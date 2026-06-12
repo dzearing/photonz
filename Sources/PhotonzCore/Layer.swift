@@ -71,6 +71,13 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case zoomCallout(ZoomCalloutContent)
 }
 
+/// How a layer composites against the content below it.
+public enum BlendMode: String, Hashable, Codable, Sendable, CaseIterable {
+    case normal
+    case multiply
+    case screen
+}
+
 /// Non-destructive per-layer styling, applied at render time.
 public struct LayerStyle: Hashable, Codable, Sendable {
     public var opacity: Double
@@ -79,15 +86,18 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     public var borderWidth: CGFloat
     public var borderColorHex: String
     public var shadow: ShadowStyle?
+    public var blendMode: BlendMode
 
     public init(opacity: Double = 1, blurRadius: CGFloat = 0, cornerRadius: CGFloat = 0,
-                borderWidth: CGFloat = 0, borderColorHex: String = "#000000", shadow: ShadowStyle? = nil) {
+                borderWidth: CGFloat = 0, borderColorHex: String = "#000000", shadow: ShadowStyle? = nil,
+                blendMode: BlendMode = .normal) {
         self.opacity = opacity
         self.blurRadius = blurRadius
         self.cornerRadius = cornerRadius
         self.borderWidth = borderWidth
         self.borderColorHex = borderColorHex
         self.shadow = shadow
+        self.blendMode = blendMode
     }
 }
 
@@ -113,17 +123,21 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public var frame: CGRect
     /// Optional crop applied to the layer's own content, in layer-local coordinates.
     public var crop: CGRect?
+    /// Geometric transform (rotation/skew/flip) applied at render time, around the frame's center.
+    public var transform: LayerTransform
     public var style: LayerStyle
     public var isVisible: Bool
     public var isLocked: Bool
 
     public init(id: UUID = UUID(), name: String, content: LayerContent, frame: CGRect,
-                crop: CGRect? = nil, style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false) {
+                crop: CGRect? = nil, transform: LayerTransform = .identity,
+                style: LayerStyle = LayerStyle(), isVisible: Bool = true, isLocked: Bool = false) {
         self.id = id
         self.name = name
         self.content = content
         self.frame = frame
         self.crop = crop
+        self.transform = transform
         self.style = style
         self.isVisible = isVisible
         self.isLocked = isLocked

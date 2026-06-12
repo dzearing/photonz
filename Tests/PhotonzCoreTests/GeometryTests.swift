@@ -88,4 +88,37 @@ struct GeometryTests {
             #expect(line.from.x == 10)
         }
     }
+
+    @Test func arrowheadTipIsAtEndPoint() {
+        let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50), end: CGPoint(x: 80, y: 50), strokeWidth: 6)
+        #expect(points.count == 3)
+        #expect(points[0] == CGPoint(x: 80, y: 50))
+    }
+
+    @Test func arrowheadWingsAreSymmetricAboutTheAxis() {
+        let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50), end: CGPoint(x: 80, y: 50), strokeWidth: 6)
+        let left = points[1]
+        let right = points[2]
+        // For a horizontal arrow the wings sit behind the tip, mirrored across y = 50.
+        #expect(left.x == right.x)
+        #expect(left.x < 80)
+        #expect(abs((50 - left.y) - (right.y - 50)) < 1e-9)
+        #expect(left.y != right.y)
+    }
+
+    @Test func arrowheadScalesWithStrokeWidth() {
+        let thin = Geometry.arrowhead(start: .zero, end: CGPoint(x: 100, y: 0), strokeWidth: 2)
+        let thick = Geometry.arrowhead(start: .zero, end: CGPoint(x: 100, y: 0), strokeWidth: 8)
+        let thinLength = 100 - thin[1].x
+        let thickLength = 100 - thick[1].x
+        #expect(thickLength > thinLength)
+    }
+
+    @Test func arrowheadDegenerateArrowIsSafe() {
+        // start == end: no direction — should not produce NaNs.
+        let points = Geometry.arrowhead(start: CGPoint(x: 5, y: 5), end: CGPoint(x: 5, y: 5), strokeWidth: 4)
+        for p in points {
+            #expect(p.x.isFinite && p.y.isFinite)
+        }
+    }
 }

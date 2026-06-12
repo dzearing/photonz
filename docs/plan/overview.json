@@ -4,8 +4,8 @@
   "howToUse": "Read this file + the in_progress phase file(s) each session. Statuses: pending | in_progress | done. Keep statuses and notes current — this plan is the source of truth, not chat history.",
   "phases": [
     { "id": 0, "file": "phase-0.json", "title": "Infrastructure: repo, CI, site, release pipeline", "status": "done" },
-    { "id": 1, "file": "phase-1.json", "title": "Core model & render engine hardening", "status": "in_progress" },
-    { "id": 2, "file": "phase-2.json", "title": "Canvas & viewport: Metal-backed view, zoom/pan, selection", "status": "pending" },
+    { "id": 1, "file": "phase-1.json", "title": "Core model & render engine hardening", "status": "done" },
+    { "id": 2, "file": "phase-2.json", "title": "Canvas & viewport: Metal-backed view, zoom/pan, selection", "status": "in_progress" },
     { "id": 3, "file": "phase-3.json", "title": "Annotations & text: arrows, shapes, highlights, text blocks", "status": "pending" },
     { "id": 4, "file": "phase-4.json", "title": "Transform tools: crop UI, resize, skew", "status": "pending" },
     { "id": 5, "file": "phase-5.json", "title": "Zoom callout (signature feature)", "status": "pending" },

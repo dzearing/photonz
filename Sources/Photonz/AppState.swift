@@ -10,9 +10,11 @@ import UniformTypeIdentifiers
 final class AppState {
     private(set) var history: History?
     let store = ImageStore()
-    private let renderer = DocumentRenderer()
+    /// Created lazily (not in init) so its frame-delivery closure can capture self.
+    private var scheduler: RenderScheduler?
 
-    /// The composited document, refreshed after every edit.
+    /// The composited document, refreshed asynchronously after every edit
+    /// (latest-wins: rapid edits coalesce instead of queueing renders).
     private(set) var renderedImage: CGImage?
     var isImporterPresented = false
     var zoom: CGFloat = 1
@@ -50,6 +52,16 @@ final class AppState {
             renderedImage = nil
             return
         }
-        renderedImage = renderer.render(document, store: store)
+        if scheduler == nil {
+            scheduler = RenderScheduler(store: store) { [weak self] image in
+                await MainActor.run {
+                    // Drop the frame if the document was closed while rendering.
+                    guard let self, self.history != nil else { return }
+                    self.renderedImage = image
+                }
+            }
+        }
+        guard let scheduler else { return }
+        Task { await scheduler.submit(document) }
     }
 }

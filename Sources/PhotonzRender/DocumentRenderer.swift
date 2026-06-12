@@ -26,18 +26,29 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         for layer in document.layers where layer.isVisible {
             guard let layerImage = ciImage(for: layer, in: document, store: store) else { continue }
-            output = layerImage.composited(over: output)
+            output = composite(layerImage, over: output, mode: blendMode(for: layer), extent: extent)
         }
 
         return context.createCGImage(output, from: extent)
     }
 
     private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore) -> CIImage? {
-        guard case .image(let ref) = layer.content, let cg = store.image(for: ref) else {
-            // Text/annotation/zoom-callout rasterization arrives in later phases.
+        var image: CIImage
+        switch layer.content {
+        case .image(let ref):
+            guard let cg = store.image(for: ref) else { return nil }
+            image = CIImage(cgImage: cg)
+        case .text(let text):
+            // Rasterized at the frame's size so the scale-to-frame step below is 1:1.
+            guard let cg = TextRasterizer.rasterize(text, size: layer.frame.size) else { return nil }
+            image = CIImage(cgImage: cg)
+        case .annotation(let annotation):
+            guard let cg = AnnotationRasterizer.rasterize(annotation, size: layer.frame.size) else { return nil }
+            image = CIImage(cgImage: cg)
+        case .zoomCallout:
+            // Zoom-callout rasterization arrives in phase 5.
             return nil
         }
-        var image = CIImage(cgImage: cg)
 
         // Layer-local crop.
         if let crop = layer.crop {
@@ -64,7 +75,72 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = blurred
         }
 
-        // Style: opacity.
+        // Style: corner radius — clip content to a rounded rect before the
+        // geometric transform so corners rotate with the layer.
+        if layer.style.cornerRadius > 0 {
+            let mask = roundedRectImage(rect: image.extent, radius: layer.style.cornerRadius, color: .white)
+            image = mask.applyingFilter("CIMultiplyCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: image])
+                .cropped(to: mask.extent)
+        }
+
+        // Style: border — an inner stroke hugging the (possibly rounded) outline.
+        if layer.style.borderWidth > 0 {
+            let width = layer.style.borderWidth
+            let outer = roundedRectImage(rect: image.extent,
+                                         radius: layer.style.cornerRadius,
+                                         color: ciColor(hex: layer.style.borderColorHex))
+            let innerRect = image.extent.insetBy(dx: width, dy: width)
+            var ring = outer
+            if !innerRect.isNull, !innerRect.isEmpty {
+                let inner = roundedRectImage(rect: innerRect,
+                                             radius: max(0, layer.style.cornerRadius - width),
+                                             color: .white)
+                ring = outer.applyingFilter("CISourceOutCompositing",
+                                            parameters: [kCIInputBackgroundImageKey: inner])
+            }
+            image = ring.composited(over: image).cropped(to: image.extent)
+        }
+
+        // Geometric transform around the layer's center. LayerTransform angles are
+        // defined in top-left model space; CI is y-up, so mirror the angular
+        // components (conjugation by a vertical flip negates rotation and skew;
+        // flips are unaffected).
+        if !layer.transform.isIdentity {
+            var mirrored = layer.transform
+            mirrored.rotation = -mirrored.rotation
+            mirrored.skewX = -mirrored.skewX
+            mirrored.skewY = -mirrored.skewY
+            let center = CGPoint(x: image.extent.midX, y: image.extent.midY)
+            image = image.transformed(by: mirrored.affineTransform(around: center))
+        }
+
+        // Position on canvas: the layer's center lands on the frame's center,
+        // flipping from top-left model coords to CI bottom-left. Center-based so
+        // rotated/skewed extents stay anchored where the frame is. Must happen
+        // before the shadow, whose expanded extent would skew the centering.
+        let frameCenterY = document.canvasSize.height - layer.frame.midY
+        image = image.transformed(by: CGAffineTransform(translationX: layer.frame.midX - image.extent.midX,
+                                                        y: frameCenterY - image.extent.midY))
+
+        // Style: shadow — the layer's silhouette tinted, blurred, offset
+        // (model y-down → CI y-up), and composited underneath.
+        if let shadow = layer.style.shadow, shadow.opacity > 0 {
+            let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
+            let silhouette = image.applyingFilter("CIColorMatrix", parameters: [
+                "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
+                "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * color.alpha),
+                "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * color.alpha),
+                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: color.alpha)
+            ])
+            let blurred = silhouette
+                .applyingGaussianBlur(sigma: shadow.radius)
+                .transformed(by: CGAffineTransform(translationX: shadow.offset.width,
+                                                   y: -shadow.offset.height))
+            image = image.composited(over: blurred)
+        }
+
+        // Style: opacity — last, so it fades content, border, and shadow together.
         if layer.style.opacity < 1 {
             let alpha = CGFloat(max(0, min(1, layer.style.opacity)))
             image = image.applyingFilter("CIColorMatrix", parameters: [
@@ -72,8 +148,45 @@ public final class DocumentRenderer: @unchecked Sendable {
             ])
         }
 
-        // Position on canvas, flipping from top-left model coords to CI bottom-left.
-        let flippedY = document.canvasSize.height - layer.frame.maxY
-        return image.transformed(by: CGAffineTransform(translationX: layer.frame.origin.x, y: flippedY))
+        return image
+    }
+
+    // MARK: - Helpers
+
+    /// Highlight annotations always multiply so underlying detail shows through;
+    /// everything else follows the layer's style.
+    private func blendMode(for layer: Layer) -> BlendMode {
+        if case .annotation(let annotation) = layer.content, annotation.shape == .highlight {
+            return .multiply
+        }
+        return layer.style.blendMode
+    }
+
+    private func composite(_ image: CIImage, over backdrop: CIImage, mode: BlendMode, extent: CGRect) -> CIImage {
+        switch mode {
+        case .normal:
+            return image.composited(over: backdrop)
+        case .multiply:
+            return image.applyingFilter("CIMultiplyBlendMode",
+                                        parameters: [kCIInputBackgroundImageKey: backdrop])
+                .cropped(to: extent)
+        case .screen:
+            return image.applyingFilter("CIScreenBlendMode",
+                                        parameters: [kCIInputBackgroundImageKey: backdrop])
+                .cropped(to: extent)
+        }
+    }
+
+    private func roundedRectImage(rect: CGRect, radius: CGFloat, color: CIColor) -> CIImage {
+        let filter = CIFilter.roundedRectangleGenerator()
+        filter.extent = rect
+        filter.radius = Float(radius)
+        filter.color = color
+        return (filter.outputImage ?? CIImage.empty()).cropped(to: rect)
+    }
+
+    private func ciColor(hex: String, alpha: Double = 1) -> CIColor {
+        let c = RGBA(hex: hex) ?? RGBA(r: 0, g: 0, b: 0)
+        return CIColor(red: c.r, green: c.g, blue: c.b, alpha: c.a * alpha)
     }
 }

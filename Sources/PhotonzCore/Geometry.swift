@@ -70,6 +70,28 @@ public enum Geometry {
         return CGRect(origin: origin, size: target)
     }
 
+    /// The filled triangle for an arrow's head: `[tip, leftWing, rightWing]`.
+    /// The tip sits exactly at `end`; the wings sit behind it, perpendicular to
+    /// the arrow's axis. Sized proportionally to `strokeWidth`.
+    public static func arrowhead(start: CGPoint, end: CGPoint, strokeWidth: CGFloat) -> [CGPoint] {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let length = hypot(dx, dy)
+        guard length > 0 else { return [end, end, end] }
+
+        let headLength = max(strokeWidth * 3.5, 8)
+        let halfWidth = headLength * 0.4
+        let ux = dx / length
+        let uy = dy / length
+        let base = CGPoint(x: end.x - ux * headLength, y: end.y - uy * headLength)
+        // Perpendicular unit vector.
+        let px = -uy
+        let py = ux
+        return [end,
+                CGPoint(x: base.x + px * halfWidth, y: base.y + py * halfWidth),
+                CGPoint(x: base.x - px * halfWidth, y: base.y - py * halfWidth)]
+    }
+
     /// The two leader-line segments connecting a zoom callout to its source box.
     /// Returns (from, to) pairs joining the nearest corners.
     public static func leaderLines(source: CGRect, callout: CGRect) -> [(from: CGPoint, to: CGPoint)] {
