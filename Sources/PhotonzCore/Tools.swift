@@ -13,6 +13,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case ellipse
     case highlight
     case text
+    case zoomCallout
 
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
@@ -22,7 +23,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text: nil
+        case .select, .crop, .text, .zoomCallout: nil
         }
     }
 

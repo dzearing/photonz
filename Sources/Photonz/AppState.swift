@@ -214,6 +214,18 @@ final class AppState {
         perform { $0.addLayer(layer) }
     }
 
+    /// Completed source-box drag from the zoom tool. One undo step adds the
+    /// callout (placement picked by Geometry); unlike the sticky annotation
+    /// tools the editor returns to select — callouts are usually adjusted,
+    /// not added in batches.
+    func addZoomCallout(from start: CGPoint, to end: CGPoint) {
+        guard let document,
+              let layer = ZoomCalloutBuilder.layer(from: start, to: end,
+                                                   canvas: document.canvasSize) else { return }
+        perform { $0.addLayer(layer) }
+        setTool(.select)
+    }
+
     // MARK: - Annotation styling
 
     /// Styled content the active tool would draw, for the canvas drag preview.
@@ -388,6 +400,10 @@ final class AppState {
         dragPreviewGeneration += 1
         let generation = dragPreviewGeneration
         guard let doc = document, let layer = doc.layer(id: id) else { return }
+        // Zoom callouts can't be sprited: their content samples the backdrop,
+        // and the leader lines must track the frame live. Leaving the preview
+        // nil falls back to full re-renders per move, which keeps both right.
+        guard layer.zoomCallout == nil else { return }
         let padding = layer.style.previewPadding
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer

@@ -76,6 +76,7 @@ struct EditorView: View {
                        onTransformCommit: { appState.commitLayerTransform(id: $0, transform: $1) },
                        onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
                        onAnnotationEndpointsCommit: { appState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
+                       onZoomCalloutCommit: { appState.addZoomCallout(from: $0, to: $1) },
                        onToolChange: { appState.setTool($0) },
                        onTextEditBegin: { appState.beginTextEdit(layerID: $0) },
                        onTextCommit: { appState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
@@ -126,7 +127,7 @@ struct EditorView: View {
             }
             .disabled(appState.document == nil)
             .help("Resize Image (⌥⌘I)")
-            placeholderButton("plus.magnifyingglass", "Zoom Callout (phase 5)")
+            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             Divider().frame(height: 20)
             Button {
                 appState.zoomOut()

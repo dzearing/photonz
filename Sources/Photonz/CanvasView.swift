@@ -53,6 +53,7 @@ struct CanvasView: NSViewRepresentable {
     let onTransformCommit: (UUID, LayerTransform) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
+    let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -87,6 +88,7 @@ struct CanvasView: NSViewRepresentable {
         view.onTransformCommit = onTransformCommit
         view.onAnnotationCommit = onAnnotationCommit
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
+        view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
@@ -108,6 +110,7 @@ final class CanvasNSView: NSView {
     var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
+    var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -140,6 +143,17 @@ final class CanvasNSView: NSView {
     /// Arrowheads are filled but never stroked (matching the rasterizer), so
     /// they need their own shape layer under the stroked shaft.
     private let annotationPreviewHeadLayer = CAShapeLayer()
+    /// A just-created zoom callout flying from its source box to its placed
+    /// frame: the magnified sprite, plus the source outline and leader lines
+    /// fading in underneath it.
+    private let calloutFlightLayer = CALayer()
+    private let calloutFlightOutlineLayer = CAShapeLayer()
+    private let calloutFlightLeaderLayer = CAShapeLayer()
+    /// The pre-commit composite, held on screen for the flight's duration so
+    /// the baked-in callout doesn't show at its destination mid-flight.
+    private var calloutHoldImage: CGImage?
+    /// Invalidates a flight's completion cleanup when a newer flight starts.
+    private var calloutFlightGeneration = 0
     private var lastReportedSize: CGSize = .zero
     /// The viewport currently on screen. Gesture handlers mutate from this and
     /// apply locally before notifying, so panning/zooming never waits a runloop
@@ -324,6 +338,16 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.addSublayer(annotationPreviewHeadLayer)
         layer?.addSublayer(annotationPreviewLayer)
 
+        calloutFlightLeaderLayer.fillColor = nil
+        calloutFlightLeaderLayer.lineCap = .round
+        calloutFlightOutlineLayer.fillColor = nil
+        calloutFlightLayer.contentsGravity = .resize
+        calloutFlightLayer.masksToBounds = true
+        for flightLayer in [calloutFlightLeaderLayer, calloutFlightOutlineLayer, calloutFlightLayer] {
+            flightLayer.isHidden = true
+            layer?.addSublayer(flightLayer)
+        }
+
         for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
@@ -418,8 +442,9 @@ final class CanvasNSView: NSView {
             }
             return
         }
-        // Drawing tools own the pointer: every drag creates a new annotation.
-        if tool.createsAnnotationByDrag {
+        // Drawing tools own the pointer: every drag creates a new annotation
+        // (or, for the zoom tool, defines the callout's source box).
+        if tool.createsAnnotationByDrag || tool == .zoomCallout {
             annotationDrag = AnnotationDrag(anchor: p)
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
             return
@@ -588,6 +613,16 @@ final class CanvasNSView: NSView {
             annotationDrag = nil
             if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
+            } else if tool == .zoomCallout {
+                clearAnnotationPreview()
+                let end = drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
+                // Build the same layer AppState will commit, to drive the
+                // flight animation from source box to placed frame.
+                if let layer = ZoomCalloutBuilder.layer(from: drag.anchor, to: end,
+                                                        canvas: viewport.documentSize) {
+                    beginCalloutFlight(for: layer)
+                    onZoomCalloutCommit(drag.anchor, end)
+                }
             } else {
                 // Leave the preview shape up until the re-rendered composite
                 // (which includes the new layer) lands — no flash.
@@ -819,6 +854,7 @@ final class CanvasNSView: NSView {
         defer { CATransaction.commit() }
 
         guard let image, let viewport else {
+            endCalloutFlight()
             contentLayer.isHidden = true
             previewSpriteLayer.isHidden = true
             selectionBaseLayer.isHidden = true
@@ -840,7 +876,9 @@ final class CanvasNSView: NSView {
         contentLayer.isHidden = false
         // refreshPreviewSprite (below) swaps in the underlay + floated sprite
         // while a drag preview is active; the full render replaces both after.
-        contentLayer.contents = image
+        // A callout flight holds the pre-commit composite so the baked-in
+        // callout doesn't show at its destination before the sprite lands.
+        contentLayer.contents = calloutHoldImage ?? image
         contentLayer.frame = viewport.documentFrameInView
         contentLayer.shadowPath = CGPath(rect: contentLayer.bounds, transform: nil)
         // Past 2× the user is inspecting pixels — show them squarely instead of smearing.
@@ -1109,7 +1147,7 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
-        if tool.createsAnnotationByDrag || tool == .crop {
+        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout {
             addCursorRect(bounds, cursor: .crosshair)
         } else if tool == .text {
             addCursorRect(bounds, cursor: .iBeam)
@@ -1124,10 +1162,19 @@ final class CanvasNSView: NSView {
         annotationPreviewHeadLayer.path = nil
     }
 
+    /// What the zoom tool's drag box previews with: a rectangle in the
+    /// callout's border style, so the box that flies out matches the draft.
+    private var calloutDraftContent: AnnotationContent {
+        let style = ZoomCalloutBuilder.defaultStyle
+        return AnnotationContent(shape: .rectangle, strokeWidth: max(1, style.borderWidth / 2),
+                                 colorHex: style.borderColorHex)
+    }
+
     /// In-flight drag-to-create: preview the active tool's styled content.
     private func refreshAnnotationPreview(constrained: Bool) {
+        let draft = tool == .zoomCallout ? calloutDraftContent : nil
         guard let drag = annotationDrag,
-              let content = annotationContent ?? tool.defaultAnnotation else {
+              let content = annotationContent ?? draft ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return
         }
@@ -1207,6 +1254,101 @@ final class CanvasNSView: NSView {
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color
         annotationPreviewLayer.isHidden = false
+        CATransaction.commit()
+    }
+
+    // MARK: Zoom-callout creation flight
+
+    /// Animates a just-committed callout from its source box to its placed
+    /// frame: the sprite is the on-screen composite cropped to the source
+    /// region (the pixels the callout magnifies), growing into the styled box
+    /// while the source outline and leader lines fade in underneath. The
+    /// pre-commit composite holds on screen for the duration; the baked render
+    /// (already landed by then) is revealed when the flight ends.
+    private func beginCalloutFlight(for calloutLayer: Layer) {
+        guard let viewport, let image, let callout = calloutLayer.zoomCallout,
+              viewport.documentSize.width > 0, viewport.documentSize.height > 0 else { return }
+        let scaleX = CGFloat(image.width) / viewport.documentSize.width
+        let scaleY = CGFloat(image.height) / viewport.documentSize.height
+        let cropRect = CGRect(x: callout.sourceRect.minX * scaleX,
+                              y: callout.sourceRect.minY * scaleY,
+                              width: callout.sourceRect.width * scaleX,
+                              height: callout.sourceRect.height * scaleY)
+        guard let sprite = image.cropping(to: cropRect) else { return }
+
+        calloutHoldImage = image
+        calloutFlightGeneration += 1
+        let generation = calloutFlightGeneration
+
+        let zoom = viewport.zoom
+        let style = calloutLayer.style
+        let magnification = max(callout.magnification, 0.01)
+        let startFrame = viewRect(forDocRect: callout.sourceRect, in: viewport)
+        let endFrame = viewRect(forDocRect: calloutLayer.frame, in: viewport)
+        let rgba = RGBA(hex: style.borderColorHex) ?? RGBA(r: 1, g: 0, b: 0)
+        let borderColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+
+        // Chrome that fades in: source outline + leader lines, matching what
+        // the renderer bakes (ZoomCalloutOverlayRasterizer's styling).
+        let sourceRadius = (style.cornerRadius / magnification) * zoom
+        let outlinePath = CGPath(roundedRect: startFrame,
+                                 cornerWidth: sourceRadius, cornerHeight: sourceRadius,
+                                 transform: nil)
+        let leaderPath = CGMutablePath()
+        for line in Geometry.leaderLines(source: callout.sourceRect, callout: calloutLayer.frame) {
+            leaderPath.move(to: viewport.viewPoint(fromDocument: line.from))
+            leaderPath.addLine(to: viewport.viewPoint(fromDocument: line.to))
+        }
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        calloutFlightLayer.contents = sprite
+        calloutFlightLayer.frame = startFrame
+        calloutFlightLayer.borderColor = borderColor
+        calloutFlightLayer.borderWidth = style.borderWidth * zoom
+        calloutFlightLayer.cornerRadius = sourceRadius
+        calloutFlightLayer.isHidden = false
+        calloutFlightOutlineLayer.path = outlinePath
+        calloutFlightOutlineLayer.strokeColor = borderColor
+        calloutFlightOutlineLayer.lineWidth = style.borderWidth * zoom
+        calloutFlightOutlineLayer.opacity = 0
+        calloutFlightOutlineLayer.isHidden = false
+        calloutFlightLeaderLayer.path = leaderPath
+        calloutFlightLeaderLayer.strokeColor = borderColor.copy(alpha: 0.6 * borderColor.alpha)
+        calloutFlightLeaderLayer.lineWidth = style.borderWidth * zoom
+        calloutFlightLeaderLayer.opacity = 0
+        calloutFlightLeaderLayer.isHidden = false
+        CATransaction.commit()
+
+        // Implicit animations carry position/bounds/cornerRadius/opacity.
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.35)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+        CATransaction.setCompletionBlock { [weak self] in
+            guard let self, self.calloutFlightGeneration == generation else { return }
+            self.endCalloutFlight()
+        }
+        calloutFlightLayer.position = CGPoint(x: endFrame.midX, y: endFrame.midY)
+        calloutFlightLayer.bounds = CGRect(origin: .zero, size: endFrame.size)
+        calloutFlightLayer.cornerRadius = style.cornerRadius * zoom
+        calloutFlightOutlineLayer.opacity = 1
+        calloutFlightLeaderLayer.opacity = 1
+        CATransaction.commit()
+    }
+
+    /// Tears the flight down and reveals the latest composite (which has the
+    /// callout baked in at its destination).
+    private func endCalloutFlight() {
+        guard calloutHoldImage != nil || !calloutFlightLayer.isHidden else { return }
+        calloutHoldImage = nil
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for flightLayer in [calloutFlightLayer, calloutFlightOutlineLayer, calloutFlightLeaderLayer] {
+            flightLayer.isHidden = true
+            flightLayer.removeAllAnimations()
+        }
+        calloutFlightLayer.contents = nil
+        contentLayer.contents = image
         CATransaction.commit()
     }
 

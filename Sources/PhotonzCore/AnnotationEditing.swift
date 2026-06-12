@@ -41,9 +41,11 @@ extension Layer {
 
     /// The layer with its frame set to `frame`. Annotation content remaps its
     /// endpoints so the drawn shape scales with the frame (a bare frame
-    /// assignment would clip or distort it); other content just moves.
+    /// assignment would clip or distort it); zoom callouts re-derive their
+    /// magnification from the new frame; other content just moves.
     public func resized(to frame: CGRect) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
+        if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         var layer = self
         layer.frame = frame
         return layer
