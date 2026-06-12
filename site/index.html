@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photonz — lightning-fast photo & screenshot editing for Mac</title>
+<meta name="description" content="Photonz is a native macOS editor for photos and screenshots: crop, annotate, zoom callouts, and non-destructive layers — at native speed.">
+<style>
+  :root {
+    --bg: #0b0b14;
+    --violet: #8b5cf6;
+    --violet-deep: #4c1d95;
+    --text: #f4f4f8;
+    --muted: #9b9bb0;
+    --glass: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .glow {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(60vw 60vh at 70% -10%, rgba(139, 92, 246, 0.25), transparent 60%),
+      radial-gradient(50vw 50vh at 10% 110%, rgba(76, 29, 149, 0.35), transparent 60%);
+  }
+  main { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 96px 0 48px; text-align: center; }
+  .icon {
+    width: 120px; height: 120px; margin: 0 auto 28px; border-radius: 27px;
+    background: linear-gradient(135deg, #2a1a73, #7333d9 55%, #c059f2);
+    display: grid; place-items: center;
+    box-shadow: 0 24px 60px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+    font-size: 56px;
+  }
+  h1 { font-size: 56px; font-weight: 700; letter-spacing: -0.02em; }
+  .tagline { font-size: 22px; color: var(--muted); margin-top: 12px; font-weight: 400; }
+  .cta { margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .download {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(180deg, #9d6bff, #7c3aed);
+    color: white; text-decoration: none; font-size: 18px; font-weight: 600;
+    padding: 16px 36px; border-radius: 999px;
+    box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .download:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(124, 58, 237, 0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .meta { font-size: 14px; color: var(--muted); }
+  .meta code { background: var(--glass); padding: 2px 8px; border-radius: 6px; }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px; padding: 48px 0 32px;
+  }
+  .card {
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 20px; padding: 26px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .card h3 { font-size: 17px; margin-bottom: 8px; }
+  .card .emoji { font-size: 26px; display: block; margin-bottom: 12px; }
+  .card p { font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .notice {
+    margin: 8px 0 64px; padding: 18px 22px; border-radius: 16px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    font-size: 14px; color: var(--muted); line-height: 1.6;
+  }
+  footer { padding: 24px 0 48px; text-align: center; font-size: 13.5px; color: var(--muted); }
+  footer a { color: var(--violet); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<main>
+  <header>
+    <div class="icon">⌬</div>
+    <h1>Photonz</h1>
+    <p class="tagline">Lightning-fast photo &amp; screenshot editing, built for your Mac.</p>
+    <div class="cta">
+      <a class="download" href="https://github.com/dzearing/photonz/releases/latest/download/Photonz.dmg">
+        ⬇&nbsp; Download for Mac
+      </a>
+      <p class="meta"><span id="version">…</span> · Apple silicon · macOS 26+ · Free &amp; open source</p>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card"><span class="emoji">✂️</span><h3>Crop, resize &amp; skew</h3>
+      <p>Pixel-perfect crops with grid overlays and aspect locks. Resize with smart presets. Skew and transform anything.</p></div>
+    <div class="card"><span class="emoji">🎯</span><h3>Zoom callouts</h3>
+      <p>Select any region and Photonz creates a magnified callout with elegant leader lines — perfect for docs and bug reports.</p></div>
+    <div class="card"><span class="emoji">🖊️</span><h3>Annotate anything</h3>
+      <p>Arrows, highlight boxes, shapes, and rich text with full font control. Beautiful defaults, everything editable later.</p></div>
+    <div class="card"><span class="emoji">🧅</span><h3>Real layers</h3>
+      <p>Promote any selection to a layer. Blur it, fade it, style it with borders, rounded corners and shadows — all non-destructive.</p></div>
+    <div class="card"><span class="emoji">⚡️</span><h3>Native speed</h3>
+      <p>Pure Swift and Metal-accelerated rendering. Opens instantly, edits at full frame rate, even on huge screenshots.</p></div>
+    <div class="card"><span class="emoji">🫧</span><h3>Feels like macOS</h3>
+      <p>Liquid Glass surfaces, fluid animations, and every keyboard shortcut where you expect it. Like it shipped with your Mac.</p></div>
+  </section>
+
+  <p class="notice"><strong>First launch:</strong> Photonz is not yet notarized, so macOS will warn you on first open.
+    Right-click the app and choose <em>Open</em> once — after that it launches normally.</p>
+
+  <footer>
+    <a href="https://github.com/dzearing/photonz">GitHub</a> ·
+    <a href="https://github.com/dzearing/photonz/releases">All releases</a> ·
+    Made with ❤️ for the Mac
+  </footer>
+</main>
+<script>
+  fetch("version.json").then(r => r.json())
+    .then(v => { document.getElementById("version").textContent = "v" + v.version; })
+    .catch(() => { document.getElementById("version").textContent = "latest"; });
+</script>
+</body>
+</html>

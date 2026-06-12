@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & test (arm64)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build (all targets)
+        run: swift build
+
+      - name: Run tests
+        run: Scripts/test.sh
+
+      - name: Build release app bundle
+        run: Scripts/build-app.sh
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Photonz.app
+          path: dist/Photonz.app
+          retention-days: 7

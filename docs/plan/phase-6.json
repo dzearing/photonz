@@ -1,0 +1,14 @@
+{
+  "phase": 6,
+  "title": "Layers UX: panel, promote-to-layer, effects, persistence",
+  "status": "pending",
+  "tasks": [
+    { "id": "6.1", "title": "Layers panel: thumbnails, visibility, lock, opacity slider, drag-reorder, rename", "status": "pending" },
+    { "id": "6.2", "title": "Promote selection to layer (⌘J) using promoteRegionToLayer + renderer rasterize", "status": "pending" },
+    { "id": "6.3", "title": "Effects inspector: blur, shadow, border, corner radius with live preview, one undo step per gesture", "status": "pending" },
+    { "id": "6.4", "title": "Blur-behind recipe as a one-click action (promote→blur→promote→crop)", "status": "pending" },
+    { "id": "6.5", "title": "Copy/paste layers (within app + paste image from system clipboard as layer)", "status": "pending" },
+    { "id": "6.6", "title": ".photonz package save/open (document.json + images/*.heic)", "status": "pending" },
+    { "id": "6.7", "title": "Export: PNG/JPEG/HEIC at 1x/2x, copy composite to clipboard (⇧⌘C)", "status": "pending" }
+  ]
+}

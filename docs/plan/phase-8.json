@@ -1,0 +1,11 @@
+{
+  "phase": 8,
+  "title": "1.0 release & marketing site refresh",
+  "status": "pending",
+  "tasks": [
+    { "id": "8.1", "title": "Site refresh: real screenshots, feature tour, zoom-callout hero demo", "status": "pending" },
+    { "id": "8.2", "title": "CHANGELOG curation + 1.0 release notes", "status": "pending" },
+    { "id": "8.3", "title": "Release 1.0.0 via release skill; verify download + site", "status": "pending" },
+    { "id": "8.4", "title": "Post-1.0 backlog triage (Windows amd64 evaluation, App Store?)", "status": "pending" }
+  ]
+}

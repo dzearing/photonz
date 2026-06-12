@@ -1,0 +1,13 @@
+{
+  "phase": 7,
+  "title": "Polish: liquid glass everywhere, animations, signing, perf pass",
+  "status": "pending",
+  "tasks": [
+    { "id": "7.1", "title": "Liquid glass audit: toolbar, panels, popovers in GlassEffectContainer; dark/light tuned", "status": "pending" },
+    { "id": "7.2", "title": "Micro-animations: tool transitions, layer add/remove, callout placement spring", "status": "pending" },
+    { "id": "7.3", "title": "App icon refinement + About panel + onboarding empty-state", "status": "pending" },
+    { "id": "7.4", "title": "Perf pass against budget (16ms/12MP/10 layers); dirty-rect rendering if needed", "status": "pending" },
+    { "id": "7.5", "title": "Developer ID signing + notarization in release.yml (needs Apple Developer secrets)", "status": "pending" },
+    { "id": "7.6", "title": "Keyboard shortcut audit + menu completeness (matches macOS conventions)", "status": "pending" }
+  ]
+}

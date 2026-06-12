@@ -1,0 +1,12 @@
+{
+  "phase": 4,
+  "title": "Transform tools: crop UI, resize, skew",
+  "status": "pending",
+  "tasks": [
+    { "id": "4.1", "title": "Crop mode: dimmed surround, thirds grid, handles, aspect locks, ⏎/⎋", "status": "pending" },
+    { "id": "4.2", "title": "Resize dialog: px/percent, aspect lock, presets, Retina @2x→@1x", "status": "pending" },
+    { "id": "4.3", "title": "Per-layer crop (drag inside layer bounds)", "status": "pending" },
+    { "id": "4.4", "title": "Skew/rotate UI on selection handles (⌥-drag corners skews, rotate knob)", "status": "pending" },
+    { "id": "4.5", "title": "Canvas-size tool (expand canvas without scaling content, anchor picker)", "status": "pending" }
+  ]
+}

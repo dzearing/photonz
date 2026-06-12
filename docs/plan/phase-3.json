@@ -1,0 +1,14 @@
+{
+  "phase": 3,
+  "title": "Annotations & text: arrows, shapes, highlights, text blocks",
+  "status": "pending",
+  "goal": "Best-in-class screenshot annotation: pick tool, drag, done — with delightful defaults.",
+  "tasks": [
+    { "id": "3.1", "title": "Tool state machine in AppState (select/crop/arrow/rect/ellipse/highlight/text)", "status": "pending" },
+    { "id": "3.2", "title": "Drag-to-create annotation layers wired to rasterizers from 1.4", "status": "pending" },
+    { "id": "3.3", "title": "Style popover: color swatches, stroke width, glass styling", "status": "pending" },
+    { "id": "3.4", "title": "Text blocks: click to place, inline editing, font picker (font/size/weight/color)", "status": "pending" },
+    { "id": "3.5", "title": "Editable after the fact: select annotation → adjust endpoints/style", "status": "pending" },
+    { "id": "3.6", "title": "Smart defaults: red arrows, yellow highlight, auto-contrast text shadow", "status": "pending" }
+  ]
+}

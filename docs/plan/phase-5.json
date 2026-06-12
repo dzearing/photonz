@@ -1,0 +1,14 @@
+{
+  "phase": 5,
+  "title": "Zoom callout (signature feature)",
+  "status": "pending",
+  "goal": "Select a box → magnified callout with leader lines, fully live and restyleable.",
+  "tasks": [
+    { "id": "5.1", "title": "ZoomCallout rasterizer: re-render source region at magnification, border+shadow+radius", "status": "pending",
+      "notes": "Placement/leader math already in Geometry (zoomCalloutPlacement, leaderLines) with tests." },
+    { "id": "5.2", "title": "Source-region outline + leader lines drawn in matching style", "status": "pending" },
+    { "id": "5.3", "title": "Tool UX: drag box → callout appears animated into place; drag callout to reposition (leader lines follow)", "status": "pending" },
+    { "id": "5.4", "title": "Inspector: magnification slider, border color/width, shape (rect/circle)", "status": "pending" },
+    { "id": "5.5", "title": "Liveness: callout re-renders when source pixels change beneath it", "status": "pending" }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "phase": 0,
+  "title": "Infrastructure: repo, CI, site, release pipeline",
+  "status": "done",
+  "tasks": [
+    { "id": "0.1", "title": "SwiftPM project: PhotonzCore / PhotonzRender / Photonz app targets", "status": "done",
+      "notes": "No Xcode project — CLT + SPM only. Scripts/test.sh wraps swift test with framework paths swift-testing needs under CommandLineTools." },
+    { "id": "0.2", "title": "Core model: Document, Layer, Geometry, History + tests", "status": "done",
+      "notes": "29 tests green. ImageRef/ImageStore split keeps pixels out of the model." },
+    { "id": "0.3", "title": "Renderer: ImageStore + DocumentRenderer (CI/Metal) + pixel tests", "status": "done",
+      "notes": "Top-left→bottom-left flip lives only in DocumentRenderer. Pixel tests use tolerance thresholds." },
+    { "id": "0.4", "title": "App shell: window, glass toolbar, open/drop image, zoom, undo/redo", "status": "done",
+      "notes": "Uses .glassEffect(.regular, in: .capsule) — compiles against macOS 26 SDK. Tool buttons are placeholders." },
+    { "id": "0.5", "title": "Scripts: test.sh, build-app.sh (--dmg), make-icon.swift, VERSION", "status": "done",
+      "notes": "build-app.sh assembles dist/Photonz.app, ad-hoc signs. Verified app launches." },
+    { "id": "0.6", "title": "Docs: design docs, plan files, progress log, CLAUDE.md rules", "status": "done" },
+    { "id": "0.7", "title": "GitHub repo created and pushed (dzearing/photonz)", "status": "done" },
+    { "id": "0.8", "title": "CI workflow (build + test on push/PR)", "status": "done" },
+    { "id": "0.9", "title": "Release workflow (tag → DMG → GitHub Release) + release skill", "status": "done" },
+    { "id": "0.10", "title": "Website on gh-pages with latest-release download link", "status": "done",
+      "notes": "Download URL uses /releases/latest/download/Photonz.dmg so it never goes stale. Version badge reads version.json." },
+    { "id": "0.11", "title": "v0.1.0 preview release published end-to-end", "status": "done" }
+  ]
+}

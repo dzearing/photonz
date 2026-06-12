@@ -1,0 +1,20 @@
+{
+  "phase": 1,
+  "title": "Core model & render engine hardening",
+  "status": "in_progress",
+  "goal": "Make the model+renderer complete enough that every later UI feature is a thin view over tested core code.",
+  "tasks": [
+    { "id": "1.1", "title": "LayerTransform struct (rotation, skew, flip) composed in renderer", "status": "pending",
+      "acceptance": "Transform math unit-tested; renderer pixel tests for rotated/skewed layers." },
+    { "id": "1.2", "title": "Corner radius + border + shadow rendering in DocumentRenderer", "status": "pending",
+      "acceptance": "Pixel tests: rounded corners clip, border strokes at right width/color, shadow darkens below-right by default offset." },
+    { "id": "1.3", "title": "Text rasterizer (CoreText) in PhotonzRender", "status": "pending",
+      "acceptance": "TextContent renders with requested font/size/color; pixel test asserts ink coverage > 0 in glyph region." },
+    { "id": "1.4", "title": "Annotation rasterizer: arrow, rect, ellipse, line, highlight (multiply blend)", "status": "pending",
+      "acceptance": "Pixel tests per shape; arrowhead present at end point; highlight multiplies not covers." },
+    { "id": "1.5", "title": "Blend modes on LayerStyle (normal, multiply, screen)", "status": "pending" },
+    { "id": "1.6", "title": "Async render path: renderer off main actor, latest-wins coalescing", "status": "pending",
+      "acceptance": "AppState API unchanged; stress test mutating 100x rapidly ends with correct final frame." },
+    { "id": "1.7", "title": "Perf baseline: benchmark target rendering 12MP/10-layer doc, record in docs/progress", "status": "pending" }
+  ]
+}
