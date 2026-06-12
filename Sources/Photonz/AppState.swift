@@ -543,6 +543,21 @@ final class AppState {
         return thumbnailCache[layer.id]?.image
     }
 
+    // MARK: - Promote selection
+
+    /// ⌘J: rasterizes the marquee selection from the current composite and
+    /// stacks it as a new image layer (one undo step). The new layer is
+    /// selected; the marquee clears — it has done its job.
+    func promoteSelectionToLayer() {
+        guard let document, let region = selection,
+              let raster = previewRenderer.rasterize(region: region, of: document, store: store) else { return }
+        let ref = store.register(raster)
+        var newID: UUID?
+        perform { newID = $0.promoteRegionToLayer(region: region, rasterized: ref, name: "Promoted Layer").id }
+        selection = nil
+        selectedLayerID = newID
+    }
+
     // MARK: - Layer selection & move
 
     /// The selected layer's frame (preview-aware), for the canvas outline.

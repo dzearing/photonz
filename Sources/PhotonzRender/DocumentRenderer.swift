@@ -46,6 +46,18 @@ public final class DocumentRenderer: @unchecked Sendable {
         return context.createCGImage(output, from: extent)
     }
 
+    /// A region of the composite as pixels ("promote selection to layer").
+    /// The region is clamped to the canvas; nil if nothing overlaps. The
+    /// rendered CGImage and the model share a top-left origin, so the crop
+    /// rect applies directly.
+    public func rasterize(region: CGRect, of document: PhotonzDocument, store: ImageStore) -> CGImage? {
+        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+        let clamped = region.standardized.intersection(canvasRect)
+        guard !clamped.isNull, clamped.width >= 1, clamped.height >= 1,
+              let full = render(document, store: store) else { return nil }
+        return full.cropping(to: clamped)
+    }
+
     // MARK: - Drag-preview pieces
 
     /// The composite with one layer hidden — the backdrop a drag preview

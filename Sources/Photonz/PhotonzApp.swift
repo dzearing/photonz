@@ -50,6 +50,10 @@ struct PhotonzApp: App {
             }
             CommandMenu("Layer") {
                 let selectedID = appState.selectedLayerID
+                Button("Promote Selection to Layer") { appState.promoteSelectionToLayer() }
+                    .keyboardShortcut("j", modifiers: .command)
+                    .disabled(appState.selection == nil)
+                Divider()
                 Button("Duplicate Layer") {
                     if let selectedID { appState.duplicateLayer(id: selectedID) }
                 }
