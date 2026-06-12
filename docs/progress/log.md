@@ -2,6 +2,18 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 5 complete: zoom callout (signature feature)
+
+- All 5 tasks done; 308 tests green (was 283). Four commits: rendering (5.1–5.2), tool UX (5.3), inspector (5.4); liveness (5.5) fell out of 5.1's design.
+- **Architecture call that made everything else cheap**: `DocumentRenderer` threads the composite-so-far into each layer render as `backdrop`; a callout crops it to `sourceRect` and the existing scale-to-frame step IS the magnification. Border/shadow/radius come free from `LayerStyle`; liveness comes free because the callout samples the canvas every render — no baked pixels anywhere.
+- `ZoomCalloutOverlayRasterizer` draws the canvas-space chrome (source outline + 0.6-alpha leader lines, `Geometry.leaderLines`) composited beneath the box. Outline radius = style radius ÷ magnification so both boxes read as one shape.
+- Tool (Z): drag box → `ZoomCalloutBuilder` (PhotonzCore, tested) → callout flies from source to placement via CA implicit animations (composite cropped to source box as the sprite; pre-commit frame held on screen during flight). Tool returns to `.select` after one callout.
+- Reposition/resize ride the existing select-tool machinery; callouts skip the CA sprite drag preview (content samples the backdrop) and fall back to full per-move re-renders — leader lines track live. Revisit cost in phase 7 if large-canvas drags feel heavy.
+- Inspector = style popover when a callout is selected: swatches/dots edit border, plus magnification slider (1.25–6×) and rect/circle shape. Slider maps mag→center-anchored frame through the normal preview/commit path; `resized(to:)` derives mag back from the frame, so the two never drift. Circle = maximal rounded rect (capsule when non-square), one rule (`effectiveCornerRadius`) shared by box and outline.
+- Verified: full suite + headless renders through the real builder/renderer (rect and circle variants, PNGs eyeballed). **Not yet hand-verified**: flight animation feel and drag UX — synthetic events need accessibility (TCC) permission the terminal lacks. Worth a 2-minute manual pass: open app, Z, drag a box; S for the inspector.
+- Perf: composite path touched; 12MP/10-layer median 49.6ms vs 48.2ms baseline (noise). Callouts add one CG overlay rasterization + crop/composite each.
+- **Next**: Phase 6 — layers panel, promote-to-layer, effects, persistence. Callout-relevant: reordering decides what a callout magnifies (it sees only layers below it).
+
 ## 2026-06-12 — Phase 4 complete: crop mode, resize dialog, per-layer crop, rotate/skew, canvas size
 
 - **4.1 Crop mode**: `Crop` + `CropAspect` (PhotonzCore). C enters crop with a full-canvas rect (or the marquee selection); handles resize aspect-locked and canvas-clamped, inside drags move, outside drags define fresh rects; ⏎/double-click commits pixel-aligned (one undo step), ⎋ cancels drag → mode. Chrome: even-odd dim, thirds grid, white border + 9pt handles. Toolbar grows aspect capsules + ✓/✕ in crop mode (`.fixedSize()` on the labels or SwiftUI collapses them in a tight toolbar).
