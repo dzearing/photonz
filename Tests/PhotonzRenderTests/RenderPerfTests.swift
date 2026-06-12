@@ -83,4 +83,40 @@ struct RenderPerfTests {
         // Loose regression guard; the 16ms product target is tracked in docs/progress/perf.md.
         #expect(median < 250, "median render time regressed badly: \(median)ms")
     }
+
+    /// The 16ms budget applies to *re-renders during editing* — that's what
+    /// the user feels on every drag tick and slider tweak. The interactive
+    /// path patches dirty regions, so measure it the way the app uses it:
+    /// an edit followed by a re-render, repeatedly.
+    @Test func interactiveEditReRenderMeetsBudget() {
+        let store = ImageStore()
+        var doc = makeBenchmarkDocument(store: store)
+        let renderer = DocumentRenderer()
+
+        // First interactive render fills the accumulation buffer.
+        #expect(renderer.renderInteractive(doc, store: store) != nil)
+
+        // Drag the rotated 800×600 patch — a typical mid-size edit.
+        let dragged = doc.layers[2].id
+        var samples: [Double] = []
+        let clock = ContinuousClock()
+        for step in 1...10 {
+            doc.updateLayer(id: dragged) {
+                $0.frame = CGRect(x: 2200 + step * 8, y: 300 + step * 6, width: 800, height: 600)
+            }
+            let duration = clock.measure {
+                #expect(renderer.renderInteractive(doc, store: store) != nil)
+            }
+            samples.append(Double(duration.components.seconds) * 1000
+                           + Double(duration.components.attoseconds) / 1e15)
+        }
+        samples.sort()
+        let median = samples[samples.count / 2]
+        print("[perf] 12MP/10-layer interactive edit — median \(String(format: "%.1f", median))ms, " +
+              "min \(String(format: "%.1f", samples[0]))ms, " +
+              "max \(String(format: "%.1f", samples[samples.count - 1]))ms over \(samples.count) runs")
+
+        // Loose CI bound; the real numbers land in docs/progress/perf.md.
+        #expect(median < 100, "interactive re-render regressed badly: \(median)ms")
+    }
 }

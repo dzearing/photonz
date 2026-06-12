@@ -39,7 +39,8 @@ public actor RenderScheduler {
     private func drain() async {
         while let document = pending {
             pending = nil
-            await onFrame(renderer.render(document, store: store))
+            // Incremental: unchanged regions are reused from the last frame.
+            await onFrame(renderer.renderInteractive(document, store: store))
         }
         drainTask = nil
     }
