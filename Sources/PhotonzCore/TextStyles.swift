@@ -1,0 +1,67 @@
+import CoreGraphics
+import Foundation
+
+/// The user's current text styling, fed by the font picker and applied to new
+/// text blocks. Mirrors `AnnotationStyles`: Codable so it persists across
+/// launches, value-typed so the popover edits are testable.
+public struct TextStyles: Equatable, Codable, Sendable {
+    public var fontName: String
+    public var fontSize: CGFloat
+    public var weight: TextWeight
+    public var colorHex: String
+
+    public init(fontName: String = "SF Pro",
+                fontSize: CGFloat = 24,
+                weight: TextWeight = .regular,
+                colorHex: String = "#FFFFFF") {
+        self.fontName = fontName
+        self.fontSize = fontSize
+        self.weight = weight
+        self.colorHex = colorHex
+    }
+
+    /// The font picker's family choices. Curated: families that ship with
+    /// macOS and read well as screenshot callouts.
+    public static let fonts: [String] = [
+        "SF Pro",
+        "SF Mono",
+        "New York",
+        "Helvetica Neue",
+        "Avenir Next",
+        "Georgia",
+    ]
+
+    /// The size picker's options, smallest first.
+    public static let fontSizes: [CGFloat] = [14, 18, 24, 32, 48, 64, 96]
+
+    /// Content for a new text block in the current style.
+    public func content(string: String = "") -> TextContent {
+        TextContent(string: string, fontName: fontName, fontSize: fontSize,
+                    colorHex: colorHex, weight: weight)
+    }
+
+    /// Takes on an existing text layer's style, so re-editing seeds the picker
+    /// with what that layer already looks like.
+    public mutating func adopt(_ content: TextContent) {
+        fontName = content.fontName
+        fontSize = content.fontSize
+        weight = content.weight
+        colorHex = content.colorHex
+    }
+}
+
+/// Builds text layers from a click point and a measured natural size.
+/// Measurement itself needs CoreText, so it lives in PhotonzRender; this is
+/// just the (tested) frame math.
+public enum TextBuilder {
+
+    /// A text layer whose frame's top-left sits at the click point and whose
+    /// size hugs the measured text. Degenerate measurements are clamped so the
+    /// rasterizer always has at least a pixel to draw into.
+    public static func layer(content: TextContent, at point: CGPoint, naturalSize: CGSize) -> Layer {
+        let frame = CGRect(x: point.x, y: point.y,
+                           width: max(naturalSize.width, 1),
+                           height: max(naturalSize.height, 1))
+        return Layer(name: "Text", content: .text(content), frame: frame)
+    }
+}

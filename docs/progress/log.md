@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 3.4: text blocks (click to place, inline editing, font picker)
+
+- **Core**: `TextWeight` (regular/medium/semibold/bold) + `TextContent.weight` with a custom decoder so pre-weight payloads still decode; `TextStyles` (`PhotonzCore/TextStyles.swift`, font/size/weight/color + curated font/size lists, `adopt()` for re-edit seeding); `TextBuilder` click-point→frame math. 10 new core tests.
+- **Render**: `TextRasterizer.naturalSize(_:maxWidth:)` (CTFramesetter measurement + `frameInset` slack) and weight-aware `font(for:)`. Two traps burned into tests: a weight trait in a font descriptor does NOT select a heavier face — enumerate the family's upright faces and pick the nearest weight; and don't inset the CTFrame draw path — CoreText silently drops lines in frames a hair shorter than the line height (the old 80×50/40pt test caught it).
+- **App**: text tool (T shortcut, toolbar button live). Click places a real `NSTextView` inline editor at the click point — font face comes from the rasterizer (PostScript name) at `fontSize × zoom`, so the draft matches the final render; it tracks pan/zoom and restyles live from the font picker. Click-away commits (empty draft → nothing; emptied re-edit → deletes the layer), Esc cancels, double-click in select mode re-edits in place — checked *before* resize handles, whose hit zones cover small text layers. `AppState.editingTextLayerID` hides the layer in `submit()` while the editor overlays it. Commit re-measures with the editor's wrap width (origin → canvas right edge) so layout doesn't shift. Style popover branches for text: 8 swatches + font/size/weight menus; `textStyles` persisted to UserDefaults.
+- 180 tests green. Verified end-to-end with a 47-check in-process harness (`/tmp/photonz-text-harness`, same NSEvent pattern as 3.3): place/type/commit, pixel-checked red ink in the committed frame, layer hidden during re-edit, undo round-trip, empty-delete, zoom-scaled editor font, persistence. PNGs reviewed.
+- **Polish candidates (phase 7)**: font picker menu labels are low-contrast on glass; the editor's accent border spans from the click point to the canvas right edge even for short text.
+- **Next**: 3.5 edit-after-the-fact (annotation endpoint remap on resize — see 3.2 gotcha — plus reusing the style popover for a selected annotation; decide text-layer resize semantics: render currently re-wraps/rescales at frame size) or 3.6 remainder (auto-contrast text shadow, now unblocked).
+
 ## 2026-06-12 — Phase 3.3: annotation style popover
 
 - **Core**: `AnnotationStyles` (`PhotonzCore/AnnotationStyles.swift`, 9 tests) — one shared stroke color for arrow/line/rect/ellipse, an independent highlight color, `strokeWidth` that only applies where `Tool.usesStrokeWidth` (highlight is a fill). 8-swatch system palette + 4 width options as static data the UI builds from. `Tool.defaultAnnotation` now delegates to `AnnotationStyles()` so smart defaults can't drift from the popover's defaults.

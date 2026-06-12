@@ -49,6 +49,7 @@ struct EditorView: View {
                        dragPreview: appState.dragPreview,
                        tool: appState.activeTool,
                        annotationContent: appState.activeAnnotationContent,
+                       textContent: appState.activeTextContent,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
@@ -57,7 +58,10 @@ struct EditorView: View {
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
                        onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) },
                        onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
-                       onToolChange: { appState.setTool($0) })
+                       onToolChange: { appState.setTool($0) },
+                       onTextEditBegin: { appState.beginTextEdit(layerID: $0) },
+                       onTextCommit: { appState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
+                       onTextCancel: { appState.cancelTextEdit() })
         } else {
             emptyState
         }
@@ -85,12 +89,12 @@ struct EditorView: View {
             toolButton(.rectangle, "rectangle", "Rectangle", "r")
             toolButton(.ellipse, "circle", "Ellipse", "o")
             toolButton(.highlight, "highlighter", "Highlight", "h")
-            if appState.activeTool.createsAnnotationByDrag {
+            toolButton(.text, "character.cursor.ibeam", "Text", "t")
+            if appState.activeTool.createsAnnotationByDrag || appState.activeTool == .text {
                 styleButton
             }
             Divider().frame(height: 20)
             placeholderButton("crop", "Crop (phase 4)")
-            placeholderButton("character.cursor.ibeam", "Text (3.4)")
             placeholderButton("plus.magnifyingglass", "Zoom Callout (phase 5)")
             Divider().frame(height: 20)
             Button {
@@ -115,18 +119,26 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
+    /// The color the active tool will draw with (annotation or text).
+    private var activeToolColorHex: String {
+        if appState.activeTool == .text {
+            return appState.textStyles.colorHex
+        }
+        return appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30"
+    }
+
     /// Swatch showing the active tool's color; opens the style popover.
     private var styleButton: some View {
         Button {
             isStylePopoverPresented.toggle()
         } label: {
             Circle()
-                .fill(Color(hex: appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30"))
+                .fill(Color(hex: activeToolColorHex))
                 .frame(width: 16, height: 16)
                 .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
                 .frame(width: 28, height: 28)
         }
-        .help("Annotation Style (S)")
+        .help(appState.activeTool == .text ? "Text Style (S)" : "Annotation Style (S)")
         .keyboardShortcut("s", modifiers: [])
         .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
             stylePopover
@@ -140,7 +152,9 @@ struct EditorView: View {
                     swatch(hex)
                 }
             }
-            if appState.activeTool.usesStrokeWidth {
+            if appState.activeTool == .text {
+                fontPicker
+            } else if appState.activeTool.usesStrokeWidth {
                 HStack(spacing: 10) {
                     ForEach(AnnotationStyles.strokeWidths, id: \.self) { width in
                         strokeWidthDot(width)
@@ -156,10 +170,46 @@ struct EditorView: View {
         .padding(8)
     }
 
+    /// Font family / size / weight menus for the text tool.
+    private var fontPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Font", selection: Binding(
+                get: { appState.textStyles.fontName },
+                set: { appState.setTextFont($0) })) {
+                ForEach(TextStyles.fonts, id: \.self) { name in
+                    Text(name).tag(name)
+                }
+            }
+            HStack(spacing: 10) {
+                Picker("Size", selection: Binding(
+                    get: { appState.textStyles.fontSize },
+                    set: { appState.setTextFontSize($0) })) {
+                    ForEach(TextStyles.fontSizes, id: \.self) { size in
+                        Text("\(Int(size)) pt").tag(size)
+                    }
+                }
+                Picker("Weight", selection: Binding(
+                    get: { appState.textStyles.weight },
+                    set: { appState.setTextWeight($0) })) {
+                    ForEach(TextWeight.allCases, id: \.self) { weight in
+                        Text(weight.rawValue.capitalized).tag(weight)
+                    }
+                }
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .frame(width: 220)
+    }
+
     private func swatch(_ hex: String) -> some View {
-        let isSelected = appState.annotationStyles.colorHex(for: appState.activeTool) == hex
+        let isSelected = activeToolColorHex == hex
         return Button {
-            appState.setAnnotationColor(hex)
+            if appState.activeTool == .text {
+                appState.setTextColor(hex)
+            } else {
+                appState.setAnnotationColor(hex)
+            }
         } label: {
             Circle()
                 .fill(Color(hex: hex))

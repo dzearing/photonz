@@ -22,17 +22,39 @@ public enum AnnotationShape: String, Codable, Sendable {
     case line
 }
 
+/// Text weight, kept as its own model type (not a CTFont trait value) so the
+/// core stays free of CoreText; the rasterizer maps it to font traits.
+public enum TextWeight: String, CaseIterable, Hashable, Codable, Sendable {
+    case regular
+    case medium
+    case semibold
+    case bold
+}
+
 public struct TextContent: Hashable, Codable, Sendable {
     public var string: String
     public var fontName: String
     public var fontSize: CGFloat
     public var colorHex: String
+    public var weight: TextWeight
 
-    public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24, colorHex: String = "#FFFFFF") {
+    public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
+                colorHex: String = "#FFFFFF", weight: TextWeight = .regular) {
         self.string = string
         self.fontName = fontName
         self.fontSize = fontSize
         self.colorHex = colorHex
+        self.weight = weight
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        string = try container.decode(String.self, forKey: .string)
+        fontName = try container.decode(String.self, forKey: .fontName)
+        fontSize = try container.decode(CGFloat.self, forKey: .fontSize)
+        colorHex = try container.decode(String.self, forKey: .colorHex)
+        // `weight` postdates TextContent; old payloads omit it.
+        weight = try container.decodeIfPresent(TextWeight.self, forKey: .weight) ?? .regular
     }
 }
 

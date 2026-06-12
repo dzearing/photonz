@@ -28,7 +28,7 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 
 ## Text (Phase 3)
 
-`TextContent`: string, font name, size, color. Rasterized via CoreText. UI: floating glass font picker (font, size, weight, color), live preview, drag to position.
+`TextContent`: string, font name, size, weight, color. Rasterized via CoreText (`TextRasterizer` also measures `naturalSize` and picks the family face nearest a `TextWeight`). Interaction: text tool click places an inline `NSTextView` editor on the canvas (zoom-scaled to match the final render); click-away commits a layer whose frame hugs the measured text, Esc cancels, double-click re-edits in place (the layer hides under the editor). Style popover gains font/size/weight menus for the text tool; current style persists via `TextStyles` in UserDefaults.
 
 ## Zoom callout (Phase 5) — signature feature
 

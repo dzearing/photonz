@@ -30,6 +30,12 @@ final class AppState {
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     private(set) var annotationStyles: AnnotationStyles = AppState.loadAnnotationStyles()
+    /// Styling for new text blocks, set from the font picker. Persisted like
+    /// annotation styles.
+    private(set) var textStyles: TextStyles = AppState.loadTextStyles()
+    /// The text layer being re-edited inline. Hidden from renders while the
+    /// canvas's editor overlay visually replaces it.
+    private(set) var editingTextLayerID: UUID?
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     private(set) var selectedLayerID: UUID?
     /// Frame override while a move drag is in flight — rendered as a preview,
@@ -71,6 +77,7 @@ final class AppState {
         activeTool = .select
         previewMove = nil
         dragPreview = nil
+        editingTextLayerID = nil
         dragPreviewGeneration += 1
         rerender()
     }
@@ -149,6 +156,93 @@ final class AppState {
     private func saveAnnotationStyles() {
         if let data = try? JSONEncoder().encode(annotationStyles) {
             UserDefaults.standard.set(data, forKey: Self.annotationStylesKey)
+        }
+    }
+
+    // MARK: - Text styling & inline editing
+
+    /// Styled (empty) content for the current text style; the canvas's inline
+    /// editor mirrors it so what you type matches what commit rasterizes.
+    var activeTextContent: TextContent { textStyles.content() }
+
+    func setTextFont(_ name: String) {
+        textStyles.fontName = name
+        saveTextStyles()
+    }
+
+    func setTextFontSize(_ size: CGFloat) {
+        textStyles.fontSize = size
+        saveTextStyles()
+    }
+
+    func setTextWeight(_ weight: TextWeight) {
+        textStyles.weight = weight
+        saveTextStyles()
+    }
+
+    func setTextColor(_ hex: String) {
+        textStyles.colorHex = hex
+        saveTextStyles()
+    }
+
+    /// An inline edit began. Re-editing an existing layer adopts its style (so
+    /// the font picker edits what's on screen) and hides the layer until
+    /// commit/cancel — the editor overlay visually replaces it.
+    func beginTextEdit(layerID: UUID?) {
+        guard let layerID, let layer = document?.layer(id: layerID),
+              case .text(let content) = layer.content else { return }
+        textStyles.adopt(content)
+        saveTextStyles()
+        editingTextLayerID = layerID
+        if let document { submit(document) }
+    }
+
+    /// Inline edit finished. Empty text adds nothing (new block) or deletes the
+    /// layer (re-edit); otherwise one undo step adds/updates the layer with its
+    /// frame hugging the re-measured text. `maxWidth` is the wrap width the
+    /// editor used (document points), so layout doesn't shift on commit.
+    func commitTextEdit(layerID: UUID?, origin: CGPoint, string: String, maxWidth: CGFloat) {
+        editingTextLayerID = nil
+        let isEmpty = string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let content = textStyles.content(string: string)
+        if let layerID {
+            if isEmpty {
+                perform { $0.removeLayer(id: layerID) }
+            } else {
+                let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+                perform { document in
+                    document.updateLayer(id: layerID) {
+                        $0.content = .text(content)
+                        $0.frame = CGRect(origin: origin, size: size)
+                    }
+                }
+            }
+        } else {
+            guard !isEmpty else { return }
+            let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+            perform { $0.addLayer(TextBuilder.layer(content: content, at: origin, naturalSize: size)) }
+        }
+    }
+
+    /// Inline edit abandoned (Esc): a hidden re-edited layer comes back as-is.
+    func cancelTextEdit() {
+        editingTextLayerID = nil
+        rerender()
+    }
+
+    private static let textStylesKey = "textStyles"
+
+    private static func loadTextStyles() -> TextStyles {
+        guard let data = UserDefaults.standard.data(forKey: textStylesKey),
+              let styles = try? JSONDecoder().decode(TextStyles.self, from: data) else {
+            return TextStyles()
+        }
+        return styles
+    }
+
+    private func saveTextStyles() {
+        if let data = try? JSONEncoder().encode(textStyles) {
+            UserDefaults.standard.set(data, forKey: Self.textStylesKey)
         }
     }
 
@@ -250,6 +344,7 @@ final class AppState {
             selectedLayerID = nil
             previewMove = nil
             dragPreview = nil
+            editingTextLayerID = nil
             return
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
@@ -263,11 +358,21 @@ final class AppState {
         if let id = selectedLayerID, document.layer(id: id) == nil {
             selectedLayerID = nil
         }
+        // Same for the layer behind an inline text edit (the canvas cancels
+        // its editor when the layer disappears).
+        if let id = editingTextLayerID, document.layer(id: id) == nil {
+            editingTextLayerID = nil
+        }
         submit(document)
     }
 
     /// Hands a document (committed or move-preview) to the render scheduler.
     private func submit(_ document: PhotonzDocument) {
+        var document = document
+        // The inline editor overlay stands in for the layer being edited.
+        if let id = editingTextLayerID {
+            document.updateLayer(id: id) { $0.isVisible = false }
+        }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
                 await MainActor.run {

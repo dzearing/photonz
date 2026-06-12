@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 /// Pre-rendered pieces for a cheap drag preview: the canvas composites
@@ -31,6 +32,9 @@ struct CanvasView: NSViewRepresentable {
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
+    /// Current text style (string empty); the inline editor mirrors it so the
+    /// draft matches what commit will rasterize.
+    let textContent: TextContent?
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
@@ -40,6 +44,9 @@ struct CanvasView: NSViewRepresentable {
     let onFrameCommit: (UUID, CGRect) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
     let onToolChange: (Tool) -> Void
+    let onTextEditBegin: (UUID?) -> Void
+    let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
+    let onTextCancel: () -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -52,7 +59,7 @@ struct CanvasView: NSViewRepresentable {
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
-                   tool: tool, annotationContent: annotationContent)
+                   tool: tool, annotationContent: annotationContent, textContent: textContent)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -65,6 +72,9 @@ struct CanvasView: NSViewRepresentable {
         view.onFrameCommit = onFrameCommit
         view.onAnnotationCommit = onAnnotationCommit
         view.onToolChange = onToolChange
+        view.onTextEditBegin = onTextEditBegin
+        view.onTextCommit = onTextCommit
+        view.onTextCancel = onTextCancel
     }
 }
 
@@ -78,6 +88,9 @@ final class CanvasNSView: NSView {
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
+    var onTextEditBegin: ((UUID?) -> Void) = { _ in }
+    var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
+    var onTextCancel: (() -> Void) = {}
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -130,6 +143,25 @@ final class CanvasNSView: NSView {
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
     private var annotationCommitImage: CGImage?
+    /// Current text style, echoed from AppState; the inline editor restyles
+    /// live when the font picker changes it. The string field is ignored.
+    private var textContent: TextContent?
+
+    /// In-progress inline text edit.
+    private struct TextEditSession {
+        /// Nil while placing a new text block; set when re-editing a layer.
+        let layerID: UUID?
+        /// The text frame's top-left in document coordinates.
+        let origin: CGPoint
+    }
+    private var textSession: TextEditSession?
+    /// The session's editor overlay, positioned/scaled to track the viewport.
+    private var textEditor: NSTextView?
+    /// The zoom `textEditor`'s font was last scaled for.
+    private var textEditorZoom: CGFloat = 0
+    /// The style `textEditor` was last configured with (string empty), so
+    /// font-picker changes mid-edit restyle the draft exactly once.
+    private var textEditorContent: TextContent?
 
     /// In-progress layer move.
     private struct MoveDrag {
@@ -222,15 +254,33 @@ final class CanvasNSView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // A click outside the inline text editor commits it; the click is
+        // swallowed so committing never doubles as starting something else.
+        if textSession != nil {
+            commitTextSession()
+            return
+        }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        // The text tool places a new block wherever you click.
+        if tool == .text {
+            beginTextSession(layerID: nil, at: p)
+            return
+        }
         // Drawing tools own the pointer: every drag creates a new annotation.
         if tool.createsAnnotationByDrag {
             annotationDrag = AnnotationDrag(anchor: p)
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
             return
         }
-        // Handles take priority: they extend past the layer's own frame.
+        // Double-click on a text layer re-opens it for inline editing. Checked
+        // before handles: on a small text layer the handle hit zones cover the
+        // whole frame and would eat the double-click.
+        if event.clickCount == 2, let hit = document?.hitTest(p), case .text = hit.content {
+            beginTextSession(layerID: hit.id, at: hit.frame.origin)
+            return
+        }
+        // Handles take priority over moves: they extend past the layer's frame.
         if let id = selectedLayerID, let frame = selectedLayerFrame,
            let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
             resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
@@ -414,7 +464,8 @@ final class CanvasNSView: NSView {
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
-              dragPreview: dragPreview, tool: tool, annotationContent: annotationContent)
+              dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
+              textContent: textContent)
         onViewportChange(next)
     }
 
@@ -422,14 +473,26 @@ final class CanvasNSView: NSView {
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
-               dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?) {
+               dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
+               textContent: TextContent?) {
         self.annotationContent = annotationContent
+        self.textContent = textContent
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation.
             annotationDrag = nil
             clearAnnotationPreview()
+            // …but a typed text draft is worth keeping: commit it. Deferred a
+            // tick because this runs inside a SwiftUI update.
+            if textSession != nil {
+                DispatchQueue.main.async { [weak self] in self?.commitTextSession() }
+            }
             window?.invalidateCursorRects(for: self)
+        }
+        // Undo while editing can delete the layer behind the editor.
+        if let session = textSession, let layerID = session.layerID,
+           let document, document.layer(id: layerID) == nil {
+            DispatchQueue.main.async { [weak self] in self?.cancelTextSession() }
         }
         // The post-commit composite (a different image) now includes the new
         // annotation layer; the held preview shape can come down.
@@ -463,6 +526,9 @@ final class CanvasNSView: NSView {
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
+            if textSession != nil {
+                DispatchQueue.main.async { [weak self] in self?.cancelTextSession() }
+            }
             return
         }
         contentLayer.isHidden = false
@@ -488,6 +554,7 @@ final class CanvasNSView: NSView {
         refreshMarqueeDisplay(constrainSquare: constrainSquare)
         refreshLayerSelectionDisplay()
         refreshPreviewSprite()
+        refreshTextEditorDisplay()
     }
 
     /// The frame the drag preview should float at, or nil when the preview
@@ -599,6 +666,8 @@ final class CanvasNSView: NSView {
     override func resetCursorRects() {
         if tool.createsAnnotationByDrag {
             addCursorRect(bounds, cursor: .crosshair)
+        } else if tool == .text {
+            addCursorRect(bounds, cursor: .iBeam)
         }
     }
 
@@ -674,9 +743,159 @@ final class CanvasNSView: NSView {
         CATransaction.commit()
     }
 
+    // MARK: Inline text editing
+
+    /// Opens the inline editor at `origin` (document coords). For a re-edit,
+    /// the editor takes over the layer's string and style; AppState hides the
+    /// layer underneath via `onTextEditBegin`.
+    private func beginTextSession(layerID: UUID?, at origin: CGPoint) {
+        guard textSession == nil else { return }
+        var style = textContent ?? TextContent(string: "")
+        var string = ""
+        if let layerID, let layer = document?.layer(id: layerID),
+           case .text(let existing) = layer.content {
+            string = existing.string
+            style = existing
+            style.string = ""
+            // The editor replaces the selection chrome.
+            selectedLayerFrame = nil
+            onSelectLayer(nil)
+        }
+        textSession = TextEditSession(layerID: layerID, origin: origin)
+
+        let editor = NSTextView()
+        editor.isRichText = false
+        editor.allowsUndo = true
+        editor.drawsBackground = false
+        editor.isAutomaticQuoteSubstitutionEnabled = false
+        editor.isAutomaticDashSubstitutionEnabled = false
+        editor.isAutomaticTextReplacementEnabled = false
+        editor.isAutomaticSpellingCorrectionEnabled = false
+        editor.isVerticallyResizable = false
+        editor.isHorizontallyResizable = false
+        editor.textContainerInset = .zero
+        editor.textContainer?.lineFragmentPadding = 0
+        editor.textContainer?.widthTracksTextView = true
+        editor.wantsLayer = true
+        editor.layer?.borderColor = NSColor.controlAccentColor.cgColor
+        editor.layer?.borderWidth = 1
+        editor.layer?.cornerRadius = 2
+        editor.delegate = self
+        editor.string = string
+        addSubview(editor)
+        textEditor = editor
+        textEditorZoom = 0 // force the style pass below to apply
+        styleTextEditor(with: style)
+        window?.makeFirstResponder(editor)
+        editor.setSelectedRange(NSRange(location: string.utf16.count, length: 0))
+        onTextEditBegin(layerID)
+        refreshOverlays()
+    }
+
+    /// Applies font/color to the editor, scaled to the current zoom so the
+    /// draft is the same apparent size as the rasterized layer will be.
+    /// `content.string` is ignored.
+    private func styleTextEditor(with content: TextContent) {
+        guard let editor = textEditor, let viewport else { return }
+        var stored = content
+        stored.string = ""
+        textEditorContent = stored
+        textEditorZoom = viewport.zoom
+
+        var scaled = stored
+        scaled.fontSize = content.fontSize * viewport.zoom
+        // The rasterizer picks the face (family + weight); reuse it via its
+        // PostScript name so the draft and the final render match.
+        let ctFont = TextRasterizer.font(for: scaled)
+        let font = NSFont(name: CTFontCopyPostScriptName(ctFont) as String, size: scaled.fontSize)
+            ?? NSFont.systemFont(ofSize: scaled.fontSize)
+        let rgba = RGBA(hex: content.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        let color = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        editor.font = font
+        editor.textColor = color
+        editor.insertionPointColor = color
+        editor.typingAttributes = [.font: font, .foregroundColor: color]
+        if let storage = editor.textStorage, storage.length > 0 {
+            storage.addAttributes([.font: font, .foregroundColor: color],
+                                  range: NSRange(location: 0, length: storage.length))
+        }
+        layoutTextEditor()
+    }
+
+    /// Positions the editor over the session origin and sizes it: wrap width
+    /// runs to the canvas's right edge (commit re-measures with the same
+    /// width), height hugs the laid-out text.
+    private func layoutTextEditor() {
+        guard let editor = textEditor, let viewport, let session = textSession else { return }
+        let topLeft = viewport.viewPoint(fromDocument: session.origin)
+        let docWidth = max(viewport.documentSize.width - session.origin.x, 20)
+        let width = docWidth * viewport.zoom
+        var height = (editor.font?.pointSize ?? 20) * 1.4
+        if let container = editor.textContainer, let layoutManager = editor.layoutManager {
+            container.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
+            layoutManager.ensureLayout(for: container)
+            height = max(height, layoutManager.usedRect(for: container).height + 2)
+        }
+        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: width, height: ceil(height))
+    }
+
+    /// Keeps the editor glued to the document while panning/zooming, and
+    /// restyles it when the font picker changes the style mid-edit.
+    private func refreshTextEditorDisplay() {
+        guard textSession != nil, let viewport else { return }
+        if let content = textContent, content != textEditorContent || viewport.zoom != textEditorZoom {
+            styleTextEditor(with: content)
+        } else {
+            layoutTextEditor()
+        }
+    }
+
+    private func commitTextSession() {
+        guard let session = textSession, let editor = textEditor else { return }
+        let string = editor.string
+        let maxWidth = max((viewport?.documentSize.width ?? .greatestFiniteMagnitude) - session.origin.x, 20)
+        teardownTextSession()
+        onTextCommit(session.layerID, session.origin, string, maxWidth)
+    }
+
+    private func cancelTextSession() {
+        guard textSession != nil else { return }
+        teardownTextSession()
+        onTextCancel()
+    }
+
+    private func teardownTextSession() {
+        textSession = nil
+        textEditorContent = nil
+        textEditorZoom = 0
+        guard let editor = textEditor else { return }
+        textEditor = nil
+        if let responder = window?.firstResponder as? NSView, responder.isDescendant(of: editor) {
+            window?.makeFirstResponder(self)
+        }
+        editor.removeFromSuperview()
+    }
+
     private func viewRect(forDocRect r: CGRect, in viewport: Viewport) -> CGRect {
         let topLeft = viewport.viewPoint(fromDocument: r.origin)
         return CGRect(x: topLeft.x, y: topLeft.y,
                       width: r.width * viewport.zoom, height: r.height * viewport.zoom)
+    }
+}
+
+extension CanvasNSView: NSTextViewDelegate {
+    func textDidChange(_ notification: Notification) {
+        layoutTextEditor()
+    }
+
+    func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        // Esc abandons the draft (a re-edited layer reappears unchanged).
+        // NSTextView routes Esc to completion in some states, so catch both.
+        if commandSelector == #selector(NSResponder.cancelOperation(_:))
+            || commandSelector == #selector(NSTextView.complete(_:)) {
+            cancelTextSession()
+            return true
+        }
+        return false
     }
 }
