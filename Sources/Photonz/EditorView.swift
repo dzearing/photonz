@@ -41,8 +41,10 @@ struct EditorView: View {
         if appState.document != nil {
             CanvasView(image: appState.renderedImage,
                        viewport: appState.viewport,
+                       selection: appState.selection,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
-                       onViewportChange: { appState.setViewport($0) })
+                       onViewportChange: { appState.setViewport($0) },
+                       onSelectionChange: { appState.setSelection($0) })
         } else {
             emptyState
         }

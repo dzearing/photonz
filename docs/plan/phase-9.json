@@ -1,7 +1,7 @@
 {
   "phase": 9,
   "title": "Screenshot capture & history (user request 2026-06-12, preempts remaining phase-2 tasks)",
-  "status": "in_progress",
+  "status": "done",
   "goal": "Photonz becomes the screenshot tool: ⌘⇧4 grabs a rectangle, ⌘⇧3 captures the full screen, ⌘⇧H toggles a history carousel (copy / edit per capture).",
   "constraints": [
     "macOS intercepts ⌘⇧3/⌘⇧4 system-wide while the system Screenshots shortcuts are enabled; Photonz registers Carbon global hotkeys that take over once the user disables the system ones (Settings → Keyboard → Keyboard Shortcuts → Screenshots). The Capture menu carries the same shortcuts for discoverability.",

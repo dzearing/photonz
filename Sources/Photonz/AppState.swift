@@ -22,6 +22,8 @@ final class AppState {
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
     private(set) var viewport: Viewport?
+    /// Marquee selection in document coordinates (pixel-aligned). Nil = no selection.
+    private(set) var selection: CGRect?
     /// Last known canvas view size, so a document opened before/after the first
     /// layout pass can still be fit correctly.
     private var canvasViewSize: CGSize = .zero
@@ -43,6 +45,7 @@ final class AppState {
         let ref = store.register(image)
         history = History(document: .withBaseImage(ref))
         viewport = .fit(documentSize: ref.pixelSize, in: canvasViewSize)
+        selection = nil
         rerender()
     }
 
@@ -62,6 +65,11 @@ final class AppState {
     /// Gesture-driven camera updates from the canvas (already clamped by Viewport).
     func setViewport(_ vp: Viewport) {
         viewport = vp
+    }
+
+    /// Marquee result from the canvas (document coords, already pixel-aligned).
+    func setSelection(_ rect: CGRect?) {
+        selection = rect
     }
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }
@@ -99,12 +107,15 @@ final class AppState {
         guard let document = history?.current else {
             renderedImage = nil
             viewport = nil
+            selection = nil
             return
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
         if var vp = viewport, vp.documentSize != document.canvasSize {
             vp.documentSize = document.canvasSize
             viewport = vp.clamped()
+            // A selection from the old canvas no longer means anything reliable.
+            selection = nil
         }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
