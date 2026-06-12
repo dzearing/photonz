@@ -36,6 +36,9 @@ struct PhotonzApp: App {
                 Button("Resize Image…") { appState.isResizeDialogPresented = true }
                     .keyboardShortcut("i", modifiers: [.command, .option])
                     .disabled(appState.document == nil)
+                Button("Canvas Size…") { appState.isCanvasSizeDialogPresented = true }
+                    .keyboardShortcut("c", modifiers: [.command, .option])
+                    .disabled(appState.document == nil)
             }
             CommandGroup(after: .undoRedo) {
                 Button("Undo") { appState.undo() }

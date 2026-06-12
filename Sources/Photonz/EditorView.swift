@@ -40,6 +40,11 @@ struct EditorView: View {
                 ResizeDialog(originalSize: document.canvasSize)
             }
         }
+        .sheet(isPresented: $appState.isCanvasSizeDialogPresented) {
+            if let document = appState.document {
+                CanvasSizeDialog(originalSize: document.canvasSize)
+            }
+        }
     }
 
     @ViewBuilder

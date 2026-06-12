@@ -2,6 +2,17 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 4 complete: crop mode, resize dialog, per-layer crop, rotate/skew, canvas size
+
+- **4.1 Crop mode**: `Crop` + `CropAspect` (PhotonzCore). C enters crop with a full-canvas rect (or the marquee selection); handles resize aspect-locked and canvas-clamped, inside drags move, outside drags define fresh rects; ⏎/double-click commits pixel-aligned (one undo step), ⎋ cancels drag → mode. Chrome: even-odd dim, thirds grid, white border + 9pt handles. Toolbar grows aspect capsules + ✓/✕ in crop mode (`.fixedSize()` on the labels or SwiftUI collapses them in a tight toolbar).
+- **4.2 Resize dialog**: `ResizeModel` (px/% conversion, aspect lock, presets, whole-pixel target). Sheet via toolbar button or Image ▸ Resize Image… (⌥⌘I). Number fields need `.grouping(.never)`.
+- **4.3 Per-layer crop**: `Layer.cropContent(to:)` maps a canvas sub-rect through the frame→content scale into `layer.crop` (composes with existing) and shrinks the frame — kept pixels stay put (renderer pixel-tested). Image layers only. Entering crop with a selected image layer confines the rect/dim to that layer's frame; `Crop` geometry generalized to CGRect bounds.
+- **4.4 Rotate/skew**: `TransformDrag` — knob rotation (⇧ snaps 15°), ⌥-corner skew where the corner exactly follows the pointer (counter-rotated delta, tan-additive). Chrome draws the transformed polygon; handle hit-testing inverse-maps the pointer; sprite preview applies the delta transform via CALayer bounds/position + `setAffineTransform` (never `frame` under a transform) with a post-commit hold. **Known limit**: sprites bake the start transform, so a heavily pre-rotated layer's sprite can clip at its padding box mid-drag (commit renders fine) — phase-7 polish.
+- **4.5 Canvas size**: `CanvasAnchor` (3×3) + `PhotonzDocument.setCanvasSize` — shifts layers by Δ·anchor, never scales, keeps out-of-bounds layers. Sheet with anchor-grid picker, Image ▸ Canvas Size… (⌥⌘C). `Text("\(Int)")` locale-formats (1,200) — use `Text(verbatim:)`.
+- 275 tests green. End-to-end verified with the in-process harness at `/tmp/photonz-crop-harness` (96 checks across T1–T20: NSEvent drags, pixel-checked dim/border/grid/crop/rotation, real `screencapture` of both sheets, undo round-trips, PNGs reviewed). Test gotcha: `#expect(optional == 4.0/3.0)` misreports with bare literal division — compare typed constants.
+- **Needs user verification**: crop/rotate/skew feel (cursors are still plain crosshair/arrow — resize/rotate cursors are a phase-7 item), Esc-in-popover routing unchanged from 3.3.
+- **Next**: Phase 5 zoom callout — 5.1 rasterizer (placement/leader math already tested in Geometry), then source outline + leader lines, tool UX, inspector, liveness.
+
 ## 2026-06-12 — Phase 3.6 (auto-contrast text shadow) → PHASE 3 COMPLETE
 
 - `RGBA.relativeLuminance` (Rec. 709 weights on gamma-encoded values) + `TextBuilder.autoContrastShadow(forColorHex:)`: light text → black contour shadow, dark text → white (radius 2, offset (0,1), opacity 0.6). Attached to every new text layer by `TextBuilder.layer`; `commitTextEdit`'s re-edit path re-derives it when the color changes. Renders through the existing silhouette-shadow path — no renderer changes.

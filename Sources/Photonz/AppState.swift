@@ -19,6 +19,7 @@ final class AppState {
     private(set) var renderedImage: CGImage?
     var isImporterPresented = false
     var isResizeDialogPresented = false
+    var isCanvasSizeDialogPresented = false
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -197,6 +198,12 @@ final class AppState {
     /// undo step.
     func resizeDocument(to size: CGSize) {
         perform { $0.resize(to: size) }
+    }
+
+    /// Canvas-size apply: grows/shrinks the canvas around the anchor without
+    /// scaling content, one undo step.
+    func setCanvasSize(to size: CGSize, anchor: CanvasAnchor) {
+        perform { $0.setCanvasSize(size, anchor: anchor) }
     }
 
     /// Completed drag-to-create from the canvas (document coords, ⇧ already

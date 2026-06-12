@@ -1,7 +1,7 @@
 {
   "phase": 5,
   "title": "Zoom callout (signature feature)",
-  "status": "pending",
+  "status": "in_progress",
   "goal": "Select a box → magnified callout with leader lines, fully live and restyleable.",
   "tasks": [
     { "id": "5.1", "title": "ZoomCallout rasterizer: re-render source region at magnification, border+shadow+radius", "status": "pending",

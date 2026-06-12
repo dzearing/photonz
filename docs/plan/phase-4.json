@@ -1,7 +1,7 @@
 {
   "phase": 4,
   "title": "Transform tools: crop UI, resize, skew",
-  "status": "in_progress",
+  "status": "done",
   "tasks": [
     {
       "id": "4.1",
@@ -30,7 +30,8 @@
     {
       "id": "4.5",
       "title": "Canvas-size tool (expand canvas without scaling content, anchor picker)",
-      "status": "pending"
+      "status": "done",
+      "notes": "Core: CanvasAnchor (3×3 grid, unit multipliers) + PhotonzDocument.setCanvasSize (7 tests) — layers shift by Δ·unit, never scale; shrink keeps out-of-bounds layers (unlike crop); ≥1×1 clamp. UI: CanvasSizeDialog sheet (px fields, anchor grid picker, Apply disabled at identity) + Image▸Canvas Size… (⌥⌘C). Text(\"\\(Int)\") locale-formats with grouping commas — use Text(verbatim:). Verified in /tmp/photonz-crop-harness T20."
     }
   ]
 }
