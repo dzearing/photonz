@@ -4,9 +4,10 @@
   "status": "in_progress",
   "goal": "Select a box → magnified callout with leader lines, fully live and restyleable.",
   "tasks": [
-    { "id": "5.1", "title": "ZoomCallout rasterizer: re-render source region at magnification, border+shadow+radius", "status": "pending",
-      "notes": "Placement/leader math already in Geometry (zoomCalloutPlacement, leaderLines) with tests." },
-    { "id": "5.2", "title": "Source-region outline + leader lines drawn in matching style", "status": "pending" },
+    { "id": "5.1", "title": "ZoomCallout rasterizer: re-render source region at magnification, border+shadow+radius", "status": "done",
+      "notes": "DocumentRenderer.ciImage now takes the composite-so-far as `backdrop`; .zoomCallout crops it to sourceRect (clamped to canvas, <1pt → skipped) and the existing scale-to-frame step provides magnification, so border/shadow/radius come free from LayerStyle. Callout sees only layers BELOW it. Liveness (5.5) falls out of this design — pixel-tested in ZoomCalloutRenderingTests.sourcePixelChangeReRendersInCallout. Gotcha: renderSprite() builds a single-layer doc, so a dragged callout sprite renders empty — 5.3 must handle drag preview differently (e.g. include backdrop layers or pre-render)." },
+    { "id": "5.2", "title": "Source-region outline + leader lines drawn in matching style", "status": "done",
+      "notes": "ZoomCalloutOverlayRasterizer (PhotonzRender) draws source outline + leader lines in canvas space (CG, top-left coords, returns image+origin); DocumentRenderer composites it beneath the callout box inside the layer loop. Outline: border color/width (1pt hairline floor when borderWidth=0), radius = style.cornerRadius/magnification so both boxes read as the same shape. Leaders: full outline width at 0.6 alpha (half-width was sub-pixel-invisible); endpoints from Geometry.leaderLines attach at frame corners, so caps peek over rounded corners — accepted, matches other tools." },
     { "id": "5.3", "title": "Tool UX: drag box → callout appears animated into place; drag callout to reposition (leader lines follow)", "status": "pending" },
     { "id": "5.4", "title": "Inspector: magnification slider, border color/width, shape (rect/circle)", "status": "pending" },
     { "id": "5.5", "title": "Liveness: callout re-renders when source pixels change beneath it", "status": "pending" }

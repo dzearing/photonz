@@ -25,7 +25,20 @@ public final class DocumentRenderer: @unchecked Sendable {
         var output = CIImage(color: .clear).cropped(to: extent)
 
         for layer in document.layers where layer.isVisible {
-            guard let layerImage = ciImage(for: layer, in: document, store: store) else { continue }
+            guard let layerImage = ciImage(for: layer, in: document, store: store, backdrop: output) else { continue }
+            // Zoom callouts carry canvas-space chrome (source outline + leader
+            // lines) that lives outside the layer frame; composite it beneath
+            // the magnified box.
+            if case .zoomCallout(let callout) = layer.content,
+               let overlay = ZoomCalloutOverlayRasterizer.rasterize(
+                   source: callout.sourceRect.standardized.intersection(extent),
+                   callout: layer.frame, style: layer.style, magnification: callout.magnification) {
+                let height = CGFloat(overlay.image.height)
+                let positioned = CIImage(cgImage: overlay.image)
+                    .transformed(by: CGAffineTransform(translationX: overlay.origin.x,
+                                                       y: canvas.height - overlay.origin.y - height))
+                output = positioned.composited(over: output).cropped(to: extent)
+            }
             output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: extent)
         }
 
@@ -57,7 +70,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         return render(doc, store: store)
     }
 
-    private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore) -> CIImage? {
+    /// `backdrop` is the composite of all visible layers below this one —
+    /// zoom callouts magnify a region of it, which is what keeps them live:
+    /// they reference the canvas, never a baked copy.
+    private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore,
+                         backdrop: CIImage) -> CIImage? {
         var image: CIImage
         switch layer.content {
         case .image(let ref):
@@ -70,9 +87,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         case .annotation(let annotation):
             guard let cg = AnnotationRasterizer.rasterize(annotation, size: layer.frame.size) else { return nil }
             image = CIImage(cgImage: cg)
-        case .zoomCallout:
-            // Zoom-callout rasterization arrives in phase 5.
-            return nil
+        case .zoomCallout(let callout):
+            let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+            let source = callout.sourceRect.standardized.intersection(canvasRect)
+            guard !source.isNull, source.width >= 1, source.height >= 1 else { return nil }
+            let flipped = CGRect(x: source.origin.x,
+                                 y: document.canvasSize.height - source.maxY,
+                                 width: source.width, height: source.height)
+            image = backdrop.cropped(to: flipped)
+                .transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
         }
 
         // Layer-local crop.
