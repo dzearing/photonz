@@ -11,6 +11,17 @@ jobs:
   release:
     name: Build, package & publish
     runs-on: macos-26
+    env:
+      # True once the Apple Developer secrets are configured; every signing/
+      # notarization step keys off this so the pipeline still works (ad-hoc)
+      # without them. Required secrets:
+      #   APPLE_SIGNING_IDENTITY      "Developer ID Application: Name (TEAMID)"
+      #   APPLE_CERTIFICATE_P12       base64 of the .p12 (cert + private key)
+      #   APPLE_CERTIFICATE_PASSWORD  password for the .p12
+      #   APPLE_ID                    Apple ID email for notarytool
+      #   APPLE_TEAM_ID               10-char team id
+      #   APPLE_APP_PASSWORD          app-specific password for notarytool
+      HAVE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +37,43 @@ jobs:
       - name: Run tests
         run: Scripts/test.sh
 
+      - name: Import Developer ID certificate
+        if: env.HAVE_SIGNING == 'true'
+        env:
+          CERT_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$CERT_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" > /dev/null
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain
+          rm "$RUNNER_TEMP/cert.p12"
+
       - name: Build app + DMG
+        env:
+          # Empty when unsigned: build-app.sh falls back to ad-hoc signing.
+          CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: Scripts/build-app.sh --dmg
+
+      - name: Notarize & staple
+        if: env.HAVE_SIGNING == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          xcrun notarytool submit dist/Photonz.dmg \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" --wait
+          xcrun stapler staple dist/Photonz.dmg
+          xcrun stapler validate dist/Photonz.dmg
 
       - name: Extract release notes from CHANGELOG
         run: |

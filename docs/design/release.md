@@ -28,11 +28,27 @@ Always via the `release` skill (`.claude/skills/release/SKILL.md`). Summary: ver
 main + green tests → bump `VERSION`, `CHANGELOG.md`, `site/version.json` → commit, tag
 `vX.Y.Z`, push → watch `release.yml` → verify the DMG asset and the live site.
 
-## Signing status
+## Signing & notarization
 
-Ad-hoc codesigned for now (no Developer ID). Users must right-click → Open on first launch;
-the website says so. Developer ID signing + notarization is a Phase 7 task (requires an
-Apple Developer account secret in the repo).
+`release.yml` signs and notarizes automatically **when the Apple Developer secrets are
+configured**, and falls back to ad-hoc signing when they are not (users then right-click →
+Open on first launch; the website says so).
+
+To enable Developer ID releases, add these repo secrets (Settings → Secrets → Actions):
+
+| Secret | Value |
+| --- | --- |
+| `APPLE_SIGNING_IDENTITY` | `Developer ID Application: Name (TEAMID)` — gates everything: empty means ad-hoc |
+| `APPLE_CERTIFICATE_P12` | base64 of the exported .p12 (`base64 -i cert.p12 \| pbcopy`) |
+| `APPLE_CERTIFICATE_PASSWORD` | the .p12 password |
+| `APPLE_ID` | Apple ID email used with notarytool |
+| `APPLE_TEAM_ID` | 10-character team id |
+| `APPLE_APP_PASSWORD` | app-specific password (appleid.apple.com → App-Specific Passwords) |
+
+Flow: import cert into a throwaway keychain → `build-app.sh --dmg` with
+`CODESIGN_IDENTITY` (hardened runtime + timestamp) → `notarytool submit --wait` on the
+DMG → `stapler staple`. Locally, `CODESIGN_IDENTITY="Developer ID Application: …"
+Scripts/build-app.sh` signs the same way if the identity is in your keychain.
 
 ## Future: Windows
 

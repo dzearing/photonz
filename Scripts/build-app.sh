@@ -86,8 +86,16 @@ if [[ -f Resources/AppIcon.icns ]]; then
   cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 fi
 
-echo "==> Codesigning (ad-hoc)"
-codesign --force --deep --sign - "$APP"
+# Developer ID signing when CODESIGN_IDENTITY is set (CI with secrets, or a
+# local Developer ID install); ad-hoc otherwise. Hardened runtime + secure
+# timestamp are notarization requirements.
+if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
+  echo "==> Codesigning (Developer ID)"
+  codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
+else
+  echo "==> Codesigning (ad-hoc)"
+  codesign --force --deep --sign - "$APP"
+fi
 
 if [[ "${1:-}" == "--dmg" ]]; then
   echo "==> Creating dist/Photonz.dmg"
