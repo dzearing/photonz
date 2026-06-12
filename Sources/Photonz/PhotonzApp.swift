@@ -13,6 +13,23 @@ struct PhotonzApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Photonz") {
+                    let credits = NSMutableAttributedString(
+                        string: "Fast photo & screenshot editing for the Mac.\n",
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                            .foregroundColor: NSColor.secondaryLabelColor,
+                        ])
+                    credits.append(NSAttributedString(
+                        string: "dzearing.github.io/photonz",
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                            .link: URL(string: "https://dzearing.github.io/photonz/")!,
+                        ]))
+                    NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+                }
+            }
             CommandGroup(after: .newItem) {
                 Button("Open…") { appState.isImporterPresented = true }
                     .keyboardShortcut("o", modifiers: .command)

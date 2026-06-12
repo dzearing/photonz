@@ -33,6 +33,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>LSMinimumSystemVersion</key><string>26.0</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.photography</string>
+    <key>NSHumanReadableCopyright</key><string>Copyright © 2026 David Zearing. MIT License.</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
     <key>CFBundleDocumentTypes</key>

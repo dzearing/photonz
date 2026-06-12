@@ -116,17 +116,55 @@ struct EditorView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "photo.badge.plus")
-                .font(.system(size: 56, weight: .light))
-                .foregroundStyle(.secondary)
-            Text("Drop a photo or screenshot here")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-            Text("or press ⌘O to open a file")
-                .font(.callout)
-                .foregroundStyle(.tertiary)
+        VStack(spacing: 28) {
+            VStack(spacing: 12) {
+                Image(systemName: "photo.badge.plus")
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundStyle(.secondary)
+                Text("Drop a photo or screenshot here")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+            GlassEffectContainer {
+                VStack(alignment: .leading, spacing: 2) {
+                    onboardingRow("folder", "Open a file", "⌘O") {
+                        appState.isImporterPresented = true
+                    }
+                    onboardingRow("rectangle.dashed", "Capture a rectangle", "⇧⌘4") {
+                        appState.capture.beginRectCapture()
+                    }
+                    onboardingRow("doc.on.clipboard", "Paste an image", "⌘V") {
+                        appState.paste()
+                    }
+                }
+                .padding(8)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            }
         }
+    }
+
+    /// One actionable hint in the onboarding card: icon, label, shortcut.
+    private func onboardingRow(_ symbol: String, _ title: String, _ shortcut: String,
+                               action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22)
+                Text(title)
+                    .font(.callout)
+                Spacer(minLength: 24)
+                Text(shortcut)
+                    .font(.callout.monospaced())
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(width: 260)
+            .contentShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.borderless)
     }
 
     private var toolbar: some View {
