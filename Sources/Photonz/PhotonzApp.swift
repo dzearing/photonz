@@ -40,6 +40,27 @@ struct PhotonzApp: App {
                     .keyboardShortcut("c", modifiers: [.command, .option])
                     .disabled(appState.document == nil)
             }
+            // Copy/paste target layers — except while an inline text editor
+            // (or any text field) has focus, where they must keep meaning
+            // "copy/paste text", so the actions forward to the field editor.
+            CommandGroup(replacing: .pasteboard) {
+                Button("Copy") {
+                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
+                        textView.copy(nil)
+                    } else {
+                        appState.copySelectedLayer()
+                    }
+                }
+                .keyboardShortcut("c", modifiers: .command)
+                Button("Paste") {
+                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
+                        textView.paste(nil)
+                    } else {
+                        appState.paste()
+                    }
+                }
+                .keyboardShortcut("v", modifiers: .command)
+            }
             CommandGroup(after: .undoRedo) {
                 Button("Undo") { appState.undo() }
                     .keyboardShortcut("z", modifiers: .command)

@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Observation
 import PhotonzCore
@@ -571,6 +572,72 @@ final class AppState {
         perform { focusID = $0.blurBehind(selection: region, rasterized: ref).focus.id }
         selection = nil
         selectedLayerID = focusID
+    }
+
+    // MARK: - Clipboard
+
+    /// ⌘C with a layer selected: the layer's model JSON (plus its bitmap for
+    /// image layers — ImageRefs only mean something in this window's store)
+    /// goes on the pasteboard under a Photonz-private type.
+    func copySelectedLayer() {
+        guard let id = selectedLayerID, let layer = document?.layer(id: id) else { return }
+        var imageData: Data?
+        if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
+            imageData = ImageCodec.encode(cg, format: .png)
+        }
+        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: imageData)) else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+    }
+
+    /// ⌘V: a copied Photonz layer pastes offset with a fresh identity; any
+    /// system image (screenshot, copied web image) pastes as a new layer —
+    /// or opens as a document when none is open.
+    func paste() {
+        let pasteboard = NSPasteboard.general
+        if let data = pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)),
+           let transfer = try? JSONDecoder().decode(LayerTransfer.self, from: data) {
+            pasteLayer(transfer)
+            return
+        }
+        if let image = NSImage(pasteboard: pasteboard)?
+            .cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            pasteImage(image)
+        }
+    }
+
+    private func pasteLayer(_ transfer: LayerTransfer) {
+        var layer = transfer.layer.duplicated(offsetBy: CGPoint(x: 16, y: 16))
+        layer.name = transfer.layer.name
+        if case .image = transfer.layer.content {
+            guard let data = transfer.imageData, let cg = ImageCodec.decode(data) else { return }
+            // The payload's ImageRef belonged to the source window's store.
+            layer.content = .image(store.register(cg))
+        }
+        if document == nil, case .image(let ref) = layer.content,
+           let cg = store.image(for: ref) {
+            openCapture(cg)
+            return
+        }
+        guard document != nil else { return }
+        discardDragPreview()
+        perform { [layer] in $0.addLayer(layer) }
+        selectedLayerID = layer.id
+    }
+
+    private func pasteImage(_ image: CGImage) {
+        guard let document else {
+            openCapture(image)
+            return
+        }
+        let ref = store.register(image)
+        let frame = PastePlacement.frame(forImageOf: ref.pixelSize, canvas: document.canvasSize)
+        guard !frame.isEmpty else { return }
+        let layer = Layer(name: "Pasted Image", content: .image(ref), frame: frame)
+        discardDragPreview()
+        perform { $0.addLayer(layer) }
+        selectedLayerID = layer.id
     }
 
     // MARK: - Layer selection & move
