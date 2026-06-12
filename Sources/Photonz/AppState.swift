@@ -24,6 +24,11 @@ final class AppState {
     private(set) var viewport: Viewport?
     /// Marquee selection in document coordinates (pixel-aligned). Nil = no selection.
     private(set) var selection: CGRect?
+    /// The layer targeted by click-to-select / drag-to-move. Nil = none.
+    private(set) var selectedLayerID: UUID?
+    /// Frame override while a move drag is in flight — rendered as a preview,
+    /// committed to history only on mouse-up.
+    private var previewMove: (id: UUID, frame: CGRect)?
     /// Last known canvas view size, so a document opened before/after the first
     /// layout pass can still be fit correctly.
     private var canvasViewSize: CGSize = .zero
@@ -46,6 +51,8 @@ final class AppState {
         history = History(document: .withBaseImage(ref))
         viewport = .fit(documentSize: ref.pixelSize, in: canvasViewSize)
         selection = nil
+        selectedLayerID = nil
+        previewMove = nil
         rerender()
     }
 
@@ -70,6 +77,37 @@ final class AppState {
     /// Marquee result from the canvas (document coords, already pixel-aligned).
     func setSelection(_ rect: CGRect?) {
         selection = rect
+    }
+
+    // MARK: - Layer selection & move
+
+    /// The selected layer's frame (preview-aware), for the canvas outline.
+    var selectedLayerFrame: CGRect? {
+        guard let id = selectedLayerID else { return nil }
+        if let previewMove, previewMove.id == id { return previewMove.frame }
+        return document?.layer(id: id)?.frame
+    }
+
+    func selectLayer(_ id: UUID?) {
+        selectedLayerID = id
+    }
+
+    /// Live drag update: renders the moved layer without touching history.
+    func previewLayerMove(id: UUID, origin: CGPoint) {
+        guard var doc = document, let layer = doc.layer(id: id) else { return }
+        var frame = layer.frame
+        frame.origin = origin
+        previewMove = (id, frame)
+        doc.updateLayer(id: id) { $0.frame = frame }
+        submit(doc)
+    }
+
+    /// Mouse-up: one undoable step from the pre-drag position to the final one.
+    /// Committing back to the original origin is a recognized no-op (History
+    /// skips it), which is how an Esc-cancelled drag restores the real render.
+    func commitLayerMove(id: UUID, origin: CGPoint) {
+        previewMove = nil
+        perform { $0.updateLayer(id: id) { $0.frame.origin = origin } }
     }
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }
@@ -108,6 +146,8 @@ final class AppState {
             renderedImage = nil
             viewport = nil
             selection = nil
+            selectedLayerID = nil
+            previewMove = nil
             return
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
@@ -117,6 +157,15 @@ final class AppState {
             // A selection from the old canvas no longer means anything reliable.
             selection = nil
         }
+        // Undo can remove the selected layer out from under us.
+        if let id = selectedLayerID, document.layer(id: id) == nil {
+            selectedLayerID = nil
+        }
+        submit(document)
+    }
+
+    /// Hands a document (committed or move-preview) to the render scheduler.
+    private func submit(_ document: PhotonzDocument) {
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in
                 await MainActor.run {

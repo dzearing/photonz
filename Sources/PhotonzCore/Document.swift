@@ -14,9 +14,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     }
 
     /// A new document built around a base image, which becomes the bottom layer.
+    /// The background is born locked (Photoshop convention): clicks on it fall
+    /// through to the marquee instead of dragging the whole image around.
     public static func withBaseImage(_ ref: ImageRef) -> PhotonzDocument {
         let layer = Layer(name: "Background", content: .image(ref),
-                          frame: CGRect(origin: .zero, size: ref.pixelSize))
+                          frame: CGRect(origin: .zero, size: ref.pixelSize),
+                          isLocked: true)
         return PhotonzDocument(canvasSize: ref.pixelSize, layers: [layer])
     }
 
@@ -28,6 +31,14 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     public func index(of id: UUID) -> Int? {
         layers.firstIndex { $0.id == id }
+    }
+
+    /// The topmost editable layer under a canvas point. Top-down order;
+    /// invisible and locked layers never hit.
+    public func hitTest(_ point: CGPoint) -> Layer? {
+        layers.reversed().first { layer in
+            layer.isVisible && !layer.isLocked && layer.contains(canvasPoint: point)
+        }
     }
 
     // MARK: - Layer mutation

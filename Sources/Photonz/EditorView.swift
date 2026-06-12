@@ -41,10 +41,15 @@ struct EditorView: View {
         if appState.document != nil {
             CanvasView(image: appState.renderedImage,
                        viewport: appState.viewport,
+                       document: appState.document,
                        selection: appState.selection,
+                       selectedLayerFrame: appState.selectedLayerFrame,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
-                       onSelectionChange: { appState.setSelection($0) })
+                       onSelectionChange: { appState.setSelection($0) },
+                       onSelectLayer: { appState.selectLayer($0) },
+                       onMovePreview: { appState.previewLayerMove(id: $0, origin: $1) },
+                       onMoveCommit: { appState.commitLayerMove(id: $0, origin: $1) })
         } else {
             emptyState
         }

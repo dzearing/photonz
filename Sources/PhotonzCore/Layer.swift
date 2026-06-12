@@ -142,4 +142,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.isVisible = isVisible
         self.isLocked = isLocked
     }
+
+    /// Whether a canvas-space point lands on this layer's transformed shape.
+    /// The layer's render-time transform is applied around the frame center,
+    /// so hit-testing inverts it and tests against the untransformed frame.
+    public func contains(canvasPoint point: CGPoint) -> Bool {
+        guard !transform.isIdentity else { return frame.contains(point) }
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+        let inverse = transform.affineTransform(around: center).inverted()
+        return frame.contains(point.applying(inverse))
+    }
 }
