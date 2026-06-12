@@ -1,9 +1,9 @@
 {
   "phase": 7,
   "title": "Polish: liquid glass everywhere, animations, signing, perf pass",
-  "status": "pending",
+  "status": "in_progress",
   "tasks": [
-    { "id": "7.1", "title": "Liquid glass audit: toolbar, panels, popovers in GlassEffectContainer; dark/light tuned", "status": "pending" },
+    { "id": "7.1", "title": "Liquid glass audit: toolbar, panels, popovers in GlassEffectContainer; dark/light tuned", "status": "done", "notes": "Glass clusters (toolbar, history panel, layers panel) each wrapped in a tight GlassEffectContainer. Canvas surround is now appearance-adaptive (underPageBackgroundColor) instead of forced black; fixed pre-existing empty-state bug where the ZStack hugged the toolbar width and painted a visible background column. Style popover now uses the system popover chrome (killed the phase-3 halo); width dots sit on a faint quaternary track ring; white swatch rings became .primary.opacity for light mode. Verified with real-app screenshots in dark+light (NSRequiresAquaSystemAppearance toggle) and the /tmp/photonz-style-harness showcase rebuilt against current sources." },
     { "id": "7.2", "title": "Micro-animations: tool transitions, layer add/remove, callout placement spring", "status": "pending" },
     { "id": "7.3", "title": "App icon refinement + About panel + onboarding empty-state", "status": "pending" },
     { "id": "7.4", "title": "Perf pass against budget (16ms/12MP/10 layers); dirty-rect rendering if needed", "status": "pending" },

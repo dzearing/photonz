@@ -90,7 +90,7 @@ private struct CaptureCell: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.15)))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.primary.opacity(0.15)))
         } else {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.quaternary)

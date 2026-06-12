@@ -1,3 +1,4 @@
+import AppKit
 import PhotonzCore
 import SwiftUI
 import UniformTypeIdentifiers
@@ -12,25 +13,37 @@ struct EditorView: View {
             canvas
             VStack {
                 if appState.capture.isHistoryVisible {
-                    HistoryPanel()
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                    GlassEffectContainer {
+                        HistoryPanel()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 Spacer()
-                toolbar
-                    .padding(.bottom, 16)
+                GlassEffectContainer {
+                    toolbar
+                }
+                .padding(.bottom, 16)
             }
             .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
         }
         .overlay(alignment: .topTrailing) {
             if appState.document != nil, appState.isLayersPanelVisible {
-                LayersPanel()
-                    .padding(.top, 16)
-                    .padding(.trailing, 16)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                GlassEffectContainer {
+                    LayersPanel()
+                }
+                .padding(.top, 16)
+                .padding(.trailing, 16)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .animation(.spring(duration: 0.3), value: appState.isLayersPanelVisible)
-        .background(.black.opacity(0.85))
+        // Fill the window even in the empty state — the ZStack otherwise hugs
+        // the toolbar's width and the background paints as a visible column
+        // against the window's own background.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Canvas surround adapts to the system appearance (Preview-style):
+        // near-black in dark mode, light gray in light mode.
+        .background(Color(nsColor: .underPageBackgroundColor))
         .fileImporter(isPresented: $appState.isImporterPresented,
                       allowedContentTypes: [.image, AppState.photonzType]) { result in
             if case .success(let url) = result {
@@ -254,7 +267,7 @@ struct EditorView: View {
             Circle()
                 .fill(Color(hex: activeToolColorHex))
                 .frame(width: 16, height: 16)
-                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
                 .frame(width: 28, height: 28)
         }
         .help(appState.activeTool == .text ? "Text Style (S)" : "Annotation Style (S)")
@@ -287,9 +300,10 @@ struct EditorView: View {
         }
         .padding(16)
         .buttonStyle(.plain)
-        .presentationBackground(.clear)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
-        .padding(8)
+        // The system popover chrome is already glass on macOS 26. Drawing our
+        // own glass rect inside a cleared presentation background left a light
+        // halo (the popover bezel) around the inner rect — let the system
+        // material carry the surface instead.
     }
 
     /// Magnification + shape controls for the selected zoom callout. Color and
@@ -385,7 +399,7 @@ struct EditorView: View {
             Circle()
                 .fill(Color(hex: hex))
                 .frame(width: 22, height: 22)
-                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
                 .overlay {
                     if isSelected {
                         Circle().strokeBorder(Color.accentColor, lineWidth: 2)
@@ -410,6 +424,8 @@ struct EditorView: View {
                 .fill(.primary)
                 .frame(width: width + 4, height: width + 4)
                 .frame(width: 24, height: 24)
+                // Faint track ring so small unselected dots stay legible.
+                .background(Circle().fill(.quaternary).padding(2))
                 .overlay {
                     if isSelected {
                         Circle().strokeBorder(Color.accentColor, lineWidth: 2)
