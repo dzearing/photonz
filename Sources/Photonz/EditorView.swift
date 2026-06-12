@@ -10,10 +10,15 @@ struct EditorView: View {
         ZStack {
             canvas
             VStack {
+                if appState.capture.isHistoryVisible {
+                    HistoryPanel()
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
                 Spacer()
                 toolbar
                     .padding(.bottom, 16)
             }
+            .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
         }
         .background(.black.opacity(0.85))
         .fileImporter(isPresented: $appState.isImporterPresented,
@@ -33,15 +38,11 @@ struct EditorView: View {
 
     @ViewBuilder
     private var canvas: some View {
-        if let image = appState.renderedImage {
-            ScrollView([.horizontal, .vertical]) {
-                Image(decorative: image, scale: 1)
-                    .resizable()
-                    .frame(width: CGFloat(image.width) * appState.zoom,
-                           height: CGFloat(image.height) * appState.zoom)
-                    .shadow(radius: 24)
-                    .padding(48)
-            }
+        if appState.document != nil {
+            CanvasView(image: appState.renderedImage,
+                       viewport: appState.viewport,
+                       onViewSizeChange: { appState.canvasViewSizeChanged($0) },
+                       onViewportChange: { appState.setViewport($0) })
         } else {
             emptyState
         }
@@ -70,7 +71,7 @@ struct EditorView: View {
             toolButton("plus.magnifyingglass", "Zoom Callout")
             Divider().frame(height: 20)
             Button {
-                appState.zoom = max(0.1, appState.zoom / 1.25)
+                appState.zoomOut()
             } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
@@ -79,7 +80,7 @@ struct EditorView: View {
                 .font(.callout.monospacedDigit())
                 .frame(width: 48)
             Button {
-                appState.zoom = min(16, appState.zoom * 1.25)
+                appState.zoomIn()
             } label: {
                 Image(systemName: "plus.magnifyingglass")
             }

@@ -1,0 +1,25 @@
+{
+  "phase": 9,
+  "title": "Screenshot capture & history (user request 2026-06-12, preempts remaining phase-2 tasks)",
+  "status": "in_progress",
+  "goal": "Photonz becomes the screenshot tool: ⌘⇧4 grabs a rectangle, ⌘⇧3 captures the full screen, ⌘⇧H toggles a history carousel (copy / edit per capture).",
+  "constraints": [
+    "macOS intercepts ⌘⇧3/⌘⇧4 system-wide while the system Screenshots shortcuts are enabled; Photonz registers Carbon global hotkeys that take over once the user disables the system ones (Settings → Keyboard → Keyboard Shortcuts → Screenshots). The Capture menu carries the same shortcuts for discoverability.",
+    "Screen capture needs the Screen Recording permission (TCC); CaptureCenter prompts and the history panel shows a hint with a deep link to Privacy settings."
+  ],
+  "tasks": [
+    { "id": "9.1", "title": "CaptureHistory core model (ordering, cap, pruning) — TDD", "status": "done",
+      "notes": "PhotonzCore/CaptureHistory.swift: CaptureEntry (id/createdAt/fileName) + CaptureHistory (newest-first, limit 50, add returns pruned entries, remove returns the entry so callers delete files). 6 tests." },
+    { "id": "9.2", "title": "ScreenCapturer: SCScreenshotManager full-screen + rect capture, permission flow", "status": "done",
+      "notes": "Capture/ScreenCapturer.swift. sourceRect is screen-local top-left points (matches flipped overlay view coords). captureAllScreens = one image per display (system ⌘⇧3 behavior). Permission via CGPreflight/CGRequestScreenCaptureAccess." },
+    { "id": "9.3", "title": "Rect-selection overlay window (crosshair drag, Esc cancels)", "status": "done",
+      "notes": "Capture/RectSelection.swift: borderless .screenSaver-level window per screen (canBecomeKey override for Esc), flipped view dims 25% and punches out the drag rect. Overlay dismissed + 60ms sleep before sampling so it's gone from the window server." },
+    { "id": "9.4", "title": "Global hotkeys ⌘⇧3/⌘⇧4/⌘⇧H (Carbon RegisterEventHotKey) + menu equivalents", "status": "done",
+      "notes": "Capture/HotkeyCenter.swift (C-callback trampoline, MainActor.assumeIsolated — Carbon app-target events arrive on main). All three registrations verified status==noErr on this machine. Capture menu in PhotonzApp mirrors the shortcuts." },
+    { "id": "9.5", "title": "CaptureStore: persist PNGs to Application Support, load on launch", "status": "done",
+      "notes": "Capture/CaptureStore.swift: PNGs + index.json in ~/Library/Application Support/Photonz/Captures (directory injectable for tests). Verified headlessly: add/reload/remove/pasteboard round-trip all green." },
+    { "id": "9.6", "title": "History carousel panel (⌘⇧H): thumbnails with copy + edit actions", "status": "done",
+      "notes": "HistoryPanel.swift: glass panel slides from top of EditorView, LazyHStack carousel, copy (doc.on.doc) + edit (pencil) under each thumbnail; edit opens via AppState.openCapture. Hosts the Screen Recording permission hint." }
+  ],
+  "verification_pending": "End-to-end capture needs the user to grant Screen Recording to Photonz.app (system prompts on first use) and, for global ⌘⇧3/⌘⇧4, to disable the system Screenshots shortcuts. Everything testable without TCC permission is verified."
+}
