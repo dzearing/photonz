@@ -32,6 +32,11 @@ struct PhotonzApp: App {
                 }
                 .keyboardShortcut("h", modifiers: [.command, .shift])
             }
+            CommandMenu("Image") {
+                Button("Resize Image…") { appState.isResizeDialogPresented = true }
+                    .keyboardShortcut("i", modifiers: [.command, .option])
+                    .disabled(appState.document == nil)
+            }
             CommandGroup(after: .undoRedo) {
                 Button("Undo") { appState.undo() }
                     .keyboardShortcut("z", modifiers: .command)

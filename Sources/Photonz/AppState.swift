@@ -18,6 +18,7 @@ final class AppState {
     /// (latest-wins: rapid edits coalesce instead of queueing renders).
     private(set) var renderedImage: CGImage?
     var isImporterPresented = false
+    var isResizeDialogPresented = false
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -155,6 +156,12 @@ final class AppState {
     /// ⎋ or the toolbar ✕: discard the pending rect.
     func cancelCrop() {
         setTool(.select)
+    }
+
+    /// Resize-dialog apply: scales the canvas and every layer frame in one
+    /// undo step.
+    func resizeDocument(to size: CGSize) {
+        perform { $0.resize(to: size) }
     }
 
     /// Completed drag-to-create from the canvas (document coords, ⇧ already

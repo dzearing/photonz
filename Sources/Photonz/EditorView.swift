@@ -35,6 +35,11 @@ struct EditorView: View {
             appState.openImage(at: url)
             return true
         }
+        .sheet(isPresented: $appState.isResizeDialogPresented) {
+            if let document = appState.document {
+                ResizeDialog(originalSize: document.canvasSize)
+            }
+        }
     }
 
     @ViewBuilder
@@ -104,6 +109,15 @@ struct EditorView: View {
             if appState.activeTool == .crop {
                 cropOptions
             }
+            Button {
+                appState.isResizeDialogPresented = true
+            } label: {
+                Image(systemName: "arrow.down.right.and.arrow.up.left.rectangle")
+                    .font(.system(size: 15, weight: .medium))
+                    .frame(width: 28, height: 28)
+            }
+            .disabled(appState.document == nil)
+            .help("Resize Image (⌥⌘I)")
             placeholderButton("plus.magnifyingglass", "Zoom Callout (phase 5)")
             Divider().frame(height: 20)
             Button {

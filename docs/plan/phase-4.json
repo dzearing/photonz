@@ -12,7 +12,8 @@
     {
       "id": "4.2",
       "title": "Resize dialog: px/percent, aspect lock, presets, Retina @2x\u2192@1x",
-      "status": "pending"
+      "status": "done",
+      "notes": "Core: ResizeModel (PhotonzCore, 14 tests) \u2014 px/% units with field conversion, aspect lock (re-lock snaps height to width), applyPercent presets, whole-pixel targetSize \u22651\u00d71, isValid/isIdentity. UI: ResizeDialog.swift sheet (segmented px/%, lock toggle, Presets menu incl. Retina @2x\u2192@1x = 50%, live result line, Resize disabled when invalid/identity); toolbar button + Image\u25b8Resize Image\u2026 (\u2325\u2318I). AppState.resizeDocument wraps document.resize in one undo step. Number fields use .grouping(.never) \u2014 default format showed '1,200'. Verified in /tmp/photonz-crop-harness T14/T15 (sheet via real screencapture; cacheDisplay misses SwiftUI sheet content)."
     },
     {
       "id": "4.3",
