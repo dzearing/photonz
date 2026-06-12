@@ -10,13 +10,14 @@ struct CanvasView: NSViewRepresentable {
     let viewport: Viewport?
     let document: PhotonzDocument?
     let selection: CGRect?
+    let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
     let onSelectLayer: (UUID?) -> Void
-    let onMovePreview: (UUID, CGPoint) -> Void
-    let onMoveCommit: (UUID, CGPoint) -> Void
+    let onFramePreview: (UUID, CGRect) -> Void
+    let onFrameCommit: (UUID, CGRect) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -27,7 +28,8 @@ struct CanvasView: NSViewRepresentable {
     func updateNSView(_ view: CanvasNSView, context: Context) {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
-                   selection: selection, selectedLayerFrame: selectedLayerFrame)
+                   selection: selection, selectedLayerID: selectedLayerID,
+                   selectedLayerFrame: selectedLayerFrame)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -35,8 +37,8 @@ struct CanvasView: NSViewRepresentable {
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
         view.onSelectLayer = onSelectLayer
-        view.onMovePreview = onMovePreview
-        view.onMoveCommit = onMoveCommit
+        view.onFramePreview = onFramePreview
+        view.onFrameCommit = onFrameCommit
     }
 }
 
@@ -45,8 +47,8 @@ final class CanvasNSView: NSView {
     var onViewportChange: ((Viewport) -> Void) = { _ in }
     var onSelectionChange: ((CGRect?) -> Void) = { _ in }
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
-    var onMovePreview: ((UUID, CGPoint) -> Void) = { _, _ in }
-    var onMoveCommit: ((UUID, CGPoint) -> Void) = { _, _ in }
+    var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
 
     private let contentLayer = CALayer()
     /// Marching ants: a solid white stroke underneath…
@@ -55,6 +57,8 @@ final class CanvasNSView: NSView {
     private let selectionAntsLayer = CAShapeLayer()
     /// Accent outline around the selected layer.
     private let layerOutlineLayer = CAShapeLayer()
+    /// The eight resize handles on the selected layer's outline.
+    private let handlesLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
     private var lastReportedSize: CGSize = .zero
@@ -67,6 +71,8 @@ final class CanvasNSView: NSView {
     private var document: PhotonzDocument?
     /// Committed marquee selection in document coordinates.
     private var selection: CGRect?
+    /// Selected layer (committed state, echoed from AppState).
+    private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
     /// In-progress marquee (document coordinates). While set, it is what the
@@ -87,6 +93,15 @@ final class CanvasNSView: NSView {
     }
     private var moveDrag: MoveDrag?
 
+    /// In-progress handle resize.
+    private struct ResizeDrag {
+        let layerID: UUID
+        let handle: ResizeHandle
+        let startFrame: CGRect
+        var frame: CGRect
+    }
+    private var resizeDrag: ResizeDrag?
+
     // Viewport math is top-left origin; flipping makes view coords match.
     override var isFlipped: Bool { true }
 
@@ -103,7 +118,7 @@ final class CanvasNSView: NSView {
         contentLayer.shadowOffset = .zero
         layer?.addSublayer(contentLayer)
 
-        for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer] {
+        for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
@@ -122,6 +137,8 @@ final class CanvasNSView: NSView {
         layerOutlineLayer.strokeColor = NSColor.controlAccentColor.cgColor
         layerOutlineLayer.lineWidth = 2
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
+        handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
     }
 
     @available(*, unavailable)
@@ -143,6 +160,13 @@ final class CanvasNSView: NSView {
         guard let viewport else { return }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        // Handles take priority: they extend past the layer's own frame.
+        if let id = selectedLayerID, let frame = selectedLayerFrame,
+           let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
+            resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+            refreshOverlays()
+            return
+        }
         if let hit = document?.hitTest(p) {
             onSelectLayer(hit.id)
             selectedLayerFrame = hit.frame
@@ -165,7 +189,13 @@ final class CanvasNSView: NSView {
     override func mouseDragged(with event: NSEvent) {
         guard let viewport else { return }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
-        if var drag = moveDrag {
+        if var drag = resizeDrag {
+            drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle, to: p,
+                                        preserveAspect: event.modifierFlags.contains(.shift))
+            resizeDrag = drag
+            onFramePreview(drag.layerID, drag.frame)
+            refreshOverlays()
+        } else if var drag = moveDrag {
             let proposed = CGPoint(x: p.x - drag.grabOffset.x, y: p.y - drag.grabOffset.y)
             if !drag.moved {
                 let travel = hypot(proposed.x - drag.startOrigin.x, proposed.y - drag.startOrigin.y)
@@ -175,7 +205,7 @@ final class CanvasNSView: NSView {
                 drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
                                                         canvas: viewport.documentSize,
                                                         zoom: viewport.zoom)
-                onMovePreview(drag.layerID, drag.snapped.origin)
+                onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
             }
             moveDrag = drag
             refreshOverlays()
@@ -188,11 +218,19 @@ final class CanvasNSView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport else { return }
-        if let drag = moveDrag {
+        if let drag = resizeDrag {
+            resizeDrag = nil
+            if drag.frame != drag.startFrame {
+                selectedLayerFrame = drag.frame
+                onFrameCommit(drag.layerID, drag.frame)
+            }
+            refreshOverlays()
+        } else if let drag = moveDrag {
             moveDrag = nil
             if drag.moved {
-                selectedLayerFrame = CGRect(origin: drag.snapped.origin, size: drag.size)
-                onMoveCommit(drag.layerID, drag.snapped.origin)
+                let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
+                selectedLayerFrame = frame
+                onFrameCommit(drag.layerID, frame)
             }
             refreshOverlays()
         } else if let drag = marquee {
@@ -209,11 +247,19 @@ final class CanvasNSView: NSView {
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer
+            if let drag = resizeDrag {
+                resizeDrag = nil
+                selectedLayerFrame = drag.startFrame
+                // Committing the start frame is a History no-op but resets the preview render.
+                onFrameCommit(drag.layerID, drag.startFrame)
+                refreshOverlays()
+                return
+            }
             if let drag = moveDrag {
                 moveDrag = nil
-                selectedLayerFrame = CGRect(origin: drag.startOrigin, size: drag.size)
-                // Committing the start origin is a History no-op but resets the preview render.
-                onMoveCommit(drag.layerID, drag.startOrigin)
+                let frame = CGRect(origin: drag.startOrigin, size: drag.size)
+                selectedLayerFrame = frame
+                onFrameCommit(drag.layerID, frame)
                 refreshOverlays()
                 return
             }
@@ -269,24 +315,25 @@ final class CanvasNSView: NSView {
     }
 
     private func commit(_ next: Viewport) {
-        apply(image: image, viewport: next, document: document,
-              selection: selection, selectedLayerFrame: selectedLayerFrame)
+        apply(image: image, viewport: next, document: document, selection: selection,
+              selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame)
         onViewportChange(next)
     }
 
     // MARK: Display
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: CGRect?, selectedLayerFrame: CGRect?) {
+               selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?) {
         self.image = image
         self.viewport = viewport
         self.document = document
+        self.selectedLayerID = selectedLayerID
         // While the user is mid-drag the local state is the truth; don't let an
         // unrelated SwiftUI update echo stale committed values over it.
         if marquee == nil {
             self.selection = selection
         }
-        if moveDrag == nil {
+        if moveDrag == nil, resizeDrag == nil {
             self.selectedLayerFrame = selectedLayerFrame
         }
 
@@ -300,6 +347,7 @@ final class CanvasNSView: NSView {
             selectionAntsLayer.isHidden = true
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
+            handlesLayer.isHidden = true
             return
         }
         contentLayer.isHidden = false
@@ -347,7 +395,9 @@ final class CanvasNSView: NSView {
 
     private func refreshLayerSelectionDisplay() {
         let frame: CGRect?
-        if let moveDrag {
+        if let resizeDrag {
+            frame = resizeDrag.frame
+        } else if let moveDrag {
             frame = CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
         } else {
             frame = selectedLayerFrame
@@ -355,10 +405,25 @@ final class CanvasNSView: NSView {
         guard let viewport, let frame else {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
+            handlesLayer.isHidden = true
             return
         }
-        layerOutlineLayer.path = CGPath(rect: viewRect(forDocRect: frame, in: viewport), transform: nil)
+        let outlineRect = viewRect(forDocRect: frame, in: viewport)
+        layerOutlineLayer.path = CGPath(rect: outlineRect, transform: nil)
         layerOutlineLayer.isHidden = false
+
+        // Handles: 8pt squares in view space, hidden while a drag is in flight.
+        if moveDrag == nil, resizeDrag == nil {
+            let handles = CGMutablePath()
+            for handle in ResizeHandle.allCases {
+                let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: frame))
+                handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+            }
+            handlesLayer.path = handles
+            handlesLayer.isHidden = false
+        } else {
+            handlesLayer.isHidden = true
+        }
 
         // Guides span the whole document so the alignment target is obvious.
         let guides = CGMutablePath()

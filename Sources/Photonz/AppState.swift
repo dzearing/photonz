@@ -92,22 +92,21 @@ final class AppState {
         selectedLayerID = id
     }
 
-    /// Live drag update: renders the moved layer without touching history.
-    func previewLayerMove(id: UUID, origin: CGPoint) {
-        guard var doc = document, let layer = doc.layer(id: id) else { return }
-        var frame = layer.frame
-        frame.origin = origin
+    /// Live drag update (move or resize): renders the new frame without
+    /// touching history.
+    func previewLayerFrame(id: UUID, frame: CGRect) {
+        guard var doc = document, doc.layer(id: id) != nil else { return }
         previewMove = (id, frame)
         doc.updateLayer(id: id) { $0.frame = frame }
         submit(doc)
     }
 
-    /// Mouse-up: one undoable step from the pre-drag position to the final one.
-    /// Committing back to the original origin is a recognized no-op (History
+    /// Mouse-up: one undoable step from the pre-drag frame to the final one.
+    /// Committing back to the original frame is a recognized no-op (History
     /// skips it), which is how an Esc-cancelled drag restores the real render.
-    func commitLayerMove(id: UUID, origin: CGPoint) {
+    func commitLayerFrame(id: UUID, frame: CGRect) {
         previewMove = nil
-        perform { $0.updateLayer(id: id) { $0.frame.origin = origin } }
+        perform { $0.updateLayer(id: id) { $0.frame = frame } }
     }
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }

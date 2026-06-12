@@ -43,13 +43,14 @@ struct EditorView: View {
                        viewport: appState.viewport,
                        document: appState.document,
                        selection: appState.selection,
+                       selectedLayerID: appState.selectedLayerID,
                        selectedLayerFrame: appState.selectedLayerFrame,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
                        onSelectLayer: { appState.selectLayer($0) },
-                       onMovePreview: { appState.previewLayerMove(id: $0, origin: $1) },
-                       onMoveCommit: { appState.commitLayerMove(id: $0, origin: $1) })
+                       onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
+                       onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) })
         } else {
             emptyState
         }
