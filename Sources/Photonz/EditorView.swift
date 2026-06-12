@@ -46,13 +46,16 @@ struct EditorView: View {
                        selectedLayerID: appState.selectedLayerID,
                        selectedLayerFrame: appState.selectedLayerFrame,
                        dragPreview: appState.dragPreview,
+                       tool: appState.activeTool,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
                        onSelectLayer: { appState.selectLayer($0) },
                        onDragBegin: { appState.beginLayerDrag(id: $0) },
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
-                       onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) })
+                       onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) },
+                       onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
+                       onToolChange: { appState.setTool($0) })
         } else {
             emptyState
         }
@@ -74,11 +77,16 @@ struct EditorView: View {
 
     private var toolbar: some View {
         HStack(spacing: 14) {
-            toolButton("crop", "Crop")
-            toolButton("arrow.up.right", "Arrow")
-            toolButton("rectangle", "Rectangle")
-            toolButton("character.cursor.ibeam", "Text")
-            toolButton("plus.magnifyingglass", "Zoom Callout")
+            toolButton(.select, "cursorarrow", "Select", "v")
+            toolButton(.arrow, "arrow.up.right", "Arrow", "a")
+            toolButton(.line, "line.diagonal", "Line", "l")
+            toolButton(.rectangle, "rectangle", "Rectangle", "r")
+            toolButton(.ellipse, "circle", "Ellipse", "o")
+            toolButton(.highlight, "highlighter", "Highlight", "h")
+            Divider().frame(height: 20)
+            placeholderButton("crop", "Crop (phase 4)")
+            placeholderButton("character.cursor.ibeam", "Text (3.4)")
+            placeholderButton("plus.magnifyingglass", "Zoom Callout (phase 5)")
             Divider().frame(height: 20)
             Button {
                 appState.zoomOut()
@@ -102,13 +110,34 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    private func toolButton(_ symbol: String, _ help: String) -> some View {
-        Button {
-            // Tools land in Phases 2–5; the shell ships first.
+    private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,
+                            _ key: KeyEquivalent) -> some View {
+        let isActive = appState.activeTool == tool
+        return Button {
+            appState.setTool(tool)
         } label: {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(isActive ? Color.white : Color.primary)
+                .frame(width: 28, height: 28)
+                .background {
+                    if isActive {
+                        Circle().fill(Color.accentColor)
+                    }
+                }
         }
+        .help("\(help) (\(String(describing: key.character).uppercased()))")
+        .keyboardShortcut(key, modifiers: [])
+    }
+
+    /// Inert buttons for tools that land in later tasks/phases.
+    private func placeholderButton(_ symbol: String, _ help: String) -> some View {
+        Button {} label: {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .medium))
+                .frame(width: 28, height: 28)
+        }
+        .disabled(true)
         .help(help)
     }
 }

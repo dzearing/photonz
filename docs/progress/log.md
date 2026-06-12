@@ -2,6 +2,14 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 3.1/3.2: tool state machine + drag-to-create annotations
+
+- **3.1 Tools**: `Tool` enum in `PhotonzCore/Tools.swift` with `annotationShape` mapping and `defaultAnnotation` smart defaults (red #FF3B30 strokes, yellow #FFD60A highlight — front-loads part of 3.6). `AppState.activeTool` + `setTool` (clears marquee/layer selection on entering a drawing tool); sticky annotation tools, Esc reverts to select. Toolbar: select/arrow/line/rect/ellipse/highlight with V/A/L/R/O/H shortcuts and accent-circle active state; crop/text/zoom-callout disabled placeholders.
+- **3.2 Drag-to-create**: `AnnotationDrag` (⇧ = 45° snap for line/arrow, square for box shapes — shape-aware, a flat ⇧-rect can't collapse) + `AnnotationBuilder` (frame = bbox + `renderPadding`; `Geometry.arrowheadHalfWidth` shared with the rasterizer so wing padding can't drift). Canvas draws the in-flight drag as CAShapeLayers (fill-only arrowhead sublayer; multiply filter for highlight), and **holds the preview after commit until a different composite CGImage arrives** so the ~50ms async re-render never shows a flash.
+- 157 tests green (16 new core tests). Canvas behavior verified with an ad-hoc headless harness (compiles `CanvasView.swift` against the built module .o files, synthesizes NSEvent drags, pixel-asserts previews/commits, PNGs reviewed): 32 checks incl. Esc cancel, sticky tool, marquee regression, click-creates-nothing.
+- **Known gap for 3.5**: resizing an annotation layer via handles doesn't remap `start`/`end` — the drawing distorts/clips. 3.5 must scale endpoints with the frame.
+- **Next**: 3.3 style popover (color/stroke width on the selected annotation) or 3.4 text blocks.
+
 ## 2026-06-12 — Phase 2 complete: marquee, layer select/move/resize, drag preview pipeline
 
 - **2.3 Marquee**: `MarqueeDrag` (core, 13 tests) — standardize/⇧-square/canvas-clamp, zoom-aware click detection, `Geometry.pixelAligned` commits. Marching ants = white CAShapeLayer under animated black dashes; selection lives in AppState (doc coords), survives zoom/pan, Esc/click clears.

@@ -70,6 +70,12 @@ public enum Geometry {
         return CGRect(origin: origin, size: target)
     }
 
+    /// How far an arrowhead's wings reach from the arrow's axis. Layer frames
+    /// must pad by at least this much or rasterization clips the head.
+    public static func arrowheadHalfWidth(strokeWidth: CGFloat) -> CGFloat {
+        max(strokeWidth * 3.5, 8) * 0.4
+    }
+
     /// The filled triangle for an arrow's head: `[tip, leftWing, rightWing]`.
     /// The tip sits exactly at `end`; the wings sit behind it, perpendicular to
     /// the arrow's axis. Sized proportionally to `strokeWidth`.
@@ -80,7 +86,7 @@ public enum Geometry {
         guard length > 0 else { return [end, end, end] }
 
         let headLength = max(strokeWidth * 3.5, 8)
-        let halfWidth = headLength * 0.4
+        let halfWidth = arrowheadHalfWidth(strokeWidth: strokeWidth)
         let ux = dx / length
         let uy = dy / length
         let base = CGPoint(x: end.x - ux * headLength, y: end.y - uy * headLength)

@@ -24,6 +24,9 @@ final class AppState {
     private(set) var viewport: Viewport?
     /// Marquee selection in document coordinates (pixel-aligned). Nil = no selection.
     private(set) var selection: CGRect?
+    /// The active editor tool. Annotation tools are sticky: each drag creates
+    /// another layer until the user returns to `.select` (Esc or V).
+    private(set) var activeTool: Tool = .select
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     private(set) var selectedLayerID: UUID?
     /// Frame override while a move drag is in flight — rendered as a preview,
@@ -62,6 +65,7 @@ final class AppState {
         viewport = .fit(documentSize: ref.pixelSize, in: canvasViewSize)
         selection = nil
         selectedLayerID = nil
+        activeTool = .select
         previewMove = nil
         dragPreview = nil
         dragPreviewGeneration += 1
@@ -89,6 +93,27 @@ final class AppState {
     /// Marquee result from the canvas (document coords, already pixel-aligned).
     func setSelection(_ rect: CGRect?) {
         selection = rect
+    }
+
+    // MARK: - Tools
+
+    func setTool(_ tool: Tool) {
+        guard activeTool != tool else { return }
+        activeTool = tool
+        // Drawing tools own the pointer; select-mode chrome (marquee ants,
+        // layer handles) would read as interactive when it isn't.
+        if tool != .select {
+            selection = nil
+            selectedLayerID = nil
+        }
+    }
+
+    /// Completed drag-to-create from the canvas (document coords, ⇧ already
+    /// applied). Adds one annotation layer as a single undo step.
+    func addAnnotation(from start: CGPoint, to end: CGPoint) {
+        guard let content = activeTool.defaultAnnotation else { return }
+        let layer = AnnotationBuilder.layer(content: content, from: start, to: end)
+        perform { $0.addLayer(layer) }
     }
 
     // MARK: - Layer selection & move

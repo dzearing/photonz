@@ -27,6 +27,7 @@ struct CanvasView: NSViewRepresentable {
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
     let dragPreview: DragPreview?
+    let tool: Tool
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
@@ -34,6 +35,8 @@ struct CanvasView: NSViewRepresentable {
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
+    let onAnnotationCommit: (CGPoint, CGPoint) -> Void
+    let onToolChange: (Tool) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -45,7 +48,8 @@ struct CanvasView: NSViewRepresentable {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, selectedLayerID: selectedLayerID,
-                   selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview)
+                   selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
+                   tool: tool)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -56,6 +60,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
+        view.onAnnotationCommit = onAnnotationCommit
+        view.onToolChange = onToolChange
     }
 }
 
@@ -67,6 +73,8 @@ final class CanvasNSView: NSView {
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onToolChange: ((Tool) -> Void) = { _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -82,6 +90,11 @@ final class CanvasNSView: NSView {
     private let handlesLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
+    /// Live preview of an in-progress drag-to-create annotation.
+    private let annotationPreviewLayer = CAShapeLayer()
+    /// Arrowheads are filled but never stroked (matching the rasterizer), so
+    /// they need their own shape layer under the stroked shaft.
+    private let annotationPreviewHeadLayer = CAShapeLayer()
     private var lastReportedSize: CGSize = .zero
     /// The viewport currently on screen. Gesture handlers mutate from this and
     /// apply locally before notifying, so panning/zooming never waits a runloop
@@ -102,6 +115,15 @@ final class CanvasNSView: NSView {
     /// In-progress marquee (document coordinates). While set, it is what the
     /// ants display — same zero-latency-echo pattern as pan/zoom.
     private var marquee: MarqueeDrag?
+    /// The active tool, echoed from AppState. Annotation tools reroute the
+    /// pointer from hit-test/marquee into drag-to-create.
+    private var tool: Tool = .select
+    /// In-progress drag-to-create (document coordinates).
+    private var annotationDrag: AnnotationDrag?
+    /// The composite that was on screen when an annotation was committed. The
+    /// preview shape stays up until a *different* image arrives, so the new
+    /// annotation doesn't flash out while the re-render is in flight.
+    private var annotationCommitImage: CGImage?
 
     /// In-progress layer move.
     private struct MoveDrag {
@@ -146,6 +168,14 @@ final class CanvasNSView: NSView {
         previewSpriteLayer.isHidden = true
         layer?.addSublayer(previewSpriteLayer)
 
+        annotationPreviewLayer.isHidden = true
+        annotationPreviewLayer.lineCap = .round
+        annotationPreviewLayer.lineJoin = .round
+        annotationPreviewLayer.fillColor = nil
+        annotationPreviewHeadLayer.strokeColor = nil
+        annotationPreviewLayer.addSublayer(annotationPreviewHeadLayer)
+        layer?.addSublayer(annotationPreviewLayer)
+
         for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
@@ -188,6 +218,12 @@ final class CanvasNSView: NSView {
         guard let viewport else { return }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        // Drawing tools own the pointer: every drag creates a new annotation.
+        if tool.createsAnnotationByDrag {
+            annotationDrag = AnnotationDrag(anchor: p)
+            refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+            return
+        }
         // Handles take priority: they extend past the layer's own frame.
         if let id = selectedLayerID, let frame = selectedLayerFrame,
            let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
@@ -219,7 +255,11 @@ final class CanvasNSView: NSView {
     override func mouseDragged(with event: NSEvent) {
         guard let viewport else { return }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
-        if var drag = resizeDrag {
+        if var drag = annotationDrag {
+            drag.update(to: p)
+            annotationDrag = drag
+            refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+        } else if var drag = resizeDrag {
             drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle, to: p,
                                         preserveAspect: event.modifierFlags.contains(.shift))
             resizeDrag = drag
@@ -248,7 +288,19 @@ final class CanvasNSView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport else { return }
-        if let drag = resizeDrag {
+        if let drag = annotationDrag {
+            annotationDrag = nil
+            if drag.isClick(atZoom: viewport.zoom) {
+                clearAnnotationPreview()
+            } else {
+                // Leave the preview shape up until the re-rendered composite
+                // (which includes the new layer) lands — no flash.
+                annotationCommitImage = image
+                let shape = tool.annotationShape ?? .line
+                onAnnotationCommit(drag.anchor,
+                                   drag.end(constrained: event.modifierFlags.contains(.shift), shape: shape))
+            }
+        } else if let drag = resizeDrag {
             resizeDrag = nil
             if drag.frame != drag.startFrame {
                 selectedLayerFrame = drag.frame
@@ -276,7 +328,12 @@ final class CanvasNSView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer
+        if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
+            if annotationDrag != nil {
+                annotationDrag = nil
+                clearAnnotationPreview()
+                return
+            }
             if let drag = resizeDrag {
                 resizeDrag = nil
                 selectedLayerFrame = drag.startFrame
@@ -302,6 +359,10 @@ final class CanvasNSView: NSView {
                 selectedLayerFrame = nil
                 onSelectLayer(nil)
                 refreshOverlays()
+                return
+            }
+            if tool != .select {
+                onToolChange(.select)
                 return
             }
         }
@@ -347,7 +408,7 @@ final class CanvasNSView: NSView {
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
-              dragPreview: dragPreview)
+              dragPreview: dragPreview, tool: tool)
         onViewportChange(next)
     }
 
@@ -355,7 +416,19 @@ final class CanvasNSView: NSView {
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
-               dragPreview: DragPreview?) {
+               dragPreview: DragPreview?, tool: Tool) {
+        if tool != self.tool {
+            self.tool = tool
+            // A tool switch mid-drag abandons the draft annotation.
+            annotationDrag = nil
+            clearAnnotationPreview()
+            window?.invalidateCursorRects(for: self)
+        }
+        // The post-commit composite (a different image) now includes the new
+        // annotation layer; the held preview shape can come down.
+        if annotationCommitImage != nil, image !== annotationCommitImage {
+            clearAnnotationPreview()
+        }
         self.image = image
         self.viewport = viewport
         self.document = document
@@ -382,6 +455,7 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
+            annotationPreviewLayer.isHidden = true
             return
         }
         contentLayer.isHidden = false
@@ -511,6 +585,85 @@ final class CanvasNSView: NSView {
         }
         snapGuideLayer.path = guides
         snapGuideLayer.isHidden = guides.isEmpty
+    }
+
+    // MARK: Annotation drag preview
+
+    override func resetCursorRects() {
+        if tool.createsAnnotationByDrag {
+            addCursorRect(bounds, cursor: .crosshair)
+        }
+    }
+
+    private func clearAnnotationPreview() {
+        annotationCommitImage = nil
+        annotationPreviewLayer.isHidden = true
+        annotationPreviewLayer.path = nil
+        annotationPreviewHeadLayer.path = nil
+    }
+
+    /// Draws the in-flight annotation as vector shapes in view coordinates —
+    /// faithful to the rasterizer so the held preview swaps invisibly for the
+    /// real composite after commit.
+    private func refreshAnnotationPreview(constrained: Bool) {
+        guard let viewport, let drag = annotationDrag, let content = tool.defaultAnnotation else {
+            clearAnnotationPreview()
+            return
+        }
+        let docEnd = drag.end(constrained: constrained, shape: content.shape)
+        let start = viewport.viewPoint(fromDocument: drag.anchor)
+        let end = viewport.viewPoint(fromDocument: docEnd)
+        let strokeWidth = content.strokeWidth * viewport.zoom
+        let rgba = RGBA(hex: content.colorHex) ?? RGBA(r: 1, g: 0, b: 0)
+        let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                         width: abs(end.x - start.x), height: abs(end.y - start.y))
+
+        let path = CGMutablePath()
+        let headPath = CGMutablePath()
+        var fill: CGColor?
+        var stroke: CGColor? = color
+        var compositing: Any?
+        switch content.shape {
+        case .line:
+            path.move(to: start)
+            path.addLine(to: end)
+        case .arrow:
+            path.move(to: start)
+            path.addLine(to: end)
+            // Head geometry in document space (its minimum size is in doc
+            // points), then mapped to view coords.
+            let head = Geometry.arrowhead(start: drag.anchor, end: docEnd,
+                                          strokeWidth: content.strokeWidth)
+            headPath.addLines(between: head.map { viewport.viewPoint(fromDocument: $0) })
+            headPath.closeSubpath()
+        case .rectangle, .ellipse:
+            let inset = box.insetBy(dx: strokeWidth / 2, dy: strokeWidth / 2)
+            if inset.width > 0, inset.height > 0 {
+                if content.shape == .rectangle {
+                    path.addRect(inset)
+                } else {
+                    path.addEllipse(in: inset)
+                }
+            }
+        case .highlight:
+            path.addRect(box)
+            fill = color
+            stroke = nil
+            compositing = "multiplyBlendMode"
+        }
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        annotationPreviewLayer.path = path
+        annotationPreviewLayer.strokeColor = stroke
+        annotationPreviewLayer.fillColor = fill
+        annotationPreviewLayer.lineWidth = strokeWidth
+        annotationPreviewLayer.compositingFilter = compositing
+        annotationPreviewHeadLayer.path = headPath
+        annotationPreviewHeadLayer.fillColor = color
+        annotationPreviewLayer.isHidden = false
+        CATransaction.commit()
     }
 
     private func viewRect(forDocRect r: CGRect, in viewport: Viewport) -> CGRect {
