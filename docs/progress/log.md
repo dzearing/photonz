@@ -2,6 +2,19 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 6 complete: layers UX (panel, effects, clipboard, persistence, export)
+
+- All 7 tasks done, TDD for every core/render piece; 335 tests green (was 318). Six commits, one per task (6.5+codec shared).
+- **Layers panel** (`LayersPanel.swift`): glass panel top-right, rows top-down via `Document.moveLayers(visualSources:visualDestination:)` (SwiftUI onMove semantics mapped onto the reversed layer stack). Thumbnails = full sprite render + CG downscale, cached by `layer.hashValue`. ⌥⌘L toggles.
+- **Gesture-undo pattern**: AppState `stylePreview` mirrors the move-drag pattern — sliders submit render-only documents while dragging, one `History.perform` on release. The effects inspector (opacity/blur/corner/border/shadow) rides it.
+- **Promote & blur-behind**: `DocumentRenderer.rasterize(region:)` (render + CGImage.cropping, shared top-left origin). `Document.blurBehind` stacks ONE full-canvas raster twice: blurred backdrop layer + sharp focus layer via `cropContent(to: selection)` — both non-destructive. ⌘J / ⇧⌘B.
+- **Clipboard**: `LayerTransfer` (layer JSON + PNG bytes, type com.photonz.layer); Edit-menu Copy/Paste forward to a focused NSTextView first so inline text editing keeps system behavior. System-image paste lands centered/aspect-fit (`PastePlacement`); with no document open it becomes the document.
+- **Persistence**: `PackageIO` — .photonz package = document.json + images/<ref-uuid>.heic, atomic temp-stage + replaceItemAt, refs re-registered under original ids (`ImageStore.register(_:as:)`). UTI com.photonz.document exported in build-app.sh plist only — dev `swift build` runs lack it.
+- **Export**: `render(_:store:scale:)` Lanczos-scales the assembled composite GPU-side (render() refactored into compositeImage + readback; perf test unchanged ~49ms median). ExportDialog ⌘E, ⇧⌘C copies PNG+TIFF.
+- Also fixed: `.onOpenURL` was missing entirely — Finder double-click/`open -a` did nothing. Verified end-to-end via screencapture: doc opens, panel renders.
+- **Next**: Phase 7 (polish: glass everywhere, micro-animations, icon/About, perf pass to 16ms, signing). Perf suspects from phase 1 still in `docs/progress/perf.md`.
+- Open questions: HEIC re-encode per save is lossy-on-lossy (quality 0.95) — consider PNG fallback for layers with alpha-critical content; both windows of the WindowGroup share one AppState (single-document app in practice).
+
 ## 2026-06-12 — Phase 5 complete: zoom callout (signature feature)
 
 - All 5 tasks done; 308 tests green (was 283). Four commits: rendering (5.1–5.2), tool UX (5.3), inspector (5.4); liveness (5.5) fell out of 5.1's design.
