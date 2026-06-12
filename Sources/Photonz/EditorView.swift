@@ -21,6 +21,15 @@ struct EditorView: View {
             }
             .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
         }
+        .overlay(alignment: .topTrailing) {
+            if appState.document != nil, appState.isLayersPanelVisible {
+                LayersPanel()
+                    .padding(.top, 16)
+                    .padding(.trailing, 16)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.3), value: appState.isLayersPanelVisible)
         .background(.black.opacity(0.85))
         .fileImporter(isPresented: $appState.isImporterPresented,
                       allowedContentTypes: [.image]) { result in

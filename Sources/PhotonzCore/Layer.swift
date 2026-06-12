@@ -203,6 +203,15 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.isLocked = isLocked
     }
 
+    /// A copy with a fresh identity, for duplicate/paste. The frame offset
+    /// keeps the copy from landing invisibly on top of the original.
+    public func duplicated(offsetBy offset: CGPoint = .zero) -> Layer {
+        Layer(name: name + " copy", content: content,
+              frame: frame.offsetBy(dx: offset.x, dy: offset.y),
+              crop: crop, transform: transform, style: style,
+              isVisible: isVisible, isLocked: false)
+    }
+
     /// The blend mode the renderer actually uses: highlight annotations always
     /// multiply so underlying detail shows through; everything else follows
     /// the layer's style.

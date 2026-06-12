@@ -20,6 +20,7 @@ final class AppState {
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
+    var isLayersPanelVisible = true
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -87,6 +88,8 @@ final class AppState {
         previewMove = nil
         dragPreview = nil
         editingTextLayerID = nil
+        stylePreview = nil
+        thumbnailCache = [:]
         dragPreviewGeneration += 1
         rerender()
     }
@@ -428,6 +431,118 @@ final class AppState {
         }
     }
 
+    // MARK: - Layers panel
+
+    /// Style override while an inspector slider drag is in flight — rendered
+    /// as a preview, committed to history only on release (one undo step per
+    /// gesture, same pattern as move/resize drags).
+    private var stylePreview: (id: UUID, style: LayerStyle)?
+    /// Thumbnail cache keyed by layer id; `hash` invalidates on any layer edit.
+    private var thumbnailCache: [UUID: (hash: Int, image: CGImage)] = [:]
+    private var thumbnailsInFlight: Set<Int> = []
+
+    /// Layers in panel order (visual index 0 = topmost).
+    var panelLayers: [Layer] {
+        (document?.layers ?? []).reversed()
+    }
+
+    /// The selected layer's style, preview-aware so inspector sliders don't
+    /// snap back mid-drag.
+    func previewedStyle(of id: UUID) -> LayerStyle? {
+        if let stylePreview, stylePreview.id == id { return stylePreview.style }
+        return document?.layer(id: id)?.style
+    }
+
+    /// Live inspector-slider update: renders the new style without touching
+    /// history. The first preview of a gesture drops any held drag sprite
+    /// (it shows the old style).
+    func previewLayerStyle(id: UUID, _ mutate: (inout LayerStyle) -> Void) {
+        guard var style = previewedStyle(of: id) else { return }
+        if stylePreview?.id != id { discardDragPreview() }
+        mutate(&style)
+        stylePreview = (id, style)
+        guard var doc = document else { return }
+        doc.updateLayer(id: id) { $0.style = style }
+        submit(doc)
+    }
+
+    /// Slider release: one undo step from the pre-gesture style to the last
+    /// previewed one (a no-change release is a History no-op).
+    func commitLayerStyle(id: UUID) {
+        guard let preview = stylePreview, preview.id == id else { return }
+        stylePreview = nil
+        perform { $0.updateLayer(id: id) { $0.style = preview.style } }
+    }
+
+    /// One-shot style edit (steppers, toggles): a single undo step, no preview.
+    func setLayerStyle(id: UUID, _ mutate: @escaping (inout LayerStyle) -> Void) {
+        stylePreview = nil
+        discardDragPreview()
+        perform { $0.updateLayer(id: id) { mutate(&$0.style) } }
+    }
+
+    func toggleLayerVisibility(id: UUID) {
+        discardDragPreview()
+        perform { $0.updateLayer(id: id) { $0.isVisible.toggle() } }
+    }
+
+    func toggleLayerLock(id: UUID) {
+        perform { $0.updateLayer(id: id) { $0.isLocked.toggle() } }
+        if document?.layer(id: id)?.isLocked == true, selectedLayerID == id {
+            selectedLayerID = nil
+        }
+    }
+
+    func renameLayer(id: UUID, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        perform { $0.updateLayer(id: id) { $0.name = trimmed } }
+    }
+
+    func deleteLayer(id: UUID) {
+        discardDragPreview()
+        if selectedLayerID == id { selectedLayerID = nil }
+        perform { $0.removeLayer(id: id) }
+    }
+
+    func duplicateLayer(id: UUID) {
+        discardDragPreview()
+        var copyID: UUID?
+        perform { copyID = $0.duplicateLayer(id: id, offsetBy: CGPoint(x: 16, y: 16))?.id }
+        selectedLayerID = copyID
+    }
+
+    /// Drag-reorder from the layers panel (SwiftUI `onMove` indices, visual
+    /// top-down order). One undo step.
+    func moveLayers(visualSources: IndexSet, visualDestination: Int) {
+        discardDragPreview()
+        perform { $0.moveLayers(visualSources: visualSources, visualDestination: visualDestination) }
+    }
+
+    /// The panel row thumbnail: cached per layer, re-rendered asynchronously
+    /// whenever the layer changes (the hash covers content, frame, and style).
+    func thumbnail(for layer: Layer) -> CGImage? {
+        let hash = layer.hashValue
+        if let cached = thumbnailCache[layer.id], cached.hash == hash { return cached.image }
+        guard let doc = document else { return thumbnailCache[layer.id]?.image }
+        if !thumbnailsInFlight.contains(hash) {
+            let renderer = previewRenderer
+            let store = store
+            let id = layer.id
+            // Defer the in-flight bookkeeping off the view-body read path.
+            Task { @MainActor [weak self] in
+                guard let self, !self.thumbnailsInFlight.contains(hash) else { return }
+                self.thumbnailsInFlight.insert(hash)
+                let image = await Task.detached(priority: .utility) {
+                    renderer.thumbnail(for: id, in: doc, store: store, maxDimension: 80)
+                }.value
+                self.thumbnailsInFlight.remove(hash)
+                if let image { self.thumbnailCache[id] = (hash, image) }
+            }
+        }
+        return thumbnailCache[layer.id]?.image
+    }
+
     // MARK: - Layer selection & move
 
     /// The selected layer's frame (preview-aware), for the canvas outline.
@@ -544,12 +659,14 @@ final class AppState {
 
     func undo() {
         discardDragPreview() // undone edits may invalidate a held sprite
+        stylePreview = nil
         history?.undo()
         rerender()
     }
 
     func redo() {
         discardDragPreview()
+        stylePreview = nil
         history?.redo()
         rerender()
     }
@@ -564,7 +681,14 @@ final class AppState {
             previewMove = nil
             dragPreview = nil
             editingTextLayerID = nil
+            stylePreview = nil
+            thumbnailCache = [:]
             return
+        }
+        // Thumbnails for layers that no longer exist are dead weight.
+        if thumbnailCache.count != document.layers.count {
+            let ids = Set(document.layers.map(\.id))
+            thumbnailCache = thumbnailCache.filter { ids.contains($0.key) }
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
         if var vp = viewport, vp.documentSize != document.canvasSize {

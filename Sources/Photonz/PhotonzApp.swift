@@ -48,8 +48,26 @@ struct PhotonzApp: App {
                     .keyboardShortcut("z", modifiers: [.command, .shift])
                     .disabled(!appState.canRedo)
             }
+            CommandMenu("Layer") {
+                let selectedID = appState.selectedLayerID
+                Button("Duplicate Layer") {
+                    if let selectedID { appState.duplicateLayer(id: selectedID) }
+                }
+                .keyboardShortcut("d", modifiers: .command)
+                .disabled(selectedID == nil)
+                Button("Delete Layer") {
+                    if let selectedID { appState.deleteLayer(id: selectedID) }
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(selectedID == nil)
+            }
             CommandGroup(after: .sidebar) {
                 let hasDocument = appState.document != nil
+                Button(appState.isLayersPanelVisible ? "Hide Layers" : "Show Layers") {
+                    appState.isLayersPanelVisible.toggle()
+                }
+                .keyboardShortcut("l", modifiers: [.command, .option])
+                .disabled(!hasDocument)
                 Button("Zoom In") { appState.zoomIn() }
                     .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
                     .disabled(!hasDocument)

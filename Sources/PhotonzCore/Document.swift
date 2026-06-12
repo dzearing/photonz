@@ -65,6 +65,32 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         mutate(&layers[idx])
     }
 
+    /// Reorders layers from the layers panel, which lists them top-down
+    /// (visual index 0 = topmost = last in `layers`). Source offsets and the
+    /// destination use SwiftUI `onMove` semantics: the destination indexes the
+    /// visual array *before* the moved rows are removed.
+    public mutating func moveLayers(visualSources: IndexSet, visualDestination: Int) {
+        var visual = Array(layers.reversed())
+        let moved = visualSources.compactMap { visual.indices.contains($0) ? visual[$0] : nil }
+        guard !moved.isEmpty else { return }
+        let movedIDs = Set(moved.map(\.id))
+        var destination = visualDestination - visualSources.count { $0 < visualDestination }
+        visual.removeAll { movedIDs.contains($0.id) }
+        destination = min(max(0, destination), visual.count)
+        visual.insert(contentsOf: moved, at: destination)
+        layers = visual.reversed()
+    }
+
+    /// Duplicates a layer directly above the original (panel context menu, ⌘V
+    /// of a copied layer reuses `Layer.duplicated`). Returns the copy.
+    @discardableResult
+    public mutating func duplicateLayer(id: UUID, offsetBy offset: CGPoint = .zero) -> Layer? {
+        guard let idx = index(of: id) else { return nil }
+        let copy = layers[idx].duplicated(offsetBy: offset)
+        layers.insert(copy, at: idx + 1)
+        return copy
+    }
+
     /// Copies a region of the canvas into a new layer placed directly on top
     /// ("promote selection to layer"). The caller supplies the ImageRef for the
     /// rasterized region (rendering lives outside the core model).

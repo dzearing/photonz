@@ -71,6 +71,26 @@ public final class DocumentRenderer: @unchecked Sendable {
         return render(doc, store: store)
     }
 
+    /// One layer rendered alone and downscaled for the layers panel. Renders
+    /// the sprite at full size (so text/annotations rasterize at their true
+    /// layout) and resamples with CoreGraphics. Never upscales.
+    public func thumbnail(for id: UUID, in document: PhotonzDocument, store: ImageStore,
+                          maxDimension: CGFloat) -> CGImage? {
+        guard let sprite = renderSprite(for: id, in: document, store: store, padding: 0) else { return nil }
+        let scale = min(1, maxDimension / CGFloat(max(sprite.width, sprite.height)))
+        guard scale < 1 else { return sprite }
+        let width = max(1, Int((CGFloat(sprite.width) * scale).rounded()))
+        let height = max(1, Int((CGFloat(sprite.height) * scale).rounded()))
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.interpolationQuality = .high
+        context.draw(sprite, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage()
+    }
+
     /// `backdrop` is the composite of all visible layers below this one —
     /// zoom callouts magnify a region of it, which is what keeps them live:
     /// they reference the canvas, never a baked copy.
