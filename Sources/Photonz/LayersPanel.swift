@@ -1,5 +1,18 @@
+import AppKit
 import PhotonzCore
 import SwiftUI
+
+extension Color {
+    /// The document model's hex form of this color (alpha dropped); nil for
+    /// colors outside sRGB.
+    var hexString: String? {
+        guard let c = NSColor(self).usingColorSpace(.sRGB) else { return nil }
+        return String(format: "#%02X%02X%02X",
+                      Int((c.redComponent * 255).rounded()),
+                      Int((c.greenComponent * 255).rounded()),
+                      Int((c.blueComponent * 255).rounded()))
+    }
+}
 
 /// Right-side glass panel listing layers top-down: thumbnails, visibility,
 /// lock, rename (double-click), drag-reorder, and an opacity slider plus
@@ -144,9 +157,65 @@ struct LayerInspector: View {
                         display: "\(Int((style.opacity * 100).rounded()))%") { style, v in
                 style.opacity = v
             }
+            styleSlider("Blur", value: Double(style.blurRadius), in: 0...50,
+                        display: "\(Int(style.blurRadius.rounded())) pt") { style, v in
+                style.blurRadius = CGFloat(v)
+            }
+            styleSlider("Corner Radius", value: Double(style.cornerRadius), in: 0...maxCornerRadius,
+                        display: "\(Int(style.cornerRadius.rounded())) pt") { style, v in
+                style.cornerRadius = CGFloat(v)
+            }
+            HStack(spacing: 8) {
+                styleSlider("Border", value: Double(style.borderWidth), in: 0...20,
+                            display: "\(Int(style.borderWidth.rounded())) pt") { style, v in
+                    style.borderWidth = CGFloat(v)
+                }
+                borderColorPicker
+            }
+            shadowControls
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    /// Corner rounding past half the short edge has no visible effect.
+    private var maxCornerRadius: Double {
+        max(1, Double(min(layer.frame.width, layer.frame.height) / 2))
+    }
+
+    private var borderColorPicker: some View {
+        ColorPicker("Border color", selection: Binding(
+            get: { Color(hex: style.borderColorHex) },
+            set: { color in
+                if let hex = color.hexString {
+                    appState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
+                }
+            }), supportsOpacity: false)
+            .labelsHidden()
+            .controlSize(.small)
+    }
+
+    @ViewBuilder
+    private var shadowControls: some View {
+        Toggle(isOn: Binding(
+            get: { style.shadow != nil },
+            set: { on in
+                appState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
+            })) {
+            Text("Shadow").font(.caption).foregroundStyle(.secondary)
+        }
+        .toggleStyle(.switch)
+        .controlSize(.mini)
+        if let shadow = style.shadow {
+            styleSlider("Shadow Blur", value: Double(shadow.radius), in: 0...40,
+                        display: "\(Int(shadow.radius.rounded())) pt") { style, v in
+                style.shadow?.radius = CGFloat(v)
+            }
+            styleSlider("Shadow Opacity", value: shadow.opacity, in: 0...1,
+                        display: "\(Int((shadow.opacity * 100).rounded()))%") { style, v in
+                style.shadow?.opacity = v
+            }
+        }
     }
 
     /// A labeled slider wired to the preview/commit gesture pattern.
