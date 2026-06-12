@@ -23,6 +23,13 @@ struct PhotonzApp: App {
                 Button("Save As…") { appState.saveDocumentAs() }
                     .keyboardShortcut("s", modifiers: [.command, .shift])
                     .disabled(appState.document == nil)
+                Divider()
+                Button("Export…") { appState.isExportDialogPresented = true }
+                    .keyboardShortcut("e", modifiers: .command)
+                    .disabled(appState.document == nil)
+                Button("Copy Image") { appState.copyCompositeToClipboard() }
+                    .keyboardShortcut("c", modifiers: [.command, .shift])
+                    .disabled(appState.document == nil)
             }
             CommandMenu("Capture") {
                 // The same shortcuts are registered as global Carbon hotkeys

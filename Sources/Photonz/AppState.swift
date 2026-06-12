@@ -22,6 +22,7 @@ final class AppState {
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
     var isLayersPanelVisible = true
+    var isExportDialogPresented = false
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -152,6 +153,41 @@ final class AppState {
             installDocument(document, url: url)
         } catch {
             presentError("Couldn't open the document.", error)
+        }
+    }
+
+    // MARK: - Export
+
+    /// Renders the composite at `scale` and writes it where the user picks.
+    func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9) {
+        guard let document,
+              let image = previewRenderer.render(document, store: store, scale: scale),
+              let data = ImageCodec.encode(image, format: format, quality: quality) else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [format.utType]
+        let base = documentURL?.deletingPathExtension().lastPathComponent ?? "Photonz Export"
+        panel.nameFieldStringValue = "\(base)\(scale == 2 ? "@2x" : "").\(format.fileExtension)"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try data.write(to: url)
+        } catch {
+            presentError("Couldn't export the image.", error)
+        }
+    }
+
+    /// ⇧⌘C: the flattened composite goes on the pasteboard as PNG + TIFF
+    /// (PNG for modern consumers, TIFF for the long tail of AppKit apps).
+    func copyCompositeToClipboard() {
+        guard let document,
+              let image = previewRenderer.render(document, store: store) else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        if let png = ImageCodec.encode(image, format: .png) {
+            pasteboard.setData(png, forType: .png)
+        }
+        let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        if let tiff = nsImage.tiffRepresentation {
+            pasteboard.setData(tiff, forType: .tiff)
         }
     }
 

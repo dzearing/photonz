@@ -18,6 +18,28 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     public func render(_ document: PhotonzDocument, store: ImageStore) -> CGImage? {
+        guard let output = compositeImage(document, store: store) else { return nil }
+        return context.createCGImage(output, from: output.extent)
+    }
+
+    /// The composite at an integer-or-not scale factor (2 = retina export).
+    /// Upscaling happens on the assembled composite with Lanczos resampling,
+    /// GPU-side, before readback.
+    public func render(_ document: PhotonzDocument, store: ImageStore, scale: CGFloat) -> CGImage? {
+        guard scale > 0 else { return nil }
+        guard scale != 1 else { return render(document, store: store) }
+        guard let output = compositeImage(document, store: store) else { return nil }
+        let scaled = output.applyingFilter("CILanczosScaleTransform", parameters: [
+            kCIInputScaleKey: scale,
+            kCIInputAspectRatioKey: 1.0
+        ])
+        let extent = CGRect(x: 0, y: 0,
+                            width: (document.canvasSize.width * scale).rounded(),
+                            height: (document.canvasSize.height * scale).rounded())
+        return context.createCGImage(scaled.cropped(to: extent), from: extent)
+    }
+
+    private func compositeImage(_ document: PhotonzDocument, store: ImageStore) -> CIImage? {
         let canvas = document.canvasSize
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
@@ -43,7 +65,7 @@ public final class DocumentRenderer: @unchecked Sendable {
             output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: extent)
         }
 
-        return context.createCGImage(output, from: extent)
+        return output
     }
 
     /// A region of the composite as pixels ("promote selection to layer").

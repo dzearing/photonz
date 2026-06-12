@@ -44,6 +44,8 @@ struct EditorView: View {
             appState.openImage(at: url)
             return true
         }
+        // Finder double-click / `open` with a document (image or .photonz).
+        .onOpenURL { appState.openImage(at: $0) }
         .sheet(isPresented: $appState.isResizeDialogPresented) {
             if let document = appState.document {
                 ResizeDialog(originalSize: document.canvasSize)
@@ -53,6 +55,9 @@ struct EditorView: View {
             if let document = appState.document {
                 CanvasSizeDialog(originalSize: document.canvasSize)
             }
+        }
+        .sheet(isPresented: $appState.isExportDialogPresented) {
+            ExportDialog()
         }
     }
 
