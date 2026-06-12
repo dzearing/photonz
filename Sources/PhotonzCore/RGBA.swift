@@ -32,4 +32,10 @@ public struct RGBA: Hashable, Codable, Sendable {
                       b: Double(value & 0xFF) / 255)
         }
     }
+
+    /// Perceived lightness in 0...1 (Rec. 709 weights on the gamma-encoded
+    /// components — close enough for light-vs-dark decisions).
+    public var relativeLuminance: Double {
+        0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
 }

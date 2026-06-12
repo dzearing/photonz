@@ -139,4 +139,26 @@ struct TextRasterizerTests {
         #expect(inkCount(output, r: 200...255, g: 0...60, b: 0...60) > 50,
                 "red glyph ink should appear in the composited document")
     }
+
+    @Test func autoContrastShadowKeepsWhiteTextLegibleOnWhite() {
+        // White text on a white screenshot: without the 3.6 auto shadow the
+        // render would be pure white; the dark contour must leave visible ink.
+        let store = ImageStore()
+        let baseContext = CGContext(data: nil, width: 100, height: 100,
+                                    bitsPerComponent: 8, bytesPerRow: 400,
+                                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        baseContext.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1))
+        baseContext.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
+        let base = store.register(baseContext.makeImage()!)
+
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.addLayer(TextBuilder.layer(content: TextContent(string: "XX", fontSize: 40),
+                                       at: CGPoint(x: 10, y: 25),
+                                       naturalSize: CGSize(width: 80, height: 50)))
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        #expect(inkCount(output, r: 0...220, g: 0...220, b: 0...220) > 30,
+                "the auto-contrast shadow should darken pixels around the glyphs")
+    }
 }

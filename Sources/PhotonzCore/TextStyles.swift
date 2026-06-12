@@ -57,11 +57,25 @@ public enum TextBuilder {
 
     /// A text layer whose frame's top-left sits at the click point and whose
     /// size hugs the measured text. Degenerate measurements are clamped so the
-    /// rasterizer always has at least a pixel to draw into.
+    /// rasterizer always has at least a pixel to draw into. Every text layer
+    /// gets the auto-contrast shadow (3.6) so it stays legible anywhere.
     public static func layer(content: TextContent, at point: CGPoint, naturalSize: CGSize) -> Layer {
         let frame = CGRect(x: point.x, y: point.y,
                            width: max(naturalSize.width, 1),
                            height: max(naturalSize.height, 1))
-        return Layer(name: "Text", content: .text(content), frame: frame)
+        var style = LayerStyle()
+        style.shadow = autoContrastShadow(forColorHex: content.colorHex)
+        return Layer(name: "Text", content: .text(content), frame: frame, style: style)
+    }
+
+    /// A tight contour shadow opposing the text color's lightness: light text
+    /// gets a dark halo, dark text a light one — keeps callouts readable on
+    /// backgrounds that match the text.
+    public static func autoContrastShadow(forColorHex hex: String) -> ShadowStyle {
+        let luminance = (RGBA(hex: hex) ?? RGBA(r: 1, g: 1, b: 1)).relativeLuminance
+        return ShadowStyle(radius: 2,
+                           offset: CGSize(width: 0, height: 1),
+                           colorHex: luminance >= 0.5 ? "#000000" : "#FFFFFF",
+                           opacity: 0.6)
     }
 }

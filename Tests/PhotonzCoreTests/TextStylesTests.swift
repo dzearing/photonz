@@ -106,3 +106,36 @@ struct TextBuilderTests {
         #expect(layer.frame.height >= 1)
     }
 }
+
+// 3.6 smart default: text always gets a shadow that contrasts with its own
+// color, so callouts stay legible on busy/matching backgrounds.
+@Suite("Auto-contrast text shadow")
+struct AutoContrastShadowTests {
+
+    @Test func luminanceBasics() {
+        #expect(RGBA(hex: "#FFFFFF")!.relativeLuminance > 0.99)
+        #expect(RGBA(hex: "#000000")!.relativeLuminance < 0.01)
+        #expect(RGBA(hex: "#FFD60A")!.relativeLuminance > 0.5) // yellow reads light
+        #expect(RGBA(hex: "#007AFF")!.relativeLuminance < 0.5) // blue reads dark
+    }
+
+    @Test func lightTextGetsADarkShadowAndViceVersa() {
+        #expect(TextBuilder.autoContrastShadow(forColorHex: "#FFFFFF").colorHex == "#000000")
+        #expect(TextBuilder.autoContrastShadow(forColorHex: "#FFD60A").colorHex == "#000000")
+        #expect(TextBuilder.autoContrastShadow(forColorHex: "#000000").colorHex == "#FFFFFF")
+        #expect(TextBuilder.autoContrastShadow(forColorHex: "#FF3B30").colorHex == "#FFFFFF")
+    }
+
+    @Test func shadowIsSubtleButPresent() {
+        let shadow = TextBuilder.autoContrastShadow(forColorHex: "#FFFFFF")
+        #expect(shadow.opacity > 0.3 && shadow.opacity < 1)
+        #expect(shadow.radius > 0 && shadow.radius <= 4)
+    }
+
+    @Test func newTextLayersCarryTheShadow() {
+        let content = TextContent(string: "Hi") // default white
+        let layer = TextBuilder.layer(content: content, at: .zero,
+                                      naturalSize: CGSize(width: 40, height: 20))
+        #expect(layer.style.shadow == TextBuilder.autoContrastShadow(forColorHex: content.colorHex))
+    }
+}

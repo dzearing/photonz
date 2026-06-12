@@ -2,6 +2,13 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 3.6 (auto-contrast text shadow) → PHASE 3 COMPLETE
+
+- `RGBA.relativeLuminance` (Rec. 709 weights on gamma-encoded values) + `TextBuilder.autoContrastShadow(forColorHex:)`: light text → black contour shadow, dark text → white (radius 2, offset (0,1), opacity 0.6). Attached to every new text layer by `TextBuilder.layer`; `commitTextEdit`'s re-edit path re-derives it when the color changes. Renders through the existing silhouette-shadow path — no renderer changes.
+- 212 tests green (5 new), including a render test proving white text stays legible on a white background; visual sample reviewed (`/tmp/photonz-36-check/shadow.png`).
+- Caveats recorded in plan notes: re-edit stomps a future hand-customized shadow (revisit with the phase-6 layers panel); the inline editor draft shows no shadow until commit (phase-7 polish candidate).
+- **Phase 3 done.** Phase 4 (crop UI, resize, skew) set in_progress.
+
 ## 2026-06-12 — Phase 3.5: annotations editable after the fact
 
 - **Core** (`PhotonzCore/AnnotationEditing.swift`, 27 new tests): `AnnotationBuilder.updating` rebuilds a layer between doc-space endpoints (identity/style preserved, frame re-padded exactly like a fresh drag); `.resized` remaps endpoints proportionally into a proposed frame — closes the 3.2 handle-resize distort/clip gotcha (`Layer.resized(to:)` dispatches by content type); `.restyled` applies color/strokeWidth with endpoints anchored while the frame re-pads. `AnnotationEndpointDrag` mirrors `AnnotationDrag` (⇧ = 45° snap around the fixed endpoint). Hit-testing is now zoom-aware: lines/arrows hit within `strokeWidth/2 + 6/zoom` of their segment (`Geometry.distance(from:toSegmentFrom:to:)`), so the empty corners of a diagonal arrow's bbox fall through to layers beneath.

@@ -243,6 +243,9 @@ final class AppState {
                     document.updateLayer(id: layerID) {
                         $0.content = .text(content)
                         $0.frame = CGRect(origin: origin, size: size)
+                        // Re-edit may have changed the color; keep the
+                        // auto-contrast shadow (3.6) opposing it.
+                        $0.style.shadow = TextBuilder.autoContrastShadow(forColorHex: content.colorHex)
                     }
                 }
             }
