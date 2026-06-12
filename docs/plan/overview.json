@@ -5,8 +5,8 @@
   "phases": [
     { "id": 0, "file": "phase-0.json", "title": "Infrastructure: repo, CI, site, release pipeline", "status": "done" },
     { "id": 1, "file": "phase-1.json", "title": "Core model & render engine hardening", "status": "done" },
-    { "id": 2, "file": "phase-2.json", "title": "Canvas & viewport: Metal-backed view, zoom/pan, selection", "status": "in_progress" },
-    { "id": 3, "file": "phase-3.json", "title": "Annotations & text: arrows, shapes, highlights, text blocks", "status": "pending" },
+    { "id": 2, "file": "phase-2.json", "title": "Canvas & viewport: Metal-backed view, zoom/pan, selection", "status": "done" },
+    { "id": 3, "file": "phase-3.json", "title": "Annotations & text: arrows, shapes, highlights, text blocks", "status": "in_progress" },
     { "id": 4, "file": "phase-4.json", "title": "Transform tools: crop UI, resize, skew", "status": "pending" },
     { "id": 5, "file": "phase-5.json", "title": "Zoom callout (signature feature)", "status": "pending" },
     { "id": 6, "file": "phase-6.json", "title": "Layers UX: panel, promote-to-layer, effects, persistence", "status": "pending" },

@@ -19,6 +19,16 @@ struct DocumentTests {
         #expect(doc.layers[0].frame == CGRect(x: 0, y: 0, width: 800, height: 600))
     }
 
+    @Test func highlightAnnotationsAlwaysBlendMultiply() {
+        let highlight = Layer(name: "h", content: .annotation(AnnotationContent(shape: .highlight)),
+                              frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(highlight.effectiveBlendMode == .multiply)
+        var screen = Layer(name: "s", content: .annotation(AnnotationContent(shape: .rectangle)),
+                           frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        screen.style.blendMode = .screen
+        #expect(screen.effectiveBlendMode == .screen)
+    }
+
     @Test func addRemoveAndReorderLayers() {
         var doc = makeDocument()
         let text = Layer(name: "Title", content: .text(TextContent(string: "Hello")),

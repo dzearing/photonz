@@ -2,6 +2,20 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
+/// Pre-rendered pieces for a cheap drag preview: the canvas composites
+/// `sprite` over `underlay` in Core Animation, so per-mouse-move cost is pure
+/// layer geometry — no Core Image.
+struct DragPreview {
+    let layerID: UUID
+    /// The document composited with the dragged layer hidden.
+    let underlay: CGImage
+    /// The dragged layer rendered alone, padded by `padding` on every side.
+    let sprite: CGImage
+    /// Document points of shadow/blur padding baked into the sprite.
+    let padding: CGFloat
+    let blendMode: PhotonzCore.BlendMode
+}
+
 /// The document canvas: a layer-backed NSView that draws the rendered composite
 /// positioned by `Viewport`. All geometry decisions live in `Viewport`
 /// (PhotonzCore, tested); this view only mirrors them into Core Animation.
@@ -12,10 +26,12 @@ struct CanvasView: NSViewRepresentable {
     let selection: CGRect?
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
+    let dragPreview: DragPreview?
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
     let onSelectLayer: (UUID?) -> Void
+    let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
 
@@ -29,7 +45,7 @@ struct CanvasView: NSViewRepresentable {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, selectedLayerID: selectedLayerID,
-                   selectedLayerFrame: selectedLayerFrame)
+                   selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -37,6 +53,7 @@ struct CanvasView: NSViewRepresentable {
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
         view.onSelectLayer = onSelectLayer
+        view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
     }
@@ -47,10 +64,14 @@ final class CanvasNSView: NSView {
     var onViewportChange: ((Viewport) -> Void) = { _ in }
     var onSelectionChange: ((CGRect?) -> Void) = { _ in }
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
+    var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
 
     private let contentLayer = CALayer()
+    /// Floats the dragged layer's pre-rendered sprite over the underlay during
+    /// drags — positioned in pure Core Animation, no per-move rendering.
+    private let previewSpriteLayer = CALayer()
     /// Marching ants: a solid white stroke underneath…
     private let selectionBaseLayer = CAShapeLayer()
     /// …and animated black dashes on top, giving the classic alternating crawl.
@@ -75,6 +96,9 @@ final class CanvasNSView: NSView {
     private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
+    /// Pre-rendered drag preview from AppState; arrives async after drag start
+    /// and outlives the drag until the post-commit render lands.
+    private var dragPreview: DragPreview?
     /// In-progress marquee (document coordinates). While set, it is what the
     /// ants display — same zero-latency-echo pattern as pan/zoom.
     private var marquee: MarqueeDrag?
@@ -117,6 +141,10 @@ final class CanvasNSView: NSView {
         contentLayer.shadowRadius = 24
         contentLayer.shadowOffset = .zero
         layer?.addSublayer(contentLayer)
+
+        previewSpriteLayer.contentsGravity = .resize
+        previewSpriteLayer.isHidden = true
+        layer?.addSublayer(previewSpriteLayer)
 
         for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
@@ -164,11 +192,13 @@ final class CanvasNSView: NSView {
         if let id = selectedLayerID, let frame = selectedLayerFrame,
            let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
             resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+            onDragBegin(id)
             refreshOverlays()
             return
         }
         if let hit = document?.hitTest(p) {
             onSelectLayer(hit.id)
+            onDragBegin(hit.id)
             selectedLayerFrame = hit.frame
             moveDrag = MoveDrag(layerID: hit.id,
                                 grabOffset: CGPoint(x: p.x - hit.frame.origin.x,
@@ -316,18 +346,21 @@ final class CanvasNSView: NSView {
 
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
-              selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame)
+              selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
+              dragPreview: dragPreview)
         onViewportChange(next)
     }
 
     // MARK: Display
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?) {
+               selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               dragPreview: DragPreview?) {
         self.image = image
         self.viewport = viewport
         self.document = document
         self.selectedLayerID = selectedLayerID
+        self.dragPreview = dragPreview
         // While the user is mid-drag the local state is the truth; don't let an
         // unrelated SwiftUI update echo stale committed values over it.
         if marquee == nil {
@@ -343,6 +376,7 @@ final class CanvasNSView: NSView {
 
         guard let image, let viewport else {
             contentLayer.isHidden = true
+            previewSpriteLayer.isHidden = true
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
             layerOutlineLayer.isHidden = true
@@ -351,6 +385,8 @@ final class CanvasNSView: NSView {
             return
         }
         contentLayer.isHidden = false
+        // refreshPreviewSprite (below) swaps in the underlay + floated sprite
+        // while a drag preview is active; the full render replaces both after.
         contentLayer.contents = image
         contentLayer.frame = viewport.documentFrameInView
         contentLayer.shadowPath = CGPath(rect: contentLayer.bounds, transform: nil)
@@ -370,6 +406,41 @@ final class CanvasNSView: NSView {
     private func refreshOverlaysInsideTransaction(constrainSquare: Bool = false) {
         refreshMarqueeDisplay(constrainSquare: constrainSquare)
         refreshLayerSelectionDisplay()
+        refreshPreviewSprite()
+    }
+
+    /// The frame the drag preview should float at, or nil when the preview
+    /// isn't applicable (no preview, or it belongs to another layer).
+    private var previewedFrame: CGRect? {
+        guard let dragPreview else { return nil }
+        if let resizeDrag, resizeDrag.layerID == dragPreview.layerID { return resizeDrag.frame }
+        if let moveDrag, moveDrag.layerID == dragPreview.layerID {
+            return CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
+        }
+        // Drag ended but the post-commit render hasn't landed yet: hold the
+        // sprite at the committed frame so nothing flashes.
+        if moveDrag == nil, resizeDrag == nil, selectedLayerID == dragPreview.layerID {
+            return selectedLayerFrame
+        }
+        return nil
+    }
+
+    private func refreshPreviewSprite() {
+        guard let viewport, let dragPreview, let frame = previewedFrame else {
+            previewSpriteLayer.isHidden = true
+            if let image, !contentLayer.isHidden { contentLayer.contents = image }
+            return
+        }
+        contentLayer.contents = dragPreview.underlay
+        previewSpriteLayer.contents = dragPreview.sprite
+        let padded = frame.insetBy(dx: -dragPreview.padding, dy: -dragPreview.padding)
+        previewSpriteLayer.frame = viewRect(forDocRect: padded, in: viewport)
+        switch dragPreview.blendMode {
+        case .normal: previewSpriteLayer.compositingFilter = nil
+        case .multiply: previewSpriteLayer.compositingFilter = "multiplyBlendMode"
+        case .screen: previewSpriteLayer.compositingFilter = "screenBlendMode"
+        }
+        previewSpriteLayer.isHidden = false
     }
 
     private func refreshMarqueeDisplay(constrainSquare: Bool) {

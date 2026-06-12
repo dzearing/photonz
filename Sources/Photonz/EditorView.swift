@@ -45,10 +45,12 @@ struct EditorView: View {
                        selection: appState.selection,
                        selectedLayerID: appState.selectedLayerID,
                        selectedLayerFrame: appState.selectedLayerFrame,
+                       dragPreview: appState.dragPreview,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
                        onSelectLayer: { appState.selectLayer($0) },
+                       onDragBegin: { appState.beginLayerDrag(id: $0) },
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
                        onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) })
         } else {

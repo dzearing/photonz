@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 2 complete: marquee, layer select/move/resize, drag preview pipeline
+
+- **2.3 Marquee**: `MarqueeDrag` (core, 13 tests) — standardize/⇧-square/canvas-clamp, zoom-aware click detection, `Geometry.pixelAligned` commits. Marching ants = white CAShapeLayer under animated black dashes; selection lives in AppState (doc coords), survives zoom/pan, Esc/click clears.
+- **2.4 Hit-test + move**: `Layer.contains` (inverts the render transform), top-down `Document.hitTest` skipping invisible/locked, `Snapping` to canvas edges/center with 8 *screen*-pt tolerance (11 tests). **Background layer is now born locked** so clicking it marquees. Pointer-modal interaction: hit → select+move, miss → marquee. One undo step per drag; Esc cancels via no-op commit.
+- **2.5 Handles**: `Handles` (core, 14 tests) — 8 handles, 6 screen-pt hit tolerance beating layer hit-test, resize anchors the opposite corner/edge, never inverts (1×1 clamp), ⇧ = uniform corner scale / cross-axis edge scale. No resize cursors yet (needs tracking areas; phase-7 polish note).
+- **2.6 Drag preview**: drag start kicks off async underlay (`render(hiding:)`) + padded sprite (`renderSprite`, `LayerStyle.previewPadding`) renders; canvas then floats the sprite as a CALayer (blend via compositingFilter) so mouse moves cost zero Core Image work. Falls back to full submits until ready; preview clears only after the post-commit frame lands (no flash-back).
+- 141 tests green. App-side behavior verified with the headless NSEvent + CALayer.render harness from 2.1 (synthesized mouse drags, pixel asserts, PNGs reviewed). Note: `CALayer.render(in:)` output is vertically flipped — account for it when sampling.
+- **Next**: Phase 3 (annotations & text tools). The toolbar buttons in EditorView are still inert placeholders; phase 3 wires them. Known preview approximations (documented in plan 2.6 notes): resize stretches the sprite bitmap until commit.
+
 ## 2026-06-12 — Phase 2.1/2.2 (canvas + zoom/pan) and phase 9 (screenshot capture, user request)
 
 - **Canvas**: `Viewport` (PhotonzCore, 10 tests) owns all camera math — fit-never-upscales, zoom-to-cursor, per-axis clamping, center-preserving resize. `CanvasNSView` is a flipped layer-backed NSView that mirrors `Viewport` into a CALayer (nearest-neighbor ≥2×); gestures (scroll pan, pinch zoom, smart-magnify toggle) apply locally then notify AppState. View menu: ⌘= ⌘- ⌘0 ⌘1.

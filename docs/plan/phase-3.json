@@ -1,7 +1,7 @@
 {
   "phase": 3,
   "title": "Annotations & text: arrows, shapes, highlights, text blocks",
-  "status": "pending",
+  "status": "in_progress",
   "goal": "Best-in-class screenshot annotation: pick tool, drag, done — with delightful defaults.",
   "tasks": [
     { "id": "3.1", "title": "Tool state machine in AppState (select/crop/arrow/rect/ellipse/highlight/text)", "status": "pending" },

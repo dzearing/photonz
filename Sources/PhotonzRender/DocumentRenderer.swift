@@ -26,10 +26,35 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         for layer in document.layers where layer.isVisible {
             guard let layerImage = ciImage(for: layer, in: document, store: store) else { continue }
-            output = composite(layerImage, over: output, mode: blendMode(for: layer), extent: extent)
+            output = composite(layerImage, over: output, mode: layer.effectiveBlendMode, extent: extent)
         }
 
         return context.createCGImage(output, from: extent)
+    }
+
+    // MARK: - Drag-preview pieces
+
+    /// The composite with one layer hidden — the backdrop a drag preview
+    /// floats over.
+    public func render(_ document: PhotonzDocument, store: ImageStore, hiding id: UUID) -> CGImage? {
+        var doc = document
+        doc.updateLayer(id: id) { $0.isVisible = false }
+        return render(doc, store: store)
+    }
+
+    /// One layer rendered alone, with `padding` document points of clear canvas
+    /// on every side so shadows/blur survive. The result is positioned by the
+    /// canvas view as a Core Animation sublayer during drags.
+    public func renderSprite(for id: UUID, in document: PhotonzDocument, store: ImageStore,
+                             padding: CGFloat) -> CGImage? {
+        guard var layer = document.layer(id: id) else { return nil }
+        layer.isVisible = true
+        layer.frame = CGRect(x: padding, y: padding,
+                             width: layer.frame.width, height: layer.frame.height)
+        let doc = PhotonzDocument(canvasSize: CGSize(width: layer.frame.width + padding * 2,
+                                                     height: layer.frame.height + padding * 2),
+                                  layers: [layer])
+        return render(doc, store: store)
     }
 
     private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore) -> CIImage? {
@@ -152,15 +177,6 @@ public final class DocumentRenderer: @unchecked Sendable {
     }
 
     // MARK: - Helpers
-
-    /// Highlight annotations always multiply so underlying detail shows through;
-    /// everything else follows the layer's style.
-    private func blendMode(for layer: Layer) -> BlendMode {
-        if case .annotation(let annotation) = layer.content, annotation.shape == .highlight {
-            return .multiply
-        }
-        return layer.style.blendMode
-    }
 
     private func composite(_ image: CIImage, over backdrop: CIImage, mode: BlendMode, extent: CGRect) -> CIImage {
         switch mode {

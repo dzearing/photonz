@@ -101,6 +101,19 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     }
 }
 
+extension LayerStyle {
+    /// How far this style's effects can reach past the layer frame, in document
+    /// points. Drag-preview sprites pad their canvas by this much so shadows
+    /// and blur aren't clipped. 3σ covers a gaussian's visible tail.
+    public var previewPadding: CGFloat {
+        var padding = blurRadius * 3
+        if let shadow, shadow.opacity > 0 {
+            padding += shadow.radius * 3 + max(abs(shadow.offset.width), abs(shadow.offset.height))
+        }
+        return padding.rounded(.up)
+    }
+}
+
 public struct ShadowStyle: Hashable, Codable, Sendable {
     public var radius: CGFloat
     public var offset: CGSize
@@ -141,6 +154,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         self.style = style
         self.isVisible = isVisible
         self.isLocked = isLocked
+    }
+
+    /// The blend mode the renderer actually uses: highlight annotations always
+    /// multiply so underlying detail shows through; everything else follows
+    /// the layer's style.
+    public var effectiveBlendMode: BlendMode {
+        if case .annotation(let annotation) = content, annotation.shape == .highlight {
+            return .multiply
+        }
+        return style.blendMode
     }
 
     /// Whether a canvas-space point lands on this layer's transformed shape.

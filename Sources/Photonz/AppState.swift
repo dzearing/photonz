@@ -29,6 +29,16 @@ final class AppState {
     /// Frame override while a move drag is in flight — rendered as a preview,
     /// committed to history only on mouse-up.
     private var previewMove: (id: UUID, frame: CGRect)?
+    /// Cheap drag preview: underlay + sprite the canvas composites in Core
+    /// Animation, so mouse moves cost zero Core Image work. Nil until the
+    /// session's two renders finish (the full-submit path covers the gap).
+    private(set) var dragPreview: DragPreview?
+    /// Renders preview sessions off the scheduler's queue.
+    private let previewRenderer = DocumentRenderer()
+    private var dragPreviewGeneration = 0
+    /// Set on commit: the preview must survive until the post-commit frame
+    /// lands, or the dragged layer would flash back to its pre-drag position.
+    private var clearPreviewAfterNextFrame = false
     /// Last known canvas view size, so a document opened before/after the first
     /// layout pass can still be fit correctly.
     private var canvasViewSize: CGSize = .zero
@@ -53,6 +63,8 @@ final class AppState {
         selection = nil
         selectedLayerID = nil
         previewMove = nil
+        dragPreview = nil
+        dragPreviewGeneration += 1
         rerender()
     }
 
@@ -92,11 +104,38 @@ final class AppState {
         selectedLayerID = id
     }
 
-    /// Live drag update (move or resize): renders the new frame without
-    /// touching history.
+    /// A drag is starting on `id`: kick off the underlay + sprite renders.
+    /// Until they land, per-move previews fall back to full submits.
+    func beginLayerDrag(id: UUID) {
+        guard dragPreview?.layerID != id else { return }
+        dragPreview = nil
+        clearPreviewAfterNextFrame = false
+        dragPreviewGeneration += 1
+        let generation = dragPreviewGeneration
+        guard let doc = document, let layer = doc.layer(id: id) else { return }
+        let padding = layer.style.previewPadding
+        let blend = layer.effectiveBlendMode
+        let renderer = previewRenderer
+        let store = store
+        Task.detached(priority: .userInitiated) {
+            let underlay = renderer.render(doc, store: store, hiding: id)
+            let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding)
+            await MainActor.run { [weak self] in
+                guard let self, self.dragPreviewGeneration == generation,
+                      let underlay, let sprite else { return }
+                self.dragPreview = DragPreview(layerID: id, underlay: underlay, sprite: sprite,
+                                               padding: padding, blendMode: blend)
+            }
+        }
+    }
+
+    /// Live drag update (move or resize). With a CA preview active the canvas
+    /// already shows the move, so this only records state; otherwise it
+    /// renders the new frame without touching history.
     func previewLayerFrame(id: UUID, frame: CGRect) {
-        guard var doc = document, doc.layer(id: id) != nil else { return }
         previewMove = (id, frame)
+        guard dragPreview?.layerID != id else { return }
+        guard var doc = document, doc.layer(id: id) != nil else { return }
         doc.updateLayer(id: id) { $0.frame = frame }
         submit(doc)
     }
@@ -106,6 +145,8 @@ final class AppState {
     /// skips it), which is how an Esc-cancelled drag restores the real render.
     func commitLayerFrame(id: UUID, frame: CGRect) {
         previewMove = nil
+        dragPreviewGeneration += 1 // cancels an in-flight preview session
+        clearPreviewAfterNextFrame = dragPreview != nil
         perform { $0.updateLayer(id: id) { $0.frame = frame } }
     }
 
@@ -147,6 +188,7 @@ final class AppState {
             selection = nil
             selectedLayerID = nil
             previewMove = nil
+            dragPreview = nil
             return
         }
         // Crop/resize/undo can change the canvas size; keep the camera in sync.
@@ -171,6 +213,10 @@ final class AppState {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil else { return }
                     self.renderedImage = image
+                    if self.clearPreviewAfterNextFrame {
+                        self.clearPreviewAfterNextFrame = false
+                        self.dragPreview = nil
+                    }
                 }
             }
         }
