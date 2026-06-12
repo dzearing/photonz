@@ -16,6 +16,13 @@ struct PhotonzApp: App {
             CommandGroup(after: .newItem) {
                 Button("Open…") { appState.isImporterPresented = true }
                     .keyboardShortcut("o", modifiers: .command)
+                Divider()
+                Button("Save") { appState.saveDocument() }
+                    .keyboardShortcut("s", modifiers: .command)
+                    .disabled(appState.document == nil)
+                Button("Save As…") { appState.saveDocumentAs() }
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
+                    .disabled(appState.document == nil)
             }
             CommandMenu("Capture") {
                 // The same shortcuts are registered as global Carbon hotkeys

@@ -72,7 +72,19 @@ final class AppState {
     var canUndo: Bool { history?.canUndo ?? false }
     var canRedo: Bool { history?.canRedo ?? false }
 
+    /// The .photonz package backing this document; nil until first save (or
+    /// always, for plain-image documents the user hasn't saved as a package).
+    private(set) var documentURL: URL?
+
+    /// The .photonz document package type. The bundle's Info.plist exports
+    /// the same identifier so Finder treats packages as files.
+    static let photonzType = UTType(exportedAs: "com.photonz.document", conformingTo: .package)
+
     func openImage(at url: URL) {
+        if url.pathExtension.lowercased() == "photonz" {
+            openPackage(at: url)
+            return
+        }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
         openCapture(image)
@@ -81,8 +93,15 @@ final class AppState {
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
     func openCapture(_ image: CGImage) {
         let ref = store.register(image)
-        history = History(document: .withBaseImage(ref))
-        viewport = .fit(documentSize: ref.pixelSize, in: canvasViewSize)
+        installDocument(.withBaseImage(ref), url: nil)
+    }
+
+    /// Installs a freshly opened document, resetting every per-document bit
+    /// of editor state.
+    private func installDocument(_ document: PhotonzDocument, url: URL?) {
+        history = History(document: document)
+        documentURL = url
+        viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
         selection = nil
         selectedLayerID = nil
         activeTool = .select
@@ -93,6 +112,55 @@ final class AppState {
         thumbnailCache = [:]
         dragPreviewGeneration += 1
         rerender()
+    }
+
+    // MARK: - Save / open packages
+
+    /// ⌘S: saves in place, or runs Save As for a never-saved document.
+    func saveDocument() {
+        if let documentURL {
+            save(to: documentURL)
+        } else {
+            saveDocumentAs()
+        }
+    }
+
+    /// ⇧⌘S.
+    func saveDocumentAs() {
+        guard document != nil else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [Self.photonzType]
+        panel.nameFieldStringValue = documentURL?.lastPathComponent ?? "Untitled.photonz"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        save(to: url)
+    }
+
+    private func save(to url: URL) {
+        guard let document else { return }
+        do {
+            try PackageIO.write(document, store: store, to: url)
+            documentURL = url
+        } catch {
+            presentError("Couldn't save the document.", error)
+        }
+    }
+
+    func openPackage(at url: URL) {
+        do {
+            let document = try PackageIO.read(from: url, into: store)
+            installDocument(document, url: url)
+        } catch {
+            presentError("Couldn't open the document.", error)
+        }
+    }
+
+    private func presentError(_ message: String, _ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = String(describing: error)
+        alert.alertStyle = .warning
+        alert.runModal()
     }
 
     // MARK: - Viewport

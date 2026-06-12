@@ -32,7 +32,7 @@ struct EditorView: View {
         .animation(.spring(duration: 0.3), value: appState.isLayersPanelVisible)
         .background(.black.opacity(0.85))
         .fileImporter(isPresented: $appState.isImporterPresented,
-                      allowedContentTypes: [.image]) { result in
+                      allowedContentTypes: [.image, AppState.photonzType]) { result in
             if case .success(let url) = result {
                 let scoped = url.startAccessingSecurityScopedResource()
                 appState.openImage(at: url)

@@ -49,6 +49,33 @@ cat > "$APP/Contents/Info.plist" <<PLIST
                 <string>com.compuserve.gif</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleTypeName</key><string>Photonz Document</string>
+            <key>CFBundleTypeRole</key><string>Editor</string>
+            <key>LSTypeIsPackage</key><true/>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.photonz.document</string>
+            </array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.document</string>
+            <key>UTTypeDescription</key><string>Photonz Document</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>com.apple.package</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>photonz</string>
+                </array>
+            </dict>
+        </dict>
     </array>
 </dict>
 </plist>

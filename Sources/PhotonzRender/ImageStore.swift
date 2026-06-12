@@ -19,6 +19,14 @@ public final class ImageStore: @unchecked Sendable {
         return ref
     }
 
+    /// Registers a bitmap under an existing ref (package loading, where the
+    /// document's refs must keep resolving).
+    public func register(_ image: CGImage, as ref: ImageRef) {
+        lock.lock()
+        images[ref.id] = image
+        lock.unlock()
+    }
+
     public func image(for ref: ImageRef) -> CGImage? {
         lock.lock()
         defer { lock.unlock() }
