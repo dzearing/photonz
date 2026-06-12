@@ -43,6 +43,8 @@ struct LayersPanel: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            // Rows slide/fade on add, delete, duplicate, and reorder.
+            .animation(.spring(duration: 0.25), value: appState.panelLayers.map(\.id))
             if let layer = selectedLayer {
                 Divider().padding(.horizontal, 10)
                 LayerInspector(layer: layer)

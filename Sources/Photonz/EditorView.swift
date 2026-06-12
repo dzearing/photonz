@@ -6,6 +6,8 @@ import UniformTypeIdentifiers
 struct EditorView: View {
     @Environment(AppState.self) private var appState
     @State private var isStylePopoverPresented = false
+    /// Anchors the active-tool accent circle so it slides between buttons.
+    @Namespace private var toolbarNamespace
 
     var body: some View {
         @Bindable var appState = appState
@@ -140,11 +142,13 @@ struct EditorView: View {
                 || appState.selectedAnnotationLayer != nil
                 || appState.selectedZoomCalloutLayer != nil {
                 styleButton
+                    .transition(.scale(scale: 0.5).combined(with: .opacity))
             }
             Divider().frame(height: 20)
             toolButton(.crop, "crop", "Crop", "c")
             if appState.activeTool == .crop {
                 cropOptions
+                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
             Button {
                 appState.isResizeDialogPresented = true
@@ -177,6 +181,10 @@ struct EditorView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+        // One spring drives every toolbar transition: the accent circle
+        // sliding between tools, conditional segments, and the capsule resize.
+        .animation(.spring(duration: 0.3), value: appState.activeTool)
+        .animation(.spring(duration: 0.3), value: appState.selectedLayerID)
     }
 
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.
@@ -448,6 +456,7 @@ struct EditorView: View {
                 .background {
                     if isActive {
                         Circle().fill(Color.accentColor)
+                            .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
                     }
                 }
         }

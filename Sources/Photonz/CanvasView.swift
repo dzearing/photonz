@@ -1320,16 +1320,47 @@ final class CanvasNSView: NSView {
         calloutFlightLeaderLayer.isHidden = false
         CATransaction.commit()
 
-        // Implicit animations carry position/bounds/cornerRadius/opacity.
+        // The sprite springs into place (slight overshoot reads as the box
+        // "landing"); the chrome fades in on a plain ease-out underneath.
+        let startBounds = CGRect(origin: .zero, size: startFrame.size)
+        let endBounds = CGRect(origin: .zero, size: endFrame.size)
+        func spring(_ keyPath: String, from: Any?, to: Any?) -> CASpringAnimation {
+            let animation = CASpringAnimation(perceptualDuration: 0.45, bounce: 0.25)
+            animation.keyPath = keyPath
+            animation.fromValue = from
+            animation.toValue = to
+            return animation
+        }
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.35)
-        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
         CATransaction.setCompletionBlock { [weak self] in
             guard let self, self.calloutFlightGeneration == generation else { return }
             self.endCalloutFlight()
         }
+        calloutFlightLayer.add(spring("position",
+                                      from: NSValue(point: CGPoint(x: startFrame.midX, y: startFrame.midY)),
+                                      to: NSValue(point: CGPoint(x: endFrame.midX, y: endFrame.midY))),
+                               forKey: "position")
+        calloutFlightLayer.add(spring("bounds",
+                                      from: NSValue(rect: startBounds),
+                                      to: NSValue(rect: endBounds)),
+                               forKey: "bounds")
+        calloutFlightLayer.add(spring("cornerRadius",
+                                      from: sourceRadius,
+                                      to: style.cornerRadius * zoom),
+                               forKey: "cornerRadius")
+        func fadeIn() -> CABasicAnimation {
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 0
+            fade.toValue = 1
+            fade.duration = 0.35
+            fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            return fade
+        }
+        calloutFlightOutlineLayer.add(fadeIn(), forKey: "opacity")
+        calloutFlightLeaderLayer.add(fadeIn(), forKey: "opacity")
+        CATransaction.setDisableActions(true)
         calloutFlightLayer.position = CGPoint(x: endFrame.midX, y: endFrame.midY)
-        calloutFlightLayer.bounds = CGRect(origin: .zero, size: endFrame.size)
+        calloutFlightLayer.bounds = endBounds
         calloutFlightLayer.cornerRadius = style.cornerRadius * zoom
         calloutFlightOutlineLayer.opacity = 1
         calloutFlightLeaderLayer.opacity = 1
