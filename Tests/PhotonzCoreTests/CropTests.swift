@@ -153,6 +153,100 @@ struct CropTests {
         #expect(rect == CGRect(x: 350, y: 350, width: 50, height: 50))
     }
 
+    // MARK: Rect bounds (per-layer crop confines drags to the layer frame)
+
+    @Test func resizeClampsToRectBounds() {
+        let bounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let rect = CGRect(x: 120, y: 120, width: 100, height: 100)
+        let result = Crop.resize(rect, dragging: .bottomRight, to: CGPoint(x: 900, y: 900),
+                                 aspect: .free, bounds: bounds)
+        #expect(result == CGRect(x: 120, y: 120, width: 180, height: 180))
+    }
+
+    @Test func ratioResizeClampsToRectBounds() {
+        let bounds = CGRect(x: 100, y: 100, width: 300, height: 200)
+        let rect = CGRect(x: 150, y: 150, width: 50, height: 50)
+        let result = Crop.resize(rect, dragging: .bottomRight, to: CGPoint(x: 900, y: 900),
+                                 aspect: .square, bounds: bounds)
+        // availY = 300 - 150 = 150 limits the square.
+        #expect(result == CGRect(x: 150, y: 150, width: 150, height: 150))
+    }
+
+    @Test func moveClampsInsideRectBounds() {
+        let bounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let rect = CGRect(x: 150, y: 150, width: 100, height: 100)
+        #expect(Crop.moved(rect, by: CGPoint(x: -500, y: 500), in: bounds)
+                == CGRect(x: 100, y: 200, width: 100, height: 100))
+    }
+
+    @Test func dragRectClampsToRectBounds() {
+        let bounds = CGRect(x: 100, y: 100, width: 200, height: 200)
+        let rect = Crop.dragRect(anchor: CGPoint(x: 150, y: 150), current: CGPoint(x: 600, y: 250),
+                                 aspect: .free, bounds: bounds)
+        #expect(rect == CGRect(x: 150, y: 150, width: 150, height: 100))
+    }
+
+    // MARK: Per-layer content crop
+
+    @Test func imageLayersSupportContentCrop() {
+        let image = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 100, height: 100))),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        let note = Layer(name: "A", content: .annotation(AnnotationContent(shape: .rectangle)),
+                         frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        #expect(image.supportsContentCrop)
+        #expect(!note.supportsContentCrop)
+    }
+
+    @Test func cropContentShrinksTheFrameAndMapsToContentCoords() {
+        // Content 200×200 shown 1:1 at (100, 100).
+        var layer = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 200, height: 200))),
+                          frame: CGRect(x: 100, y: 100, width: 200, height: 200))
+        layer.cropContent(to: CGRect(x: 150, y: 150, width: 100, height: 100))
+        #expect(layer.frame == CGRect(x: 150, y: 150, width: 100, height: 100))
+        #expect(layer.crop == CGRect(x: 50, y: 50, width: 100, height: 100))
+    }
+
+    @Test func cropContentAccountsForFrameScale() {
+        // Content 400×400 displayed in a 200×200 frame (2× downscale).
+        var layer = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 400, height: 400))),
+                          frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+        layer.cropContent(to: CGRect(x: 50, y: 0, width: 100, height: 100))
+        #expect(layer.frame == CGRect(x: 50, y: 0, width: 100, height: 100))
+        #expect(layer.crop == CGRect(x: 100, y: 0, width: 200, height: 200))
+    }
+
+    @Test func cropContentComposesWithAnExistingCrop() {
+        // Already cropped to the content's right half (100,0,100,200), shown
+        // in a 100×200 frame at the origin.
+        var layer = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 200, height: 200))),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 200),
+                          crop: CGRect(x: 100, y: 0, width: 100, height: 200))
+        layer.cropContent(to: CGRect(x: 50, y: 100, width: 50, height: 100))
+        #expect(layer.frame == CGRect(x: 50, y: 100, width: 50, height: 100))
+        #expect(layer.crop == CGRect(x: 150, y: 100, width: 50, height: 100))
+    }
+
+    @Test func cropContentClampsToTheFrame() {
+        var layer = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 100, height: 100))),
+                          frame: CGRect(x: 100, y: 100, width: 100, height: 100))
+        layer.cropContent(to: CGRect(x: 0, y: 0, width: 150, height: 150))
+        #expect(layer.frame == CGRect(x: 100, y: 100, width: 50, height: 50))
+        #expect(layer.crop == CGRect(x: 0, y: 0, width: 50, height: 50))
+    }
+
+    @Test func cropContentIgnoresNonImageLayersAndEmptyRects() {
+        var note = Layer(name: "A", content: .annotation(AnnotationContent(shape: .rectangle)),
+                         frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        note.cropContent(to: CGRect(x: 10, y: 10, width: 50, height: 50))
+        #expect(note.crop == nil)
+        #expect(note.frame == CGRect(x: 0, y: 0, width: 100, height: 100))
+
+        var image = Layer(name: "L", content: .image(ImageRef(pixelSize: CGSize(width: 100, height: 100))),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        image.cropContent(to: CGRect(x: 500, y: 500, width: 50, height: 50))
+        #expect(image.crop == nil, "a rect outside the frame changes nothing")
+    }
+
     // MARK: Rule-of-thirds grid
 
     @Test func thirdsLinesDivideTheRectInThree() {

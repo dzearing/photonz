@@ -118,4 +118,38 @@ struct DocumentRendererTests {
         let doc = PhotonzDocument(canvasSize: .zero)
         #expect(renderer.render(doc, store: ImageStore()) == nil)
     }
+
+    /// Two-tone CGImage: left half red, right half blue.
+    private func twoToneImage(width: Int, height: Int) -> CGImage {
+        let context = CGContext(data: nil, width: width, height: height,
+                                bitsPerComponent: 8, bytesPerRow: width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width / 2, height: height))
+        context.setFillColor(CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        context.fill(CGRect(x: width / 2, y: 0, width: width - width / 2, height: height))
+        return context.makeImage()!
+    }
+
+    @Test func cropContentKeepsPixelsInPlaceOnCanvas() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 100, height: 100, r: 0, g: 255, b: 0))
+        // Left half red, right half blue, placed 1:1 at (10, 10).
+        let patch = store.register(twoToneImage(width: 40, height: 40))
+
+        var doc = PhotonzDocument.withBaseImage(base)
+        var layer = Layer(name: "Patch", content: .image(patch),
+                          frame: CGRect(x: 10, y: 10, width: 40, height: 40))
+        // Keep only the blue right half.
+        layer.cropContent(to: CGRect(x: 30, y: 10, width: 20, height: 40))
+        doc.addLayer(layer)
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        let kept = pixel(output, x: 40, y: 30)
+        #expect(kept.b > 240, "kept pixels render where they were — got \(kept)")
+        let dropped = pixel(output, x: 20, y: 30)
+        #expect(dropped.g > 240 && dropped.r < 16,
+                "cropped-away region shows the backdrop — got \(dropped)")
+    }
 }

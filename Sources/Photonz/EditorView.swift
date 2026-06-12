@@ -51,6 +51,7 @@ struct EditorView: View {
                        selection: appState.selection,
                        cropRect: appState.cropRect,
                        cropAspect: appState.cropAspect,
+                       cropBounds: appState.cropBounds,
                        selectedLayerID: appState.selectedLayerID,
                        selectedLayerFrame: appState.selectedLayerFrame,
                        dragPreview: appState.dragPreview,

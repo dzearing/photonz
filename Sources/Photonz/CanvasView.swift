@@ -28,6 +28,8 @@ struct CanvasView: NSViewRepresentable {
     /// Pending crop rect + aspect lock while the crop tool is active.
     let cropRect: CGRect?
     let cropAspect: CropAspect
+    /// What the crop rect is confined to (canvas, or a layer's frame).
+    let cropBounds: CGRect?
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
     let dragPreview: DragPreview?
@@ -64,7 +66,7 @@ struct CanvasView: NSViewRepresentable {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, cropRect: cropRect, cropAspect: cropAspect,
-                   selectedLayerID: selectedLayerID,
+                   cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent, textContent: textContent)
     }
@@ -144,6 +146,9 @@ final class CanvasNSView: NSView {
     private var cropRect: CGRect?
     /// Crop aspect lock, echoed from AppState; drags constrain through it.
     private var cropAspect: CropAspect = .free
+    /// Crop confinement (canvas, or the target layer's frame), echoed from
+    /// AppState. Nil falls back to the full document.
+    private var cropBounds: CGRect?
 
     /// In-progress crop-rect drag. `startRect` restores on Esc and on
     /// click-without-drag.
@@ -418,21 +423,22 @@ final class CanvasNSView: NSView {
         guard let viewport else { return }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         if var drag = cropDrag {
+            let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
             switch drag.kind {
             case .resize(let handle):
                 guard let start = drag.startRect else { break }
                 cropRect = Crop.resize(start, dragging: handle, to: p,
-                                       aspect: cropAspect, canvas: viewport.documentSize)
+                                       aspect: cropAspect, bounds: bounds)
             case .move:
                 if let rect = cropRect {
                     cropRect = Crop.moved(rect, by: CGPoint(x: p.x - drag.lastPoint.x,
                                                             y: p.y - drag.lastPoint.y),
-                                          in: viewport.documentSize)
+                                          in: bounds)
                 }
             case .define(let anchor):
                 // An empty drag (a stray click) keeps the existing rect.
                 cropRect = Crop.dragRect(anchor: anchor, current: p, aspect: cropAspect,
-                                         canvas: viewport.documentSize) ?? drag.startRect
+                                         bounds: bounds) ?? drag.startRect
             }
             drag.lastPoint = p
             cropDrag = drag
@@ -627,7 +633,7 @@ final class CanvasNSView: NSView {
 
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
-              cropRect: cropRect, cropAspect: cropAspect,
+              cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent)
@@ -638,12 +644,13 @@ final class CanvasNSView: NSView {
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
-               selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                textContent: TextContent?) {
         self.annotationContent = annotationContent
         self.textContent = textContent
         self.cropAspect = cropAspect
+        self.cropBounds = cropBounds
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation/endpoint edit.
@@ -746,8 +753,14 @@ final class CanvasNSView: NSView {
         }
         let rectInView = viewRect(forDocRect: rect, in: viewport)
 
+        // For a per-layer crop the dim covers just the layer's frame — only
+        // that layer's pixels outside the rect go away.
         let dim = CGMutablePath()
-        dim.addRect(viewport.documentFrameInView)
+        if let cropBounds {
+            dim.addRect(viewRect(forDocRect: cropBounds, in: viewport))
+        } else {
+            dim.addRect(viewport.documentFrameInView)
+        }
         dim.addRect(rectInView)
         cropDimLayer.path = dim
 

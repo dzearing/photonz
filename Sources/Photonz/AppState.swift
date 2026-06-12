@@ -32,6 +32,9 @@ final class AppState {
     private(set) var cropRect: CGRect?
     /// Crop aspect lock; the crop rect always honors it.
     private(set) var cropAspect: CropAspect = .free
+    /// When set, crop mode targets this layer (non-destructive content crop)
+    /// instead of the whole document.
+    private(set) var cropTargetLayerID: UUID?
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     private(set) var annotationStyles: AnnotationStyles = AppState.loadAnnotationStyles()
@@ -114,9 +117,22 @@ final class AppState {
 
     func setTool(_ tool: Tool) {
         guard activeTool != tool else { return }
-        // Entering crop mode adopts the marquee selection as the starting rect
-        // (a common flow: marquee the region, then C to crop to it).
-        cropRect = tool == .crop ? defaultCropRect() : nil
+        if tool == .crop {
+            // A selected image layer makes this a per-layer crop; otherwise
+            // the marquee selection seeds the rect (a common flow: marquee
+            // the region, then C to crop to it).
+            if let id = selectedLayerID, let layer = document?.layer(id: id),
+               layer.supportsContentCrop {
+                cropTargetLayerID = id
+                cropRect = Crop.fitted(layer.frame, to: cropAspect)
+            } else {
+                cropTargetLayerID = nil
+                cropRect = defaultCropRect()
+            }
+        } else {
+            cropTargetLayerID = nil
+            cropRect = nil
+        }
         activeTool = tool
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't.
@@ -134,6 +150,16 @@ final class AppState {
         return Crop.fitted(base, to: cropAspect)
     }
 
+    /// What the crop rect is confined to: the target layer's frame for a
+    /// per-layer crop, else the whole canvas.
+    var cropBounds: CGRect? {
+        guard activeTool == .crop, let document else { return nil }
+        if let id = cropTargetLayerID, let layer = document.layer(id: id) {
+            return layer.frame
+        }
+        return CGRect(origin: .zero, size: document.canvasSize)
+    }
+
     /// Crop rect updates from the canvas (drags already aspect-locked and
     /// canvas-clamped by `Crop`).
     func setCropRect(_ rect: CGRect) {
@@ -146,11 +172,20 @@ final class AppState {
         if let rect = cropRect { cropRect = Crop.fitted(rect, to: aspect) }
     }
 
-    /// ⏎ or the toolbar checkmark: one undo step, then back to select.
+    /// ⏎ or the toolbar checkmark: one undo step, then back to select. A
+    /// layer target gets a non-destructive content crop and stays selected;
+    /// otherwise the whole document crops.
     func commitCrop() {
         guard let rect = cropRect else { return }
-        perform { $0.crop(to: Geometry.pixelAligned(rect)) }
+        let aligned = Geometry.pixelAligned(rect)
+        let target = cropTargetLayerID
+        if let target {
+            perform { $0.updateLayer(id: target) { $0.cropContent(to: aligned) } }
+        } else {
+            perform { $0.crop(to: aligned) }
+        }
         setTool(.select)
+        selectedLayerID = target
     }
 
     /// ⎋ or the toolbar ✕: discard the pending rect.
@@ -455,6 +490,13 @@ final class AppState {
         // Undo can remove the selected layer out from under us.
         if let id = selectedLayerID, document.layer(id: id) == nil {
             selectedLayerID = nil
+        }
+        // Same for a per-layer crop target: fall back to a document crop.
+        if let id = cropTargetLayerID, document.layer(id: id) == nil {
+            cropTargetLayerID = nil
+            if activeTool == .crop {
+                cropRect = Crop.fitted(CGRect(origin: .zero, size: document.canvasSize), to: cropAspect)
+            }
         }
         // Same for the layer behind an inline text edit (the canvas cancels
         // its editor when the layer disappears).

@@ -18,7 +18,8 @@
     {
       "id": "4.3",
       "title": "Per-layer crop (drag inside layer bounds)",
-      "status": "pending"
+      "status": "done",
+      "notes": "Core: Layer.cropContent(to:) + supportsContentCrop (image layers only — text/annotations re-rasterize at frame size so a stored crop would chase its own tail). Maps a canvas-space sub-rect through the frame→content scale into layer.crop (composes with existing crop) and shrinks the frame, so kept pixels stay put on canvas; renderer pixel test proves it. Crop.resize/moved/dragRect generalized to CGRect bounds (CGSize canvas overloads kept). UI: entering crop with a selected image layer targets it — AppState.cropTargetLayerID + cropBounds (layer frame) confine drags and the dim; commit = one undo step, layer stays selected; undo mid-crop of the target layer falls back to document crop. Verified in /tmp/photonz-crop-harness T16 (pixel-checked two-tone crop)."
     },
     {
       "id": "4.4",
