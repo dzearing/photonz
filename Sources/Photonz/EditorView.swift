@@ -58,6 +58,7 @@ struct EditorView: View {
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
                        onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) },
                        onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
+                       onAnnotationEndpointsCommit: { appState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onToolChange: { appState.setTool($0) },
                        onTextEditBegin: { appState.beginTextEdit(layerID: $0) },
                        onTextCommit: { appState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
@@ -90,7 +91,8 @@ struct EditorView: View {
             toolButton(.ellipse, "circle", "Ellipse", "o")
             toolButton(.highlight, "highlighter", "Highlight", "h")
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
-            if appState.activeTool.createsAnnotationByDrag || appState.activeTool == .text {
+            if appState.activeTool.createsAnnotationByDrag || appState.activeTool == .text
+                || appState.selectedAnnotationLayer != nil {
                 styleButton
             }
             Divider().frame(height: 20)
@@ -119,12 +121,34 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
     }
 
-    /// The color the active tool will draw with (annotation or text).
+    /// The annotation the popover is editing when one is selected (select
+    /// tool); otherwise the popover sets defaults for the active tool.
+    private var selectedAnnotation: AnnotationContent? {
+        appState.selectedAnnotationLayer?.annotation
+    }
+
+    /// The color the popover currently represents: the selected annotation's,
+    /// or what the active tool will draw with (annotation or text).
     private var activeToolColorHex: String {
+        if let selected = selectedAnnotation {
+            return selected.colorHex
+        }
         if appState.activeTool == .text {
             return appState.textStyles.colorHex
         }
         return appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30"
+    }
+
+    /// Stroke width applies to stroke shapes only — highlight is a fill.
+    private var showsStrokeWidthRow: Bool {
+        if let selected = selectedAnnotation {
+            return selected.shape != .highlight
+        }
+        return appState.activeTool.usesStrokeWidth
+    }
+
+    private var editedStrokeWidth: CGFloat {
+        selectedAnnotation?.strokeWidth ?? appState.annotationStyles.strokeWidth
     }
 
     /// Swatch showing the active tool's color; opens the style popover.
@@ -154,7 +178,7 @@ struct EditorView: View {
             }
             if appState.activeTool == .text {
                 fontPicker
-            } else if appState.activeTool.usesStrokeWidth {
+            } else if showsStrokeWidthRow {
                 HStack(spacing: 10) {
                     ForEach(AnnotationStyles.strokeWidths, id: \.self) { width in
                         strokeWidthDot(width)
@@ -227,7 +251,7 @@ struct EditorView: View {
 
     /// Dot whose diameter tracks the stroke width it selects.
     private func strokeWidthDot(_ width: CGFloat) -> some View {
-        let isSelected = appState.annotationStyles.strokeWidth == width
+        let isSelected = editedStrokeWidth == width
         return Button {
             appState.setAnnotationStrokeWidth(width)
         } label: {

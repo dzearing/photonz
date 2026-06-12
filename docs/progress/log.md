@@ -2,6 +2,16 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 3.5: annotations editable after the fact
+
+- **Core** (`PhotonzCore/AnnotationEditing.swift`, 27 new tests): `AnnotationBuilder.updating` rebuilds a layer between doc-space endpoints (identity/style preserved, frame re-padded exactly like a fresh drag); `.resized` remaps endpoints proportionally into a proposed frame — closes the 3.2 handle-resize distort/clip gotcha (`Layer.resized(to:)` dispatches by content type); `.restyled` applies color/strokeWidth with endpoints anchored while the frame re-pads. `AnnotationEndpointDrag` mirrors `AnnotationDrag` (⇧ = 45° snap around the fixed endpoint). Hit-testing is now zoom-aware: lines/arrows hit within `strokeWidth/2 + 6/zoom` of their segment (`Geometry.distance(from:toSegmentFrom:to:)`), so the empty corners of a diagonal arrow's bbox fall through to layers beneath.
+- **Decisions**: text layers never frame-resize (`allowsFrameResize == false`; size changes go through the font picker — render-time re-wrap/rescale was unpredictable); lines/arrows get two round endpoint handles and *no* frame outline (a box around a diagonal stroke read as phantom chrome); restyling a selected annotation also becomes the default for new ones.
+- **App**: endpoint drags reuse the drag-to-create vector preview over the drag-preview underlay — zero per-move rendering; `endpointHoldLayerID` keeps underlay+preview up until the post-commit composite lands (no flash). Style popover targets `AppState.selectedAnnotationLayer` when the select tool has an annotation selected (swatch button appears in the toolbar for it). Esc mid-endpoint-drag cancels via a History-no-op commit, same as resize.
+- **Fixed a latent bug the harness caught**: a click-select leaves `dragPreview` alive (sprite held over the underlay), so content edits beneath it — restyle, undo, redo — kept drawing the stale sprite (canvas showed the old red arrow while the composite was already blue). `AppState.discardDragPreview()` now drops the preview on those paths.
+- 207 tests green. Verified with a 50-check in-process harness (`/tmp/photonz-35-harness`): segment hit-testing, endpoint drag (plain/⇧/Esc/undo/redo), rect resize remap with pixel-checked outline migration, restyle (canvas-level pixel checks, not just composite), text no-resize, highlight width guard, persistence. PNGs reviewed. Harness gotcha: keyboard shortcuts typed while the inline text editor is focused go into the editor — commit drafts via click-away first.
+- **Known approximation** (carried from 2.6): box-annotation handle-resize stretches the sprite mid-drag (stroke appears scaled), snapping to the constant stroke on commit.
+- **Next**: 3.6 remainder (auto-contrast text shadow) to finish phase 3, then phase 4 (crop UI). Manual check still pending from 3.3: Esc with the style popover open should close only the popover.
+
 ## 2026-06-12 — Phase 3.4: text blocks (click to place, inline editing, font picker)
 
 - **Core**: `TextWeight` (regular/medium/semibold/bold) + `TextContent.weight` with a custom decoder so pre-weight payloads still decode; `TextStyles` (`PhotonzCore/TextStyles.swift`, font/size/weight/color + curated font/size lists, `adopt()` for re-edit seeding); `TextBuilder` click-point→frame math. 10 new core tests.

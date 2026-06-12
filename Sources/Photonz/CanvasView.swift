@@ -43,6 +43,7 @@ struct CanvasView: NSViewRepresentable {
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
+    let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -71,6 +72,7 @@ struct CanvasView: NSViewRepresentable {
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
         view.onAnnotationCommit = onAnnotationCommit
+        view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
@@ -87,6 +89,7 @@ final class CanvasNSView: NSView {
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -186,6 +189,23 @@ final class CanvasNSView: NSView {
     }
     private var resizeDrag: ResizeDrag?
 
+    /// In-progress endpoint drag on a selected line/arrow. The geometry lives
+    /// in `AnnotationEndpointDrag` (core, tested); this wraps it with what the
+    /// canvas needs for preview styling and Esc-cancel.
+    private struct EndpointDragSession {
+        let layerID: UUID
+        /// The layer's content, for styling the vector preview.
+        let content: AnnotationContent
+        let originalStart: CGPoint
+        let originalEnd: CGPoint
+        var drag: AnnotationEndpointDrag
+    }
+    private var endpointDrag: EndpointDragSession?
+    /// After an endpoint commit, the underlay + vector preview stay up until
+    /// the re-rendered composite lands — the sprite can't represent the
+    /// re-shaped layer, so this replaces the `previewedFrame` hold.
+    private var endpointHoldLayerID: UUID?
+
     // Viewport math is top-left origin; flipping makes view coords match.
     override var isFlipped: Bool { true }
 
@@ -276,19 +296,35 @@ final class CanvasNSView: NSView {
         // Double-click on a text layer re-opens it for inline editing. Checked
         // before handles: on a small text layer the handle hit zones cover the
         // whole frame and would eat the double-click.
-        if event.clickCount == 2, let hit = document?.hitTest(p), case .text = hit.content {
+        if event.clickCount == 2, let hit = document?.hitTest(p, zoom: viewport.zoom),
+           case .text = hit.content {
             beginTextSession(layerID: hit.id, at: hit.frame.origin)
             return
         }
         // Handles take priority over moves: they extend past the layer's frame.
+        // Lines/arrows expose their endpoints; everything else (that resizes)
+        // gets the eight frame handles.
+        let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
+        if let id = selectedLayerID, let layer = selectedLayer, let content = layer.annotation,
+           let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
+           let drag = AnnotationEndpointDrag(layer: layer, endpoint: endpoint),
+           let start = layer.annotationEndpoint(.start), let end = layer.annotationEndpoint(.end) {
+            endpointDrag = EndpointDragSession(layerID: id, content: content,
+                                               originalStart: start, originalEnd: end, drag: drag)
+            onDragBegin(id)
+            refreshEndpointPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
+            return
+        }
         if let id = selectedLayerID, let frame = selectedLayerFrame,
+           selectedLayer?.allowsFrameResize ?? true,
            let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
             resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
             onDragBegin(id)
             refreshOverlays()
             return
         }
-        if let hit = document?.hitTest(p) {
+        if let hit = document?.hitTest(p, zoom: viewport.zoom) {
             onSelectLayer(hit.id)
             onDragBegin(hit.id)
             selectedLayerFrame = hit.frame
@@ -315,6 +351,11 @@ final class CanvasNSView: NSView {
             drag.update(to: p)
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+        } else if var session = endpointDrag {
+            session.drag.update(to: p)
+            endpointDrag = session
+            refreshEndpointPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
         } else if var drag = resizeDrag {
             drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle, to: p,
                                         preserveAspect: event.modifierFlags.contains(.shift))
@@ -356,6 +397,15 @@ final class CanvasNSView: NSView {
                 onAnnotationCommit(drag.anchor,
                                    drag.end(constrained: event.modifierFlags.contains(.shift), shape: shape))
             }
+        } else if let session = endpointDrag {
+            endpointDrag = nil
+            let (start, end) = session.drag.endpoints(constrained: event.modifierFlags.contains(.shift))
+            // Same no-flash hold as drag-to-create: the vector preview (over
+            // the underlay) stands in until the re-rendered composite lands.
+            annotationCommitImage = image
+            endpointHoldLayerID = session.layerID
+            onAnnotationEndpointsCommit(session.layerID, start, end)
+            refreshOverlays()
         } else if let drag = resizeDrag {
             resizeDrag = nil
             if drag.frame != drag.startFrame {
@@ -388,6 +438,15 @@ final class CanvasNSView: NSView {
             if annotationDrag != nil {
                 annotationDrag = nil
                 clearAnnotationPreview()
+                return
+            }
+            if let session = endpointDrag {
+                endpointDrag = nil
+                clearAnnotationPreview()
+                // Committing the original endpoints is a History no-op but
+                // resets the preview render, like the resize-drag cancel.
+                onAnnotationEndpointsCommit(session.layerID, session.originalStart, session.originalEnd)
+                refreshOverlays()
                 return
             }
             if let drag = resizeDrag {
@@ -479,8 +538,9 @@ final class CanvasNSView: NSView {
         self.textContent = textContent
         if tool != self.tool {
             self.tool = tool
-            // A tool switch mid-drag abandons the draft annotation.
+            // A tool switch mid-drag abandons the draft annotation/endpoint edit.
             annotationDrag = nil
+            endpointDrag = nil
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
             // tick because this runs inside a SwiftUI update.
@@ -574,6 +634,15 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshPreviewSprite() {
+        // Endpoint drags re-shape the layer per move — a stretched sprite
+        // can't represent that, so the vector preview draws over the underlay
+        // alone (during the drag and through the post-commit hold).
+        if let dragPreview, let holdID = endpointDrag?.layerID ?? endpointHoldLayerID,
+           holdID == dragPreview.layerID {
+            contentLayer.contents = dragPreview.underlay
+            previewSpriteLayer.isHidden = true
+            return
+        }
         guard let viewport, let dragPreview, let frame = previewedFrame else {
             previewSpriteLayer.isHidden = true
             if let image, !contentLayer.isHidden { contentLayer.contents = image }
@@ -627,21 +696,45 @@ final class CanvasNSView: NSView {
             handlesLayer.isHidden = true
             return
         }
-        let outlineRect = viewRect(forDocRect: frame, in: viewport)
-        layerOutlineLayer.path = CGPath(rect: outlineRect, transform: nil)
-        layerOutlineLayer.isHidden = false
+        let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
+        let dragInFlight = moveDrag != nil || resizeDrag != nil
+            || endpointDrag != nil || endpointHoldLayerID != nil
 
-        // Handles: 8pt squares in view space, hidden while a drag is in flight.
-        if moveDrag == nil, resizeDrag == nil {
-            let handles = CGMutablePath()
-            for handle in ResizeHandle.allCases {
-                let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: frame))
-                handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+        if selectedLayer?.hasEndpointHandles == true {
+            // A line/arrow is its stroke; a rectangle outline around the
+            // padded frame reads as a phantom box. Round endpoint handles
+            // replace the whole frame chrome.
+            layerOutlineLayer.isHidden = true
+            if !dragInFlight, let layer = selectedLayer {
+                let handles = CGMutablePath()
+                for endpoint in AnnotationEndpoint.allCases {
+                    guard let dp = layer.annotationEndpoint(endpoint) else { continue }
+                    let p = viewport.viewPoint(fromDocument: dp)
+                    handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
+                }
+                handlesLayer.path = handles
+                handlesLayer.isHidden = false
+            } else {
+                handlesLayer.isHidden = true
             }
-            handlesLayer.path = handles
-            handlesLayer.isHidden = false
         } else {
-            handlesLayer.isHidden = true
+            let outlineRect = viewRect(forDocRect: frame, in: viewport)
+            layerOutlineLayer.path = CGPath(rect: outlineRect, transform: nil)
+            layerOutlineLayer.isHidden = false
+
+            // Handles: 8pt squares in view space, hidden while a drag is in
+            // flight and for layers that don't frame-resize (text).
+            if !dragInFlight, selectedLayer?.allowsFrameResize ?? true {
+                let handles = CGMutablePath()
+                for handle in ResizeHandle.allCases {
+                    let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: frame))
+                    handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+                }
+                handlesLayer.path = handles
+                handlesLayer.isHidden = false
+            } else {
+                handlesLayer.isHidden = true
+            }
         }
 
         // Guides span the whole document so the alignment target is obvious.
@@ -673,22 +766,44 @@ final class CanvasNSView: NSView {
 
     private func clearAnnotationPreview() {
         annotationCommitImage = nil
+        endpointHoldLayerID = nil
         annotationPreviewLayer.isHidden = true
         annotationPreviewLayer.path = nil
         annotationPreviewHeadLayer.path = nil
     }
 
-    /// Draws the in-flight annotation as vector shapes in view coordinates —
-    /// faithful to the rasterizer so the held preview swaps invisibly for the
-    /// real composite after commit.
+    /// In-flight drag-to-create: preview the active tool's styled content.
     private func refreshAnnotationPreview(constrained: Bool) {
-        guard let viewport, let drag = annotationDrag,
+        guard let drag = annotationDrag,
               let content = annotationContent ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return
         }
-        let docEnd = drag.end(constrained: constrained, shape: content.shape)
-        let start = viewport.viewPoint(fromDocument: drag.anchor)
+        displayAnnotationPreview(content: content, docStart: drag.anchor,
+                                 docEnd: drag.end(constrained: constrained, shape: content.shape))
+    }
+
+    /// In-flight endpoint drag: preview the selected layer's content with the
+    /// dragged endpoint applied.
+    private func refreshEndpointPreview(constrained: Bool) {
+        guard let session = endpointDrag else {
+            clearAnnotationPreview()
+            return
+        }
+        let (docStart, docEnd) = session.drag.endpoints(constrained: constrained)
+        displayAnnotationPreview(content: session.content, docStart: docStart, docEnd: docEnd)
+    }
+
+    /// Draws an annotation as vector shapes in view coordinates — faithful to
+    /// the rasterizer so the held preview swaps invisibly for the real
+    /// composite after commit.
+    private func displayAnnotationPreview(content: AnnotationContent,
+                                          docStart: CGPoint, docEnd: CGPoint) {
+        guard let viewport else {
+            clearAnnotationPreview()
+            return
+        }
+        let start = viewport.viewPoint(fromDocument: docStart)
         let end = viewport.viewPoint(fromDocument: docEnd)
         let strokeWidth = content.strokeWidth * viewport.zoom
         let rgba = RGBA(hex: content.colorHex) ?? RGBA(r: 1, g: 0, b: 0)
@@ -710,7 +825,7 @@ final class CanvasNSView: NSView {
             path.addLine(to: end)
             // Head geometry in document space (its minimum size is in doc
             // points), then mapped to view coords.
-            let head = Geometry.arrowhead(start: drag.anchor, end: docEnd,
+            let head = Geometry.arrowhead(start: docStart, end: docEnd,
                                           strokeWidth: content.strokeWidth)
             headPath.addLines(between: head.map { viewport.viewPoint(fromDocument: $0) })
             headPath.closeSubpath()

@@ -36,17 +36,13 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// The color new annotations from `tool` will get, nil for non-annotation tools.
     public func colorHex(for tool: Tool) -> String? {
         guard let shape = tool.annotationShape else { return nil }
-        return shape == .highlight ? highlightColorHex : strokeColorHex
+        return colorHex(forShape: shape)
     }
 
     /// Routes a swatch pick to the bucket the active tool draws from.
     public mutating func setColorHex(_ hex: String, for tool: Tool) {
         guard let shape = tool.annotationShape else { return }
-        if shape == .highlight {
-            highlightColorHex = hex
-        } else {
-            strokeColorHex = hex
-        }
+        setColorHex(hex, forShape: shape)
     }
 
     /// Styled content for a new annotation, nil for non-annotation tools.

@@ -191,10 +191,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// Whether a canvas-space point lands on this layer's transformed shape.
     /// The layer's render-time transform is applied around the frame center,
     /// so hit-testing inverts it and tests against the untransformed frame.
-    public func contains(canvasPoint point: CGPoint) -> Bool {
-        guard !transform.isIdentity else { return frame.contains(point) }
-        let center = CGPoint(x: frame.midX, y: frame.midY)
-        let inverse = transform.affineTransform(around: center).inverted()
-        return frame.contains(point.applying(inverse))
+    /// Lines/arrows hit near their stroke, not their whole (mostly empty)
+    /// padded bounding box; `zoom` keeps that slop constant in screen points.
+    public func contains(canvasPoint point: CGPoint, zoom: CGFloat = 1) -> Bool {
+        var p = point
+        if !transform.isIdentity {
+            let center = CGPoint(x: frame.midX, y: frame.midY)
+            p = point.applying(transform.affineTransform(around: center).inverted())
+        }
+        if let a = annotation, a.shape == .line || a.shape == .arrow {
+            let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)
+            let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
+            let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
+            return Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance
+        }
+        return frame.contains(p)
     }
 }

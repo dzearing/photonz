@@ -70,6 +70,16 @@ public enum Geometry {
         return CGRect(origin: origin, size: target)
     }
 
+    /// Distance from `p` to the closest point on segment `a`–`b`.
+    public static func distance(from p: CGPoint, toSegmentFrom a: CGPoint, to b: CGPoint) -> CGFloat {
+        let abx = b.x - a.x
+        let aby = b.y - a.y
+        let lengthSquared = abx * abx + aby * aby
+        guard lengthSquared > 0 else { return hypot(p.x - a.x, p.y - a.y) }
+        let t = max(0, min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSquared))
+        return hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby))
+    }
+
     /// How far an arrowhead's wings reach from the arrow's axis. Layer frames
     /// must pad by at least this much or rasterization clips the head.
     public static func arrowheadHalfWidth(strokeWidth: CGFloat) -> CGFloat {

@@ -133,14 +133,43 @@ final class AppState {
         annotationStyles.content(for: activeTool)
     }
 
+    /// The selected annotation layer when the select tool is active — the
+    /// style popover edits this layer instead of the new-annotation defaults.
+    var selectedAnnotationLayer: Layer? {
+        guard activeTool == .select, let id = selectedLayerID,
+              let layer = document?.layer(id: id), layer.annotation != nil else { return nil }
+        return layer
+    }
+
+    /// A swatch pick restyles the selected annotation (one undo step) when
+    /// there is one; either way it becomes the default for new annotations.
     func setAnnotationColor(_ hex: String) {
-        annotationStyles.setColorHex(hex, for: activeTool)
+        if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
+            discardDragPreview() // a click-select's held sprite shows the old style
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
+            annotationStyles.setColorHex(hex, forShape: shape)
+        } else {
+            annotationStyles.setColorHex(hex, for: activeTool)
+        }
         saveAnnotationStyles()
     }
 
     func setAnnotationStrokeWidth(_ width: CGFloat) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape != .highlight {
+            discardDragPreview()
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, strokeWidth: width) } }
+        }
         annotationStyles.strokeWidth = width
         saveAnnotationStyles()
+    }
+
+    /// Drops a live drag preview whose sprite no longer matches the layer
+    /// (content edits, undo/redo). The canvas falls back to the last composite
+    /// until the re-render lands, so nothing flashes.
+    private func discardDragPreview() {
+        dragPreviewGeneration += 1
+        dragPreview = nil
+        clearPreviewAfterNextFrame = false
     }
 
     private static let annotationStylesKey = "annotationStyles"
@@ -291,18 +320,30 @@ final class AppState {
         previewMove = (id, frame)
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
-        doc.updateLayer(id: id) { $0.frame = frame }
+        doc.updateLayer(id: id) { $0 = $0.resized(to: frame) }
         submit(doc)
     }
 
     /// Mouse-up: one undoable step from the pre-drag frame to the final one.
     /// Committing back to the original frame is a recognized no-op (History
     /// skips it), which is how an Esc-cancelled drag restores the real render.
+    /// `resized(to:)` remaps annotation endpoints so resize scales the shape.
     func commitLayerFrame(id: UUID, frame: CGRect) {
         previewMove = nil
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
-        perform { $0.updateLayer(id: id) { $0.frame = frame } }
+        perform { $0.updateLayer(id: id) { $0 = $0.resized(to: frame) } }
+    }
+
+    /// Endpoint-drag commit from the canvas (document coords, ⇧ already
+    /// applied). Rebuilds the layer's frame around the new endpoints in one
+    /// undo step; committing the original endpoints is a History no-op (how
+    /// an Esc-cancelled endpoint drag restores the real render).
+    func commitAnnotationEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+        previewMove = nil
+        dragPreviewGeneration += 1
+        clearPreviewAfterNextFrame = dragPreview != nil
+        perform { $0.updateLayer(id: id) { $0 = AnnotationBuilder.updating($0, start: start, end: end) } }
     }
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }
@@ -327,11 +368,13 @@ final class AppState {
     }
 
     func undo() {
+        discardDragPreview() // undone edits may invalidate a held sprite
         history?.undo()
         rerender()
     }
 
     func redo() {
+        discardDragPreview()
         history?.redo()
         rerender()
     }

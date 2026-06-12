@@ -34,10 +34,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     }
 
     /// The topmost editable layer under a canvas point. Top-down order;
-    /// invisible and locked layers never hit.
-    public func hitTest(_ point: CGPoint) -> Layer? {
+    /// invisible and locked layers never hit. `zoom` keeps stroke hit slop
+    /// constant in screen points.
+    public func hitTest(_ point: CGPoint, zoom: CGFloat = 1) -> Layer? {
         layers.reversed().first { layer in
-            layer.isVisible && !layer.isLocked && layer.contains(canvasPoint: point)
+            layer.isVisible && !layer.isLocked && layer.contains(canvasPoint: point, zoom: zoom)
         }
     }
 

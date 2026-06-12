@@ -71,6 +71,19 @@ struct AnnotationStylesTests {
         }
     }
 
+    // 3.5: restyling a selected annotation routes by its shape (there's no
+    // tool in that flow), updating the same buckets the tools draw from.
+    @Test func shapeRoutingMatchesToolRouting() {
+        var styles = AnnotationStyles()
+        styles.setColorHex("#007AFF", forShape: .arrow)
+        #expect(styles.colorHex(forShape: .line) == "#007AFF")
+        #expect(styles.colorHex(for: .arrow) == "#007AFF")
+        #expect(styles.colorHex(forShape: .highlight) == "#FFD60A")
+        styles.setColorHex("#34C759", forShape: .highlight)
+        #expect(styles.colorHex(forShape: .highlight) == "#34C759")
+        #expect(styles.colorHex(forShape: .rectangle) == "#007AFF")
+    }
+
     // The UI builds itself from these; they must be valid and selectable.
     @Test func palettesAreValid() {
         #expect(AnnotationStyles.swatches.count >= 6)
