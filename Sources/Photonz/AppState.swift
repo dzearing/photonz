@@ -263,6 +263,56 @@ final class AppState {
         saveAnnotationStyles()
     }
 
+    // MARK: - Zoom-callout inspector
+
+    /// The selected zoom-callout layer when the select tool is active — the
+    /// style popover becomes the callout inspector for it.
+    var selectedZoomCalloutLayer: Layer? {
+        guard activeTool == .select, let id = selectedLayerID,
+              let layer = document?.layer(id: id), layer.zoomCallout != nil else { return nil }
+        return layer
+    }
+
+    /// The selected callout's magnification, preview-aware so the inspector
+    /// slider doesn't snap back mid-drag (previews live in the frame, and
+    /// frame ÷ source is the magnification by construction).
+    var selectedCalloutMagnification: CGFloat? {
+        guard let layer = selectedZoomCalloutLayer, let callout = layer.zoomCallout,
+              callout.sourceRect.width > 0 else { return nil }
+        return (selectedLayerFrame?.width ?? layer.frame.width) / callout.sourceRect.width
+    }
+
+    /// Slider movement: the box grows around its center via the regular
+    /// frame-preview path (rendered live, no history).
+    func previewCalloutMagnification(_ magnification: CGFloat) {
+        guard let layer = selectedZoomCalloutLayer else { return }
+        previewLayerFrame(id: layer.id, frame: ZoomCalloutBuilder.frame(for: magnification, of: layer))
+    }
+
+    /// Slider release: one undo step from the pre-drag frame to the last
+    /// previewed one (a no-move release is a History no-op).
+    func commitCalloutMagnification() {
+        guard let layer = selectedZoomCalloutLayer, let frame = selectedLayerFrame else { return }
+        commitLayerFrame(id: layer.id, frame: frame)
+    }
+
+    func setCalloutShape(_ shape: ZoomCalloutShape) {
+        guard let layer = selectedZoomCalloutLayer, var callout = layer.zoomCallout,
+              callout.shape != shape else { return }
+        callout.shape = shape
+        perform { $0.updateLayer(id: layer.id) { $0.content = .zoomCallout(callout) } }
+    }
+
+    func setCalloutBorderColor(_ hex: String) {
+        guard let layer = selectedZoomCalloutLayer else { return }
+        perform { $0.updateLayer(id: layer.id) { $0.style.borderColorHex = hex } }
+    }
+
+    func setCalloutBorderWidth(_ width: CGFloat) {
+        guard let layer = selectedZoomCalloutLayer else { return }
+        perform { $0.updateLayer(id: layer.id) { $0.style.borderWidth = width } }
+    }
+
     /// Drops a live drag preview whose sprite no longer matches the layer
     /// (content edits, undo/redo). The canvas falls back to the last composite
     /// until the re-render lands, so nothing flashes.

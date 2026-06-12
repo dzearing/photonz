@@ -46,6 +46,19 @@ public enum ZoomCalloutBuilder {
                      frame: frame, style: style)
     }
 
+    /// Where the callout's frame lands when the inspector slider sets a new
+    /// magnification: the box grows/shrinks around its current center. The
+    /// caller routes the result through the regular frame preview/commit path,
+    /// and `resized(to:)` re-derives the same magnification from it.
+    public static func frame(for magnification: CGFloat, of layer: Layer) -> CGRect {
+        guard let callout = layer.zoomCallout else { return layer.frame }
+        let size = CGSize(width: callout.sourceRect.width * magnification,
+                          height: callout.sourceRect.height * magnification)
+        return CGRect(x: layer.frame.midX - size.width / 2,
+                      y: layer.frame.midY - size.height / 2,
+                      width: size.width, height: size.height)
+    }
+
     /// Frame edit on a callout: magnification follows the frame so the stored
     /// value (what the inspector slider shows, and what scales the source
     /// outline's corner radius) keeps matching what's rendered.

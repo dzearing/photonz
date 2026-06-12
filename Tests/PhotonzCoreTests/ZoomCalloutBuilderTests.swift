@@ -78,6 +78,50 @@ struct ZoomCalloutBuilderTests {
         #expect(layer.frame == CGRect(x: 5, y: 5, width: 20, height: 20))
     }
 
+    @Test func legacyPayloadDecodesToRectangleShape() throws {
+        let json = #"{"sourceRect":[[10,10],[20,20]],"magnification":2}"#
+        let content = try JSONDecoder().decode(ZoomCalloutContent.self, from: Data(json.utf8))
+        #expect(content.shape == .rectangle)
+        #expect(content.sourceRect == CGRect(x: 10, y: 10, width: 20, height: 20))
+    }
+
+    @Test func shapeRoundTripsThroughCodable() throws {
+        var content = ZoomCalloutContent(sourceRect: CGRect(x: 0, y: 0, width: 10, height: 10))
+        content.shape = .circle
+        let data = try JSONEncoder().encode(content)
+        let decoded = try JSONDecoder().decode(ZoomCalloutContent.self, from: data)
+        #expect(decoded.shape == .circle)
+    }
+
+    @Test func circleEffectiveRadiusIsHalfTheShortSide() {
+        var content = ZoomCalloutContent(sourceRect: CGRect(x: 0, y: 0, width: 20, height: 20))
+        content.shape = .circle
+        #expect(content.effectiveCornerRadius(boxSize: CGSize(width: 60, height: 40), styleRadius: 6) == 20)
+    }
+
+    @Test func rectangleEffectiveRadiusFollowsStyle() {
+        let content = ZoomCalloutContent(sourceRect: CGRect(x: 0, y: 0, width: 20, height: 20))
+        #expect(content.effectiveCornerRadius(boxSize: CGSize(width: 60, height: 40), styleRadius: 6) == 6)
+    }
+
+    @Test func magnificationFrameKeepsTheCenter() {
+        let layer = ZoomCalloutBuilder.layer(from: CGPoint(x: 20, y: 30),
+                                             to: CGPoint(x: 80, y: 90), canvas: canvas)!
+        // 60×60 source at 2× → 120×120 frame. At 3× the frame grows to
+        // 180×180 around the same center.
+        let frame = ZoomCalloutBuilder.frame(for: 3, of: layer)
+        #expect(frame.size == CGSize(width: 180, height: 180))
+        #expect(frame.midX == layer.frame.midX && frame.midY == layer.frame.midY)
+        // Round-tripping through resized(to:) recovers the magnification.
+        #expect(layer.resized(to: frame).zoomCallout?.magnification == 3)
+    }
+
+    @Test func magnificationFrameOfNonCalloutIsUnchanged() {
+        let layer = Layer(name: "Image", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
+                          frame: CGRect(x: 5, y: 5, width: 10, height: 10))
+        #expect(ZoomCalloutBuilder.frame(for: 3, of: layer) == layer.frame)
+    }
+
     @Test func zoomCalloutToolIsNotAnAnnotationTool() {
         #expect(Tool.zoomCallout.annotationShape == nil)
         #expect(!Tool.zoomCallout.createsAnnotationByDrag)

@@ -52,12 +52,14 @@ struct ZoomCalloutRenderingTests {
     }
 
     private func calloutLayer(source: CGRect, magnification: CGFloat,
-                              frame: CGRect? = nil, style: LayerStyle = LayerStyle()) -> Layer {
+                              frame: CGRect? = nil, style: LayerStyle = LayerStyle(),
+                              shape: ZoomCalloutShape = .rectangle) -> Layer {
         let frame = frame ?? CGRect(x: 0, y: 0,
                                     width: source.width * magnification,
                                     height: source.height * magnification)
         return Layer(name: "Zoom",
-                     content: .zoomCallout(ZoomCalloutContent(sourceRect: source, magnification: magnification)),
+                     content: .zoomCallout(ZoomCalloutContent(sourceRect: source, magnification: magnification,
+                                                              shape: shape)),
                      frame: frame, style: style)
     }
 
@@ -218,6 +220,50 @@ struct ZoomCalloutRenderingTests {
         // Leader line: the diagonal (30,30)→(120,120) passes through (75,75).
         let leader = pixel(output, x: 75, y: 75)
         #expect(leader.g > 90, "leader line tints the canvas between boxes — got \(leader)")
+    }
+
+    @Test func circleShapeClipsBoxCorners() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 100, height: 100, r: 255, g: 0, b: 0))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 200, height: 200)
+
+        doc.addLayer(calloutLayer(source: CGRect(x: 10, y: 10, width: 30, height: 30),
+                                  magnification: 2,
+                                  frame: CGRect(x: 120, y: 120, width: 60, height: 60),
+                                  shape: .circle))
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        let center = pixel(output, x: 150, y: 150)
+        #expect(center.r > 240, "circle interior shows the magnified source — got \(center)")
+        // All four box corners fall outside the inscribed circle.
+        for (x, y) in [(123, 123), (177, 123), (123, 177), (177, 177)] {
+            let corner = pixel(output, x: x, y: y)
+            #expect(corner.a < 64, "circle clips the box corner (\(x),\(y)) — got \(corner)")
+        }
+    }
+
+    @Test func circleShapeOutlinesSourceAsCircle() {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 100, height: 100, r: 255, g: 0, b: 0))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 200, height: 200)
+
+        var style = LayerStyle()
+        style.borderWidth = 2
+        style.borderColorHex = "#00FF00"
+        doc.addLayer(calloutLayer(source: CGRect(x: 10, y: 10, width: 30, height: 30),
+                                  magnification: 2,
+                                  frame: CGRect(x: 120, y: 120, width: 60, height: 60),
+                                  style: style, shape: .circle))
+
+        let output = DocumentRenderer().render(doc, store: store)!
+        // Top-center of the source box lies on the circle: stroked.
+        let topCenter = pixel(output, x: 25, y: 10)
+        #expect(topCenter.g > 180, "source circle stroked at its top — got \(topCenter)")
+        // The box corner is off the circle: red base shows through.
+        let corner = pixel(output, x: 11, y: 11)
+        #expect(corner.r > 200 && corner.g < 100, "source corner left unstroked — got \(corner)")
     }
 
     @Test func sourceRectClampedToCanvasDoesNotCrash() {

@@ -13,7 +13,8 @@ public enum ZoomCalloutOverlayRasterizer {
     /// callout's border style; its corner radius is the callout's divided by
     /// `magnification` so both boxes read as the same shape at different scales.
     public static func rasterize(source: CGRect, callout: CGRect,
-                                 style: LayerStyle, magnification: CGFloat) -> (image: CGImage, origin: CGPoint)? {
+                                 style: LayerStyle, magnification: CGFloat,
+                                 shape: ZoomCalloutShape = .rectangle) -> (image: CGImage, origin: CGPoint)? {
         let source = source.standardized
         guard source.width >= 1, source.height >= 1 else { return nil }
 
@@ -55,9 +56,11 @@ public enum ZoomCalloutOverlayRasterizer {
         context.setStrokeColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b,
                                        alpha: rgba.a * opacity))
         context.setLineWidth(outlineWidth)
-        let radius = magnification > 0
+        let scaledStyleRadius = magnification > 0
             ? min(style.cornerRadius / magnification, min(source.width, source.height) / 2)
             : 0
+        let radius = ZoomCalloutContent(sourceRect: source, shape: shape)
+            .effectiveCornerRadius(boxSize: source.size, styleRadius: scaledStyleRadius)
         if radius > 0 {
             context.addPath(CGPath(roundedRect: source, cornerWidth: radius, cornerHeight: radius, transform: nil))
             context.strokePath()

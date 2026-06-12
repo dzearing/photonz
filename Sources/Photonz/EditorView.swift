@@ -110,7 +110,8 @@ struct EditorView: View {
             toolButton(.highlight, "highlighter", "Highlight", "h")
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
             if appState.activeTool.createsAnnotationByDrag || appState.activeTool == .text
-                || appState.selectedAnnotationLayer != nil {
+                || appState.selectedAnnotationLayer != nil
+                || appState.selectedZoomCalloutLayer != nil {
                 styleButton
             }
             Divider().frame(height: 20)
@@ -199,9 +200,12 @@ struct EditorView: View {
         appState.selectedAnnotationLayer?.annotation
     }
 
-    /// The color the popover currently represents: the selected annotation's,
-    /// or what the active tool will draw with (annotation or text).
+    /// The color the popover currently represents: the selected annotation's
+    /// or callout's, or what the active tool will draw with.
     private var activeToolColorHex: String {
+        if let callout = appState.selectedZoomCalloutLayer {
+            return callout.style.borderColorHex
+        }
         if let selected = selectedAnnotation {
             return selected.colorHex
         }
@@ -213,6 +217,9 @@ struct EditorView: View {
 
     /// Stroke width applies to stroke shapes only — highlight is a fill.
     private var showsStrokeWidthRow: Bool {
+        if appState.selectedZoomCalloutLayer != nil {
+            return true
+        }
         if let selected = selectedAnnotation {
             return selected.shape != .highlight
         }
@@ -220,7 +227,9 @@ struct EditorView: View {
     }
 
     private var editedStrokeWidth: CGFloat {
-        selectedAnnotation?.strokeWidth ?? appState.annotationStyles.strokeWidth
+        appState.selectedZoomCalloutLayer?.style.borderWidth
+            ?? selectedAnnotation?.strokeWidth
+            ?? appState.annotationStyles.strokeWidth
     }
 
     /// Swatch showing the active tool's color; opens the style popover.
@@ -258,12 +267,62 @@ struct EditorView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+            if appState.selectedZoomCalloutLayer != nil {
+                calloutInspector
+            }
         }
         .padding(16)
         .buttonStyle(.plain)
         .presentationBackground(.clear)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
         .padding(8)
+    }
+
+    /// Magnification + shape controls for the selected zoom callout. Color and
+    /// width reuse the shared swatch/dot rows above.
+    private var calloutInspector: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                Slider(value: Binding(
+                    get: { Double(appState.selectedCalloutMagnification ?? 2) },
+                    set: { appState.previewCalloutMagnification(CGFloat($0)) }),
+                       in: 1.25...6) { editing in
+                    if !editing { appState.commitCalloutMagnification() }
+                }
+                Text(Double(appState.selectedCalloutMagnification ?? 2)
+                    .formatted(.number.precision(.fractionLength(1))) + "×")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 34, alignment: .trailing)
+            }
+            HStack(spacing: 6) {
+                calloutShapeButton(.rectangle, "rectangle", "Rectangular callout")
+                calloutShapeButton(.circle, "circle", "Circular callout")
+            }
+        }
+        .frame(width: 220)
+    }
+
+    private func calloutShapeButton(_ shape: ZoomCalloutShape, _ symbol: String,
+                                    _ help: String) -> some View {
+        let isActive = appState.selectedZoomCalloutLayer?.zoomCallout?.shape == shape
+        return Button {
+            appState.setCalloutShape(shape)
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(isActive ? Color.white : Color.primary)
+                .frame(width: 28, height: 24)
+                .background {
+                    if isActive {
+                        RoundedRectangle(cornerRadius: 6).fill(Color.accentColor)
+                    }
+                }
+        }
+        .help(help)
     }
 
     /// Font family / size / weight menus for the text tool.
@@ -301,7 +360,9 @@ struct EditorView: View {
     private func swatch(_ hex: String) -> some View {
         let isSelected = activeToolColorHex == hex
         return Button {
-            if appState.activeTool == .text {
+            if appState.selectedZoomCalloutLayer != nil {
+                appState.setCalloutBorderColor(hex)
+            } else if appState.activeTool == .text {
                 appState.setTextColor(hex)
             } else {
                 appState.setAnnotationColor(hex)
@@ -325,7 +386,11 @@ struct EditorView: View {
     private func strokeWidthDot(_ width: CGFloat) -> some View {
         let isSelected = editedStrokeWidth == width
         return Button {
-            appState.setAnnotationStrokeWidth(width)
+            if appState.selectedZoomCalloutLayer != nil {
+                appState.setCalloutBorderWidth(width)
+            } else {
+                appState.setAnnotationStrokeWidth(width)
+            }
         } label: {
             Circle()
                 .fill(.primary)

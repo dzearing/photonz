@@ -75,14 +75,39 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     }
 }
 
+/// The silhouette of a zoom callout's box and its source outline. Circle is
+/// drawn as a maximal rounded rect (a capsule when the box isn't square), so
+/// box and outline read as the same shape at different aspect ratios.
+public enum ZoomCalloutShape: String, CaseIterable, Hashable, Codable, Sendable {
+    case rectangle
+    case circle
+}
+
 public struct ZoomCalloutContent: Hashable, Codable, Sendable {
     /// Region of the canvas being magnified, in canvas coordinates.
     public var sourceRect: CGRect
     public var magnification: CGFloat
+    public var shape: ZoomCalloutShape
 
-    public init(sourceRect: CGRect, magnification: CGFloat = 2) {
+    public init(sourceRect: CGRect, magnification: CGFloat = 2,
+                shape: ZoomCalloutShape = .rectangle) {
         self.sourceRect = sourceRect
         self.magnification = magnification
+        self.shape = shape
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sourceRect = try container.decode(CGRect.self, forKey: .sourceRect)
+        magnification = try container.decode(CGFloat.self, forKey: .magnification)
+        // `shape` postdates ZoomCalloutContent; old payloads omit it.
+        shape = try container.decodeIfPresent(ZoomCalloutShape.self, forKey: .shape) ?? .rectangle
+    }
+
+    /// The corner radius a box of `boxSize` actually renders with: circles max
+    /// it out (capsule on non-square boxes), rectangles follow the style.
+    public func effectiveCornerRadius(boxSize: CGSize, styleRadius: CGFloat) -> CGFloat {
+        shape == .circle ? min(boxSize.width, boxSize.height) / 2 : styleRadius
     }
 }
 

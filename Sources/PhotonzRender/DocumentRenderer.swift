@@ -32,7 +32,8 @@ public final class DocumentRenderer: @unchecked Sendable {
             if case .zoomCallout(let callout) = layer.content,
                let overlay = ZoomCalloutOverlayRasterizer.rasterize(
                    source: callout.sourceRect.standardized.intersection(extent),
-                   callout: layer.frame, style: layer.style, magnification: callout.magnification) {
+                   callout: layer.frame, style: layer.style, magnification: callout.magnification,
+                   shape: callout.shape) {
                 let height = CGFloat(overlay.image.height)
                 let positioned = CIImage(cgImage: overlay.image)
                     .transformed(by: CGAffineTransform(translationX: overlay.origin.x,
@@ -123,10 +124,21 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = blurred
         }
 
+        // Circle-shaped callouts max out the corner radius (capsule on
+        // non-square boxes); everything else takes the style's radius. The
+        // extent here is already frame-sized, so the radius is in box space.
+        let cornerRadius: CGFloat
+        if case .zoomCallout(let callout) = layer.content {
+            cornerRadius = callout.effectiveCornerRadius(boxSize: image.extent.size,
+                                                         styleRadius: layer.style.cornerRadius)
+        } else {
+            cornerRadius = layer.style.cornerRadius
+        }
+
         // Style: corner radius — clip content to a rounded rect before the
         // geometric transform so corners rotate with the layer.
-        if layer.style.cornerRadius > 0 {
-            let mask = roundedRectImage(rect: image.extent, radius: layer.style.cornerRadius, color: .white)
+        if cornerRadius > 0 {
+            let mask = roundedRectImage(rect: image.extent, radius: cornerRadius, color: .white)
             image = mask.applyingFilter("CIMultiplyCompositing",
                                         parameters: [kCIInputBackgroundImageKey: image])
                 .cropped(to: mask.extent)
@@ -136,13 +148,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         if layer.style.borderWidth > 0 {
             let width = layer.style.borderWidth
             let outer = roundedRectImage(rect: image.extent,
-                                         radius: layer.style.cornerRadius,
+                                         radius: cornerRadius,
                                          color: ciColor(hex: layer.style.borderColorHex))
             let innerRect = image.extent.insetBy(dx: width, dy: width)
             var ring = outer
             if !innerRect.isNull, !innerRect.isEmpty {
                 let inner = roundedRectImage(rect: innerRect,
-                                             radius: max(0, layer.style.cornerRadius - width),
+                                             radius: max(0, cornerRadius - width),
                                              color: .white)
                 ring = outer.applyingFilter("CISourceOutCompositing",
                                             parameters: [kCIInputBackgroundImageKey: inner])
