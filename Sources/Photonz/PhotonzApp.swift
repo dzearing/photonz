@@ -53,6 +53,9 @@ struct PhotonzApp: App {
                 Button("Promote Selection to Layer") { appState.promoteSelectionToLayer() }
                     .keyboardShortcut("j", modifiers: .command)
                     .disabled(appState.selection == nil)
+                Button("Blur Behind Selection") { appState.blurBehindSelection() }
+                    .keyboardShortcut("b", modifiers: [.command, .shift])
+                    .disabled(appState.selection == nil)
                 Divider()
                 Button("Duplicate Layer") {
                     if let selectedID { appState.duplicateLayer(id: selectedID) }

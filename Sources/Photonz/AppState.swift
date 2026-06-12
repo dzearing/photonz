@@ -558,6 +558,21 @@ final class AppState {
         selectedLayerID = newID
     }
 
+    /// One-click blur-behind: a single full-canvas rasterization becomes a
+    /// blurred backdrop layer plus a sharp cutout cropped to the selection
+    /// (one undo step). The focus layer ends up selected so its blur radius
+    /// or crop can be adjusted immediately.
+    func blurBehindSelection() {
+        guard let document, let region = selection,
+              let raster = previewRenderer.rasterize(region: CGRect(origin: .zero, size: document.canvasSize),
+                                                     of: document, store: store) else { return }
+        let ref = store.register(raster)
+        var focusID: UUID?
+        perform { focusID = $0.blurBehind(selection: region, rasterized: ref).focus.id }
+        selection = nil
+        selectedLayerID = focusID
+    }
+
     // MARK: - Layer selection & move
 
     /// The selected layer's frame (preview-aware), for the canvas outline.

@@ -102,6 +102,24 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return layer
     }
 
+    /// The one-click blur-behind recipe: stacks a blurred full-canvas copy of
+    /// the composite, then a sharp copy cropped to `selection` on top — the
+    /// selection stays crisp while everything around it blurs. Both layers
+    /// share `ref` (one full-canvas rasterization); both stay fully
+    /// non-destructive (the blur is a style, the cutout a stored crop).
+    @discardableResult
+    public mutating func blurBehind(selection: CGRect, rasterized ref: ImageRef,
+                                    blurRadius: CGFloat = 16) -> (blur: Layer, focus: Layer) {
+        let canvasRect = CGRect(origin: .zero, size: canvasSize)
+        var blur = Layer(name: "Blur Behind", content: .image(ref), frame: canvasRect)
+        blur.style.blurRadius = blurRadius
+        var focus = Layer(name: "Focus", content: .image(ref), frame: canvasRect)
+        focus.cropContent(to: Geometry.clampCrop(selection, toCanvas: canvasSize))
+        layers.append(blur)
+        layers.append(focus)
+        return (blur, focus)
+    }
+
     // MARK: - Canvas operations
 
     /// Crops the whole document. Layer frames are re-expressed relative to the
