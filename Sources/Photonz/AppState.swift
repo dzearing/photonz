@@ -27,6 +27,10 @@ final class AppState {
     /// The active editor tool. Annotation tools are sticky: each drag creates
     /// another layer until the user returns to `.select` (Esc or V).
     private(set) var activeTool: Tool = .select
+    /// The pending crop rect (document coords) while the crop tool is active.
+    private(set) var cropRect: CGRect?
+    /// Crop aspect lock; the crop rect always honors it.
+    private(set) var cropAspect: CropAspect = .free
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     private(set) var annotationStyles: AnnotationStyles = AppState.loadAnnotationStyles()
@@ -109,6 +113,9 @@ final class AppState {
 
     func setTool(_ tool: Tool) {
         guard activeTool != tool else { return }
+        // Entering crop mode adopts the marquee selection as the starting rect
+        // (a common flow: marquee the region, then C to crop to it).
+        cropRect = tool == .crop ? defaultCropRect() : nil
         activeTool = tool
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't.
@@ -116,6 +123,38 @@ final class AppState {
             selection = nil
             selectedLayerID = nil
         }
+    }
+
+    // MARK: - Crop mode
+
+    private func defaultCropRect() -> CGRect? {
+        guard let document else { return nil }
+        let base = selection ?? CGRect(origin: .zero, size: document.canvasSize)
+        return Crop.fitted(base, to: cropAspect)
+    }
+
+    /// Crop rect updates from the canvas (drags already aspect-locked and
+    /// canvas-clamped by `Crop`).
+    func setCropRect(_ rect: CGRect) {
+        cropRect = rect
+    }
+
+    /// An aspect pick re-fits the pending rect so it holds immediately.
+    func setCropAspect(_ aspect: CropAspect) {
+        cropAspect = aspect
+        if let rect = cropRect { cropRect = Crop.fitted(rect, to: aspect) }
+    }
+
+    /// ⏎ or the toolbar checkmark: one undo step, then back to select.
+    func commitCrop() {
+        guard let rect = cropRect else { return }
+        perform { $0.crop(to: Geometry.pixelAligned(rect)) }
+        setTool(.select)
+    }
+
+    /// ⎋ or the toolbar ✕: discard the pending rect.
+    func cancelCrop() {
+        setTool(.select)
     }
 
     /// Completed drag-to-create from the canvas (document coords, ⇧ already
@@ -387,6 +426,7 @@ final class AppState {
             renderedImage = nil
             viewport = nil
             selection = nil
+            cropRect = nil
             selectedLayerID = nil
             previewMove = nil
             dragPreview = nil
@@ -399,6 +439,11 @@ final class AppState {
             viewport = vp.clamped()
             // A selection from the old canvas no longer means anything reliable.
             selection = nil
+            // Same for a pending crop rect (undo/redo mid-crop): restart from
+            // the full new canvas.
+            if activeTool == .crop {
+                cropRect = Crop.fitted(CGRect(origin: .zero, size: document.canvasSize), to: cropAspect)
+            }
         }
         // Undo can remove the selected layer out from under us.
         if let id = selectedLayerID, document.layer(id: id) == nil {

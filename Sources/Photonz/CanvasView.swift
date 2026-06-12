@@ -25,6 +25,9 @@ struct CanvasView: NSViewRepresentable {
     let viewport: Viewport?
     let document: PhotonzDocument?
     let selection: CGRect?
+    /// Pending crop rect + aspect lock while the crop tool is active.
+    let cropRect: CGRect?
+    let cropAspect: CropAspect
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
     let dragPreview: DragPreview?
@@ -38,6 +41,8 @@ struct CanvasView: NSViewRepresentable {
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
+    let onCropRectChange: (CGRect) -> Void
+    let onCropCommit: () -> Void
     let onSelectLayer: (UUID?) -> Void
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
@@ -58,7 +63,8 @@ struct CanvasView: NSViewRepresentable {
     func updateNSView(_ view: CanvasNSView, context: Context) {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
-                   selection: selection, selectedLayerID: selectedLayerID,
+                   selection: selection, cropRect: cropRect, cropAspect: cropAspect,
+                   selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent, textContent: textContent)
     }
@@ -67,6 +73,8 @@ struct CanvasView: NSViewRepresentable {
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
+        view.onCropRectChange = onCropRectChange
+        view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
@@ -84,6 +92,8 @@ final class CanvasNSView: NSView {
     var onViewSizeChange: ((CGSize) -> Void) = { _ in }
     var onViewportChange: ((Viewport) -> Void) = { _ in }
     var onSelectionChange: ((CGRect?) -> Void) = { _ in }
+    var onCropRectChange: ((CGRect) -> Void) = { _ in }
+    var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
@@ -109,6 +119,12 @@ final class CanvasNSView: NSView {
     private let handlesLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
+    /// Crop mode chrome: dimmed surround (even-odd fill), thirds grid,
+    /// border, and handles.
+    private let cropDimLayer = CAShapeLayer()
+    private let cropGridLayer = CAShapeLayer()
+    private let cropBorderLayer = CAShapeLayer()
+    private let cropHandlesLayer = CAShapeLayer()
     /// Live preview of an in-progress drag-to-create annotation.
     private let annotationPreviewLayer = CAShapeLayer()
     /// Arrowheads are filled but never stroked (matching the rasterizer), so
@@ -124,6 +140,24 @@ final class CanvasNSView: NSView {
     private var document: PhotonzDocument?
     /// Committed marquee selection in document coordinates.
     private var selection: CGRect?
+    /// Pending crop rect (document coordinates), echoed from AppState.
+    private var cropRect: CGRect?
+    /// Crop aspect lock, echoed from AppState; drags constrain through it.
+    private var cropAspect: CropAspect = .free
+
+    /// In-progress crop-rect drag. `startRect` restores on Esc and on
+    /// click-without-drag.
+    private struct CropDrag {
+        enum Kind {
+            case resize(ResizeHandle)
+            case move
+            case define(anchor: CGPoint)
+        }
+        let kind: Kind
+        let startRect: CGRect?
+        var lastPoint: CGPoint
+    }
+    private var cropDrag: CropDrag?
     /// Selected layer (committed state, echoed from AppState).
     private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
@@ -240,6 +274,24 @@ final class CanvasNSView: NSView {
             shape.isHidden = true
             layer?.addSublayer(shape)
         }
+        // Crop chrome stacks above the composite and the selection chrome
+        // (which is hidden in crop mode anyway).
+        cropDimLayer.fillColor = CGColor(gray: 0, alpha: 0.55)
+        cropDimLayer.fillRule = .evenOdd
+        cropGridLayer.fillColor = nil
+        cropGridLayer.strokeColor = CGColor(gray: 1, alpha: 0.35)
+        cropGridLayer.lineWidth = 1
+        cropBorderLayer.fillColor = nil
+        cropBorderLayer.strokeColor = CGColor(gray: 1, alpha: 1)
+        cropBorderLayer.lineWidth = 2
+        cropHandlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        cropHandlesLayer.strokeColor = CGColor(gray: 0, alpha: 0.4)
+        cropHandlesLayer.lineWidth = 1
+        for cropLayer in [cropDimLayer, cropGridLayer, cropBorderLayer, cropHandlesLayer] {
+            cropLayer.isHidden = true
+            layer?.addSublayer(cropLayer)
+        }
+
         selectionBaseLayer.strokeColor = CGColor(gray: 1, alpha: 1)
         selectionAntsLayer.strokeColor = CGColor(gray: 0, alpha: 1)
         selectionAntsLayer.lineDashPattern = [4, 4]
@@ -285,6 +337,24 @@ final class CanvasNSView: NSView {
         // The text tool places a new block wherever you click.
         if tool == .text {
             beginTextSession(layerID: nil, at: p)
+            return
+        }
+        // Crop mode owns the pointer: handles resize, inside moves, outside
+        // draws a fresh rect. Double-click inside commits.
+        if tool == .crop {
+            if event.clickCount == 2, let rect = cropRect, rect.contains(p) {
+                cropDrag = nil
+                onCropCommit()
+                return
+            }
+            if let rect = cropRect,
+               let handle = Handles.hit(at: p, frame: rect, zoom: viewport.zoom, screenTolerance: 8) {
+                cropDrag = CropDrag(kind: .resize(handle), startRect: rect, lastPoint: p)
+            } else if let rect = cropRect, rect.contains(p) {
+                cropDrag = CropDrag(kind: .move, startRect: rect, lastPoint: p)
+            } else {
+                cropDrag = CropDrag(kind: .define(anchor: p), startRect: cropRect, lastPoint: p)
+            }
             return
         }
         // Drawing tools own the pointer: every drag creates a new annotation.
@@ -347,7 +417,27 @@ final class CanvasNSView: NSView {
     override func mouseDragged(with event: NSEvent) {
         guard let viewport else { return }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
-        if var drag = annotationDrag {
+        if var drag = cropDrag {
+            switch drag.kind {
+            case .resize(let handle):
+                guard let start = drag.startRect else { break }
+                cropRect = Crop.resize(start, dragging: handle, to: p,
+                                       aspect: cropAspect, canvas: viewport.documentSize)
+            case .move:
+                if let rect = cropRect {
+                    cropRect = Crop.moved(rect, by: CGPoint(x: p.x - drag.lastPoint.x,
+                                                            y: p.y - drag.lastPoint.y),
+                                          in: viewport.documentSize)
+                }
+            case .define(let anchor):
+                // An empty drag (a stray click) keeps the existing rect.
+                cropRect = Crop.dragRect(anchor: anchor, current: p, aspect: cropAspect,
+                                         canvas: viewport.documentSize) ?? drag.startRect
+            }
+            drag.lastPoint = p
+            cropDrag = drag
+            refreshOverlays()
+        } else if var drag = annotationDrag {
             drag.update(to: p)
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
@@ -385,7 +475,11 @@ final class CanvasNSView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport else { return }
-        if let drag = annotationDrag {
+        if cropDrag != nil {
+            cropDrag = nil
+            if let rect = cropRect { onCropRectChange(rect) }
+            refreshOverlays()
+        } else if let drag = annotationDrag {
             annotationDrag = nil
             if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
@@ -434,7 +528,18 @@ final class CanvasNSView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
+        if tool == .crop, event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
+            cropDrag = nil
+            onCropCommit()
+            return
+        }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
+            if let drag = cropDrag {
+                cropDrag = nil
+                cropRect = drag.startRect
+                refreshOverlays()
+                return
+            }
             if annotationDrag != nil {
                 annotationDrag = nil
                 clearAnnotationPreview()
@@ -522,6 +627,7 @@ final class CanvasNSView: NSView {
 
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
+              cropRect: cropRect, cropAspect: cropAspect,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent)
@@ -531,16 +637,19 @@ final class CanvasNSView: NSView {
     // MARK: Display
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
+               selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                textContent: TextContent?) {
         self.annotationContent = annotationContent
         self.textContent = textContent
+        self.cropAspect = cropAspect
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation/endpoint edit.
             annotationDrag = nil
             endpointDrag = nil
+            cropDrag = nil
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
             // tick because this runs inside a SwiftUI update.
@@ -569,6 +678,9 @@ final class CanvasNSView: NSView {
         if marquee == nil {
             self.selection = selection
         }
+        if cropDrag == nil {
+            self.cropRect = cropRect
+        }
         if moveDrag == nil, resizeDrag == nil {
             self.selectedLayerFrame = selectedLayerFrame
         }
@@ -586,6 +698,10 @@ final class CanvasNSView: NSView {
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
+            cropDimLayer.isHidden = true
+            cropGridLayer.isHidden = true
+            cropBorderLayer.isHidden = true
+            cropHandlesLayer.isHidden = true
             if textSession != nil {
                 DispatchQueue.main.async { [weak self] in self?.cancelTextSession() }
             }
@@ -613,8 +729,48 @@ final class CanvasNSView: NSView {
     private func refreshOverlaysInsideTransaction(constrainSquare: Bool = false) {
         refreshMarqueeDisplay(constrainSquare: constrainSquare)
         refreshLayerSelectionDisplay()
+        refreshCropDisplay()
         refreshPreviewSprite()
         refreshTextEditorDisplay()
+    }
+
+    /// Crop chrome: dimmed surround (even-odd: document frame minus the crop
+    /// rect), rule-of-thirds grid, white border, eight handles.
+    private func refreshCropDisplay() {
+        guard tool == .crop, let viewport, let rect = cropRect else {
+            cropDimLayer.isHidden = true
+            cropGridLayer.isHidden = true
+            cropBorderLayer.isHidden = true
+            cropHandlesLayer.isHidden = true
+            return
+        }
+        let rectInView = viewRect(forDocRect: rect, in: viewport)
+
+        let dim = CGMutablePath()
+        dim.addRect(viewport.documentFrameInView)
+        dim.addRect(rectInView)
+        cropDimLayer.path = dim
+
+        let grid = CGMutablePath()
+        for line in Crop.thirdsLines(in: rect) {
+            grid.move(to: viewport.viewPoint(fromDocument: line.from))
+            grid.addLine(to: viewport.viewPoint(fromDocument: line.to))
+        }
+        cropGridLayer.path = grid
+
+        cropBorderLayer.path = CGPath(rect: rectInView, transform: nil)
+
+        let handles = CGMutablePath()
+        for handle in ResizeHandle.allCases {
+            let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: rect))
+            handles.addRect(CGRect(x: p.x - 4.5, y: p.y - 4.5, width: 9, height: 9))
+        }
+        cropHandlesLayer.path = handles
+
+        cropDimLayer.isHidden = false
+        cropGridLayer.isHidden = false
+        cropBorderLayer.isHidden = false
+        cropHandlesLayer.isHidden = false
     }
 
     /// The frame the drag preview should float at, or nil when the preview
@@ -757,7 +913,7 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
-        if tool.createsAnnotationByDrag {
+        if tool.createsAnnotationByDrag || tool == .crop {
             addCursorRect(bounds, cursor: .crosshair)
         } else if tool == .text {
             addCursorRect(bounds, cursor: .iBeam)

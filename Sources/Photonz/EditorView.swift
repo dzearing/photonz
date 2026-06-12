@@ -44,6 +44,8 @@ struct EditorView: View {
                        viewport: appState.viewport,
                        document: appState.document,
                        selection: appState.selection,
+                       cropRect: appState.cropRect,
+                       cropAspect: appState.cropAspect,
                        selectedLayerID: appState.selectedLayerID,
                        selectedLayerFrame: appState.selectedLayerFrame,
                        dragPreview: appState.dragPreview,
@@ -53,6 +55,8 @@ struct EditorView: View {
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
+                       onCropRectChange: { appState.setCropRect($0) },
+                       onCropCommit: { appState.commitCrop() },
                        onSelectLayer: { appState.selectLayer($0) },
                        onDragBegin: { appState.beginLayerDrag(id: $0) },
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
@@ -96,7 +100,10 @@ struct EditorView: View {
                 styleButton
             }
             Divider().frame(height: 20)
-            placeholderButton("crop", "Crop (phase 4)")
+            toolButton(.crop, "crop", "Crop", "c")
+            if appState.activeTool == .crop {
+                cropOptions
+            }
             placeholderButton("plus.magnifyingglass", "Zoom Callout (phase 5)")
             Divider().frame(height: 20)
             Button {
@@ -119,6 +126,48 @@ struct EditorView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+    }
+
+    /// Aspect locks plus commit/cancel, shown while the crop tool is active.
+    private var cropOptions: some View {
+        HStack(spacing: 6) {
+            ForEach(CropAspect.allCases, id: \.self) { aspect in
+                let isActive = appState.cropAspect == aspect
+                Button {
+                    appState.setCropAspect(aspect)
+                } label: {
+                    Text(aspect.label)
+                        .font(.caption.weight(.medium))
+                        .fixedSize()
+                        .foregroundStyle(isActive ? Color.white : Color.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            if isActive {
+                                Capsule().fill(Color.accentColor)
+                            }
+                        }
+                }
+                .help("Lock aspect to \(aspect.label)")
+            }
+            Button {
+                appState.commitCrop()
+            } label: {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 24, height: 24)
+            }
+            .keyboardShortcut(.return, modifiers: [])
+            .help("Apply Crop (⏎)")
+            Button {
+                appState.cancelCrop()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 24, height: 24)
+            }
+            .help("Cancel Crop (⎋)")
+        }
     }
 
     /// The annotation the popover is editing when one is selected (select

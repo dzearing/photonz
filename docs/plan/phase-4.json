@@ -6,7 +6,8 @@
     {
       "id": "4.1",
       "title": "Crop mode: dimmed surround, thirds grid, handles, aspect locks, \u23ce/\u238b",
-      "status": "pending"
+      "status": "done",
+      "notes": "Core: Crop + CropAspect in PhotonzCore/Crop.swift (19 tests) \u2014 fitted/resize/moved/dragRect/thirdsLines, all aspect-locked and canvas-clamped. UI: crop tool enabled (C), full-canvas default rect, marquee selection seeds the rect, handles resize (8pt screen tolerance), inside drag moves, outside drag defines fresh rect, double-click or \u23ce commits (pixel-aligned, one undo step), \u238b cancels drag then mode. Toolbar shows aspect capsules + \u2713/\u2715 in crop mode (labels need .fixedSize() or SwiftUI collapses them). Chrome: even-odd dim layer, thirds grid, white border, square handles. Verified with in-process harness /tmp/photonz-crop-harness (41 checks, PNGs reviewed). Gotcha: #expect(optional == 4.0/3.0) misreports with bare literal division \u2014 use typed constants in tests."
     },
     {
       "id": "4.2",
