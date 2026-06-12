@@ -49,6 +49,8 @@ struct CanvasView: NSViewRepresentable {
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
+    let onTransformPreview: (UUID, LayerTransform) -> Void
+    let onTransformCommit: (UUID, LayerTransform) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onToolChange: (Tool) -> Void
@@ -81,6 +83,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
+        view.onTransformPreview = onTransformPreview
+        view.onTransformCommit = onTransformCommit
         view.onAnnotationCommit = onAnnotationCommit
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onToolChange = onToolChange
@@ -100,6 +104,8 @@ final class CanvasNSView: NSView {
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onTransformPreview: ((UUID, LayerTransform) -> Void) = { _, _ in }
+    var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
@@ -119,6 +125,8 @@ final class CanvasNSView: NSView {
     private let layerOutlineLayer = CAShapeLayer()
     /// The eight resize handles on the selected layer's outline.
     private let handlesLayer = CAShapeLayer()
+    /// Rotate knob: a circle floated off the layer's top edge plus its stem.
+    private let rotateKnobLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
     /// Crop mode chrome: dimmed surround (even-odd fill), thirds grid,
@@ -228,6 +236,49 @@ final class CanvasNSView: NSView {
     }
     private var resizeDrag: ResizeDrag?
 
+    /// In-progress rotate (knob) or skew (⌥-corner) drag.
+    private struct TransformDragSession {
+        enum Kind {
+            case rotate(grabAngle: CGFloat)
+            case skew(corner: ResizeHandle, grabPoint: CGPoint)
+        }
+        let layerID: UUID
+        let kind: Kind
+        let startTransform: LayerTransform
+        let center: CGPoint
+        let frameSize: CGSize
+        var transform: LayerTransform
+    }
+    private var transformDrag: TransformDragSession?
+    /// After a transform commit, the sprite keeps the final delta applied
+    /// until the re-rendered composite lands (no flash-back).
+    private var transformHold: (layerID: UUID, start: LayerTransform, transform: LayerTransform)?
+
+    /// Maps a document point into the selected layer's untransformed frame
+    /// space, so frame-handle hit-testing and resizing agree with where the
+    /// (transformed) chrome draws.
+    private func handleSpacePoint(_ p: CGPoint, layer: Layer?) -> CGPoint {
+        guard let layer, !layer.transform.isIdentity else { return p }
+        let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
+        return p.applying(layer.transform.affineTransform(around: center).inverted())
+    }
+
+    /// The rotate knob's position in document coordinates: floated off the
+    /// midpoint of the layer's (transformed) top edge, 18 screen points out.
+    private func rotateKnobPoint(for layer: Layer, zoom: CGFloat) -> CGPoint? {
+        let corners = layer.transformedCorners
+        guard corners.count == 4, zoom > 0 else { return nil }
+        let topMid = CGPoint(x: (corners[0].x + corners[1].x) / 2,
+                             y: (corners[0].y + corners[1].y) / 2)
+        let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
+        let dx = topMid.x - center.x
+        let dy = topMid.y - center.y
+        let length = hypot(dx, dy)
+        guard length > 0 else { return CGPoint(x: topMid.x, y: topMid.y - 18 / zoom) }
+        let offset = 18 / zoom
+        return CGPoint(x: topMid.x + dx / length * offset, y: topMid.y + dy / length * offset)
+    }
+
     /// In-progress endpoint drag on a selected line/arrow. The geometry lives
     /// in `AnnotationEndpointDrag` (core, tested); this wraps it with what the
     /// canvas needs for preview styling and Esc-cancel.
@@ -312,6 +363,11 @@ final class CanvasNSView: NSView {
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        rotateKnobLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        rotateKnobLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        rotateKnobLayer.lineWidth = 1
+        rotateKnobLayer.isHidden = true
+        layer?.addSublayer(rotateKnobLayer)
     }
 
     @available(*, unavailable)
@@ -391,10 +447,35 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // Rotate knob, floated off the selected layer's top edge.
+        if let id = selectedLayerID, let layer = selectedLayer, !layer.hasEndpointHandles,
+           let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom),
+           hypot(p.x - knob.x, p.y - knob.y) * viewport.zoom <= 8 {
+            let center = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
+            transformDrag = TransformDragSession(
+                layerID: id, kind: .rotate(grabAngle: TransformDrag.pointerAngle(p, around: center)),
+                startTransform: layer.transform, center: center,
+                frameSize: layer.frame.size, transform: layer.transform)
+            onDragBegin(id)
+            refreshOverlays()
+            return
+        }
+        // Frame handles. The pointer maps through the layer's inverse
+        // transform so handles on a rotated/skewed layer hit where they draw.
+        // ⌥ on a corner skews instead of resizing.
         if let id = selectedLayerID, let frame = selectedLayerFrame,
            selectedLayer?.allowsFrameResize ?? true,
-           let handle = Handles.hit(at: p, frame: frame, zoom: viewport.zoom) {
-            resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+           let handle = Handles.hit(at: handleSpacePoint(p, layer: selectedLayer),
+                                    frame: frame, zoom: viewport.zoom) {
+            if event.modifierFlags.contains(.option), handle.isCorner, let layer = selectedLayer {
+                transformDrag = TransformDragSession(
+                    layerID: id, kind: .skew(corner: handle, grabPoint: p),
+                    startTransform: layer.transform,
+                    center: CGPoint(x: layer.frame.midX, y: layer.frame.midY),
+                    frameSize: layer.frame.size, transform: layer.transform)
+            } else {
+                resizeDrag = ResizeDrag(layerID: id, handle: handle, startFrame: frame, frame: frame)
+            }
             onDragBegin(id)
             refreshOverlays()
             return
@@ -452,8 +533,26 @@ final class CanvasNSView: NSView {
             endpointDrag = session
             refreshEndpointPreview(constrained: event.modifierFlags.contains(.shift))
             refreshOverlays()
+        } else if var session = transformDrag {
+            switch session.kind {
+            case .rotate(let grabAngle):
+                session.transform.rotation = TransformDrag.rotation(
+                    from: session.startTransform.rotation, grabAngle: grabAngle,
+                    currentAngle: TransformDrag.pointerAngle(p, around: session.center),
+                    snapped: event.modifierFlags.contains(.shift))
+            case .skew(let corner, let grabPoint):
+                session.transform = TransformDrag.skewed(
+                    session.startTransform, corner: corner,
+                    by: CGPoint(x: p.x - grabPoint.x, y: p.y - grabPoint.y),
+                    frameSize: session.frameSize)
+            }
+            transformDrag = session
+            onTransformPreview(session.layerID, session.transform)
+            refreshOverlays()
         } else if var drag = resizeDrag {
-            drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle, to: p,
+            let layer = document?.layer(id: drag.layerID)
+            drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle,
+                                        to: handleSpacePoint(p, layer: layer),
                                         preserveAspect: event.modifierFlags.contains(.shift))
             resizeDrag = drag
             onFramePreview(drag.layerID, drag.frame)
@@ -506,6 +605,15 @@ final class CanvasNSView: NSView {
             endpointHoldLayerID = session.layerID
             onAnnotationEndpointsCommit(session.layerID, start, end)
             refreshOverlays()
+        } else if let session = transformDrag {
+            transformDrag = nil
+            if session.transform != session.startTransform {
+                // Hold the sprite at the final transform until the post-commit
+                // composite lands — otherwise it flashes back.
+                transformHold = (session.layerID, session.startTransform, session.transform)
+                onTransformCommit(session.layerID, session.transform)
+            }
+            refreshOverlays()
         } else if let drag = resizeDrag {
             resizeDrag = nil
             if drag.frame != drag.startFrame {
@@ -557,6 +665,14 @@ final class CanvasNSView: NSView {
                 // Committing the original endpoints is a History no-op but
                 // resets the preview render, like the resize-drag cancel.
                 onAnnotationEndpointsCommit(session.layerID, session.originalStart, session.originalEnd)
+                refreshOverlays()
+                return
+            }
+            if let session = transformDrag {
+                transformDrag = nil
+                // Committing the start transform is a History no-op but resets
+                // the preview render.
+                onTransformCommit(session.layerID, session.startTransform)
                 refreshOverlays()
                 return
             }
@@ -657,6 +773,8 @@ final class CanvasNSView: NSView {
             annotationDrag = nil
             endpointDrag = nil
             cropDrag = nil
+            transformDrag = nil
+            transformHold = nil
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
             // tick because this runs inside a SwiftUI update.
@@ -680,6 +798,10 @@ final class CanvasNSView: NSView {
         self.document = document
         self.selectedLayerID = selectedLayerID
         self.dragPreview = dragPreview
+        // The held delta is only needed while the sprite is still floating.
+        if let hold = transformHold, dragPreview?.layerID != hold.layerID {
+            transformHold = nil
+        }
         // While the user is mid-drag the local state is the truth; don't let an
         // unrelated SwiftUI update echo stale committed values over it.
         if marquee == nil {
@@ -704,6 +826,7 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
             cropDimLayer.isHidden = true
             cropGridLayer.isHidden = true
@@ -820,13 +943,37 @@ final class CanvasNSView: NSView {
         contentLayer.contents = dragPreview.underlay
         previewSpriteLayer.contents = dragPreview.sprite
         let padded = frame.insetBy(dx: -dragPreview.padding, dy: -dragPreview.padding)
-        previewSpriteLayer.frame = viewRect(forDocRect: padded, in: viewport)
+        let spriteRect = viewRect(forDocRect: padded, in: viewport)
+        // Bounds + position instead of frame: a rotate/skew drag floats the
+        // sprite with a delta transform (set below), and CALayer.frame is
+        // undefined under a non-identity transform.
+        previewSpriteLayer.bounds = CGRect(origin: .zero, size: spriteRect.size)
+        previewSpriteLayer.position = CGPoint(x: spriteRect.midX, y: spriteRect.midY)
+        previewSpriteLayer.setAffineTransform(spriteDeltaTransform(for: dragPreview.layerID))
         switch dragPreview.blendMode {
         case .normal: previewSpriteLayer.compositingFilter = nil
         case .multiply: previewSpriteLayer.compositingFilter = "multiplyBlendMode"
         case .screen: previewSpriteLayer.compositingFilter = "screenBlendMode"
         }
         previewSpriteLayer.isHidden = false
+    }
+
+    /// What a rotate/skew drag adds on top of the sprite bitmap (which was
+    /// rendered with the start transform baked in): current ∘ start⁻¹, the
+    /// linear parts only — CALayer applies it about the sprite's center,
+    /// which coincides with the layer's transform center.
+    private func spriteDeltaTransform(for layerID: UUID) -> CGAffineTransform {
+        let session: (start: LayerTransform, current: LayerTransform)?
+        if let transformDrag, transformDrag.layerID == layerID {
+            session = (transformDrag.startTransform, transformDrag.transform)
+        } else if let transformHold, transformHold.layerID == layerID {
+            session = (transformHold.start, transformHold.transform)
+        } else {
+            session = nil
+        }
+        guard let session, session.start != session.current else { return .identity }
+        return session.start.affineTransform(around: .zero).inverted()
+            .concatenating(session.current.affineTransform(around: .zero))
     }
 
     private func refreshMarqueeDisplay(constrainSquare: Bool) {
@@ -863,10 +1010,11 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
             return
         }
         let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
-        let dragInFlight = moveDrag != nil || resizeDrag != nil
+        let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
             || endpointDrag != nil || endpointHoldLayerID != nil
 
         if selectedLayer?.hasEndpointHandles == true {
@@ -874,6 +1022,7 @@ final class CanvasNSView: NSView {
             // padded frame reads as a phantom box. Round endpoint handles
             // replace the whole frame chrome.
             layerOutlineLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
             if !dragInFlight, let layer = selectedLayer {
                 let handles = CGMutablePath()
                 for endpoint in AnnotationEndpoint.allCases {
@@ -887,8 +1036,26 @@ final class CanvasNSView: NSView {
                 handlesLayer.isHidden = true
             }
         } else {
-            let outlineRect = viewRect(forDocRect: frame, in: viewport)
-            layerOutlineLayer.path = CGPath(rect: outlineRect, transform: nil)
+            // The outline (and handle placement) follows the layer's
+            // transform — the in-flight one during a rotate/skew drag.
+            let activeTransform = transformDrag?.transform ?? selectedLayer?.transform ?? .identity
+            let center = CGPoint(x: frame.midX, y: frame.midY)
+            let docToHandle = activeTransform.isIdentity
+                ? CGAffineTransform.identity
+                : activeTransform.affineTransform(around: center)
+            func chromePoint(_ docPoint: CGPoint) -> CGPoint {
+                viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
+            }
+
+            let outline = CGMutablePath()
+            outline.addLines(between: [
+                chromePoint(CGPoint(x: frame.minX, y: frame.minY)),
+                chromePoint(CGPoint(x: frame.maxX, y: frame.minY)),
+                chromePoint(CGPoint(x: frame.maxX, y: frame.maxY)),
+                chromePoint(CGPoint(x: frame.minX, y: frame.maxY)),
+            ])
+            outline.closeSubpath()
+            layerOutlineLayer.path = outline
             layerOutlineLayer.isHidden = false
 
             // Handles: 8pt squares in view space, hidden while a drag is in
@@ -896,13 +1063,29 @@ final class CanvasNSView: NSView {
             if !dragInFlight, selectedLayer?.allowsFrameResize ?? true {
                 let handles = CGMutablePath()
                 for handle in ResizeHandle.allCases {
-                    let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: frame))
+                    let p = chromePoint(Handles.point(for: handle, in: frame))
                     handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
                 }
                 handlesLayer.path = handles
                 handlesLayer.isHidden = false
             } else {
                 handlesLayer.isHidden = true
+            }
+
+            // Rotate knob with its stem, off the (transformed) top edge.
+            if !dragInFlight, let layer = selectedLayer,
+               let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom) {
+                let knobInView = viewport.viewPoint(fromDocument: knob)
+                let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
+                let path = CGMutablePath()
+                path.move(to: topMid)
+                path.addLine(to: knobInView)
+                path.addEllipse(in: CGRect(x: knobInView.x - 5, y: knobInView.y - 5,
+                                           width: 10, height: 10))
+                rotateKnobLayer.path = path
+                rotateKnobLayer.isHidden = false
+            } else {
+                rotateKnobLayer.isHidden = true
             }
         }
 

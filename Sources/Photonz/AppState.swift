@@ -419,6 +419,24 @@ final class AppState {
         perform { $0.updateLayer(id: id) { $0 = $0.resized(to: frame) } }
     }
 
+    /// Live rotate/skew update. With a CA preview active the canvas applies
+    /// the transform to the floated sprite, so this only renders when the
+    /// preview pieces haven't landed yet.
+    func previewLayerTransform(id: UUID, transform: LayerTransform) {
+        guard dragPreview?.layerID != id else { return }
+        guard var doc = document, doc.layer(id: id) != nil else { return }
+        doc.updateLayer(id: id) { $0.transform = transform }
+        submit(doc)
+    }
+
+    /// Mouse-up on a rotate/skew drag: one undo step. Committing the original
+    /// transform is a History no-op (the Esc-cancel path).
+    func commitLayerTransform(id: UUID, transform: LayerTransform) {
+        dragPreviewGeneration += 1
+        clearPreviewAfterNextFrame = dragPreview != nil
+        perform { $0.updateLayer(id: id) { $0.transform = transform } }
+    }
+
     /// Endpoint-drag commit from the canvas (document coords, ⇧ already
     /// applied). Rebuilds the layer's frame around the new endpoints in one
     /// undo step; committing the original endpoints is a History no-op (how

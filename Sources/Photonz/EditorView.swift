@@ -67,6 +67,8 @@ struct EditorView: View {
                        onDragBegin: { appState.beginLayerDrag(id: $0) },
                        onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
                        onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) },
+                       onTransformPreview: { appState.previewLayerTransform(id: $0, transform: $1) },
+                       onTransformCommit: { appState.commitLayerTransform(id: $0, transform: $1) },
                        onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
                        onAnnotationEndpointsCommit: { appState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onToolChange: { appState.setTool($0) },

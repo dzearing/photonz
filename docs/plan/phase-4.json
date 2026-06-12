@@ -24,7 +24,8 @@
     {
       "id": "4.4",
       "title": "Skew/rotate UI on selection handles (\u2325-drag corners skews, rotate knob)",
-      "status": "pending"
+      "status": "done",
+      "notes": "Core: TransformDrag (PhotonzCore, 11 tests) \u2014 pointerAngle (clockwise-positive, matches LayerTransform), rotation with \u21e7 15\u00b0 snap, skewed() where the \u2325-dragged corner exactly follows the pointer (tan-additive against half-width/height levers, delta counter-rotated for existing rotation); Layer.transformedCorners for chrome. UI: rotate knob (circle+stem 18 screen pts off the transformed top edge) on non-endpoint layers; \u2325-corner = skew, plain corner = resize; outline+handles draw as the transformed polygon and handle hit-testing maps the pointer through the inverse transform; Esc commits the start transform (History no-op). Sprite preview applies the delta transform (current\u2218start\u207b\u00b9) via CALayer bounds/position+setAffineTransform \u2014 never set frame under a transform; transformHold keeps the delta until the post-commit frame lands. Known approximations: sprite is rendered with the start transform baked, so a heavily pre-rotated layer's sprite may clip at its padding box during drags (commit renders correctly); renderSprite has the same clip limit for moves of transformed layers \u2014 phase 7 polish note. Verified in /tmp/photonz-crop-harness T17\u2013T19 (90\u00b0 pixel check, Esc cancel, corner-follows-pointer, plain-resize regression)."
     },
     {
       "id": "4.5",
