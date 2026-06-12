@@ -28,6 +28,9 @@ struct CanvasView: NSViewRepresentable {
     let selectedLayerFrame: CGRect?
     let dragPreview: DragPreview?
     let tool: Tool
+    /// Styled content the active tool draws (color/width from the style
+    /// popover), so the drag preview matches what commit will rasterize.
+    let annotationContent: AnnotationContent?
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
@@ -49,7 +52,7 @@ struct CanvasView: NSViewRepresentable {
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
-                   tool: tool)
+                   tool: tool, annotationContent: annotationContent)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -120,6 +123,9 @@ final class CanvasNSView: NSView {
     private var tool: Tool = .select
     /// In-progress drag-to-create (document coordinates).
     private var annotationDrag: AnnotationDrag?
+    /// Styled content for the active tool, echoed from AppState; the in-flight
+    /// preview strokes with this so it matches the committed rasterization.
+    private var annotationContent: AnnotationContent?
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
@@ -408,7 +414,7 @@ final class CanvasNSView: NSView {
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
-              dragPreview: dragPreview, tool: tool)
+              dragPreview: dragPreview, tool: tool, annotationContent: annotationContent)
         onViewportChange(next)
     }
 
@@ -416,7 +422,8 @@ final class CanvasNSView: NSView {
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
-               dragPreview: DragPreview?, tool: Tool) {
+               dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?) {
+        self.annotationContent = annotationContent
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation.
@@ -606,7 +613,8 @@ final class CanvasNSView: NSView {
     /// faithful to the rasterizer so the held preview swaps invisibly for the
     /// real composite after commit.
     private func refreshAnnotationPreview(constrained: Bool) {
-        guard let viewport, let drag = annotationDrag, let content = tool.defaultAnnotation else {
+        guard let viewport, let drag = annotationDrag,
+              let content = annotationContent ?? tool.defaultAnnotation else {
             clearAnnotationPreview()
             return
         }

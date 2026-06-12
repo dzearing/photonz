@@ -2,6 +2,16 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 3.3: annotation style popover
+
+- **Core**: `AnnotationStyles` (`PhotonzCore/AnnotationStyles.swift`, 9 tests) — one shared stroke color for arrow/line/rect/ellipse, an independent highlight color, `strokeWidth` that only applies where `Tool.usesStrokeWidth` (highlight is a fill). 8-swatch system palette + 4 width options as static data the UI builds from. `Tool.defaultAnnotation` now delegates to `AnnotationStyles()` so smart defaults can't drift from the popover's defaults.
+- **App**: `AppState.annotationStyles` persisted to UserDefaults (`annotationStyles` key, survives relaunch); `addAnnotation` and the canvas drag preview both draw from `annotationStyles.content(for: activeTool)`, so the live preview always matches what commit rasterizes.
+- **UI**: swatch button appears in the toolbar when an annotation tool is active (shows the active tool's current color; S toggles), opening a glass popover (`presentationBackground(.clear)` + `.glassEffect`) — swatch row + width-dot row; the width row hides for highlight.
+- 166 tests green. Verified end-to-end with an in-process harness (`/tmp/photonz-style-harness`): hosts the real `EditorView`+`AppState`, sends NSEvents to the real windows — including clicks inside the actual popover window located by pixel-cluster scan — 31 checks, plus a real `screencapture` of the live popover for glass rendering. Harness gotchas worth remembering: `cacheDisplay` reps are top-down (unlike `CALayer.render(in:)`), popover content views are flipped, and UserDefaults persistence leaks between harness runs (clear the key first).
+- **Polish candidates (phase 7)**: unselected width dots are low-contrast on glass; system popover bezel shows as a light halo around the inner glass rect.
+- **Needs user verification**: with the style popover open, Esc should close just the popover and keep the active tool (synthetic dispatch in the harness couldn't prove real key routing).
+- **Next**: 3.4 text blocks (click to place, inline editing, font picker) or 3.5 edit-after-the-fact (reuse this popover for the selected annotation; remember the 3.2 endpoint-remap gap).
+
 ## 2026-06-12 — Phase 3.1/3.2: tool state machine + drag-to-create annotations
 
 - **3.1 Tools**: `Tool` enum in `PhotonzCore/Tools.swift` with `annotationShape` mapping and `defaultAnnotation` smart defaults (red #FF3B30 strokes, yellow #FFD60A highlight — front-loads part of 3.6). `AppState.activeTool` + `setTool` (clears marquee/layer selection on entering a drawing tool); sticky annotation tools, Esc reverts to select. Toolbar: select/arrow/line/rect/ellipse/highlight with V/A/L/R/O/H shortcuts and accent-circle active state; crop/text/zoom-callout disabled placeholders.

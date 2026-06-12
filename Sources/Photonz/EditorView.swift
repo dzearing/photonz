@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct EditorView: View {
     @Environment(AppState.self) private var appState
+    @State private var isStylePopoverPresented = false
 
     var body: some View {
         @Bindable var appState = appState
@@ -47,6 +48,7 @@ struct EditorView: View {
                        selectedLayerFrame: appState.selectedLayerFrame,
                        dragPreview: appState.dragPreview,
                        tool: appState.activeTool,
+                       annotationContent: appState.activeAnnotationContent,
                        onViewSizeChange: { appState.canvasViewSizeChanged($0) },
                        onViewportChange: { appState.setViewport($0) },
                        onSelectionChange: { appState.setSelection($0) },
@@ -83,6 +85,9 @@ struct EditorView: View {
             toolButton(.rectangle, "rectangle", "Rectangle", "r")
             toolButton(.ellipse, "circle", "Ellipse", "o")
             toolButton(.highlight, "highlighter", "Highlight", "h")
+            if appState.activeTool.createsAnnotationByDrag {
+                styleButton
+            }
             Divider().frame(height: 20)
             placeholderButton("crop", "Crop (phase 4)")
             placeholderButton("character.cursor.ibeam", "Text (3.4)")
@@ -108,6 +113,85 @@ struct EditorView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+    }
+
+    /// Swatch showing the active tool's color; opens the style popover.
+    private var styleButton: some View {
+        Button {
+            isStylePopoverPresented.toggle()
+        } label: {
+            Circle()
+                .fill(Color(hex: appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30"))
+                .frame(width: 16, height: 16)
+                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                .frame(width: 28, height: 28)
+        }
+        .help("Annotation Style (S)")
+        .keyboardShortcut("s", modifiers: [])
+        .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
+            stylePopover
+        }
+    }
+
+    private var stylePopover: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                ForEach(AnnotationStyles.swatches, id: \.self) { hex in
+                    swatch(hex)
+                }
+            }
+            if appState.activeTool.usesStrokeWidth {
+                HStack(spacing: 10) {
+                    ForEach(AnnotationStyles.strokeWidths, id: \.self) { width in
+                        strokeWidthDot(width)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(16)
+        .buttonStyle(.plain)
+        .presentationBackground(.clear)
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .padding(8)
+    }
+
+    private func swatch(_ hex: String) -> some View {
+        let isSelected = appState.annotationStyles.colorHex(for: appState.activeTool) == hex
+        return Button {
+            appState.setAnnotationColor(hex)
+        } label: {
+            Circle()
+                .fill(Color(hex: hex))
+                .frame(width: 22, height: 22)
+                .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                .overlay {
+                    if isSelected {
+                        Circle().strokeBorder(Color.accentColor, lineWidth: 2)
+                            .padding(-4)
+                    }
+                }
+        }
+        .help(hex)
+    }
+
+    /// Dot whose diameter tracks the stroke width it selects.
+    private func strokeWidthDot(_ width: CGFloat) -> some View {
+        let isSelected = appState.annotationStyles.strokeWidth == width
+        return Button {
+            appState.setAnnotationStrokeWidth(width)
+        } label: {
+            Circle()
+                .fill(.primary)
+                .frame(width: width + 4, height: width + 4)
+                .frame(width: 24, height: 24)
+                .overlay {
+                    if isSelected {
+                        Circle().strokeBorder(Color.accentColor, lineWidth: 2)
+                    }
+                }
+        }
+        .help("\(Int(width)) pt")
     }
 
     private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,
@@ -139,5 +223,13 @@ struct EditorView: View {
         }
         .disabled(true)
         .help(help)
+    }
+}
+
+extension Color {
+    /// Color from the document model's hex strings, via the tested RGBA parser.
+    init(hex: String) {
+        let rgba = RGBA(hex: hex) ?? RGBA(r: 1, g: 0, b: 0)
+        self.init(.sRGB, red: rgba.r, green: rgba.g, blue: rgba.b, opacity: rgba.a)
     }
 }

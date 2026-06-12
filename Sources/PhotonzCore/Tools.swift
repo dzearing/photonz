@@ -31,9 +31,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// Smart-default content for this tool: red strokes, yellow highlight
     /// (system palette colors). Nil for non-annotation tools.
     public var defaultAnnotation: AnnotationContent? {
-        guard let shape = annotationShape else { return nil }
-        let color = shape == .highlight ? "#FFD60A" : "#FF3B30"
-        return AnnotationContent(shape: shape, strokeWidth: 4, colorHex: color)
+        AnnotationStyles().content(for: self)
     }
 }
 

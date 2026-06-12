@@ -27,6 +27,9 @@ final class AppState {
     /// The active editor tool. Annotation tools are sticky: each drag creates
     /// another layer until the user returns to `.select` (Esc or V).
     private(set) var activeTool: Tool = .select
+    /// Styling for new annotations, set from the style popover. Persisted so
+    /// the user's color/width survive relaunches.
+    private(set) var annotationStyles: AnnotationStyles = AppState.loadAnnotationStyles()
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     private(set) var selectedLayerID: UUID?
     /// Frame override while a move drag is in flight — rendered as a preview,
@@ -111,9 +114,42 @@ final class AppState {
     /// Completed drag-to-create from the canvas (document coords, ⇧ already
     /// applied). Adds one annotation layer as a single undo step.
     func addAnnotation(from start: CGPoint, to end: CGPoint) {
-        guard let content = activeTool.defaultAnnotation else { return }
+        guard let content = annotationStyles.content(for: activeTool) else { return }
         let layer = AnnotationBuilder.layer(content: content, from: start, to: end)
         perform { $0.addLayer(layer) }
+    }
+
+    // MARK: - Annotation styling
+
+    /// Styled content the active tool would draw, for the canvas drag preview.
+    var activeAnnotationContent: AnnotationContent? {
+        annotationStyles.content(for: activeTool)
+    }
+
+    func setAnnotationColor(_ hex: String) {
+        annotationStyles.setColorHex(hex, for: activeTool)
+        saveAnnotationStyles()
+    }
+
+    func setAnnotationStrokeWidth(_ width: CGFloat) {
+        annotationStyles.strokeWidth = width
+        saveAnnotationStyles()
+    }
+
+    private static let annotationStylesKey = "annotationStyles"
+
+    private static func loadAnnotationStyles() -> AnnotationStyles {
+        guard let data = UserDefaults.standard.data(forKey: annotationStylesKey),
+              let styles = try? JSONDecoder().decode(AnnotationStyles.self, from: data) else {
+            return AnnotationStyles()
+        }
+        return styles
+    }
+
+    private func saveAnnotationStyles() {
+        if let data = try? JSONEncoder().encode(annotationStyles) {
+            UserDefaults.standard.set(data, forKey: Self.annotationStylesKey)
+        }
     }
 
     // MARK: - Layer selection & move
