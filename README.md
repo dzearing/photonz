@@ -6,7 +6,7 @@ Lightning-fast photo & screenshot editing, built natively for the Mac.
 
 Photonz is a macOS 26+ editor designed for the screenshot-to-share loop: crop, resize, skew, annotate with arrows/shapes/text, create magnified zoom callouts with leader lines, and work non-destructively with Photoshop-style layers (blur, fade, borders, rounded corners, shadows). Swift 6 + SwiftUI + Metal-accelerated Core Image; Liquid Glass UI throughout.
 
-> Early preview: the editing tools are landing phase by phase — see [the plan](docs/plan/overview.json).
+> 1.0: every editing tool is shipping. See the [changelog](CHANGELOG.md) for what's in it and [the plan](docs/plan/overview.json) for how it was built.
 
 ## Building from source
 
