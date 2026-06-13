@@ -2,6 +2,14 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-12 — Phase 8.1: site refresh with an engine-rendered hero
+
+- **8.1 Site refresh.** True GUI screen capture isn't possible in this headless env (no Screen Recording, no window server session), so instead of a faked mockup the hero is *real engine output*: new `SiteAssets` executable target (`Sources/SiteAssets/main.swift`, `swift run SiteAssets`) builds a showcase `PhotonzDocument` and composites it through the shipping `DocumentRenderer` → `site/assets/hero.png` (2880×1800, 2×). It exercises the signature zoom callout (magnifying a fine-print bar, with leader lines), arrow + highlight annotations, a text caption, and a non-destructively styled image layer (corner radius + drop shadow + rotation).
+- Coordinate gotcha for future asset work: the base bitmap is drawn in CoreGraphics bottom-left space; the document model is top-left. `SiteAssets` defines all rects in document coords and converts (`cg(r) = {y: H - r.maxY}`) so the callout `sourceRect`/annotations line up with what's drawn. Magnify-small-text reads best on a *solid* dark bar (translucent panel text washes out when magnified).
+- `index.html` reworked: app-window-framed hero (traffic-light titlebar), 6-card feature tour with keyboard shortcuts, 1.0 messaging, `og:image`, changelog link. First-launch notice kept honest — builds are ad-hoc signed; `gh secret list` shows no Apple signing secrets, so release.yml's `HAVE_SIGNING` path stays off and the app is not notarized.
+- 367 tests green (SiteAssets target compiles clean under Swift 6 v6 mode; not part of the shipping app or release).
+- **Next**: 8.2 CHANGELOG curation + 1.0 release notes, then 8.3 release 1.0.0 via the release skill, then 8.4 post-1.0 backlog triage.
+
 ## 2026-06-12 — Phase 7 complete: polish (glass, animations, icon/About, perf, signing, shortcuts)
 
 - All 6 tasks done; **367 tests green** (was 335). Six commits, one per task.

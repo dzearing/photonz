@@ -25,6 +25,14 @@ let package = Package(
             dependencies: ["PhotonzCore", "PhotonzRender"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        // Dev tool: composites a showcase document through the real engine and
+        // writes the marketing-site hero image. Run with `swift run SiteAssets`.
+        // Not part of the shipping app; safe to ignore in CI/release.
+        .executableTarget(
+            name: "SiteAssets",
+            dependencies: ["PhotonzCore", "PhotonzRender"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         .testTarget(
             name: "PhotonzCoreTests",
             dependencies: ["PhotonzCore"]

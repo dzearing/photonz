@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Photonz — lightning-fast photo & screenshot editing for Mac</title>
-<meta name="description" content="Photonz is a native macOS editor for photos and screenshots: crop, annotate, zoom callouts, and non-destructive layers — at native speed.">
+<meta name="description" content="Photonz is a native macOS editor for photos and screenshots: crop, annotate, magnify with zoom callouts, and work in non-destructive layers — all at native Metal speed.">
+<meta property="og:title" content="Photonz — photo & screenshot editing for Mac">
+<meta property="og:description" content="Crop, annotate, magnify with zoom callouts, and work in non-destructive layers — at native speed. Free & open source.">
+<meta property="og:image" content="assets/hero.png">
+<meta name="theme-color" content="#0b0b14">
 <style>
   :root {
     --bg: #0b0b14;
@@ -29,18 +33,18 @@
       radial-gradient(60vw 60vh at 70% -10%, rgba(139, 92, 246, 0.25), transparent 60%),
       radial-gradient(50vw 50vh at 10% 110%, rgba(76, 29, 149, 0.35), transparent 60%);
   }
-  main { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 0 24px; }
-  header { padding: 96px 0 48px; text-align: center; }
+  main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 84px 0 24px; text-align: center; }
   .icon {
-    width: 120px; height: 120px; margin: 0 auto 28px; border-radius: 27px;
+    width: 108px; height: 108px; margin: 0 auto 26px; border-radius: 24px;
     background: linear-gradient(135deg, #2a1a73, #7333d9 55%, #c059f2);
     display: grid; place-items: center;
     box-shadow: 0 24px 60px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255,255,255,0.35);
-    font-size: 56px;
+    font-size: 50px;
   }
   h1 { font-size: 56px; font-weight: 700; letter-spacing: -0.02em; }
   .tagline { font-size: 22px; color: var(--muted); margin-top: 12px; font-weight: 400; }
-  .cta { margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .cta { margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
   .download {
     display: inline-flex; align-items: center; gap: 10px;
     background: linear-gradient(180deg, #9d6bff, #7c3aed);
@@ -52,9 +56,30 @@
   .download:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(124, 58, 237, 0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
   .meta { font-size: 14px; color: var(--muted); }
   .meta code { background: var(--glass); padding: 2px 8px; border-radius: 6px; }
+
+  /* App-window framed hero */
+  .shot { margin: 48px 0 16px; perspective: 1600px; }
+  .window {
+    border-radius: 16px; overflow: hidden;
+    background: #16121f;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 40px 100px rgba(8, 4, 20, 0.7), 0 4px 16px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .titlebar {
+    height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .titlebar .name { margin-left: 12px; font-size: 13px; color: var(--muted); font-weight: 500; }
+  .window img { display: block; width: 100%; height: auto; }
+  .shot .caption { text-align: center; font-size: 13.5px; color: var(--muted); margin-top: 14px; }
+
   .grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 18px; padding: 48px 0 32px;
+    gap: 18px; padding: 44px 0 28px;
   }
   .card {
     background: var(--glass); border: 1px solid var(--glass-border);
@@ -64,6 +89,11 @@
   .card h3 { font-size: 17px; margin-bottom: 8px; }
   .card .emoji { font-size: 26px; display: block; margin-bottom: 12px; }
   .card p { font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .card kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+    background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+    border-radius: 5px; padding: 1px 6px; color: var(--text);
+  }
   .notice {
     margin: 8px 0 64px; padding: 18px 22px; border-radius: 16px;
     background: var(--glass); border: 1px solid var(--glass-border);
@@ -71,6 +101,7 @@
   }
   footer { padding: 24px 0 48px; text-align: center; font-size: 13.5px; color: var(--muted); }
   footer a { color: var(--violet); text-decoration: none; }
+  @media (max-width: 600px) { h1 { font-size: 42px; } .tagline { font-size: 18px; } }
 </style>
 </head>
 <body>
@@ -88,27 +119,40 @@
     </div>
   </header>
 
-  <section class="grid">
-    <div class="card"><span class="emoji">✂️</span><h3>Crop, resize &amp; skew</h3>
-      <p>Pixel-perfect crops with grid overlays and aspect locks. Resize with smart presets. Skew and transform anything.</p></div>
-    <div class="card"><span class="emoji">🎯</span><h3>Zoom callouts</h3>
-      <p>Select any region and Photonz creates a magnified callout with elegant leader lines — perfect for docs and bug reports.</p></div>
-    <div class="card"><span class="emoji">🖊️</span><h3>Annotate anything</h3>
-      <p>Arrows, highlight boxes, shapes, and rich text with full font control. Beautiful defaults, everything editable later.</p></div>
-    <div class="card"><span class="emoji">🧅</span><h3>Real layers</h3>
-      <p>Promote any selection to a layer. Blur it, fade it, style it with borders, rounded corners and shadows — all non-destructive.</p></div>
-    <div class="card"><span class="emoji">⚡️</span><h3>Native speed</h3>
-      <p>Pure Swift and Metal-accelerated rendering. Opens instantly, edits at full frame rate, even on huge screenshots.</p></div>
-    <div class="card"><span class="emoji">🫧</span><h3>Feels like macOS</h3>
-      <p>Liquid Glass surfaces, fluid animations, and every keyboard shortcut where you expect it. Like it shipped with your Mac.</p></div>
+  <section class="shot">
+    <div class="window">
+      <div class="titlebar">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="name">Aurora Ridge — final cut.photonz</span>
+      </div>
+      <img src="assets/hero.png" width="2880" height="1800"
+           alt="A Photonz document: a photo with a zoom callout magnifying fine print, a highlighted heading, an arrow, and a styled layer with a soft shadow.">
+    </div>
+    <p class="caption">Every pixel above is composited by the same Metal renderer that ships in the app — zoom callout, annotations, and a non-destructively styled layer.</p>
   </section>
 
-  <p class="notice"><strong>First launch:</strong> Photonz is not yet notarized, so macOS will warn you on first open.
+  <section class="grid">
+    <div class="card"><span class="emoji">🎯</span><h3>Zoom callouts</h3>
+      <p>Drag a box over any detail (<kbd>Z</kbd>) and Photonz flies in a magnified callout with leader lines — rectangle or circle, adjustable magnification. The signature feature for docs and bug reports.</p></div>
+    <div class="card"><span class="emoji">🖊️</span><h3>Annotate anything</h3>
+      <p>Arrows, rectangles, ellipses, highlights, and rich text with full font control. Drop them fast, then re-color, re-size, and drag endpoints anytime — annotations stay editable.</p></div>
+    <div class="card"><span class="emoji">✂️</span><h3>Crop, resize &amp; transform</h3>
+      <p>Crop with thirds grid and aspect locks, resize in pixels or percent with presets, set the canvas size with an anchor, and rotate or skew any layer.</p></div>
+    <div class="card"><span class="emoji">🧅</span><h3>Real layers</h3>
+      <p>Promote any selection to a layer (<kbd>⌘J</kbd>). Add blur, opacity, borders, rounded corners and shadows — all non-destructive, applied live at render time.</p></div>
+    <div class="card"><span class="emoji">📸</span><h3>Capture &amp; edit</h3>
+      <p>Grab a region (<kbd>⌘⇧4</kbd>) or full screen (<kbd>⌘⇧3</kbd>) straight into Photonz, with a capture history carousel (<kbd>⌘⇧H</kbd>). Export PNG, JPEG, or HEIC at 1× or 2×.</p></div>
+    <div class="card"><span class="emoji">⚡️</span><h3>Native speed</h3>
+      <p>Pure Swift and Metal-accelerated Core Image. A 12-megapixel, 10-layer document re-renders in well under one frame — interactive edits land in single-digit milliseconds.</p></div>
+  </section>
+
+  <p class="notice"><strong>First launch:</strong> Photonz is signed ad-hoc and not yet notarized, so macOS will warn you the first time you open it.
     Right-click the app and choose <em>Open</em> once — after that it launches normally.</p>
 
   <footer>
     <a href="https://github.com/dzearing/photonz">GitHub</a> ·
     <a href="https://github.com/dzearing/photonz/releases">All releases</a> ·
+    <a href="https://github.com/dzearing/photonz/blob/main/CHANGELOG.md">Changelog</a> ·
     Made with ❤️ for the Mac
   </footer>
 </main>
