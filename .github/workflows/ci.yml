@@ -10,6 +10,7 @@ jobs:
   test:
     name: Build & test (arm64)
     runs-on: macos-26
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -20,6 +21,7 @@ jobs:
         run: swift build
 
       - name: Run tests
+        timeout-minutes: 12
         run: Scripts/test.sh
 
       - name: Build release app bundle

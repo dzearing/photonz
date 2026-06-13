@@ -41,9 +41,17 @@ public final class DocumentRenderer: @unchecked Sendable {
         return rasterCache.count + wrapCache.count
     }
 
+    /// A single process-wide CIContext shared by every renderer instance.
+    /// CIContext is thread-safe and expensive to create; Apple's guidance is to
+    /// make one and reuse it. Creating one per instance meant a session that
+    /// spins up many renderers — or runs the render suite in parallel — built
+    /// dozens of Metal contexts at once, exhausting GPU resources on
+    /// constrained machines (e.g. CI VMs), observed as a full stall. The
+    /// per-renderer raster/wrap caches below stay per-instance.
+    private static let sharedContext = CIContext(options: [.cacheIntermediates: true])
+
     public init() {
-        // CIContext picks a Metal device by default on macOS.
-        self.context = CIContext(options: [.cacheIntermediates: true])
+        self.context = DocumentRenderer.sharedContext
     }
 
     /// The cached CIImage wrap of a stored bitmap (keyed by object identity).

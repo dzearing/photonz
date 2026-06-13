@@ -8,7 +8,10 @@ import PhotonzCore
 /// 12-megapixel document with 10 layers). The assertion bound is deliberately
 /// loose (CI machines vary); the printed numbers are the real deliverable and
 /// get recorded in docs/progress/perf.md.
-@Suite("Render performance")
+// Serialized: these 12-megapixel renders are heavy, and letting them run
+// concurrently with the rest of the (parallel) render suite thrashes GPU memory
+// on constrained machines. Timings are meaningful only when run alone anyway.
+@Suite("Render performance", .serialized)
 struct RenderPerfTests {
 
     private func solidImage(width: Int, height: Int, r: UInt8, g: UInt8, b: UInt8) -> CGImage {

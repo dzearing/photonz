@@ -11,6 +11,7 @@ jobs:
   release:
     name: Build, package & publish
     runs-on: macos-26
+    timeout-minutes: 40
     env:
       # True once the Apple Developer secrets are configured; every signing/
       # notarization step keys off this so the pipeline still works (ad-hoc)
@@ -35,6 +36,7 @@ jobs:
           fi
 
       - name: Run tests
+        timeout-minutes: 12
         run: Scripts/test.sh
 
       - name: Import Developer ID certificate
