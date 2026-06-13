@@ -30,7 +30,12 @@ struct PhotonzApp: App {
                     NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
                 }
             }
-            CommandGroup(after: .newItem) {
+            // Replace the auto "New Window" so ⌘N is Preview-style "New from
+            // Clipboard"; without replacing, WindowGroup's default New Window
+            // also binds ⌘N and the two collide.
+            CommandGroup(replacing: .newItem) {
+                Button("New from Clipboard") { appState.newFromClipboard() }
+                    .keyboardShortcut("n", modifiers: .command)
                 Button("Open…") { appState.isImporterPresented = true }
                     .keyboardShortcut("o", modifiers: .command)
                 Divider()
@@ -71,10 +76,18 @@ struct PhotonzApp: App {
                     .keyboardShortcut("c", modifiers: [.command, .option])
                     .disabled(appState.document == nil)
             }
-            // Copy/paste target layers — except while an inline text editor
-            // (or any text field) has focus, where they must keep meaning
-            // "copy/paste text", so the actions forward to the field editor.
+            // Cut/copy/paste/select-all target layers — except while an inline
+            // text editor (or any text field) has focus, where they must keep
+            // their text meaning, so the actions forward to the field editor.
             CommandGroup(replacing: .pasteboard) {
+                Button("Cut") {
+                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
+                        textView.cut(nil)
+                    } else {
+                        appState.cutSelectedLayer()
+                    }
+                }
+                .keyboardShortcut("x", modifiers: .command)
                 Button("Copy") {
                     if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
                         textView.copy(nil)
@@ -91,6 +104,18 @@ struct PhotonzApp: App {
                     }
                 }
                 .keyboardShortcut("v", modifiers: .command)
+                Divider()
+                Button("Select All") {
+                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
+                        textView.selectAll(nil)
+                    } else {
+                        appState.selectAll()
+                    }
+                }
+                .keyboardShortcut("a", modifiers: .command)
+                Button("Deselect") { appState.deselect() }
+                    .keyboardShortcut("a", modifiers: [.command, .shift])
+                    .disabled(appState.selection == nil)
             }
             CommandGroup(after: .undoRedo) {
                 Button("Undo") { appState.undo() }

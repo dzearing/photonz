@@ -10,8 +10,8 @@
     { "id": 4, "file": "phase-4.json", "title": "Transform tools: crop UI, resize, skew", "status": "done" },
     { "id": 5, "file": "phase-5.json", "title": "Zoom callout (signature feature)", "status": "done" },
     { "id": 6, "file": "phase-6.json", "title": "Layers UX: panel, promote-to-layer, effects, persistence", "status": "done" },
-    { "id": 7, "file": "phase-7.json", "title": "Polish: liquid glass everywhere, animations, signing, perf pass", "status": "in_progress" },
-    { "id": 8, "file": "phase-8.json", "title": "1.0 release & marketing site refresh", "status": "pending" },
+    { "id": 7, "file": "phase-7.json", "title": "Polish: liquid glass everywhere, animations, signing, perf pass", "status": "done" },
+    { "id": 8, "file": "phase-8.json", "title": "1.0 release & marketing site refresh", "status": "in_progress" },
     { "id": 9, "file": "phase-9.json", "title": "Screenshot capture & history (user request; preempts phase 2 remainder)", "status": "done" }
   ]
 }

@@ -58,6 +58,7 @@ struct CanvasView: NSViewRepresentable {
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
+    let onDeleteLayer: (UUID) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -93,6 +94,7 @@ struct CanvasView: NSViewRepresentable {
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
+        view.onDeleteLayer = onDeleteLayer
     }
 }
 
@@ -115,6 +117,7 @@ final class CanvasNSView: NSView {
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
+    var onDeleteLayer: ((UUID) -> Void) = { _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -680,6 +683,23 @@ final class CanvasNSView: NSView {
         if tool == .crop, event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
             cropDrag = nil
             onCropCommit()
+            return
+        }
+        // Delete / forward-delete removes the selected (unlocked) layer.
+        if event.keyCode == 51 || event.keyCode == 117,
+           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked {
+            onDeleteLayer(id)
+            return
+        }
+        // Arrow keys nudge the selected layer (1pt, ⇧ for 10pt).
+        if let delta = Nudge.delta(keyCode: event.keyCode,
+                                   large: event.modifierFlags.contains(.shift)),
+           moveDrag == nil, resizeDrag == nil, transformDrag == nil,
+           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked {
+            let frame = layer.frame.offsetBy(dx: delta.dx, dy: delta.dy)
+            selectedLayerFrame = frame
+            onFrameCommit(id, frame)
+            refreshOverlays()
             return
         }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool

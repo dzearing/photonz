@@ -695,6 +695,36 @@ final class AppState {
         pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
     }
 
+    /// ⌘X: copy the selected (unlocked) layer, then remove it.
+    func cutSelectedLayer() {
+        guard let id = selectedLayerID, let layer = document?.layer(id: id),
+              !layer.isLocked else { return }
+        copySelectedLayer()
+        deleteLayer(id: id)
+    }
+
+    /// ⌘A (Preview convention): marquee the whole canvas.
+    func selectAll() {
+        guard let document else { return }
+        setSelection(CGRect(origin: .zero, size: document.canvasSize))
+    }
+
+    /// ⇧⌘A: clear the marquee.
+    func deselect() {
+        setSelection(nil)
+    }
+
+    /// File > New from Clipboard (⌘N, Preview convention): a clipboard image
+    /// becomes a new document; beeps when the clipboard has none.
+    func newFromClipboard() {
+        if let image = NSImage(pasteboard: .general)?
+            .cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            openCapture(image)
+        } else {
+            NSSound.beep()
+        }
+    }
+
     /// ⌘V: a copied Photonz layer pastes offset with a fresh identity; any
     /// system image (screenshot, copied web image) pastes as a new layer —
     /// or opens as a document when none is open.

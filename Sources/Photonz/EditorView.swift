@@ -109,7 +109,8 @@ struct EditorView: View {
                        onToolChange: { appState.setTool($0) },
                        onTextEditBegin: { appState.beginTextEdit(layerID: $0) },
                        onTextCommit: { appState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
-                       onTextCancel: { appState.cancelTextEdit() })
+                       onTextCancel: { appState.cancelTextEdit() },
+                       onDeleteLayer: { appState.deleteLayer(id: $0) })
         } else {
             emptyState
         }
