@@ -2,6 +2,31 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-13 — Phase 8 complete: 1.0.0 released; ALL PHASES DONE
+
+- **8.3 Release.** Preflight green (367 tests, `build-app.sh --dmg` → 1.9M DMG). Tagged `v1.0.0`
+  (matches VERSION), pushed `main` + tag, and the GitHub **release v1.0.0** is published with
+  `Photonz.dmg` + the CHANGELOG-extracted notes. Verified the asset is reachable via authenticated
+  `gh api` (returns zlib/DMG bytes). It is now marked Latest.
+- **8.3 — two environmental blockers the user must resolve (NOT release defects):**
+  1. **GitHub Actions billing.** Every workflow (Release, CI, Deploy site) aborts in ~4s:
+     *"recent account payments have failed or your spending limit needs to be increased."* I
+     published the release manually with the locally-built/tested DMG to route around the dead
+     Release workflow. The **live site still shows 0.1.0** because the Pages deploy is billing-blocked
+     (the repo's `site/` is current). Fix billing, then `gh workflow run site.yml`.
+  2. **Private repo → broken public download.** `releases/latest/download/Photonz.dmg` 404s
+     anonymously (verified: v0.1.0's asset 404s the same way). Make the repo public or host the DMG
+     on a public mirror. Both items captured in `docs/plan/backlog.md`.
+- **8.4 Backlog triage.** New `docs/plan/backlog.md`: P0 release blockers (above), P1 Developer-ID
+  signing + notarization (release.yml scaffolded, secrets unset), P2 Windows amd64 (effectively a
+  renderer+UI rewrite; only PhotonzCore is portable) and Mac App Store (sandbox + capture-hotkey
+  rework), P3 deferred nice-to-haves.
+- **Plan status: phases 0–9 are all `done`.** Phase 8 closed in both `phase-8.json` and
+  `overview.json`; phase 9 was already done. No phase remains `in_progress`. The build plan is
+  complete. SiteAssets remains a dev-only target for regenerating the hero (`swift run SiteAssets`).
+- **Open question for the user:** does 1.0 stay private (downloads need auth) or go public? And is
+  the Actions billing intentional/temporary? Those gate the public download + auto-deploy story.
+
 ## 2026-06-12 — Phase 8.2: 1.0.0 release notes + version stamp
 
 - **8.2 CHANGELOG + notes.** Wrote the user-facing 1.0.0 entry grouped by feature area (zoom callouts, annotations, transforms, layers, capture/export, macOS feel, perf), then stamped the release file set the way the release skill prescribes: `VERSION` 0.1.0 → 1.0.0, `site/version.json` → 1.0.0. README's "early preview" line swapped for 1.0 framing. The version-stamp commit lives here (phase 8.2) rather than under a `release: v1.0.0` message; 8.3 tags v1.0.0 at it and runs the publish + verify steps.
