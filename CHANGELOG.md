@@ -2,9 +2,9 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
-## 1.0.0 — 2026-06-12
+## 0.2.0 — 2026-06-13
 
-The first complete release. Every editing tool that was a placeholder in 0.1.0 is now wired up and shipping.
+Beta. Every editing tool that was a placeholder in 0.1.0 is now wired up — Photonz is feature-complete for daily use, but still pre-1.0 while it gets real-world testing.
 
 **Zoom callouts (the signature feature).** Press <kbd>Z</kbd>, drag a box over any detail, and Photonz flies in a magnified callout connected by leader lines. Choose a rectangle or circle, dial the magnification, and restyle the border — perfect for documentation and bug reports.
 
@@ -20,7 +20,7 @@ The first complete release. Every editing tool that was a placeholder in 0.1.0 i
 
 **Fast.** Metal-accelerated Core Image compositing with a content cache and dirty-rect incremental rendering: a 12-megapixel, 10-layer document re-renders in single-digit milliseconds — comfortably under one frame.
 
-Still unsigned: the build is ad-hoc signed and not yet notarized, so right-click → Open on first launch.
+Developer ID signed and notarized — it launches without Gatekeeper warnings.
 
 ## 0.1.0 — 2026-06-12
 
