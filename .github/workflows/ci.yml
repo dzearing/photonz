@@ -22,7 +22,10 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 12
-        run: Scripts/test.sh
+        # --no-parallel: swift-testing otherwise launches every test concurrently;
+        # the GPU-bound render tests then saturate the cooperative thread pool on
+        # the headless CI VM and the whole process wedges. Serial is ~seconds here.
+        run: Scripts/test.sh --no-parallel
 
       - name: Build release app bundle
         run: Scripts/build-app.sh

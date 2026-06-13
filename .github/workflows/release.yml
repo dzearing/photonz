@@ -37,7 +37,8 @@ jobs:
 
       - name: Run tests
         timeout-minutes: 12
-        run: Scripts/test.sh
+        # --no-parallel: see ci.yml — serial avoids the headless-runner test hang.
+        run: Scripts/test.sh --no-parallel
 
       - name: Import Developer ID certificate
         if: env.HAVE_SIGNING == 'true'
