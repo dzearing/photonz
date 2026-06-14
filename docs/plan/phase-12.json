@@ -1,0 +1,12 @@
+{
+  "phase": 12,
+  "title": "Screen recording (⌘⇧5): region/full, audio device, floating stop, into history",
+  "status": "pending",
+  "goal": "Add screen-video capture to match CleanShot's ⌘⇧5. Use ScreenCaptureKit (SCStream) — the modern macOS path for screen + audio, not the deprecated AVCaptureScreenInput. Recordings land in the same history bin as screenshots (phase 11). Recording session/config logic should live in a testable core type; AVAssetWriter/SCStream plumbing is app-side.",
+  "tasks": [
+    { "id": "12.1", "title": "⌘⇧5 recording entry: choose whole screen or a region", "status": "pending", "notes": "Global ⌘⇧5 starts the record flow with a selector for full display vs a dragged region (reuse the region-capture overlay from capture). Wire through the menu-bar agent. Establish the SCStream + AVAssetWriter pipeline writing an .mov/.mp4 to a temp file." },
+    { "id": "12.2", "title": "Audio device picker (system audio and/or microphone)", "status": "pending", "notes": "Before/at record start, let the user pick audio source(s): system audio (SCStream audio), a microphone (AVCaptureDevice), or none. Persist the last choice. Mux audio into the recording via AVAssetWriter." },
+    { "id": "12.3", "title": "Floating stop control that is excluded from the recording", "status": "pending", "notes": "Show a small always-on-top stop button (and elapsed time) in a screen corner during recording. It must NOT appear in the captured video — exclude its window from the SCStream content filter (SCContentFilter excludingWindows). Stopping finalizes the asset." },
+    { "id": "12.4", "title": "Recordings drop into the history bin alongside images", "status": "pending", "notes": "Extend CaptureHistory/CaptureStore (TDD) to hold video entries (duration, file URL, a poster-frame thumbnail) next to image entries. The slide-down bin (phase 11) shows video items with a play affordance; Copy puts the file on the clipboard, Edit opens the video editor (phase 13)." }
+  ]
+}

@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-14 — 0.2.0 beta walk-back, Developer ID signing, CI hang fix, phases 10–13 planned
+
+- **Versioning.** 1.0.0 was premature ("not out of beta yet"). Deleted the 1.0.0 release+tag, re-versioned to **0.2.0** (continue the 0.x line) with beta framing across CHANGELOG/site/README. `0.0.1` was rejected (below the existing 0.1.0).
+- **Developer ID signing set up.** Generated a fresh Developer ID Application cert from a local CSR (private key in `~/photonz-signing`, never committed), built a verified `.p12`, set all six `APPLE_*` GitHub secrets (Team ID `VMGW2V57S7`, Apple ID `dzearing@hotmail.com`). `release.yml` `HAVE_SIGNING` path now active. Repo made **public** (fixes anonymous download + frees Actions minutes).
+- **CI/release hang — root-caused + fixed.** First full headless run since 0.1.0 hung 18min on tests (vs 59s): swift-testing runs tests concurrently and synchronous Core Image/Metal renders saturated the cooperative thread pool (261 started, 0 completed — even microsecond logic tests starved). Fixes: `DocumentRenderer` shares ONE process-wide `CIContext`; `RenderPerfTests` `.serialized`; CI/release run `Scripts/test.sh --no-parallel` (green in 19s). Added `timeout-minutes` guards.
+- **Notarization headroom.** First signed v0.2.0 build was cancelled when Apple's notary queue ran ~38min into a 40min job ceiling. Raised release job to 75min + bounded `notarytool --timeout 45m`. v0.2.0 re-cut in flight (signed build OK; waiting on Apple's queue).
+- **New roadmap — phases 10–13 ('compete with CleanShot X'), interleaved per user.** 10: editor fixes (undo/redo, arrow redesign w/ adjustable head + tail flair, annotation-shadow-follows-stroke bug). 11: menu-bar agent + ⌘⇧3/⌘⇧4 overrides + slide-down history bin + edit round-trip. 12: ⌘⇧5 recording (ScreenCaptureKit, region/full, audio picker, floating stop excluded, into history). 13: text font/scale, color picker + MRU, video playback/trim/crop, MP4+GIF export. See phase-10..13.json; bug tasks reproduce-first per CLAUDE.md.
+- **Next**: confirm v0.2.0 publishes (notarized DMG, download 200, site 0.2.0, flip site notice to "signed & notarized"), then start phase 10.1.
+
 ## 2026-06-13 — Phase 8 complete: 1.0.0 released; ALL PHASES DONE
 
 - **8.3 Release.** Preflight green (367 tests, `build-app.sh --dmg` → 1.9M DMG). Tagged `v1.0.0`

@@ -1,7 +1,8 @@
 {
   "project": "photonz",
-  "updated": "2026-06-13",
+  "updated": "2026-06-14",
   "howToUse": "Read this file + the in_progress phase file(s) each session. Statuses: pending | in_progress | done. Keep statuses and notes current — this plan is the source of truth, not chat history.",
+  "roadmapNote": "Phases 0–9 shipped the original editor + 0.2.0 beta release. Phases 10–13 are the 'compete with CleanShot X' chapter, sequenced interleaved per the user: worst editor bugs first (10), then the menu-bar/capture/recording features (11–12), then remaining polish + video editing (13). Post-1.0 candidate list lives in backlog.md.",
   "phases": [
     { "id": 0, "file": "phase-0.json", "title": "Infrastructure: repo, CI, site, release pipeline", "status": "done" },
     { "id": 1, "file": "phase-1.json", "title": "Core model & render engine hardening", "status": "done" },
@@ -12,6 +13,10 @@
     { "id": 6, "file": "phase-6.json", "title": "Layers UX: panel, promote-to-layer, effects, persistence", "status": "done" },
     { "id": 7, "file": "phase-7.json", "title": "Polish: liquid glass everywhere, animations, signing, perf pass", "status": "done" },
     { "id": 8, "file": "phase-8.json", "title": "1.0 release & marketing site refresh", "status": "done" },
-    { "id": 9, "file": "phase-9.json", "title": "Screenshot capture & history (user request; preempts phase 2 remainder)", "status": "done" }
+    { "id": 9, "file": "phase-9.json", "title": "Screenshot capture & history (user request; preempts phase 2 remainder)", "status": "done" },
+    { "id": 10, "file": "phase-10.json", "title": "Critical editor fixes: undo/redo, arrow redesign, annotation-shadow bug", "status": "pending" },
+    { "id": 11, "file": "phase-11.json", "title": "Menu-bar app & capture overrides (tray, ⌘⇧3/⌘⇧4, slide-down history, edit round-trip)", "status": "pending" },
+    { "id": 12, "file": "phase-12.json", "title": "Screen recording (⌘⇧5): region/full, audio device, floating stop, into history", "status": "pending" },
+    { "id": 13, "file": "phase-13.json", "title": "Editor polish + video: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF export", "status": "pending" }
   ]
 }

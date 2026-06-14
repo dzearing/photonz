@@ -1,0 +1,12 @@
+{
+  "phase": 11,
+  "title": "Menu-bar app & capture overrides (tray, ⌘⇧3/⌘⇧4, slide-down history, edit round-trip)",
+  "status": "pending",
+  "goal": "Make Photonz behave like CleanShot X: a resident menu-bar agent that overrides the system screenshot shortcuts and routes everything through a slide-down history bin you can copy or edit. Phase 9 already did ⌘⇧3/⌘⇧4 capture, a ⌘⇧H carousel, global Carbon hotkeys, and the CaptureHistory/CaptureStore model — this phase refines that into the tray model and adds the edit round-trip. Keep capture/history logic in testable core types; the SwiftUI/AppKit shell stays thin.",
+  "tasks": [
+    { "id": "11.1", "title": "Resident menu-bar agent (NSStatusItem) with capture menu", "status": "pending", "notes": "Run as a menu-bar/status-tray app (LSUIElement / Accessory activation policy) that stays resident after windows close. Status-item menu: full-screen capture, region capture, record, open history, preferences, quit. Decide whether the editor window is on-demand vs always-resident. Verify global hotkeys still fire while the app has no key window." },
+    { "id": "11.2", "title": "System shortcut overrides ⌘⇧3 (full) / ⌘⇧4 (region) routed through the tray", "status": "pending", "notes": "Refine phase-9 hotkeys so ⌘⇧3 = full screen, ⌘⇧4 = region, captured into the history bin from the resident agent. Handle the Screen Recording permission flow and the conflict with macOS's own Screenshot shortcuts (guide the user to disable system bindings, or document it). Keep the in-app Capture menu working regardless." },
+    { "id": "11.3", "title": "History bin slides down from the top of the screen (⌘⇧H), Copy/Edit per item", "status": "pending", "notes": "Replace/augment the phase-9 carousel with an overlay panel that animates DOWN from the top screen edge on ⌘⇧H (NSPanel/borderless window across the active display, Liquid Glass styling, Esc dismiss). Each item: thumbnail + Copy and Edit actions. Newest first; capped per CaptureHistory." },
+    { "id": "11.4", "title": "Edit round-trip: item → editor → back into the carousel (override vs save-as-new)", "status": "pending", "notes": "Edit on a history item opens it in the Photonz editor for annotation. On close, prompt Override (replace the item in place) vs Save as new (adds a new carousel entry). Update CaptureHistory/CaptureStore accordingly so the bin reflects the change. Core model changes (entry replace/derive) are TDD; the prompt UI is app-side." }
+  ]
+}

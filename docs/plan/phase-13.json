@@ -1,0 +1,13 @@
+{
+  "phase": 13,
+  "title": "Editor polish + video: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF export",
+  "status": "pending",
+  "goal": "Finish the remaining editor-polish items from the user's report and add the video-editing surface for recordings from phase 12. Text/color model changes go in PhotonzCore (TDD); video trim/crop math is testable core; playback/export plumbing (AVPlayer/AVAssetExportSession/CGImageDestination GIF) is app-side.",
+  "tasks": [
+    { "id": "13.1", "title": "Text element: change font and size/scale after placement", "status": "pending", "notes": "User can't change font or scale of a placed text element. Add a font picker + size control (and/or live frame-scale that updates fontSize) to the text element's editing UI. TextContent already carries fontName/fontSize/weight (PhotonzCore) — wire the UI and ensure re-render + undo. Keep auto-contrast shadow behavior." },
+    { "id": "13.2", "title": "Color picker overhaul: custom colors + recents/MRU palette", "status": "pending", "notes": "Replace the fixed-swatch chooser with a full custom color picker (system NSColorPanel or a custom HSB/eyedropper picker) plus a persisted most-recently-used palette so users can build a working set fast. Applies to annotations, text, borders. Persist MRU across launches." },
+    { "id": "13.3", "title": "Video playback + trim (in/out points)", "status": "pending", "notes": "Open a recording in an editor surface with AVPlayer playback (scrub, play/pause) and trim handles to set in/out points. Trim math (clamping, min duration) is a testable core type; the actual cut is applied on export (non-destructive until then)." },
+    { "id": "13.4", "title": "Video crop to a region", "status": "pending", "notes": "Let the user crop the recording to a rectangular region (reuse the image crop UI patterns / Geometry crop math). Non-destructive: store the crop rect, apply on export." },
+    { "id": "13.5", "title": "Export video as MP4 and animated GIF", "status": "pending", "notes": "Export the trimmed+cropped recording to H.264 MP4 (AVAssetExportSession with a composition/videoComposition applying trim+crop) and to an animated GIF (sample frames → CGImageDestination with kCGImagePropertyGIFDictionary, with sensible fps/size caps). Surface size/quality options." }
+  ]
+}
