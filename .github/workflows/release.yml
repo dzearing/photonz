@@ -11,7 +11,9 @@ jobs:
   release:
     name: Build, package & publish
     runs-on: macos-26
-    timeout-minutes: 40
+    # Generous: Apple's notary service is usually minutes but can crawl for
+    # 30+ min during slow stretches; don't let the job cancel a good build.
+    timeout-minutes: 75
     env:
       # True once the Apple Developer secrets are configured; every signing/
       # notarization step keys off this so the pipeline still works (ad-hoc)
@@ -72,9 +74,12 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
+          # --timeout bounds notarytool itself so a stuck Apple queue fails
+          # cleanly (with logs) rather than getting silently cancelled by the
+          # job ceiling. 45m sits under the 75m job timeout.
           xcrun notarytool submit dist/Photonz.dmg \
             --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_PASSWORD" --wait
+            --password "$APPLE_APP_PASSWORD" --wait --timeout 45m
           xcrun stapler staple dist/Photonz.dmg
           xcrun stapler validate dist/Photonz.dmg
 
