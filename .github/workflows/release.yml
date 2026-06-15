@@ -67,21 +67,41 @@ jobs:
           CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: Scripts/build-app.sh --dmg
 
-      - name: Notarize & staple
+      # Best-effort: the build is already Developer ID signed, which is what
+      # matters. Notarization removes the first-launch Gatekeeper prompt, but
+      # Apple's notary *ingestion* has been hanging at the upload stage (no
+      # submission id, so notarytool's own --timeout — which only covers the
+      # result wait — never fires). So we wrap submit in a shell `timeout` to
+      # kill a stalled upload, retry a few times, and if it still won't go
+      # through we PUBLISH THE SIGNED DMG ANYWAY and notarize on a later build.
+      - name: Notarize & staple (best-effort)
         if: env.HAVE_SIGNING == 'true'
+        continue-on-error: true
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          # --timeout bounds notarytool itself so a stuck Apple queue fails
-          # cleanly (with logs) rather than getting silently cancelled by the
-          # job ceiling. 45m sits under the 75m job timeout.
-          xcrun notarytool submit dist/Photonz.dmg \
-            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_PASSWORD" --wait --timeout 45m
-          xcrun stapler staple dist/Photonz.dmg
-          xcrun stapler validate dist/Photonz.dmg
+          ok=0
+          for attempt in 1 2 3; do
+            echo "::group::Notarization attempt $attempt"
+            # `timeout 720` hard-kills a stalled upload (notarytool --timeout
+            # only bounds the post-upload wait); --timeout 10m bounds the wait.
+            if timeout 720 xcrun notarytool submit dist/Photonz.dmg \
+                 --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+                 --password "$APPLE_APP_PASSWORD" --wait --timeout 10m --verbose; then
+              ok=1; echo "::endgroup::"; break
+            fi
+            echo "attempt $attempt did not complete (upload stall or timeout)"
+            echo "::endgroup::"; sleep 20
+          done
+          if [ "$ok" = 1 ]; then
+            xcrun stapler staple dist/Photonz.dmg
+            xcrun stapler validate dist/Photonz.dmg
+            echo "NOTARIZED=1" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Notarization did not complete after retries; publishing the signed-but-unnotarized DMG. It will notarize on a future release once Apple's notary ingestion is healthy."
+          fi
 
       - name: Extract release notes from CHANGELOG
         run: |

@@ -20,7 +20,7 @@ Beta. Every editing tool that was a placeholder in 0.1.0 is now wired up — Pho
 
 **Fast.** Metal-accelerated Core Image compositing with a content cache and dirty-rect incremental rendering: a 12-megapixel, 10-layer document re-renders in single-digit milliseconds — comfortably under one frame.
 
-Developer ID signed and notarized — it launches without Gatekeeper warnings.
+Developer ID signed. Notarization is still being finalized, so macOS may ask you to right-click → Open on first launch until a notarized build lands.
 
 ## 0.1.0 — 2026-06-12
 
