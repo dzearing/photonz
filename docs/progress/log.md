@@ -2,6 +2,13 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-16 — v0.2.0 beta SHIPPED (signed); CleanShot benchmark + plan expanded to phases 14–15
+
+- **v0.2.0 published** as Latest with `Photonz.dmg` — Developer ID **signed**; **notarization is best-effort/pending** (Apple's notary *ingestion* kept hanging at upload, so the release step retries with a shell `timeout` and publishes the signed DMG regardless; `continue-on-error`). It auto-notarizes on a future build once Apple's ingestion is healthy. Verified: download `releases/latest/download/Photonz.dmg` → HTTP 200 (~1.9MB, anonymous OK since the repo is public), live site reads 0.2.0. The "right-click → Open on first launch" note (site + CHANGELOG) stays accurate until a notarized build lands. This closes the long release saga (phase 8.3 fully resolved as a signed beta).
+- **CleanShot X competitive research** (subagent) → `docs/plan/competitive-cleanshot.md`: full feature inventory + gap analysis vs our plan.
+- **Plan expanded with the gaps the user chose** (DOCS ONLY — no implementation this session): phase 10.2 now also covers curved/multi-style arrows; phase 11 gained 11.5 **Quick Access Overlay** + 11.6 **pin-to-screen** (CleanShot signature interactions); phase 12 flagged TOP-PRIORITY and expanded to record MP4 **+ GIF + WebP** with audio-input + region selection (12.5); phase 13.5 export adds WebP; new **phase 14** (annotation toolset: redaction blur/pixelate, step counter, curved-arrow follow-through, spotlight, pencil) and **phase 15** (power capture: scrolling capture, window capture, freeze-screen, self-timer). Cloud upload/sharing intentionally left as a separate later track.
+- **Next**: begin implementation when the user gives the go — phase 10.1 (reproduce undo/redo gap) is the entry point. Nothing is in_progress yet.
+
 ## 2026-06-14 — 0.2.0 beta walk-back, Developer ID signing, CI hang fix, phases 10–13 planned
 
 - **Versioning.** 1.0.0 was premature ("not out of beta yet"). Deleted the 1.0.0 release+tag, re-versioned to **0.2.0** (continue the 0.x line) with beta framing across CHANGELOG/site/README. `0.0.1` was rejected (below the existing 0.1.0).

@@ -1,0 +1,13 @@
+{
+  "phase": 14,
+  "title": "Annotation toolset expansion: redaction (blur/pixelate), step counter, curved arrows follow-through, spotlight, pencil",
+  "status": "pending",
+  "goal": "Round out the annotation toolset to CleanShot parity (see competitive-cleanshot.md). These are NEW tools layered on the existing non-destructive annotation model. Logic (shapes, counter sequencing, redaction region math) goes in PhotonzCore/PhotonzRender with tests; tool UI is app-side. Redaction and the step counter are the highest-value items here.",
+  "tasks": [
+    { "id": "14.1", "title": "Redaction: blur and pixelate tools", "status": "pending", "notes": "HIGH VALUE (privacy). Add blur and pixelate annotation tools that obscure a selected region — non-destructive (stored as a region + effect, applied at render time in PhotonzRender via CIGaussianBlur / CIPixellate). Offer a 'secure' (irreversible-looking, heavier) vs 'smooth' variant like CleanShot. Pixel-test that the underlying pixels are actually obscured in the exported image, not just visually overlaid." },
+    { "id": "14.2", "title": "Step counter: auto-incrementing numbered markers", "status": "pending", "notes": "HIGH VALUE (tutorials). A tool that drops numbered circular badges that auto-increment (1, 2, 3…) as you place them, with restyle (color/size) and reorder/renumber when one is deleted. Counter state + numbering logic is TDD in PhotonzCore; badge rendering in the annotation rasterizer." },
+    { "id": "14.3", "title": "Curved-arrow follow-through (if not finished in 10.2)", "status": "pending", "notes": "If phase 10.2 only delivered straight-arrow polish, finish curved arrows + the small arrow-style set here (editable curve control point, smart rendering). Geometry is TDD in PhotonzCore." },
+    { "id": "14.4", "title": "Spotlight: dim everything except an emphasized region", "status": "pending", "notes": "Dim/darken the whole image except a chosen rectangle/ellipse to draw the eye (distinct from the existing zoom callout, which magnifies). Non-destructive overlay applied at render time. Lower priority than 14.1/14.2." },
+    { "id": "14.5", "title": "Pencil / freehand with auto-smoothing", "status": "pending", "notes": "Freehand draw tool with stroke smoothing (Catmull-Rom or similar). Path model + smoothing is TDD in PhotonzCore; stroke rendering in the rasterizer. Lower priority." }
+  ]
+}

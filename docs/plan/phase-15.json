@@ -1,0 +1,12 @@
+{
+  "phase": 15,
+  "title": "Power capture: scrolling capture, window capture (smart detection), freeze-screen, self-timer",
+  "status": "pending",
+  "goal": "Advanced capture modes that round out CleanShot parity (see competitive-cleanshot.md). Builds on the menu-bar/capture infrastructure from phase 11. Scrolling and window capture are the signature items; freeze-screen and self-timer are smaller polish. Capture/stitching math goes in testable core types; ScreenCaptureKit / CGWindow plumbing is app-side.",
+  "tasks": [
+    { "id": "15.1", "title": "Scrolling capture: stitch content beyond the viewport", "status": "pending", "notes": "SIGNATURE FEATURE. Capture a long page/document by scrolling and stitching frames into one tall image. Detect scroll, grab frames, align/dedupe overlapping regions, and composite. The stitch/alignment algorithm (overlap detection, seam) is the hard part and is TDD in core; capture is app-side. Vertical first; horizontal later." },
+    { "id": "15.2", "title": "Window capture with smart window detection", "status": "pending", "notes": "Capture a single app window: hover-highlight the window under the cursor and shoot just it (with correct shadow/transparency). Use ScreenCaptureKit window enumeration / CGWindowList. Pairs well with the window-background/padding output polish noted in competitive-cleanshot.md." },
+    { "id": "15.3", "title": "Freeze-screen during region selection", "status": "pending", "notes": "Option to freeze the screen image while selecting a region so transient UI (hover states, dropdowns, menus) can be captured without timing pressure. Snapshot the display, present it as a frozen overlay to drag the selection on." },
+    { "id": "15.4", "title": "Self-timer capture", "status": "pending", "notes": "Delayed capture (e.g. 3/5/10s countdown) to set up the moment before the shot fires. Small; wire into the capture entry points and menu-bar agent." }
+  ]
+}

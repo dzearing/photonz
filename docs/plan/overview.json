@@ -1,8 +1,8 @@
 {
   "project": "photonz",
-  "updated": "2026-06-14",
+  "updated": "2026-06-16",
   "howToUse": "Read this file + the in_progress phase file(s) each session. Statuses: pending | in_progress | done. Keep statuses and notes current — this plan is the source of truth, not chat history.",
-  "roadmapNote": "Phases 0–9 shipped the original editor + 0.2.0 beta release. Phases 10–13 are the 'compete with CleanShot X' chapter, sequenced interleaved per the user: worst editor bugs first (10), then the menu-bar/capture/recording features (11–12), then remaining polish + video editing (13). Post-1.0 candidate list lives in backlog.md.",
+  "roadmapNote": "Phases 0–9 shipped the original editor; v0.2.0 beta is published (Developer ID signed; notarization best-effort/pending). Phases 10–15 are the 'compete with CleanShot X' chapter — see competitive-cleanshot.md for the benchmark + gap analysis. Sequenced interleaved per the user: editor bugs first (10), then menu-bar/capture + Quick Access Overlay (11), then SCREEN RECORDING (12, flagged top-priority by the user: region/full, audio-input choice, record to MP4 + GIF + WebP), then video editing + remaining polish (13), then the expanded annotation toolset (14: redaction, step counter) and power capture (15: scrolling + window capture). Cloud upload/sharing is intentionally a SEPARATE later track, not in 10–15. Post-1.0 candidate list lives in backlog.md.",
   "phases": [
     { "id": 0, "file": "phase-0.json", "title": "Infrastructure: repo, CI, site, release pipeline", "status": "done" },
     { "id": 1, "file": "phase-1.json", "title": "Core model & render engine hardening", "status": "done" },
@@ -17,6 +17,8 @@
     { "id": 10, "file": "phase-10.json", "title": "Critical editor fixes: undo/redo, arrow redesign, annotation-shadow bug", "status": "pending" },
     { "id": 11, "file": "phase-11.json", "title": "Menu-bar app & capture overrides (tray, ⌘⇧3/⌘⇧4, slide-down history, edit round-trip)", "status": "pending" },
     { "id": 12, "file": "phase-12.json", "title": "Screen recording (⌘⇧5): region/full, audio device, floating stop, into history", "status": "pending" },
-    { "id": 13, "file": "phase-13.json", "title": "Editor polish + video: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF export", "status": "pending" }
+    { "id": 13, "file": "phase-13.json", "title": "Editor polish + video edit: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF/WebP export", "status": "pending" },
+    { "id": 14, "file": "phase-14.json", "title": "Annotation toolset expansion: redaction (blur/pixelate), step counter, curved arrows follow-through, spotlight, pencil", "status": "pending" },
+    { "id": 15, "file": "phase-15.json", "title": "Power capture: scrolling capture, window capture (smart detection), freeze-screen, self-timer", "status": "pending" }
   ]
 }
