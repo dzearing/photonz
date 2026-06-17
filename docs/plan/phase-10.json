@@ -1,7 +1,7 @@
 {
   "phase": 10,
   "title": "Critical editor fixes: undo/redo, arrow redesign, annotation-shadow bug",
-  "status": "pending",
+  "status": "in_progress",
   "goal": "Fix the things that make the current editor feel unpolished. These are the worst bugs from the user's report; each task starts by REPRODUCING the issue (per CLAUDE.md) before fixing. TDD: arrow geometry + shadow extent are PhotonzCore/PhotonzRender work — tests first.",
   "tasks": [
     { "id": "10.1", "title": "Undo/redo wired across the whole editor (⌘Z / ⇧⌘Z)", "status": "pending", "notes": "User reports no undo/redo. Core `History` (snapshot undo) exists from phase 0/1 — reproduce first to find the gap (likely the editor UI / menu items not calling History.perform, or annotation/text/transform mutations bypassing it). Ensure EVERY document mutation routes through History.perform, add Edit menu items + ⌘Z/⇧⌘Z, and verify redo stack clears on new edits. Add tests for any mutation paths found bypassing History." },

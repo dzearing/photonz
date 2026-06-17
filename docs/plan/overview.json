@@ -14,7 +14,7 @@
     { "id": 7, "file": "phase-7.json", "title": "Polish: liquid glass everywhere, animations, signing, perf pass", "status": "done" },
     { "id": 8, "file": "phase-8.json", "title": "1.0 release & marketing site refresh", "status": "done" },
     { "id": 9, "file": "phase-9.json", "title": "Screenshot capture & history (user request; preempts phase 2 remainder)", "status": "done" },
-    { "id": 10, "file": "phase-10.json", "title": "Critical editor fixes: undo/redo, arrow redesign, annotation-shadow bug", "status": "pending" },
+    { "id": 10, "file": "phase-10.json", "title": "Critical editor fixes: undo/redo, arrow redesign, annotation-shadow bug", "status": "in_progress" },
     { "id": 11, "file": "phase-11.json", "title": "Menu-bar app & capture overrides (tray, ⌘⇧3/⌘⇧4, slide-down history, edit round-trip)", "status": "pending" },
     { "id": 12, "file": "phase-12.json", "title": "Screen recording (⌘⇧5): region/full, audio device, floating stop, into history", "status": "pending" },
     { "id": 13, "file": "phase-13.json", "title": "Editor polish + video edit: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF/WebP export", "status": "pending" },
