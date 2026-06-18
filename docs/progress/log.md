@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-17 — Phase 10.1: undo/redo fixed (⌘Z / ⇧⌘Z were dead)
+
+- **Root cause (reproduced, not assumed)**: dumped the live `NSApp.mainMenu` from inside the running app (env-guarded debug `.task`, since osascript was denied Accessibility). The Edit menu had FOUR items: SwiftUI's built-in `Undo [⌘Z] action=undo:` / `Redo [⇧⌘Z] action=redo:` (target the responder-chain `UndoManager`, which we never register with → no-op), PLUS our own `Undo`/`Redo` from `CommandGroup(after: .undoRedo)` — which had NO key equivalent and no action. `after:` appends; it does not replace the built-ins, so ⌘Z hit the dead built-in. That's the user's "no undo/redo."
+- **Fix**: one line — `CommandGroup(after: .undoRedo)` → `CommandGroup(replacing: .undoRedo)` (PhotonzApp.swift:120, +explanatory comment). Re-dumped: now exactly one `Undo [⌘Z]` / `Redo [⇧⌘Z]` pair, the built-ins gone.
+- **Reactivity proven**: instrumented the `.disabled(!appState.canUndo)` expression to log every commands-body evaluation. After an edit SwiftUI re-evaluated and saw `canUndo=true` — so the command observes AppState correctly and enables on demand. (The `NSMenuItem.isEnabled` read out-of-band stays stale `false` because SwiftUI only syncs enablement on real menu-tracking — a harness artifact, not a bug.)
+- **No History bypass found**: grep confirms every editor mutation routes through `AppState.perform → history.perform`. Preview drags (style/frame/transform) intentionally mutate a local copy and commit one undo step on mouse-up. So task 10.1's "add tests for bypassing paths" was a no-op — nothing bypasses. 367 tests green; app builds clean. All debug scaffolding removed (final diff is the 1-line change + comment).
+- **User-confirmed**: synthetic `NSApp.sendEvent`/`performKeyEquivalent`/`CGEvent.postToPid` do NOT drive SwiftUI's command key-dispatch in-process (the shortcut is caught by a SwiftUI event monitor that only fires for real window-server events), so the literal keypress couldn't be machine-driven here. The user physically pressed ⌘Z/⇧⌘Z in the running app and confirmed undo/redo works end-to-end.
+- **Next**: 10.2 arrow redesign (proportioned head + tapered tail, adjustable size, curved variant — TDD in PhotonzCore Geometry) or 10.3 annotation shadow-follows-stroke bug.
+
 ## 2026-06-16 — v0.2.0 beta SHIPPED (signed); CleanShot benchmark + plan expanded to phases 14–15
 
 - **Signature verified on the published DMG** (downloaded + mounted): `Authority=Developer ID Application: DAVID BENJAMIN ZEARING (VMGW2V57S7)` → Developer ID CA → Apple Root, `flags=0x10000(runtime)` hardened, TeamID `VMGW2V57S7` — genuinely Developer ID signed, NOT adhoc. `spctl -a` reports `rejected, source=Unnotarized Developer ID`, confirming signed-but-not-notarized (right-click→Open until notarized).

@@ -117,7 +117,11 @@ struct PhotonzApp: App {
                     .keyboardShortcut("a", modifiers: [.command, .shift])
                     .disabled(appState.selection == nil)
             }
-            CommandGroup(after: .undoRedo) {
+            // Must REPLACE, not append: SwiftUI's built-in .undoRedo items carry
+            // the ⌘Z/⇧⌘Z shortcuts and target the responder-chain UndoManager
+            // (which we never register with), so appending leaves ⌘Z dead. See
+            // docs/progress/log.md 2026-06-17.
+            CommandGroup(replacing: .undoRedo) {
                 Button("Undo") { appState.undo() }
                     .keyboardShortcut("z", modifiers: .command)
                     .disabled(!appState.canUndo)
