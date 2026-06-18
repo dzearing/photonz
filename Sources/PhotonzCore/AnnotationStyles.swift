@@ -32,9 +32,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
             ?? AnnotationStyles.defaultArrowheadScale
     }
 
-    /// New arrows start with a bold head. `Geometry.arrowhead`'s base
-    /// proportions are "1x"; the user-facing default scales them up.
-    public static let defaultArrowheadScale: CGFloat = 1.5
+    /// New arrows start at the head's base proportions. `Geometry.arrowhead`'s
+    /// base size (×1.0) is already a bold, clearly-visible head; the user can
+    /// scale it up or down from there with the Arrowhead slider.
+    public static let defaultArrowheadScale: CGFloat = 1.0
 
     /// Adjustable ranges for the popover sliders.
     public static let strokeWidthRange: ClosedRange<CGFloat> = 1...40

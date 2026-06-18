@@ -197,13 +197,16 @@ struct AnnotationRestyledTests {
     }
 
     @Test func strokeWidthChangeRepadsTheFrameAroundFixedEndpoints() {
+        // Since 10.4 the arrowhead is fixed (independent of stroke), so the frame
+        // only repads once the shaft is thick enough that its own width drives
+        // padding past the head — use a heavy stroke so the repad is observable.
         let layer = arrowLayer(from: CGPoint(x: 20, y: 100), to: CGPoint(x: 220, y: 100), strokeWidth: 4)
-        let restyled = AnnotationBuilder.restyled(layer, strokeWidth: 10)
+        let restyled = AnnotationBuilder.restyled(layer, strokeWidth: 30)
         guard let content = annotation(restyled) else {
             Issue.record("expected annotation content")
             return
         }
-        #expect(content.strokeWidth == 10)
+        #expect(content.strokeWidth == 30)
         // Doc endpoints stay anchored…
         #expect(restyled.annotationEndpoint(.start) == CGPoint(x: 20, y: 100))
         #expect(restyled.annotationEndpoint(.end) == CGPoint(x: 220, y: 100))
@@ -300,6 +303,15 @@ struct SegmentHitTests {
         let layer = AnnotationBuilder.layer(content: content,
                                             from: CGPoint(x: 0, y: 0), to: CGPoint(x: 100, y: 100))
         #expect(layer.contains(canvasPoint: CGPoint(x: 50, y: 50))) // hollow center still grabs
+    }
+
+    @Test func defaultArrowheadScaleIsOne() {
+        // 10.4: new arrows start at ×1.0 (the head's base proportions), not ×1.5.
+        #expect(AnnotationStyles.defaultArrowheadScale == 1.0)
+        let styles = AnnotationStyles()
+        #expect(styles.arrowheadScale == 1.0)
+        let arrow = styles.content(for: .arrow)
+        #expect(arrow?.arrowheadScale == 1.0)
     }
 
     @Test func documentHitTestPassesZoomThrough() {

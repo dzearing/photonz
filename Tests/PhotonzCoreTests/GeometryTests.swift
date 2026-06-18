@@ -106,12 +106,29 @@ struct GeometryTests {
         #expect(left.y != right.y)
     }
 
-    @Test func arrowheadScalesWithStrokeWidth() {
-        let thin = Geometry.arrowhead(start: .zero, end: CGPoint(x: 100, y: 0), strokeWidth: 2)
-        let thick = Geometry.arrowhead(start: .zero, end: CGPoint(x: 100, y: 0), strokeWidth: 8)
-        let thinLength = 100 - thin[1].x
-        let thickLength = 100 - thick[1].x
-        #expect(thickLength > thinLength)
+    @Test func arrowheadSizeIsIndependentOfStrokeWidth() {
+        // 10.4: the Thickness slider must NOT change the head. At equal scale, a
+        // thin and a thick shaft (both below the thick-shaft floor) produce an
+        // identical head — head size is driven by `scale` alone.
+        let thin = Geometry.arrowhead(start: .zero, end: CGPoint(x: 200, y: 0),
+                                      strokeWidth: 2, scale: 1)
+        let thick = Geometry.arrowhead(start: .zero, end: CGPoint(x: 200, y: 0),
+                                       strokeWidth: 10, scale: 1)
+        let thinLength = 200 - thin[1].x
+        let thickLength = 200 - thick[1].x
+        let thinWidth = abs(thin[1].y - thin[2].y)
+        let thickWidth = abs(thick[1].y - thick[2].y)
+        #expect(abs(thinLength - thickLength) < 1e-9, "head length must not depend on stroke width")
+        #expect(abs(thinWidth - thickWidth) < 1e-9, "head width must not depend on stroke width")
+    }
+
+    @Test func arrowheadFloorKeepsAVeryThickShaftFromOutWidthingItsHead() {
+        // The one stroke dependency we keep: a very thick shaft must never be
+        // wider than its own head, or the arrow stops reading as an arrow.
+        let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50),
+                                        end: CGPoint(x: 200, y: 50), strokeWidth: 60, scale: 1)
+        let fullWidth = abs(points[1].y - points[2].y)
+        #expect(fullWidth >= 60, "a 60px shaft's head (\(fullWidth)) must be at least as wide as the shaft")
     }
 
     @Test func arrowheadDegenerateArrowIsSafe() {
@@ -122,15 +139,16 @@ struct GeometryTests {
         }
     }
 
-    @Test func arrowheadIsClearlyWiderThanTheShaft() {
-        // The whole point of the redesign: the head must read as an arrowhead,
-        // not a pinprick. Full width should be several times the shaft width.
-        for stroke in [CGFloat(2), 4, 6, 10] {
+    @Test func arrowheadIsAClearlyVisibleHead() {
+        // The head must read as an arrowhead, not a pinprick. Since 10.4 the head
+        // is a fixed size at the default scale (independent of the shaft), so the
+        // bar is an absolute one — and it's never narrower than the shaft.
+        for stroke in [CGFloat(2), 4, 6, 10, 30] {
             let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50),
                                             end: CGPoint(x: 200, y: 50), strokeWidth: stroke)
             let fullWidth = abs(points[1].y - points[2].y)
-            #expect(fullWidth >= stroke * 3.5,
-                    "head full width \(fullWidth) should be >= 3.5x the \(stroke)px shaft")
+            #expect(fullWidth >= 24, "head full width \(fullWidth) should be a clearly visible size")
+            #expect(fullWidth >= stroke, "head should never be narrower than the \(stroke)px shaft")
         }
     }
 

@@ -80,21 +80,30 @@ public enum Geometry {
         return hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby))
     }
 
+    /// The arrowhead's fixed base dimensions at `scale` = 1, in points. Since
+    /// 10.4 the head is sized from `scale` ALONE — not the shaft width — so the
+    /// Thickness slider changes the line without bloating the head. (At ×1.0
+    /// these match the old strokeWidth-driven head at a 4px shaft / ×1.5, so the
+    /// default arrow looks unchanged.)
+    private static let baseArrowheadHalfWidth: CGFloat = 16
+    private static let baseArrowheadLength: CGFloat = 30
+
     /// Half the arrowhead's full width — how far each wing reaches from the
     /// arrow's axis. Layer frames must pad by at least this much or
     /// rasterization clips the head. Kept in lockstep with `arrowhead`'s wing
     /// math so frame padding and drawing never drift.
     public static func arrowheadHalfWidth(strokeWidth: CGFloat, scale: CGFloat = 1) -> CGFloat {
-        // Bold by default: full width ≈ 5.6x a 6px shaft, with a generous floor
-        // so even a 2px line gets a head you can actually see. Half of that is
-        // the per-wing reach. `scale` is the user-facing size multiplier.
-        max(strokeWidth * 2.8, 12) * max(scale, 0)
+        // Driven by `scale` alone, with one floor: a very thick shaft must never
+        // out-width its own head (else the arrow stops reading as an arrow), so
+        // the head is at least 0.6x the stroke per wing (full width ≥ 1.2x shaft).
+        max(baseArrowheadHalfWidth * max(scale, 0), strokeWidth * 0.6)
     }
 
     /// Length of the arrowhead from tip to the line joining its wings, before
-    /// the short-arrow cap.
+    /// the short-arrow cap. Like the width, driven by `scale` with a thick-shaft
+    /// floor so the head stays proportionate to a heavy line.
     private static func rawArrowheadLength(strokeWidth: CGFloat, scale: CGFloat) -> CGFloat {
-        max(strokeWidth * 5, 22) * max(scale, 0)
+        max(baseArrowheadLength * max(scale, 0), strokeWidth * 1.1)
     }
 
     /// Head length actually drawn: capped so a bold head never overshoots the

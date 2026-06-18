@@ -2,6 +2,13 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-18 (session 2) — committed the 10.2/10.3 blob; 10.4 arrow decouple done
+
+- **Committed last session's working-tree blob as ONE commit** (f0e7334), per the user's choice: arrow redesign (10.2) + adjustable shadow/inspector (10.3) + capture/dev-signing scripts + synced design docs. 374 tests were green at commit time.
+- **10.4 DONE — arrow polish round 2 (TDD, PhotonzCore).** Two changes: (1) `AnnotationStyles.defaultArrowheadScale` 1.5 → 1.0. (2) Decoupled head size from stroke width — `Geometry` now sizes the head from `scale` alone via fixed bases (`baseArrowheadHalfWidth=16`, `baseArrowheadLength=30`), so the Thickness slider no longer grows the head. Picked 16/30 because ×1.0 ≈ the old strokeWidth-driven head at 4px/×1.5, so default arrows look unchanged. Kept ONE stroke dependency as a floor: `halfWidth = max(16*scale, sw*0.6)`, `length = max(30*scale, sw*1.1)` so a very heavy line can't out-width its own head. `arrowheadHalfWidth` is still the single source feeding `renderPadding`, so frame padding stays in lockstep automatically (no separate change needed). Tests: replaced `arrowheadScalesWithStrokeWidth` → `arrowheadSizeIsIndependentOfStrokeWidth`; added floor + default-scale tests; rewrote the 3.5x-shaft test to an absolute-size test; bumped the repad test to sw 4→30. **376 tests green; app builds.**
+- **NEXT: 10.5** (dock the inspector as a full-height resizable right side panel with reorderable Photoshop-style sections — the biggest item) or **10.6** (shadow: invisible controls + add a Size/spread knob). 10.6 may be partly resolved by 10.5's full-height panel (the current clipping suspect). 10.7 (slow layer selection) and 10.8 (double-click background to zoom) still pending.
+- **Capture/screen-recording is still OPEN and needs the USER** (sudo `tccutil reset ScreenCapture com.dzearing.photonz` + MDM PPPC check) — see the prior entry; not an app-code bug.
+
 ## 2026-06-18 — Phase 10.2/10.3 done; arrow + inspector + capture/signing; feedback queued as 10.4–10.8
 
 - **⚠️ WORKING TREE IS DIRTY / MOSTLY UNCOMMITTED.** Only 10.1 (undo fix) is committed (821500b). Everything below is on disk but NOT committed — arrow redesign (PhotonzCore Geometry, Layer, Tools, AnnotationStyles, AnnotationEditing; PhotonzRender AnnotationRasterizer), the popover sliders + AnnotationInspector + shadow knobs (Photonz EditorView, LayersPanel, AppState, CanvasView), and the capture/signing work (Capture/ScreenCapturer, CaptureCenter, Scripts/build-app.sh, Scripts/dev-codesign-setup.sh). 374 tests green; app builds. **Next session: consider committing this before continuing** (ask the user how to split).
