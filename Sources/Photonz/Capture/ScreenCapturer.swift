@@ -13,6 +13,28 @@ enum ScreenCapturer {
     @discardableResult
     static func requestPermission() -> Bool { CGRequestScreenCaptureAccess() }
 
+    /// Gets Photonz listed under System Settings → Privacy & Security → Screen &
+    /// System Audio Recording and surfaces the prompt. `CGRequestScreenCaptureAccess`
+    /// alone covers the legacy path; modern macOS only lists a ScreenCaptureKit
+    /// client once it actually issues an SCK query, so we do both. The SCK call
+    /// throws when undetermined/denied — that's expected; the side effect
+    /// (registration + prompt) is the point.
+    static func primePermissionRegistration() async {
+        _ = CGRequestScreenCaptureAccess()
+        // Issuing an SCK query is what registers a ScreenCaptureKit client in
+        // System Settings → Screen & System Audio Recording. It throws until
+        // access is granted — expected; the registration is the point.
+        _ = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+    }
+
+    /// Opens the Screen Recording pane in System Settings so the user can grant
+    /// access (and see Photonz listed) without hunting through the panes.
+    static func openScreenRecordingSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     enum CaptureError: Error {
         case displayNotFound
     }

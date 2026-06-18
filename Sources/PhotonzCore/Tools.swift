@@ -122,7 +122,8 @@ extension AnnotationContent {
         case .line:
             (strokeWidth / 2).rounded(.up)
         case .arrow:
-            max(strokeWidth / 2, Geometry.arrowheadHalfWidth(strokeWidth: strokeWidth)).rounded(.up)
+            max(strokeWidth / 2,
+                Geometry.arrowheadHalfWidth(strokeWidth: strokeWidth, scale: arrowheadScale)).rounded(.up)
         case .rectangle, .ellipse, .highlight:
             0
         }

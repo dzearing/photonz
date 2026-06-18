@@ -82,12 +82,28 @@ struct AnnotationRenderingTests {
         let output = renderAnnotation(AnnotationContent(shape: .arrow, strokeWidth: 6, colorHex: "#FF0000",
                                                         start: CGPoint(x: 10, y: 50), end: CGPoint(x: 80, y: 50)))
         #expect(isRed(pixel(output, x: 40, y: 50)), "shaft should be stroked")
-        // The head flares wider than the 6px shaft near the end point: with
-        // strokeWidth 6 the head spans x 59...80, and at x = 62 it covers y 42.8...57.2.
+        // The bold head flares well wider than the 6px shaft near the end point:
+        // with strokeWidth 6 the head spans x ~50...80 with half-width ~16.8, so
+        // at x = 62 it comfortably covers y 44 and 56.
         #expect(isRed(pixel(output, x: 62, y: 44)), "upper wing of the arrowhead")
         #expect(isRed(pixel(output, x: 62, y: 56)), "lower wing of the arrowhead")
         #expect(isWhite(pixel(output, x: 40, y: 44)), "shaft should not flare mid-line")
         #expect(isWhite(pixel(output, x: 85, y: 50)), "nothing past the tip")
+    }
+
+    @Test func arrowheadScaleWidensTheRenderedHead() {
+        // A bigger arrowheadScale must visibly widen the head: sample a point
+        // off-axis near the tip that the small head misses but the big one fills.
+        let small = renderAnnotation(AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF0000",
+                                                       start: CGPoint(x: 10, y: 50), end: CGPoint(x: 80, y: 50),
+                                                       arrowheadScale: 0.7))
+        let big = renderAnnotation(AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF0000",
+                                                     start: CGPoint(x: 10, y: 50), end: CGPoint(x: 80, y: 50),
+                                                     arrowheadScale: 2.2))
+        // x=40 is bare shaft for the small head (its head starts at ~x65) but
+        // well inside the ×2.2 head (whose base reaches back to ~x32).
+        #expect(isWhite(pixel(small, x: 40, y: 35)), "small arrowhead should not reach back to x=40")
+        #expect(isRed(pixel(big, x: 40, y: 35)), "the ×2.2 arrowhead should cover (40, 35)")
     }
 
     @Test func highlightMultipliesInsteadOfCovering() {

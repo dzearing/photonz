@@ -121,4 +121,65 @@ struct GeometryTests {
             #expect(p.x.isFinite && p.y.isFinite)
         }
     }
+
+    @Test func arrowheadIsClearlyWiderThanTheShaft() {
+        // The whole point of the redesign: the head must read as an arrowhead,
+        // not a pinprick. Full width should be several times the shaft width.
+        for stroke in [CGFloat(2), 4, 6, 10] {
+            let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50),
+                                            end: CGPoint(x: 200, y: 50), strokeWidth: stroke)
+            let fullWidth = abs(points[1].y - points[2].y)
+            #expect(fullWidth >= stroke * 3.5,
+                    "head full width \(fullWidth) should be >= 3.5x the \(stroke)px shaft")
+        }
+    }
+
+    @Test func arrowheadHeadIsLongerThanItIsHalfWide() {
+        // A sensible aspect: the head reads as a triangle pointing forward, not
+        // a squat wedge. Length should exceed half-width.
+        let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 0),
+                                        end: CGPoint(x: 200, y: 0), strokeWidth: 6)
+        let headLength = 200 - points[1].x
+        let halfWidth = abs(points[1].y)
+        #expect(headLength > halfWidth, "head length \(headLength) should exceed half-width \(halfWidth)")
+    }
+
+    @Test func arrowheadScaleEnlargesTheHead() {
+        let normal = Geometry.arrowhead(start: .zero, end: CGPoint(x: 200, y: 0),
+                                        strokeWidth: 6, scale: 1)
+        let big = Geometry.arrowhead(start: .zero, end: CGPoint(x: 200, y: 0),
+                                     strokeWidth: 6, scale: 2)
+        let normalLen = 200 - normal[1].x
+        let bigLen = 200 - big[1].x
+        let normalWidth = abs(normal[1].y - normal[2].y)
+        let bigWidth = abs(big[1].y - big[2].y)
+        #expect(bigLen > normalLen * 1.8, "scale 2 head should be markedly longer")
+        #expect(bigWidth > normalWidth * 1.8, "scale 2 head should be markedly wider")
+    }
+
+    @Test func arrowShaftStopsShortOfTheTipSoItDoesNotPokeThrough() {
+        let start = CGPoint(x: 0, y: 50), end = CGPoint(x: 200, y: 50)
+        let shaftEnd = Geometry.arrowShaftEnd(start: start, end: end, strokeWidth: 6, scale: 1)
+        let head = Geometry.arrowhead(start: start, end: end, strokeWidth: 6, scale: 1)
+        let headBaseX = head[1].x // wings sit at the base of the head
+        // The shaft must end before the tip (so its round cap can't poke past it)
+        // and inside the head (so the filled head covers the join — no gap).
+        #expect(shaftEnd.x < end.x, "shaft should stop short of the tip")
+        #expect(shaftEnd.x > headBaseX, "shaft should reach into the head so there's no gap")
+        #expect(abs(shaftEnd.y - 50) < 1e-9, "shaft end stays on the axis")
+    }
+
+    @Test func arrowShaftEndDegenerateIsSafe() {
+        let p = Geometry.arrowShaftEnd(start: .zero, end: .zero, strokeWidth: 4, scale: 1)
+        #expect(p.x.isFinite && p.y.isFinite)
+    }
+
+    @Test func arrowheadHalfWidthMatchesTheHeadGeometry() {
+        // The frame-padding helper must agree with the actual wing reach, or
+        // arrows clip / get loose bounding boxes.
+        let points = Geometry.arrowhead(start: CGPoint(x: 0, y: 50),
+                                        end: CGPoint(x: 200, y: 50), strokeWidth: 6)
+        let wingReach = abs(points[1].y - 50)
+        #expect(abs(Geometry.arrowheadHalfWidth(strokeWidth: 6) - wingReach) < 1e-6)
+    }
 }

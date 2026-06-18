@@ -86,14 +86,22 @@ if [[ -f Resources/AppIcon.icns ]]; then
   cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 fi
 
-# Developer ID signing when CODESIGN_IDENTITY is set (CI with secrets, or a
-# local Developer ID install); ad-hoc otherwise. Hardened runtime + secure
-# timestamp are notarization requirements.
+# Signing priority:
+#  1. Developer ID (CODESIGN_IDENTITY set) — CI/release. Hardened runtime +
+#     secure timestamp are notarization requirements.
+#  2. "Photonz Dev" self-signed identity, if present — stable local signature so
+#     TCC permissions (Screen Recording) survive rebuilds. See
+#     Scripts/dev-codesign-setup.sh.
+#  3. Ad-hoc — fallback; permissions reset every rebuild.
+DEV_IDENTITY="Photonz Dev"
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   echo "==> Codesigning (Developer ID)"
   codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
+elif security find-identity -p codesigning 2>/dev/null | grep -q "$DEV_IDENTITY"; then
+  echo "==> Codesigning (stable self-signed: $DEV_IDENTITY)"
+  codesign --force --deep --sign "$DEV_IDENTITY" "$APP"
 else
-  echo "==> Codesigning (ad-hoc)"
+  echo "==> Codesigning (ad-hoc — run Scripts/dev-codesign-setup.sh for stable Screen Recording permission)"
   codesign --force --deep --sign - "$APP"
 fi
 

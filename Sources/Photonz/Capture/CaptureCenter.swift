@@ -23,6 +23,15 @@ final class CaptureCenter {
     /// Called once at app launch.
     func start() {
         store.loadFromDisk()
+        // Register with TCC up front so Photonz shows up in System Settings →
+        // Privacy & Security → Screen Recording before the first capture. The
+        // system only lists an app once it asks; preflight alone never adds it.
+        // No-op (and no prompt) once a decision has been made.
+        // Only reflect the current status in the UI here — do NOT request at
+        // launch. A screen-recording request made while the app is in the
+        // background can be auto-declined (and the decision sticks), so we ask
+        // only in response to a user-initiated capture (see ensurePermission).
+        needsScreenRecordingPermission = !ScreenCapturer.hasPermission
         hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.captureFullScreen() }
         hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.beginRectCapture() }
         hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.revealHistory() }
@@ -94,7 +103,13 @@ final class CaptureCenter {
         }
         needsScreenRecordingPermission = true
         isHistoryVisible = true // the panel hosts the permission hint
-        ScreenCapturer.requestPermission()
+        // User-initiated and frontmost: issue the real request that registers
+        // Photonz as a ScreenCaptureKit client (CGRequest + an SCK query), then
+        // open the Screen Recording pane so they can grant it.
+        Task {
+            await ScreenCapturer.primePermissionRegistration()
+            ScreenCapturer.openScreenRecordingSettings()
+        }
         return false
     }
 

@@ -4,12 +4,12 @@
 
 `DocumentRenderer.render(document, store:)` walks layers bottom-to-top:
 
-1. Resolve content → `CIImage` (image layers now; text/annotation/zoom-callout rasterizers land in Phases 3–5).
+1. Resolve content → `CIImage`. Image layers wrap a stored `CGImage`; text/annotation/zoom-callout layers rasterize on demand (`TextRasterizer`, `AnnotationRasterizer`, zoom-callout overlay) into a transparent-background image.
 2. Apply layer-local crop (stored rect, never destructive).
 3. Scale content into `layer.frame`.
-4. Apply `LayerStyle`: gaussian blur (clamped-to-extent to avoid edge fade), opacity via `CIColorMatrix` alpha vector. Corner radius, border, and shadow rasterization land with Phase 6 styling work.
+4. Apply `LayerStyle`: gaussian blur (clamped-to-extent to avoid edge fade) → corner-radius clip → border (inner stroke) → geometric transform → center-based positioning → **shadow** → opacity (`CIColorMatrix` alpha vector). **Shadow is derived from the layer image's ALPHA silhouette** (a `CIColorMatrix` that tints the existing alpha, then blur + offset), so a diagonal arrow's shadow hugs the actual stroke pixels, NOT its bounding box. The shadow composites *after* positioning, or its expanded extent breaks centering.
 5. Translate onto canvas, flipping top-left model coords → Core Image bottom-left. **This flip exists in exactly one place; never add another.**
-6. `composited(over:)` accumulation, final `createCGImage` over the canvas extent.
+6. `composited(over:)` accumulation, final `createCGImage` over the canvas extent. The same composite path backs `render`, `renderSprite` (drag float), scaled export, and thumbnails — so styling/shadow behave identically everywhere.
 
 ## Coordinate systems
 

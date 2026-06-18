@@ -80,23 +80,43 @@ public enum Geometry {
         return hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby))
     }
 
-    /// How far an arrowhead's wings reach from the arrow's axis. Layer frames
-    /// must pad by at least this much or rasterization clips the head.
-    public static func arrowheadHalfWidth(strokeWidth: CGFloat) -> CGFloat {
-        max(strokeWidth * 3.5, 8) * 0.4
+    /// Half the arrowhead's full width — how far each wing reaches from the
+    /// arrow's axis. Layer frames must pad by at least this much or
+    /// rasterization clips the head. Kept in lockstep with `arrowhead`'s wing
+    /// math so frame padding and drawing never drift.
+    public static func arrowheadHalfWidth(strokeWidth: CGFloat, scale: CGFloat = 1) -> CGFloat {
+        // Bold by default: full width ≈ 5.6x a 6px shaft, with a generous floor
+        // so even a 2px line gets a head you can actually see. Half of that is
+        // the per-wing reach. `scale` is the user-facing size multiplier.
+        max(strokeWidth * 2.8, 12) * max(scale, 0)
+    }
+
+    /// Length of the arrowhead from tip to the line joining its wings, before
+    /// the short-arrow cap.
+    private static func rawArrowheadLength(strokeWidth: CGFloat, scale: CGFloat) -> CGFloat {
+        max(strokeWidth * 5, 22) * max(scale, 0)
+    }
+
+    /// Head length actually drawn: capped so a bold head never overshoots the
+    /// start on a short drag (keeps a sliver of visible shaft).
+    private static func effectiveArrowheadLength(strokeWidth: CGFloat, scale: CGFloat,
+                                                 length: CGFloat) -> CGFloat {
+        min(rawArrowheadLength(strokeWidth: strokeWidth, scale: scale), length * 0.85)
     }
 
     /// The filled triangle for an arrow's head: `[tip, leftWing, rightWing]`.
     /// The tip sits exactly at `end`; the wings sit behind it, perpendicular to
-    /// the arrow's axis. Sized proportionally to `strokeWidth`.
-    public static func arrowhead(start: CGPoint, end: CGPoint, strokeWidth: CGFloat) -> [CGPoint] {
+    /// the arrow's axis. Sized proportionally to `strokeWidth`, scaled by the
+    /// user-facing `scale` (1 = the default, bold proportions).
+    public static func arrowhead(start: CGPoint, end: CGPoint,
+                                 strokeWidth: CGFloat, scale: CGFloat = 1) -> [CGPoint] {
         let dx = end.x - start.x
         let dy = end.y - start.y
         let length = hypot(dx, dy)
         guard length > 0 else { return [end, end, end] }
 
-        let headLength = max(strokeWidth * 3.5, 8)
-        let halfWidth = arrowheadHalfWidth(strokeWidth: strokeWidth)
+        let headLength = effectiveArrowheadLength(strokeWidth: strokeWidth, scale: scale, length: length)
+        let halfWidth = arrowheadHalfWidth(strokeWidth: strokeWidth, scale: scale)
         let ux = dx / length
         let uy = dy / length
         let base = CGPoint(x: end.x - ux * headLength, y: end.y - uy * headLength)
@@ -106,6 +126,23 @@ public enum Geometry {
         return [end,
                 CGPoint(x: base.x + px * halfWidth, y: base.y + py * halfWidth),
                 CGPoint(x: base.x - px * halfWidth, y: base.y - py * halfWidth)]
+    }
+
+    /// Where the arrow's shaft line should terminate so its (round) cap never
+    /// pokes past the sharp arrowhead tip. Sits a little inside the head so the
+    /// filled triangle covers the join with no gap. Falls back to `end` for a
+    /// zero-length arrow.
+    public static func arrowShaftEnd(start: CGPoint, end: CGPoint,
+                                     strokeWidth: CGFloat, scale: CGFloat = 1) -> CGPoint {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let length = hypot(dx, dy)
+        guard length > 0 else { return end }
+        let headLength = effectiveArrowheadLength(strokeWidth: strokeWidth, scale: scale, length: length)
+        // Stop 70% of the way up the head: well past the base (so the head's
+        // wide body hides the cap) but short of the tip.
+        let back = headLength * 0.7
+        return CGPoint(x: end.x - dx / length * back, y: end.y - dy / length * back)
     }
 
     /// The two leader-line segments connecting a zoom callout to its source box.

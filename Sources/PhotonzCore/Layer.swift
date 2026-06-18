@@ -65,13 +65,28 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// For arrows/lines: start and end in layer-local coordinates.
     public var start: CGPoint
     public var end: CGPoint
+    /// Arrow-only: user-facing arrowhead size multiplier (1 = the bold default).
+    public var arrowheadScale: CGFloat
 
-    public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30", start: CGPoint = .zero, end: CGPoint = .zero) {
+    public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
+                start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1) {
         self.shape = shape
         self.strokeWidth = strokeWidth
         self.colorHex = colorHex
         self.start = start
         self.end = end
+        self.arrowheadScale = arrowheadScale
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        shape = try c.decode(AnnotationShape.self, forKey: .shape)
+        strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        start = try c.decode(CGPoint.self, forKey: .start)
+        end = try c.decode(CGPoint.self, forKey: .end)
+        // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
+        arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
     }
 }
 

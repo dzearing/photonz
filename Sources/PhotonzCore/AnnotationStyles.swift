@@ -9,14 +9,36 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     public var strokeColorHex: String
     public var highlightColorHex: String
     public var strokeWidth: CGFloat
+    /// Arrow-only: the arrowhead size multiplier new arrows start with.
+    public var arrowheadScale: CGFloat
 
     public init(strokeColorHex: String = "#FF3B30",
                 highlightColorHex: String = "#FFD60A",
-                strokeWidth: CGFloat = 4) {
+                strokeWidth: CGFloat = 4,
+                arrowheadScale: CGFloat = AnnotationStyles.defaultArrowheadScale) {
         self.strokeColorHex = strokeColorHex
         self.highlightColorHex = highlightColorHex
         self.strokeWidth = strokeWidth
+        self.arrowheadScale = arrowheadScale
     }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        strokeColorHex = try c.decode(String.self, forKey: .strokeColorHex)
+        highlightColorHex = try c.decode(String.self, forKey: .highlightColorHex)
+        strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
+        // `arrowheadScale` postdates AnnotationStyles; old saved prefs omit it.
+        arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale)
+            ?? AnnotationStyles.defaultArrowheadScale
+    }
+
+    /// New arrows start with a bold head. `Geometry.arrowhead`'s base
+    /// proportions are "1x"; the user-facing default scales them up.
+    public static let defaultArrowheadScale: CGFloat = 1.5
+
+    /// Adjustable ranges for the popover sliders.
+    public static let strokeWidthRange: ClosedRange<CGFloat> = 1...40
+    public static let arrowheadScaleRange: ClosedRange<CGFloat> = 0.5...5
 
     /// The swatch row, in display order (system palette).
     public static let swatches: [String] = [
@@ -32,6 +54,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     /// The stroke width picker's options, thinnest first.
     public static let strokeWidths: [CGFloat] = [2, 4, 6, 10]
+
+    /// The arrowhead-size picker's options (multipliers), smallest first.
+    public static let arrowheadScales: [CGFloat] = [0.7, 1.0, 1.5, 2.2]
 
     /// The color new annotations from `tool` will get, nil for non-annotation tools.
     public func colorHex(for tool: Tool) -> String? {
@@ -50,7 +75,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         guard let shape = tool.annotationShape, let color = colorHex(for: tool) else { return nil }
         // Highlight is a filled box; the stroke width slider doesn't touch it.
         let width = tool.usesStrokeWidth ? strokeWidth : AnnotationContent.defaultStrokeWidth
-        return AnnotationContent(shape: shape, strokeWidth: width, colorHex: color)
+        return AnnotationContent(shape: shape, strokeWidth: width, colorHex: color,
+                                 arrowheadScale: arrowheadScale)
     }
 }
 

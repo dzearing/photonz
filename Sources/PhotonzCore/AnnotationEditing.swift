@@ -81,12 +81,14 @@ extension AnnotationBuilder {
     /// Style edit on an existing annotation: endpoints stay anchored in
     /// document space while the frame re-pads for the new stroke width.
     public static func restyled(_ layer: Layer, colorHex: String? = nil,
-                                strokeWidth: CGFloat? = nil) -> Layer {
+                                strokeWidth: CGFloat? = nil,
+                                arrowheadScale: CGFloat? = nil) -> Layer {
         guard var a = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
         if let colorHex { a.colorHex = colorHex }
         if let strokeWidth { a.strokeWidth = strokeWidth }
+        if let arrowheadScale { a.arrowheadScale = arrowheadScale }
         var updated = layer
         updated.content = .annotation(a)
         return updating(updated, start: start, end: end)

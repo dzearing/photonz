@@ -44,9 +44,14 @@ public enum AnnotationRasterizer {
 
         case .arrow:
             let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
-                                          strokeWidth: annotation.strokeWidth)
+                                          strokeWidth: annotation.strokeWidth,
+                                          scale: annotation.arrowheadScale)
+            // Stop the shaft inside the head so its round cap can't poke past the tip.
+            let shaftEnd = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
+                                                  strokeWidth: annotation.strokeWidth,
+                                                  scale: annotation.arrowheadScale)
             context.move(to: annotation.start)
-            context.addLine(to: annotation.end)
+            context.addLine(to: shaftEnd)
             context.strokePath()
             context.beginPath()
             context.addLines(between: head)

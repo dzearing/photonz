@@ -1240,12 +1240,18 @@ final class CanvasNSView: NSView {
             path.move(to: start)
             path.addLine(to: end)
         case .arrow:
+            // Stop the shaft inside the head (doc space → view space) so its cap
+            // doesn't poke past the tip, matching the rasterizer.
+            let shaftEndDoc = Geometry.arrowShaftEnd(start: docStart, end: docEnd,
+                                                     strokeWidth: content.strokeWidth,
+                                                     scale: content.arrowheadScale)
             path.move(to: start)
-            path.addLine(to: end)
+            path.addLine(to: viewport.viewPoint(fromDocument: shaftEndDoc))
             // Head geometry in document space (its minimum size is in doc
             // points), then mapped to view coords.
             let head = Geometry.arrowhead(start: docStart, end: docEnd,
-                                          strokeWidth: content.strokeWidth)
+                                          strokeWidth: content.strokeWidth,
+                                          scale: content.arrowheadScale)
             headPath.addLines(between: head.map { viewport.viewPoint(fromDocument: $0) })
             headPath.closeSubpath()
         case .rectangle, .ellipse:

@@ -6,6 +6,9 @@ import UniformTypeIdentifiers
 struct EditorView: View {
     @Environment(AppState.self) private var appState
     @State private var isStylePopoverPresented = false
+    /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
+    @State private var strokeWidthDraft: CGFloat?
+    @State private var arrowheadScaleDraft: CGFloat?
     /// Anchors the active-tool accent circle so it slides between buttons.
     @Namespace private var toolbarNamespace
 
@@ -306,6 +309,17 @@ struct EditorView: View {
             ?? appState.annotationStyles.strokeWidth
     }
 
+    /// The arrowhead-size row applies to arrows only.
+    private var showsArrowheadRow: Bool {
+        if appState.selectedZoomCalloutLayer != nil { return false }
+        if let selected = selectedAnnotation { return selected.shape == .arrow }
+        return appState.activeTool == .arrow
+    }
+
+    private var editedArrowheadScale: CGFloat {
+        selectedAnnotation?.arrowheadScale ?? appState.annotationStyles.arrowheadScale
+    }
+
     /// Swatch showing the active tool's color; opens the style popover.
     private var styleButton: some View {
         Button {
@@ -334,12 +348,10 @@ struct EditorView: View {
             if appState.activeTool == .text {
                 fontPicker
             } else if showsStrokeWidthRow {
-                HStack(spacing: 10) {
-                    ForEach(AnnotationStyles.strokeWidths, id: \.self) { width in
-                        strokeWidthDot(width)
-                    }
-                }
-                .frame(maxWidth: .infinity)
+                strokeWidthSlider
+            }
+            if showsArrowheadRow {
+                arrowheadSizeSlider
             }
             if appState.selectedZoomCalloutLayer != nil {
                 calloutInspector
@@ -457,29 +469,70 @@ struct EditorView: View {
         .help(hex)
     }
 
-    /// Dot whose diameter tracks the stroke width it selects.
-    private func strokeWidthDot(_ width: CGFloat) -> some View {
-        let isSelected = editedStrokeWidth == width
-        return Button {
-            if appState.selectedZoomCalloutLayer != nil {
-                appState.setCalloutBorderWidth(width)
-            } else {
-                appState.setAnnotationStrokeWidth(width)
+    /// Stroke width slider with a live numeric readout. Drag previews without
+    /// recording undo; release commits one step.
+    private var strokeWidthSlider: some View {
+        let value = strokeWidthDraft ?? editedStrokeWidth
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Label("Width", systemImage: "lineweight").labelStyle(.titleOnly)
+                Spacer()
+                Text("\(Int(value.rounded())) pt").monospacedDigit().foregroundStyle(.secondary)
             }
-        } label: {
-            Circle()
-                .fill(.primary)
-                .frame(width: width + 4, height: width + 4)
-                .frame(width: 24, height: 24)
-                // Faint track ring so small unselected dots stay legible.
-                .background(Circle().fill(.quaternary).padding(2))
-                .overlay {
-                    if isSelected {
-                        Circle().strokeBorder(Color.accentColor, lineWidth: 2)
+            .font(.callout)
+            Slider(value: Binding(
+                get: { strokeWidthDraft ?? editedStrokeWidth },
+                set: { v in
+                    strokeWidthDraft = v
+                    // Annotations preview live; callouts commit on release only
+                    // (no preview path, so live updates would spam undo).
+                    if appState.selectedZoomCalloutLayer == nil {
+                        appState.previewAnnotationRestyle(strokeWidth: v.rounded())
                     }
                 }
+            ), in: AnnotationStyles.strokeWidthRange, onEditingChanged: { editing in
+                if !editing {
+                    let final = (strokeWidthDraft ?? editedStrokeWidth).rounded()
+                    if appState.selectedZoomCalloutLayer != nil {
+                        appState.setCalloutBorderWidth(final)
+                    } else {
+                        appState.setAnnotationStrokeWidth(final)
+                    }
+                    strokeWidthDraft = nil
+                }
+            })
         }
-        .help("\(Int(width)) pt")
+        .frame(width: 220)
+    }
+
+    /// Arrowhead size slider (multiplier) with a small/large triangle on each end.
+    private var arrowheadSizeSlider: some View {
+        let value = arrowheadScaleDraft ?? editedArrowheadScale
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Label("Arrowhead", systemImage: "arrowshape.right.fill").labelStyle(.titleOnly)
+                Spacer()
+                Text("×\(String(format: "%.1f", value))").monospacedDigit().foregroundStyle(.secondary)
+            }
+            .font(.callout)
+            HStack(spacing: 8) {
+                Image(systemName: "arrowtriangle.right.fill").font(.system(size: 8)).foregroundStyle(.secondary)
+                Slider(value: Binding(
+                    get: { arrowheadScaleDraft ?? editedArrowheadScale },
+                    set: { v in
+                        arrowheadScaleDraft = v
+                        appState.previewAnnotationRestyle(arrowheadScale: v)
+                    }
+                ), in: AnnotationStyles.arrowheadScaleRange, onEditingChanged: { editing in
+                    if !editing {
+                        appState.setAnnotationArrowheadScale(arrowheadScaleDraft ?? editedArrowheadScale)
+                        arrowheadScaleDraft = nil
+                    }
+                })
+                Image(systemName: "arrowtriangle.right.fill").font(.system(size: 15)).foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 220)
     }
 
     private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,

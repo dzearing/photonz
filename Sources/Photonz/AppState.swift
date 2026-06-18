@@ -371,6 +371,32 @@ final class AppState {
         saveAnnotationStyles()
     }
 
+    /// Live slider drag: restyle the selected stroke/arrow WITHOUT recording an
+    /// undo step (the canvas updates immediately), keeping the default in sync so
+    /// the value also applies to the next-drawn annotation. Commit on release via
+    /// `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale` (one undo step).
+    func previewAnnotationRestyle(strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
+        if let strokeWidth { annotationStyles.strokeWidth = strokeWidth }
+        if let arrowheadScale { annotationStyles.arrowheadScale = arrowheadScale }
+        guard let layer = selectedAnnotationLayer, var doc = document else { return }
+        discardDragPreview()
+        doc.updateLayer(id: layer.id) {
+            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale)
+        }
+        submit(doc)
+    }
+
+    /// Arrow-only: the arrowhead size multiplier. Restyles the selected arrow
+    /// (one undo step) and updates the default for new arrows.
+    func setAnnotationArrowheadScale(_ scale: CGFloat) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
+            discardDragPreview()
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, arrowheadScale: scale) } }
+        }
+        annotationStyles.arrowheadScale = scale
+        saveAnnotationStyles()
+    }
+
     // MARK: - Zoom-callout inspector
 
     /// The selected zoom-callout layer when the select tool is active — the
