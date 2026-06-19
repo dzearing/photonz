@@ -49,7 +49,14 @@ struct InspectorPanel: View {
                 }
             }
             .padding(.vertical, 6)
-            .animation(.spring(duration: 0.25), value: orderedAvailableSections)
+            // NO implicit animation on the section SET (10.7). Animating
+            // section insert/remove forces the whole .regularMaterial panel to
+            // re-blur and an NSColorWell to animate in/out every frame for the
+            // spring's duration — ~350ms of pegged CPU per selection that
+            // crosses between an annotation and a non-annotation layer (the
+            // Annotation section toggles). Showing/hiding sections instantly
+            // drops that to ~20ms. Collapse (chevron) and drag-reorder keep
+            // their own explicit `withAnimation`, so they still animate.
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(.regularMaterial)

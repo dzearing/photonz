@@ -229,7 +229,14 @@ struct EditorView: View {
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
         .animation(.spring(duration: 0.3), value: appState.activeTool)
-        .animation(.spring(duration: 0.3), value: appState.selectedLayerID)
+        // NO toolbar animation on selectedLayerID (10.7). Selecting an
+        // annotation/callout shows the style swatch, which resizes this glass
+        // capsule; animating that reflow re-renders the glass every frame for
+        // the spring's duration — ~350ms of pegged CPU per selection that
+        // crosses an annotation boundary, on top of the inspector's own cost.
+        // Making the swatch appear instantly on selection drops it to ~25ms.
+        // (The accent circle still slides on TOOL change via `value: activeTool`
+        // above, and the swatch still animates in when you pick the arrow tool.)
     }
 
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.
