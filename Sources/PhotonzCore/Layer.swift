@@ -14,7 +14,7 @@ public struct ImageRef: Hashable, Codable, Sendable {
     }
 }
 
-public enum AnnotationShape: String, Codable, Sendable {
+public enum AnnotationShape: String, CaseIterable, Codable, Sendable {
     case arrow
     case rectangle
     case highlight
@@ -171,22 +171,41 @@ extension LayerStyle {
         var padding = blurRadius * 3
         if let shadow, shadow.opacity > 0 {
             padding += shadow.radius * 3 + max(abs(shadow.offset.width), abs(shadow.offset.height))
+                + max(shadow.spread, 0)
         }
         return padding.rounded(.up)
     }
 }
 
 public struct ShadowStyle: Hashable, Codable, Sendable {
+    /// Softness — gaussian blur sigma of the shadow.
     public var radius: CGFloat
+    /// Offset of the shadow from the object (model y-down).
     public var offset: CGSize
+    /// Spread — how much bigger (>0, dilate) or smaller (<0, erode) the shadow
+    /// SHAPE is than the object, before blurring. Distinct from blur (softness)
+    /// and offset (distance).
+    public var spread: CGFloat
     public var colorHex: String
     public var opacity: Double
 
-    public init(radius: CGFloat = 12, offset: CGSize = CGSize(width: 0, height: 4), colorHex: String = "#000000", opacity: Double = 0.4) {
+    public init(radius: CGFloat = 12, offset: CGSize = CGSize(width: 0, height: 4), spread: CGFloat = 0,
+                colorHex: String = "#000000", opacity: Double = 0.4) {
         self.radius = radius
         self.offset = offset
+        self.spread = spread
         self.colorHex = colorHex
         self.opacity = opacity
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        radius = try c.decode(CGFloat.self, forKey: .radius)
+        offset = try c.decode(CGSize.self, forKey: .offset)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        opacity = try c.decode(Double.self, forKey: .opacity)
+        // `spread` postdates ShadowStyle; old payloads omit it.
+        spread = try c.decodeIfPresent(CGFloat.self, forKey: .spread) ?? 0
     }
 }
 

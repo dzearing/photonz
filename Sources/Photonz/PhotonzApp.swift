@@ -67,6 +67,11 @@ struct PhotonzApp: App {
                     appState.capture.toggleHistory()
                 }
                 .keyboardShortcut("h", modifiers: [.command, .shift])
+                Divider()
+                Button("Request Screen Recording Access…") {
+                    appState.capture.requestScreenRecordingAccess()
+                }
+                .help("Registers Photonz in System Settings → Privacy → Screen & System Audio Recording and opens that pane.")
             }
             CommandMenu("Image") {
                 Button("Resize Image…") { appState.isResizeDialogPresented = true }

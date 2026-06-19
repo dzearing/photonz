@@ -93,4 +93,30 @@ struct StyleRenderingTests {
         let above = pixel(output, x: 50, y: 24)
         #expect(below.r < above.r, "shadow should be stronger below the layer than above it")
     }
+
+    @Test func shadowSpreadExtendsTheShadowBeyondTheLayer() {
+        // 10.6: positive `spread` dilates the shadow silhouette so it reaches
+        // further from the object than spread 0. Patch spans y∈[30,70]; sample
+        // 6px below its edge with a tight blur so the difference is the spread.
+        func belowEdge(_ spread: CGFloat) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {
+            let style = LayerStyle(shadow: ShadowStyle(radius: 2, offset: .zero, spread: spread,
+                                                       colorHex: "#000000", opacity: 1))
+            return pixel(renderStyledPatch(style: style, baseColor: (255, 255, 255)), x: 50, y: 76)
+        }
+        let none = belowEdge(0)
+        let spread = belowEdge(8)
+        #expect(none.r > 230, "with no spread, a tight shadow barely reaches 6px past the edge")
+        #expect(spread.r < none.r - 40, "spread 8 should darken well past the edge (\(spread.r) vs \(none.r))")
+    }
+
+    @Test func shadowNegativeSpreadShrinksTheShadow() {
+        // Negative spread erodes the silhouette: the shadow pulls in toward the
+        // object, so a point just past the edge is lighter than with spread 0.
+        func belowEdge(_ spread: CGFloat) -> UInt8 {
+            let style = LayerStyle(shadow: ShadowStyle(radius: 6, offset: .zero, spread: spread,
+                                                       colorHex: "#000000", opacity: 1))
+            return pixel(renderStyledPatch(style: style, baseColor: (255, 255, 255)), x: 50, y: 74).r
+        }
+        #expect(belowEdge(-6) > belowEdge(0), "eroded shadow should be lighter just past the edge")
+    }
 }

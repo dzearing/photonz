@@ -9,46 +9,49 @@ struct EditorView: View {
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
+    /// Docked inspector width, set by the 1px left resize handle; persisted.
+    @AppStorage("inspector.width") private var panelWidth = 264.0
     /// Anchors the active-tool accent circle so it slides between buttons.
     @Namespace private var toolbarNamespace
 
     var body: some View {
         @Bindable var appState = appState
-        ZStack {
-            canvas
-            VStack {
-                if appState.capture.isHistoryVisible {
-                    GlassEffectContainer {
-                        HistoryPanel()
+        HStack(spacing: 0) {
+            ZStack {
+                canvas
+                VStack {
+                    if appState.capture.isHistoryVisible {
+                        GlassEffectContainer {
+                            HistoryPanel()
+                        }
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     }
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    Spacer()
+                    GlassEffectContainer {
+                        toolbar
+                    }
+                    .padding(.bottom, 16)
                 }
-                Spacer()
-                GlassEffectContainer {
-                    toolbar
-                }
-                .padding(.bottom, 16)
+                .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
             }
-            .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
-        }
-        .overlay(alignment: .topTrailing) {
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Canvas surround adapts to the system appearance (Preview-style):
+            // near-black in dark mode, light gray in light mode.
+            .background(Color(nsColor: .underPageBackgroundColor))
+            // The docked, full-height inspector with its 1px left resize handle.
             if appState.document != nil, appState.isLayersPanelVisible {
-                GlassEffectContainer {
-                    LayersPanel()
-                }
-                .padding(.top, 16)
-                .padding(.trailing, 16)
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+                InspectorResizeHandle(width: $panelWidth)
+                InspectorPanel()
+                    .frame(width: panelWidth)
+                    .frame(maxHeight: .infinity)
+                    .transition(.move(edge: .trailing))
             }
         }
         .animation(.spring(duration: 0.3), value: appState.isLayersPanelVisible)
-        // Fill the window even in the empty state — the ZStack otherwise hugs
+        // Fill the window even in the empty state — the HStack otherwise hugs
         // the toolbar's width and the background paints as a visible column
         // against the window's own background.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Canvas surround adapts to the system appearance (Preview-style):
-        // near-black in dark mode, light gray in light mode.
-        .background(Color(nsColor: .underPageBackgroundColor))
         .fileImporter(isPresented: $appState.isImporterPresented,
                       allowedContentTypes: [.image, AppState.photonzType]) { result in
             if case .success(let url) = result {
@@ -289,7 +292,7 @@ struct EditorView: View {
         if appState.activeTool == .text {
             return appState.textStyles.colorHex
         }
-        return appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30"
+        return appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30" // non-annotation fallback
     }
 
     /// Stroke width applies to stroke shapes only — highlight is a fill.
@@ -306,7 +309,7 @@ struct EditorView: View {
     private var editedStrokeWidth: CGFloat {
         appState.selectedZoomCalloutLayer?.style.borderWidth
             ?? selectedAnnotation?.strokeWidth
-            ?? appState.annotationStyles.strokeWidth
+            ?? appState.annotationStyles.strokeWidth(for: appState.activeTool)
     }
 
     /// The arrowhead-size row applies to arrows only.
@@ -317,7 +320,7 @@ struct EditorView: View {
     }
 
     private var editedArrowheadScale: CGFloat {
-        selectedAnnotation?.arrowheadScale ?? appState.annotationStyles.arrowheadScale
+        selectedAnnotation?.arrowheadScale ?? appState.annotationStyles.arrowheadScale(for: appState.activeTool)
     }
 
     /// Swatch showing the active tool's color; opens the style popover.

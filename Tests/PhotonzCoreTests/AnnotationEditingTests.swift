@@ -309,7 +309,7 @@ struct SegmentHitTests {
         // 10.4: new arrows start at ×1.0 (the head's base proportions), not ×1.5.
         #expect(AnnotationStyles.defaultArrowheadScale == 1.0)
         let styles = AnnotationStyles()
-        #expect(styles.arrowheadScale == 1.0)
+        #expect(styles.arrowheadScale(forShape: .arrow) == 1.0)
         let arrow = styles.content(for: .arrow)
         #expect(arrow?.arrowheadScale == 1.0)
     }

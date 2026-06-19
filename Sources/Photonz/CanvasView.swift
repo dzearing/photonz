@@ -253,6 +253,16 @@ final class CanvasNSView: NSView {
     }
     private var resizeDrag: ResizeDrag?
 
+    /// True only between a move/resize COMMIT and the post-commit composite
+    /// landing — the window in which the sprite must be held at the committed
+    /// frame so it doesn't flash. A static click-select sets up a drag preview
+    /// (for a possible drag) but must NOT hold the sprite: the sprite is a baked
+    /// bitmap CALayer composites in gamma space, which renders semi-transparent
+    /// effects (notably shadows) slightly differently than the linear-space CI
+    /// composite — so a held sprite makes a selected layer's shadow visibly
+    /// darker. Showing the real composite for a static selection avoids that.
+    private var holdSpriteUntilRender = false
+
     /// In-progress rotate (knob) or skew (⌥-corner) drag.
     private struct TransformDragSession {
         enum Kind {
@@ -422,6 +432,14 @@ final class CanvasNSView: NSView {
         }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        // Double-click on the empty surround behind the image performs the
+        // standard window title-bar action (zoom/minimize). `.hiddenTitleBar`
+        // removes the title bar, so without this that gesture does nothing.
+        if event.clickCount == 2,
+           !CGRect(origin: .zero, size: viewport.documentSize).contains(p) {
+            performWindowTitleBarAction()
+            return
+        }
         // The text tool places a new block wherever you click.
         if tool == .text {
             beginTextSession(layerID: nil, at: p)
@@ -656,6 +674,7 @@ final class CanvasNSView: NSView {
             resizeDrag = nil
             if drag.frame != drag.startFrame {
                 selectedLayerFrame = drag.frame
+                holdSpriteUntilRender = true
                 onFrameCommit(drag.layerID, drag.frame)
             }
             refreshOverlays()
@@ -664,6 +683,7 @@ final class CanvasNSView: NSView {
             if drag.moved {
                 let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
                 selectedLayerFrame = frame
+                holdSpriteUntilRender = true
                 onFrameCommit(drag.layerID, frame)
             }
             refreshOverlays()
@@ -802,6 +822,20 @@ final class CanvasNSView: NSView {
         }
     }
 
+    /// Mirrors the system "Double-click a window's title bar to" preference for
+    /// a double-click on the empty surround (we hide the real title bar).
+    private func performWindowTitleBarAction() {
+        guard let window else { return }
+        switch UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick") {
+        case "Minimize":
+            window.performMiniaturize(nil)
+        case "None":
+            break
+        default: // "Maximize" (Zoom) is the modern default.
+            window.performZoom(nil)
+        }
+    }
+
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
               cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
@@ -853,6 +887,9 @@ final class CanvasNSView: NSView {
         self.document = document
         self.selectedLayerID = selectedLayerID
         self.dragPreview = dragPreview
+        // The post-commit composite has landed once the preview is cleared; the
+        // sprite hold is no longer needed (and must not linger over a selection).
+        if dragPreview == nil { holdSpriteUntilRender = false }
         // The held delta is only needed while the sprite is still floating.
         if let hold = transformHold, dragPreview?.layerID != hold.layerID {
             transformHold = nil
@@ -971,13 +1008,23 @@ final class CanvasNSView: NSView {
     /// isn't applicable (no preview, or it belongs to another layer).
     private var previewedFrame: CGRect? {
         guard let dragPreview else { return nil }
-        if let resizeDrag, resizeDrag.layerID == dragPreview.layerID { return resizeDrag.frame }
-        if let moveDrag, moveDrag.layerID == dragPreview.layerID {
+        // Only float the sprite once a drag is genuinely under way. On mere
+        // mouse-DOWN (or before the move threshold) the frame hasn't changed, so
+        // showing the sprite would needlessly swap the live composite for the
+        // gamma-composited bitmap — which shifts semi-transparent effects like
+        // shadows. Keep the real composite until the layer actually moves/resizes.
+        if let resizeDrag, resizeDrag.layerID == dragPreview.layerID,
+           resizeDrag.frame != resizeDrag.startFrame {
+            return resizeDrag.frame
+        }
+        if let moveDrag, moveDrag.layerID == dragPreview.layerID, moveDrag.moved {
             return CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
         }
         // Drag ended but the post-commit render hasn't landed yet: hold the
-        // sprite at the committed frame so nothing flashes.
-        if moveDrag == nil, resizeDrag == nil, selectedLayerID == dragPreview.layerID {
+        // sprite at the committed frame so nothing flashes. Only after a real
+        // commit — never for a static selection (see `holdSpriteUntilRender`).
+        if moveDrag == nil, resizeDrag == nil, holdSpriteUntilRender,
+           selectedLayerID == dragPreview.layerID {
             return selectedLayerFrame
         }
         return nil

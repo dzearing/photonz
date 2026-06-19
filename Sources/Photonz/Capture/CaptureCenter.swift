@@ -70,6 +70,20 @@ final class CaptureCenter {
         isHistoryVisible.toggle()
     }
 
+    /// Explicit, user-invoked "register me with TCC" — fires the Screen
+    /// Recording request UNCONDITIONALLY (not gated on the preflight check,
+    /// which can report a stale value when the system TCC record is stuck) and
+    /// opens the Settings pane. This is what gets Photonz listed so the toggle
+    /// can be flipped. Must run frontmost.
+    func requestScreenRecordingAccess() {
+        NSApp.activate(ignoringOtherApps: true)
+        Task {
+            await ScreenCapturer.primePermissionRegistration()
+            ScreenCapturer.openScreenRecordingSettings()
+            needsScreenRecordingPermission = !ScreenCapturer.hasPermission
+        }
+    }
+
     /// Global-hotkey path: surface the app, then show the panel.
     private func revealHistory() {
         if NSApp.isActive {

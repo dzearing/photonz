@@ -431,12 +431,22 @@ public final class DocumentRenderer: @unchecked Sendable {
         // (model y-down → CI y-up), and composited underneath.
         if let shadow = layer.style.shadow, shadow.opacity > 0 {
             let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
-            let silhouette = image.applyingFilter("CIColorMatrix", parameters: [
+            var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
                 "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
                 "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * color.alpha),
                 "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * color.alpha),
                 "inputAVector": CIVector(x: 0, y: 0, z: 0, w: color.alpha)
             ])
+            // Spread: grow/shrink the silhouette SHAPE before blurring. Dilate
+            // (max) for positive spread, erode (min) for negative — distinct
+            // from blur (softness) and offset (distance).
+            if shadow.spread > 0 {
+                silhouette = silhouette.applyingFilter("CIMorphologyMaximum",
+                                                       parameters: ["inputRadius": shadow.spread])
+            } else if shadow.spread < 0 {
+                silhouette = silhouette.applyingFilter("CIMorphologyMinimum",
+                                                       parameters: ["inputRadius": -shadow.spread])
+            }
             let blurred = silhouette
                 .applyingGaussianBlur(sigma: shadow.radius)
                 .transformed(by: CGAffineTransform(translationX: shadow.offset.width,

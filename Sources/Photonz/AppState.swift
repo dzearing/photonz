@@ -317,8 +317,12 @@ final class AppState {
     /// Completed drag-to-create from the canvas (document coords, ⇧ already
     /// applied). Adds one annotation layer as a single undo step.
     func addAnnotation(from start: CGPoint, to end: CGPoint) {
-        guard let content = annotationStyles.content(for: activeTool) else { return }
-        let layer = AnnotationBuilder.layer(content: content, from: start, to: end)
+        guard let shape = activeTool.annotationShape,
+              let content = annotationStyles.content(for: activeTool) else { return }
+        var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
+        // Inherit this shape's last non-destructive effects (e.g. a drop shadow
+        // added to the previous arrow carries to the next).
+        layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
     }
 
@@ -362,22 +366,32 @@ final class AppState {
         saveAnnotationStyles()
     }
 
+    /// The shape a toolbar-popover style edit applies to: the selected
+    /// annotation's shape (select tool) or the active drawing tool's shape.
+    private var styleTargetShape: AnnotationShape? {
+        selectedAnnotationLayer?.annotation?.shape ?? activeTool.annotationShape
+    }
+
     func setAnnotationStrokeWidth(_ width: CGFloat) {
         if let layer = selectedAnnotationLayer, layer.annotation?.shape != .highlight {
             discardDragPreview()
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, strokeWidth: width) } }
         }
-        annotationStyles.strokeWidth = width
+        if let shape = styleTargetShape, shape != .highlight {
+            annotationStyles.setStrokeWidth(width, forShape: shape)
+        }
         saveAnnotationStyles()
     }
 
     /// Live slider drag: restyle the selected stroke/arrow WITHOUT recording an
-    /// undo step (the canvas updates immediately), keeping the default in sync so
-    /// the value also applies to the next-drawn annotation. Commit on release via
-    /// `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale` (one undo step).
+    /// undo step (the canvas updates immediately), keeping that shape's default
+    /// in sync so the value also applies to the next-drawn annotation. Commit on
+    /// release via `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale`.
     func previewAnnotationRestyle(strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
-        if let strokeWidth { annotationStyles.strokeWidth = strokeWidth }
-        if let arrowheadScale { annotationStyles.arrowheadScale = arrowheadScale }
+        if let shape = styleTargetShape {
+            if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
+            if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+        }
         guard let layer = selectedAnnotationLayer, var doc = document else { return }
         discardDragPreview()
         doc.updateLayer(id: layer.id) {
@@ -387,13 +401,54 @@ final class AppState {
     }
 
     /// Arrow-only: the arrowhead size multiplier. Restyles the selected arrow
-    /// (one undo step) and updates the default for new arrows.
+    /// (one undo step) and updates the arrow default for new arrows.
     func setAnnotationArrowheadScale(_ scale: CGFloat) {
         if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
             discardDragPreview()
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, arrowheadScale: scale) } }
         }
-        annotationStyles.arrowheadScale = scale
+        if let shape = styleTargetShape, shape == .arrow {
+            annotationStyles.setArrowheadScale(scale, forShape: .arrow)
+        }
+        saveAnnotationStyles()
+    }
+
+    // MARK: - Layers-panel annotation inspector (targets a specific layer,
+    // independent of the active tool — so editing a selected line/arrow's style
+    // from the docked panel always reaches the document and that shape's default).
+
+    /// Live inspector-slider restyle of `layerID` (no undo step). Updates the
+    /// shape's persisted default too, so the next-drawn object of that type
+    /// inherits it.
+    func previewAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
+        guard var doc = document, let shape = doc.layer(id: layerID)?.annotation?.shape else { return }
+        if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
+        if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+        discardDragPreview()
+        doc.updateLayer(id: layerID) {
+            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale)
+        }
+        submit(doc)
+    }
+
+    /// Inspector slider release: one undo step + persist the shape default.
+    func commitAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
+        guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
+        discardDragPreview()
+        perform { $0.updateLayer(id: layerID) {
+            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale)
+        } }
+        if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
+        if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+        saveAnnotationStyles()
+    }
+
+    /// Inspector color pick on `layerID`: one undo step + persist the shape default.
+    func setAnnotationColor(layerID: UUID, _ hex: String) {
+        guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
+        discardDragPreview()
+        perform { $0.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
+        annotationStyles.setColorHex(hex, forShape: shape)
         saveAnnotationStyles()
     }
 
@@ -603,6 +658,7 @@ final class AppState {
         guard let preview = stylePreview, preview.id == id else { return }
         stylePreview = nil
         perform { $0.updateLayer(id: id) { $0.style = preview.style } }
+        captureAnnotationStyleDefault(layerID: id)
     }
 
     /// One-shot style edit (steppers, toggles): a single undo step, no preview.
@@ -610,6 +666,15 @@ final class AppState {
         stylePreview = nil
         discardDragPreview()
         perform { $0.updateLayer(id: id) { mutate(&$0.style) } }
+        captureAnnotationStyleDefault(layerID: id)
+    }
+
+    /// If `layerID` is an annotation, remember its current effects as that
+    /// shape's default so the next-drawn object of the type inherits them.
+    private func captureAnnotationStyleDefault(layerID: UUID) {
+        guard let layer = document?.layer(id: layerID), let shape = layer.annotation?.shape else { return }
+        annotationStyles.setLayerStyle(layer.style, forShape: shape)
+        saveAnnotationStyles()
     }
 
     func toggleLayerVisibility(id: UUID) {

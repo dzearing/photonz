@@ -152,20 +152,3 @@ public enum AnnotationEndpoints {
         return best?.endpoint
     }
 }
-
-extension AnnotationStyles {
-    /// The bucket an existing annotation of `shape` draws its color from.
-    /// Shape-keyed twin of the tool-keyed accessors, for restyling a selected
-    /// annotation (where there's no active drawing tool).
-    public func colorHex(forShape shape: AnnotationShape) -> String {
-        shape == .highlight ? highlightColorHex : strokeColorHex
-    }
-
-    public mutating func setColorHex(_ hex: String, forShape shape: AnnotationShape) {
-        if shape == .highlight {
-            highlightColorHex = hex
-        } else {
-            strokeColorHex = hex
-        }
-    }
-}
