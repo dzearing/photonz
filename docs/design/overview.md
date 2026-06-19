@@ -6,6 +6,8 @@ One page. Read this every session; read the per-area docs only when working in t
 
 A native macOS photo/screenshot editor optimized for *speed of editing*: crop, resize, skew, annotate (arrows, rectangles, highlights, text), zoom callouts, and Photoshop-style layers with non-destructive effects. arm64 / macOS 26+ only. It should feel like Apple shipped it with the OS.
 
+It runs as a **resident menu-bar agent** (CleanShot-style): always available to capture a screenshot or recording, with a **global slide-down history overlay**, and an **on-demand, multi-window editor** (one window per image). Capture and history are app-level — not editor chrome. See `capture.md`.
+
 ## Stack
 
 - **Swift 6 / SwiftUI** app shell with macOS 26 Liquid Glass (`.glassEffect`) surfaces.
@@ -18,7 +20,7 @@ A native macOS photo/screenshot editor optimized for *speed of editing*: crop, r
 | --- | --- | --- |
 | `PhotonzCore` | Document model: layers, geometry, history. | Pure values. CoreGraphics types only. 100% testable. |
 | `PhotonzRender` | `ImageStore` (bitmaps) + `DocumentRenderer` (CIImage compositor). | No UI imports. Pixel-tested. |
-| `Photonz` (app) | SwiftUI: `AppState`, `EditorView`, tools. | Thin; logic pushed down into core. |
+| `Photonz` (app) | SwiftUI/AppKit shell: menu-bar `AppCoordinator`, per-window `EditorState`/`EditorView`, capture + history overlay, tools. | Thin; logic pushed down into core. |
 
 ## Key decisions (and why)
 
@@ -30,7 +32,8 @@ A native macOS photo/screenshot editor optimized for *speed of editing*: crop, r
 
 ## Per-area design docs
 
-- `architecture.md` — module boundaries, data flow, concurrency model.
+- `architecture.md` — module boundaries, data flow, concurrency model, process/window topology.
+- `capture.md` — menu-bar agent, global hotkeys, slide-down history overlay, multi-window editor & edit round-trip.
 - `rendering.md` — compositor pipeline, coordinate systems, perf budget.
 - `tools.md` — crop/resize/skew, annotations, text, zoom-callout interactions.
 - `layers.md` — layer model, promote-to-layer, effects semantics.

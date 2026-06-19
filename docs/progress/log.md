@@ -2,6 +2,14 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-19 (design) — capture re-architecture: menu-bar agent + slide-down history overlay + multi-window editor
+
+- **DOCS ONLY (no code).** User wants CleanShot-style architecture: a resident MENU-BAR AGENT (always runs, user can Quit) that owns capture, global hotkeys, history, and an updater; history becomes a GLOBAL top-of-screen overlay that slides DOWN + fades in (slides UP + fades out on dismiss), NOT an in-editor carousel; the editor is on-demand and MULTI-WINDOW (one window per image; editing a history item opens a new window or focuses the existing one).
+- **New `docs/design/capture.md`** documents the target: process/window topology (AppCoordinator resident root vs per-window EditorState), status-item menu, capture flow, the slide-down history overlay (replaces phase-9 HistoryPanel/`capture.isHistoryVisible`), multi-window editor + edit round-trip (override vs save-as-new, focus-existing via captureID→window registry), and the updater (version vs site/version.json). DECIDED by user: windowing = SwiftUI WindowGroup(for: CaptureID.self) (value-based reuse → focus-existing for free); updater = lightweight custom version.json check (no Sparkle). Still open: AppState→AppCoordinator/EditorState split scope, Preferences scope.
+- **Updated** `docs/design/overview.md` (menu-bar-primary + multi-window framing, capture.md link) and `docs/design/architecture.md` (process/window topology section + diagram).
+- **Plan rewritten:** `phase-11.json` → 8 tasks (11.1 app split, 11.2 status menu, 11.3 hotkey overrides, 11.4 slide-down overlay replacing the carousel, 11.5 multi-window + edit round-trip, 11.6 check-for-updates, 11.7 Quick Access Overlay, 11.8 pin-to-screen). `overview.json` phase-11 title + roadmapNote updated. Phase 11 still `pending` — no implementation yet.
+- **NOTE:** this supersedes parts of phase 9 (the in-editor carousel) and the old phase-11 framing.
+
 ## 2026-06-19 — 10.5/10.6/10.8 done; per-type annotation defaults; shadow-on-select fix; capture still OPEN
 
 - **10.5 DONE — docked inspector.** EditorView now `HStack(canvas | InspectorResizeHandle | InspectorPanel)`. InspectorPanel (LayersPanel.swift): full-height `.regularMaterial` ScrollView of `CollapsibleSection`s (Layers/Annotation/Effects/Shadow); header tap collapses, header drag reorders (NSItemProvider + SectionDropDelegate). Persisted: `inspector.sectionOrder`, `inspector.collapsed`, `inspector.width` (220–480 via the 1px handle). Layers list → `LayersListView` (List kept for onMove, scrollDisabled, height capped 320). LayerInspector split into `EffectsInspector` + `ShadowInspector` sharing `LayerStyleSlider`.

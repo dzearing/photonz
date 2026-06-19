@@ -4,9 +4,11 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Photonz (SwiftUI app)                       │
-│   AppState (@Observable, @MainActor)        │
-│   EditorView / tools / inspectors           │
+│ Photonz (SwiftUI/AppKit app)                │
+│   AppCoordinator (menu-bar agent, resident) │
+│     status item · hotkeys · capture/history │
+│     · updater · window registry             │
+│   EditorState (per editor window) + EditorView / tools │
 └──────────────┬──────────────────────────────┘
                │ owns
 ┌──────────────▼──────────────┐  ┌────────────────────────┐
@@ -16,6 +18,17 @@
 └─────────────────────────────┘  │   Geometry / History   │
                                  └────────────────────────┘
 ```
+
+## Process & window topology
+
+The app is a **resident menu-bar agent**, not a window-first app (see
+`capture.md`). `AppCoordinator` is the app-level root (status item, global
+hotkeys, capture pipeline + persisted history, updater, window registry) and
+stays alive with no windows open. The **editor is per-window**: each editor
+window owns its own `EditorState` (today's `AppState`), `History`, `ImageStore`,
+and `DocumentRenderer`, so several images edit independently at once. History is
+a **global slide-down overlay**, not editor chrome. (Phase 11 migrates from the
+phase-9 single-window, in-editor carousel to this model.)
 
 - `PhotonzCore` depends on nothing but CoreGraphics/Foundation. It must compile on any Apple platform and be 100% unit-testable without a GPU.
 - `PhotonzRender` depends on `PhotonzCore` + CoreImage. It is testable headlessly (CI runners render via software/Metal fine).
