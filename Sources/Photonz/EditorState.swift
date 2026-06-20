@@ -8,10 +8,9 @@ import UniformTypeIdentifiers
 
 @MainActor
 @Observable
-final class AppState {
+final class EditorState {
     private(set) var history: History?
     let store = ImageStore()
-    let capture = CaptureCenter()
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 
@@ -29,9 +28,15 @@ final class AppState {
     private(set) var viewport: Viewport?
     /// Marquee selection in document coordinates (pixel-aligned). Nil = no selection.
     private(set) var selection: CGRect?
-    /// The active editor tool. Annotation tools are sticky: each drag creates
-    /// another layer until the user returns to `.select` (Esc or V).
+    /// The active editor tool. Drawing tools are ONE-SHOT by default: after a
+    /// shape is drawn the editor returns to `.select` (and selects the new
+    /// shape). Double-clicking a tool in the toolbar sets `toolLocked`, which
+    /// keeps it active for repeated drawing until the user leaves it.
     private(set) var activeTool: Tool = .select
+    /// When true, the active drawing tool stays put after each shape instead of
+    /// reverting to select. Set by double-clicking the tool; cleared whenever
+    /// the tool changes.
+    private(set) var toolLocked = false
     /// The pending crop rect (document coords) while the crop tool is active.
     private(set) var cropRect: CGRect?
     /// Crop aspect lock; the crop rect always honors it.
@@ -41,10 +46,10 @@ final class AppState {
     private(set) var cropTargetLayerID: UUID?
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
-    private(set) var annotationStyles: AnnotationStyles = AppState.loadAnnotationStyles()
+    private(set) var annotationStyles: AnnotationStyles = EditorState.loadAnnotationStyles()
     /// Styling for new text blocks, set from the font picker. Persisted like
     /// annotation styles.
-    private(set) var textStyles: TextStyles = AppState.loadTextStyles()
+    private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
     /// The text layer being re-edited inline. Hidden from renders while the
     /// canvas's editor overlay visually replaces it.
     private(set) var editingTextLayerID: UUID?
@@ -91,10 +96,45 @@ final class AppState {
         openCapture(image)
     }
 
+    /// Drag-and-drop / drop of an image URL (from the history overlay, Finder, …):
+    /// when a document is already open, the image lands as a **new layer**
+    /// (centered, aspect-fit) so it can be cropped/moved/styled; with no
+    /// document open, it opens as a fresh document. `.photonz` packages always
+    /// open as a document.
+    func addImageLayerOrOpen(at url: URL) {
+        if url.pathExtension.lowercased() == "photonz" || document == nil {
+            openImage(at: url)
+            return
+        }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+        pasteImage(image)
+    }
+
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
     func openCapture(_ image: CGImage) {
         let ref = store.register(image)
         installDocument(.withBaseImage(ref), url: nil)
+    }
+
+    /// Seeds a freshly created editor window from its window identity (phase
+    /// 11.1). Called once when the window appears; window reuse (re-opening the
+    /// same id) keeps the existing state, giving focus-existing for free, so
+    /// this never reloads a window that already holds a document.
+    func seed(from windowID: EditorWindowID, capture: CaptureCenter) {
+        guard document == nil else { return }
+        switch windowID {
+        case .capture(let entryID):
+            guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }),
+                  let image = capture.store.image(for: entry) else { return }
+            openCapture(image)
+        case .file(let url):
+            openImage(at: url)
+        case .clipboard:
+            newFromClipboard()
+        case .fresh:
+            break // empty editor; the onboarding card guides the next step
+        }
     }
 
     /// Installs a freshly opened document, resetting every per-document bit
@@ -224,7 +264,7 @@ final class AppState {
 
     // MARK: - Tools
 
-    func setTool(_ tool: Tool) {
+    func setTool(_ tool: Tool, locked: Bool = false) {
         guard activeTool != tool else { return }
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise
@@ -243,12 +283,21 @@ final class AppState {
             cropRect = nil
         }
         activeTool = tool
+        // Switching tools always clears any lock; double-clicking re-locks.
+        toolLocked = locked
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't.
         if tool != .select {
             selection = nil
             selectedLayerID = nil
         }
+    }
+
+    /// Double-click a tool: keep it active for repeated drawing (sticky)
+    /// instead of reverting to select after each shape.
+    func lockTool(_ tool: Tool) {
+        setTool(tool)
+        toolLocked = true
     }
 
     // MARK: - Crop mode
@@ -324,6 +373,12 @@ final class AppState {
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
+        // One-shot by default: return to select and select the new shape so it
+        // can be adjusted immediately. A double-click-locked tool stays put.
+        if !toolLocked {
+            setTool(.select)
+            selectedLayerID = layer.id
+        }
     }
 
     /// Completed source-box drag from the zoom tool. One undo step adds the
@@ -420,23 +475,27 @@ final class AppState {
     /// Live inspector-slider restyle of `layerID` (no undo step). Updates the
     /// shape's persisted default too, so the next-drawn object of that type
     /// inherits it.
-    func previewAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
+    func previewAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil,
+                                  cornerRadius: CGFloat? = nil) {
         guard var doc = document, let shape = doc.layer(id: layerID)?.annotation?.shape else { return }
         if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
         if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
         discardDragPreview()
         doc.updateLayer(id: layerID) {
-            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale)
+            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale,
+                                            cornerRadius: cornerRadius)
         }
         submit(doc)
     }
 
     /// Inspector slider release: one undo step + persist the shape default.
-    func commitAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil) {
+    func commitAnnotationRestyle(layerID: UUID, strokeWidth: CGFloat? = nil, arrowheadScale: CGFloat? = nil,
+                                 cornerRadius: CGFloat? = nil) {
         guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
         discardDragPreview()
         perform { $0.updateLayer(id: layerID) {
-            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale)
+            $0 = AnnotationBuilder.restyled($0, strokeWidth: strokeWidth, arrowheadScale: arrowheadScale,
+                                            cornerRadius: cornerRadius)
         } }
         if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
         if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
@@ -591,7 +650,14 @@ final class AppState {
         } else {
             guard !isEmpty else { return }
             let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
-            perform { $0.addLayer(TextBuilder.layer(content: content, at: origin, naturalSize: size)) }
+            let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
+            perform { $0.addLayer(layer) }
+            // One-shot text placement reverts to select (re-edits run with the
+            // select tool already active, so the guard leaves them untouched).
+            if activeTool == .text, !toolLocked {
+                setTool(.select)
+                selectedLayerID = layer.id
+            }
         }
     }
 

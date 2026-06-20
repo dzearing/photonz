@@ -59,6 +59,7 @@ struct CanvasView: NSViewRepresentable {
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
+    let onDropImageURL: (URL) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -95,6 +96,7 @@ struct CanvasView: NSViewRepresentable {
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
         view.onDeleteLayer = onDeleteLayer
+        view.onDropImageURL = onDropImageURL
     }
 }
 
@@ -118,6 +120,11 @@ final class CanvasNSView: NSView {
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
     var onDeleteLayer: ((UUID) -> Void) = { _ in }
+    /// A file (image) dropped onto the canvas — e.g. a history-overlay thumbnail
+    /// or a Finder file. Handled here on the canvas NSView (which covers the
+    /// document) rather than a SwiftUI `.dropDestination`, which doesn't reliably
+    /// receive drops layered over an NSViewRepresentable.
+    var onDropImageURL: ((URL) -> Void) = { _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -167,12 +174,12 @@ final class CanvasNSView: NSView {
     private var document: PhotonzDocument?
     /// Committed marquee selection in document coordinates.
     private var selection: CGRect?
-    /// Pending crop rect (document coordinates), echoed from AppState.
+    /// Pending crop rect (document coordinates), echoed from EditorState.
     private var cropRect: CGRect?
-    /// Crop aspect lock, echoed from AppState; drags constrain through it.
+    /// Crop aspect lock, echoed from EditorState; drags constrain through it.
     private var cropAspect: CropAspect = .free
     /// Crop confinement (canvas, or the target layer's frame), echoed from
-    /// AppState. Nil falls back to the full document.
+    /// EditorState. Nil falls back to the full document.
     private var cropBounds: CGRect?
 
     /// In-progress crop-rect drag. `startRect` restores on Esc and on
@@ -188,29 +195,29 @@ final class CanvasNSView: NSView {
         var lastPoint: CGPoint
     }
     private var cropDrag: CropDrag?
-    /// Selected layer (committed state, echoed from AppState).
+    /// Selected layer (committed state, echoed from EditorState).
     private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
-    /// Pre-rendered drag preview from AppState; arrives async after drag start
+    /// Pre-rendered drag preview from EditorState; arrives async after drag start
     /// and outlives the drag until the post-commit render lands.
     private var dragPreview: DragPreview?
     /// In-progress marquee (document coordinates). While set, it is what the
     /// ants display — same zero-latency-echo pattern as pan/zoom.
     private var marquee: MarqueeDrag?
-    /// The active tool, echoed from AppState. Annotation tools reroute the
+    /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     private var tool: Tool = .select
     /// In-progress drag-to-create (document coordinates).
     private var annotationDrag: AnnotationDrag?
-    /// Styled content for the active tool, echoed from AppState; the in-flight
+    /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     private var annotationContent: AnnotationContent?
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
     private var annotationCommitImage: CGImage?
-    /// Current text style, echoed from AppState; the inline editor restyles
+    /// Current text style, echoed from EditorState; the inline editor restyles
     /// live when the font picker changes it. The string field is ignored.
     private var textContent: TextContent?
 
@@ -405,10 +412,34 @@ final class CanvasNSView: NSView {
         rotateKnobLayer.lineWidth = 1
         rotateKnobLayer.isHidden = true
         layer?.addSublayer(rotateKnobLayer)
+
+        registerForDraggedTypes([.fileURL])
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    // MARK: - Drag destination (drop an image to add it as a layer)
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        droppedURL(sender) != nil ? .copy : []
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        droppedURL(sender) != nil ? .copy : []
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard let url = droppedURL(sender) else { return false }
+        onDropImageURL(url)
+        return true
+    }
+
+    private func droppedURL(_ sender: NSDraggingInfo) -> URL? {
+        sender.draggingPasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true])?.first as? URL
+    }
 
     override func layout() {
         super.layout()
@@ -637,7 +668,7 @@ final class CanvasNSView: NSView {
             } else if tool == .zoomCallout {
                 clearAnnotationPreview()
                 let end = drag.end(constrained: event.modifierFlags.contains(.shift), shape: .rectangle)
-                // Build the same layer AppState will commit, to drive the
+                // Build the same layer EditorState will commit, to drive the
                 // flight animation from source box to placed frame.
                 if let layer = ZoomCalloutBuilder.layer(from: drag.anchor, to: end,
                                                         canvas: viewport.documentSize) {
@@ -1459,7 +1490,7 @@ final class CanvasNSView: NSView {
     // MARK: Inline text editing
 
     /// Opens the inline editor at `origin` (document coords). For a re-edit,
-    /// the editor takes over the layer's string and style; AppState hides the
+    /// the editor takes over the layer's string and style; EditorState hides the
     /// layer underneath via `onTextEditBegin`.
     private func beginTextSession(layerID: UUID?, at origin: CGPoint) {
         guard textSession == nil else { return }

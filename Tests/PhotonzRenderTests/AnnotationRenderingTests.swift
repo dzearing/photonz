@@ -67,6 +67,26 @@ struct AnnotationRenderingTests {
         #expect(isRed(pixel(output, x: 21, y: 50)), "left edge should be stroked")
         #expect(isWhite(pixel(output, x: 50, y: 50)), "interior should stay empty")
         #expect(isWhite(pixel(output, x: 15, y: 50)), "outside the rect should stay empty")
+        // The sharp corner is stroked when cornerRadius is 0.
+        #expect(isRed(pixel(output, x: 21, y: 21)), "sharp rectangle strokes its corner")
+    }
+
+    @Test func roundedRectangleRoundsTheStrokeNotClipsItAway() {
+        // The user's bug: rounding a rectangle made its border disappear at the
+        // corners (a layer-level rounded clip ate the sharp stroke). With a
+        // native corner radius the stroke follows the rounded corners: edges
+        // stay stroked and the extreme corner is empty (rounded away), but the
+        // border is NOT gone — it curves through the corner region.
+        let output = renderAnnotation(AnnotationContent(shape: .rectangle, strokeWidth: 4, colorHex: "#FF0000",
+                                                        start: CGPoint(x: 20, y: 20), end: CGPoint(x: 80, y: 80),
+                                                        cornerRadius: 18))
+        #expect(isRed(pixel(output, x: 50, y: 21)), "top edge still stroked after rounding")
+        #expect(isRed(pixel(output, x: 21, y: 50)), "left edge still stroked after rounding")
+        #expect(isWhite(pixel(output, x: 21, y: 21)), "the extreme corner is rounded away")
+        // A point on the rounded corner arc (~45° in from the corner) is stroked,
+        // proving the border curves through the corner rather than vanishing.
+        #expect(isRed(pixel(output, x: 26, y: 26)), "the rounded corner arc is stroked")
+        #expect(isWhite(pixel(output, x: 50, y: 50)), "interior stays empty")
     }
 
     @Test func ellipseStrokesPerimeterNotInterior() {

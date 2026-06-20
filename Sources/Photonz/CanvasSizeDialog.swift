@@ -5,7 +5,7 @@ import SwiftUI
 /// picker for where the existing content pins. Content never scales — that's
 /// the resize dialog's job.
 struct CanvasSizeDialog: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     @Environment(\.dismiss) private var dismiss
     @State private var width: Double
     @State private var height: Double
@@ -45,7 +45,7 @@ struct CanvasSizeDialog: View {
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button("Apply") {
-                    appState.setCanvasSize(to: CGSize(width: width.rounded(), height: height.rounded()),
+                    editorState.setCanvasSize(to: CGSize(width: width.rounded(), height: height.rounded()),
                                            anchor: anchor)
                     dismiss()
                 }

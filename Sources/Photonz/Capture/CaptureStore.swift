@@ -70,7 +70,8 @@ final class CaptureStore {
 
     // MARK: - Disk
 
-    private func fileURL(for entry: CaptureEntry) -> URL {
+    /// On-disk PNG location — used by the history overlay's drag-to-export.
+    func fileURL(for entry: CaptureEntry) -> URL {
         directory.appendingPathComponent(entry.fileName)
     }
 

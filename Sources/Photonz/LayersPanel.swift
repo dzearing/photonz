@@ -22,7 +22,7 @@ extension Color {
 /// collapsed state persist across launches; the panel width is set by the 1px
 /// `InspectorResizeHandle` on its left edge.
 struct InspectorPanel: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     @AppStorage("inspector.sectionOrder") private var orderRaw = ""
     @AppStorage("inspector.collapsed") private var collapsedRaw = ""
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
@@ -65,8 +65,8 @@ struct InspectorPanel: View {
     }
 
     private var selectedLayer: Layer? {
-        guard let id = appState.selectedLayerID else { return nil }
-        return appState.document?.layer(id: id)
+        guard let id = editorState.selectedLayerID else { return nil }
+        return editorState.document?.layer(id: id)
     }
 
     /// Sections currently applicable: Layers always; Effects/Shadow when a layer
@@ -255,21 +255,21 @@ struct InspectorResizeHandle: View {
 /// drag-reorder, and selection. Lives inside the docked inspector's Layers
 /// section.
 struct LayersListView: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     @State private var renamingLayerID: UUID?
     @State private var renameText = ""
     @FocusState private var renameFieldFocused: Bool
 
     var body: some View {
         List {
-            ForEach(appState.panelLayers) { layer in
+            ForEach(editorState.panelLayers) { layer in
                 row(layer)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
                     .listRowBackground(Color.clear)
             }
             .onMove { source, destination in
-                appState.moveLayers(visualSources: source, visualDestination: destination)
+                editorState.moveLayers(visualSources: source, visualDestination: destination)
             }
         }
         .listStyle(.plain)
@@ -277,18 +277,18 @@ struct LayersListView: View {
         .scrollDisabled(true)
         .frame(height: listHeight)
         // Rows slide/fade on add, delete, duplicate, and reorder.
-        .animation(.spring(duration: 0.25), value: appState.panelLayers.map(\.id))
+        .animation(.spring(duration: 0.25), value: editorState.panelLayers.map(\.id))
     }
 
     /// Size the list to its rows so the whole panel scrolls as one column; cap
     /// so a tall stack doesn't crowd out the inspectors below (it scrolls then).
     private var listHeight: CGFloat {
-        let rows = max(1, appState.panelLayers.count)
+        let rows = max(1, editorState.panelLayers.count)
         return min(CGFloat(rows) * 38 + 6, 320)
     }
 
     private func row(_ layer: Layer) -> some View {
-        let isSelected = appState.selectedLayerID == layer.id
+        let isSelected = editorState.selectedLayerID == layer.id
         return HStack(spacing: 8) {
             thumbnail(layer)
             if renamingLayerID == layer.id {
@@ -309,7 +309,7 @@ struct LayersListView: View {
             }
             Spacer(minLength: 4)
             Button {
-                appState.toggleLayerLock(id: layer.id)
+                editorState.toggleLayerLock(id: layer.id)
             } label: {
                 Image(systemName: layer.isLocked ? "lock.fill" : "lock.open")
                     .font(.system(size: 11))
@@ -317,7 +317,7 @@ struct LayersListView: View {
             }
             .help(layer.isLocked ? "Unlock Layer" : "Lock Layer")
             Button {
-                appState.toggleLayerVisibility(id: layer.id)
+                editorState.toggleLayerVisibility(id: layer.id)
             } label: {
                 Image(systemName: layer.isVisible ? "eye" : "eye.slash")
                     .font(.system(size: 11))
@@ -334,10 +334,10 @@ struct LayersListView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { appState.selectLayer(layer.id) }
+        .onTapGesture { editorState.selectLayer(layer.id) }
         .contextMenu {
-            Button("Duplicate") { appState.duplicateLayer(id: layer.id) }
-            Button("Delete", role: .destructive) { appState.deleteLayer(id: layer.id) }
+            Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
+            Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
         }
     }
 
@@ -345,7 +345,7 @@ struct LayersListView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
                 .fill(.quaternary)
-            if let cg = appState.thumbnail(for: layer) {
+            if let cg = editorState.thumbnail(for: layer) {
                 Image(decorative: cg, scale: 1)
                     .resizable()
                     .scaledToFit()
@@ -365,7 +365,7 @@ struct LayersListView: View {
     private func commitRename(_ layer: Layer) {
         guard renamingLayerID == layer.id else { return }
         renamingLayerID = nil
-        appState.renameLayer(id: layer.id, to: renameText)
+        editorState.renameLayer(id: layer.id, to: renameText)
     }
 }
 
@@ -374,11 +374,11 @@ struct LayersListView: View {
 /// Non-destructive effects for the selected layer: opacity, blur, corner
 /// radius, border. Sliders preview live and commit one undo step per gesture.
 struct EffectsInspector: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     let layer: Layer
 
     private var style: LayerStyle {
-        appState.previewedStyle(of: layer.id) ?? layer.style
+        editorState.previewedStyle(of: layer.id) ?? layer.style
     }
 
     var body: some View {
@@ -419,7 +419,7 @@ struct EffectsInspector: View {
             get: { Color(hex: style.borderColorHex) },
             set: { color in
                 if let hex = color.hexString {
-                    appState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
+                    editorState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
                 }
             }), supportsOpacity: false)
             .labelsHidden()
@@ -430,11 +430,11 @@ struct EffectsInspector: View {
 /// The selected layer's shadow: a toggle plus, when on, blur (softness), size
 /// (spread), distance (offset), direction (angle), opacity, and color (10.6).
 struct ShadowInspector: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     let layer: Layer
 
     private var style: LayerStyle {
-        appState.previewedStyle(of: layer.id) ?? layer.style
+        editorState.previewedStyle(of: layer.id) ?? layer.style
     }
 
     var body: some View {
@@ -442,7 +442,7 @@ struct ShadowInspector: View {
             Toggle(isOn: Binding(
                 get: { style.shadow != nil },
                 set: { on in
-                    appState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
+                    editorState.setLayerStyle(id: layer.id) { $0.shadow = on ? ShadowStyle() : nil }
                 })) {
                 Text("Enable Shadow").font(.caption).foregroundStyle(.secondary)
             }
@@ -491,7 +491,7 @@ struct ShadowInspector: View {
             get: { Color(hex: style.shadow?.colorHex ?? "#000000") },
             set: { color in
                 if let hex = color.hexString {
-                    appState.setLayerStyle(id: layer.id) { $0.shadow?.colorHex = hex }
+                    editorState.setLayerStyle(id: layer.id) { $0.shadow?.colorHex = hex }
                 }
             }), supportsOpacity: false)
             .labelsHidden()
@@ -510,10 +510,10 @@ struct ShadowInspector: View {
     }
 }
 
-/// A labeled style slider wired to AppState's preview/commit gesture pattern:
+/// A labeled style slider wired to EditorState's preview/commit gesture pattern:
 /// dragging previews without recording undo; release commits one step.
 struct LayerStyleSlider: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     let layerID: UUID
     let label: String
     let value: Double
@@ -530,9 +530,9 @@ struct LayerStyleSlider: View {
             }
             Slider(value: Binding(
                 get: { value },
-                set: { v in appState.previewLayerStyle(id: layerID) { apply(&$0, v) } }),
+                set: { v in editorState.previewLayerStyle(id: layerID) { apply(&$0, v) } }),
                    in: range) { editing in
-                if !editing { appState.commitLayerStyle(id: layerID) }
+                if !editing { editorState.commitLayerStyle(id: layerID) }
             }
             .controlSize(.small)
         }
@@ -545,13 +545,14 @@ struct LayerStyleSlider: View {
 /// thickness, and (arrows only) arrowhead size. Sliders preview live and commit
 /// one undo step on release, mirroring the toolbar style popover.
 struct AnnotationInspector: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     let layer: Layer
     @State private var widthDraft: CGFloat?
     @State private var headDraft: CGFloat?
+    @State private var radiusDraft: CGFloat?
 
     private var annotation: AnnotationContent? {
-        appState.document?.layer(id: layer.id)?.annotation
+        editorState.document?.layer(id: layer.id)?.annotation
     }
 
     var body: some View {
@@ -562,7 +563,7 @@ struct AnnotationInspector: View {
                     Spacer()
                     ColorPicker("Color", selection: Binding(
                         get: { Color(hex: a.colorHex) },
-                        set: { if let hex = $0.hexString { appState.setAnnotationColor(layerID: layer.id, hex) } }),
+                        set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
                         supportsOpacity: false)
                         .labelsHidden().controlSize(.small)
                 }
@@ -572,10 +573,10 @@ struct AnnotationInspector: View {
                               range: AnnotationStyles.strokeWidthRange,
                               set: { v in
                                   widthDraft = v
-                                  appState.previewAnnotationRestyle(layerID: layer.id, strokeWidth: v.rounded())
+                                  editorState.previewAnnotationRestyle(layerID: layer.id, strokeWidth: v.rounded())
                               },
                               commit: {
-                                  appState.commitAnnotationRestyle(layerID: layer.id,
+                                  editorState.commitAnnotationRestyle(layerID: layer.id,
                                                                    strokeWidth: (widthDraft ?? a.strokeWidth).rounded())
                                   widthDraft = nil
                               })
@@ -586,12 +587,26 @@ struct AnnotationInspector: View {
                               range: AnnotationStyles.arrowheadScaleRange,
                               set: { v in
                                   headDraft = v
-                                  appState.previewAnnotationRestyle(layerID: layer.id, arrowheadScale: v)
+                                  editorState.previewAnnotationRestyle(layerID: layer.id, arrowheadScale: v)
                               },
                               commit: {
-                                  appState.commitAnnotationRestyle(layerID: layer.id,
+                                  editorState.commitAnnotationRestyle(layerID: layer.id,
                                                                    arrowheadScale: headDraft ?? a.arrowheadScale)
                                   headDraft = nil
+                              })
+                }
+                if a.shape == .rectangle {
+                    sliderRow("Corner Radius", value: radiusDraft ?? a.cornerRadius,
+                              display: "\(Int((radiusDraft ?? a.cornerRadius).rounded())) pt",
+                              range: 0...120,
+                              set: { v in
+                                  radiusDraft = v
+                                  editorState.previewAnnotationRestyle(layerID: layer.id, cornerRadius: v.rounded())
+                              },
+                              commit: {
+                                  editorState.commitAnnotationRestyle(layerID: layer.id,
+                                                                   cornerRadius: (radiusDraft ?? a.cornerRadius).rounded())
+                                  radiusDraft = nil
                               })
                 }
             }

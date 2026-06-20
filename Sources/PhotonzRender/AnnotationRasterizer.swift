@@ -60,7 +60,17 @@ public enum AnnotationRasterizer {
 
         case .rectangle:
             // Inset by half the stroke so the outline stays inside start..end.
-            context.stroke(box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2))
+            let inset = box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2)
+            if annotation.cornerRadius > 0, !inset.isEmpty {
+                // Round the stroke itself (clamped to a capsule at most), so the
+                // border follows the corners rather than being clipped off.
+                let radius = min(annotation.cornerRadius, min(inset.width, inset.height) / 2)
+                context.addPath(CGPath(roundedRect: inset, cornerWidth: radius,
+                                       cornerHeight: radius, transform: nil))
+                context.strokePath()
+            } else {
+                context.stroke(inset)
+            }
 
         case .ellipse:
             context.strokeEllipse(in: box.insetBy(dx: annotation.strokeWidth / 2, dy: annotation.strokeWidth / 2))

@@ -135,13 +135,27 @@ comparator, and any geometry for overlay placement. The `NSStatusItem`,
 
 ## Decided
 
-- **Windowing:** SwiftUI `WindowGroup(for: CaptureID.self)` — value-based reuse
-  gives focus-existing for free (see *Process & window topology*).
+- **Windowing:** SwiftUI `WindowGroup(for: EditorWindowID.self)` — value-based
+  reuse gives focus-existing for free (see *Process & window topology*).
+  `EditorWindowID` is an enum `{ capture(UUID) | file(URL) | fresh(UUID) |
+  clipboard(UUID) }` — one window group covers captures, opened files, new and
+  clipboard documents (rather than two parallel groups). NOTE: a value-typed
+  `WindowGroup` still force-opens one window at launch, so the editor group
+  carries `.defaultLaunchBehavior(.suppressed)` to start as a pure agent.
+- **Menu-bar item:** SwiftUI **`MenuBarExtra`**, not a raw `NSStatusItem`
+  (phase 11.1). Same UX, and its always-rendered label captures
+  `@Environment(\.openWindow)` at launch so the windowless agent can spawn
+  editor windows (the `.menu`-style content is built lazily and can't).
+- **App split (phase 11.1, done):** `AppState` → per-window **`EditorState`**
+  (document/history/render/viewport/tools) + resident **`AppCoordinator`**
+  (`@MainActor @Observable`) owning `CaptureCenter` (capture + global hotkeys +
+  `CaptureStore`) and the window-open intents. Agent lifecycle via an
+  `AppDelegate`: `.accessory` activation policy + `applicationShouldTerminate-
+  AfterLastWindowClosed = false`; the bundle adds `LSUIElement`. Menu commands
+  target the focused window through `@FocusedValue(\.editorState)`.
 - **Updater:** lightweight custom `version.json` check, no Sparkle.
 
 ## Open questions
 
-- `AppState` → split into app-level `AppCoordinator` + per-window `EditorState`;
-  scope of the rename/refactor.
 - Where Preferences live and what they cover (hotkeys, capture defaults,
   history cap, overlay timeout).

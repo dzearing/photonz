@@ -67,15 +67,21 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var end: CGPoint
     /// Arrow-only: user-facing arrowhead size multiplier (1 = the bold default).
     public var arrowheadScale: CGFloat
+    /// Rectangle-only: corner radius (layer-local units). 0 = sharp corners. The
+    /// rasterizer draws a rounded-rect stroke, so the border follows the corners
+    /// instead of being clipped away by a layer-level rounded mask.
+    public var cornerRadius: CGFloat
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
-                start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1) {
+                start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
+                cornerRadius: CGFloat = 0) {
         self.shape = shape
         self.strokeWidth = strokeWidth
         self.colorHex = colorHex
         self.start = start
         self.end = end
         self.arrowheadScale = arrowheadScale
+        self.cornerRadius = cornerRadius
     }
 
     public init(from decoder: Decoder) throws {
@@ -87,6 +93,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         end = try c.decode(CGPoint.self, forKey: .end)
         // `arrowheadScale` postdates AnnotationContent; old payloads omit it.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
+        // `cornerRadius` postdates AnnotationContent too.
+        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
     }
 }
 

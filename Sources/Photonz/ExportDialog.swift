@@ -2,9 +2,9 @@ import PhotonzRender
 import SwiftUI
 
 /// Format + scale picker for Export… (⌘E). The actual rendering, encoding,
-/// and save panel live in AppState.
+/// and save panel live in EditorState.
 struct ExportDialog: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     @Environment(\.dismiss) private var dismiss
     @State private var format: ImageCodec.Format = .png
     @State private var scale: CGFloat = 1
@@ -24,7 +24,7 @@ struct ExportDialog: View {
                 Text("2×").tag(CGFloat(2))
             }
             .pickerStyle(.segmented)
-            if let size = appState.document?.canvasSize {
+            if let size = editorState.document?.canvasSize {
                 Text("\(Int(size.width * scale)) × \(Int(size.height * scale)) px")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -35,7 +35,7 @@ struct ExportDialog: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Export…") {
                     dismiss()
-                    appState.exportComposite(format: format, scale: scale)
+                    editorState.exportComposite(format: format, scale: scale)
                 }
                 .keyboardShortcut(.defaultAction)
             }

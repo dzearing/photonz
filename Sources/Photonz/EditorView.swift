@@ -4,7 +4,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct EditorView: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
+    /// Capture/history live on the resident agent now; the in-editor history
+    /// panel (phase-9 carousel) reads it until phase 11.4 replaces it with the
+    /// global slide-down overlay.
+    @Environment(AppCoordinator.self) private var coordinator
     @State private var isStylePopoverPresented = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
@@ -15,31 +19,24 @@ struct EditorView: View {
     @Namespace private var toolbarNamespace
 
     var body: some View {
-        @Bindable var appState = appState
+        @Bindable var editorState = editorState
         HStack(spacing: 0) {
             ZStack {
                 canvas
                 VStack {
-                    if appState.capture.isHistoryVisible {
-                        GlassEffectContainer {
-                            HistoryPanel()
-                        }
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
                     Spacer()
                     GlassEffectContainer {
                         toolbar
                     }
                     .padding(.bottom, 16)
                 }
-                .animation(.spring(duration: 0.3), value: appState.capture.isHistoryVisible)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // Canvas surround adapts to the system appearance (Preview-style):
             // near-black in dark mode, light gray in light mode.
             .background(Color(nsColor: .underPageBackgroundColor))
             // The docked, full-height inspector with its 1px left resize handle.
-            if appState.document != nil, appState.isLayersPanelVisible {
+            if editorState.document != nil, editorState.isLayersPanelVisible {
                 InspectorResizeHandle(width: $panelWidth)
                 InspectorPanel()
                     .frame(width: panelWidth)
@@ -47,76 +44,79 @@ struct EditorView: View {
                     .transition(.move(edge: .trailing))
             }
         }
-        .animation(.spring(duration: 0.3), value: appState.isLayersPanelVisible)
+        .animation(.spring(duration: 0.3), value: editorState.isLayersPanelVisible)
         // Fill the window even in the empty state — the HStack otherwise hugs
         // the toolbar's width and the background paints as a visible column
         // against the window's own background.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .fileImporter(isPresented: $appState.isImporterPresented,
-                      allowedContentTypes: [.image, AppState.photonzType]) { result in
+        .fileImporter(isPresented: $editorState.isImporterPresented,
+                      allowedContentTypes: [.image, EditorState.photonzType]) { result in
             if case .success(let url) = result {
                 let scoped = url.startAccessingSecurityScopedResource()
-                appState.openImage(at: url)
+                editorState.openImage(at: url)
                 if scoped { url.stopAccessingSecurityScopedResource() }
             }
         }
+        // Drop an image (history overlay thumbnail, Finder file, …): into an
+        // open document it becomes a new layer; otherwise it opens as a document.
         .dropDestination(for: URL.self) { urls, _ in
             guard let url = urls.first else { return false }
-            appState.openImage(at: url)
+            editorState.addImageLayerOrOpen(at: url)
             return true
         }
         // Finder double-click / `open` with a document (image or .photonz).
-        .onOpenURL { appState.openImage(at: $0) }
-        .sheet(isPresented: $appState.isResizeDialogPresented) {
-            if let document = appState.document {
+        .onOpenURL { editorState.openImage(at: $0) }
+        .sheet(isPresented: $editorState.isResizeDialogPresented) {
+            if let document = editorState.document {
                 ResizeDialog(originalSize: document.canvasSize)
             }
         }
-        .sheet(isPresented: $appState.isCanvasSizeDialogPresented) {
-            if let document = appState.document {
+        .sheet(isPresented: $editorState.isCanvasSizeDialogPresented) {
+            if let document = editorState.document {
                 CanvasSizeDialog(originalSize: document.canvasSize)
             }
         }
-        .sheet(isPresented: $appState.isExportDialogPresented) {
+        .sheet(isPresented: $editorState.isExportDialogPresented) {
             ExportDialog()
         }
     }
 
     @ViewBuilder
     private var canvas: some View {
-        if appState.document != nil {
-            CanvasView(image: appState.renderedImage,
-                       viewport: appState.viewport,
-                       document: appState.document,
-                       selection: appState.selection,
-                       cropRect: appState.cropRect,
-                       cropAspect: appState.cropAspect,
-                       cropBounds: appState.cropBounds,
-                       selectedLayerID: appState.selectedLayerID,
-                       selectedLayerFrame: appState.selectedLayerFrame,
-                       dragPreview: appState.dragPreview,
-                       tool: appState.activeTool,
-                       annotationContent: appState.activeAnnotationContent,
-                       textContent: appState.activeTextContent,
-                       onViewSizeChange: { appState.canvasViewSizeChanged($0) },
-                       onViewportChange: { appState.setViewport($0) },
-                       onSelectionChange: { appState.setSelection($0) },
-                       onCropRectChange: { appState.setCropRect($0) },
-                       onCropCommit: { appState.commitCrop() },
-                       onSelectLayer: { appState.selectLayer($0) },
-                       onDragBegin: { appState.beginLayerDrag(id: $0) },
-                       onFramePreview: { appState.previewLayerFrame(id: $0, frame: $1) },
-                       onFrameCommit: { appState.commitLayerFrame(id: $0, frame: $1) },
-                       onTransformPreview: { appState.previewLayerTransform(id: $0, transform: $1) },
-                       onTransformCommit: { appState.commitLayerTransform(id: $0, transform: $1) },
-                       onAnnotationCommit: { appState.addAnnotation(from: $0, to: $1) },
-                       onAnnotationEndpointsCommit: { appState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
-                       onZoomCalloutCommit: { appState.addZoomCallout(from: $0, to: $1) },
-                       onToolChange: { appState.setTool($0) },
-                       onTextEditBegin: { appState.beginTextEdit(layerID: $0) },
-                       onTextCommit: { appState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
-                       onTextCancel: { appState.cancelTextEdit() },
-                       onDeleteLayer: { appState.deleteLayer(id: $0) })
+        if editorState.document != nil {
+            CanvasView(image: editorState.renderedImage,
+                       viewport: editorState.viewport,
+                       document: editorState.document,
+                       selection: editorState.selection,
+                       cropRect: editorState.cropRect,
+                       cropAspect: editorState.cropAspect,
+                       cropBounds: editorState.cropBounds,
+                       selectedLayerID: editorState.selectedLayerID,
+                       selectedLayerFrame: editorState.selectedLayerFrame,
+                       dragPreview: editorState.dragPreview,
+                       tool: editorState.activeTool,
+                       annotationContent: editorState.activeAnnotationContent,
+                       textContent: editorState.activeTextContent,
+                       onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
+                       onViewportChange: { editorState.setViewport($0) },
+                       onSelectionChange: { editorState.setSelection($0) },
+                       onCropRectChange: { editorState.setCropRect($0) },
+                       onCropCommit: { editorState.commitCrop() },
+                       onSelectLayer: { editorState.selectLayer($0) },
+                       onDragBegin: { editorState.beginLayerDrag(id: $0) },
+                       onFramePreview: { editorState.previewLayerFrame(id: $0, frame: $1) },
+                       onFrameCommit: { editorState.commitLayerFrame(id: $0, frame: $1) },
+                       onTransformPreview: { editorState.previewLayerTransform(id: $0, transform: $1) },
+                       onTransformCommit: { editorState.commitLayerTransform(id: $0, transform: $1) },
+                       onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },
+                       onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
+                       onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
+                       onToolChange: { editorState.setTool($0) },
+                       onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
+                       onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
+                       onTextCancel: { editorState.cancelTextEdit() },
+                       onDeleteLayer: { editorState.deleteLayer(id: $0) },
+                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) })
         } else {
             emptyState
         }
@@ -135,13 +135,13 @@ struct EditorView: View {
             GlassEffectContainer {
                 VStack(alignment: .leading, spacing: 2) {
                     onboardingRow("folder", "Open a file", "⌘O") {
-                        appState.isImporterPresented = true
+                        editorState.isImporterPresented = true
                     }
                     onboardingRow("rectangle.dashed", "Capture a rectangle", "⇧⌘4") {
-                        appState.capture.beginRectCapture()
+                        coordinator.capture.beginRectCapture()
                     }
                     onboardingRow("doc.on.clipboard", "Paste an image", "⌘V") {
-                        appState.paste()
+                        editorState.paste()
                     }
                 }
                 .padding(8)
@@ -183,40 +183,40 @@ struct EditorView: View {
             toolButton(.ellipse, "circle", "Ellipse", "o")
             toolButton(.highlight, "highlighter", "Highlight", "h")
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
-            if appState.activeTool.createsAnnotationByDrag || appState.activeTool == .text
-                || appState.selectedAnnotationLayer != nil
-                || appState.selectedZoomCalloutLayer != nil {
+            if editorState.activeTool.createsAnnotationByDrag || editorState.activeTool == .text
+                || editorState.selectedAnnotationLayer != nil
+                || editorState.selectedZoomCalloutLayer != nil {
                 styleButton
                     .transition(.scale(scale: 0.5).combined(with: .opacity))
             }
             Divider().frame(height: 20)
             toolButton(.crop, "crop", "Crop", "c")
-            if appState.activeTool == .crop {
+            if editorState.activeTool == .crop {
                 cropOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
             Button {
-                appState.isResizeDialogPresented = true
+                editorState.isResizeDialogPresented = true
             } label: {
                 Image(systemName: "arrow.down.right.and.arrow.up.left.rectangle")
                     .font(.system(size: 15, weight: .medium))
                     .frame(width: 28, height: 28)
             }
-            .disabled(appState.document == nil)
+            .disabled(editorState.document == nil)
             .help("Resize Image (⌥⌘I)")
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             Divider().frame(height: 20)
             Button {
-                appState.zoomOut()
+                editorState.zoomOut()
             } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
             .help("Zoom Out")
-            Text(Double(appState.zoom).formatted(.percent.precision(.fractionLength(0))))
+            Text(Double(editorState.zoom).formatted(.percent.precision(.fractionLength(0))))
                 .font(.callout.monospacedDigit())
                 .frame(width: 48)
             Button {
-                appState.zoomIn()
+                editorState.zoomIn()
             } label: {
                 Image(systemName: "plus.magnifyingglass")
             }
@@ -228,7 +228,7 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
-        .animation(.spring(duration: 0.3), value: appState.activeTool)
+        .animation(.spring(duration: 0.3), value: editorState.activeTool)
         // NO toolbar animation on selectedLayerID (10.7). Selecting an
         // annotation/callout shows the style swatch, which resizes this glass
         // capsule; animating that reflow re-renders the glass every frame for
@@ -243,9 +243,9 @@ struct EditorView: View {
     private var cropOptions: some View {
         HStack(spacing: 6) {
             ForEach(CropAspect.allCases, id: \.self) { aspect in
-                let isActive = appState.cropAspect == aspect
+                let isActive = editorState.cropAspect == aspect
                 Button {
-                    appState.setCropAspect(aspect)
+                    editorState.setCropAspect(aspect)
                 } label: {
                     Text(aspect.label)
                         .font(.caption.weight(.medium))
@@ -262,7 +262,7 @@ struct EditorView: View {
                 .help("Lock aspect to \(aspect.label)")
             }
             Button {
-                appState.commitCrop()
+                editorState.commitCrop()
             } label: {
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .semibold))
@@ -271,7 +271,7 @@ struct EditorView: View {
             .keyboardShortcut(.return, modifiers: [])
             .help("Apply Crop (⏎)")
             Button {
-                appState.cancelCrop()
+                editorState.cancelCrop()
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))
@@ -284,50 +284,50 @@ struct EditorView: View {
     /// The annotation the popover is editing when one is selected (select
     /// tool); otherwise the popover sets defaults for the active tool.
     private var selectedAnnotation: AnnotationContent? {
-        appState.selectedAnnotationLayer?.annotation
+        editorState.selectedAnnotationLayer?.annotation
     }
 
     /// The color the popover currently represents: the selected annotation's
     /// or callout's, or what the active tool will draw with.
     private var activeToolColorHex: String {
-        if let callout = appState.selectedZoomCalloutLayer {
+        if let callout = editorState.selectedZoomCalloutLayer {
             return callout.style.borderColorHex
         }
         if let selected = selectedAnnotation {
             return selected.colorHex
         }
-        if appState.activeTool == .text {
-            return appState.textStyles.colorHex
+        if editorState.activeTool == .text {
+            return editorState.textStyles.colorHex
         }
-        return appState.annotationStyles.colorHex(for: appState.activeTool) ?? "#FF3B30" // non-annotation fallback
+        return editorState.annotationStyles.colorHex(for: editorState.activeTool) ?? "#FF3B30" // non-annotation fallback
     }
 
     /// Stroke width applies to stroke shapes only — highlight is a fill.
     private var showsStrokeWidthRow: Bool {
-        if appState.selectedZoomCalloutLayer != nil {
+        if editorState.selectedZoomCalloutLayer != nil {
             return true
         }
         if let selected = selectedAnnotation {
             return selected.shape != .highlight
         }
-        return appState.activeTool.usesStrokeWidth
+        return editorState.activeTool.usesStrokeWidth
     }
 
     private var editedStrokeWidth: CGFloat {
-        appState.selectedZoomCalloutLayer?.style.borderWidth
+        editorState.selectedZoomCalloutLayer?.style.borderWidth
             ?? selectedAnnotation?.strokeWidth
-            ?? appState.annotationStyles.strokeWidth(for: appState.activeTool)
+            ?? editorState.annotationStyles.strokeWidth(for: editorState.activeTool)
     }
 
     /// The arrowhead-size row applies to arrows only.
     private var showsArrowheadRow: Bool {
-        if appState.selectedZoomCalloutLayer != nil { return false }
+        if editorState.selectedZoomCalloutLayer != nil { return false }
         if let selected = selectedAnnotation { return selected.shape == .arrow }
-        return appState.activeTool == .arrow
+        return editorState.activeTool == .arrow
     }
 
     private var editedArrowheadScale: CGFloat {
-        selectedAnnotation?.arrowheadScale ?? appState.annotationStyles.arrowheadScale(for: appState.activeTool)
+        selectedAnnotation?.arrowheadScale ?? editorState.annotationStyles.arrowheadScale(for: editorState.activeTool)
     }
 
     /// Swatch showing the active tool's color; opens the style popover.
@@ -341,7 +341,7 @@ struct EditorView: View {
                 .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
                 .frame(width: 28, height: 28)
         }
-        .help(appState.activeTool == .text ? "Text Style (S)" : "Annotation Style (S)")
+        .help(editorState.activeTool == .text ? "Text Style (S)" : "Annotation Style (S)")
         .keyboardShortcut("s", modifiers: [])
         .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
             stylePopover
@@ -355,7 +355,7 @@ struct EditorView: View {
                     swatch(hex)
                 }
             }
-            if appState.activeTool == .text {
+            if editorState.activeTool == .text {
                 fontPicker
             } else if showsStrokeWidthRow {
                 strokeWidthSlider
@@ -363,7 +363,7 @@ struct EditorView: View {
             if showsArrowheadRow {
                 arrowheadSizeSlider
             }
-            if appState.selectedZoomCalloutLayer != nil {
+            if editorState.selectedZoomCalloutLayer != nil {
                 calloutInspector
             }
         }
@@ -384,12 +384,12 @@ struct EditorView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                 Slider(value: Binding(
-                    get: { Double(appState.selectedCalloutMagnification ?? 2) },
-                    set: { appState.previewCalloutMagnification(CGFloat($0)) }),
+                    get: { Double(editorState.selectedCalloutMagnification ?? 2) },
+                    set: { editorState.previewCalloutMagnification(CGFloat($0)) }),
                        in: 1.25...6) { editing in
-                    if !editing { appState.commitCalloutMagnification() }
+                    if !editing { editorState.commitCalloutMagnification() }
                 }
-                Text(Double(appState.selectedCalloutMagnification ?? 2)
+                Text(Double(editorState.selectedCalloutMagnification ?? 2)
                     .formatted(.number.precision(.fractionLength(1))) + "×")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -405,9 +405,9 @@ struct EditorView: View {
 
     private func calloutShapeButton(_ shape: ZoomCalloutShape, _ symbol: String,
                                     _ help: String) -> some View {
-        let isActive = appState.selectedZoomCalloutLayer?.zoomCallout?.shape == shape
+        let isActive = editorState.selectedZoomCalloutLayer?.zoomCallout?.shape == shape
         return Button {
-            appState.setCalloutShape(shape)
+            editorState.setCalloutShape(shape)
         } label: {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .medium))
@@ -426,23 +426,23 @@ struct EditorView: View {
     private var fontPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
             Picker("Font", selection: Binding(
-                get: { appState.textStyles.fontName },
-                set: { appState.setTextFont($0) })) {
+                get: { editorState.textStyles.fontName },
+                set: { editorState.setTextFont($0) })) {
                 ForEach(TextStyles.fonts, id: \.self) { name in
                     Text(name).tag(name)
                 }
             }
             HStack(spacing: 10) {
                 Picker("Size", selection: Binding(
-                    get: { appState.textStyles.fontSize },
-                    set: { appState.setTextFontSize($0) })) {
+                    get: { editorState.textStyles.fontSize },
+                    set: { editorState.setTextFontSize($0) })) {
                     ForEach(TextStyles.fontSizes, id: \.self) { size in
                         Text("\(Int(size)) pt").tag(size)
                     }
                 }
                 Picker("Weight", selection: Binding(
-                    get: { appState.textStyles.weight },
-                    set: { appState.setTextWeight($0) })) {
+                    get: { editorState.textStyles.weight },
+                    set: { editorState.setTextWeight($0) })) {
                     ForEach(TextWeight.allCases, id: \.self) { weight in
                         Text(weight.rawValue.capitalized).tag(weight)
                     }
@@ -457,12 +457,12 @@ struct EditorView: View {
     private func swatch(_ hex: String) -> some View {
         let isSelected = activeToolColorHex == hex
         return Button {
-            if appState.selectedZoomCalloutLayer != nil {
-                appState.setCalloutBorderColor(hex)
-            } else if appState.activeTool == .text {
-                appState.setTextColor(hex)
+            if editorState.selectedZoomCalloutLayer != nil {
+                editorState.setCalloutBorderColor(hex)
+            } else if editorState.activeTool == .text {
+                editorState.setTextColor(hex)
             } else {
-                appState.setAnnotationColor(hex)
+                editorState.setAnnotationColor(hex)
             }
         } label: {
             Circle()
@@ -496,17 +496,17 @@ struct EditorView: View {
                     strokeWidthDraft = v
                     // Annotations preview live; callouts commit on release only
                     // (no preview path, so live updates would spam undo).
-                    if appState.selectedZoomCalloutLayer == nil {
-                        appState.previewAnnotationRestyle(strokeWidth: v.rounded())
+                    if editorState.selectedZoomCalloutLayer == nil {
+                        editorState.previewAnnotationRestyle(strokeWidth: v.rounded())
                     }
                 }
             ), in: AnnotationStyles.strokeWidthRange, onEditingChanged: { editing in
                 if !editing {
                     let final = (strokeWidthDraft ?? editedStrokeWidth).rounded()
-                    if appState.selectedZoomCalloutLayer != nil {
-                        appState.setCalloutBorderWidth(final)
+                    if editorState.selectedZoomCalloutLayer != nil {
+                        editorState.setCalloutBorderWidth(final)
                     } else {
-                        appState.setAnnotationStrokeWidth(final)
+                        editorState.setAnnotationStrokeWidth(final)
                     }
                     strokeWidthDraft = nil
                 }
@@ -531,11 +531,11 @@ struct EditorView: View {
                     get: { arrowheadScaleDraft ?? editedArrowheadScale },
                     set: { v in
                         arrowheadScaleDraft = v
-                        appState.previewAnnotationRestyle(arrowheadScale: v)
+                        editorState.previewAnnotationRestyle(arrowheadScale: v)
                     }
                 ), in: AnnotationStyles.arrowheadScaleRange, onEditingChanged: { editing in
                     if !editing {
-                        appState.setAnnotationArrowheadScale(arrowheadScaleDraft ?? editedArrowheadScale)
+                        editorState.setAnnotationArrowheadScale(arrowheadScaleDraft ?? editedArrowheadScale)
                         arrowheadScaleDraft = nil
                     }
                 })
@@ -547,9 +547,10 @@ struct EditorView: View {
 
     private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,
                             _ key: KeyEquivalent) -> some View {
-        let isActive = appState.activeTool == tool
+        let isActive = editorState.activeTool == tool
+        let isLocked = isActive && editorState.toolLocked
         return Button {
-            appState.setTool(tool)
+            editorState.setTool(tool)
         } label: {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
@@ -561,8 +562,18 @@ struct EditorView: View {
                             .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
                     }
                 }
+                // Locked (double-clicked) tools get an inner ring so it's clear
+                // they'll stay active instead of reverting to select.
+                .overlay {
+                    if isLocked {
+                        Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1.5)
+                            .padding(3)
+                    }
+                }
         }
-        .help("\(help) (\(String(describing: key.character).uppercased()))")
+        // Double-click keeps the tool active for repeated drawing.
+        .simultaneousGesture(TapGesture(count: 2).onEnded { editorState.lockTool(tool) })
+        .help("\(help) (\(String(describing: key.character).uppercased())) — double-click to keep active")
         .keyboardShortcut(key, modifiers: [])
     }
 

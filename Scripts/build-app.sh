@@ -36,6 +36,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>NSHumanReadableCopyright</key><string>Copyright © 2026 David Zearing. MIT License.</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
+    <!-- Resident menu-bar agent (phase 11): no Dock icon; stays alive with no
+         editor window open. AppCoordinator also sets .accessory at runtime so
+         plain `swift build` dev runs behave the same. -->
+    <key>LSUIElement</key><true/>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

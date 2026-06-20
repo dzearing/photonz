@@ -1,180 +1,120 @@
+import AppKit
 import SwiftUI
 
 @main
 struct PhotonzApp: App {
-    @State private var appState = AppState()
+    /// The resident menu-bar agent. Owns capture, hotkeys, history, and the
+    /// window registry; survives with zero editor windows open (phase 11.1).
+    @State private var coordinator: AppCoordinator
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
+    init() {
+        let coordinator = AppCoordinator()
+        _coordinator = State(initialValue: coordinator)
+        // Hand the coordinator to the delegate so its launch hook can start the
+        // agent (activation policy + capture) — the menu's content is built
+        // lazily, so it can't be the launch hook.
+        AppDelegate.coordinator = coordinator
+    }
 
     var body: some Scene {
-        WindowGroup {
-            EditorView()
-                .environment(appState)
+        // Editor windows: one per document, value-based so `openWindow(value:)`
+        // with an id already on screen reuses that window (focus-existing for
+        // free — phase 11.5) and opens a fresh one otherwise. A value-typed
+        // WindowGroup also means no window is forced open at launch, which is
+        // what lets Photonz run as a windowless agent.
+        WindowGroup(for: EditorWindowID.self) { $windowID in
+            EditorRootView(windowID: windowID)
+                .environment(coordinator)
                 .frame(minWidth: 760, minHeight: 520)
-                .task { appState.capture.start() }
         }
         .windowStyle(.hiddenTitleBar)
-        .commands {
-            CommandGroup(replacing: .appInfo) {
-                Button("About Photonz") {
-                    let credits = NSMutableAttributedString(
-                        string: "Fast photo & screenshot editing for the Mac.\n",
-                        attributes: [
-                            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
-                            .foregroundColor: NSColor.secondaryLabelColor,
-                        ])
-                    credits.append(NSAttributedString(
-                        string: "dzearing.github.io/photonz",
-                        attributes: [
-                            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
-                            .link: URL(string: "https://dzearing.github.io/photonz/")!,
-                        ]))
-                    NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
-                }
-            }
-            // Replace the auto "New Window" so ⌘N is Preview-style "New from
-            // Clipboard"; without replacing, WindowGroup's default New Window
-            // also binds ⌘N and the two collide.
-            CommandGroup(replacing: .newItem) {
-                Button("New from Clipboard") { appState.newFromClipboard() }
-                    .keyboardShortcut("n", modifiers: .command)
-                Button("Open…") { appState.isImporterPresented = true }
-                    .keyboardShortcut("o", modifiers: .command)
-                Divider()
-                Button("Save") { appState.saveDocument() }
-                    .keyboardShortcut("s", modifiers: .command)
-                    .disabled(appState.document == nil)
-                Button("Save As…") { appState.saveDocumentAs() }
-                    .keyboardShortcut("s", modifiers: [.command, .shift])
-                    .disabled(appState.document == nil)
-                Divider()
-                Button("Export…") { appState.isExportDialogPresented = true }
-                    .keyboardShortcut("e", modifiers: .command)
-                    .disabled(appState.document == nil)
-                Button("Copy Image") { appState.copyCompositeToClipboard() }
-                    .keyboardShortcut("c", modifiers: [.command, .shift])
-                    .disabled(appState.document == nil)
-            }
-            CommandMenu("Capture") {
-                // The same shortcuts are registered as global Carbon hotkeys
-                // (CaptureCenter); these menu items make them discoverable and
-                // clickable. ⌘⇧3/⌘⇧4 only reach us once the system Screenshots
-                // shortcuts are disabled in System Settings.
-                Button("Capture Full Screen") { appState.capture.captureFullScreen() }
-                    .keyboardShortcut("3", modifiers: [.command, .shift])
-                Button("Capture Rectangle") { appState.capture.beginRectCapture() }
-                    .keyboardShortcut("4", modifiers: [.command, .shift])
-                Divider()
-                Button(appState.capture.isHistoryVisible ? "Hide Capture History" : "Show Capture History") {
-                    appState.capture.toggleHistory()
-                }
-                .keyboardShortcut("h", modifiers: [.command, .shift])
-                Divider()
-                Button("Request Screen Recording Access…") {
-                    appState.capture.requestScreenRecordingAccess()
-                }
-                .help("Registers Photonz in System Settings → Privacy → Screen & System Audio Recording and opens that pane.")
-            }
-            CommandMenu("Image") {
-                Button("Resize Image…") { appState.isResizeDialogPresented = true }
-                    .keyboardShortcut("i", modifiers: [.command, .option])
-                    .disabled(appState.document == nil)
-                Button("Canvas Size…") { appState.isCanvasSizeDialogPresented = true }
-                    .keyboardShortcut("c", modifiers: [.command, .option])
-                    .disabled(appState.document == nil)
-            }
-            // Cut/copy/paste/select-all target layers — except while an inline
-            // text editor (or any text field) has focus, where they must keep
-            // their text meaning, so the actions forward to the field editor.
-            CommandGroup(replacing: .pasteboard) {
-                Button("Cut") {
-                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
-                        textView.cut(nil)
-                    } else {
-                        appState.cutSelectedLayer()
-                    }
-                }
-                .keyboardShortcut("x", modifiers: .command)
-                Button("Copy") {
-                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
-                        textView.copy(nil)
-                    } else {
-                        appState.copySelectedLayer()
-                    }
-                }
-                .keyboardShortcut("c", modifiers: .command)
-                Button("Paste") {
-                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
-                        textView.paste(nil)
-                    } else {
-                        appState.paste()
-                    }
-                }
-                .keyboardShortcut("v", modifiers: .command)
-                Divider()
-                Button("Select All") {
-                    if let textView = NSApp.keyWindow?.firstResponder as? NSTextView {
-                        textView.selectAll(nil)
-                    } else {
-                        appState.selectAll()
-                    }
-                }
-                .keyboardShortcut("a", modifiers: .command)
-                Button("Deselect") { appState.deselect() }
-                    .keyboardShortcut("a", modifiers: [.command, .shift])
-                    .disabled(appState.selection == nil)
-            }
-            // Must REPLACE, not append: SwiftUI's built-in .undoRedo items carry
-            // the ⌘Z/⇧⌘Z shortcuts and target the responder-chain UndoManager
-            // (which we never register with), so appending leaves ⌘Z dead. See
-            // docs/progress/log.md 2026-06-17.
-            CommandGroup(replacing: .undoRedo) {
-                Button("Undo") { appState.undo() }
-                    .keyboardShortcut("z", modifiers: .command)
-                    .disabled(!appState.canUndo)
-                Button("Redo") { appState.redo() }
-                    .keyboardShortcut("z", modifiers: [.command, .shift])
-                    .disabled(!appState.canRedo)
-            }
-            CommandMenu("Layer") {
-                let selectedID = appState.selectedLayerID
-                Button("Promote Selection to Layer") { appState.promoteSelectionToLayer() }
-                    .keyboardShortcut("j", modifiers: .command)
-                    .disabled(appState.selection == nil)
-                Button("Blur Behind Selection") { appState.blurBehindSelection() }
-                    .keyboardShortcut("b", modifiers: [.command, .shift])
-                    .disabled(appState.selection == nil)
-                Divider()
-                Button("Duplicate Layer") {
-                    if let selectedID { appState.duplicateLayer(id: selectedID) }
-                }
-                .keyboardShortcut("d", modifiers: .command)
-                .disabled(selectedID == nil)
-                Button("Delete Layer") {
-                    if let selectedID { appState.deleteLayer(id: selectedID) }
-                }
-                .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(selectedID == nil)
-            }
-            CommandGroup(after: .sidebar) {
-                let hasDocument = appState.document != nil
-                Button(appState.isLayersPanelVisible ? "Hide Layers" : "Show Layers") {
-                    appState.isLayersPanelVisible.toggle()
-                }
-                .keyboardShortcut("l", modifiers: [.command, .option])
-                .disabled(!hasDocument)
-                Button("Zoom In") { appState.zoomIn() }
-                    .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
-                    .disabled(!hasDocument)
-                Button("Zoom Out") { appState.zoomOut() }
-                    .keyboardShortcut("-", modifiers: .command)
-                    .disabled(!hasDocument)
-                Button("Zoom to Fit") { appState.zoomToFit() }
-                    .keyboardShortcut("0", modifiers: .command)
-                    .disabled(!hasDocument)
-                Button("Actual Size") { appState.zoomToActualSize() }
-                    .keyboardShortcut("1", modifiers: .command)
-                    .disabled(!hasDocument)
-                Divider()
-            }
+        // Don't pop an editor window at launch — Photonz starts as a pure
+        // menu-bar agent; windows open on demand (capture/edit/New/Open).
+        .defaultLaunchBehavior(.suppressed)
+        .commands { EditorCommands(coordinator: coordinator) }
+
+        // The always-present menu-bar item keeps the agent alive and is the
+        // entry point with no window open. Its label (the icon, always
+        // rendered) captures SwiftUI's openWindow action so the agent can spawn
+        // editor windows from anywhere. (Phase 11.2 fleshes out this menu.)
+        MenuBarExtra {
+            MenuBarMenu(coordinator: coordinator)
+        } label: {
+            MenuBarLabel(coordinator: coordinator)
         }
+    }
+}
+
+/// Launch + lifecycle hooks an `App` struct can't express directly. The menu's
+/// content is built lazily (on first open), so agent startup must run here.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Set from `PhotonzApp.init` before launch finishes.
+    @MainActor static var coordinator: AppCoordinator?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        MainActor.assumeIsolated { AppDelegate.coordinator?.start() }
+    }
+
+    /// Resident agent: closing the last editor window must NOT quit. Only the
+    /// menu's Quit (NSApplication.terminate) ends the app.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+}
+
+/// Root of an editor window: owns this window's `EditorState`, seeds it once
+/// from the window identity, and publishes it as the focused editor for the
+/// menu commands.
+struct EditorRootView: View {
+    let windowID: EditorWindowID?
+    @Environment(AppCoordinator.self) private var coordinator
+    @State private var editorState = EditorState()
+
+    var body: some View {
+        EditorView()
+            .environment(editorState)
+            .focusedSceneValue(\.editorState, editorState)
+            .task {
+                if let windowID {
+                    editorState.seed(from: windowID, capture: coordinator.capture)
+                }
+            }
+    }
+}
+
+/// The menu-bar icon. Always rendered, so its `.task` is a reliable launch-time
+/// hook to capture `openWindow` for the agent (the menu content is lazy).
+struct MenuBarLabel: View {
+    let coordinator: AppCoordinator
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Image(systemName: "camera.viewfinder")
+            .task { coordinator.openWindowAction = { openWindow(value: $0) } }
+    }
+}
+
+/// The menu-bar drop-down. Phase 11.2 expands this; for 11.1 it covers the
+/// essentials so the agent is usable with no window open.
+struct MenuBarMenu: View {
+    @Bindable var coordinator: AppCoordinator
+
+    var body: some View {
+        Button("Capture Region") { coordinator.capture.beginRectCapture() }
+            .keyboardShortcut("4", modifiers: [.command, .shift])
+        Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+        Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
+            coordinator.toggleHistory()
+        }
+        .keyboardShortcut("h", modifiers: [.command, .shift])
+        Divider()
+        Button("New Window") { coordinator.newDocumentWindow() }
+        Button("Open…") { coordinator.presentOpenPanel() }
+        Divider()
+        Button("About Photonz") { coordinator.showAbout() }
+        Button("Quit Photonz") { NSApplication.shared.terminate(nil) }
+            .keyboardShortcut("q", modifiers: .command)
     }
 }

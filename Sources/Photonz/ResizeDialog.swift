@@ -4,7 +4,7 @@ import SwiftUI
 /// The Image → Resize… sheet. All sizing logic lives in `ResizeModel`
 /// (PhotonzCore, tested); this view just binds fields to it.
 struct ResizeDialog: View {
-    @Environment(AppState.self) private var appState
+    @Environment(EditorState.self) private var editorState
     @Environment(\.dismiss) private var dismiss
     @State private var model: ResizeModel
 
@@ -64,7 +64,7 @@ struct ResizeDialog: View {
                 Button("Cancel", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button("Resize") {
-                    appState.resizeDocument(to: model.targetSize)
+                    editorState.resizeDocument(to: model.targetSize)
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
