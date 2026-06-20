@@ -33,6 +33,7 @@ struct EditorCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About Photonz") { coordinator.showAbout() }
+            Button("Check for Updates…") { coordinator.checkForUpdates() }
         }
 
         // Replace the auto "New Window" so ⌘N is Preview-style "New from

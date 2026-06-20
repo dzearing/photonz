@@ -2,6 +2,14 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-20 — Phase 11.2 (status-item menu) + 11.6 (check for updates)
+
+- **11.2 menu-bar dropdown** (`MenuBarMenu`, PhotonzApp.swift): fleshed the resident agent's menu to the full spec, grouped by dividers — Capture Region (⌘⇧4) / Capture Full Screen (⌘⇧3) / Record Screen·Video… (disabled, phase 12) — Show/Hide History (⌘⇧H toggle) — New Window / New from Clipboard / Open… — Check for Updates… / Preferences… (disabled stub) / About — Quit (⌘Q). Built on MenuBarExtra (the 11.1 deviation from raw NSStatusItem; its always-rendered label captures `openWindow` for the windowless agent). Every action routes through `AppCoordinator` so it works with zero windows open. Icon stays the `camera.viewfinder` SF Symbol (template by default).
+- **11.6 updater** (TDD): new core type `SemanticVersion` (Comparable, tolerant parse, numeric ordering) + `UpdateAvailability(current:latest:)` — 10 tests. App shell `UpdateChecker` reads the running version from the bundle (CFBundleShortVersionString, stamped from VERSION; 0.0.0 fallback for dev `swift build`), fetches `https://dzearing.github.io/photonz/version.json` (no-cache, 15s timeout), and `AppCoordinator.checkForUpdates()` presents an NSAlert (up-to-date / Download…→releases/latest / failed). Wired into both the menu-bar dropdown and the editor app menu (EditorCommands).
+- 398 tests green (+10). App bundle launches as `ApplicationType=UIElement` (lsappinfo) windowless; live version.json reachable and returns 0.2.0 == current VERSION (so a release build reports up-to-date). No Sparkle.
+- **Needs user verification**: dropdown clicks + greyed disabled items (menu rendering needs Accessibility we lack headless); the "update available" alert path (needs a newer published version, or a lower-versioned dev bundle) and its Download button.
+- **Next**: 11.3 (refine ⌘⇧3/⌘⇧4 global hotkeys + Screen Recording permission flow — needs the user for TCC), or 11.5 (multi-window edit round-trip: open-new vs focus-existing + override/save-as-new on save). 11.7 Quick Access Overlay and 11.8 Pin-to-screen are the remaining signature features.
+
 ## 2026-06-19 — Workflow round: drag-history-into-layer, icon-button design language, rounded rectangle annotations
 
 User testing the new overlay drove four changes (some outside the strict 11.x task list — captured here):

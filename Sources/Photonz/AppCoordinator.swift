@@ -118,6 +118,53 @@ final class AppCoordinator {
         openFileWindow(url)
     }
 
+    // MARK: - Updater (phase 11.6)
+
+    /// True while an update check is in flight, so the menu can disable the item
+    /// and avoid overlapping checks.
+    private(set) var isCheckingForUpdates = false
+
+    /// Menu "Check for Updates…": compares the running build against the
+    /// published `version.json` and reports the outcome in an alert. The
+    /// comparison logic is the testable `SemanticVersion`; this just fetches and
+    /// presents.
+    func checkForUpdates() {
+        guard !isCheckingForUpdates else { return }
+        isCheckingForUpdates = true
+        NSApp.activate(ignoringOtherApps: true)
+        Task {
+            let result = await UpdateChecker.check()
+            isCheckingForUpdates = false
+            presentUpdateResult(result)
+        }
+    }
+
+    private func presentUpdateResult(_ result: UpdateChecker.Result) {
+        let alert = NSAlert()
+        switch result {
+        case .upToDate(let current):
+            alert.messageText = "You're up to date"
+            alert.informativeText = "Photonz \(current) is the latest version."
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+        case .updateAvailable(let current, let latest):
+            alert.messageText = "Update available"
+            alert.informativeText =
+                "Photonz \(latest) is available — you have \(current). Download the latest version?"
+            alert.addButton(withTitle: "Download…")
+            alert.addButton(withTitle: "Later")
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSWorkspace.shared.open(UpdateChecker.downloadPageURL)
+            }
+        case .failed(let message):
+            alert.alertStyle = .warning
+            alert.messageText = "Couldn't check for updates"
+            alert.informativeText = message
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+        }
+    }
+
     /// Shared About panel (menu-bar menu + the editor windows' app menu).
     func showAbout() {
         NSApp.activate(ignoringOtherApps: true)

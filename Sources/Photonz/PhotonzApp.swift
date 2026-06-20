@@ -37,7 +37,7 @@ struct PhotonzApp: App {
         // The always-present menu-bar item keeps the agent alive and is the
         // entry point with no window open. Its label (the icon, always
         // rendered) captures SwiftUI's openWindow action so the agent can spawn
-        // editor windows from anywhere. (Phase 11.2 fleshes out this menu.)
+        // editor windows from anywhere. The full menu is phase 11.2.
         MenuBarExtra {
             MenuBarMenu(coordinator: coordinator)
         } label: {
@@ -95,25 +95,52 @@ struct MenuBarLabel: View {
     }
 }
 
-/// The menu-bar drop-down. Phase 11.2 expands this; for 11.1 it covers the
-/// essentials so the agent is usable with no window open.
+/// The resident agent's status-item drop-down (phase 11.2). Every action works
+/// with no editor window open — capture, history, window-spawning, and the
+/// updater all route through the `AppCoordinator`. Items not yet implemented
+/// (Record → phase 12, Preferences → later) are present-but-disabled so the
+/// shape of the app is visible without pretending to work.
 struct MenuBarMenu: View {
     @Bindable var coordinator: AppCoordinator
 
     var body: some View {
+        // Capture
         Button("Capture Region") { coordinator.capture.beginRectCapture() }
             .keyboardShortcut("4", modifiers: [.command, .shift])
         Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
             .keyboardShortcut("3", modifiers: [.command, .shift])
+        Button("Record Screen / Video…") {}
+            .disabled(true)  // wired in phase 12
+            .help("Screen recording arrives in a later update.")
+
+        Divider()
+
+        // History
         Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
             coordinator.toggleHistory()
         }
         .keyboardShortcut("h", modifiers: [.command, .shift])
+
         Divider()
+
+        // Windows
         Button("New Window") { coordinator.newDocumentWindow() }
+        Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
         Button("Open…") { coordinator.presentOpenPanel() }
+
         Divider()
+
+        // App
+        Button(coordinator.isCheckingForUpdates ? "Checking for Updates…" : "Check for Updates…") {
+            coordinator.checkForUpdates()
+        }
+        .disabled(coordinator.isCheckingForUpdates)
+        Button("Preferences…") {}
+            .disabled(true)  // settings UI lands in a later phase
         Button("About Photonz") { coordinator.showAbout() }
+
+        Divider()
+
         Button("Quit Photonz") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q", modifiers: .command)
     }
