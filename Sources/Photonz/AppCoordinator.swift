@@ -39,6 +39,9 @@ final class AppCoordinator {
     /// with quick actions, shown after each capture and auto-closing.
     @ObservationIgnored private let quickAccess = QuickAccessController()
 
+    /// Pin-to-screen floating windows (phase 11.8).
+    @ObservationIgnored private let pinned = PinnedWindowController()
+
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
     func start() {
@@ -69,6 +72,14 @@ final class AppCoordinator {
 
     func hideQuickAccess() {
         quickAccess.hide(notify: false)
+    }
+
+    /// Pin a capture as a floating, always-on-top window (phase 11.8). Invokable
+    /// from the Quick Access Overlay (11.7) and the history overlay (11.4).
+    func pinCapture(_ entryID: UUID) {
+        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }),
+              let image = capture.store.image(for: entry) else { return }
+        pinned.pin(image: image, on: activeScreen())
     }
 
     /// Quick Access "Save…": writes the capture's PNG wherever the user picks.

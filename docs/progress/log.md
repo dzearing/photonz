@@ -2,6 +2,16 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-20 — Phase 11.8: Pin-to-screen (floating reference windows)
+
+- **Signature CleanShot feature**: pin a capture as a borderless, always-on-top window that floats above your work as reference material — draggable anywhere, resizable (aspect-locked), with an adjustable opacity.
+- **Core (TDD, 6 tests)**: `PinnedImageMetrics` (PhotonzCore) — `fittedSize` (aspect-fit into a max square, never upscaling) + `clampOpacity` into [0.2, 1.0].
+- **Shell**: `PinnedWindowController` owns N independent pinned windows (borderless+resizable, `.floating` level, movable-by-background, aspect-locked, cascade placement from the top-right). `PinnedImageView` (SwiftUI) fills the window with the image; on hover a close button + a glass opacity-slider capsule fade in. Opacity applies to the image only so the controls stay legible.
+- **Wiring**: `AppCoordinator.pinCapture(entryID)`; Pin buttons added to both the Quick Access Overlay (11.7) and the history overlay (11.4).
+- **Verified**: 411 tests green (+6). Env-guarded headless self-test pinned a synthetic image twice → two floating windows both sized to the computed `fittedSize` (360×225), first at the top-right inset, second cascaded (+28/−28); debug hook removed.
+- **Needs user**: drag-to-move, edge-resize keeping aspect, hover controls, opacity feel, close-to-unpin (interactive).
+- **Phase 11 status**: 11.1, 11.2, 11.4, 11.6, 11.7, 11.8 done. Remaining: **11.3** (global ⌘⇧3/⌘⇧4 hotkey + Screen-Recording TCC flow — needs the user) and **11.5** (multi-window edit save-back round-trip: override vs save-as-new; Edit currently only opens the editor).
+
 ## 2026-06-20 — Phase 11.7: Quick Access Overlay (post-capture floating thumbnail)
 
 - **Signature CleanShot feature**, built on the 11.4 pattern (testable geometry core + thin AppKit shell). After every capture, a small glass thumbnail slides into the bottom-left corner with Copy / Save… / Edit / Delete + drag-the-PNG-out, and auto-closes.

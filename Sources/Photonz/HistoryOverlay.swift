@@ -78,6 +78,13 @@ private struct HistoryOverlayCell: View {
                     Image(systemName: "square.and.pencil")
                 }
                 .help("Edit in a new window")
+                Button {
+                    coordinator.pinCapture(entry.id)
+                    coordinator.hideHistory()
+                } label: {
+                    Image(systemName: "pin")
+                }
+                .help("Pin to Screen")
                 Button(role: .destructive) {
                     store.remove(id: entry.id)
                 } label: {
