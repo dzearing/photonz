@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import Observation
+import PhotonzCore
 
 /// Coordinates the screenshot feature: global hotkeys, capture modes, and the
 /// history panel's visibility.
@@ -22,6 +23,10 @@ final class CaptureCenter {
     /// overlay is shown (e.g. to surface the permission hint).
     @ObservationIgnored var onToggleHistory: (() -> Void)?
     @ObservationIgnored var onRequestHistory: (() -> Void)?
+
+    /// Fired after a capture lands in the store, so the resident agent can pop
+    /// the post-capture Quick Access Overlay (phase 11.7). Carries the new entry.
+    @ObservationIgnored var onCaptureComplete: ((CaptureEntry) -> Void)?
 
     @ObservationIgnored private let hotkeys = HotkeyCenter()
     @ObservationIgnored private var rectSelection: RectSelectionController?
@@ -50,7 +55,7 @@ final class CaptureCenter {
         Task {
             do {
                 for image in try await ScreenCapturer.captureAllScreens() {
-                    store.add(image)
+                    onCaptureComplete?(store.add(image))
                 }
             } catch {
                 NSLog("Full-screen capture failed: \(error)")
@@ -93,7 +98,7 @@ final class CaptureCenter {
             // window server before we sample the screen.
             try? await Task.sleep(for: .milliseconds(60))
             do {
-                store.add(try await ScreenCapturer.capture(screen: screen, sourceRect: rect))
+                onCaptureComplete?(store.add(try await ScreenCapturer.capture(screen: screen, sourceRect: rect)))
             } catch {
                 NSLog("Rect capture failed: \(error)")
             }

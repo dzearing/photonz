@@ -35,6 +35,10 @@ final class AppCoordinator {
     private(set) var isHistoryShown = false
     @ObservationIgnored private let historyOverlay = HistoryOverlayController()
 
+    /// The post-capture Quick Access Overlay (phase 11.7) — a floating thumbnail
+    /// with quick actions, shown after each capture and auto-closing.
+    @ObservationIgnored private let quickAccess = QuickAccessController()
+
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
     func start() {
@@ -45,8 +49,43 @@ final class AppCoordinator {
         // History presentation: capture signals; the overlay is ours to drive.
         capture.onToggleHistory = { [weak self] in self?.toggleHistory() }
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
+        capture.onCaptureComplete = { [weak self] entry in self?.showQuickAccess(entry.id) }
         historyOverlay.onDismiss = { [weak self] in self?.isHistoryShown = false }
         capture.start()
+    }
+
+    // MARK: - Quick Access Overlay (phase 11.7)
+
+    /// Pop the post-capture floating thumbnail for `entryID`. A second capture
+    /// while one is up retargets the same panel (the controller handles reuse).
+    func showQuickAccess(_ entryID: UUID) {
+        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }) else { return }
+        let overlay = QuickAccessOverlay(
+            entry: entry,
+            coordinator: self,
+            onHoverChange: { [weak self] hovering in self?.quickAccess.setHovering(hovering) })
+        quickAccess.show(content: overlay, on: activeScreen())
+    }
+
+    func hideQuickAccess() {
+        quickAccess.hide(notify: false)
+    }
+
+    /// Quick Access "Save…": writes the capture's PNG wherever the user picks.
+    func saveCaptureToDisk(_ entryID: UUID) {
+        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }) else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = entry.fileName
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        // Write the bytes (not copyItem) so confirming an overwrite in the panel
+        // actually replaces the existing file.
+        if let data = try? Data(contentsOf: capture.store.fileURL(for: entry)) {
+            try? data.write(to: url, options: .atomic)
+        }
+        hideQuickAccess()
     }
 
     // MARK: - History overlay

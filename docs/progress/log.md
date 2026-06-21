@@ -2,6 +2,16 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-20 — Phase 11.7: Quick Access Overlay (post-capture floating thumbnail)
+
+- **Signature CleanShot feature**, built on the 11.4 pattern (testable geometry core + thin AppKit shell). After every capture, a small glass thumbnail slides into the bottom-left corner with Copy / Save… / Edit / Delete + drag-the-PNG-out, and auto-closes.
+- **Core (TDD, 7 tests)**: `QuickAccessLayout` + `ScreenCorner` (PhotonzCore) — corner placement within a display `visibleFrame` (margin-inset) + a `hiddenFrame` slid off the nearest horizontal edge for the entrance; honors secondary-display origins.
+- **Shell**: `QuickAccessController` — borderless non-activating floating panel (never becomes key → never steals focus), slide+fade in/out, auto-close via a cancelable `DispatchWorkItem` (6s; paused on hover, 1.5s grace on exit); a second capture retargets the same panel + resets the timer. `QuickAccessOverlay` (SwiftUI, Liquid glass, `IconActionButtonStyle`) is the card; Save writes the PNG bytes via NSSavePanel (overwrite-safe), Edit opens/focuses the editor window, hover reports to the controller.
+- **Trigger**: `CaptureCenter.onCaptureComplete((CaptureEntry))` fired after each `store.add` (full-screen + rect); `AppCoordinator.showQuickAccess/hideQuickAccess/saveCaptureToDisk` wire it.
+- **Verified**: 405 tests green (+7). Env-guarded headless self-test (synthetic capture → showQuickAccess) confirmed the panel's real on-screen frame `(24,80,232,196)` == the computed bottom-left `restingFrame` on the main display, then removed.
+- **Needs user**: the real post-capture pop + slide/auto-close feel, hover-pauses-timeout, the four actions + drag-out (interactive, not drivable headless).
+- **Next**: 11.5 (edit save-back round-trip — override vs save-as-new; Edit currently only opens the editor), 11.8 (pin-to-screen, invokable from this overlay + history), or 11.3 (hotkey/permission refinement — needs the user for TCC). Corner is fixed bottom-left for now (`ScreenCorner` preference is a later add).
+
 ## 2026-06-20 — Phase 11.2 (status-item menu) + 11.6 (check for updates)
 
 - **11.2 menu-bar dropdown** (`MenuBarMenu`, PhotonzApp.swift): fleshed the resident agent's menu to the full spec, grouped by dividers — Capture Region (⌘⇧4) / Capture Full Screen (⌘⇧3) / Record Screen·Video… (disabled, phase 12) — Show/Hide History (⌘⇧H toggle) — New Window / New from Clipboard / Open… — Check for Updates… / Preferences… (disabled stub) / About — Quit (⌘Q). Built on MenuBarExtra (the 11.1 deviation from raw NSStatusItem; its always-rendered label captures `openWindow` for the windowless agent). Every action routes through `AppCoordinator` so it works with zero windows open. Icon stays the `camera.viewfinder` SF Symbol (template by default).
