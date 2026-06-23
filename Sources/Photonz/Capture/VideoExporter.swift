@@ -28,6 +28,19 @@ enum VideoExporter {
         return seconds
     }
 
+    /// The video's natural pixel size **after** its `preferredTransform` (so a
+    /// portrait recording reports portrait dimensions). Used by the in-app
+    /// editor's crop overlay (phase 13.3/13.4). Falls back to `.zero` if the
+    /// track can't be read.
+    static func orientedNaturalSize(of url: URL) async -> CGSize {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let natural = try? await track.load(.naturalSize),
+              let transform = try? await track.load(.preferredTransform) else { return .zero }
+        let oriented = natural.applying(transform)
+        return CGSize(width: abs(oriented.width), height: abs(oriented.height))
+    }
+
     /// A representative frame for the history thumbnail — sampled a hair into the
     /// clip so it isn't a black first frame.
     static func posterFrame(of url: URL, maxDimension: CGFloat = 600) async -> CGImage? {

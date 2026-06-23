@@ -87,10 +87,16 @@ final class AppCoordinator {
 
     // MARK: - Recordings (phase 12.4 / 12.5)
 
-    /// Open a recording in the system's default video player (the in-app video
-    /// editor arrives in phase 13).
+    /// Open a recording in the in-app video editor (phase 13.3): open/focus a
+    /// `.video` window for it and bring the app forward. Opening a recording for
+    /// playback is NOT TCC-gated (only capturing one is). Falls back to revealing
+    /// the file in Finder if the window action isn't wired up yet.
     func openRecording(_ url: URL) {
-        NSWorkspace.shared.open(url)
+        guard openWindowAction != nil else {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+            return
+        }
+        openWindow(.video(standardizing: url))
     }
 
     /// Convert a recording to an animated GIF / HEIC and save it where the user
@@ -114,6 +120,14 @@ final class AppCoordinator {
                 }
             }
         }
+    }
+
+    /// Export the recording open in the video editor, honoring its in-memory
+    /// trim/crop. For phase 13.3 this delegates to the verbatim/animated path on
+    /// the source URL; phase 13.5 replaces the body with real trim+crop export.
+    func saveRecording(_ state: VideoEditorState, as format: RecordingFormat) {
+        guard let url = state.url else { return }
+        saveRecording(url, as: format)
     }
 
     /// Pin a capture as a floating, always-on-top window (phase 11.8).

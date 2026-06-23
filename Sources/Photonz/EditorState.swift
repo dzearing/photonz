@@ -139,6 +139,8 @@ final class EditorState {
             newFromClipboard()
         case .fresh:
             break // empty editor; the onboarding card guides the next step
+        case .video:
+            break // routed to the video editor (VideoEditorState), never here
         }
     }
 

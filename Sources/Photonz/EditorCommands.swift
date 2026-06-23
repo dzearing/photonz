@@ -16,6 +16,19 @@ extension FocusedValues {
     }
 }
 
+/// Carries the key window's `VideoEditorState` (phase 13.3) so the Video menu
+/// targets the focused recording window.
+struct VideoEditorStateFocusedValueKey: FocusedValueKey {
+    typealias Value = VideoEditorState
+}
+
+extension FocusedValues {
+    var videoEditorState: VideoEditorState? {
+        get { self[VideoEditorStateFocusedValueKey.self] }
+        set { self[VideoEditorStateFocusedValueKey.self] = newValue }
+    }
+}
+
 /// The app's menu-bar command set. App-level actions (capture, New, Open, About)
 /// go through the resident `AppCoordinator` so they work with no window open;
 /// document actions target the focused editor window (`editor`), disabling when
@@ -23,6 +36,7 @@ extension FocusedValues {
 struct EditorCommands: Commands {
     let coordinator: AppCoordinator
     @FocusedValue(\.editorState) private var editor: EditorState?
+    @FocusedValue(\.videoEditorState) private var video: VideoEditorState?
 
     /// True when a text field/inline editor is focused — text-editing commands
     /// must keep their system meaning there.
@@ -102,6 +116,39 @@ struct EditorCommands: Commands {
             Button("Canvas Size…") { editor?.isCanvasSizeDialogPresented = true }
                 .keyboardShortcut("c", modifiers: [.command, .option])
                 .disabled(editor?.document == nil)
+        }
+
+        // Video menu: only meaningful in a recording window (phase 13.3). Gated
+        // on the focused video state so it disables in image windows.
+        CommandMenu("Video") {
+            let hasVideo = video?.isReady ?? false
+            Button((video?.isPlaying ?? false) ? "Pause" : "Play") { video?.togglePlayPause() }
+                .keyboardShortcut(.space, modifiers: [])
+                .disabled(!hasVideo)
+            Divider()
+            Button("Set Trim Start to Playhead") {
+                if let video { video.setTrimIn(video.currentTime) }
+            }
+            .keyboardShortcut("i", modifiers: [])
+            .disabled(!hasVideo)
+            Button("Set Trim End to Playhead") {
+                if let video { video.setTrimOut(video.currentTime) }
+            }
+            .keyboardShortcut("o", modifiers: [])
+            .disabled(!hasVideo)
+            Divider()
+            Button("Export MP4…") {
+                if let video { coordinator.saveRecording(video, as: .mp4) }
+            }
+            .disabled(!hasVideo)
+            Button("Export GIF…") {
+                if let video { coordinator.saveRecording(video, as: .gif) }
+            }
+            .disabled(!hasVideo)
+            Button("Export HEIC…") {
+                if let video { coordinator.saveRecording(video, as: .heic) }
+            }
+            .disabled(!hasVideo)
         }
 
         // Cut/copy/paste/select-all target layers — except while an inline text
