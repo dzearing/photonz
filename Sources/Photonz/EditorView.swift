@@ -185,6 +185,7 @@ struct EditorView: View {
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
             if editorState.activeTool.createsAnnotationByDrag || editorState.activeTool == .text
                 || editorState.selectedAnnotationLayer != nil
+                || editorState.selectedTextLayer != nil
                 || editorState.selectedZoomCalloutLayer != nil {
                 styleButton
                     .transition(.scale(scale: 0.5).combined(with: .opacity))
@@ -287,14 +288,30 @@ struct EditorView: View {
         editorState.selectedAnnotationLayer?.annotation
     }
 
+    /// The selected text layer's content when the popover should edit it
+    /// (13.1), else nil. Routes the font/color controls to that layer.
+    private var selectedTextContent: TextContent? {
+        if case .text(let content)? = editorState.selectedTextLayer?.content { return content }
+        return nil
+    }
+
+    /// Whether the popover shows the text controls: the text tool is active, or
+    /// a placed text element is selected.
+    private var showsTextControls: Bool {
+        editorState.activeTool == .text || selectedTextContent != nil
+    }
+
     /// The color the popover currently represents: the selected annotation's
-    /// or callout's, or what the active tool will draw with.
+    /// or callout's, the selected/edited text's, or what the active tool draws.
     private var activeToolColorHex: String {
         if let callout = editorState.selectedZoomCalloutLayer {
             return callout.style.borderColorHex
         }
         if let selected = selectedAnnotation {
             return selected.colorHex
+        }
+        if let text = selectedTextContent {
+            return text.colorHex
         }
         if editorState.activeTool == .text {
             return editorState.textStyles.colorHex
@@ -355,7 +372,7 @@ struct EditorView: View {
                     swatch(hex)
                 }
             }
-            if editorState.activeTool == .text {
+            if showsTextControls {
                 fontPicker
             } else if showsStrokeWidthRow {
                 strokeWidthSlider
@@ -422,26 +439,28 @@ struct EditorView: View {
         .help(help)
     }
 
-    /// Font family / size / weight menus for the text tool.
+    /// Font family / size / weight menus. Drives the new-text defaults for the
+    /// text tool, or the selected text element's face/size/weight (13.1) — the
+    /// pickers reflect that element so the panel edits what's on screen.
     private var fontPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
             Picker("Font", selection: Binding(
-                get: { editorState.textStyles.fontName },
+                get: { selectedTextContent?.fontName ?? editorState.textStyles.fontName },
                 set: { editorState.setTextFont($0) })) {
-                ForEach(TextStyles.fonts, id: \.self) { name in
+                ForEach(fontMenuFamilies, id: \.self) { name in
                     Text(name).tag(name)
                 }
             }
             HStack(spacing: 10) {
                 Picker("Size", selection: Binding(
-                    get: { editorState.textStyles.fontSize },
+                    get: { selectedTextContent?.fontSize ?? editorState.textStyles.fontSize },
                     set: { editorState.setTextFontSize($0) })) {
-                    ForEach(TextStyles.fontSizes, id: \.self) { size in
+                    ForEach(fontMenuSizes, id: \.self) { size in
                         Text("\(Int(size)) pt").tag(size)
                     }
                 }
                 Picker("Weight", selection: Binding(
-                    get: { editorState.textStyles.weight },
+                    get: { selectedTextContent?.weight ?? editorState.textStyles.weight },
                     set: { editorState.setTextWeight($0) })) {
                     ForEach(TextWeight.allCases, id: \.self) { weight in
                         Text(weight.rawValue.capitalized).tag(weight)
@@ -454,12 +473,30 @@ struct EditorView: View {
         .frame(width: 220)
     }
 
+    /// Font families for the picker, including the selected element's family if
+    /// it isn't one of the curated defaults (so its current value stays valid).
+    private var fontMenuFamilies: [String] {
+        guard let name = selectedTextContent?.fontName, !TextStyles.fonts.contains(name) else {
+            return TextStyles.fonts
+        }
+        return TextStyles.fonts + [name]
+    }
+
+    /// Sizes for the picker, including the selected element's size if it isn't a
+    /// preset (so a custom size from a re-measure still selects correctly).
+    private var fontMenuSizes: [CGFloat] {
+        guard let size = selectedTextContent?.fontSize, !TextStyles.fontSizes.contains(size) else {
+            return TextStyles.fontSizes
+        }
+        return (TextStyles.fontSizes + [size]).sorted()
+    }
+
     private func swatch(_ hex: String) -> some View {
         let isSelected = activeToolColorHex == hex
         return Button {
             if editorState.selectedZoomCalloutLayer != nil {
                 editorState.setCalloutBorderColor(hex)
-            } else if editorState.activeTool == .text {
+            } else if showsTextControls {
                 editorState.setTextColor(hex)
             } else {
                 editorState.setAnnotationColor(hex)

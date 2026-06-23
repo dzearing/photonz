@@ -604,23 +604,76 @@ final class EditorState {
     /// editor mirrors it so what you type matches what commit rasterizes.
     var activeTextContent: TextContent { textStyles.content() }
 
+    /// The selected text layer when the select tool is active — the properties
+    /// panel edits its font face/size/weight/color (13.1) instead of only the
+    /// new-text defaults. Mirrors `selectedAnnotationLayer`.
+    var selectedTextLayer: Layer? {
+        guard activeTool == .select, let id = selectedLayerID,
+              let layer = document?.layer(id: id),
+              case .text = layer.content else { return nil }
+        return layer
+    }
+
+    /// Restyles the selected text layer through `TextBuilder.restyled` and
+    /// re-measures its frame (the rasterizer needs CoreText, so it's done here),
+    /// keeping the wrap width so layout doesn't shift. One undo step.
+    private func restyleSelectedText(_ layer: Layer, fontName: String? = nil,
+                                     fontSize: CGFloat? = nil, weight: TextWeight? = nil,
+                                     colorHex: String? = nil) {
+        discardDragPreview()
+        let maxWidth = layer.frame.width
+        perform { document in
+            document.updateLayer(id: layer.id) { l in
+                l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
+                                         weight: weight, colorHex: colorHex)
+                if case .text(let content) = l.content {
+                    let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+                    l.frame = CGRect(origin: l.frame.origin, size: size)
+                }
+            }
+        }
+    }
+
     func setTextFont(_ name: String) {
+        if let layer = selectedTextLayer { restyleSelectedText(layer, fontName: name) }
         textStyles.fontName = name
         saveTextStyles()
     }
 
     func setTextFontSize(_ size: CGFloat) {
+        if let layer = selectedTextLayer { restyleSelectedText(layer, fontSize: size) }
         textStyles.fontSize = size
         saveTextStyles()
     }
 
     func setTextWeight(_ weight: TextWeight) {
+        if let layer = selectedTextLayer { restyleSelectedText(layer, weight: weight) }
         textStyles.weight = weight
         saveTextStyles()
     }
 
     func setTextColor(_ hex: String) {
+        if let layer = selectedTextLayer { restyleSelectedText(layer, colorHex: hex) }
         textStyles.colorHex = hex
+        saveTextStyles()
+    }
+
+    // MARK: - Docked text inspector (targets a specific layer, independent of
+    // the active tool — so editing a selected text element's font from the
+    // docked panel always reaches the document and updates the new-text default).
+
+    /// Restyles `layerID` if it's a text layer, re-measuring its frame. One undo
+    /// step. Also updates the new-text default so the next block inherits it.
+    func setTextStyle(layerID: UUID, fontName: String? = nil, fontSize: CGFloat? = nil,
+                      weight: TextWeight? = nil, colorHex: String? = nil) {
+        guard let layer = document?.layer(id: layerID),
+              case .text = layer.content else { return }
+        restyleSelectedText(layer, fontName: fontName, fontSize: fontSize,
+                            weight: weight, colorHex: colorHex)
+        if let fontName { textStyles.fontName = fontName }
+        if let fontSize { textStyles.fontSize = fontSize }
+        if let weight { textStyles.weight = weight }
+        if let colorHex { textStyles.colorHex = colorHex }
         saveTextStyles()
     }
 

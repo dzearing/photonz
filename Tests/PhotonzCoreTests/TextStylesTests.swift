@@ -107,6 +107,86 @@ struct TextBuilderTests {
     }
 }
 
+// 13.1: change a placed text element's font face/size/weight/color via the
+// props panel — mirrors AnnotationBuilder.restyled. Frame is NOT touched here
+// (the app re-measures via CoreText); identity and frame.origin survive.
+@Suite("TextBuilder.restyled")
+struct TextBuilderRestyledTests {
+
+    private func textLayer(_ content: TextContent) -> Layer {
+        TextBuilder.layer(content: content, at: CGPoint(x: 30, y: 50),
+                          naturalSize: CGSize(width: 120, height: 40))
+    }
+
+    @Test func restyleChangesFontName() {
+        let layer = textLayer(TextContent(string: "Hi", fontName: "SF Pro"))
+        let out = TextBuilder.restyled(layer: layer, fontName: "Georgia")
+        guard case .text(let c) = out.content else { Issue.record("expected text"); return }
+        #expect(c.fontName == "Georgia")
+        #expect(out.id == layer.id)
+        #expect(out.frame.origin == layer.frame.origin)
+    }
+
+    @Test func restyleChangesFontSize() {
+        let layer = textLayer(TextContent(string: "Hi", fontSize: 24))
+        let out = TextBuilder.restyled(layer: layer, fontSize: 48)
+        guard case .text(let c) = out.content else { Issue.record("expected text"); return }
+        #expect(c.fontSize == 48)
+        #expect(out.id == layer.id)
+    }
+
+    @Test func restyleChangesWeight() {
+        let layer = textLayer(TextContent(string: "Hi", weight: .regular))
+        let out = TextBuilder.restyled(layer: layer, weight: .bold)
+        guard case .text(let c) = out.content else { Issue.record("expected text"); return }
+        #expect(c.weight == .bold)
+    }
+
+    @Test func restyleOnlyAppliesProvidedParams() {
+        let original = TextContent(string: "Hi", fontName: "Georgia", fontSize: 32,
+                                   colorHex: "#FF3B30", weight: .semibold)
+        let layer = textLayer(original)
+        let out = TextBuilder.restyled(layer: layer, fontSize: 64)
+        guard case .text(let c) = out.content else { Issue.record("expected text"); return }
+        #expect(c.fontName == "Georgia")
+        #expect(c.fontSize == 64)
+        #expect(c.weight == .semibold)
+        #expect(c.colorHex == "#FF3B30")
+    }
+
+    @Test func colorChangeRefreshesAutoContrastShadow() {
+        // White text → dark shadow. Recolor to black → shadow must flip light.
+        let layer = textLayer(TextContent(string: "Hi", colorHex: "#FFFFFF"))
+        #expect(layer.style.shadow?.colorHex == "#000000")
+        let out = TextBuilder.restyled(layer: layer, colorHex: "#000000")
+        guard case .text(let c) = out.content else { Issue.record("expected text"); return }
+        #expect(c.colorHex == "#000000")
+        #expect(out.style.shadow == TextBuilder.autoContrastShadow(forColorHex: "#000000"))
+        #expect(out.style.shadow?.colorHex == "#FFFFFF")
+    }
+
+    @Test func noColorChangeLeavesShadowUntouched() {
+        let layer0 = textLayer(TextContent(string: "Hi", colorHex: "#FFFFFF"))
+        // Give the layer a custom (non-auto) shadow to prove it's preserved.
+        var layer = layer0
+        var custom = ShadowStyle()
+        custom.radius = 9
+        custom.colorHex = "#123456"
+        layer.style.shadow = custom
+        let out = TextBuilder.restyled(layer: layer, fontSize: 48)
+        #expect(out.style.shadow == custom)
+    }
+
+    @Test func nonTextLayerPassesThroughUnchanged() {
+        let annotation = Layer(name: "Box",
+                               content: .annotation(AnnotationContent(shape: .rectangle)),
+                               frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+        let out = TextBuilder.restyled(layer: annotation, fontName: "Georgia",
+                                       fontSize: 99, weight: .bold, colorHex: "#00FF00")
+        #expect(out == annotation)
+    }
+}
+
 // 3.6 smart default: text always gets a shadow that contrasts with its own
 // color, so callouts stay legible on busy/matching backgrounds.
 @Suite("Auto-contrast text shadow")
