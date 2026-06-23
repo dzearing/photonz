@@ -2,6 +2,65 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-22 — History tooltips escape the window; Clear All moved to a top bar
+
+- **Clipboard paste into Claude fixed (prior issue).** Auto-copy now writes a single multi-flavor pasteboard item: the **file URL** (`public.file-url`/`NSFilenamesPboardType` — what Claude/Mail/Finder read) **plus** PNG + TIFF. Image-data-only copy was the reason a captured screenshot wouldn't ⌘V into Claude even though a copied file would. (Also: an earlier "it's live" was on a stale bundle — a background build had errored before finishing; rebuild discipline tightened.)
+- **Tooltips are now their own floating window** (`TooltipController`): a borderless, passive (`ignoresMouseEvents`) `.popUpMenu`-level panel shown below the pointer on icon hover. It **escapes** the overlay bounds, so the per-cell reserved tooltip line is gone (it was getting clipped). `AppCoordinator.showCaptureTooltip/hideCaptureTooltip`; hidden on cell-leave + history dismiss.
+- **Clear All → top bar.** Moved from the bottom footer to a right-aligned row **above** the strip; title still absent. With the tooltip line removed, the cell is just thumbnail + (hover-revealed) actions, so the overlay panel shrank 206 → **190**.
+- No core changes (UI only); app rebuilt + relaunched.
+- **NEEDS USER:** confirm ⌘V-paste of a screenshot into Claude works now, and that history tooltips float below the icons (unclipped) with Clear All at the top-right.
+
+## 2026-06-21 — Capture UX: auto-copy, dedicated stop hotkey, history footer
+
+Small validation-driven tweaks:
+
+- **Auto-copy on capture.** Every screenshot/recording is now put on the clipboard the instant it's taken (`onCaptureComplete` → `store.copyToPasteboard`: image data for screenshots, the file URL for recordings) so you can paste immediately.
+- **Dedicated stop shortcut.** Added `HotkeyCenter.controlShift` and registered **⌃⇧F5** → `CaptureCenter.stopRecordingIfNeeded` (no-op unless recording). ⌘⇧5 still toggles, but it collides with macOS's own screenshot toolbar, so ⌃⇧F5 is a reliable stop while recording.
+- **History chrome trimmed.** Removed the "Recent Captures" title; moved **Clear All** to a compact bottom footer (right-aligned, caption size). Overlay panel height 228 → 206.
+- Tests untouched by these (no core changes); app rebuilt + relaunched.
+- **NEEDS USER:** confirm paste-after-capture works, ⌃⇧F5 stops a recording, and the shorter history with the bottom Clear All looks right.
+
+## 2026-06-21 — Capture history is now folder-backed (no private store) + history UX polish
+
+User feedback round on the running app — a storage-model rewrite plus history-overlay polish:
+
+- **No private library — the folder IS the history.** Replaced the Application-Support index+copies model with a live view of `~/Pictures/Screenshots`. `CaptureStore` rewritten: scans the folder (classify by extension via the new testable `CaptureLibrary`), newest-first; new captures/recordings write straight in; a `DispatchSource` folder **watcher** reloads on external changes. `CaptureEntry` (PhotonzCore) is now `{ url, createdAt, kind }` (identity = URL); removed `CaptureHistory`/index/poster-files/UUID identity. Video posters + durations are derived **on demand** and cached in memory (nothing extra written to the user's folder).
+- **Two-way delete sync, via Trash.** Delete in history → `trashItem` (recoverable) → file leaves the folder; delete the file externally → watcher drops it from history. **Clear All** (new history-header action) trashes everything behind a confirm alert (`AppCoordinator.clearHistory`).
+- **Identity ripple.** `EditorWindowID.capture(UUID)` removed — Edit opens `.file(url)` (focus-existing still free). `editCapture`/`pinCapture`/`openRecording`/`saveRecording`/`flashNewCapture`/`highlightedCaptureURL` and 11.5's round-trip are all URL-keyed now; `EditorState.sourceCaptureURL` is set when the opened file lives in the capture folder (Override vs Save-as-new still works).
+- **History UX (user asks).** Per-item icons are **hidden until the cell is hovered** (opacity+hit-testing), and each icon shows a **custom tooltip in a reserved line below the row** (never covers the thumbnail) — not native `.help()`. Panel grew to 228pt for the header + tooltip line.
+- **Bug found + fixed via headless self-test:** in-app `add` returned `nil` (so the post-capture highlight/flash never fired) because it matched the new entry by URL equality, which differs (percent-encoding/symlink) from `contentsOfDirectory`'s URLs — now matches by file name. A temp-dir self-test verified: external add/delete sync (watcher), in-app add returns the entry, trash-remove, clear-all (then removed).
+- **412 tests green** (−6 net: dropped `CaptureHistoryTests`/index-based `CaptureEntry` tests, added `CaptureLibraryTests`). Clean build; bundle rebuilt + relaunched.
+- **Still NEEDS USER (TCC-gated):** take a screenshot/recording and confirm it lands in `~/Pictures/Screenshots`, history shows it highlighted, hover reveals icons with tooltips below, delete moves it to Trash + disappears, dropping/removing a file in Finder updates history live, and Clear All works.
+- **Next:** phase 13 (in_progress). Open: capture-folder location should become a Preference.
+
+## 2026-06-21 — Validation round: removed the Quick Access toast; history-with-highlight is the post-capture surface
+
+User testing phases 11/12 in the running app drove a design pivot:
+
+- **Quick Access corner toast (11.7) REMOVED.** User: the bottom-left toast is redundant with the slide-down history overlay (toast auto-dismissed and wasn't recallable; history is ⌘⇧H-recallable). Replaced by: on capture/recording complete, **show the history overlay with the newest entry highlighted** (accent ring + glow). Deleted `QuickAccessController`/`QuickAccessOverlay` (app) + `QuickAccessLayout`/`ScreenCorner` (PhotonzCore) + its 7 tests. `AppCoordinator.flashNewCapture(id)` sets `highlightedCaptureID` then `showHistory()`; `hideHistory()` clears the highlight. 11.7 marked `superseded` in phase-11.json; capture.md post-capture-flow updated.
+- **Auto-save replaces manual "Save".** User: why a Save button per item — just auto-save like macOS. Now every capture is auto-written to **`~/Pictures/Screenshots`** ("Screenshot/Recording yyyy-MM-dd at HH.mm.ss.ext", collision-suffixed) the moment it's taken (`CaptureStore.add`/`addRecording`). The internal Application-Support library stays the rolling history cache (capped/pruned); Pictures/Screenshots is the permanent archive (untouched by prune or in-app Delete). Removed the image **Save to File** button + `AppCoordinator.saveCaptureToDisk`; trimmed the video menu to GIF/HEIC export (MP4 is auto-saved). Verified naming/collision logic in isolation; the per-capture archive landing needs a real capture to confirm (TCC-gated). Location will become a Preference later.
+- **History cells:** tile-tap-to-play (`CaptureThumbnailView.onActivate`) + video Play / GIF·HEIC export live on history; image cells = Copy / Edit / Pin / Delete.
+- **Interim toast fixes (now moot but informative):** before deciding to remove it, fixed (a) tile-tap played AND dismissed, (b) every button auto-dismissed — the user wanted persist-until-✕/drag-off. Implemented ✕ + drag-to-dismiss + no-auto-close, then the user opted to drop the toast entirely. Lesson captured in the design: one capture surface, not two.
+- **418 tests green** (was 425; −7 from the deleted QuickAccessLayout suite). Clean build; bundle rebuilt + relaunched.
+- **Process note:** relaunch the app after rebuilding before handing back to the user to test (saved as a memory — kept tripping on this).
+- **Still NEEDS USER (TCC-gated, not headless):** grant Screen Recording, then run ⌘⇧3/4/5 and confirm the history overlay pops with the newest item highlighted, recordings show the play badge + Play/Export, and the stop HUD is absent from the file.
+- **Next:** continue phase 13 (in_progress) — editor polish + in-app video editor (playback/trim/crop, reusing VideoExporter for MP4/GIF/HEIC).
+
+## 2026-06-21 — Phase 11 closed (11.3, 11.5) + Phase 12 screen recording (all tasks)
+
+Single session: finished phase 11 and built phase 12 end to end. **425 tests green** (+14), clean build, app bundle launches as a UIElement agent.
+
+- **11.5 edit round-trip.** EditorState tracks `sourceCaptureID` (set in `seed()` for `.capture`) + `compositeImage()`. New 'Save to Capture History' command (⌥⌘S, EditorCommands) → `AppCoordinator.saveEditedCapture` presents Override / Save as New / Cancel. Override = `CaptureStore.replace(id:with:)` (rewrite PNG bytes in place, identity + position unchanged); Save-as-new = `store.add`. Open-new-vs-focus-existing was already free from the 11.1 value-typed WindowGroup.
+- **11.3 hotkeys/permission (code complete, TCC NEEDS USER).** ⌘⇧5 added to HotkeyCenter alongside ⌘⇧3/4/H; menu items everywhere; system-Screenshots conflict documented; `ensurePermission` gates capture AND recording. Marked done per repo convention (NEEDS-USER notes), since only TCC validation remains.
+- **Phase 12 core (TDD, PhotonzCore).** `CaptureEntry` gained `kind`/`duration`/poster (custom Decodable → legacy index.json still decodes as `.image`). New `Recording.swift`: `RecordingSource`, `AudioSources` (OptionSet), `RecordingFormat`, `RecordingConfig`, `RecordingClock.elapsedString`, `AnimatedExportPlanner` (reuses `PinnedImageMetrics.fittedSize`). 14 new tests.
+- **Phase 12 shell.** `ScreenRecorder` uses SCStream + **`SCRecordingOutput`** (macOS 15+) — writes the MP4 itself (video + system audio via `capturesAudio`, mic via `captureMicrophone`/`microphoneCaptureDeviceID`); the stop HUD is excluded via `SCContentFilter(excludingWindows:)`. **No hand-rolled AVAssetWriter** (deviation from the literal plan — much less plumbing). `RecordingCoordinator` orchestrates recorder + stop HUD + 0.25s elapsed timer + history filing + UserDefaults config persistence. `RecordingSetupController`/View = pre-record card (Full/Region + System Audio + Mic picker). `RecordingControlsController` = floating glass stop HUD (pulsing dot + elapsed + Stop). ⌘⇧5 / menu → `CaptureCenter.toggleRecording` → setup → (region selection) → record. Recordings fire the same Quick Access path screenshots use.
+- **History/Quick Access overlays** render video cells via new shared `CaptureThumbnailView` (play badge + duration pill); video actions: Copy (file URL) / Play (NSWorkspace.open — in-app video edit is phase 13) / Save+Export menu / Delete.
+- **Export (12.5).** `VideoExporter` re-encodes recorded frames via AVAssetImageGenerator + ImageIO `CGImageDestination`: GIF + **animated HEIC** (`public.heics` + `kCGImagePropertyHEICSDictionary`). **WebP DROPPED — user-approved deviation:** macOS 26's ImageIO can't *write* WebP (`CGImageDestinationCopyTypeIdentifiers` lists only gif + heic/heics for animation), and a real encoder needs vendored libwebp (conflicts with no-deps). WebP → backlog.
+- **VALIDATED HEADLESSLY** (Screen Recording TCC denied on this box, so the live SCStream path can't run here): a temporary env-guarded self-test synthesized a 1s MP4 via AVAssetWriter and exercised the REAL `VideoExporter` + `CaptureStore.addRecording` — duration 1.0s, 320×200 poster, mp4+poster on disk, thumbnail loads, GIF (15 frames, 5.7KB) + HEIC (15 frames, 10.7KB) both valid multi-frame. Self-test removed after.
+- **Bundle:** `build-app.sh` Info.plist gains `NSMicrophoneUsageDescription` (mic capture would otherwise crash).
+- **NEEDS USER (interactive / TCC, not drivable headlessly):** grant Screen Recording → run ⌘⇧5 full + region, confirm the stop HUD shows and is absent from the file, system+mic audio land, the recording appears in history + Quick Access with the play affordance, GIF/HEIC export from the menu, and the 11.5 Override/Save-as-new alert updates the bin. Then `Scripts/build-app.sh` is signed and ready.
+- **Next:** phase 13 (now `in_progress`) — editor polish + the in-app video editor (playback/trim/crop, sharing the export pipeline). Open: record-time format choice (currently MP4-only at start, convert-after for GIF/HEIC); record→trim→export chaining lands with phase 13.
+
 ## 2026-06-20 — Phase 11.8: Pin-to-screen (floating reference windows)
 
 - **Signature CleanShot feature**: pin a capture as a borderless, always-on-top window that floats above your work as reference material — draggable anywhere, resizable (aspect-locked), with an adjustable opacity.

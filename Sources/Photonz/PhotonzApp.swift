@@ -109,9 +109,10 @@ struct MenuBarMenu: View {
             .keyboardShortcut("4", modifiers: [.command, .shift])
         Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
             .keyboardShortcut("3", modifiers: [.command, .shift])
-        Button("Record Screen / Video…") {}
-            .disabled(true)  // wired in phase 12
-            .help("Screen recording arrives in a later update.")
+        Button(coordinator.capture.isRecording ? "Stop Recording" : "Record Screen / Video…") {
+            coordinator.capture.toggleRecording()
+        }
+        .keyboardShortcut("5", modifiers: [.command, .shift])
 
         Divider()
 

@@ -36,6 +36,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>NSHumanReadableCopyright</key><string>Copyright © 2026 David Zearing. MIT License.</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
+    <!-- Screen recording (phase 12): TCC requires a microphone usage string when
+         the user opts to record mic audio, or the app is killed on first access. -->
+    <key>NSMicrophoneUsageDescription</key><string>Photonz records microphone audio when you include it in a screen recording.</string>
     <!-- Resident menu-bar agent (phase 11): no Dock icon; stays alive with no
          editor window open. AppCoordinator also sets .accessory at runtime so
          plain `swift build` dev runs behave the same. -->

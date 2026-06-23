@@ -14,8 +14,13 @@ import PhotonzCore
 @Observable
 final class CaptureCenter {
     let store = CaptureStore()
+    /// Screen recording (phase 12): pipeline + stop HUD + history filing.
+    let recording: RecordingCoordinator
     /// Set when a capture attempt is blocked on the Screen Recording permission.
     var needsScreenRecordingPermission = false
+
+    /// True while a recording is in progress (menu label / state).
+    var isRecording: Bool { recording.isRecording }
 
     /// History presentation now lives in the resident agent's global slide-down
     /// overlay (phase 11.4), not an in-editor panel — so capture just signals
@@ -30,10 +35,17 @@ final class CaptureCenter {
 
     @ObservationIgnored private let hotkeys = HotkeyCenter()
     @ObservationIgnored private var rectSelection: RectSelectionController?
+    @ObservationIgnored private let recordingSetup = RecordingSetupController()
+
+    init() {
+        recording = RecordingCoordinator(store: store)
+    }
 
     /// Called once at app launch.
     func start() {
-        store.loadFromDisk()
+        store.start()
+        // Recordings pop the same post-capture Quick Access Overlay screenshots do.
+        recording.onRecordingComplete = { [weak self] entry in self?.onCaptureComplete?(entry) }
         // Register with TCC up front so Photonz shows up in System Settings →
         // Privacy & Security → Screen Recording before the first capture. The
         // system only lists an app once it asks; preflight alone never adds it.
@@ -45,7 +57,65 @@ final class CaptureCenter {
         needsScreenRecordingPermission = !ScreenCapturer.hasPermission
         hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.captureFullScreen() }
         hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.beginRectCapture() }
+        hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.toggleRecording() }
+        // Dedicated stop shortcut for recording — ⌘⇧5 collides with macOS's own
+        // screenshot toolbar, so ⌃⇧F5 reliably stops a recording in progress.
+        hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.stopRecordingIfNeeded() }
         hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.onToggleHistory?() }
+    }
+
+    // MARK: - Recording (phase 12)
+
+    /// ⌘⇧5 / menu: stop if recording, otherwise open the setup card.
+    func toggleRecording() {
+        if recording.isRecording {
+            Task { await recording.stop() }
+        } else {
+            beginRecordingFlow()
+        }
+    }
+
+    /// ⌃⇧F5: stop a recording in progress (no-op otherwise).
+    func stopRecordingIfNeeded() {
+        guard recording.isRecording else { return }
+        Task { await recording.stop() }
+    }
+
+    /// Presents the recording setup card, then starts on the chosen source.
+    func beginRecordingFlow() {
+        guard !recording.isRecording else { return }
+        guard ensurePermission() else { return }
+        recordingSetup.present(
+            initial: recording.config,
+            microphones: ScreenRecorder.availableMicrophones()
+        ) { [weak self] config in
+            self?.startRecording(with: config)
+        }
+    }
+
+    private func startRecording(with config: RecordingConfig) {
+        if case .region = config.source {
+            // Drag a region first, then record exactly that rect on its screen.
+            guard rectSelection == nil else { return }
+            rectSelection = RectSelectionController(
+                onComplete: { [weak self] screen, rect in
+                    self?.rectSelection = nil
+                    var regionConfig = config
+                    regionConfig.source = .region(rect)
+                    Task { await self?.recording.start(config: regionConfig, screen: screen) }
+                },
+                onCancel: { [weak self] in self?.rectSelection = nil })
+            rectSelection?.begin()
+        } else {
+            Task { await recording.start(config: config, screen: activeScreen()) }
+        }
+    }
+
+    private func activeScreen() -> NSScreen {
+        if let screen = NSApp.keyWindow?.screen { return screen }
+        let mouse = NSEvent.mouseLocation
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) { return screen }
+        return NSScreen.main ?? NSScreen.screens[0]
     }
 
     // MARK: - Modes
@@ -55,7 +125,7 @@ final class CaptureCenter {
         Task {
             do {
                 for image in try await ScreenCapturer.captureAllScreens() {
-                    onCaptureComplete?(store.add(image))
+                    if let entry = store.add(image) { onCaptureComplete?(entry) }
                 }
             } catch {
                 NSLog("Full-screen capture failed: \(error)")
@@ -98,7 +168,9 @@ final class CaptureCenter {
             // window server before we sample the screen.
             try? await Task.sleep(for: .milliseconds(60))
             do {
-                onCaptureComplete?(store.add(try await ScreenCapturer.capture(screen: screen, sourceRect: rect)))
+                if let entry = store.add(try await ScreenCapturer.capture(screen: screen, sourceRect: rect)) {
+                    onCaptureComplete?(entry)
+                }
             } catch {
                 NSLog("Rect capture failed: \(error)")
             }

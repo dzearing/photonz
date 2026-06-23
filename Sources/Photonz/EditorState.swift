@@ -82,6 +82,11 @@ final class EditorState {
     /// always, for plain-image documents the user hasn't saved as a package).
     private(set) var documentURL: URL?
 
+    /// The capture file this window was opened to edit, if it lives in the
+    /// capture folder (phase 11.5). Lets "Save to Capture History" offer
+    /// Override-in-place vs Save-as-new.
+    private(set) var sourceCaptureURL: URL?
+
     /// The .photonz document package type. The bundle's Info.plist exports
     /// the same identifier so Finder treats packages as files.
     static let photonzType = UTType(exportedAs: "com.photonz.document", conformingTo: .package)
@@ -124,12 +129,12 @@ final class EditorState {
     func seed(from windowID: EditorWindowID, capture: CaptureCenter) {
         guard document == nil else { return }
         switch windowID {
-        case .capture(let entryID):
-            guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }),
-                  let image = capture.store.image(for: entry) else { return }
-            openCapture(image)
         case .file(let url):
             openImage(at: url)
+            // A file opened from the capture folder can round-trip back to history.
+            if url.deletingLastPathComponent().standardizedFileURL == capture.store.directory.standardizedFileURL {
+                sourceCaptureURL = url
+            }
         case .clipboard:
             newFromClipboard()
         case .fresh:
@@ -197,6 +202,13 @@ final class EditorState {
     }
 
     // MARK: - Export
+
+    /// The flattened composite at 1× — used by the capture-history round-trip
+    /// (phase 11.5) to write an edited capture back to the store.
+    func compositeImage() -> CGImage? {
+        guard let document else { return nil }
+        return previewRenderer.render(document, store: store)
+    }
 
     /// Renders the composite at `scale` and writes it where the user picks.
     func exportComposite(format: ImageCodec.Format, scale: CGFloat, quality: Double = 0.9) {

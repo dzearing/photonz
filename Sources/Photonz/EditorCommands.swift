@@ -53,6 +53,13 @@ struct EditorCommands: Commands {
             Button("Save As…") { editor?.saveDocumentAs() }
                 .keyboardShortcut("s", modifiers: [.command, .shift])
                 .disabled(editor?.document == nil)
+            Button("Save to Capture History") {
+                if let editor, let image = editor.compositeImage() {
+                    coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL, image: image)
+                }
+            }
+            .keyboardShortcut("s", modifiers: [.command, .option])
+            .disabled(editor?.document == nil)
             Divider()
             Button("Export…") { editor?.isExportDialogPresented = true }
                 .keyboardShortcut("e", modifiers: .command)
@@ -72,6 +79,10 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("3", modifiers: [.command, .shift])
             Button("Capture Rectangle") { coordinator.capture.beginRectCapture() }
                 .keyboardShortcut("4", modifiers: [.command, .shift])
+            Button(coordinator.capture.isRecording ? "Stop Recording" : "Record Screen / Video…") {
+                coordinator.capture.toggleRecording()
+            }
+            .keyboardShortcut("5", modifiers: [.command, .shift])
             Divider()
             Button(coordinator.isHistoryShown ? "Hide Capture History" : "Show Capture History") {
                 coordinator.toggleHistory()

@@ -80,8 +80,13 @@ The `NSStatusItem` menu is the always-available entry point:
 2. Region capture uses the fullscreen `RectSelectionController` overlay; full
    screen / window / video are their own modes.
 3. The result is added to `CaptureStore` (the persisted history) as a new entry.
-4. A **Quick Access Overlay** (phase 11.5) shows a corner thumbnail with
-   Copy / Save / Edit / drag-out / Delete and an auto-close timeout.
+4. **Post-capture feedback = the history overlay itself** (revised 2026-06-21).
+   On capture/recording complete, the slide-down history overlay is shown with
+   the **newest entry highlighted** (accent ring + glow). The earlier corner
+   "Quick Access" toast (phase 11.7) was **removed** as redundant: it
+   auto-dismissed and wasn't recallable, whereas history is one place and
+   ⌘⇧H-recallable. Per-item actions (Copy / Save / Edit / Pin / Delete; for
+   videos Play / Save-Export) and drag-out live on the history cells.
 5. Editing routes through the multi-window editor (below).
 
 Screen Recording permission (TCC) is requested user-initiated from the agent;
@@ -98,11 +103,34 @@ A **global, top-of-screen overlay**, not editor chrome.
   dismiss: **slides UP and fades out.** Driven by a single spring; the panel is
   removed when the animation completes.
 - **Dismiss.** Esc, click-away, re-pressing ⌘⇧H, or selecting an action.
-- **Contents.** Newest-first thumbnails (capped by `CaptureHistory`). Per item:
-  **Copy**, **Edit** (→ opens/focuses an editor window), drag-the-file-out,
-  **Delete**, and (later) Pin-to-screen.
+- **Contents.** Newest-first thumbnails of the **capture folder** (below). A
+  **Clear All** header action (moves everything to the Trash, with a confirm).
+  Per-item actions are **hidden until the item is hovered** (they're noisy
+  otherwise) and each shows a small tooltip **below** the row so it never covers
+  the thumbnail: **Copy**, **Edit** / **Pin** (images) or **Play** / **Export
+  GIF·HEIC** (videos), **Delete**, plus drag-the-file-out. The newest item is
+  ring-highlighted right after a capture.
 - The phase-9 `HistoryPanel` inside `EditorView` and `capture.isHistoryVisible`
-  are removed; `CaptureStore` / `CaptureHistory` are reused unchanged.
+  are removed.
+
+## Capture storage = a user folder (no private library)
+
+*(Revised 2026-06-21 per user feedback.)* The capture history is backed
+**directly by `~/Pictures/Screenshots`** — there is no private Application-Support
+library or index. The folder is the single source of truth:
+
+- Every capture/recording is auto-written into it (macOS-style names,
+  `Screenshot/Recording yyyy-MM-dd at HH.mm.ss.ext`), so the user never has to
+  "Save" — it's already a file in a normal folder.
+- History is a **live listing** of the folder's media files (classified by
+  extension via the testable `CaptureLibrary`), newest first.
+- **Delete in history ⇒ file to Trash; delete the file ⇒ leaves history.** A
+  `DispatchSource` folder watcher reloads on external changes, keeping the two in
+  sync both ways. Deletes use the Trash (recoverable).
+- Thumbnails are cached in memory; video poster frames are generated on demand
+  (no poster files written into the user's folder). `CaptureEntry` is now just a
+  `{ url, createdAt, kind }` descriptor (identity = URL); the location will become
+  a Preference later.
 
 ## Multi-window editor & the edit round-trip
 
@@ -113,10 +141,13 @@ A **global, top-of-screen overlay**, not editor chrome.
   registry of `captureID → editor window`.
 - **Independent windows.** Other editor windows (different images, or opened
   files) stay open and independent.
-- **Round-trip back to history** (phase 11.4): on save/close, an edited capture
-  can **Override** the history entry in place or **Save as new** (a derived
-  entry). Model changes for replace/derive live in `CaptureStore`/core and are
-  TDD'd; the prompt is app-side.
+- **Edit = open the file.** Captures are plain files, so Edit just opens
+  `EditorWindowID.file(url)` (re-opening the same URL focuses the existing
+  window — no separate `.capture` id).
+- **Round-trip back to history** (phase 11.5): "Save to Capture History" on a
+  file opened from the capture folder offers **Override** (rewrite that file) or
+  **Save as new** (a new file in the folder). `CaptureStore.replace(at:)` /
+  `add` handle it; the prompt is app-side.
 
 ## Updater
 
@@ -128,10 +159,11 @@ The version comparator is a testable core type; fetch/UI is the thin shell.
 
 ## What stays testable
 
-Capture/history/updater **logic** stays in core/store types with unit tests:
-`CaptureStore` (add/dedupe/cap/persist, override-vs-derive), the version
-comparator, and any geometry for overlay placement. The `NSStatusItem`,
-`NSPanel` animation, and window management are the thin AppKit/SwiftUI shell.
+Capture/history/updater **logic** stays in core types with unit tests:
+`CaptureLibrary` (extension→kind classification, newest-first ordering), the
+version comparator, and overlay placement geometry. The folder scan + watcher,
+`NSStatusItem`, `NSPanel` animation, and window management are the thin
+AppKit/SwiftUI shell (`CaptureStore`).
 
 ## Decided
 

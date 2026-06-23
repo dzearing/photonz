@@ -27,7 +27,7 @@ final class HistoryOverlayController {
 
     var isShown: Bool { panel != nil }
 
-    private static let panelHeight: CGFloat = 196
+    private static let panelHeight: CGFloat = 208
 
     func show(content: some View, on screen: NSScreen) {
         if panel != nil { return }

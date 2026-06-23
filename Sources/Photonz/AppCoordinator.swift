@@ -35,12 +35,17 @@ final class AppCoordinator {
     private(set) var isHistoryShown = false
     @ObservationIgnored private let historyOverlay = HistoryOverlayController()
 
-    /// The post-capture Quick Access Overlay (phase 11.7) — a floating thumbnail
-    /// with quick actions, shown after each capture and auto-closing.
-    @ObservationIgnored private let quickAccess = QuickAccessController()
+    /// The just-captured file, highlighted in the history overlay so the latest
+    /// capture/recording stands out when the overlay pops after a capture. Nil
+    /// when the overlay was opened manually (⌘⇧H) or after it's dismissed.
+    private(set) var highlightedCaptureURL: URL?
 
     /// Pin-to-screen floating windows (phase 11.8).
     @ObservationIgnored private let pinned = PinnedWindowController()
+
+    /// Floating tooltips for the history overlay's per-item icons (their own
+    /// window so they escape the overlay bounds — no reserved space per cell).
+    @ObservationIgnored private let tooltip = TooltipController()
 
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
@@ -52,51 +57,70 @@ final class AppCoordinator {
         // History presentation: capture signals; the overlay is ours to drive.
         capture.onToggleHistory = { [weak self] in self?.toggleHistory() }
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
-        capture.onCaptureComplete = { [weak self] entry in self?.showQuickAccess(entry.id) }
-        historyOverlay.onDismiss = { [weak self] in self?.isHistoryShown = false }
+        capture.onCaptureComplete = { [weak self] entry in
+            // Auto-copy so the user can paste immediately (image data for
+            // screenshots, the file for recordings).
+            self?.capture.store.copyToPasteboard(entry)
+            self?.flashNewCapture(entry.url)
+        }
+        historyOverlay.onDismiss = { [weak self] in
+            self?.isHistoryShown = false
+            self?.highlightedCaptureURL = nil
+            self?.tooltip.hide()
+        }
         capture.start()
     }
 
-    // MARK: - Quick Access Overlay (phase 11.7)
+    // MARK: - Post-capture feedback
 
-    /// Pop the post-capture floating thumbnail for `entryID`. A second capture
-    /// while one is up retargets the same panel (the controller handles reuse).
-    func showQuickAccess(_ entryID: UUID) {
-        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }) else { return }
-        let overlay = QuickAccessOverlay(
-            entry: entry,
-            coordinator: self,
-            onHoverChange: { [weak self] hovering in self?.quickAccess.setHovering(hovering) })
-        quickAccess.show(content: overlay, on: activeScreen())
+    /// After a capture/recording lands, surface the history overlay with the new
+    /// entry highlighted (replaces the old corner toast — the overlay is the one
+    /// place captures live, and it's recallable with ⌘⇧H).
+    func flashNewCapture(_ url: URL) {
+        highlightedCaptureURL = url
+        if historyOverlay.isShown {
+            NSApp.activate(ignoringOtherApps: true)
+        } else {
+            showHistory()
+        }
     }
 
-    func hideQuickAccess() {
-        quickAccess.hide(notify: false)
+    // MARK: - Recordings (phase 12.4 / 12.5)
+
+    /// Open a recording in the system's default video player (the in-app video
+    /// editor arrives in phase 13).
+    func openRecording(_ url: URL) {
+        NSWorkspace.shared.open(url)
     }
 
-    /// Pin a capture as a floating, always-on-top window (phase 11.8). Invokable
-    /// from the Quick Access Overlay (11.7) and the history overlay (11.4).
-    func pinCapture(_ entryID: UUID) {
-        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }),
-              let image = capture.store.image(for: entry) else { return }
-        pinned.pin(image: image, on: activeScreen())
-    }
-
-    /// Quick Access "Save…": writes the capture's PNG wherever the user picks.
-    func saveCaptureToDisk(_ entryID: UUID) {
-        guard let entry = capture.store.history.entries.first(where: { $0.id == entryID }) else { return }
+    /// Convert a recording to an animated GIF / HEIC and save it where the user
+    /// picks (the "quick convert" path of 12.5; the MP4 is already auto-saved).
+    func saveRecording(_ sourceURL: URL, as format: RecordingFormat) {
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.png]
-        panel.nameFieldStringValue = entry.fileName
+        panel.allowedContentTypes = [format.savePanelType]
+        panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        // Write the bytes (not copyItem) so confirming an overwrite in the panel
-        // actually replaces the existing file.
-        if let data = try? Data(contentsOf: capture.store.fileURL(for: entry)) {
-            try? data.write(to: url, options: .atomic)
+        if format == .mp4 {
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.copyItem(at: sourceURL, to: url)
+        } else {
+            Task {
+                do {
+                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format)
+                } catch {
+                    NSLog("Recording export failed: \(error)")
+                }
+            }
         }
-        hideQuickAccess()
+    }
+
+    /// Pin a capture as a floating, always-on-top window (phase 11.8).
+    func pinCapture(_ url: URL) {
+        guard let entry = capture.store.entries.first(where: { $0.url == url }),
+              let image = capture.store.image(for: entry) else { return }
+        pinned.pin(image: image, on: activeScreen())
     }
 
     // MARK: - History overlay
@@ -116,6 +140,36 @@ final class AppCoordinator {
     func hideHistory() {
         historyOverlay.hide(notify: false)
         isHistoryShown = false
+        highlightedCaptureURL = nil
+        tooltip.hide()
+    }
+
+    /// History-icon tooltips (their own floating window, below the pointer).
+    func showCaptureTooltip(_ text: String) {
+        let mouse = NSEvent.mouseLocation
+        tooltip.show(text, below: CGPoint(x: mouse.x, y: mouse.y - 14))
+    }
+
+    func hideCaptureTooltip() {
+        tooltip.hide()
+    }
+
+    /// "Clear All" in the history overlay: confirm, then move every capture to
+    /// the Trash (recoverable). The watched folder drives the UI refresh.
+    func clearHistory() {
+        let count = capture.store.entries.count
+        guard count > 0 else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Clear capture history?"
+        alert.informativeText =
+            "This moves \(count) item\(count == 1 ? "" : "s") in \(capture.store.directory.lastPathComponent) to the Trash. You can recover them from there."
+        alert.addButton(withTitle: "Move to Trash")
+        alert.addButton(withTitle: "Cancel")
+        alert.alertStyle = .warning
+        if alert.runModal() == .alertFirstButtonReturn {
+            capture.store.clearAll()
+        }
     }
 
     /// The display the overlay should drop onto: the one with the key window,
@@ -147,9 +201,36 @@ final class AppCoordinator {
     }
 
     /// Edit a capture from history: dismiss the overlay, open/focus its window.
-    func editCapture(_ entryID: UUID) {
+    /// Captures are files now, so this just opens the file (re-opening the same
+    /// URL focuses the existing window).
+    func editCapture(_ url: URL) {
         if isHistoryShown { hideHistory() }
-        openWindow(.capture(entryID))
+        openWindow(.file(url))
+    }
+
+    /// The edit round-trip back to history (phase 11.5). Called from the editor's
+    /// "Save to Capture History" command with the flattened composite. If the
+    /// window was opened from a capture still in the folder, offer Override-in-place
+    /// vs Save-as-new; otherwise just add a new entry. The history overlay observes
+    /// `CaptureStore`, so it refreshes automatically.
+    func saveEditedCapture(sourceURL: URL?, image: CGImage) {
+        NSApp.activate(ignoringOtherApps: true)
+        if let sourceURL, capture.store.entries.contains(where: { $0.url == sourceURL }) {
+            let alert = NSAlert()
+            alert.messageText = "Save to Capture History"
+            alert.informativeText =
+                "Replace the original capture with your edits, or keep both by saving as a new entry?"
+            alert.addButton(withTitle: "Override Original")
+            alert.addButton(withTitle: "Save as New")
+            alert.addButton(withTitle: "Cancel")
+            switch alert.runModal() {
+            case .alertFirstButtonReturn: capture.store.replace(at: sourceURL, with: image)
+            case .alertSecondButtonReturn: capture.store.add(image)
+            default: return
+            }
+        } else {
+            capture.store.add(image)
+        }
     }
 
     /// Open an image / `.photonz` file in its own window.

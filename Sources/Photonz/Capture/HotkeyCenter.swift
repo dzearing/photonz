@@ -18,6 +18,10 @@ final class HotkeyCenter {
         static func commandShift(_ keyCode: Int) -> Hotkey {
             Hotkey(keyCode: UInt32(keyCode), carbonModifiers: UInt32(cmdKey | shiftKey))
         }
+
+        static func controlShift(_ keyCode: Int) -> Hotkey {
+            Hotkey(keyCode: UInt32(keyCode), carbonModifiers: UInt32(controlKey | shiftKey))
+        }
     }
 
     private var actions: [UInt32: () -> Void] = [:]

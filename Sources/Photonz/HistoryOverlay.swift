@@ -2,24 +2,28 @@ import PhotonzCore
 import SwiftUI
 
 /// Contents of the global slide-down history overlay (phase 11.4): a
-/// newest-first strip of recent captures, each with Copy / Edit / Delete and
-/// drag-to-export. Replaces the phase-9 in-editor `HistoryPanel` carousel.
-/// Liquid Glass surface; the panel chrome/animation is `HistoryOverlayController`.
+/// newest-first strip of the capture folder's contents. Per-item actions stay
+/// hidden until the item is hovered (they're noisy otherwise) and each shows a
+/// small tooltip *below* the row so it never covers the thumbnail. Liquid Glass
+/// surface; the panel chrome/animation is `HistoryOverlayController`.
 struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
     private var capture: CaptureCenter { coordinator.capture }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
+            if !capture.store.entries.isEmpty {
+                topBar
+            }
             if capture.needsScreenRecordingPermission {
                 permissionHint
             }
-            if capture.store.history.entries.isEmpty {
-                Text("No captures yet — press ⌘⇧4 to grab a rectangle or ⌘⇧3 for the full screen.")
+            if capture.store.entries.isEmpty {
+                Text("No captures yet — ⌘⇧4 grabs a rectangle, ⌘⇧3 the full screen, ⌘⇧5 records.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .frame(maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 strip
             }
@@ -30,11 +34,25 @@ struct HistoryOverlay: View {
         .padding(8)
     }
 
+    private var topBar: some View {
+        HStack {
+            Spacer()
+            Button(role: .destructive) {
+                coordinator.clearHistory()
+            } label: {
+                Label("Clear All", systemImage: "trash")
+            }
+            .buttonStyle(PillActionButtonStyle())
+            .help("Move all captures to the Trash")
+        }
+    }
+
     private var strip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(alignment: .top, spacing: 14) {
-                ForEach(capture.store.history.entries) { entry in
-                    HistoryOverlayCell(entry: entry, coordinator: coordinator)
+                ForEach(capture.store.entries) { entry in
+                    HistoryOverlayCell(entry: entry, coordinator: coordinator,
+                                       highlighted: entry.url == coordinator.highlightedCaptureURL)
                 }
             }
             .padding(.horizontal, 4)
@@ -58,61 +76,90 @@ struct HistoryOverlay: View {
 private struct HistoryOverlayCell: View {
     let entry: CaptureEntry
     let coordinator: AppCoordinator
+    /// The just-captured entry, accented so the newest capture stands out.
+    let highlighted: Bool
+
+    @State private var hovered = false
 
     private var store: CaptureStore { coordinator.capture.store }
 
     var body: some View {
         VStack(spacing: 6) {
-            thumbnail
-            HStack(spacing: 6) {
-                Button {
-                    store.copyToPasteboard(entry)
-                    coordinator.hideHistory()
-                } label: {
-                    Image(systemName: "doc.on.doc")
+            CaptureThumbnailView(entry: entry, store: store, fixedHeight: 100, minWidth: 96,
+                                 onActivate: entry.kind == .video ? {
+                                     coordinator.openRecording(entry.url)
+                                     coordinator.hideHistory()
+                                 } : nil)
+                .overlay {
+                    if highlighted {
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.accentColor, lineWidth: 3)
+                    }
                 }
-                .help("Copy to Clipboard")
-                Button {
-                    coordinator.editCapture(entry.id)
-                } label: {
-                    Image(systemName: "square.and.pencil")
-                }
-                .help("Edit in a new window")
-                Button {
-                    coordinator.pinCapture(entry.id)
-                    coordinator.hideHistory()
-                } label: {
-                    Image(systemName: "pin")
-                }
-                .help("Pin to Screen")
-                Button(role: .destructive) {
-                    store.remove(id: entry.id)
-                } label: {
-                    Image(systemName: "trash")
-                }
-                .help("Delete")
-            }
-            .buttonStyle(IconActionButtonStyle())
+                .shadow(color: highlighted ? Color.accentColor.opacity(0.55) : .clear,
+                        radius: highlighted ? 8 : 0)
+                .animation(.easeOut(duration: 0.25), value: highlighted)
+
+            // Actions reveal on hover; their tooltips float on a separate window
+            // (TooltipController) so they escape the overlay without reserving space.
+            actions
+                .opacity(hovered ? 1 : 0)
+                .allowsHitTesting(hovered)
+                .animation(.easeOut(duration: 0.12), value: hovered)
+        }
+        // The whole tile rectangle is the hover target — important for very
+        // skinny images whose thumbnail is only a few px wide.
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            hovered = hovering
+            if !hovering { coordinator.hideCaptureTooltip() }
         }
     }
 
-    @ViewBuilder
-    private var thumbnail: some View {
-        Group {
-            if let image = store.image(for: entry) {
-                Image(decorative: image, scale: 1)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 104)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.primary.opacity(0.15)))
+    private var actions: some View {
+        HStack(spacing: 6) {
+            iconButton("Copy", "doc.on.doc") {
+                store.copyToPasteboard(entry)
+                coordinator.hideHistory()
+            }
+            if entry.kind == .video {
+                iconButton("Play", "play.fill") {
+                    coordinator.openRecording(entry.url)
+                    coordinator.hideHistory()
+                }
+                Menu {
+                    Button("Export GIF…") { coordinator.saveRecording(entry.url, as: .gif) }
+                    Button("Export HEIC…") { coordinator.saveRecording(entry.url, as: .heic) }
+                } label: {
+                    Image(systemName: "square.and.arrow.down")
+                }
+                .menuIndicator(.hidden)
+                .frame(width: 22)
+                .onHover { if $0 { coordinator.showCaptureTooltip("Export") } else { coordinator.hideCaptureTooltip() } }
             } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.quaternary)
-                    .frame(width: 140, height: 104)
+                iconButton("Edit", "square.and.pencil") {
+                    coordinator.editCapture(entry.url)
+                }
+                iconButton("Pin", "pin") {
+                    coordinator.pinCapture(entry.url)
+                    coordinator.hideHistory()
+                }
+            }
+            iconButton("Delete", "trash", role: .destructive) {
+                store.remove(entry)
             }
         }
-        // Drag the capture's PNG straight out to Finder / another app.
-        .onDrag { NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider() }
+        .buttonStyle(IconActionButtonStyle())
+    }
+
+    private func iconButton(_ title: String, _ systemImage: String,
+                            role: ButtonRole? = nil, action: @escaping () -> Void) -> some View {
+        Button(role: role, action: action) {
+            Image(systemName: systemImage)
+        }
+        .onHover { hovering in
+            if hovering { coordinator.showCaptureTooltip(title) }
+            else { coordinator.hideCaptureTooltip() }
+        }
     }
 }
