@@ -10,6 +10,8 @@ struct EditorView: View {
     /// global slide-down overlay.
     @Environment(AppCoordinator.self) private var coordinator
     @State private var isStylePopoverPresented = false
+    /// The bespoke HSB color picker popover (13.2).
+    @State private var isColorPickerPresented = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
@@ -371,6 +373,10 @@ struct EditorView: View {
                 ForEach(AnnotationStyles.swatches, id: \.self) { hex in
                     swatch(hex)
                 }
+                customColorButton
+            }
+            if !editorState.recentColors.colors.isEmpty {
+                recentColorsRow
             }
             if showsTextControls {
                 fontPicker
@@ -491,16 +497,23 @@ struct EditorView: View {
         return (TextStyles.fontSizes + [size]).sorted()
     }
 
+    /// Routes a committed color pick to the bucket the popover is editing:
+    /// the selected callout's border, the active/selected text, or the active
+    /// annotation. Every path records the shared recents list (13.2).
+    private func applyColor(_ hex: String) {
+        if editorState.selectedZoomCalloutLayer != nil {
+            editorState.setCalloutBorderColor(hex)
+        } else if showsTextControls {
+            editorState.setTextColor(hex)
+        } else {
+            editorState.setAnnotationColor(hex)
+        }
+    }
+
     private func swatch(_ hex: String) -> some View {
         let isSelected = activeToolColorHex == hex
         return Button {
-            if editorState.selectedZoomCalloutLayer != nil {
-                editorState.setCalloutBorderColor(hex)
-            } else if showsTextControls {
-                editorState.setTextColor(hex)
-            } else {
-                editorState.setAnnotationColor(hex)
-            }
+            applyColor(hex)
         } label: {
             Circle()
                 .fill(Color(hex: hex))
@@ -514,6 +527,40 @@ struct EditorView: View {
                 }
         }
         .help(hex)
+    }
+
+    /// The shared recent-colors row (13.2): one click reapplies a color you
+    /// recently committed, regardless of which object you picked it on.
+    private var recentColorsRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Recent").font(.caption2).foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                ForEach(editorState.recentColors.colors, id: \.self) { hex in
+                    swatch(hex)
+                }
+            }
+        }
+    }
+
+    /// Opens the bespoke HSB color picker with eyedropper + hex entry (13.2).
+    private var customColorButton: some View {
+        Button {
+            isColorPickerPresented.toggle()
+        } label: {
+            Image(systemName: "eyedropper.halffull")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 22, height: 22)
+                .background(
+                    Circle().fill(.quaternary)
+                        .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1)))
+        }
+        .help("Custom Color…")
+        .popover(isPresented: $isColorPickerPresented, arrowEdge: .bottom) {
+            ColorPickerPopover(initialHex: activeToolColorHex) { hex in
+                applyColor(hex)
+            }
+        }
     }
 
     /// Stroke width slider with a live numeric readout. Drag previews without

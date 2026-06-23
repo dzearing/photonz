@@ -50,6 +50,9 @@ final class EditorState {
     /// Styling for new text blocks, set from the font picker. Persisted like
     /// annotation styles.
     private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
+    /// Recently committed colors, SHARED across annotations/text/borders (13.2).
+    /// Recorded on commit only (never on live preview) and persisted.
+    private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
     /// The text layer being re-edited inline. Hidden from renders while the
     /// canvas's editor overlay visually replaces it.
     private(set) var editingTextLayerID: UUID?
@@ -431,6 +434,7 @@ final class EditorState {
             annotationStyles.setColorHex(hex, for: activeTool)
         }
         saveAnnotationStyles()
+        recordRecentColor(hex: hex)
     }
 
     /// The shape a toolbar-popover style edit applies to: the selected
@@ -521,6 +525,7 @@ final class EditorState {
         perform { $0.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
         annotationStyles.setColorHex(hex, forShape: shape)
         saveAnnotationStyles()
+        recordRecentColor(hex: hex)
     }
 
     // MARK: - Zoom-callout inspector
@@ -566,6 +571,7 @@ final class EditorState {
     func setCalloutBorderColor(_ hex: String) {
         guard let layer = selectedZoomCalloutLayer else { return }
         perform { $0.updateLayer(id: layer.id) { $0.style.borderColorHex = hex } }
+        recordRecentColor(hex: hex)
     }
 
     func setCalloutBorderWidth(_ width: CGFloat) {
@@ -580,6 +586,29 @@ final class EditorState {
         dragPreviewGeneration += 1
         dragPreview = nil
         clearPreviewAfterNextFrame = false
+    }
+
+    // MARK: - Recent colors (13.2)
+
+    private static let recentColorsKey = "recentColors"
+
+    private static func loadRecentColors() -> RecentColors {
+        guard let data = UserDefaults.standard.data(forKey: recentColorsKey),
+              let recents = try? JSONDecoder().decode(RecentColors.self, from: data) else {
+            return RecentColors()
+        }
+        return recents
+    }
+
+    /// The single funnel for the shared recents list. Called from every COMMIT
+    /// path (not preview): annotation color, per-layer annotation color, text
+    /// color, callout border color, and LayerStyle border/shadow. Malformed hex
+    /// is ignored by `RecentColors.record`.
+    func recordRecentColor(hex: String) {
+        recentColors.record(hex: hex)
+        if let data = try? JSONEncoder().encode(recentColors) {
+            UserDefaults.standard.set(data, forKey: Self.recentColorsKey)
+        }
     }
 
     private static let annotationStylesKey = "annotationStyles"
@@ -656,6 +685,7 @@ final class EditorState {
         if let layer = selectedTextLayer { restyleSelectedText(layer, colorHex: hex) }
         textStyles.colorHex = hex
         saveTextStyles()
+        recordRecentColor(hex: hex)
     }
 
     // MARK: - Docked text inspector (targets a specific layer, independent of
@@ -675,6 +705,7 @@ final class EditorState {
         if let weight { textStyles.weight = weight }
         if let colorHex { textStyles.colorHex = colorHex }
         saveTextStyles()
+        if let colorHex { recordRecentColor(hex: colorHex) }
     }
 
     /// An inline edit began. Re-editing an existing layer adopts its style (so

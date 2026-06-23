@@ -427,6 +427,7 @@ struct EffectsInspector: View {
             set: { color in
                 if let hex = color.hexString {
                     editorState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
+                    editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
             .labelsHidden()
@@ -499,6 +500,7 @@ struct ShadowInspector: View {
             set: { color in
                 if let hex = color.hexString {
                     editorState.setLayerStyle(id: layer.id) { $0.shadow?.colorHex = hex }
+                    editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
             .labelsHidden()
