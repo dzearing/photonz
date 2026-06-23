@@ -28,6 +28,11 @@ final class VideoEditorState {
 
     /// Non-destructive trim window. Full-clip until the user drags a handle.
     private(set) var trim = VideoTrim(duration: 0)
+    /// Non-destructive crop region in natural-video-pixel space, top-left
+    /// origin (phase 13.4). Nil = full frame.
+    private(set) var crop: VideoCrop?
+    /// Whether the crop overlay is active (the user is choosing a region).
+    var isCropping = false
 
     /// Live playback head in seconds, updated by the periodic observer so the
     /// scrubber's playhead tracks playback.
@@ -169,6 +174,51 @@ final class VideoEditorState {
         seek(to: trim.outPoint)
     }
 
+    // MARK: - Crop editing (phase 13.4)
+
+    /// Begin cropping: show the overlay, seeding a full-frame region if none.
+    func beginCrop() {
+        guard naturalSize.width > 0, naturalSize.height > 0 else { return }
+        if crop == nil { crop = VideoCrop(fullFrame: naturalSize) }
+        isCropping = true
+        pause()
+    }
+
+    /// Replace the crop region (already in natural-video pixels; clamped here).
+    func setCropRect(_ rect: CGRect) {
+        crop = VideoCrop(rect: rect, videoSize: naturalSize, aspect: crop?.aspect ?? .free)
+    }
+
+    /// Set the crop aspect lock, re-fitting any existing crop (or starting one).
+    func setCropAspect(_ aspect: CropAspect) {
+        if var c = crop {
+            c.setAspect(aspect, videoSize: naturalSize)
+            crop = c
+        } else if naturalSize.width > 0 {
+            crop = VideoCrop(fullFrame: naturalSize, aspect: aspect)
+        }
+    }
+
+    /// Finish cropping, keeping the chosen region (cleared if it's full-frame).
+    func commitCrop() {
+        isCropping = false
+        if let c = crop, !c.isCropped(videoSize: naturalSize) { crop = nil }
+    }
+
+    /// Cancel cropping, dropping the region.
+    func cancelCrop() {
+        isCropping = false
+        crop = nil
+    }
+
+    /// Reset to the full frame.
+    func clearCrop() {
+        crop = nil
+        isCropping = false
+    }
+
     /// True when the recording has any edit that requires re-encoding on export.
-    var hasEdits: Bool { trim.isTrimmed }
+    var hasEdits: Bool {
+        trim.isTrimmed || (crop?.isCropped(videoSize: naturalSize) ?? false)
+    }
 }

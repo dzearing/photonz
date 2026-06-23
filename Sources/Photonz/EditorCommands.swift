@@ -137,6 +137,15 @@ struct EditorCommands: Commands {
             .keyboardShortcut("o", modifiers: [])
             .disabled(!hasVideo)
             Divider()
+            Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {
+                if let video {
+                    if video.isCropping { video.commitCrop() } else { video.beginCrop() }
+                }
+            }
+            .disabled(!hasVideo)
+            Button("Reset Crop") { video?.clearCrop() }
+                .disabled(!(video?.crop != nil))
+            Divider()
             Button("Export MP4…") {
                 if let video { coordinator.saveRecording(video, as: .mp4) }
             }

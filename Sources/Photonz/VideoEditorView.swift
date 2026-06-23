@@ -22,7 +22,11 @@ struct VideoEditorView: View {
 
                 if state.isReady {
                     VStack(spacing: 10) {
-                        TrimTimeline(state: state)
+                        if state.isCropping {
+                            cropRow
+                        } else {
+                            TrimTimeline(state: state)
+                        }
                         transportRow
                     }
                     .padding(.horizontal, 18)
@@ -44,6 +48,11 @@ struct VideoEditorView: View {
         if let player = state.player {
             VideoPlayerView(player: player)
                 .background(Color.black)
+                .overlay {
+                    if state.isCropping {
+                        VideoCropOverlay(state: state)
+                    }
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(radius: 12, y: 4)
         } else if let poster = state.poster {
@@ -66,6 +75,7 @@ struct VideoEditorView: View {
             }
             .buttonStyle(.plain)
             .help(state.isPlaying ? "Pause" : "Play")
+            .disabled(state.isCropping)
 
             Text(VideoTimecode.label(state.currentTime))
                 .font(.system(.caption, design: .monospaced))
@@ -79,11 +89,47 @@ struct VideoEditorView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            if let crop = state.crop, crop.isCropped(videoSize: state.naturalSize) {
+                Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))",
+                      systemImage: "crop")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !state.isCropping {
+                Button { state.beginCrop() } label: {
+                    Image(systemName: "crop")
+                }
+                .buttonStyle(.plain)
+                .help("Crop to Region")
+            }
 
             Text(VideoTimecode.label(state.duration))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Crop controls replace the timeline while a region is being chosen.
+    private var cropRow: some View {
+        HStack(spacing: 12) {
+            ForEach(CropAspect.allCases, id: \.self) { aspect in
+                Button(aspect.label) { state.setCropAspect(aspect) }
+                    .buttonStyle(.plain)
+                    .font(.caption.weight(state.crop?.aspect == aspect ? .bold : .regular))
+                    .foregroundStyle(state.crop?.aspect == aspect ? Color.accentColor : .secondary)
+            }
+            Spacer()
+            Button("Reset") { state.setCropRect(CGRect(origin: .zero, size: state.naturalSize)) }
+                .buttonStyle(.plain)
+                .font(.caption)
+            Button("Cancel") { state.cancelCrop() }
+                .keyboardShortcut(.cancelAction)
+            Button("Done") { state.commitCrop() }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+        }
+        .frame(height: 44)
     }
 }
 

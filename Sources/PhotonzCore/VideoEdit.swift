@@ -114,3 +114,67 @@ public struct VideoTrim: Codable, Sendable, Hashable {
         }
     }
 }
+
+/// Non-destructive crop region for a recording (phase 13.4). Stores a `CGRect`
+/// in **natural-video-pixel space, top-left origin** (the same convention the
+/// document model uses), plus an optional aspect lock. All editing reuses the
+/// image editor's `Crop`/`CropAspect`/`Geometry.clampCrop` geometry verbatim —
+/// only the storage and the clamp-to-video-size wrapper are new. The bottom-left
+/// flip and `preferredTransform` handling are re-done at export time, never here.
+public struct VideoCrop: Codable, Sendable, Hashable {
+    /// The kept region in natural-video pixels (top-left origin), always inside
+    /// `[0, videoSize]`.
+    public private(set) var rect: CGRect
+    /// Aspect lock the rect honors; `.free` = unconstrained.
+    public private(set) var aspect: CropAspect
+
+    /// A crop clamped to `videoSize`. A null/empty intersection falls back to a
+    /// minimal in-bounds rect (matching `Geometry.clampCrop`).
+    public init(rect: CGRect, videoSize: CGSize, aspect: CropAspect = .free) {
+        self.rect = Geometry.clampCrop(rect, toCanvas: videoSize)
+        self.aspect = aspect
+    }
+
+    /// The full-frame default (whole video). With an aspect lock, the largest
+    /// rect of that ratio, centered.
+    public init(fullFrame videoSize: CGSize, aspect: CropAspect = .free) {
+        let full = CGRect(origin: .zero, size: videoSize)
+        self.rect = Crop.fitted(full, to: aspect)
+        self.aspect = aspect
+    }
+
+    /// The exported pixel size — the crop rect's size (whole pixels).
+    public var outputSize: CGSize {
+        CGSize(width: rect.width.rounded(), height: rect.height.rounded())
+    }
+
+    /// True when the region is anything narrower than the whole video.
+    public func isCropped(videoSize: CGSize) -> Bool {
+        rect.standardized != CGRect(origin: .zero, size: videoSize)
+    }
+
+    /// Resize by dragging a handle, ratio-locked and clamped to the video — a
+    /// thin wrapper over `Crop.resize`.
+    public mutating func resize(dragging handle: ResizeHandle, to point: CGPoint, videoSize: CGSize) {
+        rect = Crop.resize(rect, dragging: handle, to: point, aspect: aspect, canvas: videoSize)
+    }
+
+    /// Translate the region, clamped to the video — wraps `Crop.moved`.
+    public mutating func move(by delta: CGPoint, videoSize: CGSize) {
+        rect = Crop.moved(rect, by: delta, in: videoSize)
+    }
+
+    /// A fresh region dragged from `anchor` to `current`, ratio-locked and
+    /// clamped — wraps `Crop.dragRect` (no-op when the drag is still empty).
+    public mutating func drag(anchor: CGPoint, current: CGPoint, videoSize: CGSize) {
+        if let r = Crop.dragRect(anchor: anchor, current: current, aspect: aspect, canvas: videoSize) {
+            rect = r
+        }
+    }
+
+    /// Change the aspect lock, re-fitting the current rect to it.
+    public mutating func setAspect(_ aspect: CropAspect, videoSize: CGSize) {
+        self.aspect = aspect
+        rect = Geometry.clampCrop(Crop.fitted(rect, to: aspect), toCanvas: videoSize)
+    }
+}
