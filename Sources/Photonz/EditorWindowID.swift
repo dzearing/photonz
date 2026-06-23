@@ -14,8 +14,18 @@ import Foundation
 ///   unique id means every New opens its own window.
 /// - `.clipboard` — a new window seeded from the clipboard image (⌘N, Preview
 ///   convention); unique id per invocation.
+/// - `.video` — a recording opened in the in-app video editor (phase 13.3),
+///   keyed by URL so re-opening the same recording focuses its window.
 enum EditorWindowID: Hashable, Codable, Sendable {
     case file(URL)
     case fresh(UUID)
     case clipboard(UUID)
+    case video(URL)
+
+    /// A video-editor id for `url`, standardized so the same recording always
+    /// hashes to the same window (re-opening focuses rather than duplicates),
+    /// mirroring how `.file` round-trips capture URLs.
+    static func video(standardizing url: URL) -> EditorWindowID {
+        .video(url.standardizedFileURL)
+    }
 }

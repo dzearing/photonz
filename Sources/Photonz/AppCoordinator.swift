@@ -87,10 +87,16 @@ final class AppCoordinator {
 
     // MARK: - Recordings (phase 12.4 / 12.5)
 
-    /// Open a recording in the system's default video player (the in-app video
-    /// editor arrives in phase 13).
+    /// Open a recording in the in-app video editor (phase 13.3): open/focus a
+    /// `.video` window for it and bring the app forward. Opening a recording for
+    /// playback is NOT TCC-gated (only capturing one is). Falls back to revealing
+    /// the file in Finder if the window action isn't wired up yet.
     func openRecording(_ url: URL) {
-        NSWorkspace.shared.open(url)
+        guard openWindowAction != nil else {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+            return
+        }
+        openWindow(.video(standardizing: url))
     }
 
     /// Convert a recording to an animated GIF / HEIC and save it where the user
@@ -114,6 +120,70 @@ final class AppCoordinator {
                 }
             }
         }
+    }
+
+    /// Export the recording open in the video editor, honoring its in-memory
+    /// trim/crop (phase 13.5). MP4 with no edits is a fast verbatim copy; with
+    /// trim/crop it's a real re-encode. GIF/HEIC always re-encode (trim+crop
+    /// threaded through). Runs off the main actor with basic error reporting.
+    func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
+                       quality: VideoExportQuality = .standard) {
+        guard let sourceURL = state.url else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [format.savePanelType]
+        panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let trim = state.trim
+        let crop = state.crop
+        let edited = state.hasEdits
+
+        if format == .mp4 {
+            if !edited {
+                // Fast path: no trim/crop → verbatim copy, no re-encode.
+                try? FileManager.default.removeItem(at: url)
+                try? FileManager.default.copyItem(at: sourceURL, to: url)
+                return
+            }
+            isExportingRecording = true
+            Task {
+                do {
+                    try await VideoExporter.exportMP4(from: sourceURL, to: url, trim: trim, crop: crop)
+                } catch {
+                    reportExportFailure(error)
+                }
+                isExportingRecording = false
+            }
+        } else {
+            isExportingRecording = true
+            Task {
+                do {
+                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
+                                                           trim: trim, crop: crop,
+                                                           targetFPS: quality.targetFPS,
+                                                           maxDimension: quality.maxDimension)
+                } catch {
+                    reportExportFailure(error)
+                }
+                isExportingRecording = false
+            }
+        }
+    }
+
+    /// True while a recording re-encode is in flight, so the editor can show a
+    /// progress/cancel affordance and disable re-entrant exports.
+    private(set) var isExportingRecording = false
+
+    private func reportExportFailure(_ error: Error) {
+        NSLog("Recording export failed: \(error)")
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn't export the recording"
+        alert.informativeText = String(describing: error)
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     /// Pin a capture as a floating, always-on-top window (phase 11.8).
