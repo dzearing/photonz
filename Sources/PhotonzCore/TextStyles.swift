@@ -68,6 +68,30 @@ public enum TextBuilder {
         return Layer(name: "Text", content: .text(content), frame: frame, style: style)
     }
 
+    /// Props-panel restyle of an existing text layer (13.1): applies only the
+    /// provided font face/size/weight/color, preserving identity and frame.
+    /// Mirrors `AnnotationBuilder.restyled`. The frame is intentionally left
+    /// untouched — re-measuring needs CoreText, so the app re-derives it via
+    /// `TextRasterizer.naturalSize`. When the color changes, the auto-contrast
+    /// shadow is refreshed so the new color stays legible; an unchanged color
+    /// leaves the existing (possibly custom) shadow alone. Non-text layers pass
+    /// through unchanged.
+    public static func restyled(layer: Layer, fontName: String? = nil,
+                                fontSize: CGFloat? = nil, weight: TextWeight? = nil,
+                                colorHex: String? = nil) -> Layer {
+        guard case .text(var content) = layer.content else { return layer }
+        if let fontName { content.fontName = fontName }
+        if let fontSize { content.fontSize = fontSize }
+        if let weight { content.weight = weight }
+        var updated = layer
+        if let colorHex, colorHex != content.colorHex {
+            content.colorHex = colorHex
+            updated.style.shadow = autoContrastShadow(forColorHex: colorHex)
+        }
+        updated.content = .text(content)
+        return updated
+    }
+
     /// A tight contour shadow opposing the text color's lightness: light text
     /// gets a dark halo, dark text a light one — keeps callouts readable on
     /// backgrounds that match the text.

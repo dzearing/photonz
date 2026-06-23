@@ -77,6 +77,7 @@ struct InspectorPanel: View {
             set.insert(.effects)
             set.insert(.shadow)
             if layer.annotation != nil { set.insert(.annotation) }
+            if case .text = layer.content { set.insert(.text) }
         }
         return set
     }
@@ -94,6 +95,10 @@ struct InspectorPanel: View {
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
+            }
+        case .text:
+            if let layer = selectedLayer, case .text = layer.content {
+                TextInspector(layer: layer)
             }
         case .effects:
             if let layer = selectedLayer {
@@ -137,6 +142,7 @@ struct InspectorPanel: View {
 enum InspectorSectionID: String, CaseIterable {
     case layers
     case annotation
+    case text
     case effects
     case shadow
 
@@ -144,6 +150,7 @@ enum InspectorSectionID: String, CaseIterable {
         switch self {
         case .layers: "Layers"
         case .annotation: "Annotation"
+        case .text: "Text"
         case .effects: "Effects"
         case .shadow: "Shadow"
         }
@@ -420,6 +427,7 @@ struct EffectsInspector: View {
             set: { color in
                 if let hex = color.hexString {
                     editorState.setLayerStyle(id: layer.id) { $0.borderColorHex = hex }
+                    editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
             .labelsHidden()
@@ -492,6 +500,7 @@ struct ShadowInspector: View {
             set: { color in
                 if let hex = color.hexString {
                     editorState.setLayerStyle(id: layer.id) { $0.shadow?.colorHex = hex }
+                    editorState.recordRecentColor(hex: hex)
                 }
             }), supportsOpacity: false)
             .labelsHidden()
@@ -641,5 +650,71 @@ struct AnnotationInspector: View {
             }
             .controlSize(.small)
         }
+    }
+}
+
+/// Docked per-layer text inspector (13.1): change a placed text element's font
+/// face, size, weight, and color. Mirrors `AnnotationInspector` — each change
+/// is one undo step and re-measures the layer frame via the core builder.
+struct TextInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let layer: Layer
+
+    private var content: TextContent? {
+        if case .text(let c)? = editorState.document?.layer(id: layer.id)?.content { return c }
+        return nil
+    }
+
+    var body: some View {
+        if let c = content {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Text").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    ColorPicker("Color", selection: Binding(
+                        get: { Color(hex: c.colorHex) },
+                        set: { if let hex = $0.hexString {
+                            editorState.setTextStyle(layerID: layer.id, colorHex: hex)
+                        } }),
+                        supportsOpacity: false)
+                        .labelsHidden().controlSize(.small)
+                }
+                Picker("Font", selection: Binding(
+                    get: { c.fontName },
+                    set: { editorState.setTextStyle(layerID: layer.id, fontName: $0) })) {
+                    ForEach(fontFamilies(current: c.fontName), id: \.self) { Text($0).tag($0) }
+                }
+                .pickerStyle(.menu).labelsHidden().controlSize(.small)
+                HStack(spacing: 8) {
+                    Picker("Size", selection: Binding(
+                        get: { c.fontSize },
+                        set: { editorState.setTextStyle(layerID: layer.id, fontSize: $0) })) {
+                        ForEach(sizes(current: c.fontSize), id: \.self) { Text("\(Int($0)) pt").tag($0) }
+                    }
+                    .pickerStyle(.menu).labelsHidden().controlSize(.small)
+                    Picker("Weight", selection: Binding(
+                        get: { c.weight },
+                        set: { editorState.setTextStyle(layerID: layer.id, weight: $0) })) {
+                        ForEach(TextWeight.allCases, id: \.self) {
+                            Text($0.rawValue.capitalized).tag($0)
+                        }
+                    }
+                    .pickerStyle(.menu).labelsHidden().controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
+    }
+
+    /// Curated families plus the current one if it's off-list (keeps it valid).
+    private func fontFamilies(current: String) -> [String] {
+        TextStyles.fonts.contains(current) ? TextStyles.fonts : TextStyles.fonts + [current]
+    }
+
+    /// Preset sizes plus the current one if it's off-list (e.g. a custom size).
+    private func sizes(current: CGFloat) -> [CGFloat] {
+        TextStyles.fontSizes.contains(current) ? TextStyles.fontSizes
+            : (TextStyles.fontSizes + [current]).sorted()
     }
 }

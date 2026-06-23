@@ -38,4 +38,12 @@ public struct RGBA: Hashable, Codable, Sendable {
     public var relativeLuminance: Double {
         0.2126 * r + 0.7152 * g + 0.0722 * b
     }
+
+    /// Canonical `#RRGGBB` (uppercase, sRGB, alpha dropped). Components are
+    /// clamped to 0...1 first so out-of-gamut values never overflow the byte
+    /// formatting. The inverse of `init?(hex:)` for the six-digit case.
+    public var hexString: String {
+        func byte(_ value: Double) -> Int { Int((min(max(value, 0), 1) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", byte(r), byte(g), byte(b))
+    }
 }

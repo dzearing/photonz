@@ -90,6 +90,20 @@ struct TextRasterizerTests {
         #expect(long.width > short.width)
     }
 
+    // 13.1: changing font size in the props panel re-measures the frame; a
+    // bigger font must never measure shorter for the same content/maxWidth.
+    @Test func naturalSizeGrowsMonotonicallyWithFontSize() {
+        let maxWidth: CGFloat = 200
+        var last = CGSize.zero
+        for size: CGFloat in [12, 18, 24, 32, 48, 64, 96] {
+            let measured = TextRasterizer.naturalSize(
+                TextContent(string: "Resize me", fontSize: size), maxWidth: maxWidth)
+            #expect(measured.height >= last.height,
+                    "height must not shrink as font size grows (\(size)pt)")
+            last = measured
+        }
+    }
+
     @Test func naturalSizeWrapsUnderMaxWidth() {
         let text = TextContent(string: "A reasonably long single line of text", fontSize: 24)
         let unconstrained = TextRasterizer.naturalSize(text)
