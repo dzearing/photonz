@@ -102,12 +102,40 @@ struct VideoEditorView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Crop to Region")
+
+                exportMenu
             }
 
             Text(VideoTimecode.label(state.duration))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var exportMenu: some View {
+        Menu {
+            Button("Export MP4…") { coordinator.saveRecording(state, as: .mp4) }
+            Menu("Export GIF") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) { coordinator.saveRecording(state, as: .gif, quality: quality) }
+                }
+            }
+            Menu("Export HEIC") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) { coordinator.saveRecording(state, as: .heic, quality: quality) }
+                }
+            }
+        } label: {
+            if coordinator.isExportingRecording {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "square.and.arrow.down")
+            }
+        }
+        .menuIndicator(.hidden)
+        .frame(width: 28)
+        .disabled(coordinator.isExportingRecording)
+        .help("Export…")
     }
 
     /// Crop controls replace the timeline while a region is being chosen.

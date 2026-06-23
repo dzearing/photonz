@@ -123,11 +123,67 @@ final class AppCoordinator {
     }
 
     /// Export the recording open in the video editor, honoring its in-memory
-    /// trim/crop. For phase 13.3 this delegates to the verbatim/animated path on
-    /// the source URL; phase 13.5 replaces the body with real trim+crop export.
-    func saveRecording(_ state: VideoEditorState, as format: RecordingFormat) {
-        guard let url = state.url else { return }
-        saveRecording(url, as: format)
+    /// trim/crop (phase 13.5). MP4 with no edits is a fast verbatim copy; with
+    /// trim/crop it's a real re-encode. GIF/HEIC always re-encode (trim+crop
+    /// threaded through). Runs off the main actor with basic error reporting.
+    func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
+                       quality: VideoExportQuality = .standard) {
+        guard let sourceURL = state.url else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [format.savePanelType]
+        panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
+        panel.canCreateDirectories = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let trim = state.trim
+        let crop = state.crop
+        let edited = state.hasEdits
+
+        if format == .mp4 {
+            if !edited {
+                // Fast path: no trim/crop → verbatim copy, no re-encode.
+                try? FileManager.default.removeItem(at: url)
+                try? FileManager.default.copyItem(at: sourceURL, to: url)
+                return
+            }
+            isExportingRecording = true
+            Task {
+                do {
+                    try await VideoExporter.exportMP4(from: sourceURL, to: url, trim: trim, crop: crop)
+                } catch {
+                    reportExportFailure(error)
+                }
+                isExportingRecording = false
+            }
+        } else {
+            isExportingRecording = true
+            Task {
+                do {
+                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
+                                                           trim: trim, crop: crop,
+                                                           targetFPS: quality.targetFPS,
+                                                           maxDimension: quality.maxDimension)
+                } catch {
+                    reportExportFailure(error)
+                }
+                isExportingRecording = false
+            }
+        }
+    }
+
+    /// True while a recording re-encode is in flight, so the editor can show a
+    /// progress/cancel affordance and disable re-entrant exports.
+    private(set) var isExportingRecording = false
+
+    private func reportExportFailure(_ error: Error) {
+        NSLog("Recording export failed: \(error)")
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn't export the recording"
+        alert.informativeText = String(describing: error)
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     /// Pin a capture as a floating, always-on-top window (phase 11.8).

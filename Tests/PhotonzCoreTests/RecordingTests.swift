@@ -77,4 +77,88 @@ struct RecordingTests {
                                               targetFPS: 15, maxDimension: 800)
         #expect(plan.frameCount == 1)
     }
+
+    @Test func untrimmedSampleTimeStartsAtZero() {
+        let plan = AnimatedExportPlanner.plan(duration: 2, sourceSize: CGSize(width: 100, height: 100),
+                                              targetFPS: 10, maxDimension: 800)
+        #expect(plan.trimStart == 0)
+        #expect(plan.sampleTime(0) == 0)
+    }
+
+    // MARK: - AnimatedExportPlanner with trim + crop (phase 13.5)
+
+    @Test func trimmedPlanFrameCountFromTrimmedDuration() {
+        // 10s clip trimmed to [2, 7] → 5s at 10fps = 50 frames.
+        let trim = VideoTrim(inPoint: 2, outPoint: 7, duration: 10)
+        let plan = AnimatedExportPlanner.plan(trim: trim,
+                                              sourceSize: CGSize(width: 400, height: 300),
+                                              targetFPS: 10, maxDimension: 800)
+        #expect(plan.frameCount == 50)
+        #expect(plan.frameDelay == 0.1)
+    }
+
+    @Test func trimmedPlanSampleTimeIsOffsetByTrimStart() {
+        let trim = VideoTrim(inPoint: 2, outPoint: 7, duration: 10)
+        let plan = AnimatedExportPlanner.plan(trim: trim,
+                                              sourceSize: CGSize(width: 400, height: 300),
+                                              targetFPS: 10, maxDimension: 800)
+        #expect(plan.trimStart == 2)
+        #expect(plan.sampleTime(0) == 2)
+        #expect(abs(plan.sampleTime(5) - 2.5) < 1e-9)
+    }
+
+    @Test func trimmedPlanSampleTimeStaysWithinTheWindow() {
+        let trim = VideoTrim(inPoint: 2, outPoint: 7, duration: 10)
+        let plan = AnimatedExportPlanner.plan(trim: trim,
+                                              sourceSize: CGSize(width: 400, height: 300),
+                                              targetFPS: 10, maxDimension: 800)
+        for i in 0..<plan.frameCount {
+            let t = plan.sampleTime(i)
+            #expect(t >= 2 - 1e-9 && t <= 7 + 1e-9)
+        }
+    }
+
+    @Test func planSizeDerivesFromCropOutputSize() {
+        // Crop down to 600×600 from a 1920×1080 source; max 800 keeps it as-is.
+        let trim = VideoTrim(duration: 4)
+        let crop = VideoCrop(rect: CGRect(x: 0, y: 0, width: 600, height: 600),
+                             videoSize: CGSize(width: 1920, height: 1080))
+        let plan = AnimatedExportPlanner.plan(trim: trim, crop: crop,
+                                              sourceSize: CGSize(width: 1920, height: 1080),
+                                              targetFPS: 15, maxDimension: 800)
+        #expect(plan.size == CGSize(width: 600, height: 600))
+    }
+
+    @Test func planSizeDownscalesCropBeyondMax() {
+        let trim = VideoTrim(duration: 4)
+        let crop = VideoCrop(rect: CGRect(x: 0, y: 0, width: 1600, height: 1080),
+                             videoSize: CGSize(width: 1920, height: 1080))
+        let plan = AnimatedExportPlanner.plan(trim: trim, crop: crop,
+                                              sourceSize: CGSize(width: 1920, height: 1080),
+                                              targetFPS: 15, maxDimension: 800)
+        // 1600×1080 fit into 800 → 800×540.
+        #expect(plan.size == CGSize(width: 800, height: 540))
+    }
+
+    // MARK: - Quality presets
+
+    @Test func qualityPresetMapsToFpsAndMaxDimension() {
+        #expect(VideoExportQuality.high.targetFPS == 24)
+        #expect(VideoExportQuality.high.maxDimension == 1280)
+        #expect(VideoExportQuality.standard.targetFPS == 15)
+        #expect(VideoExportQuality.standard.maxDimension == 800)
+        #expect(VideoExportQuality.small.targetFPS == 10)
+        #expect(VideoExportQuality.small.maxDimension == 480)
+    }
+
+    @Test func presetPlanUsesPresetFpsAndCap() {
+        let trim = VideoTrim(duration: 2)
+        let plan = AnimatedExportPlanner.plan(trim: trim, crop: nil,
+                                              sourceSize: CGSize(width: 1920, height: 1080),
+                                              quality: .small)
+        #expect(plan.frameDelay == 0.1) // 10fps
+        #expect(plan.frameCount == 20)
+        // 1920×1080 capped at 480 → 480×270.
+        #expect(plan.size == CGSize(width: 480, height: 270))
+    }
 }

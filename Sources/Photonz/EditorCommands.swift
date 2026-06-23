@@ -1,4 +1,5 @@
 import AppKit
+import PhotonzCore
 import SwiftUI
 
 /// Carries the key window's `EditorState` to the menu commands. The editor is
@@ -150,12 +151,20 @@ struct EditorCommands: Commands {
                 if let video { coordinator.saveRecording(video, as: .mp4) }
             }
             .disabled(!hasVideo)
-            Button("Export GIF…") {
-                if let video { coordinator.saveRecording(video, as: .gif) }
+            Menu("Export GIF") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) {
+                        if let video { coordinator.saveRecording(video, as: .gif, quality: quality) }
+                    }
+                }
             }
             .disabled(!hasVideo)
-            Button("Export HEIC…") {
-                if let video { coordinator.saveRecording(video, as: .heic) }
+            Menu("Export HEIC") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) {
+                        if let video { coordinator.saveRecording(video, as: .heic, quality: quality) }
+                    }
+                }
             }
             .disabled(!hasVideo)
         }

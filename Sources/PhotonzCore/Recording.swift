@@ -114,22 +114,60 @@ public struct AnimatedExportPlan: Hashable, Sendable {
     public let frameDelay: TimeInterval
     /// Output frame size (downscaled, never upscaled), aspect preserved.
     public let size: CGSize
+    /// Source presentation time the first frame is sampled at — the trim
+    /// in-point (0 for a full clip). Subsequent frames step by `frameDelay`
+    /// from here, staying within the trimmed window (phase 13.5).
+    public let trimStart: TimeInterval
 
-    public init(frameCount: Int, frameDelay: TimeInterval, size: CGSize) {
+    public init(frameCount: Int, frameDelay: TimeInterval, size: CGSize,
+                trimStart: TimeInterval = 0) {
         self.frameCount = frameCount
         self.frameDelay = frameDelay
         self.size = size
+        self.trimStart = trimStart
     }
 
-    /// The presentation time (seconds) to sample the i-th frame at, spread
-    /// evenly across the source duration.
+    /// The presentation time (seconds) to sample the i-th frame at: offset by
+    /// the trim in-point, then spread by `frameDelay` across the trimmed window.
     public func sampleTime(_ index: Int) -> TimeInterval {
-        Double(index) * frameDelay
+        trimStart + Double(index) * frameDelay
+    }
+}
+
+/// Size/quality presets for animated/MP4 export (phase 13.5). Maps a user
+/// choice to an fps + max-dimension cap. Pure so the menu and the planner agree.
+public enum VideoExportQuality: String, CaseIterable, Sendable, Codable {
+    case high
+    case standard
+    case small
+
+    public var targetFPS: Double {
+        switch self {
+        case .high: return 24
+        case .standard: return 15
+        case .small: return 10
+        }
+    }
+
+    public var maxDimension: CGFloat {
+        switch self {
+        case .high: return 1280
+        case .standard: return 800
+        case .small: return 480
+        }
+    }
+
+    public var label: String {
+        switch self {
+        case .high: return "High (24 fps, ≤1280px)"
+        case .standard: return "Standard (15 fps, ≤800px)"
+        case .small: return "Small (10 fps, ≤480px)"
+        }
     }
 }
 
 public enum AnimatedExportPlanner {
-    /// Plan a GIF/HEIC re-encode.
+    /// Plan a GIF/HEIC re-encode of the full clip.
     /// - duration: source length in seconds.
     /// - sourceSize: recorded pixel size.
     /// - targetFPS: desired frame rate (clamped to ≥1).
@@ -145,5 +183,34 @@ public enum AnimatedExportPlanner {
         let count = max(1, Int((max(0, duration) * fps).rounded()))
         let size = PinnedImageMetrics.fittedSize(imageSize: sourceSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size)
+    }
+
+    /// Plan a GIF/HEIC re-encode honoring a trim window and optional crop
+    /// (phase 13.5). The frame count comes from the trimmed duration; sample
+    /// times offset from the trim in-point; the output size derives from the
+    /// crop's pixel size (full frame when `crop` is nil), down-scaled to
+    /// `maxDimension`.
+    public static func plan(trim: VideoTrim,
+                            crop: VideoCrop? = nil,
+                            sourceSize: CGSize,
+                            targetFPS: Double = 15,
+                            maxDimension: CGFloat = 800) -> AnimatedExportPlan {
+        let fps = max(1, targetFPS)
+        let delay = 1.0 / fps
+        let trimmed = trim.effectiveDuration
+        let count = max(1, Int((max(0, trimmed) * fps).rounded()))
+        let baseSize = crop?.outputSize ?? sourceSize
+        let size = PinnedImageMetrics.fittedSize(imageSize: baseSize, maxDimension: maxDimension)
+        return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
+                                  trimStart: trim.inPoint)
+    }
+
+    /// Preset overload: derives fps + max-dimension from a `VideoExportQuality`.
+    public static func plan(trim: VideoTrim,
+                            crop: VideoCrop? = nil,
+                            sourceSize: CGSize,
+                            quality: VideoExportQuality) -> AnimatedExportPlan {
+        plan(trim: trim, crop: crop, sourceSize: sourceSize,
+             targetFPS: quality.targetFPS, maxDimension: quality.maxDimension)
     }
 }
