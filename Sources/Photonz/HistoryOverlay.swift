@@ -9,6 +9,10 @@ import SwiftUI
 struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
+    /// Coordinate space anchored at the overlay's top-left, so each icon can
+    /// report its frame for tooltip placement.
+    static let coordSpace = "captureHistoryOverlay"
+
     private var capture: CaptureCenter { coordinator.capture }
 
     var body: some View {
@@ -32,6 +36,7 @@ struct HistoryOverlay: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .padding(8)
+        .coordinateSpace(.named(Self.coordSpace))
     }
 
     private var topBar: some View {
@@ -135,7 +140,7 @@ private struct HistoryOverlayCell: View {
                 }
                 .menuIndicator(.hidden)
                 .frame(width: 22)
-                .onHover { if $0 { coordinator.showCaptureTooltip("Export") } else { coordinator.hideCaptureTooltip() } }
+                .historyTooltip("Export", coordinator: coordinator)
             } else {
                 iconButton("Edit", "square.and.pencil") {
                     coordinator.editCapture(entry.url)
@@ -157,9 +162,40 @@ private struct HistoryOverlayCell: View {
         Button(role: role, action: action) {
             Image(systemName: systemImage)
         }
-        .onHover { hovering in
-            if hovering { coordinator.showCaptureTooltip(title) }
-            else { coordinator.hideCaptureTooltip() }
-        }
+        .historyTooltip(title, coordinator: coordinator)
+    }
+}
+
+/// Captures a control's frame in the overlay's coordinate space and shows the
+/// floating tooltip anchored just below it on hover.
+private struct HistoryTooltipModifier: ViewModifier {
+    let title: String
+    let coordinator: AppCoordinator
+    @State private var frame: CGRect = .zero
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                GeometryReader { proxy in
+                    Color.clear.preference(key: HistoryIconFrameKey.self,
+                                           value: proxy.frame(in: .named(HistoryOverlay.coordSpace)))
+                }
+            )
+            .onPreferenceChange(HistoryIconFrameKey.self) { frame = $0 }
+            .onHover { hovering in
+                if hovering { coordinator.showCaptureTooltip(title, iconFrameInOverlay: frame) }
+                else { coordinator.hideCaptureTooltip() }
+            }
+    }
+}
+
+private struct HistoryIconFrameKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+private extension View {
+    func historyTooltip(_ title: String, coordinator: AppCoordinator) -> some View {
+        modifier(HistoryTooltipModifier(title: title, coordinator: coordinator))
     }
 }

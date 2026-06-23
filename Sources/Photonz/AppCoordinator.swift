@@ -144,10 +144,14 @@ final class AppCoordinator {
         tooltip.hide()
     }
 
-    /// History-icon tooltips (their own floating window, below the pointer).
-    func showCaptureTooltip(_ text: String) {
-        let mouse = NSEvent.mouseLocation
-        tooltip.show(text, below: CGPoint(x: mouse.x, y: mouse.y - 14))
+    /// History-icon tooltips (their own floating window). Anchored to the icon's
+    /// frame (`rect`, in the overlay's local top-left coordinate space) so the
+    /// tooltip sits just BELOW the icon — not wherever the pointer happens to be.
+    func showCaptureTooltip(_ text: String, iconFrameInOverlay rect: CGRect) {
+        guard let panel = historyOverlay.panelFrame else { return }
+        let centerX = panel.minX + rect.midX
+        let iconBottomScreenY = panel.maxY - rect.maxY  // overlay y is top-down; screen is bottom-up
+        tooltip.show(text, below: CGPoint(x: centerX, y: iconBottomScreenY - 6))
     }
 
     func hideCaptureTooltip() {

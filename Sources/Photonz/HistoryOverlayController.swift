@@ -27,6 +27,10 @@ final class HistoryOverlayController {
 
     var isShown: Bool { panel != nil }
 
+    /// The presented panel's screen frame (bottom-left origin) — used to convert
+    /// an icon's overlay-local frame to screen coords for anchoring tooltips.
+    var panelFrame: CGRect? { panel?.frame }
+
     private static let panelHeight: CGFloat = 208
 
     func show(content: some View, on screen: NSScreen) {
