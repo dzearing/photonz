@@ -136,7 +136,7 @@ final class AppCoordinator {
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        let trim = state.trim
+        let trim = state.exportTrim
         let crop = state.crop
         let edited = state.hasEdits
 

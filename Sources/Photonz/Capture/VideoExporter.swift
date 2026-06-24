@@ -41,6 +41,15 @@ enum VideoExporter {
         return CGSize(width: abs(oriented.width), height: abs(oriented.height))
     }
 
+    /// The video's nominal frame rate (fps), for frame-accurate ←/→ stepping in
+    /// the editor. Falls back to 30 if the track can't be read or reports 0.
+    static func frameRate(of url: URL) async -> Double {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let fps = try? await track.load(.nominalFrameRate), fps > 0 else { return 30 }
+        return Double(fps)
+    }
+
     /// A representative frame for the history thumbnail — sampled a hair into the
     /// clip so it isn't a black first frame.
     static func posterFrame(of url: URL, maxDimension: CGFloat = 600) async -> CGImage? {

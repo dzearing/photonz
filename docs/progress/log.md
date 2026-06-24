@@ -2,6 +2,16 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-24 — Video editor UX pass (transport, keyboard, grabbable trim, Apply Trim + ⌘Z)
+
+User-driven refinement of the 13.3 video editor in the running app. App-side only (no core/render changes); 461 tests still green in parallel.
+
+- **Transport redesign.** Play/pause now uses the shared `IconActionButtonStyle` (was `.buttonStyle(.plain)` — inconsistent + tiny hit target) at a 42pt diameter; crop/export adopt the same circular language. Added a step-back · play/pause · step-forward cluster.
+- **Keyboard transport** (`VideoEditorView.onKeyPress(phases: [.down, .repeat])`, view made `.focusable`): **space** toggles play/pause (key-down only); **←/→** skip ∓1s while playing and step ∓1 frame while paused; holding repeats continuously via key auto-repeat. Frame step uses the clip's real fps (new `VideoExporter.frameRate(of:)`). `VideoEditorState.stepBackward/stepForward/stepFrame/skip` clamp to the trim window. (Skip interval started at 5s, user changed to **1s**.)
+- **Trim handles fixed.** They were pinned to the track edges and half-clipped (~6px sliver under the glass padding) at the default full-clip state → un-grabbable, which read as "I can't trim." `TrimTimeline` now **insets** the track so end handles stay fully on-screen, gives each a wide invisible grab area (34pt), and resolves drags in a named coordinate space (no offset math).
+- **Apply Trim (in-editor re-seat)** — user picked this over export-only or file-overwrite. New applied-window model in `VideoEditorState`: `originalDuration` + `appliedIn/appliedOut`; `duration` is now the working span; player time ↔ working time is offset by `appliedIn` (remapped in the periodic observer + `seek`). `applyTrim()` folds the live trim into the window (timeline/duration/playhead re-seat to the kept range); `undoApplyTrim()` + a snapshot stack restore it. **Non-destructive to the file** — `exportTrim` composes the applied window with any live trim back into source-file seconds, so `AppCoordinator.saveRecording` exports the right range with no exporter change. **⌘Z** routes to the focused window's undo (image history, or applied-trim stack in a recording window); Redo stays image-only.
+- **NEEDS USER:** confirm trim handles drag + stick, Apply Trim re-seats the timeline, ⌘Z/↩ undo it, and an exported MP4 length matches the trimmed range.
+
 ## 2026-06-23 — Phase 13 built end-to-end (text props, color picker, in-app video editor) — 458 tests green
 
 Whole phase implemented in two parallel git worktrees (user chose parallel tracks), then merged to `main`. **458 tests pass** (was 412; +19 Track A, +27 Track B). Combined `swift build` clean. All 5 tasks marked `done` (code-complete + unit-tested); interactive/TCC verification still pending (see NEEDS USER).

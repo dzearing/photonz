@@ -18,16 +18,31 @@ final class VideoEditorState {
     private(set) var url: URL?
     /// The AVKit player driving the preview. Created on `seed`.
     private(set) var player: AVPlayer?
-    /// Source length in seconds (loaded asynchronously).
-    private(set) var duration: TimeInterval = 0
+    /// Full length of the source file in seconds (loaded asynchronously). Export
+    /// maps the working window back onto this.
+    private(set) var originalDuration: TimeInterval = 0
+    /// The working window into the source file, in original-file seconds. Apply
+    /// Trim narrows it; everything the UI shows (timeline, playhead, live trim) is
+    /// expressed relative to this window. Starts at the whole clip.
+    private(set) var appliedIn: TimeInterval = 0
+    private(set) var appliedOut: TimeInterval = 0
+    /// The working clip length the UI edits within — the applied window's span.
+    var duration: TimeInterval { max(0, appliedOut - appliedIn) }
+    /// Nominal frame rate (fps), for frame-accurate ←/→ stepping. Defaults to 30
+    /// until metadata loads.
+    private(set) var frameRate: Double = 30
     /// Natural pixel size of the video, oriented (after `preferredTransform`),
     /// for the crop overlay. `.zero` until loaded.
     private(set) var naturalSize: CGSize = .zero
     /// A poster frame for the empty/loading state.
     private(set) var poster: CGImage?
 
-    /// Non-destructive trim window. Full-clip until the user drags a handle.
+    /// Non-destructive live trim window, in working seconds. Full working clip
+    /// until the user drags a handle; Apply Trim folds it into the applied window.
     private(set) var trim = VideoTrim(duration: 0)
+    /// Snapshots for undoing Apply Trim. Observed so the Undo affordance toggles
+    /// live; a stack so repeated applies undo one at a time.
+    private var trimUndo: [TrimSnapshot] = []
     /// Non-destructive crop region in natural-video-pixel space, top-left
     /// origin (phase 13.4). Nil = full frame.
     private(set) var crop: VideoCrop?
@@ -84,7 +99,9 @@ final class VideoEditorState {
         let observer = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                self.currentTime = time.seconds.isFinite ? time.seconds : 0
+                // Player runs in original-file time; the UI works in window time.
+                let working = (time.seconds.isFinite ? time.seconds : self.appliedIn) - self.appliedIn
+                self.currentTime = min(max(0, working), self.duration)
                 // Loop back to the in-point when playback runs past the out-point.
                 if self.isPlaying, self.currentTime >= self.trim.outPoint - 1e-3 {
                     self.seek(to: self.trim.inPoint)
@@ -111,12 +128,16 @@ final class VideoEditorState {
         let seconds = await VideoExporter.duration(of: url)
         let oriented = await VideoExporter.orientedNaturalSize(of: url)
         let poster = await VideoExporter.posterFrame(of: url)
+        let fps = await VideoExporter.frameRate(of: url)
         // The asset reference is intentionally unused past metadata; AVPlayerItem
         // holds its own.
         _ = asset
-        self.duration = seconds
+        self.originalDuration = seconds
+        self.appliedIn = 0
+        self.appliedOut = seconds
         self.naturalSize = oriented
         self.poster = poster
+        self.frameRate = fps
         self.trim = VideoTrim(duration: seconds)
         self.isReady = seconds > 0
     }
@@ -143,11 +164,47 @@ final class VideoEditorState {
         isPlaying = false
     }
 
-    /// Seek the player to `seconds` (frame-accurate within tolerance).
+    /// Seconds an arrow-key skip moves while playing.
+    static let skipInterval: TimeInterval = 1
+
+    /// ←/→ behaviour, shared by the transport buttons and the key handler:
+    /// while playing, skip ±1s and keep playing; while paused, step a single
+    /// frame. Auto-repeat (key held) just calls these again, so paused stepping
+    /// scrubs frame-by-frame and playing scrubs in 1s jumps.
+    func stepBackward() {
+        isPlaying ? skip(by: -Self.skipInterval) : stepFrame(forward: false)
+    }
+
+    func stepForward() {
+        isPlaying ? skip(by: Self.skipInterval) : stepFrame(forward: true)
+    }
+
+    /// Move one frame (paused). Frame-accurate via a zero-tolerance seek; clamped
+    /// to the trim window.
+    func stepFrame(forward: Bool) {
+        pause()
+        let delta = (forward ? 1.0 : -1.0) / max(1, frameRate)
+        seekWithinTrim(currentTime + delta)
+    }
+
+    /// Skip by `seconds` without changing the play state (used for ±5s jumps
+    /// during playback). Clamped to the trim window.
+    func skip(by seconds: TimeInterval) {
+        seekWithinTrim(currentTime + seconds)
+    }
+
+    /// Seek, clamped to the active trim window so navigation never leaves the
+    /// region playback loops over.
+    private func seekWithinTrim(_ seconds: TimeInterval) {
+        seek(to: min(max(trim.inPoint, seconds), trim.outPoint))
+    }
+
+    /// Seek to `seconds` in **working** time (frame-accurate within tolerance);
+    /// the player itself is offset into the applied window.
     func seek(to seconds: TimeInterval) {
         guard let player else { return }
         let clamped = min(max(0, seconds), max(0, duration))
-        let time = CMTime(seconds: clamped, preferredTimescale: 600)
+        let time = CMTime(seconds: appliedIn + clamped, preferredTimescale: 600)
         player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         currentTime = clamped
     }
@@ -172,6 +229,38 @@ final class VideoEditorState {
         pause()
         trim.setOut(seconds, duration: duration)
         seek(to: trim.outPoint)
+    }
+
+    /// True when the live trim selects anything narrower than the working clip,
+    /// i.e. there's something to Apply.
+    var canApplyTrim: Bool { trim.isTrimmed }
+
+    /// True when at least one Apply Trim can be undone.
+    var canUndoTrim: Bool { !trimUndo.isEmpty }
+
+    /// Apply the live trim: shrink the working clip to `[in, out]`. The timeline,
+    /// duration, and playhead re-seat to the kept range so further edits compose
+    /// on top; export maps the cumulative window back onto the source file. The
+    /// source file is never modified — undo via `undoApplyTrim`.
+    func applyTrim() {
+        guard trim.isTrimmed else { return }
+        trimUndo.append(TrimSnapshot(appliedIn: appliedIn, appliedOut: appliedOut, trim: trim))
+        appliedOut = appliedIn + trim.outPoint
+        appliedIn += trim.inPoint
+        trim = VideoTrim(duration: duration)
+        pause()
+        seek(to: 0)
+    }
+
+    /// Undo the most recent Apply Trim, restoring the prior working window and its
+    /// live trim selection.
+    func undoApplyTrim() {
+        guard let prev = trimUndo.popLast() else { return }
+        appliedIn = prev.appliedIn
+        appliedOut = prev.appliedOut
+        trim = prev.trim
+        pause()
+        seek(to: trim.inPoint)
     }
 
     // MARK: - Crop editing (phase 13.4)
@@ -217,8 +306,23 @@ final class VideoEditorState {
         isCropping = false
     }
 
+    /// The trim to apply at export, in **source-file** seconds: the cumulative
+    /// applied window composed with any live (un-applied) trim.
+    var exportTrim: VideoTrim {
+        VideoTrim(inPoint: appliedIn + trim.inPoint,
+                  outPoint: appliedIn + trim.outPoint,
+                  duration: originalDuration)
+    }
+
     /// True when the recording has any edit that requires re-encoding on export.
     var hasEdits: Bool {
-        trim.isTrimmed || (crop?.isCropped(videoSize: naturalSize) ?? false)
+        exportTrim.isTrimmed || (crop?.isCropped(videoSize: naturalSize) ?? false)
+    }
+
+    /// A working-window snapshot for undoing Apply Trim.
+    private struct TrimSnapshot {
+        let appliedIn: TimeInterval
+        let appliedOut: TimeInterval
+        let trim: VideoTrim
     }
 }

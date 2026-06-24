@@ -9,6 +9,9 @@ import SwiftUI
 struct VideoEditorView: View {
     @Environment(VideoEditorState.self) private var state
     @Environment(AppCoordinator.self) private var coordinator
+    /// Keeps keyboard transport (space / ←·→) routed to this view rather than the
+    /// AVPlayerView. Re-asserted once the clip is ready.
+    @FocusState private var keyboardFocused: Bool
 
     var body: some View {
         ZStack {
@@ -41,6 +44,33 @@ struct VideoEditorView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .focusable(state.isReady)
+        .focusEffectDisabled()
+        .focused($keyboardFocused)
+        .onAppear { keyboardFocused = true }
+        .onChange(of: state.isReady) { _, ready in if ready { keyboardFocused = true } }
+        .onKeyPress(phases: [.down, .repeat]) { press in handleKey(press) }
+    }
+
+    /// Transport keys. Space toggles play/pause on key-down only (so holding it
+    /// doesn't stutter); ←/→ fire on key-down *and* auto-repeat, so holding an
+    /// arrow scrubs continuously — frame-by-frame while paused, in 5s jumps while
+    /// playing. Crop mode hands keys back (Esc/Return drive the crop sheet).
+    private func handleKey(_ press: KeyPress) -> KeyPress.Result {
+        guard state.isReady, !state.isCropping else { return .ignored }
+        switch press.key {
+        case .space:
+            if press.phase == .down { state.togglePlayPause() }
+            return .handled
+        case .leftArrow:
+            state.stepBackward()
+            return .handled
+        case .rightArrow:
+            state.stepForward()
+            return .handled
+        default:
+            return .ignored
+        }
     }
 
     @ViewBuilder
@@ -66,16 +96,7 @@ struct VideoEditorView: View {
 
     private var transportRow: some View {
         HStack(spacing: 14) {
-            Button {
-                state.togglePlayPause()
-            } label: {
-                Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(width: 30, height: 30)
-            }
-            .buttonStyle(.plain)
-            .help(state.isPlaying ? "Pause" : "Play")
-            .disabled(state.isCropping)
+            transportCluster
 
             Text(VideoTimecode.label(state.currentTime))
                 .font(.system(.caption, design: .monospaced))
@@ -83,11 +104,22 @@ struct VideoEditorView: View {
 
             Spacer()
 
-            if state.trim.isTrimmed {
+            if state.canApplyTrim {
                 Label(VideoTimecode.label(state.trim.effectiveDuration),
                       systemImage: "scissors")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Button("Apply Trim") { state.applyTrim() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .help("Shrink the working clip to the selected range")
+            }
+            if state.canUndoTrim {
+                Button { state.undoApplyTrim() } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(IconActionButtonStyle())
+                .help("Undo applied trim")
             }
             if let crop = state.crop, crop.isCropped(videoSize: state.naturalSize) {
                 Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))",
@@ -100,7 +132,7 @@ struct VideoEditorView: View {
                 Button { state.beginCrop() } label: {
                     Image(systemName: "crop")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(IconActionButtonStyle())
                 .help("Crop to Region")
 
                 exportMenu
@@ -110,6 +142,33 @@ struct VideoEditorView: View {
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Step-back · play/pause · step-forward, sharing the app's circular icon
+    /// design language. The step buttons follow the keyboard: ±5s while playing,
+    /// ±1 frame while paused (icons + tooltips reflect the active mode).
+    private var transportCluster: some View {
+        HStack(spacing: 8) {
+            Button { state.stepBackward() } label: {
+                Image(systemName: state.isPlaying ? "gobackward" : "backward.frame.fill")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help(state.isPlaying ? "Back 1 second (←)" : "Previous frame (←)")
+
+            Button { state.togglePlayPause() } label: {
+                Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 17, weight: .bold))
+            }
+            .buttonStyle(IconActionButtonStyle(diameter: 42))
+            .help(state.isPlaying ? "Pause (space)" : "Play (space)")
+
+            Button { state.stepForward() } label: {
+                Image(systemName: state.isPlaying ? "goforward" : "forward.frame.fill")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help(state.isPlaying ? "Forward 1 second (→)" : "Next frame (→)")
+        }
+        .disabled(state.isCropping)
     }
 
     private var exportMenu: some View {
