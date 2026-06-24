@@ -60,29 +60,28 @@ public enum TextRasterizer {
     /// trait alone doesn't reliably pick a heavier face, so this enumerates the
     /// family's upright faces and takes the one whose weight is closest to the
     /// model's `TextWeight`.
+    ///
+    /// Enumerating a family's faces (`CTFontDescriptorCreateMatchingFontDescriptors`)
+    /// round-trips to the font daemon (`fontd`) over XPC — expensive, and under
+    /// parallel load the synchronous reply can deadlock. The chosen face depends
+    /// only on (family, weight), never on point size, so we memoize the resolved
+    /// descriptor per `FontFaceKey` and apply the size fresh on every call. That
+    /// collapses repeated/concurrent lookups to a single XPC hit per family+weight.
     public static func font(for text: TextContent) -> CTFont {
-        let target = text.weight.fontWeightTrait
-        let family = CTFontDescriptorCreateWithAttributes(
-            [kCTFontFamilyNameAttribute: text.fontName] as CFDictionary)
-        let mandatory = Set([kCTFontFamilyNameAttribute as String]) as CFSet
-        if let faces = CTFontDescriptorCreateMatchingFontDescriptors(family, mandatory) as? [CTFontDescriptor] {
-            var best: (descriptor: CTFontDescriptor, distance: CGFloat)?
-            for face in faces {
-                guard let traits = CTFontDescriptorCopyAttribute(face, kCTFontTraitsAttribute) as? [String: Any] else { continue }
-                let symbolic = (traits[kCTFontSymbolicTrait as String] as? NSNumber)?.uint32Value ?? 0
-                guard symbolic & CTFontSymbolicTraits.traitItalic.rawValue == 0 else { continue }
-                let weight = (traits[kCTFontWeightTrait as String] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
-                let distance = abs(weight - target)
-                if distance < (best?.distance ?? .infinity) {
-                    best = (face, distance)
-                }
-            }
-            if let best {
-                return CTFontCreateWithFontDescriptor(best.descriptor, text.fontSize, nil)
-            }
+        let key = FontFaceKey(fontName: text.fontName, weight: text.weight)
+        let descriptor: CTFontDescriptor?
+        if let cached = faceCache.resolved(key) {
+            descriptor = cached
+        } else {
+            descriptor = bestFaceDescriptor(fontName: text.fontName, target: text.weight.fontWeightTrait)
+            faceCache.store(key, descriptor)
+        }
+        if let descriptor {
+            return CTFontCreateWithFontDescriptor(descriptor, text.fontSize, nil)
         }
         // Unknown family: name lookup, with the symbolic bold flag as the only
         // weight lever left.
+        let target = text.weight.fontWeightTrait
         let font = CTFontCreateWithName(text.fontName as CFString, text.fontSize, nil)
         if target >= TextWeight.semibold.fontWeightTrait,
            let bold = CTFontCreateCopyWithSymbolicTraits(font, text.fontSize, nil, .traitBold, .traitBold) {
@@ -90,6 +89,59 @@ public enum TextRasterizer {
         }
         return font
     }
+
+    /// The upright face in `fontName`'s family whose weight is closest to
+    /// `target`, or nil when the family isn't installed (caller falls back to a
+    /// plain name lookup). This is the only path that touches `fontd`.
+    private static func bestFaceDescriptor(fontName: String, target: CGFloat) -> CTFontDescriptor? {
+        let family = CTFontDescriptorCreateWithAttributes(
+            [kCTFontFamilyNameAttribute: fontName] as CFDictionary)
+        let mandatory = Set([kCTFontFamilyNameAttribute as String]) as CFSet
+        guard let faces = CTFontDescriptorCreateMatchingFontDescriptors(family, mandatory) as? [CTFontDescriptor] else {
+            return nil
+        }
+        var best: (descriptor: CTFontDescriptor, distance: CGFloat)?
+        for face in faces {
+            guard let traits = CTFontDescriptorCopyAttribute(face, kCTFontTraitsAttribute) as? [String: Any] else { continue }
+            let symbolic = (traits[kCTFontSymbolicTrait as String] as? NSNumber)?.uint32Value ?? 0
+            guard symbolic & CTFontSymbolicTraits.traitItalic.rawValue == 0 else { continue }
+            let weight = (traits[kCTFontWeightTrait as String] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+            let distance = abs(weight - target)
+            if distance < (best?.distance ?? .infinity) {
+                best = (face, distance)
+            }
+        }
+        return best?.descriptor
+    }
+
+    private struct FontFaceKey: Hashable {
+        let fontName: String
+        let weight: TextWeight
+    }
+
+    /// A resolved (family, weight) → face descriptor cache. CTFontDescriptor is
+    /// immutable and thread-safe, and every access here is serialized by `lock`,
+    /// so the unchecked-Sendable box is safe under Swift 6 strict concurrency.
+    /// A stored `nil` value records a known miss (family not installed) so the
+    /// fallback path isn't re-derived either.
+    private final class FontFaceCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var entries: [FontFaceKey: CTFontDescriptor?] = [:]
+
+        /// `.some(value)` = resolved (value may be nil for a known miss);
+        /// `nil` = not yet resolved.
+        func resolved(_ key: FontFaceKey) -> CTFontDescriptor?? {
+            lock.lock(); defer { lock.unlock() }
+            return entries[key]
+        }
+
+        func store(_ key: FontFaceKey, _ value: CTFontDescriptor?) {
+            lock.lock(); defer { lock.unlock() }
+            entries[key] = value
+        }
+    }
+
+    private static let faceCache = FontFaceCache()
 
     private static func attributedString(_ text: TextContent, font: CTFont? = nil) -> NSAttributedString {
         let rgba = RGBA(hex: text.colorHex) ?? RGBA(r: 1, g: 1, b: 1)

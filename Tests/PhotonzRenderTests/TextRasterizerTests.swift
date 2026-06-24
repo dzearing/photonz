@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreText
 import Foundation
 import Testing
 import PhotonzCore
@@ -116,6 +117,38 @@ struct TextRasterizerTests {
         // The inline editor needs a caret-height frame before any typing.
         let size = TextRasterizer.naturalSize(TextContent(string: "", fontSize: 24))
         #expect(size.height >= 24)
+    }
+
+    private func ctWeight(_ font: CTFont) -> CGFloat {
+        let traits = CTFontCopyTraits(font) as NSDictionary
+        return (traits[kCTFontWeightTrait as String] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+    }
+
+    @Test func fontResolutionScalesSizeFromTheSameFace() {
+        // The face is resolved (and cached) independent of size; size is applied
+        // fresh per call — so the same family at two sizes must agree on family
+        // and differ on point size.
+        let small = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 12))
+        let large = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 48))
+        #expect(CTFontCopyFamilyName(small) as String == CTFontCopyFamilyName(large) as String)
+        #expect(CTFontGetSize(small) == 12)
+        #expect(CTFontGetSize(large) == 48)
+    }
+
+    @Test func fontResolutionPicksAHeavierFaceForBold() {
+        // Caching the chosen face per (family, weight) must not collapse weights:
+        // bold resolves to a heavier face than regular in the same family.
+        let regular = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 24, weight: .regular))
+        let bold = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 24, weight: .bold))
+        #expect(ctWeight(bold) > ctWeight(regular), "bold should resolve to a heavier face than regular")
+    }
+
+    @Test func repeatedResolutionIsStable() {
+        // Cached and uncached paths must return the same face for the same input.
+        let first = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 30, weight: .medium))
+        let second = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 30, weight: .medium))
+        #expect(CTFontCopyPostScriptName(first) as String == CTFontCopyPostScriptName(second) as String)
+        #expect(CTFontGetSize(first) == CTFontGetSize(second))
     }
 
     @Test func textRendersWithoutClippingInsideNaturalSize() throws {
