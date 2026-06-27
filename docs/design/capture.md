@@ -182,9 +182,28 @@ AppKit/SwiftUI shell (`CaptureStore`).
   (document/history/render/viewport/tools) + resident **`AppCoordinator`**
   (`@MainActor @Observable`) owning `CaptureCenter` (capture + global hotkeys +
   `CaptureStore`) and the window-open intents. Agent lifecycle via an
-  `AppDelegate`: `.accessory` activation policy + `applicationShouldTerminate-
-  AfterLastWindowClosed = false`; the bundle adds `LSUIElement`. Menu commands
-  target the focused window through `@FocusedValue(\.editorState)`.
+  `AppDelegate`: `applicationShouldTerminateAfterLastWindowClosed = false`; the
+  bundle adds `LSUIElement`. Menu commands target the focused window through
+  `@FocusedValue(\.editorState)`.
+- **Hybrid activation policy (DYNAMIC, not always `.accessory`):** the app starts
+  `.accessory` (menu-bar agent, no Dock icon, windowless). When an editor/video
+  window opens it switches to **`.regular`** so editor windows are first-class
+  multi-document windows — Dock icon, ⌘` window cycling, click-the-Dock-icon-to-
+  return. `AppCoordinator.syncActivationPolicy()` (called from `openWindow` and a
+  `NSWindow.willCloseNotification` observer) drops back to `.accessory` when the
+  last editor window closes (editor windows = `!(is NSPanel) && .titled`; the
+  history/pinned/tooltip surfaces are panels). The menu-bar icon stays in both
+  modes.
+- **History is decoupled from editor windows:** `showHistory`/`flashNewCapture`
+  do **not** `NSApp.activate` — the history overlay is a non-activating floating
+  panel that orders itself front and becomes key on its own, so "Show History"
+  never drags editor windows forward.
+- **Window titles:** each editor window sets `.navigationTitle` from `EditorState.
+  windowTitle` (saved package name → opened file name → "Untitled N") / `VideoEditorState.windowTitle` (recording file name), so windows are tellable apart in the ⌘` switcher / Window menu / Dock (the title bar itself is hidden).
+- **Double-click-to-zoom:** `.hiddenTitleBar` leaves no real title bar, so
+  `CanvasNSView.mouseDown` zooms the window on a double-click that isn't on an
+  *editable* layer (matte, empty, or the locked base image — `document.hitTest`
+  returns nil); editable layers stay double-click-to-edit.
 - **Updater:** lightweight custom `version.json` check, no Sparkle.
 
 ## Open questions

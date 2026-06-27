@@ -52,6 +52,20 @@ struct AnnotationUpdatingTests {
         let updated = AnnotationBuilder.updating(layer, start: .zero, end: CGPoint(x: 5, y: 5))
         #expect(updated == layer)
     }
+
+    @Test func textLayerResizesWidthOnly() {
+        let layer = Layer(name: "Text", content: .text(TextContent(string: "hi")),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 30))
+        #expect(layer.allowsFrameResize == true)
+        #expect(layer.resizeWidthOnly == true)
+    }
+
+    @Test func imageLayerResizesFreelyInBothAxes() {
+        let layer = Layer(name: "Image", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
+                          frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(layer.allowsFrameResize == true)
+        #expect(layer.resizeWidthOnly == false)
+    }
 }
 
 @Suite("AnnotationBuilder.resized")
@@ -242,12 +256,14 @@ struct AnnotationEndpointHandleTests {
         }
     }
 
-    // 3.5 decision: text never frame-resizes (render re-wraps/rescales at frame
-    // size, which is unpredictable). Text size changes go through the font picker.
-    @Test func textLayersDoNotFrameResize() {
+    // Phase 13: text frame-resizes WIDTH-only (the renderer re-wraps to the new
+    // width); it has no endpoint handles. (Reverses the original 3.5 decision per
+    // user request — corner/edge resize must re-wrap, even when rotated.)
+    @Test func textLayersResizeWidthOnly() {
         let layer = Layer(name: "Text", content: .text(TextContent(string: "hi")),
                           frame: CGRect(x: 0, y: 0, width: 100, height: 30))
-        #expect(!layer.allowsFrameResize)
+        #expect(layer.allowsFrameResize)
+        #expect(layer.resizeWidthOnly)
         #expect(!layer.hasEndpointHandles)
     }
 

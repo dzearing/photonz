@@ -5,13 +5,28 @@ import Foundation
 public enum ResizeHandle: String, CaseIterable, Sendable {
     case topLeft, top, topRight, left, right, bottomLeft, bottom, bottomRight
 
-    var movesMinX: Bool { self == .topLeft || self == .left || self == .bottomLeft }
-    var movesMaxX: Bool { self == .topRight || self == .right || self == .bottomRight }
-    var movesMinY: Bool { self == .topLeft || self == .top || self == .topRight }
-    var movesMaxY: Bool { self == .bottomLeft || self == .bottom || self == .bottomRight }
+    public var movesMinX: Bool { self == .topLeft || self == .left || self == .bottomLeft }
+    public var movesMaxX: Bool { self == .topRight || self == .right || self == .bottomRight }
+    public var movesMinY: Bool { self == .topLeft || self == .top || self == .topRight }
+    public var movesMaxY: Bool { self == .bottomLeft || self == .bottom || self == .bottomRight }
 
     public var isCorner: Bool {
         (movesMinX || movesMaxX) && (movesMinY || movesMaxY)
+    }
+
+    /// The handle diagonally/axis opposite this one — the anchor that should stay
+    /// put during a resize.
+    public var opposite: ResizeHandle {
+        switch self {
+        case .topLeft: .bottomRight
+        case .top: .bottom
+        case .topRight: .bottomLeft
+        case .left: .right
+        case .right: .left
+        case .bottomLeft: .topRight
+        case .bottom: .top
+        case .bottomRight: .topLeft
+        }
     }
 }
 
@@ -72,5 +87,26 @@ public enum Handles {
             r.size.width = w
         }
         return r
+    }
+
+    /// Shift `newFrame` so the corner/edge opposite `handle` stays fixed in
+    /// **screen** space under `transform`. Frame resize anchors the opposite
+    /// corner in untransformed space, but a rotated/skewed layer is drawn around
+    /// its frame *center* — which moves when the frame resizes — so without this
+    /// the anchored corner swings on screen (the "resize after rotate is broken"
+    /// bug). Identity transforms are returned unchanged. Works for any `newFrame`
+    /// (including one whose height was re-derived, e.g. text re-wrap), since it
+    /// only adds a translation.
+    public static func anchoredFrame(start: CGRect, proposed newFrame: CGRect,
+                                     handle: ResizeHandle, transform: LayerTransform) -> CGRect {
+        guard !transform.isIdentity else { return newFrame }
+        let anchor = handle.opposite
+        let oldCenter = CGPoint(x: start.midX, y: start.midY)
+        let newCenter = CGPoint(x: newFrame.midX, y: newFrame.midY)
+        let screenOld = point(for: anchor, in: start)
+            .applying(transform.affineTransform(around: oldCenter))
+        let screenNew = point(for: anchor, in: newFrame)
+            .applying(transform.affineTransform(around: newCenter))
+        return newFrame.offsetBy(dx: screenOld.x - screenNew.x, dy: screenOld.y - screenNew.y)
     }
 }

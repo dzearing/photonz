@@ -16,6 +16,9 @@ import SwiftUI
 final class VideoEditorState {
     /// The recording being edited; nil until `seed`.
     private(set) var url: URL?
+    /// Window title (the recording's file name) so video windows are tellable
+    /// apart in the ⌘` switcher / Window menu / Dock.
+    var windowTitle: String { url?.lastPathComponent ?? "Recording" }
     /// The AVKit player driving the preview. Created on `seed`.
     private(set) var player: AVPlayer?
     /// Full length of the source file in seconds (loaded asynchronously). Export

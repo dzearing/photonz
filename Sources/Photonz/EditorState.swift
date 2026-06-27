@@ -90,6 +90,27 @@ final class EditorState {
     /// Override-in-place vs Save-as-new.
     private(set) var sourceCaptureURL: URL?
 
+    /// The file this window was opened from (screenshot/image/package), for the
+    /// window title. Distinct from `documentURL`, which is only set once saved as
+    /// a `.photonz` package.
+    private(set) var openedFileURL: URL?
+
+    /// "Untitled N" name for a brand-new (unsaved) window, assigned once at seed
+    /// so windows are tellable apart in the ⌘` switcher / Window menu / Dock.
+    private(set) var untitledName = "Untitled"
+    private static var untitledCount = 0
+    private static func nextUntitledName() -> String {
+        untitledCount += 1
+        return "Untitled \(untitledCount)"
+    }
+
+    /// The window title: the saved package name, else the opened file's name,
+    /// else "Untitled N". Reactive — updates when the document is saved.
+    var windowTitle: String {
+        if let url = documentURL ?? openedFileURL { return url.lastPathComponent }
+        return untitledName
+    }
+
     /// The .photonz document package type. The bundle's Info.plist exports
     /// the same identifier so Finder treats packages as files.
     static let photonzType = UTType(exportedAs: "com.photonz.document", conformingTo: .package)
@@ -134,14 +155,16 @@ final class EditorState {
         switch windowID {
         case .file(let url):
             openImage(at: url)
+            openedFileURL = url
             // A file opened from the capture folder can round-trip back to history.
             if url.deletingLastPathComponent().standardizedFileURL == capture.store.directory.standardizedFileURL {
                 sourceCaptureURL = url
             }
         case .clipboard:
             newFromClipboard()
+            untitledName = Self.nextUntitledName()
         case .fresh:
-            break // empty editor; the onboarding card guides the next step
+            untitledName = Self.nextUntitledName() // empty editor; onboarding card guides next step
         case .video:
             break // routed to the video editor (VideoEditorState), never here
         }
@@ -658,7 +681,8 @@ final class EditorState {
                 l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
                                          weight: weight, colorHex: colorHex)
                 if case .text(let content) = l.content {
-                    let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+                    let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
+                                                          minWidth: TextRasterizer.minimumTextWidth)
                     l.frame = CGRect(origin: l.frame.origin, size: size)
                 }
             }
@@ -734,7 +758,8 @@ final class EditorState {
             if isEmpty {
                 perform { $0.removeLayer(id: layerID) }
             } else {
-                let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+                let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
+                                                      minWidth: TextRasterizer.minimumTextWidth)
                 perform { document in
                     document.updateLayer(id: layerID) {
                         $0.content = .text(content)
@@ -747,7 +772,8 @@ final class EditorState {
             }
         } else {
             guard !isEmpty else { return }
-            let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth)
+            let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
+                                                  minWidth: TextRasterizer.minimumTextWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
             perform { $0.addLayer(layer) }
             // One-shot text placement reverts to select (re-edits run with the
@@ -1052,9 +1078,11 @@ final class EditorState {
         let generation = dragPreviewGeneration
         guard let doc = document, let layer = doc.layer(id: id) else { return }
         // Zoom callouts can't be sprited: their content samples the backdrop,
-        // and the leader lines must track the frame live. Leaving the preview
-        // nil falls back to full re-renders per move, which keeps both right.
+        // and the leader lines must track the frame live. Text can't either: it
+        // re-wraps on resize, so a stretched start-bitmap would distort glyphs.
+        // Both fall back to full re-renders per move, which keeps them right.
         guard layer.zoomCallout == nil else { return }
+        if case .text = layer.content { return }
         let padding = layer.style.previewPadding
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer

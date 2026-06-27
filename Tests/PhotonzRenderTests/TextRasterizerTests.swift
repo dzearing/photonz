@@ -113,6 +113,25 @@ struct TextRasterizerTests {
         #expect(wrapped.height > unconstrained.height * 1.5, "wrapping should add lines")
     }
 
+    @Test func naturalSizeHonorsMinWidth() {
+        // A short caption floors at the minimum width instead of collapsing to a
+        // few glyphs wide.
+        let unfloored = TextRasterizer.naturalSize(TextContent(string: ".", fontSize: 24))
+        let floored = TextRasterizer.naturalSize(TextContent(string: ".", fontSize: 24), minWidth: 140)
+        #expect(unfloored.width < 140)
+        #expect(floored.width >= 140)
+        // The floor never shrinks height.
+        #expect(floored.height == unfloored.height)
+    }
+
+    @Test func minWidthDoesNotPreventWrapping() {
+        // Min width only floors a SHORT line; a long string still wraps at maxWidth.
+        let long = TextContent(string: "the quick brown fox jumps over the lazy dog again", fontSize: 24)
+        let wrapped = TextRasterizer.naturalSize(long, maxWidth: 160, minWidth: 80)
+        #expect(wrapped.width <= 160 + 1)
+        #expect(wrapped.height >= 2 * 24)
+    }
+
     @Test func naturalSizeOfEmptyStringStillHasALineOfHeight() {
         // The inline editor needs a caret-height frame before any typing.
         let size = TextRasterizer.naturalSize(TextContent(string: "", fontSize: 24))
@@ -141,6 +160,60 @@ struct TextRasterizerTests {
         let regular = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 24, weight: .regular))
         let bold = TextRasterizer.font(for: TextContent(string: "x", fontName: "Helvetica Neue", fontSize: 24, weight: .bold))
         #expect(ctWeight(bold) > ctWeight(regular), "bold should resolve to a heavier face than regular")
+    }
+
+    /// Alpha of a single pixel (premultiplied-last sRGB).
+    private func pixelAlpha(_ image: CGImage, x: Int, y: Int) -> UInt8 {
+        var data = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        let ctx = CGContext(data: &data, width: image.width, height: image.height,
+                            bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return data[(y * image.width + x) * 4 + 3]
+    }
+
+    @Test func textBorderOutlinesGlyphsNotTheBox() throws {
+        // A border on text strokes the LETTERS, not the bounding box.
+        let text = TextContent(string: "I", fontSize: 48, colorHex: "#FFFFFF")
+        let size = CGSize(width: 120, height: 80)   // generous box; "I" is top-left
+        let bordered = try #require(TextRasterizer.rasterize(text, size: size,
+                                                             borderWidth: 5, borderColorHex: "#FF0000"))
+        let plain = try #require(TextRasterizer.rasterize(text, size: size))
+
+        // The outline adds red ink that the plain render doesn't have.
+        #expect(inkCount(bordered, r: 200...255, g: 0...70, b: 0...70) > 20)
+        #expect(inkCount(plain, r: 200...255, g: 0...70, b: 0...70) == 0)
+        // A box border would fill the far corner; a glyph outline leaves it clear.
+        #expect(pixelAlpha(bordered, x: Int(size.width) - 1, y: Int(size.height) - 1) == 0)
+        // The border grows OUTWARD: the white glyph fill is preserved, not eaten
+        // into by a centered stroke.
+        let whiteBordered = inkCount(bordered, r: 200...255, g: 200...255, b: 200...255)
+        let whitePlain = inkCount(plain, r: 200...255, g: 200...255, b: 200...255)
+        #expect(whiteBordered >= whitePlain * 9 / 10,
+                "outer border must keep the glyph fill (bordered=\(whiteBordered) plain=\(whitePlain))")
+    }
+
+    @Test func curatedFontsResolveToDistinctRealFonts() {
+        // Every font in the picker must render as a real, distinct face — the bug
+        // was SF Pro / SF Mono / New York all silently falling back to Helvetica.
+        var families: [String] = []
+        for name in TextStyles.fonts {
+            let font = TextRasterizer.font(for: TextContent(string: "Hi", fontName: name, fontSize: 24))
+            let ps = CTFontCopyPostScriptName(font) as String
+            #expect(ps != "Helvetica", "\(name) silently fell back to Helvetica")
+            families.append(CTFontCopyFamilyName(font) as String)
+        }
+        #expect(Set(families).count == TextStyles.fonts.count,
+                "curated fonts must be visually distinct, got \(families)")
+    }
+
+    @Test func monospacedFontMeasuresDifferentlyThanProportional() {
+        let s = "iiiwww"
+        let mono = TextRasterizer.naturalSize(TextContent(string: s, fontName: "SF Mono", fontSize: 24))
+        let prop = TextRasterizer.naturalSize(TextContent(string: s, fontName: "SF Pro", fontSize: 24))
+        #expect(abs(mono.width - prop.width) > 1,
+                "mono vs proportional advances should differ (mono=\(mono.width) prop=\(prop.width))")
     }
 
     @Test func repeatedResolutionIsStable() {

@@ -297,6 +297,30 @@ final class CanvasNSView: NSView {
         return p.applying(layer.transform.affineTransform(around: center).inverted())
     }
 
+    /// The resized frame for a handle drag: the standard opposite-anchor resize,
+    /// plus — for text — width-only sizing with a re-wrapped height (the top edge
+    /// stays put, the block grows downward), plus anchor compensation so the
+    /// corner opposite the dragged handle stays fixed in screen space under any
+    /// rotation/skew (a plain resize would swing it — the "resize after rotate"
+    /// bug).
+    private func resizedFrame(for layer: Layer?, start: CGRect, handle: ResizeHandle,
+                             pointer p: CGPoint, preserveAspect: Bool) -> CGRect {
+        let local = handleSpacePoint(p, layer: layer)
+        var frame = Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
+        if let layer, layer.resizeWidthOnly, case .text(let content) = layer.content {
+            let w = max(frame.width, TextRasterizer.minimumTextWidth)
+            let measured = TextRasterizer.naturalSize(content, maxWidth: w,
+                                                      minWidth: TextRasterizer.minimumTextWidth)
+            let minX = handle.movesMinX ? frame.maxX - w : frame.minX
+            frame = CGRect(x: minX, y: start.minY, width: w, height: measured.height)
+        }
+        if let layer {
+            frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,
+                                          transform: layer.transform)
+        }
+        return frame
+    }
+
     /// The rotate knob's position in document coordinates: floated off the
     /// midpoint of the layer's (transformed) top edge, 18 screen points out.
     private func rotateKnobPoint(for layer: Layer, zoom: CGFloat) -> CGPoint? {
@@ -463,11 +487,13 @@ final class CanvasNSView: NSView {
         }
         window?.makeFirstResponder(self)
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
-        // Double-click on the empty surround behind the image performs the
-        // standard window title-bar action (zoom/minimize). `.hiddenTitleBar`
-        // removes the title bar, so without this that gesture does nothing.
-        if event.clickCount == 2,
-           !CGRect(origin: .zero, size: viewport.documentSize).contains(p) {
+        // Double-click the window background — the matte OR the locked base image,
+        // i.e. anywhere that isn't an editable layer — performs the standard
+        // window zoom. `.hiddenTitleBar` leaves no real title bar to double-click,
+        // and on an image that fills the window the matte alone wasn't reachable,
+        // so this makes "double-click the bg to maximize" work everywhere. Editable
+        // layers (text/annotations) stay double-click-to-edit.
+        if event.clickCount == 2, document?.hitTest(p, zoom: viewport.zoom) == nil {
             performWindowTitleBarAction()
             return
         }
@@ -628,9 +654,8 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if var drag = resizeDrag {
             let layer = document?.layer(id: drag.layerID)
-            drag.frame = Handles.resize(drag.startFrame, dragging: drag.handle,
-                                        to: handleSpacePoint(p, layer: layer),
-                                        preserveAspect: event.modifierFlags.contains(.shift))
+            drag.frame = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
+                                      pointer: p, preserveAspect: event.modifierFlags.contains(.shift))
             resizeDrag = drag
             onFramePreview(drag.layerID, drag.frame)
             refreshOverlays()
@@ -734,6 +759,16 @@ final class CanvasNSView: NSView {
         if tool == .crop, event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
             cropDrag = nil
             onCropCommit()
+            return
+        }
+        // Enter / Return edits the selected text layer's content (same as a
+        // double-click). Only when idle — while the inline editor is up the
+        // NSTextView owns Return (newline).
+        if event.keyCode == 36 || event.keyCode == 76,
+           moveDrag == nil, resizeDrag == nil, transformDrag == nil,
+           let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked,
+           case .text = layer.content {
+            beginTextSession(layerID: id, at: layer.frame.origin)
             return
         }
         // Delete / forward-delete removes the selected (unlocked) layer.
@@ -1507,7 +1542,8 @@ final class CanvasNSView: NSView {
         }
         textSession = TextEditSession(layerID: layerID, origin: origin)
 
-        let editor = NSTextView()
+        let editor = InlineTextView()
+        editor.onCommit = { [weak self] in self?.commitTextSession() }
         editor.isRichText = false
         editor.allowsUndo = true
         editor.drawsBackground = false
@@ -1519,7 +1555,10 @@ final class CanvasNSView: NSView {
         editor.isHorizontallyResizable = false
         editor.textContainerInset = .zero
         editor.textContainer?.lineFragmentPadding = 0
-        editor.textContainer?.widthTracksTextView = true
+        // The container wraps at an explicit cap (layoutTextEditor) while the
+        // editor frame hugs the typed text, so the box grows with content instead
+        // of spanning to the canvas edge.
+        editor.textContainer?.widthTracksTextView = false
         editor.wantsLayer = true
         editor.layer?.borderColor = NSColor.controlAccentColor.cgColor
         editor.layer?.borderWidth = 1
@@ -1566,21 +1605,37 @@ final class CanvasNSView: NSView {
         layoutTextEditor()
     }
 
-    /// Positions the editor over the session origin and sizes it: wrap width
-    /// runs to the canvas's right edge (commit re-measures with the same
-    /// width), height hugs the laid-out text.
+    /// The wrap cap (document points) for a text block placed at `origin`: the
+    /// box wraps at 60% of the canvas, but never past the right edge and never
+    /// below the minimum width. The committed frame re-measures with the same cap.
+    private func textWrapWidth(origin: CGPoint) -> CGFloat {
+        guard let viewport else { return TextRasterizer.minimumTextWidth }
+        let toEdge = viewport.documentSize.width - origin.x
+        let cap = viewport.documentSize.width * 0.6
+        return max(min(toEdge, cap), TextRasterizer.minimumTextWidth)
+    }
+
+    /// Positions the editor over the session origin and sizes it: the box wraps
+    /// at `textWrapWidth` but its frame HUGS the laid-out text (floored at the
+    /// minimum width), so it grows with what you type instead of spanning to the
+    /// canvas edge. Height hugs the laid-out text.
     private func layoutTextEditor() {
         guard let editor = textEditor, let viewport, let session = textSession else { return }
         let topLeft = viewport.viewPoint(fromDocument: session.origin)
-        let docWidth = max(viewport.documentSize.width - session.origin.x, 20)
-        let width = docWidth * viewport.zoom
+        let capView = textWrapWidth(origin: session.origin) * viewport.zoom
+        let minView = TextRasterizer.minimumTextWidth * viewport.zoom
+        var contentWidth = minView
         var height = (editor.font?.pointSize ?? 20) * 1.4
         if let container = editor.textContainer, let layoutManager = editor.layoutManager {
-            container.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
+            container.containerSize = NSSize(width: capView, height: .greatestFiniteMagnitude)
             layoutManager.ensureLayout(for: container)
-            height = max(height, layoutManager.usedRect(for: container).height + 2)
+            let used = layoutManager.usedRect(for: container)
+            // Hug the longest laid-out line (+ caret slack), floored at the
+            // minimum and capped at the wrap width.
+            contentWidth = min(capView, max(minView, ceil(used.width) + 3))
+            height = max(height, used.height + 2)
         }
-        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: width, height: ceil(height))
+        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and
@@ -1597,7 +1652,8 @@ final class CanvasNSView: NSView {
     private func commitTextSession() {
         guard let session = textSession, let editor = textEditor else { return }
         let string = editor.string
-        let maxWidth = max((viewport?.documentSize.width ?? .greatestFiniteMagnitude) - session.origin.x, 20)
+        // Same wrap cap the live editor used, so layout doesn't shift on commit.
+        let maxWidth = textWrapWidth(origin: session.origin)
         teardownTextSession()
         onTextCommit(session.layerID, session.origin, string, maxWidth)
     }
@@ -1641,5 +1697,20 @@ extension CanvasNSView: NSTextViewDelegate {
             return true
         }
         return false
+    }
+}
+
+/// The inline text editor. A plain `NSTextView` treats Return as a newline; this
+/// subclass commits the edit on **⌘Return** (and keypad ⌘Enter) via `onCommit`,
+/// leaving plain Return to insert a line break.
+private final class InlineTextView: NSTextView {
+    var onCommit: () -> Void = {}
+
+    override func keyDown(with event: NSEvent) {
+        if (event.keyCode == 36 || event.keyCode == 76), event.modifierFlags.contains(.command) {
+            onCommit()
+            return
+        }
+        super.keyDown(with: event)
     }
 }

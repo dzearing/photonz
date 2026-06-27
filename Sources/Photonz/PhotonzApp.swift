@@ -91,6 +91,7 @@ private struct ImageEditorRootView: View {
         EditorView()
             .environment(editorState)
             .focusedSceneValue(\.editorState, editorState)
+            .navigationTitle(editorState.windowTitle)
             .task {
                 if let windowID {
                     editorState.seed(from: windowID, capture: coordinator.capture)
@@ -110,6 +111,7 @@ private struct VideoEditorRootView: View {
         VideoEditorView()
             .environment(state)
             .focusedSceneValue(\.videoEditorState, state)
+            .navigationTitle(state.windowTitle)
             .task { state.seed(url: url, capture: coordinator.capture) }
     }
 }

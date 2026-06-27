@@ -22,13 +22,18 @@ public struct TextStyles: Equatable, Codable, Sendable {
 
     /// The font picker's family choices. Curated: families that ship with
     /// macOS and read well as screenshot callouts.
+    // Curated set. "SF Pro"/"SF Mono" are the system UI faces (resolved specially
+    // in TextRasterizer — they aren't matchable by family name); the rest are
+    // installed families. ("New York" was dropped: it's only reachable via
+    // AppKit's design API, which the render layer can't import — Baskerville is a
+    // real serif that resolves through CoreText.)
     public static let fonts: [String] = [
         "SF Pro",
         "SF Mono",
-        "New York",
         "Helvetica Neue",
         "Avenir Next",
         "Georgia",
+        "Baskerville",
     ]
 
     /// The size picker's options, smallest first.

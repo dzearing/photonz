@@ -95,4 +95,50 @@ struct HandlesTests {
         let r = Handles.resize(frame, dragging: .bottomRight, to: CGPoint(x: 0, y: 0), preserveAspect: false)
         #expect(r == CGRect(x: 100, y: 100, width: 1, height: 1))
     }
+
+    // MARK: Anchored resize under rotation (the "resize after rotate" fix)
+
+    private func screenPoint(_ handle: ResizeHandle, in rect: CGRect, _ t: LayerTransform) -> CGPoint {
+        Handles.point(for: handle, in: rect)
+            .applying(t.affineTransform(around: CGPoint(x: rect.midX, y: rect.midY)))
+    }
+
+    @Test func anchoredFrameKeepsTheOppositeEdgeFixedUnderRotation() {
+        let t = LayerTransform(rotation: .pi / 4)
+        // Grow the right edge by 60 in untransformed space.
+        let resized = Handles.resize(frame, dragging: .right,
+                                     to: CGPoint(x: frame.maxX + 60, y: frame.midY),
+                                     preserveAspect: false)
+        // Naive resize drifts the anchor on screen; anchoredFrame must not.
+        let naiveDrift = hypot(screenPoint(.left, in: frame, t).x - screenPoint(.left, in: resized, t).x,
+                               screenPoint(.left, in: frame, t).y - screenPoint(.left, in: resized, t).y)
+        #expect(naiveDrift > 1, "precondition: naive resize drifts the anchor")
+
+        let anchored = Handles.anchoredFrame(start: frame, proposed: resized, handle: .right, transform: t)
+        let before = screenPoint(.left, in: frame, t)
+        let after = screenPoint(.left, in: anchored, t)
+        #expect(abs(before.x - after.x) < 1e-6)
+        #expect(abs(before.y - after.y) < 1e-6)
+    }
+
+    @Test func anchoredFrameKeepsTheOppositeCornerFixedUnderRotation() {
+        let t = LayerTransform(rotation: .pi / 2)
+        let resized = Handles.resize(frame, dragging: .bottomRight,
+                                     to: CGPoint(x: frame.maxX + 40, y: frame.maxY + 25),
+                                     preserveAspect: false)
+        let anchored = Handles.anchoredFrame(start: frame, proposed: resized, handle: .bottomRight, transform: t)
+        let before = screenPoint(.topLeft, in: frame, t)
+        let after = screenPoint(.topLeft, in: anchored, t)
+        #expect(abs(before.x - after.x) < 1e-6)
+        #expect(abs(before.y - after.y) < 1e-6)
+    }
+
+    @Test func anchoredFrameIsANoOpWithoutATransform() {
+        let resized = Handles.resize(frame, dragging: .right,
+                                     to: CGPoint(x: frame.maxX + 30, y: frame.midY),
+                                     preserveAspect: false)
+        let anchored = Handles.anchoredFrame(start: frame, proposed: resized,
+                                             handle: .right, transform: LayerTransform())
+        #expect(anchored == resized)
+    }
 }

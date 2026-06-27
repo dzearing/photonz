@@ -22,6 +22,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         let content: LayerContent
         let pixelWidth: Int
         let pixelHeight: Int
+        /// Distinguishes rasterizations of the same content+size that differ by
+        /// style not carried in `content` (e.g. a text glyph outline from the
+        /// layer's border). Empty for content whose pixels depend only on itself.
+        let variant: String
     }
     /// Per-cache cap; the two caches together stay within 64 entries.
     private static let cacheCapacity = 32
@@ -75,11 +79,12 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     /// The cached rasterization of value-typed content at `size`, produced by
     /// `rasterize` on a miss (returning nil caches nothing).
-    private func raster(for content: LayerContent, size: CGSize,
+    private func raster(for content: LayerContent, size: CGSize, variant: String = "",
                         rasterize: () -> CGImage?) -> CIImage? {
         let key = RasterKey(content: content,
                             pixelWidth: Int(size.width.rounded()),
-                            pixelHeight: Int(size.height.rounded()))
+                            pixelHeight: Int(size.height.rounded()),
+                            variant: variant)
         cacheLock.lock()
         if let hit = rasterCache[key] {
             contentCacheHits += 1
@@ -322,9 +327,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             guard let cg = store.image(for: ref) else { return nil }
             image = wrapped(cg)
         case .text(let text):
-            // Rasterized at the frame's size so the scale-to-frame step below is 1:1.
-            guard let raster = raster(for: layer.content, size: layer.frame.size, rasterize: {
-                TextRasterizer.rasterize(text, size: layer.frame.size)
+            // Rasterized at the frame's size so the scale-to-frame step below is
+            // 1:1. A border outlines the GLYPHS (inside the rasterizer); the box
+            // border below is suppressed for text.
+            let textBorder = layer.style.borderWidth
+            let textBorderHex = layer.style.borderColorHex
+            let variant = textBorder > 0 ? "outline:\(textBorder):\(textBorderHex)" : ""
+            guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
+                TextRasterizer.rasterize(text, size: layer.frame.size,
+                                         borderWidth: textBorder, borderColorHex: textBorderHex)
             }) else { return nil }
             image = raster
         case .annotation(let annotation):
@@ -389,7 +400,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
 
         // Style: border — an inner stroke hugging the (possibly rounded) outline.
-        if layer.style.borderWidth > 0 {
+        // Text is exempt: its border outlines the glyphs (done in the rasterizer),
+        // not the box.
+        let isTextLayer: Bool = { if case .text = layer.content { return true } else { return false } }()
+        if layer.style.borderWidth > 0, !isTextLayer {
             let width = layer.style.borderWidth
             let outer = roundedRectImage(rect: image.extent,
                                          radius: cornerRadius,

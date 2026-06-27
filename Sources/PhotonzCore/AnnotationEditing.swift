@@ -21,15 +21,23 @@ extension Layer {
     }
 
     /// Whether the selection chrome offers the eight frame-resize handles.
-    /// Lines/arrows use endpoint handles instead. Text never frame-resizes
-    /// (the renderer re-wraps/rescales at frame size, which is unpredictable;
-    /// text size changes go through the font picker — decided in 3.5).
+    /// Lines/arrows use endpoint handles instead. Text resizes width-only: the
+    /// handles set the wrap width and the renderer re-wraps to it (see
+    /// `resizeWidthOnly`); font size still goes through the picker.
     public var allowsFrameResize: Bool {
         switch content {
-        case .text: false
+        case .text: true
         case .annotation: !hasEndpointHandles
         case .image, .zoomCallout: true
         }
+    }
+
+    /// Text resize only changes WIDTH (the wrap width); height follows from the
+    /// re-wrap, and vertical handle drags don't stretch glyphs. Other content
+    /// resizes freely in both axes.
+    public var resizeWidthOnly: Bool {
+        if case .text = content { return true }
+        return false
     }
 
     /// An annotation endpoint's position in document coordinates.

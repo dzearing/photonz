@@ -68,6 +68,13 @@ final class AppCoordinator {
             self?.highlightedCaptureURL = nil
             self?.tooltip.hide()
         }
+        // When the last editor window closes, drop the Dock icon and return to a
+        // pure menu-bar agent. willClose fires before the window leaves
+        // NSApp.windows, so re-evaluate on the next runloop tick.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main) { [weak self] _ in
+            DispatchQueue.main.async { self?.syncActivationPolicy() }
+        }
         capture.start()
     }
 
@@ -78,9 +85,9 @@ final class AppCoordinator {
     /// place captures live, and it's recallable with ⌘⇧H).
     func flashNewCapture(_ url: URL) {
         highlightedCaptureURL = url
-        if historyOverlay.isShown {
-            NSApp.activate(ignoringOtherApps: true)
-        } else {
+        // Already-shown: the highlight updates reactively and the floating panel
+        // stays on top — no app activation (that would raise editor windows).
+        if !historyOverlay.isShown {
             showHistory()
         }
     }
@@ -202,7 +209,10 @@ final class AppCoordinator {
 
     func showHistory() {
         guard !historyOverlay.isShown else { return }
-        NSApp.activate(ignoringOtherApps: true)
+        // The history overlay is a non-activating floating panel that orders
+        // itself front and becomes key on its own — DON'T activate the app, or
+        // every editor window would be dragged forward with it. "Show history"
+        // means show history, not the editor windows.
         historyOverlay.show(content: HistoryOverlay(coordinator: self), on: activeScreen())
         isHistoryShown = true
     }
@@ -257,11 +267,27 @@ final class AppCoordinator {
 
     // MARK: - Window intents
 
-    /// Opens (or focuses) an editor window for `id`. Brings the app forward so
-    /// the window can take focus from an accessory (no-Dock) agent.
+    /// Opens (or focuses) an editor window for `id`. Editor windows are
+    /// first-class app windows — becoming `.regular` gives the app a Dock icon,
+    /// ⌘` window cycling, and click-the-Dock-icon-to-return, like any
+    /// multi-document app. `syncActivationPolicy` drops back to the menu-bar-only
+    /// `.accessory` when the last one closes.
     func openWindow(_ id: EditorWindowID) {
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         openWindowAction?(id)
+    }
+
+    /// Editor windows are real titled app windows; the history/pinned/tooltip
+    /// surfaces are panels. Be `.regular` while any editor window is open (Dock
+    /// icon + ⌘` cycling) and return to the windowless agent's `.accessory` (no
+    /// Dock icon) when none remain.
+    func syncActivationPolicy() {
+        let hasEditorWindow = NSApp.windows.contains { window in
+            !(window is NSPanel) && window.styleMask.contains(.titled) && window.isVisible
+        }
+        let desired: NSApplication.ActivationPolicy = hasEditorWindow ? .regular : .accessory
+        if NSApp.activationPolicy() != desired { NSApp.setActivationPolicy(desired) }
     }
 
     /// Menu "New Window": a brand-new empty document in its own window.

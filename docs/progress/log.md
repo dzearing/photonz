@@ -2,6 +2,21 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-27 — "Very buggy text" round + menu-bar/window decoupling (471 tests)
+
+User-driven bug fixing in the running app. Investigation of the 4 text bugs was fanned out (root-cause workflow); each fix is test-first. **471 tests pass in parallel.** App-side window work is verified headlessly via an env-guarded NSEvent self-test (since removed).
+
+- **Text — fonts (`TextRasterizer.font(for:)`):** "SF Pro"/"SF Mono"/"New York" all silently resolved to **Helvetica** (not installed family names), so changing font did nothing. Now SF Pro/SF Mono resolve via `CTFontCreateUIFontForLanguage(.system/.userFixedPitch)` + weight-trait descriptor; "New York"→"Baskerville" (New York needs AppKit's design API, off-limits in render). 2 render tests.
+- **Text — min-width + wrap:** the inline editor spanned to the canvas edge; now it **hugs typed text** (80pt floor, 60% wrap cap) via `naturalSize(minWidth:)` + `CanvasNSView.textWrapWidth`. 2 render tests.
+- **Text — resize after rotate / corner-resize re-wrap:** new `Handles.anchoredFrame` keeps the corner opposite the dragged handle fixed in screen space (rotated resize no longer swings). Text now `allowsFrameResize` **width-only** (`resizeWidthOnly`, reverses the 3.5 decision) and re-wraps live (height auto; text excluded from the drag sprite so glyphs don't stretch). Core tests: anchoredFrame @45/90°, text gating.
+- **Text — border outlines glyphs:** a text border now strokes the **letter outlines** (two-pass outer stroke, fill intact, grows outward) instead of the box; `DocumentRenderer` suppresses the box border for text + threads the border into the raster cache `variant`. 1 render test.
+- **Text — editing:** **Return** re-edits a selected text layer (mirrors double-click); **⌘Return** commits (plain Return = newline) via `InlineTextView`.
+- **Menu-bar agent ↔ windows decoupled.** `showHistory`/`flashNewCapture` no longer `NSApp.activate` (the non-activating panel orders itself front), so Show History doesn't drag editors forward. Editor windows are now **first-class**: hybrid activation policy — `.regular` while any editor window is open (Dock icon, ⌘` cycling, click-Dock-to-return), back to `.accessory` at rest (`AppCoordinator.syncActivationPolicy` on open + `willClose`).
+- **Window titles:** `.navigationTitle` from `EditorState.windowTitle` (file name / "Untitled N") + `VideoEditorState.windowTitle` — windows tellable apart in ⌘`/Window menu/Dock.
+- **Double-click-to-zoom fixed:** only the matte zoomed before; now a double-click on anything that isn't an editable layer (matte/empty/locked base image) zooms — proven via synthetic events (image-center/upper now zoom; was matte-only). Diagnosed that `.navigationTitle` and the activation switch did NOT break it (the window stays zoomable; the gap was a window-filling image leaving no matte).
+- **Docs:** `capture.md` (hybrid activation, history decoupling, window titles, dbl-click-zoom) + `tools.md` (Phase 13 text fixes) updated.
+- **Next:** user moving on to other bugs.
+
 ## 2026-06-24 — Video editor UX pass (transport, keyboard, grabbable trim, Apply Trim + ⌘Z)
 
 User-driven refinement of the 13.3 video editor in the running app. App-side only (no core/render changes); 461 tests still green in parallel.
