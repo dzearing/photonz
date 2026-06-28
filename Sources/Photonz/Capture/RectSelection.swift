@@ -5,6 +5,9 @@ import AppKit
 @MainActor
 final class RectSelectionController {
     private var windows: [SelectionWindow] = []
+    /// Whoever was frontmost before the overlay, so focus returns there instead
+    /// of leaving an open editor window yanked to the foreground.
+    private var previousApp: NSRunningApplication?
     private let onComplete: (NSScreen, CGRect) -> Void
     private let onCancel: () -> Void
 
@@ -15,6 +18,7 @@ final class RectSelectionController {
 
     func begin() {
         guard windows.isEmpty else { return }
+        previousApp = NSWorkspace.shared.frontmostApplication
         for screen in NSScreen.screens {
             let window = SelectionWindow(screen: screen)
             window.selectionView.onSelect = { [weak self] rect in self?.finish(screen: screen, rect: rect) }
@@ -22,6 +26,9 @@ final class RectSelectionController {
             window.makeKeyAndOrderFront(nil)
             windows.append(window)
         }
+        // Activating gives the overlay key focus, but with an editor window open
+        // the app is `.regular`, so this also raises the editor. Focus is handed
+        // back to `previousApp` in `dismiss()` so the editor doesn't stay front.
         NSApp.activate(ignoringOtherApps: true)
         NSCursor.crosshair.set()
     }
@@ -31,6 +38,12 @@ final class RectSelectionController {
         windows.forEach { $0.orderOut(nil) }
         windows = []
         NSCursor.arrow.set()
+        // Return focus to the app that was frontmost before capture (unless that
+        // was us), so taking a screenshot doesn't pull the editor forward.
+        if let previousApp, previousApp.processIdentifier != NSRunningApplication.current.processIdentifier {
+            previousApp.activate()
+        }
+        previousApp = nil
     }
 
     private func finish(screen: NSScreen, rect: CGRect) {
