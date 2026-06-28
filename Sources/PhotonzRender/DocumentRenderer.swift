@@ -343,10 +343,14 @@ public final class DocumentRenderer: @unchecked Sendable {
                 AnnotationRasterizer.rasterize(annotation, size: layer.frame.size)
             }) else { return nil }
             image = raster
-        case .measure:
-            // Rasterization lands in 16.2; until then a measure layer contributes
-            // nothing to the composite (the model + interaction come first).
-            return nil
+        case .measure(let measure):
+            // The label text depends on the document's pixelScale (points readout),
+            // which isn't part of the cache key's content — fold it into the variant.
+            let variant = "scale:\(document.pixelScale)"
+            guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
+                MeasureRasterizer.rasterize(measure, size: layer.frame.size, pixelScale: document.pixelScale)
+            }) else { return nil }
+            image = raster
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)

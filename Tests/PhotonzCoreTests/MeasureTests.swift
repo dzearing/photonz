@@ -129,7 +129,9 @@ struct MeasureGeometryTests {
 struct MeasureBuilderTests {
 
     @Test func layerFramePadsTheBoundingBoxAndStoresLocalEndpoints() {
-        let m = measureContent(mode: .free)
+        // showLabel off isolates the geometric frame from the label reservation.
+        var m = measureContent(mode: .free)
+        m.showLabel = false
         let layer = MeasureBuilder.layer(content: m,
                                          from: CGPoint(x: 100, y: 100),
                                          to: CGPoint(x: 200, y: 160))
@@ -146,6 +148,21 @@ struct MeasureBuilderTests {
         // Endpoints become layer-local.
         #expect(measure.start == CGPoint(x: pad, y: pad))
         #expect(measure.end == CGPoint(x: 100 + pad, y: 60 + pad))
+    }
+
+    @Test func labelReservationGrowsTheFrameForAShortMeasure() {
+        // A tiny span whose bounding box is far narrower than its label plate:
+        // the frame must widen to contain the centered label.
+        let labelled = MeasureBuilder.layer(content: measureContent(mode: .horizontal),
+                                            from: CGPoint(x: 100, y: 100), to: CGPoint(x: 110, y: 100))
+        guard let m = labelled.measure else { Issue.record("expected measure"); return }
+        #expect(labelled.frame.width >= m.estimatedLabelSize.width)
+
+        var noLabelContent = measureContent(mode: .horizontal)
+        noLabelContent.showLabel = false
+        let bare = MeasureBuilder.layer(content: noLabelContent,
+                                        from: CGPoint(x: 100, y: 100), to: CGPoint(x: 110, y: 100))
+        #expect(bare.frame.width < labelled.frame.width)
     }
 
     @Test func updatingKeepsIdentityAndStyleButRebuildsLikeAFreshDrag() {

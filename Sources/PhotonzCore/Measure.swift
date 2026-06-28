@@ -153,11 +153,31 @@ extension MeasureContent {
         }
     }
 
+    /// Label text plate point size. Fixed (independent of the document's
+    /// `pixelScale`) so a measure's frame never shifts when the unit toggles.
+    public static let labelFontSize: CGFloat = 24
+    /// Padding inside the label plate, each side.
+    public static let labelPadding: CGFloat = 7
+
+    /// Perpendicular reach of the end caps (ticks/arrowheads) past the line.
+    public var capExtent: CGFloat { (strokeWidth * 1.5 + 4).rounded(.up) }
+
     /// How far drawing can extend past the reference-point bounding box: half the
-    /// stroke plus the perpendicular reach of end caps. Conservative; the
-    /// rasterizer (16.2) refines exact cap extents.
+    /// stroke or the cap reach, whichever is larger.
     public var renderPadding: CGFloat {
-        max(strokeWidth / 2, strokeWidth * 2).rounded(.up)
+        max(strokeWidth / 2, capExtent).rounded(.up)
+    }
+
+    /// A generous estimate of the label plate's footprint, used by the builder to
+    /// reserve frame space. Sized from the raw-pixel magnitude (an upper bound on
+    /// digit count across units), so it stays stable when the unit/scale changes.
+    /// The rasterizer measures the real text and centers within this reservation.
+    public var estimatedLabelSize: CGSize {
+        let digits = max(1, String(Int(rawDistance.rounded())).count)
+        let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
+        let w = chars * Self.labelFontSize * 0.62 + 2 * Self.labelPadding
+        let h = Self.labelFontSize * 1.3 + 2 * Self.labelPadding
+        return CGSize(width: w.rounded(.up), height: h.rounded(.up))
     }
 }
 
@@ -170,10 +190,23 @@ public enum MeasureBuilder {
     /// creates. Frame = padded bbox; endpoints become layer-local.
     public static func layer(content: MeasureContent, from start: CGPoint, to end: CGPoint) -> Layer {
         var content = content
+        // Adopt the real span up front so `rawDistance`-derived metrics
+        // (renderPadding, estimatedLabelSize) reflect THIS measure, not the
+        // input content's stale endpoints. Endpoints are re-localized below.
+        content.start = start
+        content.end = end
         let pad = content.renderPadding
         var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
             .insetBy(dx: -pad, dy: -pad)
+        // Reserve room for the label plate, centered on the dimension line, so a
+        // short measure's number isn't clipped at the frame edge.
+        if content.showLabel {
+            let anchor = MeasureContent.geometry(mode: content.mode, start: start, end: end).labelAnchor
+            let size = content.estimatedLabelSize
+            box = box.union(CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
+                                   width: size.width, height: size.height))
+        }
         box.size.width = max(box.size.width, 1)
         box.size.height = max(box.size.height, 1)
         content.start = CGPoint(x: start.x - box.minX, y: start.y - box.minY)
