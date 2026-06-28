@@ -491,6 +491,22 @@ final class EditorState {
         perform { $0.pixelScale = scale }
     }
 
+    /// Live corner-resize of a placed measure (no history) — re-renders so the
+    /// gap value updates as the corner moves.
+    func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+        guard var doc = document, doc.layer(id: id)?.measure != nil else { return }
+        doc.updateLayer(id: id) { $0 = MeasureBuilder.updating($0, start: start, end: end) }
+        if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
+        submit(doc)
+    }
+
+    /// Mouse-up on a measure corner: one undoable step. Committing the original
+    /// corners is a History no-op (the Esc-cancel path).
+    func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+        previewMove = nil
+        perform { $0.updateLayer(id: id) { $0 = MeasureBuilder.updating($0, start: start, end: end) } }
+    }
+
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
 
     private func applyMeasureRestyle(_ restyle: (Layer) -> Layer) {

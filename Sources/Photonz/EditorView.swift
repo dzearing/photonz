@@ -115,6 +115,8 @@ struct EditorView: View {
                        onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2) },
+                       onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2) },
+                       onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2) },
                        onToolChange: { editorState.setTool($0) },
                        onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },

@@ -57,6 +57,8 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode) -> Void
+    let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint) -> Void
+    let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -96,6 +98,8 @@ struct CanvasView: NSViewRepresentable {
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onMeasureCommit = onMeasureCommit
+        view.onMeasureEndpointPreview = onMeasureEndpointPreview
+        view.onMeasureEndpointCommit = onMeasureEndpointCommit
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
@@ -121,6 +125,8 @@ final class CanvasNSView: NSView {
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode) -> Void) = { _, _, _ in }
+    var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
+    var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -222,6 +228,25 @@ final class CanvasNSView: NSView {
     private var measureContent: MeasureContent?
     /// In-flight measure drag (reuses AnnotationDrag for the anchor/current pair).
     private var measureDrag: AnnotationDrag?
+    /// In-flight resize of a placed measure by dragging one of its two corners.
+    private var measureCornerDrag: MeasureCornerDrag?
+
+    /// Dragging one corner of a placed measure; the opposite corner stays fixed.
+    private struct MeasureCornerDrag {
+        let layerID: UUID
+        let endpoint: AnnotationEndpoint
+        let fixed: CGPoint   // the opposite corner, document space
+        let original: CGPoint // the dragged corner's pre-drag position (for Esc)
+        var current: CGPoint
+        /// The measure's endpoints with this drag applied (start, end).
+        func endpoints() -> (start: CGPoint, end: CGPoint) {
+            endpoint == .start ? (current, fixed) : (fixed, current)
+        }
+        /// The pre-drag endpoints, for restoring on cancel.
+        func originalEndpoints() -> (start: CGPoint, end: CGPoint) {
+            endpoint == .start ? (original, fixed) : (fixed, original)
+        }
+    }
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
@@ -565,6 +590,17 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // A placed measure resizes by dragging either of its two corners; the
+        // opposite corner stays fixed and the gap/label update live.
+        if let id = selectedLayerID, let layer = selectedLayer, layer.measure != nil,
+           let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
+           let fixed = layer.measureEndpoint(endpoint == .start ? .end : .start),
+           let original = layer.measureEndpoint(endpoint) {
+            measureCornerDrag = MeasureCornerDrag(layerID: id, endpoint: endpoint, fixed: fixed,
+                                                  original: original, current: p)
+            refreshOverlays()
+            return
+        }
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, !layer.hasEndpointHandles,
            let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom),
@@ -650,6 +686,13 @@ final class CanvasNSView: NSView {
             drag.update(to: p)
             measureDrag = drag
             refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
+        } else if var corner = measureCornerDrag {
+            corner.current = p
+            measureCornerDrag = corner
+            // Live re-render so the gap value updates as the corner moves.
+            let (start, end) = corner.endpoints()
+            onMeasureEndpointPreview(corner.layerID, start, end)
+            refreshOverlays()
         } else if var session = endpointDrag {
             session.drag.update(to: p)
             endpointDrag = session
@@ -739,6 +782,11 @@ final class CanvasNSView: NSView {
                                                 constrained: event.modifierFlags.contains(.shift))
                 onMeasureCommit(drag.anchor, drag.current, mode)
             }
+        } else if let corner = measureCornerDrag {
+            measureCornerDrag = nil
+            let (start, end) = corner.endpoints()
+            onMeasureEndpointCommit(corner.layerID, start, end)
+            refreshOverlays()
         } else if let session = endpointDrag {
             endpointDrag = nil
             let (start, end) = session.drag.endpoints(constrained: event.modifierFlags.contains(.shift))
@@ -838,6 +886,13 @@ final class CanvasNSView: NSView {
                 // Committing the original endpoints is a History no-op but
                 // resets the preview render, like the resize-drag cancel.
                 onAnnotationEndpointsCommit(session.layerID, session.originalStart, session.originalEnd)
+                refreshOverlays()
+                return
+            }
+            if let corner = measureCornerDrag {
+                measureCornerDrag = nil
+                let (start, end) = corner.originalEndpoints()
+                onMeasureEndpointCommit(corner.layerID, start, end) // History no-op; restores render
                 refreshOverlays()
                 return
             }
@@ -960,6 +1015,7 @@ final class CanvasNSView: NSView {
             // A tool switch mid-drag abandons the draft annotation/endpoint edit.
             annotationDrag = nil
             measureDrag = nil
+            measureCornerDrag = nil
             endpointDrag = nil
             cropDrag = nil
             transformDrag = nil
@@ -1220,18 +1276,34 @@ final class CanvasNSView: NSView {
         }
         let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
-            || endpointDrag != nil || endpointHoldLayerID != nil
+            || endpointDrag != nil || endpointHoldLayerID != nil || measureCornerDrag != nil
 
         if selectedLayer?.hasEndpointHandles == true {
             // A line/arrow is its stroke; a rectangle outline around the
             // padded frame reads as a phantom box. Round endpoint handles
-            // replace the whole frame chrome.
-            layerOutlineLayer.isHidden = true
+            // replace the whole frame chrome. A measure additionally gets a
+            // dotted selection box so it reads as selected and resizable.
             rotateKnobLayer.isHidden = true
+            if let layer = selectedLayer, layer.measure != nil {
+                let box = CGMutablePath()
+                box.addLines(between: [
+                    viewport.viewPoint(fromDocument: CGPoint(x: frame.minX, y: frame.minY)),
+                    viewport.viewPoint(fromDocument: CGPoint(x: frame.maxX, y: frame.minY)),
+                    viewport.viewPoint(fromDocument: CGPoint(x: frame.maxX, y: frame.maxY)),
+                    viewport.viewPoint(fromDocument: CGPoint(x: frame.minX, y: frame.maxY)),
+                ])
+                box.closeSubpath()
+                layerOutlineLayer.path = box
+                layerOutlineLayer.lineDashPattern = [3, 3]
+                layerOutlineLayer.isHidden = false
+            } else {
+                layerOutlineLayer.isHidden = true
+                layerOutlineLayer.lineDashPattern = nil
+            }
             if !dragInFlight, let layer = selectedLayer {
                 let handles = CGMutablePath()
                 for endpoint in AnnotationEndpoint.allCases {
-                    guard let dp = layer.annotationEndpoint(endpoint) else { continue }
+                    guard let dp = layer.editEndpoint(endpoint) else { continue }
                     let p = viewport.viewPoint(fromDocument: dp)
                     handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
                 }
@@ -1261,6 +1333,7 @@ final class CanvasNSView: NSView {
             ])
             outline.closeSubpath()
             layerOutlineLayer.path = outline
+            layerOutlineLayer.lineDashPattern = nil
             layerOutlineLayer.isHidden = false
 
             // Handles: 8pt squares in view space, hidden while a drag is in

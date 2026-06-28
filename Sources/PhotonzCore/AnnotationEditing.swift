@@ -60,6 +60,12 @@ extension Layer {
         return CGPoint(x: frame.minX + local.x, y: frame.minY + local.y)
     }
 
+    /// The draggable endpoint (corner) for whichever endpoint-handled content
+    /// this is — a line/arrow vertex or a measure's box corner.
+    public func editEndpoint(_ endpoint: AnnotationEndpoint) -> CGPoint? {
+        annotationEndpoint(endpoint) ?? measureEndpoint(endpoint)
+    }
+
     /// The layer with its frame set to `frame`. Annotation content remaps its
     /// endpoints so the drawn shape scales with the frame (a bare frame
     /// assignment would clip or distort it); zoom callouts re-derive their
@@ -167,7 +173,7 @@ public enum AnnotationEndpoints {
         let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
         var best: (endpoint: AnnotationEndpoint, distance: CGFloat)?
         for endpoint in AnnotationEndpoint.allCases {
-            guard let ep = layer.annotationEndpoint(endpoint) else { continue }
+            guard let ep = layer.editEndpoint(endpoint) else { continue }
             let distance = hypot(p.x - ep.x, p.y - ep.y)
             if distance <= tolerance, distance < (best?.distance ?? .infinity) {
                 best = (endpoint, distance)
