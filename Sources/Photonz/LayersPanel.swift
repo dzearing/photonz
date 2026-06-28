@@ -755,13 +755,22 @@ struct MeasureInspector: View {
                     Text("Line").tag(MeasureForm.line)
                 }
                 .pickerStyle(.segmented).controlSize(.small)
-                Picker("Direction", selection: Binding(
-                    get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
-                    set: { editorState.setMeasureAxis($0) })) {
-                    Text("Vertical").tag(MeasureMode.vertical)
-                    Text("Horizontal").tag(MeasureMode.horizontal)
+                HStack(spacing: 6) {
+                    Picker("Direction", selection: Binding(
+                        get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
+                        set: { editorState.setMeasureAxis($0) })) {
+                        Text("Vertical").tag(MeasureMode.vertical)
+                        Text("Horizontal").tag(MeasureMode.horizontal)
+                    }
+                    .pickerStyle(.segmented).controlSize(.small)
+                    Button {
+                        editorState.invertMeasure()
+                    } label: {
+                        Image(systemName: "arrow.left.arrow.right")
+                    }
+                    .controlSize(.small)
+                    .help("Flip the bracket to the other side")
                 }
-                .pickerStyle(.segmented).controlSize(.small)
                 Picker("Unit", selection: Binding(
                     get: { c.unit },
                     set: { editorState.setMeasureUnit($0) })) {

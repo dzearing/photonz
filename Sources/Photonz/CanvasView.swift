@@ -231,20 +231,38 @@ final class CanvasNSView: NSView {
     /// In-flight resize of a placed measure by dragging one of its two corners.
     private var measureCornerDrag: MeasureCornerDrag?
 
-    /// Dragging one corner of a placed measure; the opposite corner stays fixed.
+    /// Dragging one corner of a placed measure's box. The dragged corner takes
+    /// its x from start or end (and y likewise); moving it updates just those
+    /// components, so the diagonally-opposite corner stays fixed.
     private struct MeasureCornerDrag {
         let layerID: UUID
-        let endpoint: AnnotationEndpoint
-        let fixed: CGPoint   // the opposite corner, document space
-        let original: CGPoint // the dragged corner's pre-drag position (for Esc)
+        let xFromEnd: Bool
+        let yFromEnd: Bool
+        let originalStart: CGPoint
+        let originalEnd: CGPoint
         var current: CGPoint
-        /// The measure's endpoints with this drag applied (start, end).
+        /// The measure's endpoints with this corner drag applied (start, end).
         func endpoints() -> (start: CGPoint, end: CGPoint) {
-            endpoint == .start ? (current, fixed) : (fixed, current)
+            var s = originalStart, e = originalEnd
+            if xFromEnd { e.x = current.x } else { s.x = current.x }
+            if yFromEnd { e.y = current.y } else { s.y = current.y }
+            return (s, e)
         }
-        /// The pre-drag endpoints, for restoring on cancel.
         func originalEndpoints() -> (start: CGPoint, end: CGPoint) {
-            endpoint == .start ? (original, fixed) : (fixed, original)
+            (originalStart, originalEnd)
+        }
+    }
+
+    /// The draggable corners of a placed measure, document space: all four box
+    /// corners for a bracket, the two line ends for a straight measure.
+    private func measureCorners(_ layer: Layer) -> [(xFromEnd: Bool, yFromEnd: Bool, point: CGPoint)] {
+        guard let m = layer.measure,
+              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
+        let combos: [(Bool, Bool)] = m.form == .bracket
+            ? [(false, false), (true, false), (false, true), (true, true)]
+            : [(false, false), (true, true)]
+        return combos.map { xe, ye in
+            (xe, ye, CGPoint(x: xe ? e.x : s.x, y: ye ? e.y : s.y))
         }
     }
     /// The composite that was on screen when an annotation was committed. The
@@ -460,12 +478,11 @@ final class CanvasNSView: NSView {
         crawl.repeatCount = .infinity
         selectionAntsLayer.add(crawl, forKey: "marchingAnts")
 
-        // Subtle selection outline: translucent accent, dotted, thin — present
-        // enough to read as selected without competing with the content.
-        layerOutlineLayer.strokeColor = NSColor.controlAccentColor.withAlphaComponent(0.6).cgColor
-        layerOutlineLayer.lineWidth = 1.5
+        // Selection outline: bright blue, dotted, 2px, 60% opaque.
+        layerOutlineLayer.strokeColor = NSColor.systemBlue.withAlphaComponent(0.6).cgColor
+        layerOutlineLayer.lineWidth = 2
         layerOutlineLayer.lineCap = .round
-        layerOutlineLayer.lineDashPattern = [1, 4]
+        layerOutlineLayer.lineDashPattern = [2, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
@@ -594,16 +611,25 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
-        // A placed measure resizes by dragging either of its two corners; the
-        // opposite corner stays fixed and the gap/label update live.
+        // A placed measure resizes by dragging any of its box corners; the
+        // diagonally-opposite corner stays fixed and the gap/label update live.
         if let id = selectedLayerID, let layer = selectedLayer, layer.measure != nil,
-           let endpoint = AnnotationEndpoints.hit(at: p, layer: layer, zoom: viewport.zoom),
-           let fixed = layer.measureEndpoint(endpoint == .start ? .end : .start),
-           let original = layer.measureEndpoint(endpoint) {
-            measureCornerDrag = MeasureCornerDrag(layerID: id, endpoint: endpoint, fixed: fixed,
-                                                  original: original, current: p)
-            refreshOverlays()
-            return
+           let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
+            let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
+            var best: (xFromEnd: Bool, yFromEnd: Bool, distance: CGFloat)?
+            for corner in measureCorners(layer) {
+                let d = hypot(p.x - corner.point.x, p.y - corner.point.y)
+                if d <= tolerance, d < (best?.distance ?? .infinity) {
+                    best = (corner.xFromEnd, corner.yFromEnd, d)
+                }
+            }
+            if let best {
+                measureCornerDrag = MeasureCornerDrag(layerID: id, xFromEnd: best.xFromEnd,
+                                                      yFromEnd: best.yFromEnd, originalStart: s,
+                                                      originalEnd: e, current: p)
+                refreshOverlays()
+                return
+            }
         }
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, !layer.hasEndpointHandles,
@@ -1325,8 +1351,11 @@ final class CanvasNSView: NSView {
             rotateKnobLayer.isHidden = true
             if !dragInFlight {
                 let handles = CGMutablePath()
-                for endpoint in AnnotationEndpoint.allCases {
-                    guard let dp = selectedLayer.editEndpoint(endpoint) else { continue }
+                // Measures expose all their box corners; lines/arrows their 2 ends.
+                let points: [CGPoint] = selectedLayer.measure != nil
+                    ? measureCorners(selectedLayer).map { $0.point }
+                    : AnnotationEndpoint.allCases.compactMap { selectedLayer.editEndpoint($0) }
+                for dp in points {
                     let p = viewport.viewPoint(fromDocument: dp)
                     handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
                 }

@@ -493,6 +493,14 @@ final class EditorState {
         applyMeasureRestyle { MeasureBuilder.restyled($0, mode: axis) }
     }
 
+    /// Flip a bracket to the opposite side by swapping its two box corners — the
+    /// U opens the other way and the connector/label move across.
+    func invertMeasure() {
+        guard let layer = selectedMeasureLayer,
+              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return }
+        perform { $0.updateLayer(id: layer.id) { $0 = MeasureBuilder.updating($0, start: e, end: s) } }
+    }
+
     func setMeasureColor(_ hex: String, commit: Bool) {
         measureStyle.colorHex = hex
         applyMeasureRestyle { MeasureBuilder.restyled($0, colorHex: hex) }
