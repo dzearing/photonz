@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-28 — Phase 13 verified done; planned Phase 16 (Inspect & Measure)
+
+- **Phase 13 closed.** User confirmed all 5 tasks interactively (text props, color picker + eyedropper, video playback/trim/crop, MP4/GIF/HEIC export). Marked `done` in `overview.json` + `phase-13.json`. 471 tests green at HEAD (`d030393`).
+- **New Phase 16 — Inspect & Measure**, inserted AHEAD of 14/15 because it's the user's PRIMARY workflow: screenshotting UX and redlining it (measuring gaps/sizes, checking alignment, calling out spacing inconsistencies). `phase-16.json` written; `status: in_progress` (planning), all tasks `pending`.
+- **Design shape:** a measure/dimension tool with auto pixel-size labels (toggleable, restyleable, per-layer) on the existing two-endpoint annotation pattern; an edge map (CIEdges/Sobel projected onto X/Y → peak boundaries) that powers SMART SNAPPING of measure endpoints + alignment guides to UI-element edges. Crux insight: a screenshot has no UI tree, so 'snap to element edge' = snap to image contrast boundaries.
+- **Decisions (user):** readouts default to LOGICAL POINTS not raw px — new `PhotonzDocument.pixelScale` (default 1), set from `NSScreen.backingScaleFactor` at capture, 2× default for opened Retina shots; store raw px, display ÷scale. Sequence: do Phase 16 NEXT, push 14/15 back. Auto-inconsistency detection (16.7) is a timeboxed SPIKE after 16.1–16.6 prove the edge map, with a cross-highlight fallback.
+- **Grounding confirmed:** doc coords == image pixels (`Document.swift:23`); existing `Snapping` only does frame↔canvas snapping (not content — new EdgeSnapping needed); `ImageRef` carries only `pixelSize` (no scale → pixelScale must live on the document).
+- **Next:** start 16.1 — Measurement model + dimension geometry in PhotonzCore, TDD (distance free/H/V, pixelScale conversion, witness-line geometry, label toggle, endpoint remap). Open question: cap style default (CAD ticks vs arrowheads) and whether guides should also snap to existing measures, not just image edges.
+
 ## 2026-06-27 — Post-capture toasts + region crosshair fix
 
 - **Region crosshair never showed.** `SelectionView` relied on `addCursorRect`/one-shot `NSCursor.crosshair.set()`, which is unreliable on borderless screen-saver-level overlay windows. Replaced with an `.inVisibleRect` + `.cursorUpdate` `NSTrackingArea` and `cursorUpdate`/`mouseEntered`/`mouseMoved` overrides that force the crosshair. (`Sources/Photonz/Capture/RectSelection.swift`)

@@ -1,7 +1,7 @@
 {
   "phase": 13,
   "title": "Editor polish + video: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF export",
-  "status": "in_progress",
+  "status": "done",
   "goal": "Finish the remaining editor-polish items from the user's report and add the video-editing surface for recordings from phase 12. Text/color model changes go in PhotonzCore (TDD); video trim/crop math is testable core; playback/export plumbing (AVPlayer/AVAssetExportSession/CGImageDestination GIF) is app-side.",
   "decisions": {
     "dated": "2026-06-22",
