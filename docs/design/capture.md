@@ -79,6 +79,16 @@ The `NSStatusItem` menu is the always-available entry point:
    `CaptureCenter` on the resident agent — **no editor window required**.
 2. Region capture uses the fullscreen `RectSelectionController` overlay; full
    screen / window / video are their own modes.
+   - **The overlay must NOT activate the app.** With an editor window open the
+     app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
+     *every* Photonz window — yanking the editor to the foreground when you
+     screenshot from another app (a reported bug, fixed 2026-06-28). The
+     selection windows are therefore **non-activating panels** (`NSPanel`,
+     `.nonactivatingPanel`, screen-saver level) ordered front via
+     `orderFrontRegardless()` with **no `NSApp.activate`**. `acceptsFirstMouse`
+     keeps drag-to-select working while the app is inactive, and **Esc** is
+     caught via local **and** global `NSEvent` key monitors (the panel isn't the
+     key window of an active app). Do not reintroduce `NSApp.activate` here.
 3. The result is added to `CaptureStore` (the persisted history) as a new entry.
 4. **Post-capture feedback = the history overlay itself** (revised 2026-06-21).
    On capture/recording complete, the slide-down history overlay is shown with

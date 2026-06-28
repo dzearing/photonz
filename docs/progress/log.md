@@ -2,6 +2,21 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-28 (pm) — Phase 16.1–16.3 built + user-verified; measure/ruler tool shipped; capture window-raise bug fixed
+
+Long interactive session building the measure/ruler tool with the user. **502 tests green.** Commits `af34f1c..328bf04` on `main`.
+
+- **16.1 model** (`PhotonzCore/Measure.swift`) + **16.2 rasterizer** (`PhotonzRender/MeasureRasterizer.swift`) + **16.3 app UX** — all done & verified. Then iterated a lot per user feedback:
+  - **Bracket form is the default** — drag corner A→opposite B and a squared "U" wraps the gap (legs from A, connector + label OUTSIDE on the far side). `MeasureForm{line,bracket}`, `bracketGeometry`/`bracketAxis`/`labelCenter`. Dominant box axis picks V("⊐")/H("⊔"); ⇧ flips on create. Inspector has explicit Direction toggle + an **invert ⇄** (`invertMeasure` swaps corners).
+  - **Select / move / resize**: dotted selection box + round handles on **all 4 box corners** (`MeasureCornerDrag(xFromEnd,yFromEnd)`, `measureCorners()`); live label via `previewMeasureEndpoints`, one undo via `commitMeasureEndpoints`; `editEndpoint` unifies annotation+measure endpoint hit-testing. Move via `Layer.contains` hitting the drawn strokes.
+  - **Units**: default **pixels** (px first); points = ÷`pixelScale`. **Stroke width = logical px** (×pixelScale, butt+miter) default 1; the confusing 1×/2× image-scale control was **removed** (pixelScale auto-detect from DPI is a deferred follow-up).
+  - **Label orientation bug** fixed: blit `TextRasterizer` glyphs instead of drawing CoreText into the rasterizer's flipped context (was upside-down "200 bʇ"); added an orientation-guard test. Diagnosed by dumping the raster to a PNG and viewing it.
+  - **Selection chrome** made universal (systemBlue, 2px, dotted, 60%) for ALL object types, and **hidden during any resize**.
+- **Capture bug (separate, user-reported + verified fixed):** screenshotting from another app yanked the open editor window to the foreground. Root cause (found via NSLog diagnostics, not guessing): `RectSelectionController.begin()` called `NSApp.activate(ignoringOtherApps:)` — with an editor open the app is `.regular`, so it raised every Photonz window. Fix: region overlay is now **non-activating `NSPanel`s** ordered front with **no `NSApp.activate`**; `acceptsFirstMouse` keeps drag-select; Esc via local+global `NSEvent` monitors. Documented in `capture.md` ("do not reintroduce NSApp.activate"). A first restore-focus attempt did NOT work and was superseded.
+- **Docs updated:** `tools.md` (new Measure/Ruler section), `capture.md` (non-activating overlay), `phase-16.json` (16.1–16.3 done with full notes; units decision revised to px-default; 16.4/16.5 refined for bracket corners + pixel-grid snapping).
+- **NEXT — "ruler snapping" (16.4 + 16.5):** the user's 3rd measure request and the explicit next task. Build the edge map (CIEdges/Sobel → X/Y projection peaks) and `EdgeSnapping` so the 4 corner grips magnetize to detected UI edges/baselines **and** to the integer pixel grid (keeps 1px lines crisp). Wire into `MeasureCornerDrag` (snap the dragged corner before `previewMeasureEndpoints`) + a snapped-edge highlight. Per-axis independent snapping. User is going to /clear before this.
+- **Open follow-ups:** measureStyle persistence; pixelScale auto-detect from capture DPI; toolbar S popover doesn't cover measures.
+
 ## 2026-06-28 — Phase 13 verified done; planned Phase 16 (Inspect & Measure)
 
 - **Phase 13 closed.** User confirmed all 5 tasks interactively (text props, color picker + eyedropper, video playback/trim/crop, MP4/GIF/HEIC export). Marked `done` in `overview.json` + `phase-13.json`. 471 tests green at HEAD (`d030393`).

@@ -40,6 +40,21 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 - **Border outlines the GLYPHS, not the box:** a border on a text layer strokes the letter outlines (two-pass: fat border-colored glyphs underneath + normal fill on top → an OUTER outline that grows outward, fill intact). `DocumentRenderer` suppresses the box border for text; the glyph border is threaded into the raster cache key (`variant`).
 - **Editing entry/exit:** **Return** on a selected text layer re-edits it (mirrors double-click); **⌘Return** in the editor commits (plain Return is a newline) via the `InlineTextView` subclass.
 
+## Measure / Ruler (Phase 16) — the user's PRIMARY workflow
+
+A designer's redline tool for measuring gaps/sizes on a screenshot and checking alignment. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own `LayerContent.measure` case on the two-endpoint pattern (start/end = the two box corners, layer-local once built); `MeasureBuilder` mirrors `AnnotationBuilder` (layer/updating/resized/restyled). Tool = `.measure` (toolbar "ruler", shortcut **M**, `createsMeasureByDrag`).
+
+- **Two forms (`MeasureForm`)** — the tool defaults to **`bracket`**:
+  - **`bracket`** (a squared "U") — drag corner **A → opposite corner B**; the U wraps the gap with legs reaching in from A, a connector spanning the measured gap on the far side, and the **label outside** the connector. `bracketGeometry()` returns the 4-point open path + connector midpoint + outward unit. Orientation is the box's dominant axis (`bracketAxis`: tall→vertical gap "⊐", wide→horizontal "⊔"); ⇧ flips the axis on create.
+  - **`line`** — a straight dimension line (+ witness lines in the locked H/V modes), free point-to-point.
+- **Measured value** — `rawDistance` (free=hypot, H/V=|dx|/|dy|, i.e. the gap-axis span). `MeasureUnit` **defaults to `pixels`** (raw image px); `points` divides by `PhotonzDocument.pixelScale` (≤0→1 guard). `label(pixelScale:)` = `%.<decimals>f <suffix>`.
+- **Stroke width is in LOGICAL pixels**, rendered ×`pixelScale` (`MeasureRasterizer` uses butt caps + miter joins for crisp 1px right-angle corners), so a "1px" sizer line aligns to the image's pixel grid. Default 1; inspector offers 1/2/3px.
+- **Rendering** (`PhotonzRender/MeasureRasterizer.swift`): branches on form; the numeric **label** is white CoreText on a rounded plate filled with the measure color — produced via `TextRasterizer` and **blitted** in (drawing CoreText directly into the rasterizer's flipped context renders it upside-down). Cache `variant = "scale:<pixelScale>"` so the points readout invalidates on scale change. The frame reserves `estimatedLabelSize` at `labelCenter(labelSize:)` so the label isn't clipped.
+- **Select / move / resize**: a selected measure shows the universal dotted selection box + **round handles on all 4 box corners** (a `line` shows its 2 ends). Dragging any corner updates the right start/end components (diagonal-opposite stays fixed) and the gap/label **update live** (full re-render per move via `previewMeasureEndpoints`; one undo step on release via `commitMeasureEndpoints`; Esc restores). Move works via hit-testing (`Layer.contains` tests the drawn strokes). `MeasureCornerDrag` carries `(xFromEnd, yFromEnd)`.
+- **Inspector** (`MeasureInspector`, `InspectorSectionID.measure`): Style (Bracket/Line) · Direction (Vertical/Horizontal) + an **invert ⇄ button** (`invertMeasure` swaps the corners → flips the bracket to the other side) · Unit (Pixels/Points) · Thickness (1/2/3px) · Show-label toggle · Color. Defaults live in `EditorState.measureStyle` (in-memory; **not yet persisted**).
+- **Open follow-ups**: measureStyle persistence; auto-detect `pixelScale` from the capture's DPI (currently fixed at 1 — the 1×/2× inspector control was removed as confusing); the toolbar S style-popover doesn't cover measures.
+- **NEXT (16.4–16.5): ruler snapping** — an edge map of the screenshot (`CIEdges`/Sobel projected onto X/Y → peak boundaries) so corner grips magnetize to detected UI edges/baselines **and** to the pixel grid (keeps thin lines crisp). There is no UI tree — snapping comes from image edge analysis. See `docs/plan/phase-16.json`.
+
 ## Zoom callout (Phase 5) — signature feature
 
 Select a box → magnified copy placed nearby with leader lines back to the source.
