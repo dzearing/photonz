@@ -460,8 +460,12 @@ final class CanvasNSView: NSView {
         crawl.repeatCount = .infinity
         selectionAntsLayer.add(crawl, forKey: "marchingAnts")
 
-        layerOutlineLayer.strokeColor = NSColor.controlAccentColor.cgColor
-        layerOutlineLayer.lineWidth = 2
+        // Subtle selection outline: translucent accent, dotted, thin — present
+        // enough to read as selected without competing with the content.
+        layerOutlineLayer.strokeColor = NSColor.controlAccentColor.withAlphaComponent(0.6).cgColor
+        layerOutlineLayer.lineWidth = 1.5
+        layerOutlineLayer.lineCap = .round
+        layerOutlineLayer.lineDashPattern = [1, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
