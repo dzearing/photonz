@@ -343,6 +343,10 @@ public final class DocumentRenderer: @unchecked Sendable {
                 AnnotationRasterizer.rasterize(annotation, size: layer.frame.size)
             }) else { return nil }
             image = raster
+        case .measure:
+            // Rasterization lands in 16.2; until then a measure layer contributes
+            // nothing to the composite (the model + interaction come first).
+            return nil
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)

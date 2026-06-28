@@ -7,20 +7,34 @@ import Foundation
 public struct PhotonzDocument: Hashable, Codable, Sendable {
     public var canvasSize: CGSize
     public var layers: [Layer]
+    /// Bitmap pixels per logical point of the source capture (1 for non-Retina,
+    /// 2 for a Retina screenshot). Measures divide raw pixel distances by this to
+    /// read out in points. Set from the capture's `backingScaleFactor`.
+    public var pixelScale: CGFloat
 
-    public init(canvasSize: CGSize, layers: [Layer] = []) {
+    public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1) {
         self.canvasSize = canvasSize
         self.layers = layers
+        self.pixelScale = pixelScale
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        canvasSize = try c.decode(CGSize.self, forKey: .canvasSize)
+        layers = try c.decode([Layer].self, forKey: .layers)
+        // `pixelScale` postdates the format; legacy documents omit it.
+        pixelScale = try c.decodeIfPresent(CGFloat.self, forKey: .pixelScale) ?? 1
     }
 
     /// A new document built around a base image, which becomes the bottom layer.
     /// The background is born locked (Photoshop convention): clicks on it fall
     /// through to the marquee instead of dragging the whole image around.
-    public static func withBaseImage(_ ref: ImageRef) -> PhotonzDocument {
+    /// `pixelScale` carries the capture's backing scale so measures read in points.
+    public static func withBaseImage(_ ref: ImageRef, pixelScale: CGFloat = 1) -> PhotonzDocument {
         let layer = Layer(name: "Background", content: .image(ref),
                           frame: CGRect(origin: .zero, size: ref.pixelSize),
                           isLocked: true)
-        return PhotonzDocument(canvasSize: ref.pixelSize, layers: [layer])
+        return PhotonzDocument(canvasSize: ref.pixelSize, layers: [layer], pixelScale: pixelScale)
     }
 
     // MARK: - Layer access

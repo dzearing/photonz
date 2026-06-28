@@ -139,6 +139,7 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case text(TextContent)
     case annotation(AnnotationContent)
     case zoomCallout(ZoomCalloutContent)
+    case measure(MeasureContent)
 }
 
 /// How a layer composites against the content below it.
@@ -280,6 +281,17 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
             let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
             return Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance
+        }
+        if let m = measure {
+            // Hit near the dimension line (and witness lines), not the padded box.
+            let geo = MeasureContent.geometry(mode: m.mode,
+                                              start: CGPoint(x: frame.minX + m.start.x, y: frame.minY + m.start.y),
+                                              end: CGPoint(x: frame.minX + m.end.x, y: frame.minY + m.end.y))
+            let tolerance = m.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
+            for seg in [geo.dimension] + geo.extensions {
+                if Geometry.distance(from: p, toSegmentFrom: seg.a, to: seg.b) <= tolerance { return true }
+            }
+            return false
         }
         return frame.contains(p)
     }

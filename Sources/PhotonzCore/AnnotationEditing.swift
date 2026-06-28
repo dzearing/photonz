@@ -14,10 +14,23 @@ extension Layer {
         return nil
     }
 
-    /// Lines/arrows edit by dragging their endpoints, not a frame.
+    /// The layer's measure content, nil for other content kinds.
+    public var measure: MeasureContent? {
+        if case .measure(let m) = content { return m }
+        return nil
+    }
+
+    /// Lines/arrows and measures edit by dragging their two endpoints.
     public var hasEndpointHandles: Bool {
-        guard let a = annotation else { return false }
-        return a.shape == .line || a.shape == .arrow
+        if let a = annotation { return a.shape == .line || a.shape == .arrow }
+        return measure != nil
+    }
+
+    /// A measure reference point's position in document coordinates.
+    public func measureEndpoint(_ endpoint: AnnotationEndpoint) -> CGPoint? {
+        guard let m = measure else { return nil }
+        let local = endpoint == .start ? m.start : m.end
+        return CGPoint(x: frame.minX + local.x, y: frame.minY + local.y)
     }
 
     /// Whether the selection chrome offers the eight frame-resize handles.
@@ -27,7 +40,7 @@ extension Layer {
     public var allowsFrameResize: Bool {
         switch content {
         case .text: true
-        case .annotation: !hasEndpointHandles
+        case .annotation, .measure: !hasEndpointHandles
         case .image, .zoomCallout: true
         }
     }
@@ -53,6 +66,7 @@ extension Layer {
     /// magnification from the new frame; other content just moves.
     public func resized(to frame: CGRect) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
+        if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         var layer = self
         layer.frame = frame
