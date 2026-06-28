@@ -102,22 +102,15 @@ public enum MeasureRasterizer {
     }
 
     /// Draws the readout centered at `anchor` on a rounded plate filled with the
-    /// measure color, white text on top. Uses CoreText in the flipped context
-    /// (upright, AppKit-free — mirrors TextRasterizer).
+    /// measure color. The glyphs come from `TextRasterizer` (the proven-upright
+    /// path) as a transparent image that's blitted in — drawing CoreText directly
+    /// into this already-flipped context renders the text upside down.
     private static func drawLabel(_ string: String, at anchor: CGPoint,
                                   plateColor: CGColor, in context: CGContext) {
-        let font = CTFontCreateUIFontForLanguage(.system, MeasureContent.labelFontSize, nil)
-            ?? CTFontCreateWithName("Helvetica" as CFString, MeasureContent.labelFontSize, nil)
-        let white = CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
-        let attrs: [NSAttributedString.Key: Any] = [
-            NSAttributedString.Key(kCTFontAttributeName as String): font,
-            NSAttributedString.Key(kCTForegroundColorAttributeName as String): white,
-        ]
-        let attributed = NSAttributedString(string: string, attributes: attrs)
-        let framesetter = CTFramesetterCreateWithAttributedString(attributed)
-        let unbounded = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        let textSize = CTFramesetterSuggestFrameSizeWithConstraints(
-            framesetter, CFRange(location: 0, length: 0), nil, unbounded, nil)
+        let text = TextContent(string: string, fontName: "SF Pro",
+                               fontSize: MeasureContent.labelFontSize, colorHex: "#FFFFFF")
+        let textSize = TextRasterizer.naturalSize(text)
+        guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
 
         let pad = MeasureContent.labelPadding
         let plateOrigin = CGPoint(x: anchor.x - textSize.width / 2 - pad,
@@ -129,10 +122,14 @@ public enum MeasureRasterizer {
                                cornerHeight: plate.height / 2, transform: nil))
         context.fillPath()
 
+        // Blit the upright glyph image. The context is flipped (top-left), so
+        // locally un-flip around the text rect to keep the image upright.
         let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
                               width: textSize.width, height: textSize.height)
-        let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0),
-                                             CGPath(rect: textRect, transform: nil), nil)
-        CTFrameDraw(frame, context)
+        context.saveGState()
+        context.translateBy(x: textRect.minX, y: textRect.maxY)
+        context.scaleBy(x: 1, y: -1)
+        context.draw(glyphs, in: CGRect(origin: .zero, size: textRect.size))
+        context.restoreGState()
     }
 }

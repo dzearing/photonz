@@ -93,6 +93,48 @@ struct MeasureRenderingTests {
         #expect(isWhite(pixel(out, x: 50, y: 75)), "off the diagonal is untouched")
     }
 
+    /// Normalized vertical ink profile of the white (text) pixels, resampled to
+    /// `bins` over the ink's vertical extent. Orientation-sensitive.
+    private func whiteRowProfile(_ img: CGImage, bins: Int = 24) -> [Double] {
+        var counts = [Int](repeating: 0, count: img.height)
+        var minY = Int.max, maxY = -1
+        for y in 0..<img.height {
+            var c = 0
+            for x in 0..<img.width where isWhite(pixel(img, x: x, y: y)) { c += 1 }
+            counts[y] = c
+            if c > 0 { minY = min(minY, y); maxY = max(maxY, y) }
+        }
+        guard maxY >= minY else { return [Double](repeating: 0, count: bins) }
+        let h = maxY - minY + 1
+        var profile = [Double](repeating: 0, count: bins)
+        for y in minY...maxY { profile[min(bins - 1, (y - minY) * bins / h)] += Double(counts[y]) }
+        let total = profile.reduce(0, +)
+        if total > 0 { for i in 0..<bins { profile[i] /= total } }
+        return profile
+    }
+
+    @Test func labelTextRendersUprightNotFlipped() {
+        // The measure blits TextRasterizer's (proven-upright) glyphs. Its vertical
+        // ink profile must match TextRasterizer's upright profile, NOT its flip —
+        // a regression that drew the label upside down would invert it.
+        let measureImg = MeasureRasterizer.rasterize(
+            MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                           mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+            size: CGSize(width: 240, height: 120), pixelScale: 1)!
+        let text = TextContent(string: "200 pt", fontName: "SF Pro",
+                               fontSize: MeasureContent.labelFontSize, colorHex: "#FFFFFF")
+        let textImg = TextRasterizer.rasterize(text, size: TextRasterizer.naturalSize(text))!
+
+        let measureProfile = whiteRowProfile(measureImg)
+        let upright = whiteRowProfile(textImg)
+        let flipped = Array(upright.reversed())
+        func ssd(_ a: [Double], _ b: [Double]) -> Double {
+            zip(a, b).reduce(0) { $0 + ($1.0 - $1.1) * ($1.0 - $1.1) }
+        }
+        #expect(ssd(measureProfile, upright) < ssd(measureProfile, flipped),
+                "label ink profile matches upright text, not its vertical flip")
+    }
+
     @Test func pointsReadoutHalvesAtRetinaScale() {
         // Same 200px span reads "200" at 1× and "100" at 2× — the rendered plate
         // narrows accordingly. We can't OCR, but the 1× plate (3 digits) must be
