@@ -735,8 +735,8 @@ final class CanvasNSView: NSView {
                 // Hold the vector preview until the composite with the new measure
                 // lands (the same no-flash trick the annotation path uses).
                 annotationCommitImage = image
-                let mode = measureMode(anchor: drag.anchor, current: drag.current,
-                                       constrained: event.modifierFlags.contains(.shift))
+                let mode = measureModeForCommit(anchor: drag.anchor, current: drag.current,
+                                                constrained: event.modifierFlags.contains(.shift))
                 onMeasureCommit(drag.anchor, drag.current, mode)
             }
         } else if let session = endpointDrag {
@@ -1430,29 +1430,49 @@ final class CanvasNSView: NSView {
         CATransaction.commit()
     }
 
-    /// Free unless ⇧ is held, which locks the measure to its dominant axis.
-    private func measureMode(anchor: CGPoint, current: CGPoint, constrained: Bool) -> MeasureMode {
+    /// The mode a committed measure gets. A bracket measures its dominant axis
+    /// (⇧ flips which axis is the gap). A straight line is free unless ⇧ locks it
+    /// to the dominant axis.
+    private func measureModeForCommit(anchor: CGPoint, current: CGPoint, constrained: Bool) -> MeasureMode {
+        let style = measureContent ?? MeasureContent()
+        if style.form == .bracket {
+            let axis = MeasureContent.bracketAxis(start: anchor, end: current)
+            guard constrained else { return axis }
+            return axis == .vertical ? .horizontal : .vertical
+        }
         guard constrained else { return .free }
         return abs(current.x - anchor.x) >= abs(current.y - anchor.y) ? .horizontal : .vertical
     }
 
-    /// In-flight measure drag: preview the dimension + witness lines (the label
-    /// plate is added on commit). Reuses the annotation preview shape layer.
+    /// In-flight measure drag: preview the strokes (line+witness, or the bracket
+    /// path). The label plate is added on commit. Reuses the annotation preview
+    /// shape layer.
     private func refreshMeasurePreview(constrained: Bool) {
         guard let drag = measureDrag, let viewport else {
             clearAnnotationPreview()
             return
         }
-        let style = measureContent ?? MeasureContent()
-        let mode = measureMode(anchor: drag.anchor, current: drag.current, constrained: constrained)
-        let geo = MeasureContent.geometry(mode: mode, start: drag.anchor, end: drag.current)
+        var style = measureContent ?? MeasureContent()
+        let mode = measureModeForCommit(anchor: drag.anchor, current: drag.current, constrained: constrained)
         let path = CGMutablePath()
-        func add(_ seg: MeasureSegment) {
-            path.move(to: viewport.viewPoint(fromDocument: seg.a))
-            path.addLine(to: viewport.viewPoint(fromDocument: seg.b))
+        if style.form == .bracket {
+            style.mode = mode
+            style.start = drag.anchor
+            style.end = drag.current
+            let pts = style.bracketGeometry().path.map { viewport.viewPoint(fromDocument: $0) }
+            if let first = pts.first {
+                path.move(to: first)
+                for p in pts.dropFirst() { path.addLine(to: p) }
+            }
+        } else {
+            let geo = MeasureContent.geometry(mode: mode, start: drag.anchor, end: drag.current)
+            func add(_ seg: MeasureSegment) {
+                path.move(to: viewport.viewPoint(fromDocument: seg.a))
+                path.addLine(to: viewport.viewPoint(fromDocument: seg.b))
+            }
+            add(geo.dimension)
+            geo.extensions.forEach(add)
         }
-        add(geo.dimension)
-        geo.extensions.forEach(add)
         let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
 

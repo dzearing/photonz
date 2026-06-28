@@ -11,6 +11,16 @@ public enum MeasureMode: String, CaseIterable, Hashable, Codable, Sendable {
     case vertical
 }
 
+/// How a measure is drawn. `line` is a straight dimension line (with witness
+/// lines in the locked modes). `bracket` is a squared "U" that wraps the gap
+/// between two opposite corners — legs reach in from the start corner, the
+/// closed connector spans the measured gap on the far side, and the label sits
+/// outside it. Built for redlining the space between two UI elements.
+public enum MeasureForm: String, CaseIterable, Hashable, Codable, Sendable {
+    case line
+    case bracket
+}
+
 /// The unit a measure's readout is shown in. `points` divides the raw bitmap
 /// distance by the document's `pixelScale` (a 2× Retina capture reads in logical
 /// points); `pixels` shows the raw bitmap distance.
@@ -79,10 +89,12 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     public var unit: MeasureUnit
     public var decimals: Int
     public var capStyle: MeasureCapStyle
+    public var form: MeasureForm
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero, mode: MeasureMode = .free,
                 strokeWidth: CGFloat = 2, colorHex: String = "#FF3B30", showLabel: Bool = true,
-                unit: MeasureUnit = .points, decimals: Int = 0, capStyle: MeasureCapStyle = .ticks) {
+                unit: MeasureUnit = .points, decimals: Int = 0, capStyle: MeasureCapStyle = .ticks,
+                form: MeasureForm = .line) {
         self.start = start
         self.end = end
         self.mode = mode
@@ -92,6 +104,22 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.unit = unit
         self.decimals = decimals
         self.capStyle = capStyle
+        self.form = form
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        start = try c.decode(CGPoint.self, forKey: .start)
+        end = try c.decode(CGPoint.self, forKey: .end)
+        mode = try c.decode(MeasureMode.self, forKey: .mode)
+        strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        showLabel = try c.decode(Bool.self, forKey: .showLabel)
+        unit = try c.decode(MeasureUnit.self, forKey: .unit)
+        decimals = try c.decode(Int.self, forKey: .decimals)
+        capStyle = try c.decode(MeasureCapStyle.self, forKey: .capStyle)
+        // `form` postdates the type; older payloads default to the straight line.
+        form = try c.decodeIfPresent(MeasureForm.self, forKey: .form) ?? .line
     }
 }
 
@@ -153,6 +181,48 @@ extension MeasureContent {
         }
     }
 
+    /// The dominant axis between two opposite corners — the measured gap for a
+    /// bracket. Vertical when the box is at least as tall as it is wide.
+    public static func bracketAxis(start s: CGPoint, end e: CGPoint) -> MeasureMode {
+        abs(e.y - s.y) >= abs(e.x - s.x) ? .vertical : .horizontal
+    }
+
+    /// The squared-U bracket between `start` and `end` (opposite corners): the
+    /// four-point open path (leg → connector → leg), the connector midpoint where
+    /// the label anchors, and the outward unit pointing away from the opening (the
+    /// side the label sits on). Mode selects which axis the connector spans.
+    public func bracketGeometry() -> (path: [CGPoint], connectorMid: CGPoint, outward: CGVector) {
+        let x0 = start.x, y0 = start.y, x1 = end.x, y1 = end.y
+        if mode == .horizontal {
+            // Legs vertical (at x0 and x1), connector horizontal at y1 (far from y0).
+            let path = [CGPoint(x: x0, y: y0), CGPoint(x: x0, y: y1),
+                        CGPoint(x: x1, y: y1), CGPoint(x: x1, y: y0)]
+            return (path, CGPoint(x: (x0 + x1) / 2, y: y1), CGVector(dx: 0, dy: y1 >= y0 ? 1 : -1))
+        } else {
+            // Legs horizontal (at y0 and y1), connector vertical at x1 (far from x0).
+            let path = [CGPoint(x: x0, y: y0), CGPoint(x: x1, y: y0),
+                        CGPoint(x: x1, y: y1), CGPoint(x: x0, y: y1)]
+            return (path, CGPoint(x: x1, y: (y0 + y1) / 2), CGVector(dx: x1 >= x0 ? 1 : -1, dy: 0))
+        }
+    }
+
+    /// Where the label plate centers, given its size. Line: on the dimension line.
+    /// Bracket: outside the connector, offset by the plate half-extent + a gap.
+    public func labelCenter(labelSize: CGSize) -> CGPoint {
+        switch form {
+        case .line:
+            return geometry().labelAnchor
+        case .bracket:
+            let b = bracketGeometry()
+            let reach = (abs(b.outward.dx) > 0 ? labelSize.width : labelSize.height) / 2 + Self.labelOutwardGap
+            return CGPoint(x: b.connectorMid.x + b.outward.dx * reach,
+                           y: b.connectorMid.y + b.outward.dy * reach)
+        }
+    }
+
+    /// Gap between a bracket's connector and its outside label plate.
+    public static let labelOutwardGap: CGFloat = 6
+
     /// Label text plate point size. Fixed (independent of the document's
     /// `pixelScale`) so a measure's frame never shifts when the unit toggles.
     public static let labelFontSize: CGFloat = 24
@@ -199,12 +269,12 @@ public enum MeasureBuilder {
         var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
             .insetBy(dx: -pad, dy: -pad)
-        // Reserve room for the label plate, centered on the dimension line, so a
-        // short measure's number isn't clipped at the frame edge.
+        // Reserve room for the label plate (on the line, or outside a bracket's
+        // connector) so the number isn't clipped at the frame edge.
         if content.showLabel {
-            let anchor = MeasureContent.geometry(mode: content.mode, start: start, end: end).labelAnchor
             let size = content.estimatedLabelSize
-            box = box.union(CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
+            let center = content.labelCenter(labelSize: size)
+            box = box.union(CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
                                    width: size.width, height: size.height))
         }
         box.size.width = max(box.size.width, 1)
@@ -241,7 +311,8 @@ public enum MeasureBuilder {
     /// in document space while the frame re-pads for any new stroke width.
     public static func restyled(_ layer: Layer, colorHex: String? = nil, strokeWidth: CGFloat? = nil,
                                 showLabel: Bool? = nil, unit: MeasureUnit? = nil, decimals: Int? = nil,
-                                mode: MeasureMode? = nil, capStyle: MeasureCapStyle? = nil) -> Layer {
+                                mode: MeasureMode? = nil, capStyle: MeasureCapStyle? = nil,
+                                form: MeasureForm? = nil) -> Layer {
         guard var m = layer.measure,
               let start = layer.measureEndpoint(.start),
               let end = layer.measureEndpoint(.end) else { return layer }
@@ -252,6 +323,7 @@ public enum MeasureBuilder {
         if let decimals { m.decimals = decimals }
         if let mode { m.mode = mode }
         if let capStyle { m.capStyle = capStyle }
+        if let form { m.form = form }
         var updated = layer
         updated.content = .measure(m)
         return updating(updated, start: start, end: end)

@@ -34,27 +34,40 @@ public enum MeasureRasterizer {
         context.setLineCap(.round)
         context.setLineJoin(.round)
 
-        let geo = measure.geometry()
+        let labelText = measure.label(pixelScale: pixelScale)
 
-        // Witness/extension lines first (under the dimension line and caps).
-        for seg in geo.extensions {
-            context.move(to: seg.a)
-            context.addLine(to: seg.b)
-        }
-        context.strokePath()
+        switch measure.form {
+        case .line:
+            let geo = measure.geometry()
+            // Witness/extension lines first (under the dimension line and caps).
+            for seg in geo.extensions {
+                context.move(to: seg.a)
+                context.addLine(to: seg.b)
+            }
+            context.strokePath()
+            // The dimension line.
+            context.move(to: geo.dimension.a)
+            context.addLine(to: geo.dimension.b)
+            context.strokePath()
+            drawCaps(measure: measure, dimension: geo.dimension, color: color, in: context)
+            if measure.showLabel {
+                drawLabel(labelText, at: geo.labelAnchor, plateColor: color, in: context)
+            }
 
-        // The dimension line.
-        context.move(to: geo.dimension.a)
-        context.addLine(to: geo.dimension.b)
-        context.strokePath()
-
-        // End caps at each end of the dimension line.
-        drawCaps(measure: measure, dimension: geo.dimension, color: color, in: context)
-
-        // Numeric label on a filled plate centered on the line.
-        if measure.showLabel {
-            drawLabel(measure.label(pixelScale: pixelScale), at: geo.labelAnchor,
-                      plateColor: color, in: context)
+        case .bracket:
+            // A squared "U": legs in from the start corner, connector across the
+            // gap on the far side, label outside it.
+            let b = measure.bracketGeometry()
+            context.move(to: b.path[0])
+            for p in b.path.dropFirst() { context.addLine(to: p) }
+            context.strokePath()
+            if measure.showLabel {
+                let size = TextRasterizer.naturalSize(
+                    TextContent(string: labelText, fontName: "SF Pro",
+                                fontSize: MeasureContent.labelFontSize))
+                let center = measure.labelCenter(labelSize: size)
+                drawLabel(labelText, at: center, plateColor: color, in: context)
+            }
         }
 
         return context.makeImage()

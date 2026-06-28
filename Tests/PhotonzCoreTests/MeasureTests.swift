@@ -123,6 +123,60 @@ struct MeasureGeometryTests {
     }
 }
 
+// MARK: - Bracket (gap U)
+
+@Suite("Measure bracket")
+struct MeasureBracketTests {
+
+    @Test func axisIsTheDominantDimensionOfTheCornerBox() {
+        // Taller than wide → vertical gap; wider than tall → horizontal gap.
+        #expect(MeasureContent.bracketAxis(start: .zero, end: CGPoint(x: 40, y: 200)) == .vertical)
+        #expect(MeasureContent.bracketAxis(start: .zero, end: CGPoint(x: 200, y: 40)) == .horizontal)
+    }
+
+    @Test func verticalBracketOpensTowardTheStartCornerWithConnectorOnTheFarSide() {
+        // A = top-left (0,0), B = bottom-right (80,200). Legs run right from A's
+        // column to the connector at x=80; the U opens left (toward A).
+        var m = MeasureContent(mode: .vertical, form: .bracket)
+        m.start = CGPoint(x: 0, y: 0)
+        m.end = CGPoint(x: 80, y: 200)
+        let g = m.bracketGeometry()
+        #expect(g.path == [CGPoint(x: 0, y: 0), CGPoint(x: 80, y: 0),
+                           CGPoint(x: 80, y: 200), CGPoint(x: 0, y: 200)])
+        #expect(g.connectorMid == CGPoint(x: 80, y: 100))
+        #expect(g.outward == CGVector(dx: 1, dy: 0)) // label sits to the right, outside
+    }
+
+    @Test func horizontalBracketHasConnectorOnTheBottomOutwardDown() {
+        var m = MeasureContent(mode: .horizontal, form: .bracket)
+        m.start = CGPoint(x: 0, y: 0)
+        m.end = CGPoint(x: 200, y: 80)
+        let g = m.bracketGeometry()
+        #expect(g.path == [CGPoint(x: 0, y: 0), CGPoint(x: 0, y: 80),
+                           CGPoint(x: 200, y: 80), CGPoint(x: 200, y: 0)])
+        #expect(g.connectorMid == CGPoint(x: 100, y: 80))
+        #expect(g.outward == CGVector(dx: 0, dy: 1))
+    }
+
+    @Test func bracketLabelSitsOutsideTheConnectorNotOnIt() {
+        var m = MeasureContent(mode: .vertical, form: .bracket)
+        m.start = CGPoint(x: 0, y: 0)
+        m.end = CGPoint(x: 80, y: 200)
+        let size = CGSize(width: 60, height: 30)
+        let center = m.labelCenter(labelSize: size)
+        // Beyond the connector (x=80) by half the plate width + the gap.
+        #expect(center.x == 80 + 30 + MeasureContent.labelOutwardGap)
+        #expect(center.y == 100)
+    }
+
+    @Test func bracketMeasuresTheGapAxisDistance() {
+        var m = MeasureContent(mode: .vertical, form: .bracket)
+        m.start = CGPoint(x: 10, y: 20)
+        m.end = CGPoint(x: 90, y: 220) // 200 tall
+        #expect(m.rawDistance == 200)
+    }
+}
+
 // MARK: - Builder: frame & local coords & remap on resize
 
 @Suite("MeasureBuilder")

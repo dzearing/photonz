@@ -282,14 +282,23 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
             return Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance
         }
-        if let m = measure {
-            // Hit near the dimension line (and witness lines), not the padded box.
-            let geo = MeasureContent.geometry(mode: m.mode,
-                                              start: CGPoint(x: frame.minX + m.start.x, y: frame.minY + m.start.y),
-                                              end: CGPoint(x: frame.minX + m.end.x, y: frame.minY + m.end.y))
+        if var m = measure {
+            // Hit near the drawn strokes (line + witness, or the bracket path),
+            // not the padded box. Express endpoints in document space.
+            m.start = CGPoint(x: frame.minX + m.start.x, y: frame.minY + m.start.y)
+            m.end = CGPoint(x: frame.minX + m.end.x, y: frame.minY + m.end.y)
             let tolerance = m.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
-            for seg in [geo.dimension] + geo.extensions {
-                if Geometry.distance(from: p, toSegmentFrom: seg.a, to: seg.b) <= tolerance { return true }
+            var segments: [(CGPoint, CGPoint)] = []
+            switch m.form {
+            case .line:
+                let geo = m.geometry()
+                segments = ([geo.dimension] + geo.extensions).map { ($0.a, $0.b) }
+            case .bracket:
+                let path = m.bracketGeometry().path
+                for i in 0..<(path.count - 1) { segments.append((path[i], path[i + 1])) }
+            }
+            for (a, b) in segments where Geometry.distance(from: p, toSegmentFrom: a, to: b) <= tolerance {
+                return true
             }
             return false
         }

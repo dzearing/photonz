@@ -53,7 +53,7 @@ final class EditorState {
     /// Template style for new measures (color, stroke, unit, label toggle, caps).
     /// In-memory default for now; start/end are ignored (set per drag).
     private(set) var measureStyle = MeasureContent(strokeWidth: 3, colorHex: "#FF3B30",
-                                                   showLabel: true, unit: .points)
+                                                   showLabel: true, unit: .points, form: .bracket)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -471,6 +471,11 @@ final class EditorState {
     func setMeasureShowLabel(_ show: Bool) {
         measureStyle.showLabel = show
         applyMeasureRestyle { MeasureBuilder.restyled($0, showLabel: show) }
+    }
+
+    func setMeasureForm(_ form: MeasureForm) {
+        measureStyle.form = form
+        applyMeasureRestyle { MeasureBuilder.restyled($0, form: form) }
     }
 
     func setMeasureColor(_ hex: String, commit: Bool) {

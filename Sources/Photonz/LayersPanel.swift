@@ -748,6 +748,13 @@ struct MeasureInspector: View {
                         supportsOpacity: false)
                         .labelsHidden().controlSize(.small)
                 }
+                Picker("Style", selection: Binding(
+                    get: { c.form },
+                    set: { editorState.setMeasureForm($0) })) {
+                    Text("Bracket").tag(MeasureForm.bracket)
+                    Text("Line").tag(MeasureForm.line)
+                }
+                .pickerStyle(.segmented).controlSize(.small)
                 Picker("Unit", selection: Binding(
                     get: { c.unit },
                     set: { editorState.setMeasureUnit($0) })) {
