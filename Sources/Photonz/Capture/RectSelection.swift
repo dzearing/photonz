@@ -5,9 +5,7 @@ import AppKit
 @MainActor
 final class RectSelectionController {
     private var windows: [SelectionWindow] = []
-    /// Whoever was frontmost before the overlay, so focus returns there instead
-    /// of leaving an open editor window yanked to the foreground.
-    private var previousApp: NSRunningApplication?
+    private var escMonitors: [Any] = []
     private let onComplete: (NSScreen, CGRect) -> Void
     private let onCancel: () -> Void
 
@@ -18,32 +16,35 @@ final class RectSelectionController {
 
     func begin() {
         guard windows.isEmpty else { return }
-        previousApp = NSWorkspace.shared.frontmostApplication
         for screen in NSScreen.screens {
             let window = SelectionWindow(screen: screen)
             window.selectionView.onSelect = { [weak self] rect in self?.finish(screen: screen, rect: rect) }
             window.selectionView.onCancel = { [weak self] in self?.cancel() }
-            window.makeKeyAndOrderFront(nil)
+            // Order front WITHOUT activating: the windows are non-activating
+            // panels so they take mouse/keys without pulling the app (and any
+            // open editor window) to the foreground.
+            window.orderFrontRegardless()
             windows.append(window)
         }
-        // Activating gives the overlay key focus, but with an editor window open
-        // the app is `.regular`, so this also raises the editor. Focus is handed
-        // back to `previousApp` in `dismiss()` so the editor doesn't stay front.
-        NSApp.activate(ignoringOtherApps: true)
         NSCursor.crosshair.set()
+        // The overlay isn't the active app, so its panels won't reliably receive
+        // keyDown — watch for Esc both locally (if we are active) and globally.
+        if let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
+            if e.keyCode == 53 { self?.cancel(); return nil }
+            return e
+        }) { escMonitors.append(local) }
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
+            if e.keyCode == 53 { self?.cancel() }
+        }) { escMonitors.append(global) }
     }
 
     /// Tears down the overlay windows so they don't appear in the capture.
     func dismiss() {
+        escMonitors.forEach { NSEvent.removeMonitor($0) }
+        escMonitors = []
         windows.forEach { $0.orderOut(nil) }
         windows = []
         NSCursor.arrow.set()
-        // Return focus to the app that was frontmost before capture (unless that
-        // was us), so taking a screenshot doesn't pull the editor forward.
-        if let previousApp, previousApp.processIdentifier != NSRunningApplication.current.processIdentifier {
-            previousApp.activate()
-        }
-        previousApp = nil
     }
 
     private func finish(screen: NSScreen, rect: CGRect) {
@@ -57,21 +58,25 @@ final class RectSelectionController {
     }
 }
 
-private final class SelectionWindow: NSWindow {
+private final class SelectionWindow: NSPanel {
     let selectionView = SelectionView()
 
     init(screen: NSScreen) {
-        super.init(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        // A non-activating panel takes mouse/keys without making Photonz the
+        // active app — so starting a capture never raises an open editor window.
+        super.init(contentRect: screen.frame, styleMask: [.borderless, .nonactivatingPanel],
+                   backing: .buffered, defer: false)
         level = .screenSaver
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
         ignoresMouseEvents = false
+        isFloatingPanel = true
+        hidesOnDeactivate = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         contentView = selectionView
     }
 
-    // Borderless windows refuse key status by default; we need Esc.
     override var canBecomeKey: Bool { true }
 }
 
@@ -87,6 +92,9 @@ private final class SelectionView: NSView {
     // the same space ScreenCapturer.capture(sourceRect:) expects.
     override var isFlipped: Bool { true }
     override var acceptsFirstResponder: Bool { true }
+    // The app isn't active during capture, so the first click must register as a
+    // drag (not just an activation) for drag-to-select to work.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     // Cursor rects are unreliable on borderless screen-saver-level overlay
     // windows (the crosshair often never replaces the arrow). A tracking area
