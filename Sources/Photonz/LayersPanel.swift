@@ -762,6 +762,14 @@ struct MeasureInspector: View {
                     Text("Pixels").tag(MeasureUnit.pixels)
                 }
                 .pickerStyle(.segmented).controlSize(.small)
+                Picker("Thickness", selection: Binding(
+                    get: { c.strokeWidth },
+                    set: { editorState.setMeasureThickness($0) })) {
+                    Text("1 px").tag(CGFloat(1))
+                    Text("2 px").tag(CGFloat(2))
+                    Text("3 px").tag(CGFloat(3))
+                }
+                .pickerStyle(.segmented).controlSize(.small)
                 Toggle("Show size label", isOn: Binding(
                     get: { c.showLabel },
                     set: { editorState.setMeasureShowLabel($0) }))

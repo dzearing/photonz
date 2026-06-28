@@ -28,11 +28,15 @@ public enum MeasureRasterizer {
 
         let rgba = RGBA(hex: measure.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        // Stroke width is in LOGICAL pixels so a "1px" sizer line aligns with the
+        // image's pixel grid: on a 2× capture one logical pixel is two image px.
+        let scale = pixelScale > 0 ? pixelScale : 1
+        let lineWidth = measure.strokeWidth * scale
         context.setStrokeColor(color)
         context.setFillColor(color)
-        context.setLineWidth(measure.strokeWidth)
-        context.setLineCap(.round)
-        context.setLineJoin(.round)
+        context.setLineWidth(lineWidth)
+        context.setLineCap(.butt)
+        context.setLineJoin(.miter)
 
         let labelText = measure.label(pixelScale: pixelScale)
 
@@ -49,7 +53,7 @@ public enum MeasureRasterizer {
             context.move(to: geo.dimension.a)
             context.addLine(to: geo.dimension.b)
             context.strokePath()
-            drawCaps(measure: measure, dimension: geo.dimension, color: color, in: context)
+            drawCaps(measure: measure, dimension: geo.dimension, lineWidth: lineWidth, color: color, in: context)
             if measure.showLabel {
                 drawLabel(labelText, at: geo.labelAnchor, plateColor: color, in: context)
             }
@@ -76,7 +80,7 @@ public enum MeasureRasterizer {
     /// Perpendicular ticks (the redline convention) or inward arrowheads at the
     /// dimension line's ends.
     private static func drawCaps(measure: MeasureContent, dimension: MeasureSegment,
-                                 color: CGColor, in context: CGContext) {
+                                 lineWidth: CGFloat, color: CGColor, in context: CGContext) {
         let dx = dimension.b.x - dimension.a.x
         let dy = dimension.b.y - dimension.a.y
         let length = hypot(dx, dy)
@@ -88,7 +92,7 @@ public enum MeasureRasterizer {
             // A serif perpendicular to the line, centered on each endpoint.
             let nx = -uy, ny = ux // perpendicular unit
             let reach = measure.capExtent
-            context.setLineWidth(measure.strokeWidth)
+            context.setLineWidth(lineWidth)
             for p in [dimension.a, dimension.b] {
                 context.move(to: CGPoint(x: p.x - nx * reach, y: p.y - ny * reach))
                 context.addLine(to: CGPoint(x: p.x + nx * reach, y: p.y + ny * reach))

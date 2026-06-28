@@ -52,7 +52,9 @@ final class EditorState {
     private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
     /// Template style for new measures (color, stroke, unit, label toggle, caps).
     /// In-memory default for now; start/end are ignored (set per drag).
-    private(set) var measureStyle = MeasureContent(strokeWidth: 3, colorHex: "#FF3B30",
+    // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
+    // aligns with the image's pixel grid.
+    private(set) var measureStyle = MeasureContent(strokeWidth: 1, colorHex: "#FF3B30",
                                                    showLabel: true, unit: .points, form: .bracket)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
@@ -476,6 +478,12 @@ final class EditorState {
     func setMeasureForm(_ form: MeasureForm) {
         measureStyle.form = form
         applyMeasureRestyle { MeasureBuilder.restyled($0, form: form) }
+    }
+
+    /// Sizer line thickness in logical pixels.
+    func setMeasureThickness(_ width: CGFloat) {
+        measureStyle.strokeWidth = width
+        applyMeasureRestyle { MeasureBuilder.restyled($0, strokeWidth: width) }
     }
 
     func setMeasureColor(_ hex: String, commit: Bool) {

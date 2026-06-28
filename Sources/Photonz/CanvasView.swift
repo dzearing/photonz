@@ -1554,7 +1554,9 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.path = path
         annotationPreviewLayer.strokeColor = color
         annotationPreviewLayer.fillColor = nil
-        annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
+        // strokeWidth is logical pixels → image px (×pixelScale) → screen (×zoom).
+        let measureScale = document?.pixelScale ?? 1
+        annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * measureScale * viewport.zoom)
         annotationPreviewLayer.compositingFilter = nil
         annotationPreviewHeadLayer.path = nil
         annotationPreviewLayer.isHidden = false
