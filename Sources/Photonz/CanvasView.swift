@@ -1274,56 +1274,35 @@ final class CanvasNSView: NSView {
             rotateKnobLayer.isHidden = true
             return
         }
-        let selectedLayer = selectedLayerID.flatMap { id in document?.layer(id: id) }
+        guard let selectedLayer = selectedLayerID.flatMap({ id in document?.layer(id: id) }) else {
+            layerOutlineLayer.isHidden = true
+            snapGuideLayer.isHidden = true
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            return
+        }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
             || endpointDrag != nil || endpointHoldLayerID != nil || measureCornerDrag != nil
+        // The blue selection outline hides during a RESIZE (frame handles,
+        // annotation endpoints, or a measure corner) so the edges being aligned
+        // stay unobstructed; it still tracks moves and rotates.
+        let resizing = resizeDrag != nil || endpointDrag != nil || measureCornerDrag != nil
 
-        if selectedLayer?.hasEndpointHandles == true {
-            // A line/arrow is its stroke; a rectangle outline around the
-            // padded frame reads as a phantom box. Round endpoint handles
-            // replace the whole frame chrome. A measure additionally gets a
-            // dotted selection box so it reads as selected and resizable.
-            rotateKnobLayer.isHidden = true
-            if let layer = selectedLayer, layer.measure != nil {
-                let box = CGMutablePath()
-                box.addLines(between: [
-                    viewport.viewPoint(fromDocument: CGPoint(x: frame.minX, y: frame.minY)),
-                    viewport.viewPoint(fromDocument: CGPoint(x: frame.maxX, y: frame.minY)),
-                    viewport.viewPoint(fromDocument: CGPoint(x: frame.maxX, y: frame.maxY)),
-                    viewport.viewPoint(fromDocument: CGPoint(x: frame.minX, y: frame.maxY)),
-                ])
-                box.closeSubpath()
-                layerOutlineLayer.path = box
-                layerOutlineLayer.lineDashPattern = [3, 3]
-                layerOutlineLayer.isHidden = false
-            } else {
-                layerOutlineLayer.isHidden = true
-                layerOutlineLayer.lineDashPattern = nil
-            }
-            if !dragInFlight, let layer = selectedLayer {
-                let handles = CGMutablePath()
-                for endpoint in AnnotationEndpoint.allCases {
-                    guard let dp = layer.editEndpoint(endpoint) else { continue }
-                    let p = viewport.viewPoint(fromDocument: dp)
-                    handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
-                }
-                handlesLayer.path = handles
-                handlesLayer.isHidden = false
-            } else {
-                handlesLayer.isHidden = true
-            }
+        // The outline (and frame-handle placement) follows the layer's
+        // transform — the in-flight one during a rotate/skew drag.
+        let activeTransform = transformDrag?.transform ?? selectedLayer.transform
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+        let docToHandle = activeTransform.isIdentity
+            ? CGAffineTransform.identity
+            : activeTransform.affineTransform(around: center)
+        func chromePoint(_ docPoint: CGPoint) -> CGPoint {
+            viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
+        }
+
+        // Universal blue selection box around the frame, for every object type.
+        if resizing {
+            layerOutlineLayer.isHidden = true
         } else {
-            // The outline (and handle placement) follows the layer's
-            // transform — the in-flight one during a rotate/skew drag.
-            let activeTransform = transformDrag?.transform ?? selectedLayer?.transform ?? .identity
-            let center = CGPoint(x: frame.midX, y: frame.midY)
-            let docToHandle = activeTransform.isIdentity
-                ? CGAffineTransform.identity
-                : activeTransform.affineTransform(around: center)
-            func chromePoint(_ docPoint: CGPoint) -> CGPoint {
-                viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
-            }
-
             let outline = CGMutablePath()
             outline.addLines(between: [
                 chromePoint(CGPoint(x: frame.minX, y: frame.minY)),
@@ -1333,12 +1312,29 @@ final class CanvasNSView: NSView {
             ])
             outline.closeSubpath()
             layerOutlineLayer.path = outline
-            layerOutlineLayer.lineDashPattern = nil
             layerOutlineLayer.isHidden = false
+        }
 
-            // Handles: 8pt squares in view space, hidden while a drag is in
-            // flight and for layers that don't frame-resize (text).
-            if !dragInFlight, selectedLayer?.allowsFrameResize ?? true {
+        if selectedLayer.hasEndpointHandles {
+            // Lines/arrows/measures edit by their endpoints (round handles), not
+            // the eight frame handles; no rotate knob.
+            rotateKnobLayer.isHidden = true
+            if !dragInFlight {
+                let handles = CGMutablePath()
+                for endpoint in AnnotationEndpoint.allCases {
+                    guard let dp = selectedLayer.editEndpoint(endpoint) else { continue }
+                    let p = viewport.viewPoint(fromDocument: dp)
+                    handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
+                }
+                handlesLayer.path = handles
+                handlesLayer.isHidden = false
+            } else {
+                handlesLayer.isHidden = true
+            }
+        } else {
+            // Eight square frame handles, hidden mid-drag and for text (which
+            // resizes width-only via its own affordance).
+            if !dragInFlight, selectedLayer.allowsFrameResize {
                 let handles = CGMutablePath()
                 for handle in ResizeHandle.allCases {
                     let p = chromePoint(Handles.point(for: handle, in: frame))
@@ -1351,8 +1347,7 @@ final class CanvasNSView: NSView {
             }
 
             // Rotate knob with its stem, off the (transformed) top edge.
-            if !dragInFlight, let layer = selectedLayer,
-               let knob = rotateKnobPoint(for: layer, zoom: viewport.zoom) {
+            if !dragInFlight, let knob = rotateKnobPoint(for: selectedLayer, zoom: viewport.zoom) {
                 let knobInView = viewport.viewPoint(fromDocument: knob)
                 let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
                 let path = CGMutablePath()
