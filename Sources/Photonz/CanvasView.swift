@@ -40,6 +40,8 @@ struct CanvasView: NSViewRepresentable {
     /// Current text style (string empty); the inline editor mirrors it so the
     /// draft matches what commit will rasterize.
     let textContent: TextContent?
+    /// The active measure tool's style, mirrored into the in-flight preview.
+    let measureContent: MeasureContent?
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
@@ -54,6 +56,7 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
+    let onMeasureCommit: (CGPoint, CGPoint, MeasureMode) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -73,7 +76,8 @@ struct CanvasView: NSViewRepresentable {
                    selection: selection, cropRect: cropRect, cropAspect: cropAspect,
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
-                   tool: tool, annotationContent: annotationContent, textContent: textContent)
+                   tool: tool, annotationContent: annotationContent, textContent: textContent,
+                   measureContent: measureContent)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -91,6 +95,7 @@ struct CanvasView: NSViewRepresentable {
         view.onAnnotationCommit = onAnnotationCommit
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
+        view.onMeasureCommit = onMeasureCommit
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
@@ -115,6 +120,7 @@ final class CanvasNSView: NSView {
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode) -> Void) = { _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -213,6 +219,9 @@ final class CanvasNSView: NSView {
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     private var annotationContent: AnnotationContent?
+    private var measureContent: MeasureContent?
+    /// In-flight measure drag (reuses AnnotationDrag for the anchor/current pair).
+    private var measureDrag: AnnotationDrag?
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
     /// annotation doesn't flash out while the re-render is in flight.
@@ -527,6 +536,12 @@ final class CanvasNSView: NSView {
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
             return
         }
+        // The measure tool drags two reference points; ⇧ locks to the dominant axis.
+        if tool == .measure {
+            measureDrag = AnnotationDrag(anchor: p)
+            refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
+            return
+        }
         // Double-click on a text layer re-opens it for inline editing. Checked
         // before handles: on a small text layer the handle hit zones cover the
         // whole frame and would eat the double-click.
@@ -631,6 +646,10 @@ final class CanvasNSView: NSView {
             drag.update(to: p)
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+        } else if var drag = measureDrag {
+            drag.update(to: p)
+            measureDrag = drag
+            refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
         } else if var session = endpointDrag {
             session.drag.update(to: p)
             endpointDrag = session
@@ -707,6 +726,18 @@ final class CanvasNSView: NSView {
                 let shape = tool.annotationShape ?? .line
                 onAnnotationCommit(drag.anchor,
                                    drag.end(constrained: event.modifierFlags.contains(.shift), shape: shape))
+            }
+        } else if let drag = measureDrag {
+            measureDrag = nil
+            if drag.isClick(atZoom: viewport.zoom) {
+                clearAnnotationPreview()
+            } else {
+                // Hold the vector preview until the composite with the new measure
+                // lands (the same no-flash trick the annotation path uses).
+                annotationCommitImage = image
+                let mode = measureMode(anchor: drag.anchor, current: drag.current,
+                                       constrained: event.modifierFlags.contains(.shift))
+                onMeasureCommit(drag.anchor, drag.current, mode)
             }
         } else if let session = endpointDrag {
             endpointDrag = nil
@@ -795,8 +826,9 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
-            if annotationDrag != nil {
+            if annotationDrag != nil || measureDrag != nil {
                 annotationDrag = nil
+                measureDrag = nil
                 clearAnnotationPreview()
                 return
             }
@@ -907,7 +939,7 @@ final class CanvasNSView: NSView {
               cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
-              textContent: textContent)
+              textContent: textContent, measureContent: measureContent)
         onViewportChange(next)
     }
 
@@ -917,15 +949,17 @@ final class CanvasNSView: NSView {
                selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
-               textContent: TextContent?) {
+               textContent: TextContent?, measureContent: MeasureContent?) {
         self.annotationContent = annotationContent
         self.textContent = textContent
+        self.measureContent = measureContent
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation/endpoint edit.
             annotationDrag = nil
+            measureDrag = nil
             endpointDrag = nil
             cropDrag = nil
             transformDrag = nil
@@ -1280,7 +1314,7 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
-        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout {
+        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout || tool == .measure {
             addCursorRect(bounds, cursor: .crosshair)
         } else if tool == .text {
             addCursorRect(bounds, cursor: .iBeam)
@@ -1392,6 +1426,44 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.compositingFilter = compositing
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color
+        annotationPreviewLayer.isHidden = false
+        CATransaction.commit()
+    }
+
+    /// Free unless ⇧ is held, which locks the measure to its dominant axis.
+    private func measureMode(anchor: CGPoint, current: CGPoint, constrained: Bool) -> MeasureMode {
+        guard constrained else { return .free }
+        return abs(current.x - anchor.x) >= abs(current.y - anchor.y) ? .horizontal : .vertical
+    }
+
+    /// In-flight measure drag: preview the dimension + witness lines (the label
+    /// plate is added on commit). Reuses the annotation preview shape layer.
+    private func refreshMeasurePreview(constrained: Bool) {
+        guard let drag = measureDrag, let viewport else {
+            clearAnnotationPreview()
+            return
+        }
+        let style = measureContent ?? MeasureContent()
+        let mode = measureMode(anchor: drag.anchor, current: drag.current, constrained: constrained)
+        let geo = MeasureContent.geometry(mode: mode, start: drag.anchor, end: drag.current)
+        let path = CGMutablePath()
+        func add(_ seg: MeasureSegment) {
+            path.move(to: viewport.viewPoint(fromDocument: seg.a))
+            path.addLine(to: viewport.viewPoint(fromDocument: seg.b))
+        }
+        add(geo.dimension)
+        geo.extensions.forEach(add)
+        let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        annotationPreviewLayer.path = path
+        annotationPreviewLayer.strokeColor = color
+        annotationPreviewLayer.fillColor = nil
+        annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
+        annotationPreviewLayer.compositingFilter = nil
+        annotationPreviewHeadLayer.path = nil
         annotationPreviewLayer.isHidden = false
         CATransaction.commit()
     }

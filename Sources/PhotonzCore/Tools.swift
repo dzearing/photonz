@@ -14,6 +14,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case highlight
     case text
     case zoomCallout
+    case measure
 
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
@@ -23,11 +24,14 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text, .zoomCallout: nil
+        case .select, .crop, .text, .zoomCallout, .measure: nil
         }
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
+
+    /// The measure tool drags two reference points to create a dimension layer.
+    public var createsMeasureByDrag: Bool { self == .measure }
 
     /// Smart-default content for this tool: red strokes, yellow highlight
     /// (system palette colors). Nil for non-annotation tools.

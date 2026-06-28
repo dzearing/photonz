@@ -50,6 +50,10 @@ final class EditorState {
     /// Styling for new text blocks, set from the font picker. Persisted like
     /// annotation styles.
     private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
+    /// Template style for new measures (color, stroke, unit, label toggle, caps).
+    /// In-memory default for now; start/end are ignored (set per drag).
+    private(set) var measureStyle = MeasureContent(strokeWidth: 3, colorHex: "#FF3B30",
+                                                   showLabel: true, unit: .points)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -431,6 +435,63 @@ final class EditorState {
                                                    canvas: document.canvasSize) else { return }
         perform { $0.addLayer(layer) }
         setTool(.select)
+    }
+
+    /// Completed measure drag: place a dimension layer with the active style and
+    /// the drag's mode (free / H-lock / V-lock). Sticky like the annotation tools
+    /// unless one-shot; selects the new layer so it can be tweaked.
+    func addMeasure(from start: CGPoint, to end: CGPoint, mode: MeasureMode) {
+        var content = measureStyle
+        content.mode = mode
+        let layer = MeasureBuilder.layer(content: content, from: start, to: end)
+        perform { $0.addLayer(layer) }
+        recordRecentColor(hex: content.colorHex)
+        if !toolLocked {
+            setTool(.select)
+            selectedLayerID = layer.id
+        }
+    }
+
+    // MARK: - Measure styling
+
+    /// The selected layer, if it's a measure.
+    var selectedMeasureLayer: Layer? {
+        guard let id = selectedLayerID, let layer = document?.layer(id: id),
+              layer.measure != nil else { return nil }
+        return layer
+    }
+
+    /// The unit shown by new measures and the selected one. Each setter restyles
+    /// the selected measure (re-padding its frame via the builder) in one undo step.
+    func setMeasureUnit(_ unit: MeasureUnit) {
+        measureStyle.unit = unit
+        applyMeasureRestyle { MeasureBuilder.restyled($0, unit: unit) }
+    }
+
+    func setMeasureShowLabel(_ show: Bool) {
+        measureStyle.showLabel = show
+        applyMeasureRestyle { MeasureBuilder.restyled($0, showLabel: show) }
+    }
+
+    func setMeasureColor(_ hex: String, commit: Bool) {
+        measureStyle.colorHex = hex
+        applyMeasureRestyle { MeasureBuilder.restyled($0, colorHex: hex) }
+        if commit { recordRecentColor(hex: hex) }
+    }
+
+    /// The document's pixels-per-point scale, driving the points readout. A Retina
+    /// screenshot is 2×. Changing it re-renders every measure's label.
+    func setDocumentPixelScale(_ scale: CGFloat) {
+        guard let document, document.pixelScale != scale else { return }
+        perform { $0.pixelScale = scale }
+    }
+
+    var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
+
+    private func applyMeasureRestyle(_ restyle: (Layer) -> Layer) {
+        guard let layer = selectedMeasureLayer else { return }
+        let updated = restyle(layer)
+        perform { $0.updateLayer(id: layer.id) { $0 = updated } }
     }
 
     // MARK: - Annotation styling

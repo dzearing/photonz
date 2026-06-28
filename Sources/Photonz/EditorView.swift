@@ -99,6 +99,7 @@ struct EditorView: View {
                        tool: editorState.activeTool,
                        annotationContent: editorState.activeAnnotationContent,
                        textContent: editorState.activeTextContent,
+                       measureContent: editorState.measureStyle,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
                        onSelectionChange: { editorState.setSelection($0) },
@@ -113,6 +114,7 @@ struct EditorView: View {
                        onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },
                        onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
                        onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
+                       onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2) },
                        onToolChange: { editorState.setTool($0) },
                        onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
@@ -208,6 +210,7 @@ struct EditorView: View {
             .disabled(editorState.document == nil)
             .help("Resize Image (⌥⌘I)")
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
+            toolButton(.measure, "ruler", "Measure", "m")
             Divider().frame(height: 20)
             Button {
                 editorState.zoomOut()

@@ -78,6 +78,7 @@ struct InspectorPanel: View {
             set.insert(.shadow)
             if layer.annotation != nil { set.insert(.annotation) }
             if case .text = layer.content { set.insert(.text) }
+            if layer.measure != nil { set.insert(.measure) }
         }
         return set
     }
@@ -99,6 +100,10 @@ struct InspectorPanel: View {
         case .text:
             if let layer = selectedLayer, case .text = layer.content {
                 TextInspector(layer: layer)
+            }
+        case .measure:
+            if let layer = selectedLayer, layer.measure != nil {
+                MeasureInspector(layer: layer)
             }
         case .effects:
             if let layer = selectedLayer {
@@ -143,6 +148,7 @@ enum InspectorSectionID: String, CaseIterable {
     case layers
     case annotation
     case text
+    case measure
     case effects
     case shadow
 
@@ -151,6 +157,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .layers: "Layers"
         case .annotation: "Annotation"
         case .text: "Text"
+        case .measure: "Measure"
         case .effects: "Effects"
         case .shadow: "Shadow"
         }
@@ -716,5 +723,57 @@ struct TextInspector: View {
     private func sizes(current: CGFloat) -> [CGFloat] {
         TextStyles.fontSizes.contains(current) ? TextStyles.fontSizes
             : (TextStyles.fontSizes + [current]).sorted()
+    }
+}
+
+/// Docked per-layer measure inspector (16.3): unit, label toggle, color, and the
+/// document's pixel scale (so the points readout is correct on a Retina capture).
+struct MeasureInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let layer: Layer
+
+    private var content: MeasureContent? {
+        editorState.document?.layer(id: layer.id)?.measure
+    }
+
+    var body: some View {
+        if let c = content {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Measure").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    ColorPicker("Color", selection: Binding(
+                        get: { Color(hex: c.colorHex) },
+                        set: { if let hex = $0.hexString { editorState.setMeasureColor(hex, commit: true) } }),
+                        supportsOpacity: false)
+                        .labelsHidden().controlSize(.small)
+                }
+                Picker("Unit", selection: Binding(
+                    get: { c.unit },
+                    set: { editorState.setMeasureUnit($0) })) {
+                    Text("Points").tag(MeasureUnit.points)
+                    Text("Pixels").tag(MeasureUnit.pixels)
+                }
+                .pickerStyle(.segmented).controlSize(.small)
+                Toggle("Show size label", isOn: Binding(
+                    get: { c.showLabel },
+                    set: { editorState.setMeasureShowLabel($0) }))
+                    .controlSize(.small)
+                HStack {
+                    Text("Image scale").font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    Picker("Image scale", selection: Binding(
+                        get: { editorState.documentPixelScale },
+                        set: { editorState.setDocumentPixelScale($0) })) {
+                        Text("1×").tag(CGFloat(1))
+                        Text("2×").tag(CGFloat(2))
+                    }
+                    .pickerStyle(.segmented).labelsHidden().controlSize(.small).fixedSize()
+                }
+                .help("Set 2× for a Retina screenshot so point sizes read correctly.")
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
     }
 }
