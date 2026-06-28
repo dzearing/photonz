@@ -55,7 +55,7 @@ final class EditorState {
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
     private(set) var measureStyle = MeasureContent(strokeWidth: 1, colorHex: "#FF3B30",
-                                                   showLabel: true, unit: .points, form: .bracket)
+                                                   showLabel: true, unit: .pixels, form: .bracket)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -484,6 +484,13 @@ final class EditorState {
     func setMeasureThickness(_ width: CGFloat) {
         measureStyle.strokeWidth = width
         applyMeasureRestyle { MeasureBuilder.restyled($0, strokeWidth: width) }
+    }
+
+    /// Force a measure's orientation (which axis is the gap) instead of relying
+    /// on the drag's dominant axis.
+    func setMeasureAxis(_ axis: MeasureMode) {
+        measureStyle.mode = axis
+        applyMeasureRestyle { MeasureBuilder.restyled($0, mode: axis) }
     }
 
     func setMeasureColor(_ hex: String, commit: Bool) {

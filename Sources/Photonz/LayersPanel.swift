@@ -755,11 +755,18 @@ struct MeasureInspector: View {
                     Text("Line").tag(MeasureForm.line)
                 }
                 .pickerStyle(.segmented).controlSize(.small)
+                Picker("Direction", selection: Binding(
+                    get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
+                    set: { editorState.setMeasureAxis($0) })) {
+                    Text("Vertical").tag(MeasureMode.vertical)
+                    Text("Horizontal").tag(MeasureMode.horizontal)
+                }
+                .pickerStyle(.segmented).controlSize(.small)
                 Picker("Unit", selection: Binding(
                     get: { c.unit },
                     set: { editorState.setMeasureUnit($0) })) {
-                    Text("Points").tag(MeasureUnit.points)
                     Text("Pixels").tag(MeasureUnit.pixels)
+                    Text("Points").tag(MeasureUnit.points)
                 }
                 .pickerStyle(.segmented).controlSize(.small)
                 Picker("Thickness", selection: Binding(
@@ -774,18 +781,6 @@ struct MeasureInspector: View {
                     get: { c.showLabel },
                     set: { editorState.setMeasureShowLabel($0) }))
                     .controlSize(.small)
-                HStack {
-                    Text("Image scale").font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    Picker("Image scale", selection: Binding(
-                        get: { editorState.documentPixelScale },
-                        set: { editorState.setDocumentPixelScale($0) })) {
-                        Text("1×").tag(CGFloat(1))
-                        Text("2×").tag(CGFloat(2))
-                    }
-                    .pickerStyle(.segmented).labelsHidden().controlSize(.small).fixedSize()
-                }
-                .help("Set 2× for a Retina screenshot so point sizes read correctly.")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
