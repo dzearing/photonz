@@ -2,6 +2,15 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-06-27 — Post-capture toasts + region crosshair fix
+
+- **Region crosshair never showed.** `SelectionView` relied on `addCursorRect`/one-shot `NSCursor.crosshair.set()`, which is unreliable on borderless screen-saver-level overlay windows. Replaced with an `.inVisibleRect` + `.cursorUpdate` `NSTrackingArea` and `cursorUpdate`/`mouseEntered`/`mouseMoved` overrides that force the crosshair. (`Sources/Photonz/Capture/RectSelection.swift`)
+- **Capture no longer pops the whole history overlay.** New `ToastController` (`Sources/Photonz/ToastController.swift`) stacks bottom-right "Copied to clipboard" toasts: one borderless non-activating panel per toast (gaps let clicks fall through; each panel re-flows independently). Newest in the corner, older stack upward; add pushes up, dismiss slides down. Each toast holds 7s at full opacity, fades over 3s (SwiftUI opacity), then self-removes; hovering cancels the lifecycle, pins it at full opacity, and reveals Edit / Dismiss (`IconActionButtonStyle`). Liquid-glass surface, content fades in on appear. Soft cap of 5 visible.
+- **Gotcha (cost an iteration): `NSWindow.animator().setFrameOrigin`/`alphaValue` silently no-op on these borderless `.nonactivatingPanel`s** — toasts stuck off the bottom edge and older ones never moved (logged frames proved direct `setFrameOrigin` was correct but the animator did nothing). Fix: position panels directly and run the stack slide on a main-runloop `Timer` that interpolates origins (easeOutCubic, 0.32s). Entrance is a SwiftUI opacity fade (panel placed at final slot), not a window-frame slide.
+- `AppCoordinator.flashNewCapture` → `showCaptureToast(_:)`; `onCaptureComplete` now copies + toasts. Edit routes to `editCapture`/`openRecording` by kind. Video posters load async, so a nil image falls back to an SF Symbol placeholder. ⌘⇧H history is unchanged.
+- Verified: 471 tests green; env-guarded self-test (`PHOTONZ_DEBUG_TOAST`, since removed) drove 4 toasts through the full stack→fade→dismiss cycle with no crash. Cursor + real-capture flow need a human (Screen Recording TCC).
+- **Next**: phase 13 remaining polish. Open question: should toasts also surface a quick "Reveal in Finder" / copy-again action on hover, or keep it to Edit/Dismiss?
+
 ## 2026-06-27 — "Very buggy text" round + menu-bar/window decoupling (471 tests)
 
 User-driven bug fixing in the running app. Investigation of the 4 text bugs was fanned out (root-cause workflow); each fix is test-first. **471 tests pass in parallel.** App-side window work is verified headlessly via an env-guarded NSEvent self-test (since removed).

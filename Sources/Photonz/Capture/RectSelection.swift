@@ -75,9 +75,22 @@ private final class SelectionView: NSView {
     override var isFlipped: Bool { true }
     override var acceptsFirstResponder: Bool { true }
 
-    override func resetCursorRects() {
-        addCursorRect(bounds, cursor: .crosshair)
+    // Cursor rects are unreliable on borderless screen-saver-level overlay
+    // windows (the crosshair often never replaces the arrow). A tracking area
+    // that delivers `.cursorUpdate` — plus pushing the cursor on enter/move — is
+    // the dependable way to force the crosshair across the whole overlay.
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas { removeTrackingArea(area) }
+        addTrackingArea(NSTrackingArea(
+            rect: bounds,
+            options: [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved, .cursorUpdate],
+            owner: self))
     }
+
+    override func cursorUpdate(with event: NSEvent) { NSCursor.crosshair.set() }
+    override func mouseEntered(with event: NSEvent) { NSCursor.crosshair.set() }
+    override func mouseMoved(with event: NSEvent) { NSCursor.crosshair.set() }
 
     override func mouseDown(with event: NSEvent) {
         dragStart = convert(event.locationInWindow, from: nil)

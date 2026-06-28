@@ -47,6 +47,10 @@ final class AppCoordinator {
     /// window so they escape the overlay bounds — no reserved space per cell).
     @ObservationIgnored private let tooltip = TooltipController()
 
+    /// Bottom-right post-capture toasts. A capture no longer pops the whole
+    /// history overlay — it stacks a small "Copied to clipboard" toast instead.
+    @ObservationIgnored private let toasts = ToastController()
+
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
     func start() {
@@ -61,7 +65,7 @@ final class AppCoordinator {
             // Auto-copy so the user can paste immediately (image data for
             // screenshots, the file for recordings).
             self?.capture.store.copyToPasteboard(entry)
-            self?.flashNewCapture(entry.url)
+            self?.showCaptureToast(entry)
         }
         historyOverlay.onDismiss = { [weak self] in
             self?.isHistoryShown = false
@@ -80,15 +84,28 @@ final class AppCoordinator {
 
     // MARK: - Post-capture feedback
 
-    /// After a capture/recording lands, surface the history overlay with the new
-    /// entry highlighted (replaces the old corner toast — the overlay is the one
-    /// place captures live, and it's recallable with ⌘⇧H).
-    func flashNewCapture(_ url: URL) {
-        highlightedCaptureURL = url
-        // Already-shown: the highlight updates reactively and the floating panel
-        // stays on top — no app activation (that would raise editor windows).
-        if !historyOverlay.isShown {
-            showHistory()
+    /// After a capture/recording lands, stack a bottom-right toast (thumbnail +
+    /// "Copied to clipboard") instead of popping the whole history overlay. The
+    /// toast auto-fades; hovering it pins it and reveals Edit / Dismiss. History
+    /// is still a deliberate ⌘⇧H away. If a capture is highlighted in an open
+    /// overlay, keep that behavior in sync.
+    func showCaptureToast(_ entry: CaptureEntry) {
+        if historyOverlay.isShown { highlightedCaptureURL = entry.url }
+        let thumbnail: NSImage
+        if let image = capture.store.image(for: entry) {
+            thumbnail = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        } else {
+            // Recording posters load async; show the toast now with a placeholder.
+            let symbol = entry.kind == .video ? "film" : "photo"
+            thumbnail = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) ?? NSImage()
+        }
+        toasts.present(image: thumbnail, message: "Copied to clipboard!", on: activeScreen()) { [weak self] in
+            guard let self else { return }
+            if entry.kind == .video {
+                self.openRecording(entry.url)
+            } else {
+                self.editCapture(entry.url)
+            }
         }
     }
 
