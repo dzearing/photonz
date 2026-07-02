@@ -20,6 +20,12 @@ extension Layer {
         return nil
     }
 
+    /// The bitmap this layer references, nil for non-image content.
+    public var imageRef: ImageRef? {
+        if case .image(let ref) = content { return ref }
+        return nil
+    }
+
     /// Lines/arrows and measures edit by dragging their two endpoints.
     public var hasEndpointHandles: Bool {
         if let a = annotation { return a.shape == .line || a.shape == .arrow }

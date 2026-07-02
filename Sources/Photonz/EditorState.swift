@@ -11,6 +11,9 @@ import UniformTypeIdentifiers
 final class EditorState {
     private(set) var history: History?
     let store = ImageStore()
+    /// Per-image detected UI edges, computed lazily on first use and reused for
+    /// every measure-corner snap. Keyed by `ImageRef`, so it survives undo/redo.
+    private let edgeMapCache = EdgeMapCache()
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 
@@ -54,7 +57,7 @@ final class EditorState {
     /// In-memory default for now; start/end are ignored (set per drag).
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
-    private(set) var measureStyle = MeasureContent(strokeWidth: 1, colorHex: "#FF3B30",
+    private(set) var measureStyle = MeasureContent(mode: .vertical, strokeWidth: 1, colorHex: "#FF3B30",
                                                    showLabel: true, unit: .pixels, form: .bracket)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
@@ -531,6 +534,18 @@ final class EditorState {
     }
 
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
+
+    /// Detected UI edges for measure snapping, but ONLY while the measure tool is
+    /// active or a measure is selected — so the GPU+CPU edge sweep never runs for
+    /// documents that aren't being redlined. `.empty` otherwise. The first real
+    /// access computes it once (cached); later accesses are free.
+    var measureEdgeMap: EdgeMap {
+        let selectedIsMeasure = selectedLayerID
+            .flatMap { document?.layer(id: $0)?.measure } != nil
+        guard activeTool == .measure || selectedIsMeasure,
+              let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
+        return edgeMapCache.edgeMap(for: ref, store: store)
+    }
 
     private func applyMeasureRestyle(_ restyle: (Layer) -> Layer) {
         guard let layer = selectedMeasureLayer else { return }

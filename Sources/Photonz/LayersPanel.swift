@@ -739,8 +739,55 @@ struct MeasureInspector: View {
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
+                if c.form == .bracket {
+                    field("Direction") {
+                        HStack(spacing: 6) {
+                            Picker("Direction", selection: Binding(
+                                get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
+                                set: { editorState.setMeasureAxis($0) })) {
+                                Text("Horizontal").tag(MeasureMode.horizontal)
+                                Text("Vertical").tag(MeasureMode.vertical)
+                            }
+                            .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                            Button { editorState.invertMeasure() } label: {
+                                Image(systemName: "arrow.left.arrow.right")
+                            }
+                            .controlSize(.small)
+                            .help("Flip the bracket to the other side")
+                        }
+                    }
+                }
+                field("Style") {
+                    Picker("Style", selection: Binding(
+                        get: { c.form },
+                        set: { editorState.setMeasureForm($0) })) {
+                        Text("Bracket").tag(MeasureForm.bracket)
+                        Text("Line").tag(MeasureForm.line)
+                    }
+                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                }
+                field("Unit") {
+                    Picker("Unit", selection: Binding(
+                        get: { c.unit },
+                        set: { editorState.setMeasureUnit($0) })) {
+                        Text("Pixels").tag(MeasureUnit.pixels)
+                        Text("Points").tag(MeasureUnit.points)
+                    }
+                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                }
+                field("Thickness") {
+                    Picker("Thickness", selection: Binding(
+                        get: { c.strokeWidth },
+                        set: { editorState.setMeasureThickness($0) })) {
+                        Text("1 px").tag(CGFloat(1))
+                        Text("2 px").tag(CGFloat(2))
+                        Text("3 px").tag(CGFloat(3))
+                    }
+                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                }
+                // Color is a narrow control, so its label sits to the left.
                 HStack {
-                    Text("Measure").font(.caption).foregroundStyle(.secondary)
+                    Text("Color").font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     ColorPicker("Color", selection: Binding(
                         get: { Color(hex: c.colorHex) },
@@ -748,51 +795,23 @@ struct MeasureInspector: View {
                         supportsOpacity: false)
                         .labelsHidden().controlSize(.small)
                 }
-                Picker("Style", selection: Binding(
-                    get: { c.form },
-                    set: { editorState.setMeasureForm($0) })) {
-                    Text("Bracket").tag(MeasureForm.bracket)
-                    Text("Line").tag(MeasureForm.line)
-                }
-                .pickerStyle(.segmented).controlSize(.small)
-                HStack(spacing: 6) {
-                    Picker("Direction", selection: Binding(
-                        get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
-                        set: { editorState.setMeasureAxis($0) })) {
-                        Text("Vertical").tag(MeasureMode.vertical)
-                        Text("Horizontal").tag(MeasureMode.horizontal)
-                    }
-                    .pickerStyle(.segmented).controlSize(.small)
-                    Button {
-                        editorState.invertMeasure()
-                    } label: {
-                        Image(systemName: "arrow.left.arrow.right")
-                    }
-                    .controlSize(.small)
-                    .help("Flip the bracket to the other side")
-                }
-                Picker("Unit", selection: Binding(
-                    get: { c.unit },
-                    set: { editorState.setMeasureUnit($0) })) {
-                    Text("Pixels").tag(MeasureUnit.pixels)
-                    Text("Points").tag(MeasureUnit.points)
-                }
-                .pickerStyle(.segmented).controlSize(.small)
-                Picker("Thickness", selection: Binding(
-                    get: { c.strokeWidth },
-                    set: { editorState.setMeasureThickness($0) })) {
-                    Text("1 px").tag(CGFloat(1))
-                    Text("2 px").tag(CGFloat(2))
-                    Text("3 px").tag(CGFloat(3))
-                }
-                .pickerStyle(.segmented).controlSize(.small)
                 Toggle("Show size label", isOn: Binding(
                     get: { c.showLabel },
                     set: { editorState.setMeasureShowLabel($0) }))
-                    .controlSize(.small)
+                    .font(.caption).controlSize(.small)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+        }
+    }
+
+    /// A compact labeled control matching the Effects panel: a small secondary
+    /// caption above the control, full width.
+    @ViewBuilder private func field<Content: View>(_ label: String,
+                                                   @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            content()
         }
     }
 }

@@ -128,34 +128,30 @@ struct MeasureGeometryTests {
 @Suite("Measure bracket")
 struct MeasureBracketTests {
 
-    @Test func axisIsTheDominantDimensionOfTheCornerBox() {
-        // Taller than wide → vertical gap; wider than tall → horizontal gap.
-        #expect(MeasureContent.bracketAxis(start: .zero, end: CGPoint(x: 40, y: 200)) == .vertical)
-        #expect(MeasureContent.bracketAxis(start: .zero, end: CGPoint(x: 200, y: 40)) == .horizontal)
-    }
-
-    @Test func verticalBracketOpensTowardTheStartCornerWithConnectorOnTheFarSide() {
-        // A = top-left (0,0), B = bottom-right (80,200). Legs run right from A's
-        // column to the connector at x=80; the U opens left (toward A).
+    @Test func verticalBracketConnectorOnStartSideOpensTowardEnd() {
+        // A = top-left (0,0), B = bottom-right (80,200). The connector sits on the
+        // START side (x=0); legs run right toward B. The U opens right, label left.
         var m = MeasureContent(mode: .vertical, form: .bracket)
         m.start = CGPoint(x: 0, y: 0)
         m.end = CGPoint(x: 80, y: 200)
         let g = m.bracketGeometry()
-        #expect(g.path == [CGPoint(x: 0, y: 0), CGPoint(x: 80, y: 0),
-                           CGPoint(x: 80, y: 200), CGPoint(x: 0, y: 200)])
-        #expect(g.connectorMid == CGPoint(x: 80, y: 100))
-        #expect(g.outward == CGVector(dx: 1, dy: 0)) // label sits to the right, outside
+        #expect(g.path == [CGPoint(x: 80, y: 0), CGPoint(x: 0, y: 0),
+                           CGPoint(x: 0, y: 200), CGPoint(x: 80, y: 200)])
+        #expect(g.connectorMid == CGPoint(x: 0, y: 100))
+        #expect(g.outward == CGVector(dx: -1, dy: 0)) // label sits to the left, outside
     }
 
-    @Test func horizontalBracketHasConnectorOnTheBottomOutwardDown() {
+    @Test func horizontalBracketConnectorOnTopOutwardUp() {
+        // Natural top-left→bottom-right drag: connector on top (start side), the
+        // label sits ABOVE.
         var m = MeasureContent(mode: .horizontal, form: .bracket)
         m.start = CGPoint(x: 0, y: 0)
         m.end = CGPoint(x: 200, y: 80)
         let g = m.bracketGeometry()
-        #expect(g.path == [CGPoint(x: 0, y: 0), CGPoint(x: 0, y: 80),
-                           CGPoint(x: 200, y: 80), CGPoint(x: 200, y: 0)])
-        #expect(g.connectorMid == CGPoint(x: 100, y: 80))
-        #expect(g.outward == CGVector(dx: 0, dy: 1))
+        #expect(g.path == [CGPoint(x: 0, y: 80), CGPoint(x: 0, y: 0),
+                           CGPoint(x: 200, y: 0), CGPoint(x: 200, y: 80)])
+        #expect(g.connectorMid == CGPoint(x: 100, y: 0))
+        #expect(g.outward == CGVector(dx: 0, dy: -1))
     }
 
     @Test func bracketLabelSitsOutsideTheConnectorNotOnIt() {
@@ -164,8 +160,9 @@ struct MeasureBracketTests {
         m.end = CGPoint(x: 80, y: 200)
         let size = CGSize(width: 60, height: 30)
         let center = m.labelCenter(labelSize: size)
-        // Beyond the connector (x=80) by half the plate width + the gap.
-        #expect(center.x == 80 + 30 + MeasureContent.labelOutwardGap)
+        // Connector on the start side (x=0); label sits to the LEFT, beyond it by
+        // half the plate width + the gap.
+        #expect(center.x == -(30 + MeasureContent.labelOutwardGap))
         #expect(center.y == 100)
     }
 

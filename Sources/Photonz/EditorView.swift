@@ -100,6 +100,7 @@ struct EditorView: View {
                        annotationContent: editorState.activeAnnotationContent,
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyle,
+                       edgeMap: editorState.measureEdgeMap,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
                        onSelectionChange: { editorState.setSelection($0) },

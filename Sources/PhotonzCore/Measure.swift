@@ -181,28 +181,29 @@ extension MeasureContent {
         }
     }
 
-    /// The dominant axis between two opposite corners — the measured gap for a
-    /// bracket. Vertical when the box is at least as tall as it is wide.
-    public static func bracketAxis(start s: CGPoint, end e: CGPoint) -> MeasureMode {
-        abs(e.y - s.y) >= abs(e.x - s.x) ? .vertical : .horizontal
-    }
-
     /// The squared-U bracket between `start` and `end` (opposite corners): the
     /// four-point open path (leg → connector → leg), the connector midpoint where
     /// the label anchors, and the outward unit pointing away from the opening (the
     /// side the label sits on). Mode selects which axis the connector spans.
+    ///
+    /// The closed back (connector + label) sits on the START corner's side and the
+    /// U opens toward the END. For the natural top-left→bottom-right drag that puts
+    /// the label ABOVE (horizontal) or on the LEFT (vertical); the invert control
+    /// swaps start/end to flip it to the other side.
     public func bracketGeometry() -> (path: [CGPoint], connectorMid: CGPoint, outward: CGVector) {
         let x0 = start.x, y0 = start.y, x1 = end.x, y1 = end.y
         if mode == .horizontal {
-            // Legs vertical (at x0 and x1), connector horizontal at y1 (far from y0).
-            let path = [CGPoint(x: x0, y: y0), CGPoint(x: x0, y: y1),
-                        CGPoint(x: x1, y: y1), CGPoint(x: x1, y: y0)]
-            return (path, CGPoint(x: (x0 + x1) / 2, y: y1), CGVector(dx: 0, dy: y1 >= y0 ? 1 : -1))
+            // Legs vertical (at x0 and x1), connector horizontal at y0 (the start
+            // side); legs drop toward y1. Label sits outside, away from y1.
+            let path = [CGPoint(x: x0, y: y1), CGPoint(x: x0, y: y0),
+                        CGPoint(x: x1, y: y0), CGPoint(x: x1, y: y1)]
+            return (path, CGPoint(x: (x0 + x1) / 2, y: y0), CGVector(dx: 0, dy: y0 >= y1 ? 1 : -1))
         } else {
-            // Legs horizontal (at y0 and y1), connector vertical at x1 (far from x0).
-            let path = [CGPoint(x: x0, y: y0), CGPoint(x: x1, y: y0),
-                        CGPoint(x: x1, y: y1), CGPoint(x: x0, y: y1)]
-            return (path, CGPoint(x: x1, y: (y0 + y1) / 2), CGVector(dx: x1 >= x0 ? 1 : -1, dy: 0))
+            // Legs horizontal (at y0 and y1), connector vertical at x0 (the start
+            // side); legs reach toward x1. Label sits outside, away from x1.
+            let path = [CGPoint(x: x1, y: y0), CGPoint(x: x0, y: y0),
+                        CGPoint(x: x0, y: y1), CGPoint(x: x1, y: y1)]
+            return (path, CGPoint(x: x0, y: (y0 + y1) / 2), CGVector(dx: x0 >= x1 ? 1 : -1, dy: 0))
         }
     }
 

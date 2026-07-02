@@ -42,6 +42,9 @@ struct CanvasView: NSViewRepresentable {
     let textContent: TextContent?
     /// The active measure tool's style, mirrored into the in-flight preview.
     let measureContent: MeasureContent?
+    /// Detected UI edges for snapping measure corners (empty unless a measure is
+    /// active/selected).
+    let edgeMap: EdgeMap
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     let onSelectionChange: (CGRect?) -> Void
@@ -79,7 +82,7 @@ struct CanvasView: NSViewRepresentable {
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent, textContent: textContent,
-                   measureContent: measureContent)
+                   measureContent: measureContent, edgeMap: edgeMap)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -230,6 +233,12 @@ final class CanvasNSView: NSView {
     private var measureDrag: AnnotationDrag?
     /// In-flight resize of a placed measure by dragging one of its two corners.
     private var measureCornerDrag: MeasureCornerDrag?
+    /// Detected UI edges, mirrored from EditorState; measure corners magnetize to
+    /// these (and the pixel grid) while dragging.
+    private var edgeMap = EdgeMap.empty
+    /// Document-space x/y of the edge(s) a measure corner is currently snapped to,
+    /// drawn as a highlight while the corner is held. Cleared on mouse-up.
+    private var snapGuide: (x: CGFloat?, y: CGFloat?)?
 
     /// Dragging one corner of a placed measure's box. The dragged corner takes
     /// its x from start or end (and y likewise); moving it updates just those
@@ -717,7 +726,16 @@ final class CanvasNSView: NSView {
             measureDrag = drag
             refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
         } else if var corner = measureCornerDrag {
-            corner.current = p
+            // Magnetize the dragged corner to detected UI edges (per-axis) and the
+            // pixel grid, unless ⌘ is held to drag freely.
+            if event.modifierFlags.contains(.command) {
+                corner.current = p
+                snapGuide = nil
+            } else {
+                let snap = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom)
+                corner.current = snap.point
+                snapGuide = (snap.guideX, snap.guideY)
+            }
             measureCornerDrag = corner
             // Live re-render so the gap value updates as the corner moves.
             let (start, end) = corner.endpoints()
@@ -814,6 +832,7 @@ final class CanvasNSView: NSView {
             }
         } else if let corner = measureCornerDrag {
             measureCornerDrag = nil
+            snapGuide = nil
             let (start, end) = corner.endpoints()
             onMeasureEndpointCommit(corner.layerID, start, end)
             refreshOverlays()
@@ -921,6 +940,7 @@ final class CanvasNSView: NSView {
             }
             if let corner = measureCornerDrag {
                 measureCornerDrag = nil
+                snapGuide = nil
                 let (start, end) = corner.originalEndpoints()
                 onMeasureEndpointCommit(corner.layerID, start, end) // History no-op; restores render
                 refreshOverlays()
@@ -1024,7 +1044,7 @@ final class CanvasNSView: NSView {
               cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
-              textContent: textContent, measureContent: measureContent)
+              textContent: textContent, measureContent: measureContent, edgeMap: edgeMap)
         onViewportChange(next)
     }
 
@@ -1034,10 +1054,12 @@ final class CanvasNSView: NSView {
                selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
-               textContent: TextContent?, measureContent: MeasureContent?) {
+               textContent: TextContent?, measureContent: MeasureContent?,
+               edgeMap: EdgeMap) {
         self.annotationContent = annotationContent
         self.textContent = textContent
         self.measureContent = measureContent
+        self.edgeMap = edgeMap
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds
         if tool != self.tool {
@@ -1046,6 +1068,7 @@ final class CanvasNSView: NSView {
             annotationDrag = nil
             measureDrag = nil
             measureCornerDrag = nil
+            snapGuide = nil
             endpointDrag = nil
             cropDrag = nil
             transformDrag = nil
@@ -1396,14 +1419,18 @@ final class CanvasNSView: NSView {
         }
 
         // Guides span the whole document so the alignment target is obvious.
+        // Driven by layer-move snapping OR a measure corner snapping to a detected
+        // UI edge — both magnetize to a document x/y and want the same full-span line.
         let guides = CGMutablePath()
         let docFrame = viewport.documentFrameInView
-        if let x = moveDrag?.snapped.guideX {
+        let guideX = moveDrag?.snapped.guideX ?? snapGuide?.x
+        let guideY = moveDrag?.snapped.guideY ?? snapGuide?.y
+        if let x = guideX {
             let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x
             guides.move(to: CGPoint(x: vx, y: docFrame.minY))
             guides.addLine(to: CGPoint(x: vx, y: docFrame.maxY))
         }
-        if let y = moveDrag?.snapped.guideY {
+        if let y = guideY {
             let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y
             guides.move(to: CGPoint(x: docFrame.minX, y: vy))
             guides.addLine(to: CGPoint(x: docFrame.maxX, y: vy))
@@ -1537,7 +1564,9 @@ final class CanvasNSView: NSView {
     private func measureModeForCommit(anchor: CGPoint, current: CGPoint, constrained: Bool) -> MeasureMode {
         let style = measureContent ?? MeasureContent()
         if style.form == .bracket {
-            let axis = MeasureContent.bracketAxis(start: anchor, end: current)
+            // The bracket keeps the chosen/remembered axis (vertical by default) so
+            // the direction never flips based on how the box is dragged. ⇧ flips it.
+            let axis: MeasureMode = style.mode == .horizontal ? .horizontal : .vertical
             guard constrained else { return axis }
             return axis == .vertical ? .horizontal : .vertical
         }

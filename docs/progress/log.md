@@ -443,3 +443,45 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Toolchain gotcha: machine has CommandLineTools only (no Xcode). `swift test` needs explicit Testing.framework search paths — encoded in `Scripts/test.sh`. CI uses full Xcode so plain `swift test` works there.
 - Infra: CI/release/site workflows, marketing site, release skill, plan + design docs, CLAUDE.md rules.
 - **Next**: Phase 1 — layer transforms, style rendering (corner radius/border/shadow), text + annotation rasterizers. TDD: pixel tests first.
+
+## 2026-06-28 — Phase 16.4: edge-map analysis (the snapping foundation)
+
+- **Core** (`PhotonzCore/EdgeMap.swift`, TDD): `EdgeCandidate{position,strength}`, `EdgeMap` (Equatable/Sendable/Codable, top-left space, x-columns + y-rows sorted ascending, `.empty`, `from(xProfile:yProfile:)` assembler), and `EdgeProfile.peaks` — local maxima above `threshold × max`, non-max suppression within `minSeparation` (strongest first, tie→lower position), strength normalized to the peak. Contrast/exposure-independent because the threshold is relative.
+- **Render** (`PhotonzRender/EdgeMapAnalyzer.swift`): `CIEdges` → crop to extent → `render(toBitmap:RGBA8)` → project the R channel onto X (columns) and Y (rows). `render(toBitmap:)` is bottom-left origin, so the Y profile is **reversed** into top-left order before peak-finding; X projection is flip-invariant. Shared `CIContext`. `EdgeMapCache` (NSLock, keyed by `ImageRef.id`) caches the one-time sweep — 16.5 wires it into the app.
+- **Tests**: 516 green (+14). Core: empty/flat→none, white-rect→L/R peaks, sorting, sub-threshold noise rejected, NMS dedup keeps the stronger, beyond-separation both kept, strength normalize, Codable round-trip. Render: real CIEdges on a 100×80 white rect detects all four sides within ±3px, flat image → none, cache identity.
+- **Next**: 16.5 — `EdgeSnapping` (core) magnetizes a dragged measure corner to the nearest in-tolerance edge per-axis + snaps to the integer pixel grid; app holds one `EdgeMapCache`, snaps the `MeasureCornerDrag` before preview, highlights the captured edge. TESTS FIRST per the plan.
+
+## 2026-06-28 — Phase 16.5: ruler/edge snapping wired (awaiting user verify)
+
+- **Core** (`PhotonzCore/EdgeSnapping.swift`, TDD, +6 tests, 522 green): `EdgeSnapping.snap` magnetizes a point to the nearest in-tolerance edge per-axis (`EdgeMap` from 16.4), falling back to the integer pixel grid; tolerance is `screenTolerance/zoom` so the magnet feels constant. Returns the captured edge as `guideX/guideY` for a highlight.
+- **App**: `Layer.imageRef` accessor; `EditorState` holds one `EdgeMapCache` and a **gated** `measureEdgeMap` (the edge sweep only runs when the measure tool is active or a measure is selected, then cached). Passed through `EditorView → CanvasView → CanvasNSView`. The measure corner-drag now snaps the dragged corner before previewing; **⌘ held = free drag**. A full-span highlight (reusing `snapGuideLayer`) shows the captured edge; cleared on mouse-up/Esc/tool-switch.
+- Built `dist/Photonz.app`, launched for interactive verification.
+- **To verify (user)**: capture/open a UX screenshot, place a bracket measure, then drag a corner — it should click onto real UI element edges and the pixel grid, with a guide line on the captured edge; ⌘ disables snapping. **Open question**: whether CIEdges' default threshold surfaces the right edges on real screenshots (may need tuning); new-measure drag end isn't snapped yet (only corner-resize).
+
+## 2026-06-28 — 16.4 revisited: directional Sobel fixes text-baseline snapping
+
+- User feedback while testing 16.5: measure corners "don't capture text baselines and top lines well." First synthetic repro (equal-height stem bars) PASSED — too clean to reproduce. Per the reproduce-first rule, ran the analyzer on a **real** dark-mode capture (1313×427, grey italic text + dividers + dock) via a throwaway env-guarded test.
+- **Root cause (confirmed):** `CIEdges` gives combined magnitude √(Gx²+Gy²). Projected onto Y, a glyph row's **vertical stems** (|Gx|) inflate every row of the band → broad plateau, baseline buried in a thicket (weak ~0.16–0.29 peaks). Plus relative-to-global-max thresholding (dock/divider = 1.0) suppressed the weak text edges at 0.25.
+- **Fix:** directional Sobel — CIColorMatrix luma → CIConvolution3X3 Gx/Gy → render each to a single-channel **float** buffer (`.Rf`; 8-bit clamps the signed half) → project `|Gx|→X`, `|Gy|→Y`. On the same capture the baseline is now a clean dominant peak (0.81, whitespace below = 0.06); dividers/dock still 1.0/0.9. Lowered default threshold 0.25→0.2 so the x-height top line (~0.22) clears too. Italic/ascender tops are inherently spread — the baseline is the reliable snap target.
+- Added render guard `detectsTextCapLineAndBaselineNotTheBandInterior`. 523 tests green. Rebuilt + relaunched the app.
+
+## 2026-06-29 — Measure bracket UX overhaul from user redline feedback
+
+- **Bracket geometry (core, TDD, verified by render):** the closed back (connector + label) now sits on the START corner's side and the U opens toward the END. For the natural top-left→bottom-right drag this puts the label ABOVE (horizontal) and on the LEFT (vertical, opening right) — matches the user's reference images. Invert (⇄, swaps start/end) flips it. Rendered both axes to PNG and eyeballed before trusting the math.
+- **Default axis horizontal:** `bracketAxis` tie-break now favors horizontal (`>` not `>=`) — square/ambiguous drags read horizontal, the common redline direction.
+- **Measure inspector redesigned to match Effects panel:** compact `field()` helper (small secondary caption ABOVE each control, `.labelsHidden()` on the segmented pickers so "Direction" no longer wraps to "Di re ct io n"); Direction toggle now lists **Horizontal first**; Color uses a left label + right swatch (narrow control). Direction row only shows for brackets.
+- 524 tests green. Rebuilt + relaunched.
+- **Snapping bug triage:** diagnosed analyzer output on a real text capture — it DOES produce horizontal edges (baselines at strength 0.81–1.0), just far fewer (12) than vertical (40 glyph stems). So "only vertical snaps" is likely sparsity/perception, not a wiring bug; to confirm in-app and tune tolerance if needed.
+
+## 2026-06-29 — Bracket direction: removed size-dependent auto-detect, default vertical
+
+- User report: "the direction changes depending on the size I drag." Root cause: `bracketAxis` picked the bracket's axis from the drag box's aspect ratio (wider→horizontal, taller→vertical), so the orientation flipped mid-gesture. Confirmed by reproducing the app's `measureModeForCommit` path on a wide TL→BR drag.
+- Fix: **removed shape-based auto-detect entirely.** Brackets now use the persisted `measureStyle.mode`, which defaults to **vertical** (the image-#2 style the user kept pointing to: connector + label on the left, opens right). ⇧ at create still flips the axis; the Direction toggle changes it and persists as the new default. Deleted the now-unused `bracketAxis` + its tests.
+- Note on terminology: code/panel "horizontal" = connector-on-top/label-above (measures width); "vertical" = connector-on-left/label-left (measures height). The user confirmed via image #5 that they want "vertical" as default.
+- 522 tests green. Rebuilt + relaunched.
+
+## 2026-07-01 — Commit checkpoint: measure bracket/panel polish + edge-map snapping infra
+
+- Committing 16.4 (edge map, directional Sobel), 16.5 snapping infra (EdgeSnapping + wiring), and the 16.3 follow-up polish: bracket connector/label on the START side (label above / left), removed size-dependent axis auto-detect (default vertical, no flipping), MeasureInspector restyled to match Effects.
+- **KNOWN-OPEN:** user reports measure corners still don't snap to obvious visual edges (e.g. a menu divider). Analyzer is verified good on the real capture (divider = strongest H-edge). Next: determine whether the edgeMap reaches the canvas at drag time (SwiftUI gating/timing) or the magnet is just too tight; likely widen tolerance + also snap the create-drag, not just corner-resize.
+- 522 tests green; temporary debug instrumentation removed before commit.
