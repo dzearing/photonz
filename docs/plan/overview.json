@@ -1,6 +1,6 @@
 {
   "project": "photonz",
-  "updated": "2026-06-28",
+  "updated": "2026-07-02",
   "howToUse": "Read this file + the in_progress phase file(s) each session. Statuses: pending | in_progress | done. Keep statuses and notes current — this plan is the source of truth, not chat history.",
   "roadmapNote": "Phases 0–9 shipped the original editor; v0.2.0 beta is published (Developer ID signed; notarization best-effort/pending). Phases 10–15 are the 'compete with CleanShot X' chapter — see competitive-cleanshot.md for the benchmark + gap analysis. Sequenced interleaved per the user: editor bugs first (10), then re-architect to a resident MENU-BAR AGENT with a global slide-down history overlay + MULTI-WINDOW editor + Quick Access Overlay (11; replaces the phase-9 in-editor carousel — see docs/design/capture.md), then SCREEN RECORDING (12, flagged top-priority by the user: region/full, audio-input choice, record to MP4 + GIF + animated HEIC — WebP deferred to backlog: macOS's built-in ImageIO can't write it without a vendored libwebp), then video editing + remaining polish (13), then the expanded annotation toolset (14: redaction, step counter) and power capture (15: scrolling + window capture). Cloud upload/sharing is intentionally a SEPARATE later track, not in 10–15. Post-1.0 candidate list lives in backlog.md.",
   "phases": [

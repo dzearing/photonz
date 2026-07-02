@@ -525,3 +525,10 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - onComplete now carries (screen, rect, frozenCrop?): screenshot mode stores the crop directly; region-recording ignores it and records live (the frozen overlay is torn down before the stream starts).
 - Future synergy noted: selection now happens over a frozen bitmap, so the EdgeMap edge-snapping (16.4/16.5) can later magnetize the capture rect itself.
 - 533 tests green. Debug binary relaunched (still SNAPDBG-instrumented for the measure verification).
+
+## 2026-07-02 — Session close: 16.4+16.5 shipped & user-verified; docs synced
+
+- Committed + pushed `7a896dd` (edge snapping final + freeze-frame ⌘⇧4). User verdict on the freeze-frame capture: "friggin perfect"; snapping verified through five feedback rounds (dividers, faint borders, baselines at 47px, axis gating).
+- Docs synced to reality: `tools.md` measure section corrected (bracket = connector/label on START side, default VERTICAL, no size-based axis auto-detect — `bracketAxis` is deleted; inspector matches the Effects panel) + new "Edge snapping" design section (windowed queries, absolute floor, luma landings, side filter, gating, gotchas). `phase-16.json` `decisions.snapping` rewritten to the final design; 16.4/16.5 done. `capture.md` records the freeze-frame model + key-panel cursor gotcha. `overview.json` dated.
+- **Phase 16 remaining**: 16.6 alignment guides (draggable H/V guide lines reusing EdgeSnapping), 16.7 auto-inspect spike. Measure follow-ups still open: measureStyle persistence, pixelScale auto-detect from capture DPI, style-popover coverage.
+- **Watch out**: EdgeCandidate layout changes + stale incremental build objects segfault the test runner — clean rebuild fixes; `git checkout` on uncommitted reworked files clobbers them.

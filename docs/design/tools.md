@@ -45,15 +45,61 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 A designer's redline tool for measuring gaps/sizes on a screenshot and checking alignment. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own `LayerContent.measure` case on the two-endpoint pattern (start/end = the two box corners, layer-local once built); `MeasureBuilder` mirrors `AnnotationBuilder` (layer/updating/resized/restyled). Tool = `.measure` (toolbar "ruler", shortcut **M**, `createsMeasureByDrag`).
 
 - **Two forms (`MeasureForm`)** — the tool defaults to **`bracket`**:
-  - **`bracket`** (a squared "U") — drag corner **A → opposite corner B**; the U wraps the gap with legs reaching in from A, a connector spanning the measured gap on the far side, and the **label outside** the connector. `bracketGeometry()` returns the 4-point open path + connector midpoint + outward unit. Orientation is the box's dominant axis (`bracketAxis`: tall→vertical gap "⊐", wide→horizontal "⊔"); ⇧ flips the axis on create.
+  - **`bracket`** (a squared "U") — drag corner **A → opposite corner B**; the connector + **label sit on the START corner's side** and the U opens toward the end (natural TL→BR drag ⇒ label above for horizontal, left for vertical). `bracketGeometry()` returns the 4-point open path + connector midpoint + outward unit. **The axis NEVER auto-flips from the drag's box shape** (a size-dependent `bracketAxis` auto-detect was shipped and removed 2026-06-29 — "the direction changes depending on the size I drag!"): brackets use the persisted `measureStyle.mode`, **default vertical**; ⇧ flips on create; the inspector Direction toggle changes it (and persists as the new default); invert ⇄ swaps corners to flip the label side.
   - **`line`** — a straight dimension line (+ witness lines in the locked H/V modes), free point-to-point.
 - **Measured value** — `rawDistance` (free=hypot, H/V=|dx|/|dy|, i.e. the gap-axis span). `MeasureUnit` **defaults to `pixels`** (raw image px); `points` divides by `PhotonzDocument.pixelScale` (≤0→1 guard). `label(pixelScale:)` = `%.<decimals>f <suffix>`.
 - **Stroke width is in LOGICAL pixels**, rendered ×`pixelScale` (`MeasureRasterizer` uses butt caps + miter joins for crisp 1px right-angle corners), so a "1px" sizer line aligns to the image's pixel grid. Default 1; inspector offers 1/2/3px.
 - **Rendering** (`PhotonzRender/MeasureRasterizer.swift`): branches on form; the numeric **label** is white CoreText on a rounded plate filled with the measure color — produced via `TextRasterizer` and **blitted** in (drawing CoreText directly into the rasterizer's flipped context renders it upside-down). Cache `variant = "scale:<pixelScale>"` so the points readout invalidates on scale change. The frame reserves `estimatedLabelSize` at `labelCenter(labelSize:)` so the label isn't clipped.
 - **Select / move / resize**: a selected measure shows the universal dotted selection box + **round handles on all 4 box corners** (a `line` shows its 2 ends). Dragging any corner updates the right start/end components (diagonal-opposite stays fixed) and the gap/label **update live** (full re-render per move via `previewMeasureEndpoints`; one undo step on release via `commitMeasureEndpoints`; Esc restores). Move works via hit-testing (`Layer.contains` tests the drawn strokes). `MeasureCornerDrag` carries `(xFromEnd, yFromEnd)`.
-- **Inspector** (`MeasureInspector`, `InspectorSectionID.measure`): Style (Bracket/Line) · Direction (Vertical/Horizontal) + an **invert ⇄ button** (`invertMeasure` swaps the corners → flips the bracket to the other side) · Unit (Pixels/Points) · Thickness (1/2/3px) · Show-label toggle · Color. Defaults live in `EditorState.measureStyle` (in-memory; **not yet persisted**).
+- **Inspector** (`MeasureInspector`, `InspectorSectionID.measure`): styled to match the Effects panel — small secondary caption **above** each control (`.labelsHidden()` segmented pickers, so labels never wrap vertically); narrow controls (Color) get a left label instead. Rows: Direction (**Horizontal listed first**, brackets only) + invert ⇄ (`invertMeasure` swaps corners → flips the bracket to the other side) · Style (Bracket/Line) · Unit (Pixels/Points) · Thickness (1/2/3px) · Color · Show-label toggle. Defaults live in `EditorState.measureStyle` (in-memory; **not yet persisted**).
 - **Open follow-ups**: measureStyle persistence; auto-detect `pixelScale` from the capture's DPI (currently fixed at 1 — the 1×/2× inspector control was removed as confusing); the toolbar S style-popover doesn't cover measures.
-- **NEXT (16.4–16.5): ruler snapping** — an edge map of the screenshot (`CIEdges`/Sobel projected onto X/Y → peak boundaries) so corner grips magnetize to detected UI edges/baselines **and** to the pixel grid (keeps thin lines crisp). There is no UI tree — snapping comes from image edge analysis. See `docs/plan/phase-16.json`.
+
+### Edge snapping (16.4–16.5, shipped 2026-07-02) — how the ruler finds UI edges
+
+There is no UI tree in a screenshot; snapping comes from image analysis. The
+design went through several user-tested revisions — the final model, and why:
+
+- **The moving line snaps to parallel edges it actually crosses.** `EdgeMap`
+  (`PhotonzCore/EdgeMap.swift`) stores block-summed (16px) **directional**
+  Sobel fields — |Gy| for horizontal boundaries, |Gx| for vertical (directional
+  matters: combined magnitude lets glyph stems smear a text band into noise) —
+  and answers **windowed** queries (`horizontalEdges(inXRange:)` /
+  `verticalEdges(inYRange:)`) where the window is the dragged ruler line's
+  span. Global X/Y projections were tried first and FAILED: a baseline only
+  spans its own text run and dilutes to nothing across a full-width image.
+- **Acceptance = absolute floor only** (`defaultFloor` 0.12 on windowed mean
+  gradient; hard unit edge ≈ 4.0/px). A window-relative threshold was tried
+  and REMOVED — it drowned faint hairline borders sharing a window with a
+  strong dark→white panel edge (raw ~0.15 vs ~3.4). Noise stays under ~0.08.
+- **Luma landings**: `EdgeMap` also stores perceptual (sRGB) luma; each
+  `EdgeCandidate` carries `edgeBefore`/`edgeAfter` = the first **visually
+  clean background** row/col walking from the gradient peak toward each side
+  (residual ≤ 10% of the edge's own contrast). AA glow counts as element;
+  sparse descender ink counts as background — the user measures from the
+  BASELINE. Hard hairlines land on the peak row itself. Snapping uses the
+  pointer-side landing, so a baseline→divider gap reads the number a designer
+  expects.
+- **Pick is strength-weighted** (`score = strength / (1 + distance/4)`), not
+  nearest-wins — a real baseline a few px away beats an antialiasing ghost
+  under the pointer; a faint divider still captures when alone.
+- **Approach-side filtering**: candidates cluster into "runs" (gap ≤ 40px);
+  a run of ≥3 lines only exposes the lines on the pointer's side of its
+  midpoint — approaching text from below can snap baseline/box-bottom, never
+  the topline.
+- **App feel** (`CanvasView` + `EdgeSnapping`): snapping applies to the CREATE
+  drag (anchor + growing corner) and corner-resize; **⌘ bypasses**; a decayed
+  motion accumulator gates axes (decisive vertical motion suppresses X
+  captures — no perpendicular guide bars); tolerance = `max(8pt/zoom, 4px)` so
+  high zoom keeps a magnet; captured edges draw a full-span guide via the
+  shared `snapGuideLayer`; un-captured axes round to the pixel grid.
+- **Analysis cost**: one background pass per image (`EdgeMapAnalyzer`, ~2s
+  debug on a 7MP capture), computed off-main in `EditorState` (gated to the
+  measure tool / a selected measure), cached per `ImageRef`. Snapping is a
+  no-op until the map lands.
+- **Gotchas encoded in tests**: `render(toBitmap:)` writes rows TOP-first
+  (an added "flip" mirrored every horizontal edge — caught only by an
+  asymmetric fixture; symmetric fixtures hid it); calibration fixtures mirror
+  measured rows from a real capture.
 
 ## Zoom callout (Phase 5) — signature feature
 
