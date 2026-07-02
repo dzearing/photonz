@@ -4,50 +4,27 @@ import Foundation
 import PhotonzCore
 
 /// Produces a per-image `EdgeMap` by running directional Sobel gradients over the
-/// base bitmap and projecting them onto the X and Y axes (|Gx|→X for vertical
-/// boundaries, |Gy|→Y for horizontal ones). The render side owns only the CI pass
-/// + projection into two 1-D profiles; `EdgeMap`/`EdgeProfile` (core) own the peak
-/// finding. Together they answer "where are the strong UI boundaries in this
-/// screenshot" for measure snapping (16.5).
+/// base bitmap. The render side owns only the CI pass that yields the |Gx| and
+/// |Gy| magnitude fields (in top-left row order); `EdgeMap` (core) owns the
+/// block-summed storage and the windowed peak queries that answer "which UI
+/// boundaries does this ruler line cross". Directional gradients matter: |Gy|
+/// alone finds text tops/baselines without glyph stems polluting the signal, and
+/// |Gx| alone finds vertical borders without underlines polluting theirs.
 public enum EdgeMapAnalyzer {
 
     /// One shared context — building a `CIContext` per call is expensive and this
     /// runs once per image (results are cached by `EdgeMapCache`).
     private static let context = CIContext(options: [.useSoftwareRenderer: false])
 
-    /// Analyzes `image` and returns its detected edges in top-left image space.
-    ///
-    /// Uses DIRECTIONAL Sobel rather than combined magnitude (`CIEdges`): the
-    /// horizontal gradient (Gx) is projected onto X to find vertical boundaries,
-    /// and the vertical gradient (Gy) onto Y to find horizontal boundaries. This
-    /// keeps a glyph's vertical stems out of the horizontal profile, so a line of
-    /// text peaks cleanly at its cap-line and baseline instead of smearing a
-    /// plateau across the whole band (the combined-magnitude failure).
-    ///
-    /// - threshold / minSeparation: forwarded to the core peak finder.
-    public static func analyze(_ image: CGImage,
-                               threshold: Double = 0.2,
-                               minSeparation: Int = 4) -> EdgeMap {
-        guard let (xProfile, yProfile) = profiles(image) else {
-            return EdgeMap(width: image.width, height: image.height,
-                           verticalEdges: [], horizontalEdges: [])
-        }
-        return EdgeMap.from(xProfile: xProfile, yProfile: yProfile,
-                            width: image.width, height: image.height,
-                            threshold: threshold, minSeparation: minSeparation)
-    }
-
     /// Sobel Gx weights (responds to vertical boundaries).
     private static let sobelX = CIVector(values: [-1, 0, 1, -2, 0, 2, -1, 0, 1], count: 9)
     /// Sobel Gy weights (responds to horizontal boundaries).
     private static let sobelY = CIVector(values: [-1, -2, -1, 0, 0, 0, 1, 2, 1], count: 9)
 
-    /// Returns the per-axis edge-magnitude profiles: `x[col] = Σ|Gx|` over rows
-    /// (top-left order trivially, X is flip-invariant) and `y[row] = Σ|Gy|` over
-    /// columns, flipped into top-left order. Nil if the CI graph can't build.
-    static func profiles(_ image: CGImage) -> (x: [Double], y: [Double])? {
+    /// Analyzes `image` and returns its locally-queryable edge map.
+    public static func analyze(_ image: CGImage) -> EdgeMap {
         let w = image.width, h = image.height
-        guard w > 0, h > 0 else { return nil }
+        guard w > 0, h > 0 else { return .empty }
         let bounds = CGRect(x: 0, y: 0, width: w, height: h)
 
         // Work on luminance so coloured text/UI is treated by brightness contrast.
@@ -59,7 +36,7 @@ public enum EdgeMapAnalyzer {
             "inputGVector": lumaVector,
             "inputBVector": lumaVector,
             "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1),
-        ])?.outputImage?.clampedToExtent() else { return nil }
+        ])?.outputImage?.clampedToExtent() else { return .empty }
 
         func convolve(_ weights: CIVector) -> CIImage? {
             CIFilter(name: "CIConvolution3X3", parameters: [
@@ -68,39 +45,75 @@ public enum EdgeMapAnalyzer {
                 "inputBias": 0,
             ])?.outputImage?.cropped(to: bounds)
         }
-        guard let gx = convolve(sobelX), let gy = convolve(sobelY) else { return nil }
-
-        // Render each gradient to a single-channel FLOAT buffer so the signed
-        // response survives (8-bit would clamp the negative half to zero, halving
-        // every edge). `render(toBitmap:)` is bottom-left, so the row profile is
-        // built bottom-up then reversed.
-        guard let gxBuf = renderFloat(gx, w: w, h: h, bounds: bounds),
-              let gyBuf = renderFloat(gy, w: w, h: h, bounds: bounds) else { return nil }
-
-        var xProfile = [Double](repeating: 0, count: w)
-        var yBottomUp = [Double](repeating: 0, count: h)
-        for row in 0..<h {
-            let base = row * w
-            var rowSum = 0.0
-            for col in 0..<w {
-                xProfile[col] += Double(abs(gxBuf[base + col]))
-                rowSum += Double(abs(gyBuf[base + col]))
-            }
-            yBottomUp[row] = rowSum
+        guard let gxImage = convolve(sobelX), let gyImage = convolve(sobelY),
+              // Float buffers so the signed response survives (8-bit would clamp
+              // the negative half to zero, halving every edge).
+              let gxBuf = renderFloat(gxImage, w: w, h: h, bounds: bounds),
+              let gyBuf = renderFloat(gyImage, w: w, h: h, bounds: bounds) else {
+            return .empty
         }
-        return (xProfile, Array(yBottomUp.reversed()))
+
+        // |G| magnitudes. NOTE: unlike CIContext's coordinate SPACE (bottom-left),
+        // `render(toBitmap:)` writes buffer rows top-down (CGImage layout), so row
+        // 0 is already the image's TOP row — no flip. Verified by an asymmetric
+        // fixture: a flip here relocates a rect's edges to mirrored rows.
+        var gx = [Double](repeating: 0, count: w * h)
+        var gy = [Double](repeating: 0, count: w * h)
+        gx.withUnsafeMutableBufferPointer { dstX in
+            gy.withUnsafeMutableBufferPointer { dstY in
+                gxBuf.withUnsafeBufferPointer { srcX in
+                    gyBuf.withUnsafeBufferPointer { srcY in
+                        for i in 0..<(w * h) {
+                            dstX[i] = Double(abs(srcX[i]))
+                            dstY[i] = Double(abs(srcY[i]))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Landing refinement wants PERCEPTUAL luma ("does this row read as clean
+        // background to a human"), so compute it on the CPU from the sRGB-encoded
+        // pixels — gamma-encoded values are already perceptual, and it sidesteps
+        // a third CI render. 0...1 units; top-left row order by construction.
+        var rgba = [UInt8](repeating: 0, count: w * h * 4)
+        var luma: [Double]?
+        let drewImage = rgba.withUnsafeMutableBytes { raw -> Bool in
+            guard let base = raw.baseAddress,
+                  let cg = CGContext(data: base, width: w, height: h,
+                                     bitsPerComponent: 8, bytesPerRow: w * 4,
+                                     space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            cg.draw(image, in: bounds)
+            return true
+        }
+        if drewImage {
+            var l = [Double](repeating: 0, count: w * h)
+            rgba.withUnsafeBufferPointer { src in
+                l.withUnsafeMutableBufferPointer { dst in
+                    for i in 0..<(w * h) {
+                        let o = i * 4
+                        dst[i] = (0.299 * Double(src[o]) + 0.587 * Double(src[o + 1])
+                                  + 0.114 * Double(src[o + 2])) / 255
+                    }
+                }
+            }
+            luma = l
+        }
+
+        return EdgeMap(width: w, height: h, gxMagnitude: gx, gyMagnitude: gy, luma: luma)
     }
 
     /// Renders a CIImage's red channel to a `w*h` array of 32-bit floats.
     private static func renderFloat(_ image: CIImage, w: Int, h: Int, bounds: CGRect) -> [Float]? {
         var buffer = [Float](repeating: 0, count: w * h)
-        var ok = true
         buffer.withUnsafeMutableBytes { raw in
-            guard let base = raw.baseAddress else { ok = false; return }
+            guard let base = raw.baseAddress else { return }
             context.render(image, toBitmap: base, rowBytes: w * MemoryLayout<Float>.stride,
                            bounds: bounds, format: .Rf, colorSpace: nil)
         }
-        return ok ? buffer : nil
+        return buffer
     }
 }
 
@@ -115,15 +128,13 @@ public final class EdgeMapCache: @unchecked Sendable {
 
     /// Returns the cached map for `ref`, computing (and caching) it on first use.
     /// Returns `.empty` if the ref has no registered bitmap.
-    public func edgeMap(for ref: ImageRef, store: ImageStore,
-                        threshold: Double = 0.2,
-                        minSeparation: Int = 4) -> EdgeMap {
+    public func edgeMap(for ref: ImageRef, store: ImageStore) -> EdgeMap {
         lock.lock()
         if let hit = cache[ref.id] { lock.unlock(); return hit }
         lock.unlock()
 
         guard let image = store.image(for: ref) else { return .empty }
-        let map = EdgeMapAnalyzer.analyze(image, threshold: threshold, minSeparation: minSeparation)
+        let map = EdgeMapAnalyzer.analyze(image)
         lock.lock()
         cache[ref.id] = map
         lock.unlock()

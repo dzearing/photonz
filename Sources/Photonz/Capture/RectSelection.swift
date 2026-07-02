@@ -1,24 +1,47 @@
 import AppKit
 
-/// Full-screen "grab a rectangle" mode (⌘⇧4): dims every screen behind a
-/// crosshair; drag selects, releasing captures, Esc cancels.
+/// Full-screen "grab a rectangle" mode (⌘⇧4), freeze-frame style: every display
+/// is screenshotted FIRST, the frozen images are shown full-screen on
+/// shielding-level panels covering everything (nothing underneath stays
+/// interactive or can float above the drag box), and the selection is dragged on
+/// top of the frozen picture. Releasing crops the region out of the frozen
+/// bitmap — atomically WYSIWYG, no re-capture race. Esc cancels.
 @MainActor
 final class RectSelectionController {
     private var windows: [SelectionWindow] = []
     private var escMonitors: [Any] = []
-    private let onComplete: (NSScreen, CGRect) -> Void
+    /// The cropped frozen image is non-nil in screenshot mode; region-recording
+    /// ignores it and uses the (screen, rect) to record live.
+    private let onComplete: (NSScreen, CGRect, CGImage?) -> Void
     private let onCancel: () -> Void
+    private var began = false
 
-    init(onComplete: @escaping (NSScreen, CGRect) -> Void, onCancel: @escaping () -> Void) {
+    init(onComplete: @escaping (NSScreen, CGRect, CGImage?) -> Void,
+         onCancel: @escaping () -> Void) {
         self.onComplete = onComplete
         self.onCancel = onCancel
     }
 
     func begin() {
-        guard windows.isEmpty else { return }
+        guard !began else { return }
+        began = true
+        Task { await freezeAndShow() }
+    }
+
+    /// Screenshots every display, then covers each with its frozen image.
+    private func freezeAndShow() async {
+        var frozen: [(screen: NSScreen, image: CGImage?)] = []
         for screen in NSScreen.screens {
-            let window = SelectionWindow(screen: screen)
-            window.selectionView.onSelect = { [weak self] rect in self?.finish(screen: screen, rect: rect) }
+            // A failed freeze (rare) degrades to the old dim-the-live-screen look
+            // for that display; selection still works via the live-capture path.
+            frozen.append((screen, try? await ScreenCapturer.capture(screen: screen)))
+        }
+        guard windows.isEmpty else { return }
+        for (screen, image) in frozen {
+            let window = SelectionWindow(screen: screen, frozenImage: image)
+            window.selectionView.onSelect = { [weak self] rect in
+                self?.finish(screen: screen, rect: rect, frozen: image)
+            }
             window.selectionView.onCancel = { [weak self] in self?.cancel() }
             // Order front WITHOUT activating: the windows are non-activating
             // panels so they take mouse/keys without pulling the app (and any
@@ -26,9 +49,14 @@ final class RectSelectionController {
             window.orderFrontRegardless()
             windows.append(window)
         }
+        // Key the panel under the mouse: a non-activating panel can be key
+        // without activating the app, and being key is what lets it own the
+        // cursor (crosshair) and receive Esc directly.
+        let mouse = NSEvent.mouseLocation
+        let keyWindow = windows.first { $0.screen?.frame.contains(mouse) == true } ?? windows.first
+        keyWindow?.makeKey()
         NSCursor.crosshair.set()
-        // The overlay isn't the active app, so its panels won't reliably receive
-        // keyDown — watch for Esc both locally (if we are active) and globally.
+        // Belt and braces for Esc: local (we're key) plus global (if focus moves).
         if let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
             if e.keyCode == 53 { self?.cancel(); return nil }
             return e
@@ -38,7 +66,7 @@ final class RectSelectionController {
         }) { escMonitors.append(global) }
     }
 
-    /// Tears down the overlay windows so they don't appear in the capture.
+    /// Tears down the overlay windows.
     func dismiss() {
         escMonitors.forEach { NSEvent.removeMonitor($0) }
         escMonitors = []
@@ -47,26 +75,36 @@ final class RectSelectionController {
         NSCursor.arrow.set()
     }
 
-    private func finish(screen: NSScreen, rect: CGRect) {
+    private func finish(screen: NSScreen, rect: CGRect, frozen: CGImage?) {
         dismiss()
-        onComplete(screen, rect)
+        onComplete(screen, rect, frozen.flatMap { Self.crop($0, to: rect, scale: screen.backingScaleFactor) })
     }
 
     private func cancel() {
         dismiss()
         onCancel()
     }
+
+    /// Crops a screen-local, top-left-origin points rect out of the frozen
+    /// bitmap (which is at the screen's backing scale).
+    private static func crop(_ image: CGImage, to rect: CGRect, scale: CGFloat) -> CGImage? {
+        let pixelRect = CGRect(x: rect.minX * scale, y: rect.minY * scale,
+                               width: rect.width * scale, height: rect.height * scale).integral
+        return image.cropping(to: pixelRect)
+    }
 }
 
 private final class SelectionWindow: NSPanel {
     let selectionView = SelectionView()
 
-    init(screen: NSScreen) {
+    init(screen: NSScreen, frozenImage: CGImage?) {
         // A non-activating panel takes mouse/keys without making Photonz the
         // active app — so starting a capture never raises an open editor window.
         super.init(contentRect: screen.frame, styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
-        level = .screenSaver
+        // Shielding level: above every app window, panel, and system alert —
+        // nothing can float over the frozen picture or the drag box.
+        level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
@@ -74,7 +112,27 @@ private final class SelectionWindow: NSPanel {
         isFloatingPanel = true
         hidesOnDeactivate = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        contentView = selectionView
+        // The freeze must be imperceptible: macOS animates panels in by default
+        // (fade/pop), which reads as a visible "flash" to the screenshot.
+        animationBehavior = .none
+
+        // The frozen screenshot sits beneath the selection chrome, so the world
+        // appears unchanged but is actually a still image we own.
+        let container = NSView(frame: CGRect(origin: .zero, size: screen.frame.size))
+        container.wantsLayer = true
+        if let frozenImage, let layer = container.layer {
+            // No implicit CALayer transitions either — contents appear in the
+            // same frame the window does.
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer.contents = frozenImage
+            layer.contentsGravity = .resize
+            CATransaction.commit()
+        }
+        selectionView.frame = container.bounds
+        selectionView.autoresizingMask = [.width, .height]
+        container.addSubview(selectionView)
+        contentView = container
     }
 
     override var canBecomeKey: Bool { true }
@@ -96,10 +154,10 @@ private final class SelectionView: NSView {
     // drag (not just an activation) for drag-to-select to work.
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    // Cursor rects are unreliable on borderless screen-saver-level overlay
-    // windows (the crosshair often never replaces the arrow). A tracking area
-    // that delivers `.cursorUpdate` — plus pushing the cursor on enter/move — is
-    // the dependable way to force the crosshair across the whole overlay.
+    // Cursor rects are unreliable on borderless overlay windows (the crosshair
+    // often never replaces the arrow). A tracking area that delivers
+    // `.cursorUpdate` — plus pushing the cursor on enter/move — is the
+    // dependable way to force the crosshair across the whole overlay.
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         for area in trackingAreas { removeTrackingArea(area) }
@@ -152,7 +210,8 @@ private final class SelectionView: NSView {
         NSColor.black.withAlphaComponent(0.25).setFill()
         bounds.fill()
         guard let rect = selectionRect else { return }
-        // …except the selection, which shows through with a crisp outline.
+        // …except the selection, which shows the frozen picture through a crisp
+        // outline.
         NSColor.clear.setFill()
         rect.fill(using: .copy)
         NSColor.white.setStroke()

@@ -79,16 +79,31 @@ The `NSStatusItem` menu is the always-available entry point:
    `CaptureCenter` on the resident agent — **no editor window required**.
 2. Region capture uses the fullscreen `RectSelectionController` overlay; full
    screen / window / video are their own modes.
+   - **Freeze-frame model (revised 2026-07-02, user-proposed).** Every display
+     is screenshotted FIRST; each screen is then covered by its frozen image on
+     a borderless panel at `CGShieldingWindowLevel()` (above every window,
+     panel, and alert — nothing underneath stays interactive or can float over
+     the drag box), and the selection is dragged over the frozen picture. On
+     mouse-up the region is **cropped from the frozen bitmap** (screen points ×
+     `backingScaleFactor`) — atomically WYSIWYG; the old dismiss → 60ms sleep →
+     live re-capture dance survives only as a fallback when freezing fails.
+     Region *recording* uses the same selection UI but ignores the crop and
+     records live (the overlay tears down before the stream starts).
+     `animationBehavior = .none` + a disabled-actions CATransaction keep the
+     freeze imperceptible — macOS's default panel fade reads as a visible flash.
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you
      screenshot from another app (a reported bug, fixed 2026-06-28). The
      selection windows are therefore **non-activating panels** (`NSPanel`,
-     `.nonactivatingPanel`, screen-saver level) ordered front via
-     `orderFrontRegardless()` with **no `NSApp.activate`**. `acceptsFirstMouse`
-     keeps drag-to-select working while the app is inactive, and **Esc** is
-     caught via local **and** global `NSEvent` key monitors (the panel isn't the
-     key window of an active app). Do not reintroduce `NSApp.activate` here.
+     `.nonactivatingPanel`) ordered front via `orderFrontRegardless()` with
+     **no `NSApp.activate`** — but the panel under the mouse IS made **key**
+     (`makeKey()`): a non-activating panel can be key without activating the
+     app, and key-ness is what makes the crosshair cursor and direct Esc
+     delivery reliable (fixed 2026-07-02 — the crosshair never appeared while
+     the panel wasn't key). `acceptsFirstMouse` keeps drag-to-select working,
+     and **Esc** is additionally caught via local **and** global `NSEvent` key
+     monitors. Do not reintroduce `NSApp.activate` here.
 3. The result is added to `CaptureStore` (the persisted history) as a new entry.
 4. **Post-capture feedback = the history overlay itself** (revised 2026-06-21).
    On capture/recording complete, the slide-down history overlay is shown with

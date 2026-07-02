@@ -485,3 +485,43 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Committing 16.4 (edge map, directional Sobel), 16.5 snapping infra (EdgeSnapping + wiring), and the 16.3 follow-up polish: bracket connector/label on the START side (label above / left), removed size-dependent axis auto-detect (default vertical, no flipping), MeasureInspector restyled to match Effects.
 - **KNOWN-OPEN:** user reports measure corners still don't snap to obvious visual edges (e.g. a menu divider). Analyzer is verified good on the real capture (divider = strongest H-edge). Next: determine whether the edgeMap reaches the canvas at drag time (SwiftUI gating/timing) or the magnet is just too tight; likely widen tolerance + also snap the create-drag, not just corner-resize.
 - 522 tests green; temporary debug instrumentation removed before commit.
+
+## 2026-07-01 — Snapping rebuilt: local windowed edge queries (deep-analysis pass)
+
+- **Ground truth first:** the instrumented build logged ZERO snap events during the user's session — the snap code never ran (it was only wired into corner-resize, not the create-drag/line moves the user actually does). Separately, an asymmetric test fixture exposed that `render(toBitmap:)` returns rows TOP-first, so the "flip from CI bottom-left" was inverting all horizontal-edge positions on asymmetric images (earlier fixtures were accidentally vertically symmetric and hid it). Two real root causes, both reproduced.
+- **New model (matches the user's description):** the MOVING LINE snaps to parallel edges it crosses. `EdgeMap` now stores block-summed |Gx|/|Gy| fields (16px blocks) and answers windowed queries — `horizontalEdges(inXRange:)` = candidates under a horizontal leg's span, `verticalEdges(inYRange:)` analog. Acceptance = absolute floor (0.3 mean/px Sobel) + mild window-relative threshold, so a strong divider can't drown a text baseline in the same window. Global projections are gone (they diluted local text edges to nothing — the original 'only full-width dividers snap' failure).
+- **EdgeSnapping** takes xSpan/ySpan (the dragged ruler's box spans) per axis; ±32px point window when spanless. Tolerance 8 screen pt / zoom; pixel-grid fallback; guides reported.
+- **Wired everywhere:** create-drag (anchor at mouseDown + growing corner during drag) AND corner-resize; ⌘ bypasses; snap guides shown in both; cleared on commit/Esc/tool-switch.
+- **Calibrated on the user's real 3456×2234 capture and verified by cropping strips at reported positions:** text-line top/baseline pairs (708/722), window-bottom boundary (2121), knowledge-panel card seam (2305) — all real. Analysis costs ~2s debug, so it now runs OFF-main (Task.detached; snapping is a no-op until the map lands, then the observable update re-feeds the canvas).
+- 523 tests green. Instrumented debug binary relaunched (PHOTONZ_SNAP_DEBUG) for user verification.
+
+## 2026-07-01 (later) — Faint hairline dividers now snap: floor 0.3→0.12 + strength-weighted pick
+
+- User scenario: bracket between two card-separator hairlines wouldn't snap. SNAPDBG log (2316 events) proved the pipeline runs and X-snapping captures (gx=420), but gy never captured. Queried the map with the EXACT failed window (x=508..727): the dividers ARE detected at y≈815/818 and 958/961 — precisely the user's drag targets (spans y=819..958) — but at raw strength ~0.15, under the 0.3 floor. Dark-mode hairlines are faint (~0.07 luma delta).
+- Fix: `EdgeMap.defaultFloor` 0.3→0.12 (background noise measured <0.08, so still clear of it) + `EdgeSnapping.snapAxis` now STRENGTH-WEIGHTED (score = strength / (1 + distance/4)) instead of nearest-wins, so admitted antialiasing ghosts near text can't out-snap a real baseline a few px away, while a faint divider still captures when alone. New tests: faintHairlineDividerStillSnaps, strongBaselineBeatsANearerAntialiasingGhost. Verified on the real capture that the user's dividers pass at defaults.
+- 525 tests green. Instrumented debug binary relaunched.
+
+## 2026-07-02 — Precise text snapping: luma landings, approach-side filtering, axis gating
+
+- User feedback round: text baseline snaps ~2px off; vertical guide bars flash while resizing vertically; wants the 4 text lines (box top / topline / baseline / box bottom) with approach-side awareness. Measured the actual capture rows: ink→766, AA glow 767, clean bg 768 (descenders to 771); divider ink 816-817. User convention = legs on the first VISUALLY CLEAN background row hugging the element (AA glow counts as element; sparse descender ink does NOT — they measure from the baseline).
+- **Luma landings (core):** EdgeMap now also stores block-summed PERCEPTUAL luma (CPU sRGB pass — a third CI render segfaulted flakily; sRGB-encoded is perceptual anyway). Each EdgeCandidate carries edgeBefore/edgeAfter = first position from the gradient peak (toward each side) whose luma residual vs local background is ≤ 10% of the edge's own contrast. Hard hairlines land on the peak row itself; soft text edges land past the glow; sparse descenders (<10% residual) read as background. EdgeSnapping snaps the pointer-side landing. VERIFIED on the real capture: baseline 766→lands 768, divider 815→815, 818→818 — the user's exact scenario now reads 47px.
+- **Approach-side filter (core):** candidates cluster into "runs" (gap ≤ 40px); for runs of ≥3 lines the pointer only sees the lines on its side of the run's midpoint — approaching from below snaps baseline/box-bottom, never the topline. Hairline pairs untouched.
+- **Tolerance floor:** magnet never shrinks under 4 image px (a 355%-zoom drag had shrunk it to 2.25px).
+- **Axis gating (app):** decayed drag-motion accumulator; decisive vertical motion suppresses X captures (and vice versa) — no more perpendicular guide bars.
+- GOTCHA (build system): changing EdgeCandidate's stored layout with stale incremental objects caused flaky autoreleasePoolPop segfaults in the test runner; forced rebuilds cured it. Also learned `git checkout <uncommitted-reworked-file>` clobbers — rewrote from context.
+- 532 tests green ×3. Instrumented debug binary relaunched.
+
+## 2026-07-02 (later) — Faint border next to a strong edge: removed window-relative threshold
+
+- User scenario: horizontal measure, left leg wouldn't snap to a faint vertical border. SNAPDBG pinpointed the drag (x≈1841, y-span 827..994); luma ground truth showed the border ink at cols 1843–1844 (same 70-vs-36 contrast as the horizontal dividers that DO snap) yet zero candidates at any floor.
+- Root cause: the window-relative threshold (10% of window max). The same window contains the dark→white panel edge (raw ~3.4), so the hairline's 0.18 = 5% relative → discarded. The earlier divider case only passed at 11%. Exactly the drown-out the absolute floor was designed to prevent.
+- Fix: windowed queries now use the ABSOLUTE floor only (threshold default 0). Verified on the capture: border candidates at 1842/1845 with clean landings; logo antialiasing junk still excluded at the 0.12 floor. Regression test faintBorderSurvivesAStrongEdgeInTheSameWindow.
+- 533 tests green. Relaunched instrumented.
+
+## 2026-07-02 (later) — Freeze-frame region capture (⌘⇧4), user-proposed redesign
+
+- User bugs: crosshair never appears; the drag box goes BEHIND higher-level windows. User proposed the CleanShot model: screenshot everything first, cover all displays with the frozen image, drag on top. Agreed and implemented.
+- `RectSelectionController` now: (1) captures every display FIRST (ScreenCapturer per screen); (2) shows each frozen image on a borderless non-activating panel at `CGShieldingWindowLevel()` — above every window/panel/alert, nothing underneath interactive; (3) `makeKey()`s the panel under the mouse — a non-activating panel can be key without activating the app, and key-ness is what makes the crosshair + direct Esc reliable; (4) on mouse-up CROPS the region from the frozen bitmap (screen-pts × backingScaleFactor) — atomically WYSIWYG, replaces the dismiss + 60ms-sleep + live re-capture dance (kept only as fallback when freezing fails). Esc monitors unchanged.
+- onComplete now carries (screen, rect, frozenCrop?): screenshot mode stores the crop directly; region-recording ignores it and records live (the frozen overlay is torn down before the stream starts).
+- Future synergy noted: selection now happens over a frozen bitmap, so the EdgeMap edge-snapping (16.4/16.5) can later magnetize the capture rect itself.
+- 533 tests green. Debug binary relaunched (still SNAPDBG-instrumented for the measure verification).

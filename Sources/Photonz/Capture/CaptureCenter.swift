@@ -98,7 +98,9 @@ final class CaptureCenter {
             // Drag a region first, then record exactly that rect on its screen.
             guard rectSelection == nil else { return }
             rectSelection = RectSelectionController(
-                onComplete: { [weak self] screen, rect in
+                onComplete: { [weak self] screen, rect, _ in
+                    // Recording wants the LIVE region, not the frozen crop — the
+                    // frozen overlay is gone by the time the stream starts.
                     self?.rectSelection = nil
                     var regionConfig = config
                     regionConfig.source = .region(rect)
@@ -137,9 +139,17 @@ final class CaptureCenter {
         guard ensurePermission() else { return }
         guard rectSelection == nil else { return }
         rectSelection = RectSelectionController(
-            onComplete: { [weak self] screen, rect in
-                self?.rectSelection = nil
-                self?.captureRect(screen: screen, rect: rect)
+            onComplete: { [weak self] screen, rect, frozenCrop in
+                guard let self else { return }
+                self.rectSelection = nil
+                // Freeze-frame path: the selection was dragged over a frozen
+                // screenshot and the crop comes straight out of that bitmap —
+                // exactly what the user saw. Live re-capture only as fallback.
+                if let frozenCrop {
+                    if let entry = self.store.add(frozenCrop) { self.onCaptureComplete?(entry) }
+                } else {
+                    self.captureRect(screen: screen, rect: rect)
+                }
             },
             onCancel: { [weak self] in self?.rectSelection = nil }
         )

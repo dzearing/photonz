@@ -13,7 +13,12 @@ final class EditorState {
     let store = ImageStore()
     /// Per-image detected UI edges, computed lazily on first use and reused for
     /// every measure-corner snap. Keyed by `ImageRef`, so it survives undo/redo.
-    private let edgeMapCache = EdgeMapCache()
+    @ObservationIgnored private let edgeMapCache = EdgeMapCache()
+    /// Edge maps that finished analysis, ready for synchronous access during a
+    /// drag. Observable so the canvas picks the map up when analysis lands.
+    private var readyEdgeMaps: [UUID: EdgeMap] = [:]
+    /// Refs whose analysis is in flight (don't kick it twice).
+    @ObservationIgnored private var edgeMapAnalysisPending: Set<UUID> = []
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
     private var scheduler: RenderScheduler?
 
@@ -536,15 +541,35 @@ final class EditorState {
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
 
     /// Detected UI edges for measure snapping, but ONLY while the measure tool is
-    /// active or a measure is selected — so the GPU+CPU edge sweep never runs for
-    /// documents that aren't being redlined. `.empty` otherwise. The first real
-    /// access computes it once (cached); later accesses are free.
+    /// active or a measure is selected — so the edge sweep never runs for
+    /// documents that aren't being redlined. Analysis takes ~seconds on a Retina
+    /// screenshot, so it runs OFF the main thread: the first access kicks it off
+    /// and returns `.empty` (snapping is a no-op until it lands), then the
+    /// observable `readyEdgeMaps` update re-feeds the canvas the real map.
     var measureEdgeMap: EdgeMap {
         let selectedIsMeasure = selectedLayerID
             .flatMap { document?.layer(id: $0)?.measure } != nil
         guard activeTool == .measure || selectedIsMeasure,
               let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
-        return edgeMapCache.edgeMap(for: ref, store: store)
+        if let ready = readyEdgeMaps[ref.id] { return ready }
+        analyzeEdgeMap(for: ref)
+        return .empty
+    }
+
+    /// Runs the edge analysis for `ref` in the background, once.
+    private func analyzeEdgeMap(for ref: ImageRef) {
+        guard !edgeMapAnalysisPending.contains(ref.id) else { return }
+        edgeMapAnalysisPending.insert(ref.id)
+        let cache = edgeMapCache
+        let store = store
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let map = cache.edgeMap(for: ref, store: store)
+            await MainActor.run {
+                guard let self else { return }
+                self.readyEdgeMaps[ref.id] = map
+                self.edgeMapAnalysisPending.remove(ref.id)
+            }
+        }
     }
 
     private func applyMeasureRestyle(_ restyle: (Layer) -> Layer) {

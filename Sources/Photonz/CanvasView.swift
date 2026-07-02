@@ -239,6 +239,40 @@ final class CanvasNSView: NSView {
     /// Document-space x/y of the edge(s) a measure corner is currently snapped to,
     /// drawn as a highlight while the corner is held. Cleared on mouse-up.
     private var snapGuide: (x: CGFloat?, y: CGFloat?)?
+    /// Decayed accumulator of recent drag motion (doc px). When the user is
+    /// clearly resizing along ONE axis, the perpendicular axis stops grabbing
+    /// edges — dragging a leg up/down shouldn't flash vertical snap guides.
+    private var dragMotion = CGVector.zero
+    private var lastDragPoint: CGPoint?
+
+    /// Suppresses edge captures on the axis perpendicular to decisive motion.
+    /// The suppressed axis falls back to the pixel grid.
+    private func axisGated(_ snap: EdgeSnapping.Snap, raw p: CGPoint) -> EdgeSnapping.Snap {
+        var snap = snap
+        let ax = abs(dragMotion.dx), ay = abs(dragMotion.dy)
+        if ay > 2 * ax, ay > 2, snap.guideX != nil {
+            snap.point.x = p.x.rounded()
+            snap.guideX = nil
+        } else if ax > 2 * ay, ax > 2, snap.guideY != nil {
+            snap.point.y = p.y.rounded()
+            snap.guideY = nil
+        }
+        return snap
+    }
+
+    /// Feeds the motion accumulator; call once per mouseDragged before snapping.
+    private func trackDragMotion(_ p: CGPoint) {
+        if let last = lastDragPoint {
+            dragMotion.dx = dragMotion.dx * 0.7 + (p.x - last.x)
+            dragMotion.dy = dragMotion.dy * 0.7 + (p.y - last.y)
+        }
+        lastDragPoint = p
+    }
+
+    private func resetDragMotion(_ p: CGPoint) {
+        dragMotion = .zero
+        lastDragPoint = p
+    }
 
     /// Dragging one corner of a placed measure's box. The dragged corner takes
     /// its x from start or end (and y likewise); moving it updates just those
@@ -593,7 +627,15 @@ final class CanvasNSView: NSView {
         }
         // The measure tool drags two reference points; ⇧ locks to the dominant axis.
         if tool == .measure {
-            measureDrag = AnnotationDrag(anchor: p)
+            // Snap the anchor too (⌘ bypasses): starting a ruler ON a baseline or
+            // border is half the workflow. No line exists yet, so a small window
+            // around the pointer supplies the candidates.
+            var anchor = p
+            if !event.modifierFlags.contains(.command) {
+                anchor = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom).point
+            }
+            resetDragMotion(p)
+            measureDrag = AnnotationDrag(anchor: anchor)
             refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
             return
         }
@@ -633,6 +675,7 @@ final class CanvasNSView: NSView {
                 }
             }
             if let best {
+                resetDragMotion(p)
                 measureCornerDrag = MeasureCornerDrag(layerID: id, xFromEnd: best.xFromEnd,
                                                       yFromEnd: best.yFromEnd, originalStart: s,
                                                       originalEnd: e, current: p)
@@ -722,17 +765,43 @@ final class CanvasNSView: NSView {
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
         } else if var drag = measureDrag {
-            drag.update(to: p)
+            // Snap the growing corner while drawing (⌘ = free): the ruler's lines
+            // span from the anchor to the pointer, so those spans window the
+            // edge candidates, exactly like the corner-resize drag.
+            if event.modifierFlags.contains(.command) {
+                drag.update(to: p)
+                snapGuide = nil
+            } else {
+                trackDragMotion(p)
+                let snap = axisGated(
+                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
+                                      xSpan: min(drag.anchor.x, p.x)...max(drag.anchor.x, p.x),
+                                      ySpan: min(drag.anchor.y, p.y)...max(drag.anchor.y, p.y)),
+                    raw: p)
+                drag.update(to: snap.point)
+                snapGuide = (snap.guideX, snap.guideY)
+            }
             measureDrag = drag
             refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
         } else if var corner = measureCornerDrag {
             // Magnetize the dragged corner to detected UI edges (per-axis) and the
-            // pixel grid, unless ⌘ is held to drag freely.
+            // pixel grid, unless ⌘ is held to drag freely. The moving horizontal
+            // leg spans from the fixed opposite corner's x to the pointer — its y
+            // snaps to horizontal edges under THAT span (text tops/baselines,
+            // borders); the vertical line likewise for x.
             if event.modifierFlags.contains(.command) {
                 corner.current = p
                 snapGuide = nil
             } else {
-                let snap = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom)
+                trackDragMotion(p)
+                let fixedX = corner.xFromEnd ? corner.originalStart.x : corner.originalEnd.x
+                let fixedY = corner.yFromEnd ? corner.originalStart.y : corner.originalEnd.y
+                let snap = axisGated(
+                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
+                                      xSpan: min(fixedX, p.x)...max(fixedX, p.x),
+                                      ySpan: min(fixedY, p.y)...max(fixedY, p.y)),
+                    raw: p)
                 corner.current = snap.point
                 snapGuide = (snap.guideX, snap.guideY)
             }
@@ -820,6 +889,8 @@ final class CanvasNSView: NSView {
             }
         } else if let drag = measureDrag {
             measureDrag = nil
+            snapGuide = nil
+            refreshOverlays()
             if drag.isClick(atZoom: viewport.zoom) {
                 clearAnnotationPreview()
             } else {
@@ -926,7 +997,9 @@ final class CanvasNSView: NSView {
             if annotationDrag != nil || measureDrag != nil {
                 annotationDrag = nil
                 measureDrag = nil
+                snapGuide = nil
                 clearAnnotationPreview()
+                refreshOverlays()
                 return
             }
             if let session = endpointDrag {

@@ -3,126 +3,116 @@ import Foundation
 import PhotonzCore
 import Testing
 
-/// Builds a triangular edge response (center highest, ±1 half) into a profile,
-/// mimicking what a Sobel projection produces at a single sharp boundary.
-private func bump(_ profile: inout [Double], at center: Int, height: Double) {
-    func add(_ i: Int, _ v: Double) {
-        guard i >= 0, i < profile.count else { return }
-        profile[i] = max(profile[i], v)
-    }
-    add(center - 1, height * 0.5)
-    add(center, height)
-    add(center + 1, height * 0.5)
-}
+/// Builds synthetic |Gx| / |Gy| magnitude fields (top-left row order) the way the
+/// analyzer would produce them, so core windowed-query logic is tested without CI.
+private struct Field {
+    var w: Int, h: Int
+    var gx: [Double]
+    var gy: [Double]
 
-// MARK: - Peak finding
-
-@Suite("Edge peak finding")
-struct EdgePeakTests {
-
-    @Test func emptyProfileHasNoPeaks() {
-        #expect(EdgeProfile.peaks(in: []).isEmpty)
+    init(w: Int, h: Int) {
+        self.w = w
+        self.h = h
+        gx = [Double](repeating: 0, count: w * h)
+        gy = [Double](repeating: 0, count: w * h)
     }
 
-    @Test func flatProfileHasNoPeaks() {
-        // A profile with no signal (all zero) yields nothing.
-        #expect(EdgeProfile.peaks(in: [Double](repeating: 0, count: 50)).isEmpty)
+    /// A horizontal boundary (like a text top/baseline or a divider): |Gy| response
+    /// at `row`, spanning columns `x0...x1`.
+    mutating func addHorizontalEdge(row: Int, x0: Int, x1: Int, magnitude: Double) {
+        for x in max(0, x0)...min(w - 1, x1) { gy[row * w + x] = magnitude }
     }
 
-    @Test func whiteRectOnBlackDetectsLeftAndRightEdges() {
-        // A white rectangle spanning columns 20...80 produces strong vertical
-        // boundaries at its left and right edges when magnitude is projected onto X.
-        var profile = [Double](repeating: 0, count: 100)
-        bump(&profile, at: 20, height: 1.0)
-        bump(&profile, at: 80, height: 1.0)
-
-        let peaks = EdgeProfile.peaks(in: profile)
-        #expect(peaks.map(\.position) == [20, 80])
+    /// A vertical boundary (container border, start of a text run): |Gx| response
+    /// at `col`, spanning rows `y0...y1`.
+    mutating func addVerticalEdge(col: Int, y0: Int, y1: Int, magnitude: Double) {
+        for y in max(0, y0)...min(h - 1, y1) { gx[y * w + col] = magnitude }
     }
 
-    @Test func peaksAreSortedAscendingByPosition() {
-        var profile = [Double](repeating: 0, count: 120)
-        bump(&profile, at: 90, height: 0.8)
-        bump(&profile, at: 10, height: 1.0)
-        bump(&profile, at: 50, height: 0.6)
-
-        let positions = EdgeProfile.peaks(in: profile).map(\.position)
-        #expect(positions == positions.sorted())
-        #expect(positions == [10, 50, 90])
-    }
-
-    @Test func noiseBelowThresholdIsRejected() {
-        var profile = [Double](repeating: 0, count: 100)
-        bump(&profile, at: 30, height: 1.0)     // real edge
-        bump(&profile, at: 60, height: 0.1)     // noise, 10% of max < 25% threshold
-
-        let peaks = EdgeProfile.peaks(in: profile, threshold: 0.25)
-        #expect(peaks.map(\.position) == [30])
-    }
-
-    @Test func nearbyPeaksAreDedupedKeepingTheStronger() {
-        // Two candidates within minSeparation collapse to one: the stronger wins.
-        var profile = [Double](repeating: 0, count: 100)
-        bump(&profile, at: 40, height: 1.0)
-        bump(&profile, at: 42, height: 0.8)     // 2px away, below the 4px separation
-
-        let peaks = EdgeProfile.peaks(in: profile, minSeparation: 4)
-        #expect(peaks.count == 1)
-        #expect(peaks.first?.position == 40)
-    }
-
-    @Test func peaksFartherApartThanSeparationAreBothKept() {
-        var profile = [Double](repeating: 0, count: 100)
-        bump(&profile, at: 40, height: 1.0)
-        bump(&profile, at: 46, height: 0.8)     // 6px away, beyond 4px separation
-
-        let positions = EdgeProfile.peaks(in: profile, minSeparation: 4).map(\.position)
-        #expect(positions == [40, 46])
-    }
-
-    @Test func strengthIsNormalizedToTheStrongestPeak() {
-        var profile = [Double](repeating: 0, count: 100)
-        bump(&profile, at: 25, height: 2.0)     // strongest
-        bump(&profile, at: 75, height: 1.0)     // half as strong
-
-        let peaks = EdgeProfile.peaks(in: profile)
-        let byPos = Dictionary(uniqueKeysWithValues: peaks.map { ($0.position, $0.strength) })
-        #expect(byPos[25] == 1.0)
-        #expect(abs((byPos[75] ?? 0) - 0.5) < 1e-9)
+    var map: EdgeMap {
+        EdgeMap(width: w, height: h, gxMagnitude: gx, gyMagnitude: gy)
     }
 }
 
-// MARK: - EdgeMap assembly
+@Suite("EdgeMap windowed queries")
+struct EdgeMapWindowTests {
 
-@Suite("EdgeMap assembly")
-struct EdgeMapAssemblyTests {
+    @Test func findsLocalTextEdgeInsideItsWindowOnly() {
+        // A text-top-like edge spanning cols 100...200 at row 50, in a big image.
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 50, x0: 100, x1: 200, magnitude: 2.0)
+        let map = f.map
 
-    @Test func fromProjectionsPopulatesBothAxes() {
-        var x = [Double](repeating: 0, count: 100)
-        bump(&x, at: 20, height: 1.0)
-        bump(&x, at: 80, height: 1.0)
-        var y = [Double](repeating: 0, count: 60)
-        bump(&y, at: 15, height: 1.0)
-        bump(&y, at: 45, height: 1.0)
+        let inWindow = map.horizontalEdges(inXRange: 100...200)
+        #expect(inWindow.map(\.position) == [50])
 
-        let map = EdgeMap.from(xProfile: x, yProfile: y, width: 100, height: 60)
-        #expect(map.width == 100)
-        #expect(map.height == 60)
-        #expect(map.verticalEdges.map(\.position) == [20, 80])
-        #expect(map.horizontalEdges.map(\.position) == [15, 45])
+        // A window elsewhere sees nothing — locality is the whole point.
+        #expect(map.horizontalEdges(inXRange: 400...500).isEmpty)
     }
 
-    @Test func emptyMapHasNoEdges() {
-        #expect(EdgeMap.empty.verticalEdges.isEmpty)
-        #expect(EdgeMap.empty.horizontalEdges.isEmpty)
+    @Test func fullWidthDividerDoesNotDrownALocalTextEdge() {
+        // The failure of the global approach: a strong divider must not suppress a
+        // weaker text top inside the same window. Acceptance is floor-based.
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 10, x0: 0, x1: 799, magnitude: 4.0)   // divider
+        f.addHorizontalEdge(row: 50, x0: 100, x1: 200, magnitude: 1.2) // text top
+        let map = f.map
+
+        let found = map.horizontalEdges(inXRange: 100...200).map(\.position)
+        #expect(found.contains(10))
+        #expect(found.contains(50))
     }
 
-    @Test func edgeMapRoundTripsThroughCodable() throws {
-        let map = EdgeMap(width: 10, height: 8,
-                          verticalEdges: [EdgeCandidate(position: 3, strength: 1)],
-                          horizontalEdges: [EdgeCandidate(position: 4, strength: 0.5)])
-        let data = try JSONEncoder().encode(map)
-        let decoded = try JSONDecoder().decode(EdgeMap.self, from: data)
-        #expect(decoded == map)
+    @Test func verticalEdgesQueryIsTheXAxisAnalog() {
+        var f = Field(w: 400, h: 800)
+        f.addVerticalEdge(col: 80, y0: 20, y1: 60, magnitude: 2.0)
+        let map = f.map
+
+        #expect(map.verticalEdges(inYRange: 20...60).map(\.position) == [80])
+        #expect(map.verticalEdges(inYRange: 300...400).isEmpty)
+    }
+
+    @Test func faintNoiseStaysBelowTheAbsoluteFloor() {
+        // A uniform faint gradient field (background noise) yields no candidates,
+        // even though relative-to-window-max thresholding alone would pass it.
+        var f = Field(w: 200, h: 200)
+        for i in 0..<(200 * 200) { f.gy[i] = 0.05 }
+        #expect(f.map.horizontalEdges(inXRange: 50...150).isEmpty)
+    }
+
+    @Test func partialCoverageEdgeStillClearsTheFloor() {
+        // Glyph tops don't cover every column of the window. 40% coverage at
+        // magnitude 1.5 → windowed mean 0.6, above the floor.
+        var f = Field(w: 400, h: 200)
+        var x = 100
+        while x < 200 { // ink every 2nd/3rd column band
+            f.addHorizontalEdge(row: 80, x0: x, x1: x + 3, magnitude: 1.5)
+            x += 10
+        }
+        let found = f.map.horizontalEdges(inXRange: 100...200).map(\.position)
+        #expect(found == [80])
+    }
+
+    @Test func adjacentAntialiasedRowsDedupeToOne() {
+        // Antialiasing spreads a boundary over 2 rows; the stronger one wins.
+        var f = Field(w: 300, h: 200)
+        f.addHorizontalEdge(row: 60, x0: 50, x1: 250, magnitude: 2.0)
+        f.addHorizontalEdge(row: 61, x0: 50, x1: 250, magnitude: 1.1)
+        let found = f.map.horizontalEdges(inXRange: 50...250)
+        #expect(found.map(\.position) == [60])
+    }
+
+    @Test func outOfBoundsWindowsAreClampedNotCrashing() {
+        var f = Field(w: 100, h: 100)
+        f.addHorizontalEdge(row: 40, x0: 0, x1: 99, magnitude: 2.0)
+        let map = f.map
+        #expect(map.horizontalEdges(inXRange: -50...500).map(\.position) == [40])
+        #expect(map.verticalEdges(inYRange: -10...(-5)).isEmpty)
+    }
+
+    @Test func emptyMapIsEmptyAndReturnsNothing() {
+        #expect(EdgeMap.empty.isEmpty)
+        #expect(EdgeMap.empty.horizontalEdges(inXRange: 0...100).isEmpty)
+        #expect(EdgeMap.empty.verticalEdges(inYRange: 0...100).isEmpty)
     }
 }
