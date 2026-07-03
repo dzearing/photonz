@@ -56,6 +56,27 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         }
     }
 
+    /// The layers a marquee rubber-band captures: every visible, unlocked layer
+    /// whose (transformed) bounds sit FULLY INSIDE `rect`, bottom-up. Fully
+    /// inside — not intersecting — so sweeping around a cluster never grabs a
+    /// long arrow that merely passes through. Locked layers (the background)
+    /// and hidden layers never join.
+    public func layerIDs(fullyInside rect: CGRect) -> [UUID] {
+        guard rect.width > 0, rect.height > 0 else { return [] }
+        return layers.filter { layer in
+            guard layer.isVisible, !layer.isLocked else { return false }
+            var bounds = layer.frame
+            if !layer.transform.isIdentity {
+                let corners = layer.transformedCorners
+                guard let first = corners.first else { return false }
+                bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
+                    $0.union(CGRect(origin: $1, size: .zero))
+                }
+            }
+            return rect.contains(bounds)
+        }.map(\.id)
+    }
+
     // MARK: - Layer mutation
 
     public mutating func addLayer(_ layer: Layer, at index: Int? = nil) {
@@ -66,6 +87,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public mutating func removeLayer(id: UUID) -> Layer? {
         guard let idx = index(of: id) else { return nil }
         return layers.remove(at: idx)
+    }
+
+    /// Removes every layer in `ids` in one mutation, so a batch delete is a
+    /// single history step. Unknown ids are ignored.
+    public mutating func removeLayers(ids: Set<UUID>) {
+        layers.removeAll { ids.contains($0.id) }
     }
 
     public mutating func moveLayer(id: UUID, to newIndex: Int) {

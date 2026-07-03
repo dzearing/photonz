@@ -69,6 +69,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public func arrowheadScale(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).arrowheadScale }
 
+    /// Interior fill new rectangles/ellipses start with; nil = no fill.
+    public func fillColorHex(forShape shape: AnnotationShape) -> String? { defaults(forShape: shape).fillColorHex }
+
     /// The non-destructive effects (shadow, opacity, blur, …) a NEW annotation
     /// of this shape starts with — captured from the last one the user styled,
     /// so e.g. adding a drop shadow to one arrow carries to the next.
@@ -88,6 +91,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setArrowheadScale(_ scale: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].arrowheadScale = scale
+    }
+
+    public mutating func setFillColorHex(_ hex: String?, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].fillColorHex = hex
     }
 
     // MARK: - Tool-keyed convenience (nil for non-annotation tools)
@@ -124,7 +131,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // Highlight is a filled box; the stroke width slider doesn't touch it.
         let width = tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth
         return AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
-                                 arrowheadScale: d.arrowheadScale)
+                                 arrowheadScale: d.arrowheadScale, fillColorHex: d.fillColorHex)
     }
 
     // MARK: - Defaults & palettes
@@ -161,15 +168,18 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     public var colorHex: String
     public var strokeWidth: CGFloat
     public var arrowheadScale: CGFloat
+    /// Interior fill for box shapes; nil = outline only.
+    public var fillColorHex: String?
     /// Non-destructive effects (shadow/opacity/blur/border/corner) new objects
     /// of this shape inherit.
     public var layerStyle: LayerStyle
 
     public init(colorHex: String, strokeWidth: CGFloat, arrowheadScale: CGFloat,
-                layerStyle: LayerStyle = LayerStyle()) {
+                fillColorHex: String? = nil, layerStyle: LayerStyle = LayerStyle()) {
         self.colorHex = colorHex
         self.strokeWidth = strokeWidth
         self.arrowheadScale = arrowheadScale
+        self.fillColorHex = fillColorHex
         self.layerStyle = layerStyle
     }
 
@@ -180,6 +190,8 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         // `arrowheadScale` may be absent in early per-shape prefs.
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale)
             ?? AnnotationStyles.defaultArrowheadScale
+        // `fillColorHex` postdates per-shape prefs; absent = no fill.
+        fillColorHex = try c.decodeIfPresent(String.self, forKey: .fillColorHex)
         // `layerStyle` postdates per-shape prefs.
         layerStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? LayerStyle()
     }

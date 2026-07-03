@@ -32,6 +32,8 @@ struct CanvasView: NSViewRepresentable {
     let cropBounds: CGRect?
     let selectedLayerID: UUID?
     let selectedLayerFrame: CGRect?
+    /// The marquee's multi-selection, echoed from EditorState.
+    let multiSelectedLayerIDs: Set<UUID>
     let dragPreview: DragPreview?
     let tool: Tool
     /// Styled content the active tool draws (color/width from the style
@@ -67,6 +69,7 @@ struct CanvasView: NSViewRepresentable {
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
+    let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
@@ -80,7 +83,8 @@ struct CanvasView: NSViewRepresentable {
         view.apply(image: image, viewport: viewport, document: document,
                    selection: selection, cropRect: cropRect, cropAspect: cropAspect,
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
-                   selectedLayerFrame: selectedLayerFrame, dragPreview: dragPreview,
+                   selectedLayerFrame: selectedLayerFrame,
+                   multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent, textContent: textContent,
                    measureContent: measureContent, edgeMap: edgeMap)
     }
@@ -108,6 +112,7 @@ struct CanvasView: NSViewRepresentable {
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
         view.onDeleteLayer = onDeleteLayer
+        view.onDeleteLayers = onDeleteLayers
         view.onDropImageURL = onDropImageURL
     }
 }
@@ -135,6 +140,7 @@ final class CanvasNSView: NSView {
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
     var onDeleteLayer: ((UUID) -> Void) = { _ in }
+    var onDeleteLayers: (([UUID]) -> Void) = { _ in }
     /// A file (image) dropped onto the canvas — e.g. a history-overlay thumbnail
     /// or a Finder file. Handled here on the canvas NSView (which covers the
     /// document) rather than a SwiftUI `.dropDestination`, which doesn't reliably
@@ -151,6 +157,10 @@ final class CanvasNSView: NSView {
     private let selectionAntsLayer = CAShapeLayer()
     /// Accent outline around the selected layer.
     private let layerOutlineLayer = CAShapeLayer()
+    /// Outlines around every layer the marquee fully contains (rubber-band
+    /// multi-selection) — live during the drag, standing once committed, so
+    /// it's obvious what ⌫ will delete.
+    private let multiSelectOutlineLayer = CAShapeLayer()
     /// The eight resize handles on the selected layer's outline.
     private let handlesLayer = CAShapeLayer()
     /// Rotate knob: a circle floated off the layer's top edge plus its stem.
@@ -214,6 +224,8 @@ final class CanvasNSView: NSView {
     private var selectedLayerID: UUID?
     /// Selected layer's frame in document coordinates (committed state).
     private var selectedLayerFrame: CGRect?
+    /// The marquee's multi-selection, echoed from EditorState (committed).
+    private var multiSelectedLayerIDs: Set<UUID> = []
     /// Pre-rendered drag preview from EditorState; arrives async after drag start
     /// and outlives the drag until the post-commit render lands.
     private var dragPreview: DragPreview?
@@ -487,7 +499,8 @@ final class CanvasNSView: NSView {
             layer?.addSublayer(flightLayer)
         }
 
-        for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer, snapGuideLayer, handlesLayer] {
+        for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
+                      multiSelectOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
@@ -526,6 +539,11 @@ final class CanvasNSView: NSView {
         layerOutlineLayer.lineWidth = 2
         layerOutlineLayer.lineCap = .round
         layerOutlineLayer.lineDashPattern = [2, 4]
+        // Marquee-captured layers share the selection-outline styling.
+        multiSelectOutlineLayer.strokeColor = layerOutlineLayer.strokeColor
+        multiSelectOutlineLayer.lineWidth = 2
+        multiSelectOutlineLayer.lineCap = .round
+        multiSelectOutlineLayer.lineDashPattern = [2, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
         handlesLayer.fillColor = CGColor(gray: 1, alpha: 1)
         handlesLayer.strokeColor = NSColor.controlAccentColor.cgColor
@@ -970,6 +988,13 @@ final class CanvasNSView: NSView {
             beginTextSession(layerID: id, at: layer.frame.origin)
             return
         }
+        // Delete / forward-delete with a marquee multi-selection removes them
+        // all (one undo step) — the "sweep around a bunch of annotations and
+        // hit ⌫" cleanup gesture.
+        if event.keyCode == 51 || event.keyCode == 117, !multiSelectedLayerIDs.isEmpty {
+            onDeleteLayers(Array(multiSelectedLayerIDs))
+            return
+        }
         // Delete / forward-delete removes the selected (unlocked) layer.
         if event.keyCode == 51 || event.keyCode == 117,
            let id = selectedLayerID, let layer = document?.layer(id: id), !layer.isLocked {
@@ -1116,6 +1141,7 @@ final class CanvasNSView: NSView {
         apply(image: image, viewport: next, document: document, selection: selection,
               cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
+              multiSelectedLayerIDs: multiSelectedLayerIDs,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent, measureContent: measureContent, edgeMap: edgeMap)
         onViewportChange(next)
@@ -1126,9 +1152,11 @@ final class CanvasNSView: NSView {
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
                selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
+               multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                textContent: TextContent?, measureContent: MeasureContent?,
                edgeMap: EdgeMap) {
+        self.multiSelectedLayerIDs = multiSelectedLayerIDs
         self.annotationContent = annotationContent
         self.textContent = textContent
         self.measureContent = measureContent
@@ -1373,6 +1401,7 @@ final class CanvasNSView: NSView {
         guard let viewport, let docRect else {
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
+            multiSelectOutlineLayer.isHidden = true
             return
         }
         // Half-point inset so the 1pt stroke lands crisply on pixel boundaries.
@@ -1382,6 +1411,24 @@ final class CanvasNSView: NSView {
         selectionAntsLayer.path = path
         selectionBaseLayer.isHidden = false
         selectionAntsLayer.isHidden = false
+
+        // Rubber-band capture: outline every captured layer so it's obvious
+        // what the marquee holds. Mid-drag the capture is derived live from the
+        // rect; once committed it's the echoed selection state, which survives
+        // rect-independent edits (a hidden member stays selected and outlined).
+        let outlines = CGMutablePath()
+        if let document {
+            let captured = marquee != nil
+                ? Set(document.layerIDs(fullyInside: docRect))
+                : multiSelectedLayerIDs
+            for layer in document.layers where captured.contains(layer.id) {
+                let corners = layer.transformedCorners.map { viewport.viewPoint(fromDocument: $0) }
+                outlines.addLines(between: corners)
+                outlines.closeSubpath()
+            }
+        }
+        multiSelectOutlineLayer.path = outlines
+        multiSelectOutlineLayer.isHidden = outlines.isEmpty
     }
 
     private func refreshLayerSelectionDisplay() {
@@ -1611,6 +1658,10 @@ final class CanvasNSView: NSView {
                     path.addEllipse(in: inset)
                 }
             }
+            // Interior fill previews live so the draft matches the commit.
+            if let fillHex = content.fillColorHex, let rgba = RGBA(hex: fillHex) {
+                fill = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+            }
         case .highlight:
             path.addRect(box)
             fill = color
@@ -1624,6 +1675,8 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.strokeColor = stroke
         annotationPreviewLayer.fillColor = fill
         annotationPreviewLayer.lineWidth = strokeWidth
+        // Match the rasterizer: rectangles corner with miters (no fake radius).
+        annotationPreviewLayer.lineJoin = content.shape == .rectangle ? .miter : .round
         annotationPreviewLayer.compositingFilter = compositing
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color

@@ -95,6 +95,7 @@ struct EditorView: View {
                        cropBounds: editorState.cropBounds,
                        selectedLayerID: editorState.selectedLayerID,
                        selectedLayerFrame: editorState.selectedLayerFrame,
+                       multiSelectedLayerIDs: editorState.multiSelectedLayerIDs,
                        dragPreview: editorState.dragPreview,
                        tool: editorState.activeTool,
                        annotationContent: editorState.activeAnnotationContent,
@@ -123,6 +124,7 @@ struct EditorView: View {
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
                        onTextCancel: { editorState.cancelTextEdit() },
                        onDeleteLayer: { editorState.deleteLayer(id: $0) },
+                       onDeleteLayers: { editorState.deleteLayers(ids: $0) },
                        onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) })
         } else {
             emptyState

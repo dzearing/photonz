@@ -532,3 +532,34 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Docs synced to reality: `tools.md` measure section corrected (bracket = connector/label on START side, default VERTICAL, no size-based axis auto-detect — `bracketAxis` is deleted; inspector matches the Effects panel) + new "Edge snapping" design section (windowed queries, absolute floor, luma landings, side filter, gating, gotchas). `phase-16.json` `decisions.snapping` rewritten to the final design; 16.4/16.5 done. `capture.md` records the freeze-frame model + key-panel cursor gotcha. `overview.json` dated.
 - **Phase 16 remaining**: 16.6 alignment guides (draggable H/V guide lines reusing EdgeSnapping), 16.7 auto-inspect spike. Measure follow-ups still open: measureStyle persistence, pixelScale auto-detect from capture DPI, style-popover coverage.
 - **Watch out**: EdgeCandidate layout changes + stale incremental build objects segfault the test runner — clean rebuild fixes; `git checkout` on uncommitted reworked files clobbers them.
+
+## 2026-07-02 (later) — 16.6 guides DROPPED on user review; replaced by marquee multi-select + delete (16.8)
+
+- 16.6 alignment guides were fully implemented and handed over; the user rejected the feature outright ("I don't know when I'd use a guide"). The complete implementation is preserved on branch `wip/16.6-alignment-guides`; main is clean of it. Plan updated (16.6 → dropped) and a feedback memory recorded: confirm speculative planned features with the user before building.
+- New 16.8 (direct user request): "marquee select around a bunch of layers ... hit backspace to delete them." Implemented as DERIVED multi-selection — the committed marquee rect also captures every visible, unlocked layer whose transformed bounds sit FULLY INSIDE it (fully-inside, not intersecting, so a long arrow crossing the sweep isn't grabbed). Captured layers get dotted blue outlines live during the drag and while the selection stands; ⌫ deletes them all in one undo step and clears the marquee. Pixel-selection workflows (promote/blur-behind) untouched.
+- Core: `Document.layerIDs(fullyInside:)` + `removeLayers(ids:)` (TDD, 7 tests). App: `multiSelectOutlineLayer` in CanvasView's marquee display, ⌫ routing, `EditorState.deleteLayers(ids:)` / `marqueeSelectedLayerIDs`.
+- 540 tests green. Debug binary relaunched for user verification.
+
+## 2026-07-03 — History overlay: double-click a screenshot to edit it (user request)
+
+- `CaptureThumbnailView` gains an optional `onDoubleClick` alongside `onActivate`, attached via a `TapActions` modifier that only installs the recognizers in use — so video tiles' single-click Play never waits out a double-click window, and if both are ever set the double-click wins via `exclusively(before:)`.
+- `HistoryOverlayCell` passes `onDoubleClick` → `coordinator.editCapture(url)` for image entries (editCapture hides the overlay itself); videos unchanged (single click already opens the video editor). The hover Edit icon still works.
+- 540 tests green. Debug binary relaunched.
+
+## 2026-07-03 — ⌘⇧4 overlay behind modals FIXED (reproduced first); multi-select is real state + panel integration
+
+- **Modal bug (user report: region selection appears behind a modal dialog).** Reproduced headlessly with a temporary env-gated self-test (osascript modal + timer-triggered capture + CGWindowList z-dump + SCK screenshot): the selection overlay sat at window level **3**, not the shielding level the code assigns. Root cause: `isFloatingPanel = true` runs AFTER the `level` assignment in `SelectionWindow.init` and silently resets the panel to `.floating` (3) — above normal windows (0), so everything looked fine, but below modal panels (8). Fix: drop `isFloatingPanel` and assign `level` LAST with a warning comment. Verified fixed in both scenarios (external osascript modal, our own `NSAlert.runModal` — capture also starts fine during our modal run loop): overlay now at 2147483628, above all. Gotcha for the future: NSPanel property setters can rewrite `level`; also SCK screenshots exclude shielding-level windows, so verify stacking via CGWindowList, not pixels. Self-test hook removed.
+- **Multi-select (user: captured layers should look selected in the panel; eye should hide all).** `multiSelectedLayerIDs` is now REAL EditorState state set on marquee commit (derived-from-rect broke on hide: an invisible layer fails the containment query). Exactly 1 captured layer promotes to the primary selection; 2+ become the multi-selection; any primary-selection change dissolves it (didSet). Panel rows highlight via `isLayerSelected`; eye/lock/delete on a member apply to the WHOLE selection in one undo step (lock also dissolves the selection). Canvas outlines/⌫ now use the echoed state (live derivation only mid-drag).
+- 540 tests green. Debug binary relaunched.
+
+## 2026-07-03 (later) — Rect/ellipse interior fill (user request)
+
+- `AnnotationContent.fillColorHex: String?` (nil = no fill; legacy payloads decode nil). `AnnotationBuilder.restyled` takes a doubly-optional `fillColorHex` (keep / clear / set). Per-shape sticky default via `ShapeDefaults.fillColorHex` + `AnnotationStyles.set/fillColorHex(forShape:)`, seeded into `content(for:)` so the next-drawn shape reuses the last fill.
+- Rasterizer fills the same inset (rounded-)rect/ellipse path before stroking, so fill hugs the stroke and follows corner radius; highlight/line/arrow untouched. Live drag preview fills too (CAShapeLayer fill on the same path). Render content-cache keys include the new field via Hashable — no cache work needed.
+- AnnotationInspector: "Fill" toggle (seeds with the stroke color when switched on) + fill color well for rectangle/ellipse. `EditorState.setAnnotationFill(layerID:_:)` restyles + persists the shape default + records recent color.
+- 548 tests green (+4 core, +4 render pixel). Debug binary relaunched. Follow-up candidates: fill control in the toolbar style popover; opacity support for fills (hex utils are alpha-blind today — layer opacity in Effects covers it meanwhile).
+
+## 2026-07-03 (later) — Rect corners: stroke joins no longer fake a radius
+
+- User report: selected rect looks rounded while the inspector's Corner Radius reads 0. The inspector was RIGHT — the rasterizer strokes all shapes with round line joins, so a thick (17pt) stroke rounds the outer corners by ~strokeWidth/2 on its own; with the new fill matching the stroke color the whole shape read as rounded. Fix: rectangles stroke with MITER joins (radius 0 = truly sharp; a real cornerRadius rounds the path itself) in both the rasterizer and the CAShapeLayer drag preview. Lines/arrows keep round caps/joins. Pixel test: zeroRadiusRectangleHasSharpCorners.
+- 549 tests green. Relaunched.

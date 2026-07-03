@@ -71,10 +71,13 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// rasterizer draws a rounded-rect stroke, so the border follows the corners
     /// instead of being clipped away by a layer-level rounded mask.
     public var cornerRadius: CGFloat
+    /// Rectangle/ellipse-only: interior fill color. Nil = no fill (the classic
+    /// outline-only redline). Highlight ignores it (its color IS the fill).
+    public var fillColorHex: String?
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
-                cornerRadius: CGFloat = 0) {
+                cornerRadius: CGFloat = 0, fillColorHex: String? = nil) {
         self.shape = shape
         self.strokeWidth = strokeWidth
         self.colorHex = colorHex
@@ -82,6 +85,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.end = end
         self.arrowheadScale = arrowheadScale
         self.cornerRadius = cornerRadius
+        self.fillColorHex = fillColorHex
     }
 
     public init(from decoder: Decoder) throws {
@@ -95,6 +99,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         arrowheadScale = try c.decodeIfPresent(CGFloat.self, forKey: .arrowheadScale) ?? 1
         // `cornerRadius` postdates AnnotationContent too.
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+        // `fillColorHex` postdates both; legacy shapes are outline-only.
+        fillColorHex = try c.decodeIfPresent(String.self, forKey: .fillColorHex)
     }
 }
 

@@ -18,7 +18,7 @@
     { "id": 11, "file": "phase-11.json", "title": "Menu-bar agent, slide-down history overlay & multi-window editor", "status": "done" },
     { "id": 12, "file": "phase-12.json", "title": "Screen recording (⌘⇧5): region/full, audio device, floating stop, into history", "status": "done" },
     { "id": 13, "file": "phase-13.json", "title": "Editor polish + video edit: text font/scale, color picker + MRU, playback/trim/crop, MP4/GIF/HEIC export", "status": "done" },
-    { "id": 16, "file": "phase-16.json", "title": "Inspect & Measure: dimension/measure tool w/ auto pixel labels, edge-map smart snapping, alignment guides (user's primary UX-redline workflow — sequenced ahead of 14/15)", "status": "in_progress" },
+    { "id": 16, "file": "phase-16.json", "title": "Inspect & Measure: dimension/measure tool w/ auto pixel labels, edge-map smart snapping, marquee multi-select + batch delete (user's primary UX-redline workflow — sequenced ahead of 14/15; alignment guides built then dropped)", "status": "in_progress" },
     { "id": 14, "file": "phase-14.json", "title": "Annotation toolset expansion: redaction (blur/pixelate), step counter, curved arrows follow-through, spotlight, pencil", "status": "pending" },
     { "id": 15, "file": "phase-15.json", "title": "Power capture: scrolling capture, window capture (smart detection), freeze-screen, self-timer", "status": "pending" }
   ]

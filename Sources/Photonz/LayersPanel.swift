@@ -302,7 +302,7 @@ struct LayersListView: View {
     }
 
     private func row(_ layer: Layer) -> some View {
-        let isSelected = editorState.selectedLayerID == layer.id
+        let isSelected = editorState.isLayerSelected(layer.id)
         return HStack(spacing: 8) {
             thumbnail(layer)
             if renamingLayerID == layer.id {
@@ -582,6 +582,24 @@ struct AnnotationInspector: View {
                         set: { if let hex = $0.hexString { editorState.setAnnotationColor(layerID: layer.id, hex) } }),
                         supportsOpacity: false)
                         .labelsHidden().controlSize(.small)
+                }
+                if a.shape == .rectangle || a.shape == .ellipse {
+                    HStack {
+                        Toggle("Fill", isOn: Binding(
+                            get: { a.fillColorHex != nil },
+                            // Toggling on seeds the fill with the stroke color;
+                            // the well below refines it. Off = no fill.
+                            set: { editorState.setAnnotationFill(layerID: layer.id, $0 ? a.colorHex : nil) }))
+                            .font(.caption).controlSize(.small)
+                        Spacer()
+                        if let fillHex = a.fillColorHex {
+                            ColorPicker("Fill Color", selection: Binding(
+                                get: { Color(hex: fillHex) },
+                                set: { if let hex = $0.hexString { editorState.setAnnotationFill(layerID: layer.id, hex) } }),
+                                supportsOpacity: false)
+                                .labelsHidden().controlSize(.small)
+                        }
+                    }
                 }
                 if a.shape != .highlight {
                     sliderRow("Thickness", value: widthDraft ?? a.strokeWidth,

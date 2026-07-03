@@ -71,7 +71,16 @@ final class EditorState {
     /// canvas's editor overlay visually replaces it.
     private(set) var editingTextLayerID: UUID?
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
-    private(set) var selectedLayerID: UUID?
+    /// Any change to the primary selection dissolves a marquee multi-selection —
+    /// the two never coexist.
+    private(set) var selectedLayerID: UUID? {
+        didSet { if oldValue != selectedLayerID { multiSelectedLayerIDs = [] } }
+    }
+    /// The marquee's rubber-band multi-selection (two or more layers). REAL
+    /// state, not derived from the selection rect — so panel operations like
+    /// hiding a member (which would make it fail a rect containment check)
+    /// don't silently drop it from the selection.
+    private(set) var multiSelectedLayerIDs: Set<UUID> = []
     /// Frame override while a move drag is in flight — rendered as a preview,
     /// committed to history only on mouse-up.
     private var previewMove: (id: UUID, frame: CGRect)?
@@ -314,6 +323,24 @@ final class EditorState {
     /// Marquee result from the canvas (document coords, already pixel-aligned).
     func setSelection(_ rect: CGRect?) {
         selection = rect
+        // The marquee doubles as rubber-band layer selection: layers fully
+        // inside become the REAL selection — one captured layer promotes to the
+        // primary selection (handles + inspector), several become the
+        // multi-selection so the panel highlights them and group ops (hide,
+        // delete) can target them.
+        let captured = rect.flatMap { document?.layerIDs(fullyInside: $0) } ?? []
+        if captured.count == 1 {
+            selectedLayerID = captured[0] // didSet clears any multi-selection
+        } else {
+            if !captured.isEmpty { selectedLayerID = nil }
+            multiSelectedLayerIDs = Set(captured)
+        }
+    }
+
+    /// Whether a layer is part of the current selection — the primary single
+    /// selection or the marquee multi-selection.
+    func isLayerSelected(_ id: UUID) -> Bool {
+        selectedLayerID == id || multiSelectedLayerIDs.contains(id)
     }
 
     // MARK: - Tools
@@ -698,6 +725,17 @@ final class EditorState {
         recordRecentColor(hex: hex)
     }
 
+    /// Interior fill for a box shape (nil = no fill). The value becomes the
+    /// shape's default, so the next rectangle/ellipse drawn reuses it.
+    func setAnnotationFill(layerID: UUID, _ hex: String?) {
+        guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
+        discardDragPreview()
+        perform { $0.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, fillColorHex: .some(hex)) } }
+        annotationStyles.setFillColorHex(hex, forShape: shape)
+        saveAnnotationStyles()
+        if let hex { recordRecentColor(hex: hex) }
+    }
+
     // MARK: - Zoom-callout inspector
 
     /// The selected zoom-callout layer when the select tool is active — the
@@ -1014,10 +1052,35 @@ final class EditorState {
 
     func toggleLayerVisibility(id: UUID) {
         discardDragPreview()
+        // Toggling a member of the multi-selection drives the WHOLE selection
+        // to the clicked layer's new state, in one undo step.
+        if multiSelectedLayerIDs.contains(id) {
+            let show = !(document?.layer(id: id)?.isVisible ?? true)
+            let ids = multiSelectedLayerIDs
+            perform { doc in
+                for layerID in ids {
+                    doc.updateLayer(id: layerID) { $0.isVisible = show }
+                }
+            }
+            return
+        }
         perform { $0.updateLayer(id: id) { $0.isVisible.toggle() } }
     }
 
     func toggleLayerLock(id: UUID) {
+        // Locking a member of the multi-selection locks/unlocks all of it (and
+        // locked layers leave the selection — they're no longer editable).
+        if multiSelectedLayerIDs.contains(id) {
+            let lock = !(document?.layer(id: id)?.isLocked ?? false)
+            let ids = multiSelectedLayerIDs
+            perform { doc in
+                for layerID in ids {
+                    doc.updateLayer(id: layerID) { $0.isLocked = lock }
+                }
+            }
+            if lock { multiSelectedLayerIDs = [] }
+            return
+        }
         perform { $0.updateLayer(id: id) { $0.isLocked.toggle() } }
         if document?.layer(id: id)?.isLocked == true, selectedLayerID == id {
             selectedLayerID = nil
@@ -1031,9 +1094,33 @@ final class EditorState {
     }
 
     func deleteLayer(id: UUID) {
+        // Deleting a member of the multi-selection deletes the whole selection.
+        if multiSelectedLayerIDs.contains(id) {
+            deleteLayers(ids: Array(multiSelectedLayerIDs))
+            return
+        }
         discardDragPreview()
         if selectedLayerID == id { selectedLayerID = nil }
         perform { $0.removeLayer(id: id) }
+    }
+
+    /// Layers the committed marquee fully contains — the rubber-band
+    /// multi-selection. Derived from (selection, document), so there's no
+    /// separate selection state to fall out of sync.
+    var marqueeSelectedLayerIDs: [UUID] {
+        guard let selection, let document else { return [] }
+        return document.layerIDs(fullyInside: selection)
+    }
+
+    /// Batch delete (⌫ over a marquee that captured layers): all of them go in
+    /// ONE undo step, then the marquee clears.
+    func deleteLayers(ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        let idSet = Set(ids)
+        if let selected = selectedLayerID, idSet.contains(selected) { selectedLayerID = nil }
+        perform { $0.removeLayers(ids: idSet) }
+        setSelection(nil)
     }
 
     func duplicateLayer(id: UUID) {
@@ -1211,6 +1298,9 @@ final class EditorState {
 
     func selectLayer(_ id: UUID?) {
         selectedLayerID = id
+        // Explicit deselection dissolves the multi-selection even when the
+        // primary was already nil (didSet only fires on change).
+        if id == nil { multiSelectedLayerIDs = [] }
     }
 
     /// A drag is starting on `id`: kick off the underlay + sprite renders.
