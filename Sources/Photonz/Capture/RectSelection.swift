@@ -102,16 +102,18 @@ private final class SelectionWindow: NSPanel {
         // active app — so starting a capture never raises an open editor window.
         super.init(contentRect: screen.frame, styleMask: [.borderless, .nonactivatingPanel],
                    backing: .buffered, defer: false)
-        // Shielding level: above every app window, panel, and system alert —
-        // nothing can float over the frozen picture or the drag box.
-        level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
         ignoresMouseEvents = false
-        isFloatingPanel = true
         hidesOnDeactivate = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        // Shielding level: above every app window, panel, and MODAL alert —
+        // nothing can float over the frozen picture or the drag box. Assigned
+        // LAST: NSPanel property setters can silently rewrite `level`
+        // (`isFloatingPanel = true` reset it to .floating(3), which lost to
+        // modal dialogs at level 8 — the "selection behind the modal" bug).
+        level = NSWindow.Level(rawValue: Int(CGShieldingWindowLevel()))
         // The freeze must be imperceptible: macOS animates panels in by default
         // (fade/pop), which reads as a visible "flash" to the screenshot.
         animationBehavior = .none
