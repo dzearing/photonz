@@ -94,7 +94,12 @@ private struct HistoryOverlayCell: View {
                                  onActivate: entry.kind == .video ? {
                                      coordinator.openRecording(entry.url)
                                      coordinator.hideHistory()
-                                 } : nil)
+                                 } : nil,
+                                 // Double-click a screenshot to edit it (videos
+                                 // already open their editor on a single click).
+                                 onDoubleClick: entry.kind == .video ? nil : {
+                                     coordinator.editCapture(entry.url)
+                                 })
                 .overlay {
                     if highlighted {
                         RoundedRectangle(cornerRadius: 8)

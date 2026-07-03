@@ -14,6 +14,9 @@ struct CaptureThumbnailView: View {
     var minWidth: CGFloat? = nil
     /// Tapping the tile itself runs this (e.g. play a recording). Nil = no tap.
     var onActivate: (() -> Void)? = nil
+    /// Double-clicking the tile runs this (e.g. open in the editor). Nil = no
+    /// double-click action.
+    var onDoubleClick: (() -> Void)? = nil
 
     var body: some View {
         Group {
@@ -35,8 +38,9 @@ struct CaptureThumbnailView: View {
         // rectangle — not just the sliver — is the hover/tap/drag target.
         .frame(minWidth: minWidth)
         .contentShape(Rectangle())
-        // Click the tile (incl. the play badge) to activate — e.g. play a video.
-        .onTapGesture { onActivate?() }
+        // Click / double-click the tile to activate — e.g. play a video, or
+        // open a screenshot in the editor.
+        .modifier(TapActions(onActivate: onActivate, onDoubleClick: onDoubleClick))
         .help(onActivate != nil ? "Play" : "")
         // Drag the capture's media (PNG or MP4) straight out to Finder / apps.
         .onDrag { NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider() }
@@ -66,6 +70,30 @@ struct CaptureThumbnailView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+/// Attaches only the tap recognizers actually in use, so a single-tap action
+/// never waits out a double-tap window it doesn't need (and vice versa). When
+/// both are set, the double-click takes priority and the single tap fires only
+/// after the double-click window lapses.
+private struct TapActions: ViewModifier {
+    let onActivate: (() -> Void)?
+    let onDoubleClick: (() -> Void)?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let onDoubleClick, onActivate == nil {
+            content.onTapGesture(count: 2) { onDoubleClick() }
+        } else if let onActivate, onDoubleClick == nil {
+            content.onTapGesture { onActivate() }
+        } else if let onActivate, let onDoubleClick {
+            content.gesture(
+                TapGesture(count: 2).onEnded { onDoubleClick() }
+                    .exclusively(before: TapGesture().onEnded { onActivate() }))
+        } else {
+            content
         }
     }
 }
