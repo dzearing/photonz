@@ -12,6 +12,8 @@ struct EditorView: View {
     @State private var isStylePopoverPresented = false
     /// The bespoke HSB color picker popover (13.2).
     @State private var isColorPickerPresented = false
+    @State private var isFgPickerShown = false
+    @State private var isBgPickerShown = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
@@ -201,7 +203,17 @@ struct EditorView: View {
         .buttonStyle(.borderless)
     }
 
+    /// Three separate glass bars: tools, fill colors, zoom — grouped in one
+    /// GlassEffectContainer so the capsules morph together.
     private var toolbar: some View {
+        HStack(spacing: 10) {
+            toolsBar
+            colorBar
+            zoomBar
+        }
+    }
+
+    private var toolsBar: some View {
         HStack(spacing: 14) {
             toolButton(.select, "cursorarrow", "Select", "v")
             toolButton(.arrow, "arrow.up.right", "Arrow", "a")
@@ -235,23 +247,6 @@ struct EditorView: View {
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             toolButton(.measure, "ruler", "Measure", "m")
             toolButton(.fill, "drop.fill", "Fill", "g")
-            fillColorControls
-            Divider().frame(height: 20)
-            Button {
-                editorState.zoomOut()
-            } label: {
-                Image(systemName: "minus.magnifyingglass")
-            }
-            .help("Zoom Out")
-            Text(Double(editorState.zoom).formatted(.percent.precision(.fractionLength(0))))
-                .font(.callout.monospacedDigit())
-                .frame(width: 48)
-            Button {
-                editorState.zoomIn()
-            } label: {
-                Image(systemName: "plus.magnifyingglass")
-            }
-            .help("Zoom In")
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
@@ -270,31 +265,94 @@ struct EditorView: View {
         // above, and the swatch still animates in when you pick the arrow tool.)
     }
 
-    /// The Photoshop-style foreground/background fill pair with X-swap. The
-    /// bucket fills with FG (⌥ = BG); canvas growth paints new area with BG.
-    private var fillColorControls: some View {
-        HStack(spacing: 3) {
-            ColorPicker("Foreground fill", selection: Binding(
-                get: { Color(hex: editorState.foregroundFillHex) },
-                set: { if let hex = $0.hexString { editorState.foregroundFillHex = hex } }),
-                supportsOpacity: false)
-                .labelsHidden()
-                .help("Foreground fill color")
+    /// The Photoshop-style fill pair: foreground swatch top-left OVERLAPPING
+    /// the background swatch bottom-right, swap arrows beside them (X). Each
+    /// swatch opens the app's HSB/eyedropper picker.
+    private var colorBar: some View {
+        HStack(spacing: 6) {
+            ZStack(alignment: .topLeading) {
+                fillSwatch(hex: editorState.backgroundFillHex, isForeground: false)
+                    .offset(x: 11, y: 11)
+                fillSwatch(hex: editorState.foregroundFillHex, isForeground: true)
+            }
+            .frame(width: 29, height: 29)
             Button {
                 editorState.swapFillColors()
             } label: {
-                Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 8, weight: .semibold))
+                Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")
+                    .font(.system(size: 10, weight: .semibold))
+                    .frame(width: 16, height: 16)
             }
             .keyboardShortcut("x", modifiers: [])
             .help("Swap Fill Colors (X)")
-            ColorPicker("Background fill", selection: Binding(
-                get: { Color(hex: editorState.backgroundFillHex) },
-                set: { if let hex = $0.hexString { editorState.backgroundFillHex = hex } }),
-                supportsOpacity: false)
-                .labelsHidden()
-                .help("Background fill color — fills new canvas space and ⌫-cleared backgrounds")
         }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .glassEffect(.regular, in: .capsule)
+    }
+
+    private func fillSwatch(hex: String, isForeground: Bool) -> some View {
+        Button {
+            if isForeground { isFgPickerShown = true } else { isBgPickerShown = true }
+        } label: {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hex: hex))
+                .frame(width: 18, height: 18)
+                .overlay(RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(.background, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+        }
+        .help(isForeground
+              ? "Foreground fill — bucket and ⌥⌫ fill with this"
+              : "Background fill — new canvas space and ⌫-cleared backgrounds use this")
+        .popover(isPresented: isForeground ? $isFgPickerShown : $isBgPickerShown,
+                 arrowEdge: .top) {
+            ColorPickerPopover(initialHex: hex) { newHex in
+                if isForeground { editorState.foregroundFillHex = newHex }
+                else { editorState.backgroundFillHex = newHex }
+                editorState.recordRecentColor(hex: newHex)
+            }
+        }
+    }
+
+    private static let zoomStops: [Double] = [0.25, 0.5, 1, 2, 4, 8]
+
+    /// Zoom: a log-scale slider plus a % readout that opens a stop menu.
+    private var zoomBar: some View {
+        HStack(spacing: 8) {
+            Slider(value: Binding(
+                get: { Double(log2(editorState.zoom)) },
+                set: { editorState.setZoom(CGFloat(pow(2, $0))) }),
+                in: -5...5)
+                .controlSize(.small)
+                .frame(width: 110)
+                .help("Zoom")
+            Menu {
+                ForEach(Self.zoomStops, id: \.self) { stop in
+                    Button(stop.formatted(.percent.precision(.fractionLength(0)))) {
+                        editorState.setZoom(CGFloat(stop))
+                    }
+                }
+                Divider()
+                Button("Fit") { editorState.zoomToFit() }
+                    .keyboardShortcut("0", modifiers: .command)
+                Button("Actual Size") { editorState.zoomToActualSize() }
+                    .keyboardShortcut("1", modifiers: .command)
+            } label: {
+                Text(Double(editorState.zoom).formatted(.percent.precision(.fractionLength(0))))
+                    .font(.callout.monospacedDigit())
+                    .frame(width: 46)
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("Choose a zoom level")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+        .disabled(editorState.document == nil)
     }
 
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.

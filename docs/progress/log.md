@@ -646,3 +646,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - **App**: FG/BG hex pair persisted in UserDefaults (black/white defaults) with toolbar swatches + swap button (X). Bucket click fills the hit layer with FG (⌥ = BG); a click that hits nothing falls back to the locked Background under the point (hit-testing skips locked layers). ⌥⌫ fills the selected layer with FG; ⌫ with the locked Background selected resets it to the BG color (branch ordered before the unlocked-delete path). All one undo step each.
 - **Canvas growth**: `setCanvasSize` now rebuilds the Background bitmap at the new size — BG color everywhere, old pixels composited at their anchor-shifted spot — in the same undo step as the resize. Skipped for cropped/transformed backgrounds (their look is preserved instead). Works for both the dialog and the new Canvas pseudo-layer edge drags.
 - 585 tests green. Relaunched. Follow-ups: fill only the marquee region, bucket cursor, D-for-defaults.
+
+## 2026-07-04 (later) — Toolbar split into three bars; PS-style diagonal swatches; zoom slider + stops
+
+- User feedback on 16.11's toolbar: fg/bg unclear side by side; tools/colors/zoom should be separate bars; zoom should be a slider with a clickable % stop menu.
+- Toolbar is now three glass capsules in one GlassEffectContainer: **tools**, **fill colors**, **zoom**. Colors: foreground swatch top-left OVERLAPPING background bottom-right (Photoshop layout), swap arrows beside the pair (still X); each swatch opens the app's own HSB/eyedropper `ColorPickerPopover` (recents recorded). Zoom: log₂-scale slider (1/32…32×) + a monospaced % readout that's a Menu with 25/50/100/200/400/800% stops, Fit (⌘0) and Actual Size (⌘1); the old ±magnifier buttons are gone (⌘+/⌘− still work via the app menu). `EditorState.setZoom` exposes absolute zoom around the view center.
+- 585 tests green. Relaunched.

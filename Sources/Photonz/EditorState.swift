@@ -1861,6 +1861,9 @@ final class EditorState {
 
     func zoomToActualSize() { zoomTowardCenter(1) }
 
+    /// Absolute zoom (the toolbar slider / stop menu); Viewport clamps.
+    func setZoom(_ newZoom: CGFloat) { zoomTowardCenter(newZoom) }
+
     private func zoomTowardCenter(_ newZoom: CGFloat) {
         guard let viewport else { return }
         let center = CGPoint(x: viewport.viewSize.width / 2, y: viewport.viewSize.height / 2)
