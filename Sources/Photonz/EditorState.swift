@@ -110,8 +110,12 @@ final class EditorState {
 
     /// The capture file this window was opened to edit, if it lives in the
     /// capture folder (phase 11.5). Lets "Save to Capture History" offer
-    /// Override-in-place vs Save-as-new.
+    /// Override-in-place vs Save-as-new, and gives plain ⌘S its save-back target.
     private(set) var sourceCaptureURL: URL?
+
+    /// The agent's capture center, captured at seed time so ⌘S on a history
+    /// capture can save back into its file through the store (cache + reload).
+    @ObservationIgnored private weak var captureCenter: CaptureCenter?
 
     /// The file this window was opened from (screenshot/image/package), for the
     /// window title. Distinct from `documentURL`, which is only set once saved as
@@ -175,9 +179,10 @@ final class EditorState {
     /// this never reloads a window that already holds a document.
     func seed(from windowID: EditorWindowID, capture: CaptureCenter) {
         guard document == nil else { return }
+        captureCenter = capture
         switch windowID {
         case .file(let url):
-            openImage(at: url)
+            openImageOrSidecar(at: url)
             openedFileURL = url
             // A file opened from the capture folder can round-trip back to history.
             if url.deletingLastPathComponent().standardizedFileURL == capture.store.directory.standardizedFileURL {
@@ -193,10 +198,79 @@ final class EditorState {
         }
     }
 
+    /// The document as it was last opened or saved — the clean baseline for
+    /// close confirmation. Value equality means undoing back to the last save
+    /// counts as clean again.
+    @ObservationIgnored private var savedDocument: PhotonzDocument?
+
+    /// The window hosting this editor, captured by `WindowCloseGuard` so the
+    /// close confirmation can attach and the edited-dot can track dirtiness.
+    @ObservationIgnored weak var hostWindow: NSWindow?
+
+    /// Whether closing this window would lose work.
+    var hasUnsavedChanges: Bool {
+        guard let document else { return false }
+        return document != savedDocument
+    }
+
+    /// The document was persisted somewhere the user considers safe (package
+    /// save, capture-history save): the current state becomes the clean baseline.
+    func markSaved() {
+        savedDocument = document
+    }
+
+    // MARK: - Layered sidecar (rich format next to the flattened capture)
+
+    /// The layered `.photonz` sidecar for a flattened media file: same folder,
+    /// same basename. Saving a capture flattens it into the PNG; the sidecar is
+    /// what lets the layers come back on the next edit.
+    static func sidecarURL(for mediaURL: URL) -> URL {
+        mediaURL.deletingPathExtension().appendingPathExtension("photonz")
+    }
+
+    private static func modificationDate(_ url: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+    }
+
+    /// Opens an image file, preferring its layered sidecar when one exists and
+    /// isn't stale (the PNG was rewritten by something else since the sidecar
+    /// was saved — then the PNG is the truth and the layers are gone).
+    private func openImageOrSidecar(at url: URL) {
+        let sidecar = Self.sidecarURL(for: url)
+        if url.pathExtension.lowercased() != "photonz",
+           let sidecarDate = Self.modificationDate(sidecar),
+           let mediaDate = Self.modificationDate(url),
+           sidecarDate >= mediaDate.addingTimeInterval(-2),
+           let document = try? PackageIO.read(from: sidecar, into: store) {
+            // documentURL stays nil: ⌘S keeps meaning "save back to the capture
+            // file (and refresh this sidecar)", not "save the package in place".
+            installDocument(document, url: nil)
+            return
+        }
+        openImage(at: url)
+    }
+
+    /// Auto-saves the layered document next to a flattened capture file, so
+    /// reopening that capture recalls the layers instead of baked pixels.
+    private func writeCaptureSidecar(nextTo mediaURL: URL) {
+        guard let document else { return }
+        try? PackageIO.write(document, store: store, to: Self.sidecarURL(for: mediaURL))
+    }
+
+    /// A "Save to Capture History" landed at `url` (override or save-as-new):
+    /// adopt it as this window's source, refresh the layered sidecar, and mark
+    /// the window clean.
+    func savedToCaptureHistory(at url: URL) {
+        sourceCaptureURL = url
+        writeCaptureSidecar(nextTo: url)
+        markSaved()
+    }
+
     /// Installs a freshly opened document, resetting every per-document bit
     /// of editor state.
     private func installDocument(_ document: PhotonzDocument, url: URL?) {
         history = History(document: document)
+        savedDocument = document
         documentURL = url
         viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
         selection = nil
@@ -213,10 +287,19 @@ final class EditorState {
 
     // MARK: - Save / open packages
 
-    /// ⌘S: saves in place, or runs Save As for a never-saved document.
+    /// ⌘S: saves the package in place; a document opened FROM a history capture
+    /// (and never saved as a package) writes the flattened composite back into
+    /// that capture file — history items are real files, and Save means "save
+    /// back to where it came from". Everything else runs Save As.
     func saveDocument() {
         if let documentURL {
             save(to: documentURL)
+        } else if let sourceCaptureURL, let store = captureCenter?.store,
+                  store.entries.contains(where: { $0.url == sourceCaptureURL }),
+                  let image = compositeImage() {
+            store.replace(at: sourceCaptureURL, with: image)
+            writeCaptureSidecar(nextTo: sourceCaptureURL)
+            markSaved()
         } else {
             saveDocumentAs()
         }
@@ -227,7 +310,9 @@ final class EditorState {
         guard document != nil else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [Self.photonzType]
-        panel.nameFieldStringValue = documentURL?.lastPathComponent ?? "Untitled.photonz"
+        panel.nameFieldStringValue = documentURL?.lastPathComponent
+            ?? openedFileURL.map { $0.deletingPathExtension().lastPathComponent + ".photonz" }
+            ?? "\(untitledName).photonz"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
         save(to: url)
@@ -238,6 +323,7 @@ final class EditorState {
         do {
             try PackageIO.write(document, store: store, to: url)
             documentURL = url
+            markSaved()
         } catch {
             presentError("Couldn't save the document.", error)
         }
@@ -712,6 +798,7 @@ final class EditorState {
         } }
         if let strokeWidth, shape != .highlight { annotationStyles.setStrokeWidth(strokeWidth, forShape: shape) }
         if let arrowheadScale { annotationStyles.setArrowheadScale(arrowheadScale, forShape: shape) }
+        if let cornerRadius { annotationStyles.setCornerRadius(cornerRadius, forShape: shape) }
         saveAnnotationStyles()
     }
 
@@ -1130,6 +1217,104 @@ final class EditorState {
         selectedLayerID = copyID
     }
 
+    // MARK: - Merge down (Photoshop ⌘E)
+
+    /// ⌘E: merge the selected layer into the one below it — or the marquee
+    /// multi-selection into one — as a single rasterized image layer.
+    func mergeDown() {
+        guard let document else { return }
+        if multiSelectedLayerIDs.count >= 2 {
+            mergeLayers(ids: document.layers.filter { multiSelectedLayerIDs.contains($0.id) }.map(\.id))
+        } else if let id = selectedLayerID {
+            mergeDown(id: id)
+        }
+    }
+
+    /// Merge one specific layer into the layer directly below it (the panel's
+    /// context menu, which acts on the clicked row, not the selection).
+    func mergeDown(id: UUID) {
+        guard let document, let idx = document.index(of: id), idx > 0 else { return }
+        mergeLayers(ids: [document.layers[idx - 1].id, id])
+    }
+
+    /// Whether ⌘E has something to merge (menu enablement).
+    var canMergeDown: Bool {
+        guard let document else { return false }
+        if multiSelectedLayerIDs.count >= 2 { return true }
+        guard let id = selectedLayerID, let idx = document.index(of: id), idx > 0,
+              !document.layers[idx].isLocked else { return false }
+        return true
+    }
+
+    /// Composites the given layers (bottom-up order) into ONE image layer, in
+    /// one undo step: their styles, blend modes, and transforms bake into the
+    /// bitmap; the result takes the bottom participant's slot, name, and lock
+    /// (so merging into the locked Background stays a background). All
+    /// participants must be visible — a hidden layer would silently rasterize
+    /// to nothing. Only the bottom layer may be locked (merge INTO it).
+    private func mergeLayers(ids: [UUID]) {
+        guard let document, ids.count >= 2 else { return }
+        let idSet = Set(ids)
+        let participants = document.layers.filter { idSet.contains($0.id) }
+        guard participants.count >= 2, participants.allSatisfy(\.isVisible),
+              let bottom = participants.first,
+              participants.dropFirst().allSatisfy({ !$0.isLocked }) else { return }
+
+        // The merged bitmap covers everything the participants can draw:
+        // transformed bounds padded by each style's reach, clamped to canvas.
+        var union = CGRect.null
+        for layer in participants {
+            var bounds = layer.frame
+            if !layer.transform.isIdentity {
+                let corners = layer.transformedCorners
+                if let first = corners.first {
+                    bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
+                        $0.union(CGRect(origin: $1, size: .zero))
+                    }
+                }
+            }
+            let pad = layer.style.previewPadding
+            union = union.union(bounds.insetBy(dx: -pad, dy: -pad))
+        }
+        let region = Geometry.clampCrop(union, toCanvas: document.canvasSize)
+        guard region.width >= 1, region.height >= 1 else { return }
+
+        // Composite ONLY the participants (over transparency), so layers in
+        // between or below don't leak into the merged bitmap.
+        var temp = document
+        temp.layers = participants
+        guard let raster = previewRenderer.rasterize(region: region, of: temp, store: store) else { return }
+        let ref = store.register(raster)
+        let merged = Layer(name: bottom.name, content: .image(ref), frame: region,
+                           isLocked: bottom.isLocked)
+        discardDragPreview()
+        perform { doc in
+            guard let insertAt = doc.index(of: bottom.id) else { return }
+            doc.removeLayers(ids: idSet)
+            doc.addLayer(merged, at: insertAt)
+        }
+        selectedLayerID = merged.id
+    }
+
+    // MARK: - Restacking (Photoshop ⌘] ⌘[ ⌘⇧] ⌘⇧[)
+
+    func bringLayerForward(id: UUID) { restack(id: id) { idx, count, _ in min(idx + 1, count - 1) } }
+    func sendLayerBackward(id: UUID) { restack(id: id) { idx, _, floor in max(idx - 1, floor) } }
+    func bringLayerToFront(id: UUID) { restack(id: id) { _, count, _ in count - 1 } }
+    func sendLayerToBack(id: UUID) { restack(id: id) { _, _, floor in floor } }
+
+    /// Moves a layer in the stack. Locked layers stay put, and nothing can be
+    /// pushed underneath the locked Background at the bottom.
+    private func restack(id: UUID, _ target: (Int, Int, Int) -> Int) {
+        guard let document, let idx = document.index(of: id),
+              !document.layers[idx].isLocked else { return }
+        let floor = document.layers.prefix(while: \.isLocked).count
+        let to = target(idx, document.layers.count, floor)
+        guard to != idx else { return }
+        discardDragPreview()
+        perform { $0.moveLayer(id: id, to: to) }
+    }
+
     /// Drag-reorder from the layers panel (SwiftUI `onMove` indices, visual
     /// top-down order). One undo step.
     func moveLayers(visualSources: IndexSet, visualDestination: Int) {
@@ -1196,16 +1381,37 @@ final class EditorState {
     /// ⌘C with a layer selected: the layer's model JSON (plus its bitmap for
     /// image layers — ImageRefs only mean something in this window's store)
     /// goes on the pasteboard under a Photonz-private type.
+    ///
+    /// With NO layer selected, ⌘C copies the marquee region — or, with no
+    /// marquee either, the whole canvas — flattened from the composite. So
+    /// ⌘A → ⌘C → ⌘V duplicates what you see (background included), and the
+    /// PNG also pastes into other apps.
     func copySelectedLayer() {
-        guard let id = selectedLayerID, let layer = document?.layer(id: id) else { return }
-        var imageData: Data?
-        if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
-            imageData = ImageCodec.encode(cg, format: .png)
+        if let id = selectedLayerID, let layer = document?.layer(id: id) {
+            var imageData: Data?
+            if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
+                imageData = ImageCodec.encode(cg, format: .png)
+            }
+            guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: imageData)) else { return }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+            return
         }
-        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: imageData)) else { return }
+        guard let document else { return }
+        let region = selection ?? CGRect(origin: .zero, size: document.canvasSize)
+        guard region.width >= 1, region.height >= 1,
+              let raster = previewRenderer.rasterize(region: region, of: document, store: store),
+              let png = ImageCodec.encode(raster, format: .png) else { return }
+        // A Photonz image-layer payload (⌘V lands it as a layer over the copied
+        // spot) plus a plain PNG for interoperability.
+        let layer = Layer(name: "Copied Selection",
+                          content: .image(ImageRef(pixelSize: region.size)), frame: region)
+        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png)) else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+        pasteboard.setData(png, forType: .png)
     }
 
     /// ⌘X: copy the selected (unlocked) layer, then remove it.

@@ -61,6 +61,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }
+
+    /// ⌘Q with unsaved editor windows gets the standard quit protection:
+    /// review each window's save sheet, discard everything, or cancel.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        MainActor.assumeIsolated {
+            let dirty = CloseGuards.dirtyEditorWindows()
+            guard !dirty.isEmpty else { return .terminateNow }
+            // The agent may be quitting from the (non-activating) menu-bar menu;
+            // the alert needs the app frontmost to be seen.
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.messageText = dirty.count == 1
+                ? "You have a window with unsaved changes."
+                : "You have \(dirty.count) windows with unsaved changes."
+            alert.informativeText = "Review your changes before quitting, or discard them."
+            alert.addButton(withTitle: "Review Changes…")
+            alert.addButton(withTitle: "Cancel")
+            alert.addButton(withTitle: "Discard Changes and Quit")
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                CloseGuards.reviewAndClose(windows: dirty) { allResolved in
+                    NSApp.reply(toApplicationShouldTerminate: allResolved)
+                }
+                return .terminateLater
+            case .alertThirdButtonReturn:
+                return .terminateNow
+            default:
+                return .terminateCancel
+            }
+        }
+    }
 }
 
 /// Root of an editor window. A `.video` id opens the in-app video editor with
@@ -92,6 +123,12 @@ private struct ImageEditorRootView: View {
             .environment(editorState)
             .focusedSceneValue(\.editorState, editorState)
             .navigationTitle(editorState.windowTitle)
+            // Standard document behavior: confirm before closing with unsaved
+            // edits, and show the edited dot in the close button meanwhile.
+            .background(WindowCloseGuard(editorState: editorState))
+            .onChange(of: editorState.hasUnsavedChanges) { _, dirty in
+                editorState.hostWindow?.isDocumentEdited = dirty
+            }
             .task {
                 if let windowID {
                     editorState.seed(from: windowID, capture: coordinator.capture)

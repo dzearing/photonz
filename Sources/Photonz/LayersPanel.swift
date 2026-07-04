@@ -351,7 +351,25 @@ struct LayersListView: View {
         .onTapGesture { editorState.selectLayer(layer.id) }
         .contextMenu {
             Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
+                .keyboardShortcut("d", modifiers: .command)
+            Button("Merge Down") { editorState.mergeDown(id: layer.id) }
+                .keyboardShortcut("e", modifiers: .command)
+            Divider()
+            Button("Bring to Front") { editorState.bringLayerToFront(id: layer.id) }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
+            Button("Bring Forward") { editorState.bringLayerForward(id: layer.id) }
+                .keyboardShortcut("]", modifiers: .command)
+            Button("Send Backward") { editorState.sendLayerBackward(id: layer.id) }
+                .keyboardShortcut("[", modifiers: .command)
+            Button("Send to Back") { editorState.sendLayerToBack(id: layer.id) }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+            Divider()
+            Button("Rename") { beginRename(layer) }
+            Button(layer.isVisible ? "Hide" : "Show") { editorState.toggleLayerVisibility(id: layer.id) }
+            Button(layer.isLocked ? "Unlock" : "Lock") { editorState.toggleLayerLock(id: layer.id) }
+            Divider()
             Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
+                .keyboardShortcut(.delete, modifiers: .command)
         }
     }
 
@@ -473,7 +491,7 @@ struct ShadowInspector: View {
                     shadowColorPicker
                 }
                 LayerStyleSlider(layerID: layer.id, label: "Size", value: Double(shadow.spread),
-                                 range: -10...20,
+                                 range: 0...80,
                                  display: "\(Int(shadow.spread.rounded())) pt") { style, v in
                     style.shadow?.spread = CGFloat(v)
                 }

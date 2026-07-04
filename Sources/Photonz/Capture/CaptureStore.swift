@@ -116,22 +116,32 @@ final class CaptureStore {
     // MARK: - Removing
 
     /// Delete a capture — moves the file to the Trash (recoverable), which also
-    /// removes it from history.
+    /// removes it from history. An edited capture's layered `.photonz` sidecar
+    /// goes with it.
     func remove(_ entry: CaptureEntry) {
         try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
+        trashSidecar(for: entry.url)
         imageCache[entry.url] = nil
         durations[entry.url] = nil
         reload()
     }
 
-    /// "Clear All": move every shown capture to the Trash.
+    /// "Clear All": move every shown capture (and its sidecar) to the Trash.
     func clearAll() {
         for entry in entries {
             try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
+            trashSidecar(for: entry.url)
         }
         imageCache.removeAll()
         durations.removeAll()
         reload()
+    }
+
+    private func trashSidecar(for url: URL) {
+        let sidecar = EditorState.sidecarURL(for: url)
+        if FileManager.default.fileExists(atPath: sidecar.path) {
+            try? FileManager.default.trashItem(at: sidecar, resultingItemURL: nil)
+        }
     }
 
     // MARK: - Media access

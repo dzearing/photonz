@@ -330,7 +330,10 @@ final class AppCoordinator {
     /// window was opened from a capture still in the folder, offer Override-in-place
     /// vs Save-as-new; otherwise just add a new entry. The history overlay observes
     /// `CaptureStore`, so it refreshes automatically.
-    func saveEditedCapture(sourceURL: URL?, image: CGImage) {
+    /// Returns the capture file the composite landed in (nil on cancel), so the
+    /// editor can adopt it as its source and refresh its layered sidecar.
+    @discardableResult
+    func saveEditedCapture(sourceURL: URL?, image: CGImage) -> URL? {
         NSApp.activate(ignoringOtherApps: true)
         if let sourceURL, capture.store.entries.contains(where: { $0.url == sourceURL }) {
             let alert = NSAlert()
@@ -341,12 +344,16 @@ final class AppCoordinator {
             alert.addButton(withTitle: "Save as New")
             alert.addButton(withTitle: "Cancel")
             switch alert.runModal() {
-            case .alertFirstButtonReturn: capture.store.replace(at: sourceURL, with: image)
-            case .alertSecondButtonReturn: capture.store.add(image)
-            default: return
+            case .alertFirstButtonReturn:
+                capture.store.replace(at: sourceURL, with: image)
+                return sourceURL
+            case .alertSecondButtonReturn:
+                return capture.store.add(image)?.url
+            default:
+                return nil
             }
         } else {
-            capture.store.add(image)
+            return capture.store.add(image)?.url
         }
     }
 

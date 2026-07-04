@@ -69,15 +69,18 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("s", modifiers: [.command, .shift])
                 .disabled(editor?.document == nil)
             Button("Save to Capture History") {
-                if let editor, let image = editor.compositeImage() {
-                    coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL, image: image)
+                if let editor, let image = editor.compositeImage(),
+                   let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
+                                                           image: image) {
+                    editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
                 }
             }
             .keyboardShortcut("s", modifiers: [.command, .option])
             .disabled(editor?.document == nil)
             Divider()
+            // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
             Button("Export…") { editor?.isExportDialogPresented = true }
-                .keyboardShortcut("e", modifiers: .command)
+                .keyboardShortcut("e", modifiers: [.command, .shift])
                 .disabled(editor?.document == nil)
             Button("Copy Image") { editor?.copyCompositeToClipboard() }
                 .keyboardShortcut("c", modifiers: [.command, .shift])
@@ -220,9 +223,14 @@ struct EditorCommands: Commands {
 
         CommandMenu("Layer") {
             let selectedID = editor?.selectedLayerID
-            Button("Promote Selection to Layer") { editor?.promoteSelectionToLayer() }
-                .keyboardShortcut("j", modifiers: .command)
-                .disabled(editor?.selection == nil)
+            // Photoshop ⌘J: copy the marquee selection to a new layer, or —
+            // with no marquee — duplicate the selected layer.
+            Button("New Layer via Copy") {
+                if editor?.selection != nil { editor?.promoteSelectionToLayer() }
+                else if let selectedID { editor?.duplicateLayer(id: selectedID) }
+            }
+            .keyboardShortcut("j", modifiers: .command)
+            .disabled(editor?.selection == nil && selectedID == nil)
             Button("Blur Behind Selection") { editor?.blurBehindSelection() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)
@@ -232,6 +240,31 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("d", modifiers: .command)
             .disabled(selectedID == nil)
+            Button("Merge Down") { editor?.mergeDown() }
+                .keyboardShortcut("e", modifiers: .command)
+                .disabled(!(editor?.canMergeDown ?? false))
+            Divider()
+            Button("Bring to Front") {
+                if let selectedID { editor?.bringLayerToFront(id: selectedID) }
+            }
+            .keyboardShortcut("]", modifiers: [.command, .shift])
+            .disabled(selectedID == nil)
+            Button("Bring Forward") {
+                if let selectedID { editor?.bringLayerForward(id: selectedID) }
+            }
+            .keyboardShortcut("]", modifiers: .command)
+            .disabled(selectedID == nil)
+            Button("Send Backward") {
+                if let selectedID { editor?.sendLayerBackward(id: selectedID) }
+            }
+            .keyboardShortcut("[", modifiers: .command)
+            .disabled(selectedID == nil)
+            Button("Send to Back") {
+                if let selectedID { editor?.sendLayerToBack(id: selectedID) }
+            }
+            .keyboardShortcut("[", modifiers: [.command, .shift])
+            .disabled(selectedID == nil)
+            Divider()
             Button("Delete Layer") {
                 if let selectedID { editor?.deleteLayer(id: selectedID) }
             }
