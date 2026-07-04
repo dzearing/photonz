@@ -536,7 +536,56 @@ final class EditorState {
     /// Canvas-size apply: grows/shrinks the canvas around the anchor without
     /// scaling content, one undo step.
     func setCanvasSize(to size: CGSize, anchor: CanvasAnchor) {
-        perform { $0.setCanvasSize(size, anchor: anchor) }
+        // Growing the canvas paints the newly exposed area with the current
+        // BACKGROUND fill color (Photoshop behavior): the locked Background
+        // layer's bitmap is rebuilt at canvas size — bg color under the old
+        // pixels at their (anchor-shifted) position — in the same undo step.
+        // Skipped when there's no plain locked background image to extend
+        // (cropped/transformed backgrounds keep their exact look instead).
+        var extendedBackground: (id: UUID, ref: ImageRef)?
+        if let doc = document,
+           size.width > doc.canvasSize.width || size.height > doc.canvasSize.height,
+           let background = doc.layers.first, background.isLocked,
+           let oldRef = background.imageRef, background.crop == nil,
+           background.transform.isIdentity,
+           let oldImage = store.image(for: oldRef) {
+            let dx = (size.width - doc.canvasSize.width) * anchor.unit.x
+            let dy = (size.height - doc.canvasSize.height) * anchor.unit.y
+            let shifted = background.frame.offsetBy(dx: dx, dy: dy)
+            if let merged = Self.backgroundExtended(oldImage, drawnAt: shifted, canvas: size,
+                                                    fillHex: backgroundFillHex) {
+                extendedBackground = (background.id, store.register(merged))
+            }
+        }
+        perform { doc in
+            doc.setCanvasSize(size, anchor: anchor)
+            if let extendedBackground {
+                doc.updateLayer(id: extendedBackground.id) { layer in
+                    layer.content = .image(extendedBackground.ref)
+                    layer.frame = CGRect(origin: .zero, size: size)
+                }
+            }
+        }
+    }
+
+    /// A canvas-sized bitmap: `fillHex` everywhere, with `image` composited at
+    /// `frame` (document coordinates, top-left origin).
+    private static func backgroundExtended(_ image: CGImage, drawnAt frame: CGRect,
+                                           canvas: CGSize, fillHex: String) -> CGImage? {
+        let width = Int(canvas.width.rounded()), height = Int(canvas.height.rounded())
+        guard width >= 1, height >= 1, let rgba = RGBA(hex: fillHex),
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
+        context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+        // Flip the top-left document rect into CG's bottom-left space.
+        context.draw(image, in: CGRect(x: frame.minX,
+                                       y: CGFloat(height) - frame.maxY,
+                                       width: frame.width, height: frame.height))
+        return context.makeImage()
     }
 
     /// Completed drag-to-create from the canvas (document coords, ⇧ already
@@ -913,6 +962,78 @@ final class EditorState {
         if let data = try? JSONEncoder().encode(recentColors) {
             UserDefaults.standard.set(data, forKey: Self.recentColorsKey)
         }
+    }
+
+    // MARK: - Fill colors (paint bucket)
+
+    /// Photoshop-style foreground/background fill pair, shared across windows
+    /// via UserDefaults. Defaults: black over white, like Photoshop's D.
+    var foregroundFillHex: String = UserDefaults.standard.string(forKey: "fill.foreground") ?? "#000000" {
+        didSet { UserDefaults.standard.set(foregroundFillHex, forKey: "fill.foreground") }
+    }
+    var backgroundFillHex: String = UserDefaults.standard.string(forKey: "fill.background") ?? "#FFFFFF" {
+        didSet { UserDefaults.standard.set(backgroundFillHex, forKey: "fill.background") }
+    }
+
+    /// X — swap foreground and background, like Photoshop.
+    func swapFillColors() {
+        (foregroundFillHex, backgroundFillHex) = (backgroundFillHex, foregroundFillHex)
+    }
+
+    /// Fills `id` with a color via the bucket semantics (`Fill.filled`): solid
+    /// content for photos, interior fill for boxes, recolor for strokes/text/
+    /// measures, backdrop for collages. One undo step; no-op when the content
+    /// refuses (zoom callouts).
+    func fillLayer(id: UUID, hex: String) {
+        guard let layer = document?.layer(id: id) else { return }
+        var solidRef: ImageRef?
+        if layer.imageRef != nil {
+            guard let solid = Self.solidImage(hex: hex) else { return }
+            solidRef = store.register(solid)
+        }
+        guard let filled = Fill.filled(layer, colorHex: hex, solidRef: solidRef) else { return }
+        discardDragPreview()
+        perform { $0.updateLayer(id: id) { $0 = filled } }
+        recordRecentColor(hex: hex)
+    }
+
+    /// Bucket click on the canvas: fill the hit layer — or, when the click
+    /// lands on the locked Background (which hit-testing skips), fill that.
+    /// `useBackground` (⌥) fills with the background color instead.
+    func fillLayer(at point: CGPoint, hit: UUID?, useBackground: Bool) {
+        let target = hit ?? document?.layers.first(where: {
+            $0.isLocked && $0.imageRef != nil && $0.frame.contains(point)
+        })?.id
+        guard let target else { return }
+        fillLayer(id: target, hex: useBackground ? backgroundFillHex : foregroundFillHex)
+    }
+
+    /// ⌥⌫ — fill the selected layer with the foreground (or background) color.
+    func fillSelectedLayer(useBackground: Bool) {
+        guard let id = selectedLayerID else { return }
+        fillLayer(id: id, hex: useBackground ? backgroundFillHex : foregroundFillHex)
+    }
+
+    /// ⌫ with the (locked) Background selected: reset it to the background
+    /// color — "clear it / make the background default".
+    func clearBackgroundLayer() {
+        guard let id = selectedLayerID, let layer = document?.layer(id: id),
+              layer.isLocked, layer.imageRef != nil else { return }
+        fillLayer(id: id, hex: backgroundFillHex)
+    }
+
+    /// A tiny solid bitmap; layer frames stretch it (identical pixels resample
+    /// to the same color).
+    private static func solidImage(hex: String) -> CGImage? {
+        guard let rgba = RGBA(hex: hex),
+              let context = CGContext(data: nil, width: 8, height: 8,
+                                      bitsPerComponent: 8, bytesPerRow: 32,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
+        context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+        return context.makeImage()
     }
 
     private static let annotationStylesKey = "annotationStyles"

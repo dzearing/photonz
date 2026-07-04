@@ -138,7 +138,12 @@ struct EditorView: View {
                        isCanvasSelected: editorState.isCanvasSelected,
                        onCanvasResize: { size, anchor in
                            editorState.setCanvasSize(to: size, anchor: anchor)
-                       })
+                       },
+                       onFillAt: { point, hit, useBackground in
+                           editorState.fillLayer(at: point, hit: hit, useBackground: useBackground)
+                       },
+                       onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
+                       onClearBackground: { editorState.clearBackgroundLayer() })
         } else {
             emptyState
         }
@@ -229,6 +234,8 @@ struct EditorView: View {
             .help("Resize Image (⌥⌘I)")
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             toolButton(.measure, "ruler", "Measure", "m")
+            toolButton(.fill, "drop.fill", "Fill", "g")
+            fillColorControls
             Divider().frame(height: 20)
             Button {
                 editorState.zoomOut()
@@ -261,6 +268,33 @@ struct EditorView: View {
         // Making the swatch appear instantly on selection drops it to ~25ms.
         // (The accent circle still slides on TOOL change via `value: activeTool`
         // above, and the swatch still animates in when you pick the arrow tool.)
+    }
+
+    /// The Photoshop-style foreground/background fill pair with X-swap. The
+    /// bucket fills with FG (⌥ = BG); canvas growth paints new area with BG.
+    private var fillColorControls: some View {
+        HStack(spacing: 3) {
+            ColorPicker("Foreground fill", selection: Binding(
+                get: { Color(hex: editorState.foregroundFillHex) },
+                set: { if let hex = $0.hexString { editorState.foregroundFillHex = hex } }),
+                supportsOpacity: false)
+                .labelsHidden()
+                .help("Foreground fill color")
+            Button {
+                editorState.swapFillColors()
+            } label: {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.system(size: 8, weight: .semibold))
+            }
+            .keyboardShortcut("x", modifiers: [])
+            .help("Swap Fill Colors (X)")
+            ColorPicker("Background fill", selection: Binding(
+                get: { Color(hex: editorState.backgroundFillHex) },
+                set: { if let hex = $0.hexString { editorState.backgroundFillHex = hex } }),
+                supportsOpacity: false)
+                .labelsHidden()
+                .help("Background fill color — fills new canvas space and ⌫-cleared backgrounds")
+        }
     }
 
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.

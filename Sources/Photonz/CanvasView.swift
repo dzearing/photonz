@@ -76,6 +76,9 @@ struct CanvasView: NSViewRepresentable {
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
     let isCanvasSelected: Bool
     let onCanvasResize: (CGSize, CanvasAnchor) -> Void
+    let onFillAt: (CGPoint, UUID?, Bool) -> Void
+    let onFillSelected: (Bool) -> Void
+    let onClearBackground: () -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -124,6 +127,9 @@ struct CanvasView: NSViewRepresentable {
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
         view.onCanvasResize = onCanvasResize
+        view.onFillAt = onFillAt
+        view.onFillSelected = onFillSelected
+        view.onClearBackground = onClearBackground
     }
 }
 
@@ -164,6 +170,12 @@ final class CanvasNSView: NSView {
     var onSwapCollageSlots: ((UUID, Int, Int) -> Void) = { _, _, _ in }
     /// A canvas-boundary handle drag ended: (new size, anchor of the pinned side).
     var onCanvasResize: ((CGSize, CanvasAnchor) -> Void) = { _, _ in }
+    /// Bucket click: (document point, hit layer if any, ⌥ = background color).
+    var onFillAt: ((CGPoint, UUID?, Bool) -> Void) = { _, _, _ in }
+    /// ⌥⌫ — fill the selected layer (false = foreground color).
+    var onFillSelected: ((Bool) -> Void) = { _ in }
+    /// ⌫ with the locked Background selected — reset it to the bg fill color.
+    var onClearBackground: (() -> Void) = {}
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -700,6 +712,14 @@ final class CanvasNSView: NSView {
             }
             return
         }
+        // Paint bucket: click fills the hit layer (or the locked Background,
+        // resolved app-side since hit-testing skips locked layers). ⌥ fills
+        // with the background color.
+        if tool == .fill {
+            onFillAt(p, document?.hitTest(p, zoom: viewport.zoom)?.id,
+                     event.modifierFlags.contains(.option))
+            return
+        }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
         if tool.createsAnnotationByDrag || tool == .zoomCallout {
@@ -1119,11 +1139,25 @@ final class CanvasNSView: NSView {
             beginTextSession(layerID: id, at: layer.frame.origin)
             return
         }
+        // ⌥⌫ fills the selected layer with the foreground color (Photoshop).
+        if event.keyCode == 51 || event.keyCode == 117,
+           event.modifierFlags.contains(.option), selectedLayerID != nil {
+            onFillSelected(false)
+            return
+        }
         // Delete / forward-delete with a marquee multi-selection removes them
         // all (one undo step) — the "sweep around a bunch of annotations and
         // hit ⌫" cleanup gesture.
         if event.keyCode == 51 || event.keyCode == 117, !multiSelectedLayerIDs.isEmpty {
             onDeleteLayers(Array(multiSelectedLayerIDs))
+            return
+        }
+        // ⌫ on the locked Background (which the delete path below skips):
+        // reset it to the background fill color — "clear to default".
+        if event.keyCode == 51 || event.keyCode == 117,
+           let id = selectedLayerID, let layer = document?.layer(id: id),
+           layer.isLocked, layer.imageRef != nil {
+            onClearBackground()
             return
         }
         // Delete / forward-delete removes the selected (unlocked) layer.

@@ -15,6 +15,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case text
     case zoomCallout
     case measure
+    /// Paint bucket: click a layer to fill it with the foreground color
+    /// (⌥ = background color). See `Fill` for per-content semantics.
+    case fill
 
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
@@ -24,7 +27,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text, .zoomCallout, .measure: nil
+        case .select, .crop, .text, .zoomCallout, .measure, .fill: nil
         }
     }
 
