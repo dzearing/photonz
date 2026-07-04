@@ -270,12 +270,15 @@ struct EditorView: View {
     /// swatch opens the app's HSB/eyedropper picker.
     private var colorBar: some View {
         HStack(spacing: 6) {
-            ZStack(alignment: .topLeading) {
+            // Corner-aligned frames (not .offset, which is visual-only and
+            // would leave the layout box as just the top swatch, hanging the
+            // pair low-right of the capsule's center).
+            ZStack {
                 fillSwatch(hex: editorState.backgroundFillHex, isForeground: false)
-                    .offset(x: 11, y: 11)
+                    .frame(width: 29, height: 29, alignment: .bottomTrailing)
                 fillSwatch(hex: editorState.foregroundFillHex, isForeground: true)
+                    .frame(width: 29, height: 29, alignment: .topLeading)
             }
-            .frame(width: 29, height: 29)
             Button {
                 editorState.swapFillColors()
             } label: {
