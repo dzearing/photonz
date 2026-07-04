@@ -190,6 +190,9 @@ private struct ToastView: View {
         }
         .padding(12)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        // Double-click anywhere on the toast = Edit (same as the hover button).
+        .onTapGesture(count: 2, perform: onEdit)
         .overlay(alignment: .topTrailing) { hoverControls }
         .opacity(opacity)
         .padding(8) // room for the shadow / hover controls so they aren't clipped
