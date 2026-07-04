@@ -4,35 +4,15 @@ Triaged after the 1.0.0 release (2026-06-12). This is a candidate list, not comm
 scope — pull items into a new numbered phase in `overview.json` when you decide to do them.
 Ordered roughly by priority.
 
-## P0 — release-pipeline blockers (surfaced during the 1.0.0 release)
+## Resolved (audited 2026-07-03)
 
-- **GitHub Actions billing is failing.** Every workflow run (Release, CI, Deploy site) now
-  aborts in ~4s with *"recent account payments have failed or your spending limit needs to be
-  increased."* Until this is fixed in GitHub → Settings → Billing & plans:
-  - the tag-triggered **Release** workflow can't build/publish (1.0.0 was published manually with
-    a locally-built, locally-tested DMG via `gh release create`);
-  - **CI** doesn't run on pushes/PRs;
-  - the **Deploy site** Pages workflow doesn't run, so `dzearing.github.io/photonz` still serves the
-    old `version.json` (0.1.0) and old `index.html` even though `site/` in the repo is current.
-  After fixing billing, re-run `gh workflow run site.yml` to deploy the refreshed site, and confirm
-  CI is green again.
-
-- **Public download link is broken because the repo is private.** The marketing site's
-  "Download for Mac" button points at `releases/latest/download/Photonz.dmg`, but a private repo's
-  release assets 404 for anonymous users (verified: both v0.1.0 and v1.0.0 assets 404 without auth;
-  the v1.0.0 asset is reachable with a token). Options:
-  1. make the repo public (simplest; fits the site's "free & open source" copy);
-  2. keep the repo private and host the DMG on a public bucket / release mirror, and point the site
-     and `release` skill at that URL instead.
-
-## P1 — distribution hardening
-
-- **Developer ID signing + notarization.** `release.yml` already has the conditional steps and
-  documents the six required secrets (`APPLE_SIGNING_IDENTITY`, `APPLE_CERTIFICATE_P12`,
-  `APPLE_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD`); `gh secret list`
-  shows none are configured, so builds ship ad-hoc-signed and Gatekeeper warns on first launch.
-  Configuring these flips `HAVE_SIGNING` on and lets us drop the "right-click → Open" notice from
-  the site and CHANGELOG.
+- ~~**GitHub Actions billing failing**~~ — RESOLVED. CI runs green on pushes to main
+  (verified 2026-07-03; latest push built in ~1m40s).
+- ~~**Public download link 404 (private repo)**~~ — RESOLVED. The repo is public now, so
+  `releases/latest/download/Photonz.dmg` serves anonymously.
+- ~~**Developer ID signing + notarization secrets**~~ — RESOLVED. All six secrets configured
+  2026-06-13 (`gh secret list`); v0.2.0 shipped Developer-ID signed (notarization best-effort —
+  verify status at the next release before dropping the "right-click → Open" notice).
 
 ## P2 — platform reach
 
