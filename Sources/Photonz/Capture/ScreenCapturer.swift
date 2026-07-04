@@ -35,32 +35,32 @@ enum ScreenCapturer {
         }
     }
 
-    enum CaptureError: Error {
-        case displayNotFound
-    }
-
     /// Captures one screen. `sourceRect` is in the screen's own coordinate
     /// space, points, top-left origin (i.e. exactly what a flipped overlay
     /// view covering the screen reports); nil captures the whole screen.
+    ///
+    /// Uses the WYSIWYG `captureImage(in:)` API, NOT the
+    /// `captureImage(contentFilter:configuration:)` one: the filter-based call
+    /// re-composites windows from their individual buffers and synthesizes no
+    /// window shadows at all (verified 2026-07-03 against `screencapture`:
+    /// filter path Δ0 luma under every window edge, WYSIWYG path matches the
+    /// system exactly), so frozen modals/windows looked pasted-on. The WYSIWYG
+    /// call includes shadows, omits the cursor, and returns native backing scale.
     static func capture(screen: NSScreen, sourceRect: CGRect? = nil) async throws -> CGImage {
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
-        guard let screenNumber,
-              let display = content.displays.first(where: { $0.displayID == screenNumber.uint32Value })
-        else { throw CaptureError.displayNotFound }
+        let local = sourceRect ?? CGRect(origin: .zero, size: screen.frame.size)
+        return try await SCScreenshotManager.captureImage(in: cgGlobalRect(for: local, on: screen))
+    }
 
-        let rect = sourceRect ?? CGRect(x: 0, y: 0, width: display.width, height: display.height)
-        let scale = screen.backingScaleFactor
-
-        let config = SCStreamConfiguration()
-        config.sourceRect = rect
-        config.width = Int(rect.width * scale)
-        config.height = Int(rect.height * scale)
-        config.showsCursor = false
-        config.captureResolution = .best
-
-        let filter = SCContentFilter(display: display, excludingWindows: [])
-        return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+    /// Converts a screen-local, top-left-origin points rect to the CG global
+    /// (primary-display top-left origin, y-down) space `captureImage(in:)` expects.
+    private static func cgGlobalRect(for local: CGRect, on screen: NSScreen) -> CGRect {
+        // NSScreen frames are global Cocoa coords (primary bottom-left origin,
+        // y-up); screens[0] is always the primary. X is shared between spaces.
+        let primaryMaxY = NSScreen.screens[0].frame.maxY
+        return CGRect(x: screen.frame.minX + local.minX,
+                      y: (primaryMaxY - screen.frame.maxY) + local.minY,
+                      width: local.width,
+                      height: local.height)
     }
 
     /// Captures every attached screen (system ⌘⇧3 behavior: one image per display).

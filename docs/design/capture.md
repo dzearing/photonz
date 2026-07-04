@@ -96,8 +96,19 @@ The `NSStatusItem` menu is the always-available entry point:
      = true` ran after the level assignment and reset it to `.floating` (3),
      which beats normal windows but loses to modal dialogs (level 8) — the
      "selection appears behind the modal" bug. Verified via a CGWindowList
-     z-dump; note SCK screenshots EXCLUDE shielding-level windows, so verify
-     stacking with the window list, not pixels.
+     z-dump; note the filter-based SCK screenshot API EXCLUDED shielding-level
+     windows, so verify stacking with the window list, not pixels.
+   - **Window shadows (fixed 2026-07-03).** `ScreenCapturer` uses the WYSIWYG
+     `SCScreenshotManager.captureImage(in:)` API (macOS 15.2+), NOT the
+     filter-based `captureImage(contentFilter:configuration:)` one. The filter
+     path re-composites windows from their individual buffers and synthesizes
+     NO window shadows (measured Δ0 luma under every window edge vs the
+     `screencapture` CLI's Δ57 normal / Δ123 modal) — frozen modals looked
+     pasted-on. The WYSIWYG call matches the system screenshot exactly:
+     shadows included, cursor excluded, native backing scale. Its rect is CG
+     global top-left coordinates — `cgGlobalRect(for:on:)` converts from the
+     screen-local top-left rects callers pass (conversion verified pixel-exact
+     with a known-position window).
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you
