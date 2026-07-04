@@ -247,7 +247,7 @@ struct EditorView: View {
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             toolButton(.measure, "ruler", "Measure", "m")
             toolButton(.fill, help: "Fill", key: "g") {
-                PaintBucketIcon().frame(width: 19, height: 17)
+                PaintBucketIcon().frame(width: 22, height: 21)
             }
         }
         .buttonStyle(.borderless)

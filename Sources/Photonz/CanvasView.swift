@@ -301,8 +301,9 @@ final class CanvasNSView: NSView {
     private var isCanvasSelected = false
     /// In-flight canvas-boundary resize: the proposed rect may grow in any
     /// direction (negative origin = space added on the left/top); commit maps
-    /// it to setCanvasSize + the anchor opposite the dragged handle.
-    private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect)?
+    /// it to setCanvasSize + the anchor opposite the dragged handle — or
+    /// `.center` when ⇧ made the drag symmetric (content stays centered).
+    private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect, centered: Bool)?
 
     /// Suppresses edge captures on the axis perpendicular to decisive motion.
     /// The suppressed axis falls back to the pixel grid.
@@ -747,7 +748,7 @@ final class CanvasNSView: NSView {
         if isCanvasSelected, tool == .select,
            let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
                                     zoom: viewport.zoom, screenTolerance: 8) {
-            canvasResizeDrag = (handle, CGRect(origin: .zero, size: viewport.documentSize))
+            canvasResizeDrag = (handle, CGRect(origin: .zero, size: viewport.documentSize), false)
             refreshOverlays()
             return
         }
@@ -994,10 +995,23 @@ final class CanvasNSView: NSView {
             }
             refreshOverlays()
         } else if var drag = canvasResizeDrag {
-            drag.rect = Handles.resize(CGRect(origin: .zero, size: viewport.documentSize),
-                                       dragging: drag.handle, to: p,
-                                       preserveAspect: event.modifierFlags.contains(.shift),
-                                       minSize: 16)
+            let base = CGRect(origin: .zero, size: viewport.documentSize)
+            var rect = Handles.resize(base, dragging: drag.handle, to: p,
+                                      preserveAspect: false, minSize: 16)
+            // ⇧ resizes symmetrically around the center: the opposite edge(s)
+            // mirror the drag, so content stays centered on commit.
+            drag.centered = event.modifierFlags.contains(.shift)
+            if drag.centered {
+                let dx = drag.handle.movesMaxX ? rect.maxX - base.maxX
+                    : (drag.handle.movesMinX ? base.minX - rect.minX : 0)
+                let dy = drag.handle.movesMaxY ? rect.maxY - base.maxY
+                    : (drag.handle.movesMinY ? base.minY - rect.minY : 0)
+                let width = max(16, base.width + 2 * dx)
+                let height = max(16, base.height + 2 * dy)
+                rect = CGRect(x: base.midX - width / 2, y: base.midY - height / 2,
+                              width: width, height: height)
+            }
+            drag.rect = rect
             canvasResizeDrag = drag
             refreshOverlays()
         } else if var drag = marquee {
@@ -1108,7 +1122,7 @@ final class CanvasNSView: NSView {
             canvasResizeDrag = nil
             let size = CGSize(width: drag.rect.width.rounded(), height: drag.rect.height.rounded())
             if size != viewport.documentSize {
-                onCanvasResize(size, .fixing(oppositeOf: drag.handle))
+                onCanvasResize(size, drag.centered ? .center : .fixing(oppositeOf: drag.handle))
             }
             refreshOverlays()
         } else if let drag = marquee {
