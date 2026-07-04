@@ -805,44 +805,64 @@ extension Color {
     }
 }
 
-/// A paint-bucket glyph (SF Symbols has no bucket): a tilted bucket — rotated
-/// rounded square with a short rim tab — pouring a filled drop at its lip.
-/// Draws in the inherited foreground style so it matches the SF tool icons.
+/// A Photoshop-style paint-bucket glyph (SF Symbols has no bucket): a tilted
+/// bucket — elliptical rim, tapered body, small back handle loop — pouring
+/// left, with a filled drop at the lip. Designed in a 20-unit box (numbers
+/// visually tuned against a rendered preview); draws in the inherited
+/// foreground style to match the SF tool icons.
 struct PaintBucketIcon: View {
     var body: some View {
         GeometryReader { proxy in
-            let w = proxy.size.width, h = proxy.size.height
-            let tilt = CGFloat.pi / 4
-            let side = min(w, h) * 0.62
-            let center = CGPoint(x: w * 0.40, y: h * 0.52)
+            let s = min(proxy.size.width, proxy.size.height) / 20
+            let dx = (proxy.size.width - 20 * s) / 2   // center the design box
+            let tilt = -CGFloat.pi / 4.4
+            let rotate = CGAffineTransform(translationX: dx + 11.6 * s, y: 9.6 * s)
+                .rotated(by: tilt)
 
-            // Bucket body: rounded square rotated 45° (diamond).
-            let body = Path(roundedRect: CGRect(x: -side / 2, y: -side / 2,
-                                                width: side, height: side),
-                            cornerRadius: side * 0.18)
-                .applying(CGAffineTransform(translationX: center.x, y: center.y)
-                    .rotated(by: tilt))
+            let rim = Path(ellipseIn: CGRect(x: -4.4 * s, y: -5.4 * s,
+                                             width: 8.8 * s, height: 3.0 * s))
+                .applying(rotate)
 
-            // Pouring drop off the bucket's lower-right lip.
-            let dropTip = CGPoint(x: w * 0.86, y: h * 0.52)
-            let dropR = min(w, h) * 0.14
-            let dropCenter = CGPoint(x: dropTip.x, y: dropTip.y + dropR * 1.5)
+            let bucket: Path = {
+                var p = Path()
+                p.move(to: CGPoint(x: -4.4 * s, y: -3.9 * s))
+                p.addLine(to: CGPoint(x: -3.1 * s, y: 4.2 * s))
+                p.addQuadCurve(to: CGPoint(x: 3.1 * s, y: 4.2 * s),
+                               control: CGPoint(x: 0, y: 5.8 * s))
+                p.addLine(to: CGPoint(x: 4.4 * s, y: -3.9 * s))
+                return p
+            }().applying(rotate)
+
+            let handle: Path = {
+                var p = Path()
+                p.addArc(center: CGPoint(x: 3.4 * s, y: -5.6 * s), radius: 2.4 * s,
+                         startAngle: .radians(.pi * 1.05), endAngle: .radians(.pi * 1.95),
+                         clockwise: false)
+                return p
+            }().applying(rotate)
+
+            // Filled drop just off the pouring lip (which lands at ≈(5.1, 9.3)).
+            let dTip = CGPoint(x: dx + 3.9 * s, y: 11.0 * s)
+            let dropR = 1.7 * s
+            let dCenter = CGPoint(x: dTip.x, y: dTip.y + dropR * 1.4)
             let drop: Path = {
                 var p = Path()
-                p.move(to: dropTip)
-                p.addQuadCurve(to: CGPoint(x: dropCenter.x - dropR, y: dropCenter.y),
-                               control: CGPoint(x: dropCenter.x - dropR, y: dropTip.y + dropR * 0.4))
-                p.addArc(center: dropCenter, radius: dropR,
+                p.move(to: dTip)
+                p.addQuadCurve(to: CGPoint(x: dCenter.x - dropR, y: dCenter.y),
+                               control: CGPoint(x: dCenter.x - dropR, y: dTip.y + dropR * 0.35))
+                p.addArc(center: dCenter, radius: dropR,
                          startAngle: .degrees(180), endAngle: .degrees(0), clockwise: true)
-                p.addQuadCurve(to: dropTip,
-                               control: CGPoint(x: dropCenter.x + dropR, y: dropTip.y + dropR * 0.4))
+                p.addQuadCurve(to: dTip,
+                               control: CGPoint(x: dCenter.x + dropR, y: dTip.y + dropR * 0.35))
                 p.closeSubpath()
                 return p
             }()
 
             ZStack {
-                body.stroke(style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
-                drop.fill(style: FillStyle())
+                bucket.stroke(style: StrokeStyle(lineWidth: 1.15 * s, lineCap: .round, lineJoin: .round))
+                rim.stroke(style: StrokeStyle(lineWidth: 1.15 * s, lineCap: .round, lineJoin: .round))
+                handle.stroke(style: StrokeStyle(lineWidth: 1.0 * s, lineCap: .round))
+                drop.fill()
             }
         }
     }
