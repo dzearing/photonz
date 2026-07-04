@@ -246,7 +246,9 @@ struct EditorView: View {
             .help("Resize Image (⌥⌘I)")
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             toolButton(.measure, "ruler", "Measure", "m")
-            toolButton(.fill, "drop.fill", "Fill", "g")
+            toolButton(.fill, help: "Fill", key: "g") {
+                PaintBucketIcon().frame(width: 19, height: 17)
+            }
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
@@ -747,13 +749,19 @@ struct EditorView: View {
 
     private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,
                             _ key: KeyEquivalent) -> some View {
+        toolButton(tool, help: help, key: key) {
+            Image(systemName: symbol).font(.system(size: 15, weight: .medium))
+        }
+    }
+
+    private func toolButton(_ tool: Tool, help: String, key: KeyEquivalent,
+                            @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
         let isLocked = isActive && editorState.toolLocked
         return Button {
             editorState.setTool(tool)
         } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 15, weight: .medium))
+            icon()
                 .foregroundStyle(isActive ? Color.white : Color.primary)
                 .frame(width: 28, height: 28)
                 .background {
@@ -794,5 +802,48 @@ extension Color {
     init(hex: String) {
         let rgba = RGBA(hex: hex) ?? RGBA(r: 1, g: 0, b: 0)
         self.init(.sRGB, red: rgba.r, green: rgba.g, blue: rgba.b, opacity: rgba.a)
+    }
+}
+
+/// A paint-bucket glyph (SF Symbols has no bucket): a tilted bucket — rotated
+/// rounded square with a short rim tab — pouring a filled drop at its lip.
+/// Draws in the inherited foreground style so it matches the SF tool icons.
+struct PaintBucketIcon: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let w = proxy.size.width, h = proxy.size.height
+            let tilt = CGFloat.pi / 4
+            let side = min(w, h) * 0.62
+            let center = CGPoint(x: w * 0.40, y: h * 0.52)
+
+            // Bucket body: rounded square rotated 45° (diamond).
+            let body = Path(roundedRect: CGRect(x: -side / 2, y: -side / 2,
+                                                width: side, height: side),
+                            cornerRadius: side * 0.18)
+                .applying(CGAffineTransform(translationX: center.x, y: center.y)
+                    .rotated(by: tilt))
+
+            // Pouring drop off the bucket's lower-right lip.
+            let dropTip = CGPoint(x: w * 0.86, y: h * 0.52)
+            let dropR = min(w, h) * 0.14
+            let dropCenter = CGPoint(x: dropTip.x, y: dropTip.y + dropR * 1.5)
+            let drop: Path = {
+                var p = Path()
+                p.move(to: dropTip)
+                p.addQuadCurve(to: CGPoint(x: dropCenter.x - dropR, y: dropCenter.y),
+                               control: CGPoint(x: dropCenter.x - dropR, y: dropTip.y + dropR * 0.4))
+                p.addArc(center: dropCenter, radius: dropR,
+                         startAngle: .degrees(180), endAngle: .degrees(0), clockwise: true)
+                p.addQuadCurve(to: dropTip,
+                               control: CGPoint(x: dropCenter.x + dropR, y: dropTip.y + dropR * 0.4))
+                p.closeSubpath()
+                return p
+            }()
+
+            ZStack {
+                body.stroke(style: StrokeStyle(lineWidth: 1.7, lineCap: .round, lineJoin: .round))
+                drop.fill(style: FillStyle())
+            }
+        }
     }
 }

@@ -652,3 +652,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User feedback on 16.11's toolbar: fg/bg unclear side by side; tools/colors/zoom should be separate bars; zoom should be a slider with a clickable % stop menu.
 - Toolbar is now three glass capsules in one GlassEffectContainer: **tools**, **fill colors**, **zoom**. Colors: foreground swatch top-left OVERLAPPING background bottom-right (Photoshop layout), swap arrows beside the pair (still X); each swatch opens the app's own HSB/eyedropper `ColorPickerPopover` (recents recorded). Zoom: log₂-scale slider (1/32…32×) + a monospaced % readout that's a Menu with 25/50/100/200/400/800% stops, Fit (⌘0) and Actual Size (⌘1); the old ±magnifier buttons are gone (⌘+/⌘− still work via the app menu). `EditorState.setZoom` exposes absolute zoom around the view center.
 - 585 tests green. Relaunched.
+
+## 2026-07-04 (later) — FG color drives new annotations; hand-drawn paint-bucket icon
+
+- **Current-color model (user request):** new text, rectangles, ellipses, lines, and arrows now draw in the current FOREGROUND color instead of per-shape sticky colors; rulers (measures) and highlights keep their own memory. Symmetrically, picking a color in the annotation style popover or text inspector updates the FG swatch — one "current color" everywhere. Width/arrowheads/fill/radius stay sticky per shape. Re-edited text keeps the layer's color (guard on `editingTextLayerID`).
+- **Bucket icon:** SF Symbols has no paint bucket (probed paintbucket/bucket variants — absent), so `PaintBucketIcon` draws one: a 45°-rotated rounded square with a filled pouring drop, stroked to match the SF tool icons. `toolButton` gained a ViewBuilder-icon variant.
+- 585 tests green. Relaunched.

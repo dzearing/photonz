@@ -592,7 +592,7 @@ final class EditorState {
     /// applied). Adds one annotation layer as a single undo step.
     func addAnnotation(from start: CGPoint, to end: CGPoint) {
         guard let shape = activeTool.annotationShape,
-              let content = annotationStyles.content(for: activeTool) else { return }
+              let content = activeAnnotationContent else { return }
         var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
@@ -752,8 +752,14 @@ final class EditorState {
     // MARK: - Annotation styling
 
     /// Styled content the active tool would draw, for the canvas drag preview.
+    /// New shapes draw in the CURRENT foreground color — the FG swatch is the
+    /// app-wide "current color" (16.12). Highlights keep their own memory
+    /// (black highlighter ink would be useless); width/heads/fill stay sticky
+    /// per shape.
     var activeAnnotationContent: AnnotationContent? {
-        annotationStyles.content(for: activeTool)
+        guard var content = annotationStyles.content(for: activeTool) else { return nil }
+        if content.shape != .highlight { content.colorHex = foregroundFillHex }
+        return content
     }
 
     /// The selected annotation layer when the select tool is active — the
@@ -767,13 +773,19 @@ final class EditorState {
     /// A swatch pick restyles the selected annotation (one undo step) when
     /// there is one; either way it becomes the default for new annotations.
     func setAnnotationColor(_ hex: String) {
+        var pickedShape = activeTool.annotationShape
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview() // a click-select's held sprite shows the old style
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
             annotationStyles.setColorHex(hex, forShape: shape)
+            pickedShape = shape
         } else {
             annotationStyles.setColorHex(hex, for: activeTool)
         }
+        // Picking a shape color makes it the app-wide current (foreground)
+        // color, so the next shape/text draws with it. Highlights stay a
+        // world of their own.
+        if pickedShape != .highlight { foregroundFillHex = hex }
         saveAnnotationStyles()
         recordRecentColor(hex: hex)
     }
@@ -1056,7 +1068,13 @@ final class EditorState {
 
     /// Styled (empty) content for the current text style; the canvas's inline
     /// editor mirrors it so what you type matches what commit rasterizes.
-    var activeTextContent: TextContent { textStyles.content() }
+    var activeTextContent: TextContent {
+        var content = textStyles.content()
+        // NEW text types in the current foreground color; re-edits keep the
+        // layer's own color (the session seeds the styles).
+        if editingTextLayerID == nil { content.colorHex = foregroundFillHex }
+        return content
+    }
 
     /// The selected text layer when the select tool is active — the properties
     /// panel edits its font face/size/weight/color (13.1) instead of only the
@@ -1110,6 +1128,7 @@ final class EditorState {
     func setTextColor(_ hex: String) {
         if let layer = selectedTextLayer { restyleSelectedText(layer, colorHex: hex) }
         textStyles.colorHex = hex
+        foregroundFillHex = hex // text color picks update the current color too
         saveTextStyles()
         recordRecentColor(hex: hex)
     }
@@ -1172,6 +1191,9 @@ final class EditorState {
             }
         } else {
             guard !isEmpty else { return }
+            // New text commits in the current foreground color (16.12).
+            var content = content
+            content.colorHex = foregroundFillHex
             let size = TextRasterizer.naturalSize(content, maxWidth: maxWidth,
                                                   minWidth: TextRasterizer.minimumTextWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
