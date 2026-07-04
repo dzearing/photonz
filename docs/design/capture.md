@@ -91,6 +91,13 @@ The `NSStatusItem` menu is the always-available entry point:
      records live (the overlay tears down before the stream starts).
      `animationBehavior = .none` + a disabled-actions CATransaction keep the
      freeze imperceptible — macOS's default panel fade reads as a visible flash.
+     **GOTCHA (fixed 2026-07-03):** assign `level` LAST when configuring the
+     panel — NSPanel property setters can silently rewrite it. `isFloatingPanel
+     = true` ran after the level assignment and reset it to `.floating` (3),
+     which beats normal windows but loses to modal dialogs (level 8) — the
+     "selection appears behind the modal" bug. Verified via a CGWindowList
+     z-dump; note SCK screenshots EXCLUDE shielding-level windows, so verify
+     stacking with the window list, not pixels.
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you
@@ -105,13 +112,15 @@ The `NSStatusItem` menu is the always-available entry point:
      and **Esc** is additionally caught via local **and** global `NSEvent` key
      monitors. Do not reintroduce `NSApp.activate` here.
 3. The result is added to `CaptureStore` (the persisted history) as a new entry.
-4. **Post-capture feedback = the history overlay itself** (revised 2026-06-21).
-   On capture/recording complete, the slide-down history overlay is shown with
-   the **newest entry highlighted** (accent ring + glow). The earlier corner
-   "Quick Access" toast (phase 11.7) was **removed** as redundant: it
-   auto-dismissed and wasn't recallable, whereas history is one place and
-   ⌘⇧H-recallable. Per-item actions (Copy / Save / Edit / Pin / Delete; for
-   videos Play / Save-Export) and drag-out live on the history cells.
+4. **Post-capture feedback = bottom-right toasts** (re-revised 2026-06-27;
+   `ToastController`). Each capture pops a small glass toast (thumbnail +
+   "Copied to clipboard") on its own borderless non-activating panel — gaps
+   between stacked toasts stay click-through. Holds 7s, fades 3s; hover pins it
+   open and reveals **Edit / Dismiss**; **double-click anywhere on the toast =
+   Edit** (2026-07-03). Toasts must never take key focus (`canBecomeKey =
+   false`) — stealing key from whatever the user is typing in caused stray
+   keystrokes + beeps. The slide-down history overlay remains the recallable
+   home (⌘⇧H) with the newest entry ring-highlighted.
 5. Editing routes through the multi-window editor (below).
 
 Screen Recording permission (TCC) is requested user-initiated from the agent;
@@ -133,8 +142,11 @@ A **global, top-of-screen overlay**, not editor chrome.
   Per-item actions are **hidden until the item is hovered** (they're noisy
   otherwise) and each shows a small tooltip **below** the row so it never covers
   the thumbnail: **Copy**, **Edit** / **Pin** (images) or **Play** / **Export
-  GIF·HEIC** (videos), **Delete**, plus drag-the-file-out. The newest item is
-  ring-highlighted right after a capture.
+  GIF·HEIC** (videos), **Delete**, plus drag-the-file-out. **Double-clicking an
+  image tile opens it in the editor** (2026-07-03; videos open on a single
+  click — the tap recognizers are installed conditionally so Play never waits
+  out a double-click window). The newest item is ring-highlighted right after
+  a capture.
 - The phase-9 `HistoryPanel` inside `EditorView` and `capture.isHistoryVisible`
   are removed.
 
@@ -169,10 +181,30 @@ library or index. The folder is the single source of truth:
 - **Edit = open the file.** Captures are plain files, so Edit just opens
   `EditorWindowID.file(url)` (re-opening the same URL focuses the existing
   window — no separate `.capture` id).
-- **Round-trip back to history** (phase 11.5): "Save to Capture History" on a
-  file opened from the capture folder offers **Override** (rewrite that file) or
-  **Save as new** (a new file in the folder). `CaptureStore.replace(at:)` /
-  `add` handle it; the prompt is app-side.
+- **Round-trip back to history** (phase 11.5, extended 2026-07-03):
+  - **⌘S saves back in place.** A window opened from a capture file (and never
+    saved as a `.photonz` package) writes the flattened composite straight back
+    into that file via `CaptureStore.replace` — history items are real files,
+    so Save means "save to where it came from". No prompt.
+  - **⌘⌥S "Save to Capture History"** keeps the choice: **Override** vs **Save
+    as new**; `AppCoordinator.saveEditedCapture` returns the landed URL so the
+    editor adopts it as its new source.
+  - **Layered sidecar (the "don't lose my layers" model).** Saving to a PNG
+    flattens, so every save-to-capture ALSO auto-writes the full layered
+    document as a `.photonz` package sidecar with the same basename
+    (`EditorState.sidecarURL(for:)`). Re-opening the capture prefers the
+    sidecar — layers come back editable. A **staleness guard** (sidecar mtime ≥
+    media mtime − 2s) ignores the sidecar when the PNG was rewritten by
+    something else. `.photonz` isn't a media extension, so sidecars never show
+    in history; deleting a capture (or Clear All) trashes its sidecar too.
+  - **Unsaved-changes protection** (2026-07-03): editor windows track a
+    `savedDocument` baseline (value equality — undo back to the last save reads
+    clean). Closing a dirty window shows the standard Save…/Cancel/Don't Save
+    sheet via a **window-delegate proxy** (`WindowCloseGuard` — SwiftUI has no
+    close veto; the proxy forwards everything else to SwiftUI's own delegate),
+    with the edited dot in the close button. ⌘Q sweeps all dirty windows:
+    Review Changes… / Cancel / Discard and Quit (`applicationShouldTerminate`
+    + `.terminateLater`).
 
 ## Updater
 

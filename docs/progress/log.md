@@ -563,3 +563,49 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 
 - User report: selected rect looks rounded while the inspector's Corner Radius reads 0. The inspector was RIGHT — the rasterizer strokes all shapes with round line joins, so a thick (17pt) stroke rounds the outer corners by ~strokeWidth/2 on its own; with the new fill matching the stroke color the whole shape read as rounded. Fix: rectangles stroke with MITER joins (radius 0 = truly sharp; a real cornerRadius rounds the path itself) in both the rasterizer and the CAShapeLayer drag preview. Lines/arrows keep round caps/joins. Pixel test: zeroRadiusRectangleHasSharpCorners.
 - 549 tests green. Relaunched.
+
+## 2026-07-03 (later) — Toast: double-click to edit
+
+- Double-clicking anywhere on a post-capture toast opens the capture in the editor (same path as the hover Edit button, and it dismisses the toast). `contentShape` on the glass card makes the whole surface the target; the tap gesture sits under the hover-controls overlay so Edit/Dismiss buttons keep priority. No single-tap action exists on toasts, so no gesture-delay tradeoff.
+- 549 tests green. Relaunched.
+
+## 2026-07-03 (later) — Corner radius remembered per shape; Photoshop-style layer commands
+
+- **Settings memory bug (user report):** editing a rect's corner radius then drawing a new rect started at 0. `ShapeDefaults` never had a `cornerRadius` field and `content(for:)` didn't seed it; `commitAnnotationRestyle` also never persisted it. Added the field (decodeIfPresent, default 0), the accessors, seeding, and the commit write-back. Color/width/head/fill already wrote back correctly.
+- **Layer commands (user request):** Layer menu now carries the Photoshop set — New Layer via Copy **⌘J** (promotes the marquee if present, else duplicates the layer), Duplicate ⌘D, **Merge Down ⌘E** (selected layer into the one below, or the marquee multi-selection into one), Bring to Front **⌘⇧]** / Bring Forward **⌘]** / Send Backward **⌘[** / Send to Back **⌘⇧[**, Delete ⌘⌫. Export moved **⌘E → ⇧⌘E** to free the PS shortcut. Layers-panel context menu mirrors it all + Rename/Hide/Lock, acting on the clicked row.
+- Merge Down composites ONLY the participants over transparency (temp doc → `rasterize(region:)`), region = transformed bounds ∪ style previewPadding clamped to canvas; result takes the bottom layer's slot/name/lock (merging into the locked Background works and stays locked); requires visible participants; one undo step. Restacking floors at the locked Background (nothing slides beneath it). Caveat noted: a merged zoom callout bakes against only its co-participants, not the full backdrop.
+- 550 tests green (+1: corner-radius memory). Relaunched.
+
+## 2026-07-03 (later) — Shadow Size slider: 0–80 (was −10…20)
+
+- User: not enough range and negative size "makes no sense." The Size slider drives `ShadowStyle.spread`; the negative half was the model's erode semantics leaking into the UI. Range now 0...80. Model still accepts negative spread (old documents render unchanged); only the control stops offering it.
+- 550 tests green. Relaunched.
+
+## 2026-07-03 (later) — ⌘C without a selected layer copies the marquee/composite
+
+- User: ⌘A → ⌘C → ⌘V did nothing. `copySelectedLayer` bailed without a `selectedLayerID` — the marquee never fed ⌘C. Now ⌘C with no layer selected flattens the marquee region (or the whole canvas with no marquee) from the composite via `rasterize(region:)` and puts BOTH a Photonz image-layer payload (⌘V lands it as a layer over the copied spot, +16pt offset) and a plain PNG (pastes into other apps) on the pasteboard. Selected-layer copy unchanged; ⌘X still requires a layer.
+- 550 tests green. Relaunched.
+
+## 2026-07-03 (later) — Standard save/discard confirmation on window close
+
+- User: closing an edited window lost work silently. Added dirty tracking to EditorState: `savedDocument` baseline (set on installDocument + package save + Save-to-Capture-History) with `hasUnsavedChanges` = value inequality — undoing back to the last save reads clean. New `WindowCloseGuard` (NSViewRepresentable) installs a `CloseGuardDelegate` PROXY as the window delegate: it answers `windowShouldClose` (clean → defer to SwiftUI's original decision; dirty → standard Save…/Cancel/Don't Save sheet) and forwards every other selector to SwiftUI's original delegate via responds/forwardingTarget, retained by objc association (delegate slot is weak). Save path re-checks dirtiness (a cancelled Save-As keeps the window open); Don't Save uses window.close() (bypasses windowShouldClose, no re-ask). Close button shows the standard edited dot via isDocumentEdited.
+- GOTCHA: AppKit delegate protocols are @MainActor in Swift 6 — the proxy is @MainActor with `nonisolated` responds/forwardingTarget overrides and `nonisolated(unsafe)` storage for the original delegate.
+- NOT covered yet (follow-up): ⌘Q with dirty windows quits without asking (needs applicationShouldTerminate sweeping the window registry); the video editor window has no dirty tracking.
+- 550 tests green. Relaunched.
+
+## 2026-07-03 (later) — ⌘Q protects unsaved windows
+
+- `applicationShouldTerminate`: sweeps `CloseGuards.dirtyEditorWindows()` (the close-guard proxies already associated with each window expose their editor). Clean → quit. Dirty → activate (quit often comes from the non-activating menu-bar menu) + standard alert: Review Changes… (walks each dirty window front-to-back through its save sheet via `.terminateLater` + `reply(toApplicationShouldTerminate:)`; any Cancel aborts the quit) / Cancel / Discard Changes and Quit. `presentSaveConfirmation` gained a completion for the review chain.
+- 550 tests green. Relaunched. Video editor windows still untracked (no dirty model there yet).
+
+## 2026-07-03 (later) — ⌘S saves back into the source history capture
+
+- User: editing a history item then ⌘S offered "Untitled" Save As. History items are real files; ⌘S on a document opened from the capture folder (and never saved as a package) now writes the flattened composite back into that file via `CaptureStore.replace` (cache + reload handled) and marks the window clean. Falls back to Save As when the entry was deleted meanwhile. ⌘⌥S keeps offering Override/Save-as-new; ⇧⌘S untouched. Save As default name now derives from the opened file (`Screenshot….photonz`) or the window's Untitled-N.
+- EditorState holds a weak `captureCenter` captured at seed time.
+- 550 tests green. Relaunched.
+
+## 2026-07-03 (later) — Layered sidecar: saves to PNG no longer lose the layers
+
+- User: saving flattens and "we lose all layer metadata... auto save some kind of additional rich format file like psd next to the png." Implemented exactly that with our own rich format: every save-to-capture (⌘S save-back AND ⌘⌥S override/save-as-new) also writes the layered document as a `.photonz` package sidecar with the same basename (`EditorState.sidecarURL(for:)`). Opening a capture prefers the sidecar when it exists and isn't stale (sidecar mtime ≥ media mtime − 2s — a PNG rewritten by something else wins), with `documentURL` kept nil so ⌘S still means "save back to the capture + refresh sidecar". `saveEditedCapture` now returns the landed URL; `savedToCaptureHistory(at:)` adopts it (save-as-new re-targets the window's source). Sidecars never appear in history (`.photonz` isn't a media extension) and are trashed with their capture (remove/clearAll).
+- Docs synced: capture.md (freeze-frame level gotcha, toasts re-documented + double-click, ⌘S save-back + sidecar + close guards), tools.md (fill, miter joins, per-shape memory incl. radius), layers.md (multi-select, PS layer commands, shadow Size range), phase-16 16.8 done, overview date.
+- 550 tests green. Relaunched.
