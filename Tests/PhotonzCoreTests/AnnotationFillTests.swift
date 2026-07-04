@@ -43,6 +43,19 @@ struct AnnotationFillTests {
         #expect(cleared.annotation?.fillColorHex == nil)
     }
 
+    @Test func stylesRememberCornerRadiusAndSeedNewRectangles() throws {
+        var styles = AnnotationStyles()
+        #expect(styles.cornerRadius(forShape: .rectangle) == 0, "sharp by default")
+
+        styles.setCornerRadius(14, forShape: .rectangle)
+        #expect(styles.content(for: .rectangle)?.cornerRadius == 14,
+                "the next rectangle reuses the last-touched radius")
+
+        let decoded = try JSONDecoder().decode(AnnotationStyles.self,
+                                               from: JSONEncoder().encode(styles))
+        #expect(decoded.cornerRadius(forShape: .rectangle) == 14)
+    }
+
     @Test func stylesRememberFillPerShapeAndSeedNewContent() throws {
         var styles = AnnotationStyles()
         #expect(styles.fillColorHex(forShape: .rectangle) == nil, "no fill by default")
