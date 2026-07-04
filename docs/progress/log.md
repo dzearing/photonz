@@ -658,3 +658,10 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - **Current-color model (user request):** new text, rectangles, ellipses, lines, and arrows now draw in the current FOREGROUND color instead of per-shape sticky colors; rulers (measures) and highlights keep their own memory. Symmetrically, picking a color in the annotation style popover or text inspector updates the FG swatch — one "current color" everywhere. Width/arrowheads/fill/radius stay sticky per shape. Re-edited text keeps the layer's color (guard on `editingTextLayerID`).
 - **Bucket icon:** SF Symbols has no paint bucket (probed paintbucket/bucket variants — absent), so `PaintBucketIcon` draws one: a 45°-rotated rounded square with a filled pouring drop, stroked to match the SF tool icons. `toolButton` gained a ViewBuilder-icon variant.
 - 585 tests green. Relaunched.
+
+## 2026-07-04 (session end) — Phase 17 planned: Photoshop-style region selection
+
+- User's next priority, captured in `phase-17.json` before a context clear: box/ellipse/magic-wand REGION selection with ⇧ add / ⌥ subtract / ⇧⌥ intersect, edge-map snapping, marching ants for arbitrary shapes; region SUPERSEDES layer ops (fill/⌫/copy target the region); ⌘N = new empty layer that PRESERVES the selection so you can fill on it (⌘N currently = New from Clipboard — remap to ⌥⌘N, confirm with user).
+- Design direction recorded in the phase file: path-based `SelectionRegion` (CGPath + macOS-13 path booleans — SPIKE their correctness first), wand = flood fill → marching-squares tracer → path, so everything composes; today's rect `EditorState.selection` and all its consumers (promote, blur-behind, ⌘C, multi-select containment, ants) migrate onto it.
+- Also this session (after the fill kit): toolbar split into tools/colors/zoom bars, PS diagonal FG/BG swatches (centered fix), FG as the app-wide current color for new shapes/text, hand-drawn paint-bucket glyph (iterated visually; sized up), ⇧ canvas resize = center-anchored.
+- 585 tests green; everything pushed through 77b51e7. Awaiting user verify: 16.9 collage layer, 16.10 canvas pseudo-layer, 16.11 fill kit + these toolbar changes.
