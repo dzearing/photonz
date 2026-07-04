@@ -30,7 +30,6 @@ final class EditorState {
     var isCanvasSizeDialogPresented = false
     var isLayersPanelVisible = true
     var isExportDialogPresented = false
-    var isCollageDialogPresented = false
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -1236,40 +1235,108 @@ final class EditorState {
 
     var canArrangeCollage: Bool { collageLayerIDs.count >= 2 }
 
-    /// Arranges `collageLayerIDs` into cells in ONE undo step: optional canvas
-    /// reformat, optional solid backdrop layer inserted just below the lowest
-    /// participant, then the non-destructive crop+frame layout (Collage.apply).
-    func arrangeCollage(template: CollageTemplate, gutter: CGFloat,
-                        canvasSize: CGSize?, backgroundColor: CGColor?) {
-        let ids = collageLayerIDs
+    /// "Arrange in Collage": absorbs `collageLayerIDs` into ONE new collage
+    /// layer (their refs become slots in reading order, frame = the union of
+    /// their frames, the source layers are removed) in one undo step, then
+    /// selects it. The collage is live: resize reflows, slots swap by drag,
+    /// photos drop in from history/Finder/other layers.
+    func arrangeSelectionAsCollage() {
+        guard let document else { return }
+        let ids = Set(collageLayerIDs)
         guard ids.count >= 2 else { return }
         discardDragPreview()
-        let backgroundRef = backgroundColor.flatMap { Self.solidImage(color: $0) }
-            .map { store.register($0) }
+        let participants = document.layers.filter { ids.contains($0.id) }
+        guard let collageLayer = Collage.layer(absorbing: participants),
+              let topIndex = document.layers.lastIndex(where: { ids.contains($0.id) }) else { return }
+        // The collage takes the TOP participant's stacking slot (indices below
+        // it shift down by the number of removed participants beneath it).
+        let insertIndex = topIndex - (participants.count - 1)
+        selectedLayerID = nil
         perform { doc in
-            Collage.apply(to: &doc, ids: ids, template: template,
-                          gutter: gutter, canvasSize: canvasSize)
-            if let backgroundRef {
-                let idSet = Set(ids)
-                let index = doc.layers.firstIndex { idSet.contains($0.id) } ?? doc.layers.count
-                doc.addLayer(Layer(name: "Collage Background",
-                                   content: .image(backgroundRef),
-                                   frame: CGRect(origin: .zero, size: doc.canvasSize)),
-                             at: index)
+            doc.removeLayers(ids: ids)
+            doc.addLayer(collageLayer, at: insertIndex)
+        }
+        selectedLayerID = collageLayer.id
+    }
+
+    /// Creates an empty 2×2 collage layer centered on the canvas.
+    func newEmptyCollageLayer() {
+        guard let document else { return }
+        discardDragPreview()
+        let canvas = document.canvasSize
+        let size = CGSize(width: (canvas.width * 0.6).rounded(), height: (canvas.height * 0.6).rounded())
+        let frame = CGRect(x: ((canvas.width - size.width) / 2).rounded(),
+                           y: ((canvas.height - size.height) / 2).rounded(),
+                           width: size.width, height: size.height)
+        let layer = Collage.layer(content: CollageContent(slots: [CollageSlot(), CollageSlot(),
+                                                                  CollageSlot(), CollageSlot()]),
+                                  frame: frame)
+        perform { $0.addLayer(layer) }
+        selectedLayerID = layer.id
+    }
+
+    /// A file dropped onto a collage cell: decode and fill that slot.
+    func dropImage(at url: URL, intoCollage collageID: UUID, slot: Int) {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+        fillCollageSlot(collageID: collageID, slot: slot, image: image)
+    }
+
+    /// Fills a collage slot with a new image (a history/Finder drop).
+    func fillCollageSlot(collageID: UUID, slot: Int, image: CGImage) {
+        let ref = store.register(image)
+        perform { doc in
+            doc.updateLayer(id: collageID) { layer in
+                if var content = layer.collage {
+                    content.fill(slot: slot, with: ref)
+                    layer.content = .collage(content)
+                }
             }
         }
     }
 
-    /// A tiny solid bitmap; the layer frame stretches it over the canvas.
-    private static func solidImage(color: CGColor) -> CGImage? {
-        guard let context = CGContext(data: nil, width: 8, height: 8,
-                                      bitsPerComponent: 8, bytesPerRow: 32,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        context.setFillColor(color)
-        context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
-        return context.makeImage()
+    /// Drops an existing photo layer into a collage slot: the layer's ref
+    /// moves into the slot and the layer disappears — one undo step.
+    func absorbLayer(id: UUID, intoCollage collageID: UUID, slot: Int) {
+        guard id != collageID,
+              let ref = document?.layers.first(where: { $0.id == id })?.imageRef else { return }
+        discardDragPreview()
+        if selectedLayerID == id { selectedLayerID = nil }
+        perform { doc in
+            doc.removeLayers(ids: [id])
+            doc.updateLayer(id: collageID) { layer in
+                if var content = layer.collage {
+                    content.fill(slot: slot, with: ref)
+                    layer.content = .collage(content)
+                }
+            }
+        }
+        selectedLayerID = collageID
+    }
+
+    /// Swaps two slots' photos (drag between cells).
+    func swapCollageSlots(collageID: UUID, _ i: Int, _ j: Int) {
+        guard i != j else { return }
+        perform { doc in
+            doc.updateLayer(id: collageID) { layer in
+                if var content = layer.collage {
+                    content.swapSlots(i, j)
+                    layer.content = .collage(content)
+                }
+            }
+        }
+    }
+
+    /// Inspector mutations, each one undo step.
+    func updateCollage(layerID: UUID, _ mutate: (inout CollageContent) -> Void) {
+        perform { doc in
+            doc.updateLayer(id: layerID) { layer in
+                if var content = layer.collage {
+                    mutate(&content)
+                    layer.content = .collage(content)
+                }
+            }
+        }
     }
 
     // MARK: - Merge down (Photoshop ⌘E)

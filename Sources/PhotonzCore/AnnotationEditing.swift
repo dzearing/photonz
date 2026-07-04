@@ -47,7 +47,7 @@ extension Layer {
         switch content {
         case .text: true
         case .annotation, .measure: !hasEndpointHandles
-        case .image, .zoomCallout: true
+        case .image, .zoomCallout, .collage: true
         }
     }
 

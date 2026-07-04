@@ -146,6 +146,7 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case annotation(AnnotationContent)
     case zoomCallout(ZoomCalloutContent)
     case measure(MeasureContent)
+    case collage(CollageContent)
 }
 
 /// How a layer composites against the content below it.

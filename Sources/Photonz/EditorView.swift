@@ -81,12 +81,6 @@ struct EditorView: View {
         .sheet(isPresented: $editorState.isExportDialogPresented) {
             ExportDialog()
         }
-        .sheet(isPresented: $editorState.isCollageDialogPresented) {
-            if let document = editorState.document {
-                CollageDialog(canvasSize: document.canvasSize,
-                              itemCount: editorState.collageLayerIDs.count)
-            }
-        }
     }
 
     @ViewBuilder
@@ -131,7 +125,16 @@ struct EditorView: View {
                        onTextCancel: { editorState.cancelTextEdit() },
                        onDeleteLayer: { editorState.deleteLayer(id: $0) },
                        onDeleteLayers: { editorState.deleteLayers(ids: $0) },
-                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) })
+                       onDropImageURL: { editorState.addImageLayerOrOpen(at: $0) },
+                       onDropImageURLIntoCollage: { url, collageID, slot in
+                           editorState.dropImage(at: url, intoCollage: collageID, slot: slot)
+                       },
+                       onAbsorbLayerIntoCollage: { layerID, collageID, slot in
+                           editorState.absorbLayer(id: layerID, intoCollage: collageID, slot: slot)
+                       },
+                       onSwapCollageSlots: { collageID, from, to in
+                           editorState.swapCollageSlots(collageID: collageID, from, to)
+                       })
         } else {
             emptyState
         }

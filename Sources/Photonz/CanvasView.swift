@@ -71,6 +71,9 @@ struct CanvasView: NSViewRepresentable {
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL) -> Void
+    let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
+    let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
+    let onSwapCollageSlots: (UUID, Int, Int) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -114,6 +117,9 @@ struct CanvasView: NSViewRepresentable {
         view.onDeleteLayer = onDeleteLayer
         view.onDeleteLayers = onDeleteLayers
         view.onDropImageURL = onDropImageURL
+        view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
+        view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
+        view.onSwapCollageSlots = onSwapCollageSlots
     }
 }
 
@@ -146,6 +152,12 @@ final class CanvasNSView: NSView {
     /// document) rather than a SwiftUI `.dropDestination`, which doesn't reliably
     /// receive drops layered over an NSViewRepresentable.
     var onDropImageURL: ((URL) -> Void) = { _ in }
+    /// A file dropped straight into a collage slot: (url, collage layer, slot).
+    var onDropImageURLIntoCollage: ((URL, UUID, Int) -> Void) = { _, _, _ in }
+    /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
+    var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }
+    /// Two slots of one collage swapped by dragging: (collage, from, to).
+    var onSwapCollageSlots: ((UUID, Int, Int) -> Void) = { _, _, _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -167,6 +179,12 @@ final class CanvasNSView: NSView {
     private let rotateKnobLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
+    /// Dashed wells + a plus glyph over every EMPTY collage slot — editor
+    /// chrome only; empty slots render transparent in the composite.
+    private let collageWellsLayer = CAShapeLayer()
+    /// The collage slot a drag (file drop / photo layer / slot swap) is
+    /// currently over — filled accent highlight.
+    private let slotHighlightLayer = CAShapeLayer()
     /// Crop mode chrome: dimmed surround (even-odd fill), thirds grid,
     /// border, and handles.
     private let cropDimLayer = CAShapeLayer()
@@ -256,6 +274,10 @@ final class CanvasNSView: NSView {
     /// edges — dragging a leg up/down shouldn't flash vertical snap guides.
     private var dragMotion = CGVector.zero
     private var lastDragPoint: CGPoint?
+    /// In-flight swap drag: a filled slot of the SELECTED collage picked up.
+    private var slotDrag: (collageID: UUID, from: Int)?
+    /// The slot any eligible drag is currently hovering (drop/absorb/swap target).
+    private var hoverSlot: (collageID: UUID, index: Int)?
 
     /// Suppresses edge captures on the axis perpendicular to decisive motion.
     /// The suppressed axis falls back to the pixel grid.
@@ -499,13 +521,20 @@ final class CanvasNSView: NSView {
             layer?.addSublayer(flightLayer)
         }
 
-        for shape in [selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
+        for shape in [collageWellsLayer, slotHighlightLayer,
+                      selectionBaseLayer, selectionAntsLayer, layerOutlineLayer,
                       multiSelectOutlineLayer, snapGuideLayer, handlesLayer] {
             shape.fillColor = nil
             shape.lineWidth = 1
             shape.isHidden = true
             layer?.addSublayer(shape)
         }
+        collageWellsLayer.strokeColor = NSColor.secondaryLabelColor.withAlphaComponent(0.55).cgColor
+        collageWellsLayer.lineWidth = 1.5
+        collageWellsLayer.lineDashPattern = [6, 4]
+        slotHighlightLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        slotHighlightLayer.fillColor = NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor
+        slotHighlightLayer.lineWidth = 2
         // Crop chrome stacks above the composite and the selection chrome
         // (which is hidden in crop mode anyway).
         cropDimLayer.fillColor = CGColor(gray: 0, alpha: 0.55)
@@ -566,13 +595,35 @@ final class CanvasNSView: NSView {
     }
 
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-        droppedURL(sender) != nil ? .copy : []
+        guard droppedURL(sender) != nil else { return [] }
+        // Highlight the collage slot under the pointer — dropping there fills
+        // the slot instead of adding a floating layer.
+        hoverSlot = dropTarget(for: sender)
+        refreshOverlays()
+        return .copy
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        hoverSlot = nil
+        refreshOverlays()
     }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        hoverSlot = nil
+        refreshOverlays()
         guard let url = droppedURL(sender) else { return false }
-        onDropImageURL(url)
+        if url.pathExtension.lowercased() != "photonz", let target = dropTarget(for: sender) {
+            onDropImageURLIntoCollage(url, target.collageID, target.index)
+        } else {
+            onDropImageURL(url)
+        }
         return true
+    }
+
+    private func dropTarget(for sender: NSDraggingInfo) -> (collageID: UUID, index: Int)? {
+        guard let viewport else { return nil }
+        let p = viewport.documentPoint(fromView: convert(sender.draggingLocation, from: nil))
+        return collageSlotTarget(at: p)
     }
 
     private func droppedURL(_ sender: NSDraggingInfo) -> URL? {
@@ -734,6 +785,19 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
+        // A SELECTED collage exposes its filled cells for swap-by-drag (like
+        // measure corners: selection first, then inner manipulation). Grabbing
+        // a gutter, the backdrop margin, or an empty well still moves the layer,
+        // and anything drawn OVER the cell (hit-test winner) keeps the click.
+        if tool == .select, let id = selectedLayerID, let layer = selectedLayer,
+           !layer.isLocked, let content = layer.collage,
+           document?.hitTest(p, zoom: viewport.zoom)?.id == id,
+           let slot = Collage.slotIndex(at: p, in: layer),
+           content.slots[slot].imageRef != nil {
+            slotDrag = (id, slot)
+            refreshOverlays()
+            return
+        }
         if let hit = document?.hitTest(p, zoom: viewport.zoom) {
             onSelectLayer(hit.id)
             onDragBegin(hit.id)
@@ -868,7 +932,23 @@ final class CanvasNSView: NSView {
                                                         zoom: viewport.zoom)
                 onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
             }
+            // A dragged photo layer offers itself to collage slots under the
+            // pointer — releasing over the highlighted cell absorbs it.
+            if drag.moved, document?.layer(id: drag.layerID)?.imageRef != nil {
+                hoverSlot = collageSlotTarget(at: p, excluding: drag.layerID)
+            } else {
+                hoverSlot = nil
+            }
             moveDrag = drag
+            refreshOverlays()
+        } else if let drag = slotDrag {
+            // Swap drag: highlight the destination cell (same collage only).
+            if let target = collageSlotTarget(at: p), target.collageID == drag.collageID,
+               target.index != drag.from {
+                hoverSlot = target
+            } else {
+                hoverSlot = nil
+            }
             refreshOverlays()
         } else if var drag = marquee {
             drag.update(to: p)
@@ -953,12 +1033,26 @@ final class CanvasNSView: NSView {
             refreshOverlays()
         } else if let drag = moveDrag {
             moveDrag = nil
-            if drag.moved {
+            if drag.moved, let target = hoverSlot,
+               document?.layer(id: drag.layerID)?.imageRef != nil {
+                // Released over a collage cell: the photo layer becomes that
+                // slot's content instead of landing at the drop position.
+                hoverSlot = nil
+                onAbsorbLayerIntoCollage(drag.layerID, target.collageID, target.index)
+            } else if drag.moved {
                 let frame = CGRect(origin: drag.snapped.origin, size: drag.size)
                 selectedLayerFrame = frame
                 holdSpriteUntilRender = true
                 onFrameCommit(drag.layerID, frame)
             }
+            hoverSlot = nil
+            refreshOverlays()
+        } else if let drag = slotDrag {
+            slotDrag = nil
+            if let target = hoverSlot, target.collageID == drag.collageID {
+                onSwapCollageSlots(drag.collageID, drag.from, target.index)
+            }
+            hoverSlot = nil
             refreshOverlays()
         } else if let drag = marquee {
             marquee = nil
@@ -1267,6 +1361,65 @@ final class CanvasNSView: NSView {
         refreshCropDisplay()
         refreshPreviewSprite()
         refreshTextEditorDisplay()
+        refreshCollageChrome()
+    }
+
+    /// Editor-only collage chrome: dashed wells with a plus glyph over every
+    /// empty slot (drop discovery), and the accent highlight on whichever slot
+    /// an eligible drag currently hovers. Wells skip transformed collages —
+    /// axis-aligned chrome on a rotated layer would lie about the target.
+    private func refreshCollageChrome() {
+        guard let viewport, let document else {
+            collageWellsLayer.isHidden = true
+            slotHighlightLayer.isHidden = true
+            return
+        }
+        let wells = CGMutablePath()
+        for layer in document.layers
+        where layer.isVisible && layer.collage != nil && layer.transform.isIdentity {
+            guard let content = layer.collage else { continue }
+            let cells = Collage.slotFrames(for: content, in: layer.frame.size)
+            for (slot, cell) in zip(content.slots, cells) where slot.imageRef == nil {
+                let docRect = cell.offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
+                let rect = viewRect(forDocRect: docRect, in: viewport).insetBy(dx: 2, dy: 2)
+                guard rect.width > 8, rect.height > 8 else { continue }
+                let radius = min(6, rect.width / 2, rect.height / 2)
+                wells.addRoundedRect(in: rect, cornerWidth: radius, cornerHeight: radius)
+                let arm = min(10, rect.width / 4, rect.height / 4)
+                let center = CGPoint(x: rect.midX, y: rect.midY)
+                wells.move(to: CGPoint(x: center.x - arm, y: center.y))
+                wells.addLine(to: CGPoint(x: center.x + arm, y: center.y))
+                wells.move(to: CGPoint(x: center.x, y: center.y - arm))
+                wells.addLine(to: CGPoint(x: center.x, y: center.y + arm))
+            }
+        }
+        collageWellsLayer.path = wells
+        collageWellsLayer.isHidden = wells.isEmpty
+
+        if let hoverSlot, let layer = document.layer(id: hoverSlot.collageID),
+           let content = layer.collage {
+            let cells = Collage.slotFrames(for: content, in: layer.frame.size)
+            if cells.indices.contains(hoverSlot.index) {
+                let docRect = cells[hoverSlot.index].offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
+                slotHighlightLayer.path = CGPath(rect: viewRect(forDocRect: docRect, in: viewport),
+                                                 transform: nil)
+                slotHighlightLayer.isHidden = false
+                return
+            }
+        }
+        slotHighlightLayer.isHidden = true
+    }
+
+    /// The topmost visible, unlocked collage layer whose slot contains the
+    /// document-space point (gutters and backdrop margins don't count).
+    private func collageSlotTarget(at p: CGPoint,
+                                   excluding excluded: UUID? = nil) -> (collageID: UUID, index: Int)? {
+        guard let document else { return nil }
+        for layer in document.layers.reversed()
+        where layer.collage != nil && layer.id != excluded && layer.isVisible && !layer.isLocked {
+            if let slot = Collage.slotIndex(at: p, in: layer) { return (layer.id, slot) }
+        }
+        return nil
     }
 
     /// Crop chrome: dimmed surround (even-odd: document frame minus the crop

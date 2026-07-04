@@ -79,6 +79,7 @@ struct InspectorPanel: View {
             if layer.annotation != nil { set.insert(.annotation) }
             if case .text = layer.content { set.insert(.text) }
             if layer.measure != nil { set.insert(.measure) }
+            if layer.collage != nil { set.insert(.collage) }
         }
         return set
     }
@@ -104,6 +105,10 @@ struct InspectorPanel: View {
         case .measure:
             if let layer = selectedLayer, layer.measure != nil {
                 MeasureInspector(layer: layer)
+            }
+        case .collage:
+            if let layer = selectedLayer, layer.collage != nil {
+                CollageInspector(layer: layer)
             }
         case .effects:
             if let layer = selectedLayer {
@@ -149,6 +154,7 @@ enum InspectorSectionID: String, CaseIterable {
     case annotation
     case text
     case measure
+    case collage
     case effects
     case shadow
 
@@ -158,6 +164,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"
+        case .collage: "Collage"
         case .effects: "Effects"
         case .shadow: "Shadow"
         }
@@ -843,6 +850,81 @@ struct MeasureInspector: View {
 
     /// A compact labeled control matching the Effects panel: a small secondary
     /// caption above the control, full width.
+    @ViewBuilder private func field<Content: View>(_ label: String,
+                                                   @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            content()
+        }
+    }
+}
+
+// MARK: - Collage inspector (16.9)
+
+struct CollageInspector: View {
+    @Environment(EditorState.self) private var editorState
+    let layer: Layer
+
+    private var content: CollageContent? {
+        editorState.document?.layer(id: layer.id)?.collage
+    }
+
+    var body: some View {
+        if let c = content {
+            VStack(alignment: .leading, spacing: 8) {
+                field("Layout") {
+                    Picker("Layout", selection: Binding(
+                        get: { c.template },
+                        set: { value in editorState.updateCollage(layerID: layer.id) { $0.template = value } })) {
+                        ForEach(CollageTemplate.allCases, id: \.self) { Text($0.label).tag($0) }
+                    }
+                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                }
+                field("Photos") {
+                    Stepper("\(c.slots.count) slots", value: Binding(
+                        get: { c.slots.count },
+                        set: { value in editorState.updateCollage(layerID: layer.id) { $0.setSlotCount(value) } }),
+                        in: 1...12)
+                        .font(.caption).controlSize(.small)
+                }
+                field("Spacing") {
+                    Stepper("\(Int(c.gutter)) px", value: Binding(
+                        get: { Int(c.gutter) },
+                        set: { value in editorState.updateCollage(layerID: layer.id) { $0.gutter = CGFloat(value) } }),
+                        in: 0...200, step: 4)
+                        .font(.caption).controlSize(.small)
+                }
+                HStack {
+                    Toggle("Backdrop", isOn: Binding(
+                        get: { c.backdropColorHex != nil },
+                        set: { on in
+                            editorState.updateCollage(layerID: layer.id) {
+                                $0.backdropColorHex = on ? "#FFFFFF" : nil
+                            }
+                        }))
+                        .font(.caption).controlSize(.small)
+                    Spacer()
+                    if let hex = c.backdropColorHex {
+                        ColorPicker("Backdrop color", selection: Binding(
+                            get: { Color(hex: hex) },
+                            set: { color in
+                                if let newHex = color.hexString {
+                                    editorState.updateCollage(layerID: layer.id) { $0.backdropColorHex = newHex }
+                                }
+                            }),
+                            supportsOpacity: false)
+                            .labelsHidden().controlSize(.small)
+                    }
+                }
+                Text("Drop photos from the history or Finder into a cell; drag a photo layer onto a cell to absorb it; drag between cells to swap.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
+    }
+
     @ViewBuilder private func field<Content: View>(_ label: String,
                                                    @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 2) {

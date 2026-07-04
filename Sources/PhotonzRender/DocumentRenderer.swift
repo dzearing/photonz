@@ -351,6 +351,11 @@ public final class DocumentRenderer: @unchecked Sendable {
                 MeasureRasterizer.rasterize(measure, size: layer.frame.size, pixelScale: document.pixelScale)
             }) else { return nil }
             image = raster
+        case .collage(let collage):
+            guard let raster = raster(for: layer.content, size: layer.frame.size, rasterize: {
+                CollageRasterizer.rasterize(collage, size: layer.frame.size, store: store)
+            }) else { return nil }
+            image = raster
         case .zoomCallout(let callout):
             let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
             let source = callout.sourceRect.standardized.intersection(canvasRect)

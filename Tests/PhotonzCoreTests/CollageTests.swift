@@ -100,84 +100,135 @@ struct CollageFillCropTests {
     }
 }
 
-@Suite("Collage apply")
-struct CollageApplyTests {
+@Suite("Collage content")
+struct CollageContentTests {
 
-    private func imageLayer(name: String, size: CGSize, at origin: CGPoint = .zero) -> Layer {
+    private func content(slots: Int, filled: [Int: ImageRef] = [:]) -> CollageContent {
+        var c = CollageContent(slots: Array(repeating: CollageSlot(), count: slots))
+        for (index, ref) in filled { c.slots[index].imageRef = ref }
+        return c
+    }
+
+    @Test func fillingASlotSetsItsRef() {
+        let ref = ImageRef(pixelSize: CGSize(width: 100, height: 50))
+        var c = content(slots: 4)
+        c.fill(slot: 2, with: ref)
+        #expect(c.slots[2].imageRef == ref)
+        #expect(c.slots[0].imageRef == nil)
+    }
+
+    @Test func fillingOutOfRangeIsIgnored() {
+        let ref = ImageRef(pixelSize: CGSize(width: 100, height: 50))
+        var c = content(slots: 2)
+        c.fill(slot: 5, with: ref)
+        c.fill(slot: -1, with: ref)
+        #expect(c.slots.allSatisfy { $0.imageRef == nil })
+    }
+
+    @Test func swappingSlotsExchangesRefs() {
+        let a = ImageRef(pixelSize: CGSize(width: 10, height: 10))
+        var c = content(slots: 3, filled: [0: a])
+        c.swapSlots(0, 2)
+        #expect(c.slots[0].imageRef == nil)
+        #expect(c.slots[2].imageRef == a)
+    }
+
+    @Test func resizingSlotCountKeepsLeadingSlots() {
+        let a = ImageRef(pixelSize: CGSize(width: 10, height: 10))
+        let b = ImageRef(pixelSize: CGSize(width: 20, height: 20))
+        var c = content(slots: 4, filled: [0: a, 3: b])
+        c.setSlotCount(2)
+        #expect(c.slots.count == 2)
+        #expect(c.slots[0].imageRef == a)
+        c.setSlotCount(5)
+        #expect(c.slots.count == 5)
+        #expect(c.slots[0].imageRef == a)
+        #expect(c.slots.suffix(3).allSatisfy { $0.imageRef == nil })
+        c.setSlotCount(0) // floor of 1
+        #expect(c.slots.count == 1)
+    }
+
+    @Test func slotIndexHitTestsInLayerLocalSpace() {
+        let layer = Collage.layer(content: content(slots: 4),
+                                  frame: CGRect(x: 100, y: 100, width: 1000, height: 1000))
+        // Cells: 2×2 with default gutter 24 → cell = (1000 - 72)/2 = 464.
+        #expect(layer.collage != nil)
+        #expect(Collage.slotIndex(at: CGPoint(x: 130, y: 130), in: layer) == 0)
+        #expect(Collage.slotIndex(at: CGPoint(x: 1070, y: 130), in: layer) == 1)
+        #expect(Collage.slotIndex(at: CGPoint(x: 130, y: 1070), in: layer) == 2)
+        // Dead center of the cross gutter hits nothing.
+        #expect(Collage.slotIndex(at: CGPoint(x: 600, y: 600), in: layer) == nil)
+        // Outside the layer entirely.
+        #expect(Collage.slotIndex(at: CGPoint(x: 0, y: 0), in: layer) == nil)
+    }
+
+    @Test func codableRoundTripsIncludingLegacyOptionalFields() throws {
+        let ref = ImageRef(pixelSize: CGSize(width: 640, height: 480))
+        var c = content(slots: 3, filled: [1: ref])
+        c.template = .row
+        c.gutter = 12
+        c.backdropColorHex = nil
+        let data = try JSONEncoder().encode(c)
+        let decoded = try JSONDecoder().decode(CollageContent.self, from: data)
+        #expect(decoded == c)
+    }
+}
+
+@Suite("Collage absorb")
+struct CollageAbsorbTests {
+
+    private func imageLayer(name: String, size: CGSize, at origin: CGPoint) -> Layer {
         Layer(name: name, content: .image(ImageRef(pixelSize: size)),
               frame: CGRect(origin: origin, size: size))
     }
 
-    private func makeDocument() -> (PhotonzDocument, [UUID]) {
-        let base = ImageRef(pixelSize: CGSize(width: 1000, height: 1000))
-        var doc = PhotonzDocument.withBaseImage(base)
-        let a = imageLayer(name: "A", size: CGSize(width: 400, height: 200))
-        let b = imageLayer(name: "B", size: CGSize(width: 300, height: 300))
-        let c = imageLayer(name: "C", size: CGSize(width: 100, height: 500))
-        doc.addLayer(a); doc.addLayer(b); doc.addLayer(c)
-        return (doc, [a.id, b.id, c.id])
+    @Test func absorbBuildsSlotsInGivenOrderAndUnionFrame() {
+        let a = imageLayer(name: "A", size: CGSize(width: 200, height: 100), at: CGPoint(x: 50, y: 50))
+        let b = imageLayer(name: "B", size: CGSize(width: 100, height: 300), at: CGPoint(x: 400, y: 20))
+        let layer = Collage.layer(absorbing: [a, b])
+        #expect(layer != nil)
+        guard let layer, let collage = layer.collage else { return }
+        #expect(layer.frame == CGRect(x: 50, y: 20, width: 450, height: 300))
+        #expect(collage.slots.count == 2)
+        #expect(collage.slots[0].imageRef == a.imageRef)
+        #expect(collage.slots[1].imageRef == b.imageRef)
     }
 
-    @Test func assignsCellsInDocumentOrderBottomToTop() {
-        var (doc, ids) = makeDocument()
-        // Pass ids intentionally shuffled: document z-order must win.
-        Collage.apply(to: &doc, ids: [ids[2], ids[0], ids[1]],
-                      template: .row, gutter: 10)
-        let frames = Collage.cellFrames(count: 3, in: doc.canvasSize, template: .row, gutter: 10)
-        #expect(doc.layers.first { $0.id == ids[0] }?.frame == frames[0])
-        #expect(doc.layers.first { $0.id == ids[1] }?.frame == frames[1])
-        #expect(doc.layers.first { $0.id == ids[2] }?.frame == frames[2])
+    @Test func absorbSkipsNonImageLayers() {
+        let a = imageLayer(name: "A", size: CGSize(width: 100, height: 100), at: .zero)
+        let text = Layer(name: "T", content: .text(TextContent(string: "hi", fontSize: 12, colorHex: "#000000")),
+                         frame: CGRect(x: 0, y: 0, width: 100, height: 40))
+        let layer = Collage.layer(absorbing: [a, text])
+        #expect(layer?.collage?.slots.count == 1)
     }
 
-    @Test func cropMatchesCellAspectSoContentIsNotDistorted() {
-        var (doc, ids) = makeDocument()
-        Collage.apply(to: &doc, ids: ids, template: .grid, gutter: 20)
-        for id in ids {
-            let layer = doc.layers.first { $0.id == id }!
-            let crop = layer.crop!
-            #expect(abs(crop.width / crop.height - layer.frame.width / layer.frame.height) < 0.01)
+    @Test func absorbingNothingYieldsNil() {
+        #expect(Collage.layer(absorbing: []) == nil)
+    }
+
+    @Test func collageLayerAllowsFrameResizeAndFrameHitTest() {
+        let a = imageLayer(name: "A", size: CGSize(width: 100, height: 100), at: .zero)
+        let b = imageLayer(name: "B", size: CGSize(width: 100, height: 100), at: CGPoint(x: 200, y: 0))
+        guard let layer = Collage.layer(absorbing: [a, b]) else {
+            Issue.record("absorb failed"); return
         }
+        #expect(layer.allowsFrameResize)
+        #expect(!layer.hasEndpointHandles)
+        #expect(layer.contains(canvasPoint: CGPoint(x: 150, y: 50)))
+        let resized = layer.resized(to: CGRect(x: 0, y: 0, width: 600, height: 400))
+        #expect(resized.frame == CGRect(x: 0, y: 0, width: 600, height: 400))
+        #expect(resized.collage == layer.collage) // cells derive from frame; content untouched
     }
 
-    @Test func composesWithExistingCropInsteadOfDiscardingIt() {
-        var (doc, ids) = makeDocument()
-        // Pre-crop A to its right half (content pixels 200…400).
-        let preCrop = CGRect(x: 200, y: 0, width: 200, height: 200)
-        doc.updateLayer(id: ids[0]) { $0.crop = preCrop }
-        Collage.apply(to: &doc, ids: ids, template: .row, gutter: 10)
-        let crop = doc.layers.first { $0.id == ids[0] }!.crop!
-        #expect(preCrop.contains(crop))
-    }
-
-    @Test func resetsRotationForCleanCells() {
-        var (doc, ids) = makeDocument()
-        doc.updateLayer(id: ids[1]) { $0.transform = LayerTransform(rotation: .pi / 4) }
-        Collage.apply(to: &doc, ids: ids, template: .grid, gutter: 20)
-        #expect(doc.layers.first { $0.id == ids[1] }?.transform == .identity)
-    }
-
-    @Test func optionalCanvasSizeIsAppliedBeforeLayout() {
-        var (doc, ids) = makeDocument()
-        Collage.apply(to: &doc, ids: ids, template: .row, gutter: 10,
-                      canvasSize: CGSize(width: 1600, height: 900))
-        #expect(doc.canvasSize == CGSize(width: 1600, height: 900))
-        let frames = Collage.cellFrames(count: 3, in: CGSize(width: 1600, height: 900),
-                                        template: .row, gutter: 10)
-        #expect(doc.layers.first { $0.id == ids[0] }?.frame == frames[0])
-    }
-
-    @Test func ignoresIDsMissingFromTheDocument() {
-        var (doc, ids) = makeDocument()
-        Collage.apply(to: &doc, ids: ids + [UUID()], template: .row, gutter: 10)
-        let frames = Collage.cellFrames(count: 3, in: doc.canvasSize, template: .row, gutter: 10)
-        #expect(doc.layers.first { $0.id == ids[2] }?.frame == frames[2])
-    }
-
-    @Test func leavesNonParticipantLayersAlone() {
-        var (doc, ids) = makeDocument()
-        let backgroundFrame = doc.layers[0].frame
-        Collage.apply(to: &doc, ids: ids, template: .grid, gutter: 20)
-        #expect(doc.layers[0].frame == backgroundFrame)
-        #expect(doc.layers[0].crop == nil)
+    @Test func documentRoundTripsACollageLayer() throws {
+        let a = imageLayer(name: "A", size: CGSize(width: 100, height: 100), at: .zero)
+        guard let layer = Collage.layer(absorbing: [a]) else {
+            Issue.record("absorb failed"); return
+        }
+        var doc = PhotonzDocument.withBaseImage(ImageRef(pixelSize: CGSize(width: 500, height: 500)))
+        doc.addLayer(layer)
+        let data = try JSONEncoder().encode(doc)
+        let decoded = try JSONDecoder().decode(PhotonzDocument.self, from: data)
+        #expect(decoded == doc)
     }
 }

@@ -69,13 +69,20 @@ public enum PackageIO {
         return document
     }
 
-    /// Unique image refs across all layers (blur-behind layers share one).
+    /// Unique image refs across all layers (blur-behind layers share one),
+    /// including the photos held inside collage slots.
     private static func imageRefs(in document: PhotonzDocument) -> [ImageRef] {
         var seen = Set<UUID>()
         var refs: [ImageRef] = []
+        func collect(_ ref: ImageRef) {
+            if seen.insert(ref.id).inserted { refs.append(ref) }
+        }
         for layer in document.layers {
-            if case .image(let ref) = layer.content, seen.insert(ref.id).inserted {
-                refs.append(ref)
+            switch layer.content {
+            case .image(let ref): collect(ref)
+            case .collage(let collage):
+                for slot in collage.slots { slot.imageRef.map(collect) }
+            default: break
             }
         }
         return refs
