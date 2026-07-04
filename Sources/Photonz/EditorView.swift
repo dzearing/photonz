@@ -81,6 +81,12 @@ struct EditorView: View {
         .sheet(isPresented: $editorState.isExportDialogPresented) {
             ExportDialog()
         }
+        .sheet(isPresented: $editorState.isCollageDialogPresented) {
+            if let document = editorState.document {
+                CollageDialog(canvasSize: document.canvasSize,
+                              itemCount: editorState.collageLayerIDs.count)
+            }
+        }
     }
 
     @ViewBuilder

@@ -243,6 +243,8 @@ struct EditorCommands: Commands {
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))
+            Button("Arrange in Collage…") { editor?.isCollageDialogPresented = true }
+                .disabled(!(editor?.canArrangeCollage ?? false))
             Divider()
             Button("Bring to Front") {
                 if let selectedID { editor?.bringLayerToFront(id: selectedID) }

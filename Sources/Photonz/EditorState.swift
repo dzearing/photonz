@@ -30,6 +30,7 @@ final class EditorState {
     var isCanvasSizeDialogPresented = false
     var isLayersPanelVisible = true
     var isExportDialogPresented = false
+    var isCollageDialogPresented = false
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -1215,6 +1216,60 @@ final class EditorState {
         var copyID: UUID?
         perform { copyID = $0.duplicateLayer(id: id, offsetBy: CGPoint(x: 16, y: 16))?.id }
         selectedLayerID = copyID
+    }
+
+    // MARK: - Collage (16.9)
+
+    /// The layers "Arrange in Collage…" would arrange: the multi-selection's
+    /// image layers when it holds at least two, else every visible, unlocked
+    /// image layer (so the command works straight from the menu with nothing
+    /// selected — the locked Background never participates).
+    var collageLayerIDs: [UUID] {
+        guard let document else { return [] }
+        let eligible = document.layers.filter {
+            if case .image = $0.content { return $0.isVisible && !$0.isLocked }
+            return false
+        }.map(\.id)
+        let selected = eligible.filter { multiSelectedLayerIDs.contains($0) }
+        return selected.count >= 2 ? selected : eligible
+    }
+
+    var canArrangeCollage: Bool { collageLayerIDs.count >= 2 }
+
+    /// Arranges `collageLayerIDs` into cells in ONE undo step: optional canvas
+    /// reformat, optional solid backdrop layer inserted just below the lowest
+    /// participant, then the non-destructive crop+frame layout (Collage.apply).
+    func arrangeCollage(template: CollageTemplate, gutter: CGFloat,
+                        canvasSize: CGSize?, backgroundColor: CGColor?) {
+        let ids = collageLayerIDs
+        guard ids.count >= 2 else { return }
+        discardDragPreview()
+        let backgroundRef = backgroundColor.flatMap { Self.solidImage(color: $0) }
+            .map { store.register($0) }
+        perform { doc in
+            Collage.apply(to: &doc, ids: ids, template: template,
+                          gutter: gutter, canvasSize: canvasSize)
+            if let backgroundRef {
+                let idSet = Set(ids)
+                let index = doc.layers.firstIndex { idSet.contains($0.id) } ?? doc.layers.count
+                doc.addLayer(Layer(name: "Collage Background",
+                                   content: .image(backgroundRef),
+                                   frame: CGRect(origin: .zero, size: doc.canvasSize)),
+                             at: index)
+            }
+        }
+    }
+
+    /// A tiny solid bitmap; the layer frame stretches it over the canvas.
+    private static func solidImage(color: CGColor) -> CGImage? {
+        guard let context = CGContext(data: nil, width: 8, height: 8,
+                                      bitsPerComponent: 8, bytesPerRow: 32,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.setFillColor(color)
+        context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+        return context.makeImage()
     }
 
     // MARK: - Merge down (Photoshop ⌘E)
