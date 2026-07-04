@@ -22,6 +22,21 @@ public enum CanvasAnchor: String, CaseIterable, Hashable, Codable, Sendable {
         }
         return CGPoint(x: x, y: y)
     }
+
+    /// The anchor for a canvas-boundary handle drag: the side OPPOSITE the
+    /// dragged handle stays pinned (drag the right edge → content pins left).
+    public static func fixing(oppositeOf handle: ResizeHandle) -> CanvasAnchor {
+        switch handle {
+        case .topLeft: .bottomRight
+        case .top: .bottom
+        case .topRight: .bottomLeft
+        case .left: .right
+        case .right: .left
+        case .bottomLeft: .topRight
+        case .bottom: .top
+        case .bottomRight: .topLeft
+        }
+    }
 }
 
 extension PhotonzDocument {

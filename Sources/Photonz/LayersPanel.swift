@@ -81,6 +81,7 @@ struct InspectorPanel: View {
             if layer.measure != nil { set.insert(.measure) }
             if layer.collage != nil { set.insert(.collage) }
         }
+        if editorState.isCanvasSelected { set.insert(.canvas) }
         return set
     }
 
@@ -109,6 +110,10 @@ struct InspectorPanel: View {
         case .collage:
             if let layer = selectedLayer, layer.collage != nil {
                 CollageInspector(layer: layer)
+            }
+        case .canvas:
+            if editorState.isCanvasSelected {
+                CanvasInspector()
             }
         case .effects:
             if let layer = selectedLayer {
@@ -155,6 +160,7 @@ enum InspectorSectionID: String, CaseIterable {
     case text
     case measure
     case collage
+    case canvas
     case effects
     case shadow
 
@@ -165,6 +171,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .text: "Text"
         case .measure: "Measure"
         case .collage: "Collage"
+        case .canvas: "Canvas"
         case .effects: "Effects"
         case .shadow: "Shadow"
         }
@@ -292,6 +299,14 @@ struct LayersListView: View {
             .onMove { source, destination in
                 editorState.moveLayers(visualSources: source, visualDestination: destination)
             }
+            // The Canvas pseudo-layer: pinned at the very bottom (beneath the
+            // Background it frames). Not a real layer — no eye/lock/delete/
+            // reorder; selecting it puts resize handles on the canvas boundary.
+            canvasRow
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
+                .listRowBackground(Color.clear)
+                .moveDisabled(true)
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -304,8 +319,42 @@ struct LayersListView: View {
     /// Size the list to its rows so the whole panel scrolls as one column; cap
     /// so a tall stack doesn't crowd out the inspectors below (it scrolls then).
     private var listHeight: CGFloat {
-        let rows = max(1, editorState.panelLayers.count)
+        let rows = max(1, editorState.panelLayers.count) + 1 // + the Canvas row
         return min(CGFloat(rows) * 38 + 6, 320)
+    }
+
+    private var canvasRow: some View {
+        HStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                    .foregroundStyle(.tertiary)
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(width: 40, height: 30)
+            Text("Canvas")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 4)
+            if let size = editorState.document?.canvasSize {
+                Text(verbatim: "\(Int(size.width)) × \(Int(size.height))")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .monospacedDigit()
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background {
+            if editorState.isCanvasSelected {
+                RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.25))
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { editorState.selectCanvas() }
+        .help("Select to resize the canvas by its edges")
     }
 
     private func row(_ layer: Layer) -> some View {
@@ -855,6 +904,58 @@ struct MeasureInspector: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
+        }
+    }
+}
+
+// MARK: - Canvas inspector (the Canvas pseudo-layer)
+
+struct CanvasInspector: View {
+    @Environment(EditorState.self) private var editorState
+    @State private var width: Double = 0
+    @State private var height: Double = 0
+
+    private var canvasSize: CGSize { editorState.document?.canvasSize ?? .zero }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                dimensionField("W", $width)
+                dimensionField("H", $height)
+                Spacer()
+                Button("Canvas Size…") { editorState.isCanvasSizeDialogPresented = true }
+                    .controlSize(.small)
+                    .help("Numeric resize with a content-anchor picker")
+            }
+            Text("Drag the canvas edges to add or trim space; content stays put on the side you didn't move. Fields grow to the right/bottom.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .onAppear { syncFields() }
+        .onChange(of: canvasSize) { syncFields() }
+    }
+
+    private func syncFields() {
+        width = Double(canvasSize.width)
+        height = Double(canvasSize.height)
+    }
+
+    private func dimensionField(_ label: String, _ value: Binding<Double>) -> some View {
+        HStack(spacing: 4) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            TextField(label, value: value,
+                      format: .number.precision(.fractionLength(0)).grouping(.never))
+                .textFieldStyle(.roundedBorder)
+                .controlSize(.small)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 58)
+                .onSubmit {
+                    let size = CGSize(width: max(1, width.rounded()), height: max(1, height.rounded()))
+                    guard size != canvasSize else { return }
+                    editorState.setCanvasSize(to: size, anchor: .topLeft)
+                }
         }
     }
 }

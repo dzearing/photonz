@@ -56,4 +56,29 @@ struct CanvasSizeTests {
         d.setCanvasSize(CGSize(width: 0, height: -5), anchor: .center)
         #expect(d.canvasSize == CGSize(width: 1, height: 1))
     }
+
+    // Canvas-boundary handle drags (the Canvas pseudo-layer): the side
+    // OPPOSITE the dragged handle stays pinned.
+    @Test func anchorOppositeAHandlePinsTheFixedSide() {
+        #expect(CanvasAnchor.fixing(oppositeOf: .right) == .left)
+        #expect(CanvasAnchor.fixing(oppositeOf: .left) == .right)
+        #expect(CanvasAnchor.fixing(oppositeOf: .bottom) == .top)
+        #expect(CanvasAnchor.fixing(oppositeOf: .top) == .bottom)
+        #expect(CanvasAnchor.fixing(oppositeOf: .bottomRight) == .topLeft)
+        #expect(CanvasAnchor.fixing(oppositeOf: .topLeft) == .bottomRight)
+        #expect(CanvasAnchor.fixing(oppositeOf: .topRight) == .bottomLeft)
+        #expect(CanvasAnchor.fixing(oppositeOf: .bottomLeft) == .topRight)
+    }
+
+    @Test func draggingAnEdgeOutwardGrowsOnlyThatSide() {
+        // Simulates the full gesture: handle .right dragged from x=100 to
+        // x=180 on a 100×100 canvas → resize + the matching anchor.
+        var d = doc(CGRect(x: 10, y: 10, width: 20, height: 20))
+        let proposed = Handles.resize(CGRect(origin: .zero, size: d.canvasSize),
+                                      dragging: .right, to: CGPoint(x: 180, y: 50),
+                                      preserveAspect: false)
+        d.setCanvasSize(proposed.size, anchor: .fixing(oppositeOf: .right))
+        #expect(d.canvasSize == CGSize(width: 180, height: 100))
+        #expect(d.layers[0].frame.origin == CGPoint(x: 10, y: 10), "left-pinned content stays put")
+    }
 }

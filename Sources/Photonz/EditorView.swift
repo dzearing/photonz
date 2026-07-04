@@ -134,6 +134,10 @@ struct EditorView: View {
                        },
                        onSwapCollageSlots: { collageID, from, to in
                            editorState.swapCollageSlots(collageID: collageID, from, to)
+                       },
+                       isCanvasSelected: editorState.isCanvasSelected,
+                       onCanvasResize: { size, anchor in
+                           editorState.setCanvasSize(to: size, anchor: anchor)
                        })
         } else {
             emptyState

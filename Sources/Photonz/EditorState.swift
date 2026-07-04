@@ -74,8 +74,17 @@ final class EditorState {
     /// Any change to the primary selection dissolves a marquee multi-selection —
     /// the two never coexist.
     private(set) var selectedLayerID: UUID? {
-        didSet { if oldValue != selectedLayerID { multiSelectedLayerIDs = [] } }
+        didSet {
+            if oldValue != selectedLayerID { multiSelectedLayerIDs = [] }
+            // Selecting anything (or explicitly deselecting) drops the Canvas
+            // pseudo-selection; selectCanvas() re-raises the flag afterwards.
+            isCanvasSelected = false
+        }
     }
+    /// The "Canvas" pseudo-layer selection: no layer is selected, the canvas
+    /// boundary shows resize handles, and the inspector offers W/H. Mutually
+    /// exclusive with any layer selection.
+    private(set) var isCanvasSelected = false
     /// The marquee's rubber-band multi-selection (two or more layers). REAL
     /// state, not derived from the selection rect — so panel operations like
     /// hiding a member (which would make it fail a rect containment check)
@@ -1629,6 +1638,14 @@ final class EditorState {
         // Explicit deselection dissolves the multi-selection even when the
         // primary was already nil (didSet only fires on change).
         if id == nil { multiSelectedLayerIDs = [] }
+    }
+
+    /// Selects the Canvas pseudo-layer (panel row click): boundary handles
+    /// appear on canvas and the Canvas inspector section opens.
+    func selectCanvas() {
+        guard document != nil else { return }
+        selectedLayerID = nil     // didSet clears the flag…
+        isCanvasSelected = true   // …then it's raised for the pseudo-selection
     }
 
     /// A drag is starting on `id`: kick off the underlay + sprite renders.

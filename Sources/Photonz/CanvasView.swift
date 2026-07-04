@@ -74,6 +74,8 @@ struct CanvasView: NSViewRepresentable {
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
     let onAbsorbLayerIntoCollage: (UUID, UUID, Int) -> Void
     let onSwapCollageSlots: (UUID, Int, Int) -> Void
+    let isCanvasSelected: Bool
+    let onCanvasResize: (CGSize, CanvasAnchor) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -89,7 +91,8 @@ struct CanvasView: NSViewRepresentable {
                    selectedLayerFrame: selectedLayerFrame,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent, textContent: textContent,
-                   measureContent: measureContent, edgeMap: edgeMap)
+                   measureContent: measureContent, edgeMap: edgeMap,
+                   isCanvasSelected: isCanvasSelected)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -120,6 +123,7 @@ struct CanvasView: NSViewRepresentable {
         view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
+        view.onCanvasResize = onCanvasResize
     }
 }
 
@@ -158,6 +162,8 @@ final class CanvasNSView: NSView {
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }
     /// Two slots of one collage swapped by dragging: (collage, from, to).
     var onSwapCollageSlots: ((UUID, Int, Int) -> Void) = { _, _, _ in }
+    /// A canvas-boundary handle drag ended: (new size, anchor of the pinned side).
+    var onCanvasResize: ((CGSize, CanvasAnchor) -> Void) = { _, _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -278,6 +284,13 @@ final class CanvasNSView: NSView {
     private var slotDrag: (collageID: UUID, from: Int)?
     /// The slot any eligible drag is currently hovering (drop/absorb/swap target).
     private var hoverSlot: (collageID: UUID, index: Int)?
+    /// The Canvas pseudo-selection, echoed from EditorState: boundary handles
+    /// on the document rect; drags resize the canvas itself.
+    private var isCanvasSelected = false
+    /// In-flight canvas-boundary resize: the proposed rect may grow in any
+    /// direction (negative origin = space added on the left/top); commit maps
+    /// it to setCanvasSize + the anchor opposite the dragged handle.
+    private var canvasResizeDrag: (handle: ResizeHandle, rect: CGRect)?
 
     /// Suppresses edge captures on the axis perpendicular to decisive motion.
     /// The suppressed axis falls back to the pixel grid.
@@ -708,6 +721,16 @@ final class CanvasNSView: NSView {
             refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
             return
         }
+        // Canvas pseudo-selection: the boundary handles resize the CANVAS.
+        // Only handle hits are captured — clicks elsewhere fall through to
+        // normal layer selection / marquee (which also deselects the canvas).
+        if isCanvasSelected, tool == .select,
+           let handle = Handles.hit(at: p, frame: CGRect(origin: .zero, size: viewport.documentSize),
+                                    zoom: viewport.zoom, screenTolerance: 8) {
+            canvasResizeDrag = (handle, CGRect(origin: .zero, size: viewport.documentSize))
+            refreshOverlays()
+            return
+        }
         // Double-click on a text layer re-opens it for inline editing. Checked
         // before handles: on a small text layer the handle hit zones cover the
         // whole frame and would eat the double-click.
@@ -809,9 +832,9 @@ final class CanvasNSView: NSView {
                                 startOrigin: hit.frame.origin,
                                 snapped: Snapping.Result(origin: hit.frame.origin))
         } else {
-            if selectedLayerFrame != nil {
+            if selectedLayerFrame != nil || isCanvasSelected {
                 selectedLayerFrame = nil
-                onSelectLayer(nil)
+                onSelectLayer(nil) // also drops the Canvas pseudo-selection
             }
             marquee = MarqueeDrag(anchor: p)
         }
@@ -950,6 +973,13 @@ final class CanvasNSView: NSView {
                 hoverSlot = nil
             }
             refreshOverlays()
+        } else if var drag = canvasResizeDrag {
+            drag.rect = Handles.resize(CGRect(origin: .zero, size: viewport.documentSize),
+                                       dragging: drag.handle, to: p,
+                                       preserveAspect: event.modifierFlags.contains(.shift),
+                                       minSize: 16)
+            canvasResizeDrag = drag
+            refreshOverlays()
         } else if var drag = marquee {
             drag.update(to: p)
             marquee = drag
@@ -1053,6 +1083,13 @@ final class CanvasNSView: NSView {
                 onSwapCollageSlots(drag.collageID, drag.from, target.index)
             }
             hoverSlot = nil
+            refreshOverlays()
+        } else if let drag = canvasResizeDrag {
+            canvasResizeDrag = nil
+            let size = CGSize(width: drag.rect.width.rounded(), height: drag.rect.height.rounded())
+            if size != viewport.documentSize {
+                onCanvasResize(size, .fixing(oppositeOf: drag.handle))
+            }
             refreshOverlays()
         } else if let drag = marquee {
             marquee = nil
@@ -1249,8 +1286,12 @@ final class CanvasNSView: NSView {
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                textContent: TextContent?, measureContent: MeasureContent?,
-               edgeMap: EdgeMap) {
+               edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
+        if self.isCanvasSelected != isCanvasSelected {
+            self.isCanvasSelected = isCanvasSelected
+            if !isCanvasSelected { canvasResizeDrag = nil }
+        }
         self.annotationContent = annotationContent
         self.textContent = textContent
         self.measureContent = measureContent
@@ -1585,6 +1626,25 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshLayerSelectionDisplay() {
+        // The Canvas pseudo-selection: outline + eight handles on the document
+        // boundary (or the in-flight proposed boundary). No rotate knob — the
+        // canvas doesn't rotate.
+        if isCanvasSelected, let viewport {
+            rotateKnobLayer.isHidden = true
+            snapGuideLayer.isHidden = true
+            let docRect = canvasResizeDrag?.rect ?? CGRect(origin: .zero, size: viewport.documentSize)
+            let rect = viewRect(forDocRect: docRect, in: viewport).insetBy(dx: 0.5, dy: 0.5)
+            layerOutlineLayer.path = CGPath(rect: rect, transform: nil)
+            layerOutlineLayer.isHidden = false
+            let handles = CGMutablePath()
+            for handle in ResizeHandle.allCases {
+                let p = viewport.viewPoint(fromDocument: Handles.point(for: handle, in: docRect))
+                handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+            }
+            handlesLayer.path = handles
+            handlesLayer.isHidden = false
+            return
+        }
         let frame: CGRect?
         if let resizeDrag {
             frame = resizeDrag.frame
