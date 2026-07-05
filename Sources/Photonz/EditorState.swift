@@ -34,8 +34,13 @@ final class EditorState {
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
     private(set) var viewport: Viewport?
-    /// Marquee selection in document coordinates (pixel-aligned). Nil = no selection.
-    private(set) var selection: CGRect?
+    /// The selected REGION (Photoshop-style) in document coordinates: any
+    /// path — marquee rect, ellipse, wand blob, or boolean combinations.
+    /// Nil = no selection. Distinct from layer selection; while a region
+    /// exists, region ops (fill, copy, promote) target it.
+    private(set) var selection: SelectionRegion?
+    /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
+    var wandTolerance: Double = 32
     /// The active editor tool. Drawing tools are ONE-SHOT by default: after a
     /// shape is drawn the editor returns to `.select` (and selects the new
     /// shape). Double-clicking a tool in the toolbar sets `toolLocked`, which
@@ -415,20 +420,46 @@ final class EditorState {
         viewport = vp
     }
 
-    /// Marquee result from the canvas (document coords, already pixel-aligned).
-    func setSelection(_ rect: CGRect?) {
-        selection = rect
-        // The marquee doubles as rubber-band layer selection: layers fully
-        // inside become the REAL selection — one captured layer promotes to the
-        // primary selection (handles + inspector), several become the
-        // multi-selection so the panel highlights them and group ops (hide,
-        // delete) can target them.
-        let captured = rect.flatMap { document?.layerIDs(fullyInside: $0) } ?? []
+    /// Selection result from the canvas (document coords). `captureLayers`
+    /// is the arrow-tool marquee behavior: it doubles as rubber-band layer
+    /// selection — layers fully inside become the REAL selection (one layer
+    /// promotes to the primary selection, several become the multi-selection
+    /// so the panel highlights them and group ops can target them). The
+    /// region tools (rect/ellipse/wand) pass false: their selection is a
+    /// pixel region, independent of layers.
+    func setSelection(_ region: SelectionRegion?, captureLayers: Bool = true) {
+        selection = region
+        guard captureLayers else { return }
+        let captured = region.flatMap { document?.layerIDs(fullyInside: $0.bounds) } ?? []
         if captured.count == 1 {
             selectedLayerID = captured[0] // didSet clears any multi-selection
         } else {
             if !captured.isEmpty { selectedLayerID = nil }
             multiSelectedLayerIDs = Set(captured)
+        }
+    }
+
+    /// Magic wand: flood-fill the composite from `point` (document coords)
+    /// and combine the blob with the existing region per `mode`. The render +
+    /// flood sweep run off-main (a Retina screenshot is a 12MP walk); the
+    /// combine hops back to main and is dropped if the canvas changed size
+    /// underneath (its coordinates would lie).
+    func wandSelect(at point: CGPoint, mode: SelectionRegion.Mode) {
+        guard let document else { return }
+        let store = store
+        let tolerance = wandTolerance
+        let base = selection
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let renderer = DocumentRenderer()
+            let canvas = CGRect(origin: .zero, size: document.canvasSize)
+            guard let composite = renderer.rasterize(region: canvas, of: document, store: store),
+                  let path = FloodFill.path(in: composite, from: point, tolerance: tolerance),
+                  let blob = SelectionRegion(path: path) else { return }
+            await MainActor.run {
+                guard let self, self.document?.canvasSize == document.canvasSize else { return }
+                self.setSelection(SelectionRegion.combine(base, with: blob, mode: mode),
+                                  captureLayers: false)
+            }
         }
     }
 
@@ -462,9 +493,13 @@ final class EditorState {
         // Switching tools always clears any lock; double-clicking re-locks.
         toolLocked = locked
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
-        // layer handles) would read as interactive when it isn't.
-        if tool != .select {
+        // layer handles) would read as interactive when it isn't. The
+        // selection REGION survives within the selection family + fill
+        // (Photoshop keeps the ants up; filling the region needs it).
+        if !tool.preservesSelectionRegion {
             selection = nil
+        }
+        if tool != .select {
             selectedLayerID = nil
         }
     }
@@ -480,7 +515,8 @@ final class EditorState {
 
     private func defaultCropRect() -> CGRect? {
         guard let document else { return nil }
-        let base = selection ?? CGRect(origin: .zero, size: document.canvasSize)
+        let base = selection.map { Geometry.pixelAligned($0.bounds) }
+            ?? CGRect(origin: .zero, size: document.canvasSize)
         return Crop.fitted(base, to: cropAspect)
     }
 
@@ -711,16 +747,19 @@ final class EditorState {
 
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
 
-    /// Detected UI edges for measure snapping, but ONLY while the measure tool is
-    /// active or a measure is selected — so the edge sweep never runs for
-    /// documents that aren't being redlined. Analysis takes ~seconds on a Retina
-    /// screenshot, so it runs OFF the main thread: the first access kicks it off
-    /// and returns `.empty` (snapping is a no-op until it lands), then the
-    /// observable `readyEdgeMaps` update re-feeds the canvas the real map.
-    var measureEdgeMap: EdgeMap {
+    /// Detected UI edges for snapping, but ONLY while a tool that snaps to
+    /// them is active (measure, rect/ellipse region select) or a measure is
+    /// selected — so the edge sweep never runs for documents that aren't
+    /// being redlined. Analysis takes ~seconds on a Retina screenshot, so it
+    /// runs OFF the main thread: the first access kicks it off and returns
+    /// `.empty` (snapping is a no-op until it lands), then the observable
+    /// `readyEdgeMaps` update re-feeds the canvas the real map.
+    var snappingEdgeMap: EdgeMap {
         let selectedIsMeasure = selectedLayerID
             .flatMap { document?.layer(id: $0)?.measure } != nil
-        guard activeTool == .measure || selectedIsMeasure,
+        let toolSnaps = activeTool == .measure
+            || activeTool == .rectSelect || activeTool == .ellipseSelect
+        guard toolSnaps || selectedIsMeasure,
               let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
         if let ready = readyEdgeMaps[ref.id] { return ready }
         analyzeEdgeMap(for: ref)
@@ -1348,7 +1387,7 @@ final class EditorState {
     /// separate selection state to fall out of sync.
     var marqueeSelectedLayerIDs: [UUID] {
         guard let selection, let document else { return [] }
-        return document.layerIDs(fullyInside: selection)
+        return document.layerIDs(fullyInside: selection.bounds)
     }
 
     /// Batch delete (⌫ over a marquee that captured layers): all of them go in
@@ -1626,7 +1665,7 @@ final class EditorState {
     /// stacks it as a new image layer (one undo step). The new layer is
     /// selected; the marquee clears — it has done its job.
     func promoteSelectionToLayer() {
-        guard let document, let region = selection,
+        guard let document, let region = selection.map({ Geometry.pixelAligned($0.bounds) }),
               let raster = previewRenderer.rasterize(region: region, of: document, store: store) else { return }
         let ref = store.register(raster)
         var newID: UUID?
@@ -1640,7 +1679,7 @@ final class EditorState {
     /// (one undo step). The focus layer ends up selected so its blur radius
     /// or crop can be adjusted immediately.
     func blurBehindSelection() {
-        guard let document, let region = selection,
+        guard let document, let region = selection.map({ Geometry.pixelAligned($0.bounds) }),
               let raster = previewRenderer.rasterize(region: CGRect(origin: .zero, size: document.canvasSize),
                                                      of: document, store: store) else { return }
         let ref = store.register(raster)
@@ -1673,7 +1712,8 @@ final class EditorState {
             return
         }
         guard let document else { return }
-        let region = selection ?? CGRect(origin: .zero, size: document.canvasSize)
+        let region = selection.map { Geometry.pixelAligned($0.bounds) }
+            ?? CGRect(origin: .zero, size: document.canvasSize)
         guard region.width >= 1, region.height >= 1,
               let raster = previewRenderer.rasterize(region: region, of: document, store: store),
               let png = ImageCodec.encode(raster, format: .png) else { return }
@@ -1699,7 +1739,7 @@ final class EditorState {
     /// ⌘A (Preview convention): marquee the whole canvas.
     func selectAll() {
         guard let document else { return }
-        setSelection(CGRect(origin: .zero, size: document.canvasSize))
+        setSelection(SelectionRegion.rect(CGRect(origin: .zero, size: document.canvasSize)))
     }
 
     /// ⇧⌘A: clear the marquee.

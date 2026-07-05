@@ -24,7 +24,7 @@ struct CanvasView: NSViewRepresentable {
     let image: CGImage?
     let viewport: Viewport?
     let document: PhotonzDocument?
-    let selection: CGRect?
+    let selection: SelectionRegion?
     /// Pending crop rect + aspect lock while the crop tool is active.
     let cropRect: CGRect?
     let cropAspect: CropAspect
@@ -49,7 +49,13 @@ struct CanvasView: NSViewRepresentable {
     let edgeMap: EdgeMap
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
-    let onSelectionChange: (CGRect?) -> Void
+    /// (region, captureLayers): capture is true for the arrow tool's marquee
+    /// (which doubles as rubber-band layer selection), false for the region
+    /// selection tools.
+    let onSelectionChange: (SelectionRegion?, Bool) -> Void
+    /// Magic-wand click: (document point, combine mode). Flood fill runs
+    /// app-side (off-main) and lands via the `selection` prop.
+    let onWandAt: (CGPoint, SelectionRegion.Mode) -> Void
     let onCropRectChange: (CGRect) -> Void
     let onCropCommit: () -> Void
     let onSelectLayer: (UUID?) -> Void
@@ -102,6 +108,7 @@ struct CanvasView: NSViewRepresentable {
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
+        view.onWandAt = onWandAt
         view.onCropRectChange = onCropRectChange
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
@@ -136,7 +143,8 @@ struct CanvasView: NSViewRepresentable {
 final class CanvasNSView: NSView {
     var onViewSizeChange: ((CGSize) -> Void) = { _ in }
     var onViewportChange: ((Viewport) -> Void) = { _ in }
-    var onSelectionChange: ((CGRect?) -> Void) = { _ in }
+    var onSelectionChange: ((SelectionRegion?, Bool) -> Void) = { _, _ in }
+    var onWandAt: ((CGPoint, SelectionRegion.Mode) -> Void) = { _, _ in }
     var onCropRectChange: ((CGRect) -> Void) = { _ in }
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
@@ -233,8 +241,8 @@ final class CanvasNSView: NSView {
     private var image: CGImage?
     /// Committed document (hit-testing source). Previews never land here.
     private var document: PhotonzDocument?
-    /// Committed marquee selection in document coordinates.
-    private var selection: CGRect?
+    /// Committed selection region in document coordinates.
+    private var selection: SelectionRegion?
     /// Pending crop rect (document coordinates), echoed from EditorState.
     private var cropRect: CGRect?
     /// Crop aspect lock, echoed from EditorState; drags constrain through it.
@@ -268,6 +276,10 @@ final class CanvasNSView: NSView {
     /// In-progress marquee (document coordinates). While set, it is what the
     /// ants display — same zero-latency-echo pattern as pan/zoom.
     private var marquee: MarqueeDrag?
+    /// In-progress region-select drag (rect/ellipse tools). The combine mode
+    /// is latched from the modifiers at gesture start (⇧ add, ⌥ subtract,
+    /// ⇧⌥ intersect); the ants preview the live boolean combination.
+    private var regionDrag: (drag: MarqueeDrag, mode: SelectionRegion.Mode, isEllipse: Bool)?
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     private var tool: Tool = .select
@@ -721,6 +733,27 @@ final class CanvasNSView: NSView {
                      event.modifierFlags.contains(.option))
             return
         }
+        // Region selection tools. The wand floods app-side (async — the
+        // composite sweep is heavy); rect/ellipse start a marquee whose
+        // corners magnetize to detected edges (⌘ = free). The combine mode
+        // (⇧ add / ⌥ subtract / ⇧⌥ intersect) latches at gesture start.
+        if tool == .wand {
+            onWandAt(p, SelectionRegion.Mode(shift: event.modifierFlags.contains(.shift),
+                                             option: event.modifierFlags.contains(.option)))
+            return
+        }
+        if tool == .rectSelect || tool == .ellipseSelect {
+            let mode = SelectionRegion.Mode(shift: event.modifierFlags.contains(.shift),
+                                            option: event.modifierFlags.contains(.option))
+            var anchor = p
+            if !event.modifierFlags.contains(.command) {
+                anchor = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom).point
+            }
+            resetDragMotion(p)
+            regionDrag = (MarqueeDrag(anchor: anchor), mode, tool == .ellipseSelect)
+            refreshOverlays()
+            return
+        }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
         if tool.createsAnnotationByDrag || tool == .zoomCallout {
@@ -1014,6 +1047,24 @@ final class CanvasNSView: NSView {
             drag.rect = rect
             canvasResizeDrag = drag
             refreshOverlays()
+        } else if var session = regionDrag {
+            // Same corner magnetizing as a measure drag: the growing edges
+            // window the candidates; ⌘ drags free.
+            if event.modifierFlags.contains(.command) {
+                session.drag.update(to: p)
+                snapGuide = nil
+            } else {
+                trackDragMotion(p)
+                let snap = axisGated(
+                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
+                                      xSpan: min(session.drag.anchor.x, p.x)...max(session.drag.anchor.x, p.x),
+                                      ySpan: min(session.drag.anchor.y, p.y)...max(session.drag.anchor.y, p.y)),
+                    raw: p)
+                session.drag.update(to: snap.point)
+                snapGuide = (snap.guideX, snap.guideY)
+            }
+            regionDrag = session
+            refreshOverlays()
         } else if var drag = marquee {
             drag.update(to: p)
             marquee = drag
@@ -1125,14 +1176,37 @@ final class CanvasNSView: NSView {
                 onCanvasResize(size, drag.centered ? .center : .fixing(oppositeOf: drag.handle))
             }
             refreshOverlays()
+        } else if let session = regionDrag {
+            regionDrag = nil
+            snapGuide = nil
+            if session.drag.isClick(atZoom: viewport.zoom) {
+                // A plain click deselects (Photoshop); a click with a combine
+                // modifier held contributes nothing and changes nothing.
+                if session.mode == .replace {
+                    commitSelection(nil, capture: false)
+                } else {
+                    refreshOverlays()
+                }
+            } else {
+                let shape = session.drag.selectionRect(in: viewport.documentSize)
+                    .map(Geometry.pixelAligned)
+                    .flatMap { session.isEllipse ? SelectionRegion.ellipse(in: $0) : SelectionRegion.rect($0) }
+                if let shape {
+                    commitSelection(SelectionRegion.combine(selection, with: shape, mode: session.mode),
+                                    capture: false)
+                } else {
+                    refreshOverlays()
+                }
+            }
         } else if let drag = marquee {
             marquee = nil
             if drag.isClick(atZoom: viewport.zoom) {
-                commitSelection(nil) // a plain click deselects
+                commitSelection(nil, capture: true) // a plain click deselects
             } else {
                 let square = event.modifierFlags.contains(.shift)
                 let rect = drag.selectionRect(constrainSquare: square, in: viewport.documentSize)
-                commitSelection(rect.map(Geometry.pixelAligned))
+                commitSelection(rect.map(Geometry.pixelAligned).flatMap(SelectionRegion.rect),
+                                capture: true)
             }
         }
     }
@@ -1247,9 +1321,15 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
+            if regionDrag != nil {
+                regionDrag = nil
+                snapGuide = nil
+                refreshOverlays()
+                return
+            }
             if marquee != nil || selection != nil {
                 marquee = nil
-                commitSelection(nil)
+                commitSelection(nil, capture: true)
                 return
             }
             if selectedLayerFrame != nil {
@@ -1266,10 +1346,10 @@ final class CanvasNSView: NSView {
         super.keyDown(with: event)
     }
 
-    private func commitSelection(_ rect: CGRect?) {
-        selection = rect
+    private func commitSelection(_ region: SelectionRegion?, capture: Bool) {
+        selection = region
         refreshOverlays()
-        onSelectionChange(rect)
+        onSelectionChange(region, capture)
     }
 
     // MARK: Gestures
@@ -1329,7 +1409,7 @@ final class CanvasNSView: NSView {
     // MARK: Display
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: CGRect?, cropRect: CGRect?, cropAspect: CropAspect,
+               selection: SelectionRegion?, cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
@@ -1352,6 +1432,7 @@ final class CanvasNSView: NSView {
             annotationDrag = nil
             measureDrag = nil
             measureCornerDrag = nil
+            regionDrag = nil
             snapGuide = nil
             endpointDrag = nil
             cropDrag = nil
@@ -1389,7 +1470,7 @@ final class CanvasNSView: NSView {
         }
         // While the user is mid-drag the local state is the truth; don't let an
         // unrelated SwiftUI update echo stale committed values over it.
-        if marquee == nil {
+        if marquee == nil, regionDrag == nil {
             self.selection = selection
         }
         if cropDrag == nil {
@@ -1634,34 +1715,52 @@ final class CanvasNSView: NSView {
     }
 
     private func refreshMarqueeDisplay(constrainSquare: Bool) {
-        let docRect: CGRect?
-        if let viewport, let marquee {
-            docRect = marquee.selectionRect(constrainSquare: constrainSquare, in: viewport.documentSize)
+        // The ants show, in priority order: the live region-tool combination
+        // (base region ⊕ in-flight shape as ONE path), the live arrow
+        // marquee, else the committed region.
+        var antsDocPath: CGPath?
+        var marqueeRect: CGRect? // the arrow marquee's live rubber-band rect
+        if let viewport, let session = regionDrag {
+            let shape = session.drag.selectionRect(in: viewport.documentSize)
+                .flatMap { session.isEllipse ? SelectionRegion.ellipse(in: $0) : SelectionRegion.rect($0) }
+            if let shape {
+                antsDocPath = SelectionRegion.combine(selection, with: shape, mode: session.mode)?.path
+            } else {
+                antsDocPath = selection?.path
+            }
+        } else if let viewport, let marquee {
+            let rect = marquee.selectionRect(constrainSquare: constrainSquare, in: viewport.documentSize)
+            antsDocPath = rect.map { CGPath(rect: $0, transform: nil) }
+            marqueeRect = rect
         } else {
-            docRect = selection
+            antsDocPath = selection?.path
         }
-        guard let viewport, let docRect else {
+        guard let viewport, let docPath = antsDocPath else {
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
             multiSelectOutlineLayer.isHidden = true
             return
         }
-        // Half-point inset so the 1pt stroke lands crisply on pixel boundaries.
-        let path = CGPath(rect: viewRect(forDocRect: docRect, in: viewport).insetBy(dx: 0.5, dy: 0.5),
-                          transform: nil)
+        // Document space → view space is a pure scale + translate (the view
+        // is flipped, so no y-inversion).
+        let docOrigin = viewport.viewPoint(fromDocument: .zero)
+        var docToView = CGAffineTransform(translationX: docOrigin.x, y: docOrigin.y)
+            .scaledBy(x: viewport.zoom, y: viewport.zoom)
+        let path = docPath.copy(using: &docToView) ?? docPath
         selectionBaseLayer.path = path
         selectionAntsLayer.path = path
         selectionBaseLayer.isHidden = false
         selectionAntsLayer.isHidden = false
 
-        // Rubber-band capture: outline every captured layer so it's obvious
-        // what the marquee holds. Mid-drag the capture is derived live from the
-        // rect; once committed it's the echoed selection state, which survives
-        // rect-independent edits (a hidden member stays selected and outlined).
+        // Rubber-band capture (arrow marquee only — the region tools select
+        // pixels, not layers): outline every captured layer so it's obvious
+        // what the marquee holds. Mid-drag the capture is derived live from
+        // the rect; once committed it's the echoed selection state, which
+        // survives rect-independent edits (a hidden member stays outlined).
         let outlines = CGMutablePath()
-        if let document {
+        if let document, regionDrag == nil {
             let captured = marquee != nil
-                ? Set(document.layerIDs(fullyInside: docRect))
+                ? marqueeRect.map { Set(document.layerIDs(fullyInside: $0)) } ?? []
                 : multiSelectedLayerIDs
             for layer in document.layers where captured.contains(layer.id) {
                 let corners = layer.transformedCorners.map { viewport.viewPoint(fromDocument: $0) }
@@ -1823,7 +1922,8 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
-        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout || tool == .measure {
+        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
+            || tool == .measure || tool.isRegionSelectionTool {
             addCursorRect(bounds, cursor: .crosshair)
         } else if tool == .text {
             addCursorRect(bounds, cursor: .iBeam)

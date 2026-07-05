@@ -103,10 +103,11 @@ struct EditorView: View {
                        annotationContent: editorState.activeAnnotationContent,
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyle,
-                       edgeMap: editorState.measureEdgeMap,
+                       edgeMap: editorState.snappingEdgeMap,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
-                       onSelectionChange: { editorState.setSelection($0) },
+                       onSelectionChange: { editorState.setSelection($0, captureLayers: $1) },
+                       onWandAt: { editorState.wandSelect(at: $0, mode: $1) },
                        onCropRectChange: { editorState.setCropRect($0) },
                        onCropCommit: { editorState.commitCrop() },
                        onSelectLayer: { editorState.selectLayer($0) },
@@ -216,6 +217,7 @@ struct EditorView: View {
     private var toolsBar: some View {
         HStack(spacing: 14) {
             toolButton(.select, "cursorarrow", "Select", "v")
+            regionSelectButtons
             toolButton(.arrow, "arrow.up.right", "Arrow", "a")
             toolButton(.line, "line.diagonal", "Line", "l")
             toolButton(.rectangle, "rectangle", "Rectangle", "r")
@@ -754,10 +756,11 @@ struct EditorView: View {
         }
     }
 
-    private func toolButton(_ tool: Tool, help: String, key: KeyEquivalent,
+    private func toolButton(_ tool: Tool, help: String, key: KeyEquivalent?,
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
         let isLocked = isActive && editorState.toolLocked
+        let keyHint = key.map { " (\(String(describing: $0.character).uppercased()))" } ?? ""
         return Button {
             editorState.setTool(tool)
         } label: {
@@ -781,8 +784,26 @@ struct EditorView: View {
         }
         // Double-click keeps the tool active for repeated drawing.
         .simultaneousGesture(TapGesture(count: 2).onEnded { editorState.lockTool(tool) })
-        .help("\(help) (\(String(describing: key.character).uppercased())) — double-click to keep active")
-        .keyboardShortcut(key, modifiers: [])
+        .help("\(help)\(keyHint) — double-click to keep active")
+        .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: []) })
+    }
+
+    /// Region selection trio (phase 17): rect/ellipse marquee + magic wand.
+    /// ⇧ adds, ⌥ subtracts, ⇧⌥ intersects with the existing region. Only the
+    /// wand has a letter key so far (W, Photoshop's) — Photoshop's M/S are
+    /// taken by measure and the style popover; picks pending a user decision.
+    private var regionSelectButtons: some View {
+        Group {
+            toolButton(.rectSelect, help: "Rectangle Select", key: nil) {
+                Image(systemName: "rectangle.dashed").font(.system(size: 15, weight: .medium))
+            }
+            toolButton(.ellipseSelect, help: "Ellipse Select", key: nil) {
+                Image(systemName: "circle.dashed").font(.system(size: 15, weight: .medium))
+            }
+            toolButton(.wand, help: "Magic Wand", key: "w") {
+                Image(systemName: "wand.and.rays").font(.system(size: 15, weight: .medium))
+            }
+        }
     }
 
     /// Inert buttons for tools that land in later tasks/phases.

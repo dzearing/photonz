@@ -38,6 +38,34 @@ struct ToolTests {
             #expect(tool.defaultAnnotation?.shape == tool.annotationShape)
         }
     }
+
+    // Region selection tools (phase 17): rect/ellipse marquee + magic wand.
+    @Test func regionSelectionToolsAreExactlyTheThreeNewOnes() {
+        for tool in Tool.allCases {
+            let isRegion = tool == .rectSelect || tool == .ellipseSelect || tool == .wand
+            #expect(tool.isRegionSelectionTool == isRegion)
+            if isRegion {
+                #expect(tool.annotationShape == nil)
+                #expect(!tool.createsAnnotationByDrag)
+                #expect(tool.defaultAnnotation == nil)
+            }
+        }
+    }
+
+    /// The selection region survives switching within the selection family
+    /// (Photoshop keeps the ants up) and the fill bucket (fill-the-region is
+    /// the point of making one); drawing/crop/text tools still clear it.
+    @Test func selectionRegionSurvivesTheSelectionFamilyAndFill() {
+        #expect(Tool.select.preservesSelectionRegion)
+        #expect(Tool.rectSelect.preservesSelectionRegion)
+        #expect(Tool.ellipseSelect.preservesSelectionRegion)
+        #expect(Tool.wand.preservesSelectionRegion)
+        #expect(Tool.fill.preservesSelectionRegion)
+        #expect(!Tool.crop.preservesSelectionRegion)
+        #expect(!Tool.rectangle.preservesSelectionRegion)
+        #expect(!Tool.text.preservesSelectionRegion)
+        #expect(!Tool.measure.preservesSelectionRegion)
+    }
 }
 
 @Suite("AnnotationDrag")

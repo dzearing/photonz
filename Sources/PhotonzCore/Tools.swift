@@ -18,6 +18,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// Paint bucket: click a layer to fill it with the foreground color
     /// (⌥ = background color). See `Fill` for per-content semantics.
     case fill
+    /// Region selection (phase 17): drag a rectangular / elliptical region,
+    /// or wand-click a contiguous color area. ⇧ adds, ⌥ subtracts, ⇧⌥
+    /// intersects with the existing region (`SelectionRegion.Mode`).
+    case rectSelect
+    case ellipseSelect
+    case wand
 
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
@@ -27,8 +33,22 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .rectangle: .rectangle
         case .ellipse: .ellipse
         case .highlight: .highlight
-        case .select, .crop, .text, .zoomCallout, .measure, .fill: nil
+        case .select, .crop, .text, .zoomCallout, .measure, .fill,
+             .rectSelect, .ellipseSelect, .wand: nil
         }
+    }
+
+    /// Whether this tool edits the selection REGION (not layer selection).
+    public var isRegionSelectionTool: Bool {
+        self == .rectSelect || self == .ellipseSelect || self == .wand
+    }
+
+    /// Whether switching TO this tool keeps the current selection region.
+    /// The selection family obviously keeps it; the fill bucket keeps it
+    /// because filling the region is why you made one. Drawing/crop/text
+    /// tools clear it — stale ants would read as interactive there.
+    public var preservesSelectionRegion: Bool {
+        self == .select || self == .fill || isRegionSelectionTool
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
