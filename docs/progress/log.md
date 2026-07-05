@@ -679,3 +679,10 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User picked **⌘N = New Layer** (New from Clipboard → ⌥⌘N) and **Photoshop parity for tool keys**: M = Rectangle Select, ⇧M = Ellipse Select, W = Magic Wand. Measure moved off M → **I** (user suggested "T for tape" but T is Text — PS's own Type key; I is where PS files its Ruler). User directive recorded in memory: default all new shortcuts to Photoshop's.
 - 17.6 partial: wand **tolerance slider** appears in the tools bar while the wand is active (0–128, persisted); **⇧⌘I Invert Selection** (full-canvas subtract, pixel semantics). Remaining, deferred until the user has tried the tools: live +/− mode indicator; possible ⌘D-deselect parity pass (⌘D is Duplicate Layer today).
 - 634 tests green. Debug binary relaunched for verification.
+
+## 2026-07-05 (later) — Marquee split button, ⌘D deselect, live +/−/× cursor badges (17.6 done)
+
+- **Split button (user request)**: rect + ellipse select now share ONE toolbar slot — click activates the remembered variant (persisted), the chevron menu (inline Picker, checkmarked) switches it; M = remembered, ⇧M = cycle. Shortcuts ride invisible stand-in buttons (SwiftUI Menus can't carry keyboardShortcut). Pattern is reusable for future tool families.
+- **⌘D = Deselect** (user confirmed PS parity); Duplicate Layer lost its shortcut (PS has none; ⌘J already duplicates when nothing is marqueed).
+- **Live mode cursor (user request)**: with a selection tool active, holding ⇧ shows a "+" badge next to the crosshair, ⌥ shows "−", ⇧⌥ shows "×" — `SelectionCursor` draws haloed cursors, `flagsChanged` swaps them live (canvas must be first responder, i.e. after one click in it).
+- 634 tests green; debug binary relaunched. Phase 17 tasks all done — awaiting user verify of the full selection workflow (plus older 16.9–16.11 verifies).

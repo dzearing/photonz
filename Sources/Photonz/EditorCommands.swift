@@ -197,8 +197,10 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("a", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)
+            // ⌘D, Photoshop's Deselect (took it from Duplicate Layer, which
+            // has no PS shortcut — ⌘J duplicates when nothing is marqueed).
             Button("Deselect") { editor?.deselect() }
-                .keyboardShortcut("a", modifiers: [.command, .shift])
+                .keyboardShortcut("d", modifiers: .command)
                 .disabled(editor?.selection == nil)
             // Photoshop ⇧⌘I: everything outside the current region.
             Button("Invert Selection") { editor?.invertSelection() }
@@ -246,10 +248,11 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("b", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)
             Divider()
+            // No shortcut (Photoshop parity: ⌘D is Deselect; ⌘J covers the
+            // duplicate-selected-layer case when no region is marqueed).
             Button("Duplicate Layer") {
                 if let selectedID { editor?.duplicateLayer(id: selectedID) }
             }
-            .keyboardShortcut("d", modifiers: .command)
             .disabled(selectedID == nil)
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)

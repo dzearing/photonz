@@ -818,21 +818,77 @@ struct EditorView: View {
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 
-    /// Region selection trio (phase 17), on Photoshop's keys: M marquee
-    /// (⇧M for the ellipse variant), W wand. ⇧ adds, ⌥ subtracts, ⇧⌥
+    /// Region selection tools (phase 17), on Photoshop's keys: M marquee
+    /// (a grouped slot — see below), W wand. ⇧ adds, ⌥ subtracts, ⇧⌥
     /// intersects with the existing region.
     private var regionSelectButtons: some View {
         Group {
-            toolButton(.rectSelect, help: "Rectangle Select", key: "m") {
-                Image(systemName: "rectangle.dashed").font(.system(size: 15, weight: .medium))
-            }
-            toolButton(.ellipseSelect, help: "Ellipse Select", key: "m", modifiers: .shift) {
-                Image(systemName: "circle.dashed").font(.system(size: 15, weight: .medium))
-            }
+            marqueeGroupButton
             toolButton(.wand, help: "Magic Wand", key: "w") {
                 Image(systemName: "wand.and.rays").font(.system(size: 15, weight: .medium))
             }
         }
+    }
+
+    /// The marquee tools share ONE toolbar slot, Photoshop-style: the button
+    /// shows (and a click activates) the last-used variant, the chevron menu
+    /// switches it, M picks the remembered one, ⇧M cycles. Keeps the bar
+    /// uncrowded as tool families grow.
+    private var marqueeGroupButton: some View {
+        let remembered = lastMarqueeTool
+        let isActive = editorState.activeTool.isMarqueeSelectTool
+        return Menu {
+            Picker("Marquee", selection: Binding(get: { lastMarqueeTool },
+                                                 set: { activateMarquee($0) })) {
+                Label("Rectangle Select", systemImage: "rectangle.dashed").tag(Tool.rectSelect)
+                Label("Ellipse Select", systemImage: "circle.dashed").tag(Tool.ellipseSelect)
+            }
+            .pickerStyle(.inline)
+        } label: {
+            Image(systemName: remembered == .ellipseSelect ? "circle.dashed" : "rectangle.dashed")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(isActive ? Color.white : Color.primary)
+                .frame(width: 28, height: 28)
+                .background {
+                    if isActive {
+                        Circle().fill(Color.accentColor)
+                            .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
+                    }
+                }
+        } primaryAction: {
+            activateMarquee(remembered)
+        }
+        .menuIndicator(.visible)
+        .menuStyle(.button)
+        .buttonStyle(.borderless)
+        .fixedSize()
+        .help("\(remembered == .ellipseSelect ? "Ellipse" : "Rectangle") Select (M, ⇧M switches) — ⇧ add, ⌥ subtract, ⇧⌥ intersect")
+        // The shortcuts live on invisible stand-ins (Menu can't carry them):
+        // M = the remembered marquee, ⇧M = cycle to the other (Photoshop).
+        .background {
+            Group {
+                Button("") { activateMarquee(lastMarqueeTool) }
+                    .keyboardShortcut("m", modifiers: [])
+                Button("") {
+                    activateMarquee(lastMarqueeTool == .rectSelect ? .ellipseSelect : .rectSelect)
+                }
+                .keyboardShortcut("m", modifiers: .shift)
+            }
+            .opacity(0)
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// The marquee variant the grouped slot remembers (persisted).
+    private var lastMarqueeTool: Tool {
+        let raw = UserDefaults.standard.string(forKey: "tool.marquee.last") ?? ""
+        let tool = Tool(rawValue: raw)
+        return tool?.isMarqueeSelectTool == true ? (tool ?? .rectSelect) : .rectSelect
+    }
+
+    private func activateMarquee(_ tool: Tool) {
+        UserDefaults.standard.set(tool.rawValue, forKey: "tool.marquee.last")
+        editorState.setTool(tool)
     }
 
     /// Inert buttons for tools that land in later tasks/phases.

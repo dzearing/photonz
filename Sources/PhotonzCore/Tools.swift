@@ -43,6 +43,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         self == .rectSelect || self == .ellipseSelect || self == .wand
     }
 
+    /// The marquee pair that shares one toolbar slot (Photoshop's M group).
+    public var isMarqueeSelectTool: Bool {
+        self == .rectSelect || self == .ellipseSelect
+    }
+
     /// Whether switching TO this tool keeps the current selection region.
     /// The selection family obviously keeps it; the fill bucket keeps it
     /// because filling the region is why you made one. Drawing/crop/text

@@ -44,6 +44,8 @@ struct ToolTests {
         for tool in Tool.allCases {
             let isRegion = tool == .rectSelect || tool == .ellipseSelect || tool == .wand
             #expect(tool.isRegionSelectionTool == isRegion)
+            // The marquee GROUP (one shared toolbar slot) is the pair minus the wand.
+            #expect(tool.isMarqueeSelectTool == (isRegion && tool != .wand))
             if isRegion {
                 #expect(tool.annotationShape == nil)
                 #expect(!tool.createsAnnotationByDrag)

@@ -291,6 +291,8 @@ final class CanvasNSView: NSView {
     /// is latched from the modifiers at gesture start (⇧ add, ⌥ subtract,
     /// ⇧⌥ intersect); the ants preview the live boolean combination.
     private var regionDrag: (drag: MarqueeDrag, mode: SelectionRegion.Mode, isEllipse: Bool)?
+    /// Live modifier state, for the selection cursor's +/−/× badge.
+    private var pointerModifiers: NSEvent.ModifierFlags = []
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     private var tool: Tool = .select
@@ -1945,12 +1947,38 @@ final class CanvasNSView: NSView {
     // MARK: Annotation drag preview
 
     override func resetCursorRects() {
-        if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
-            || tool == .measure || tool.isRegionSelectionTool {
+        if tool.isRegionSelectionTool {
+            // The badge mirrors the LIVE modifiers so the combine mode is
+            // visible before the drag starts (⇧ +, ⌥ −, ⇧⌥ ×).
+            addCursorRect(bounds, cursor: SelectionCursor.cursor(for: selectionMode))
+        } else if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
+            || tool == .measure {
             addCursorRect(bounds, cursor: .crosshair)
         } else if tool == .text {
             addCursorRect(bounds, cursor: .iBeam)
         }
+    }
+
+    /// The combine mode the current modifier state implies.
+    private var selectionMode: SelectionRegion.Mode {
+        SelectionRegion.Mode(shift: pointerModifiers.contains(.shift),
+                             option: pointerModifiers.contains(.option))
+    }
+
+    /// Modifier keys reach the first responder as flagsChanged, not keyDown;
+    /// tracking them keeps the selection cursor's +/−/× badge live.
+    override func flagsChanged(with event: NSEvent) {
+        pointerModifiers = event.modifierFlags
+        if tool.isRegionSelectionTool, let window {
+            window.invalidateCursorRects(for: self)
+            // invalidate alone waits for the next mouse move; set the cursor
+            // now if the pointer is already over the canvas.
+            let local = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            if bounds.contains(local) {
+                SelectionCursor.cursor(for: selectionMode).set()
+            }
+        }
+        super.flagsChanged(with: event)
     }
 
     private func clearAnnotationPreview() {
