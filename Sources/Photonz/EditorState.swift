@@ -39,6 +39,11 @@ final class EditorState {
     /// Nil = no selection. Distinct from layer selection; while a region
     /// exists, region ops (fill, copy, promote) target it.
     private(set) var selection: SelectionRegion?
+    /// True when the region was made by a region tool (rect/ellipse/wand) —
+    /// pixel semantics: ⌫ erases pixels, ⌘C copies the clipped composite,
+    /// bucket fills the region. False for the arrow tool's marquee, which
+    /// keeps its layer semantics (rubber-band capture, batch delete).
+    private(set) var selectionTargetsPixels = false
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
     var wandTolerance: Double = 32
     /// The active editor tool. Drawing tools are ONE-SHOT by default: after a
@@ -429,6 +434,7 @@ final class EditorState {
     /// pixel region, independent of layers.
     func setSelection(_ region: SelectionRegion?, captureLayers: Bool = true) {
         selection = region
+        selectionTargetsPixels = region != nil && !captureLayers
         guard captureLayers else { return }
         let captured = region.flatMap { document?.layerIDs(fullyInside: $0.bounds) } ?? []
         if captured.count == 1 {
@@ -1052,6 +1058,13 @@ final class EditorState {
     /// lands on the locked Background (which hit-testing skips), fill that.
     /// `useBackground` (⌥) fills with the background color instead.
     func fillLayer(at point: CGPoint, hit: UUID?, useBackground: Bool) {
+        // While a pixel region exists the bucket fills THE REGION, not the
+        // layer — and clicks outside it do nothing (Photoshop).
+        if selectionTargetsPixels, let region = selection {
+            guard region.contains(point), let target = regionTargetID(preferring: hit) else { return }
+            fillRegion(hex: useBackground ? backgroundFillHex : foregroundFillHex, into: target)
+            return
+        }
         let target = hit ?? document?.layers.first(where: {
             $0.isLocked && $0.imageRef != nil && $0.frame.contains(point)
         })?.id
@@ -1059,10 +1072,97 @@ final class EditorState {
         fillLayer(id: target, hex: useBackground ? backgroundFillHex : foregroundFillHex)
     }
 
-    /// ⌥⌫ — fill the selected layer with the foreground (or background) color.
+    /// ⌥⌫ — fill the selected layer with the foreground (or background)
+    /// color; with a pixel region active, fill the region instead.
     func fillSelectedLayer(useBackground: Bool) {
+        let hex = useBackground ? backgroundFillHex : foregroundFillHex
+        if selectionTargetsPixels, selection != nil {
+            if let target = regionTargetID() { fillRegion(hex: hex, into: target) }
+            return
+        }
         guard let id = selectedLayerID else { return }
-        fillLayer(id: id, hex: useBackground ? backgroundFillHex : foregroundFillHex)
+        fillLayer(id: id, hex: hex)
+    }
+
+    // MARK: - Region-targeted ops (17.5)
+
+    /// The image layer a region op bakes into: the preferred (hit) layer when
+    /// it's bakeable, else the selected layer, else the locked Background
+    /// under the region. Only untransformed, uncropped image layers qualify —
+    /// the axis-aligned doc→bitmap mapping would lie for anything else.
+    private func regionTargetID(preferring hit: UUID? = nil) -> UUID? {
+        guard let document, let region = selection else { return nil }
+        func bakeable(_ layer: Layer?) -> Bool {
+            guard let layer else { return false }
+            return layer.imageRef != nil && layer.crop == nil && layer.transform.isIdentity
+        }
+        if let hit, bakeable(document.layer(id: hit)) { return hit }
+        if let id = selectedLayerID, bakeable(document.layer(id: id)) { return id }
+        return document.layers.first(where: {
+            $0.isLocked && bakeable($0) && $0.frame.intersects(region.bounds)
+        })?.id
+    }
+
+    /// Bakes a region op into an image layer's bitmap as ONE undo step. The
+    /// region path maps from document space into bitmap pixels through the
+    /// layer's frame (bitmaps stretch to their frame at render time).
+    @discardableResult
+    private func bakeRegion(into id: UUID, op: (CGImage, CGPath) -> CGImage?) -> Bool {
+        guard let region = selection, let document,
+              let layer = document.layer(id: id), let ref = layer.imageRef,
+              layer.crop == nil, layer.transform.isIdentity,
+              layer.frame.width > 0, layer.frame.height > 0,
+              let bitmap = store.image(for: ref) else { return false }
+        var docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
+                                            y: CGFloat(bitmap.height) / layer.frame.height)
+            .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
+        let localPath = region.path.copy(using: &docToBitmap) ?? region.path
+        guard let baked = op(bitmap, localPath) else { return false }
+        let newRef = store.register(baked)
+        discardDragPreview()
+        perform { $0.updateLayer(id: id) { $0.content = .image(newRef) } }
+        return true
+    }
+
+    /// Fills the selection region with `hex` into the target image layer's
+    /// pixels. The selection stays up afterwards (Photoshop).
+    @discardableResult
+    func fillRegion(hex: String, into id: UUID) -> Bool {
+        let filled = bakeRegion(into: id) { RegionOps.filled($0, path: $1, hex: hex) }
+        if filled { recordRecentColor(hex: hex) }
+        return filled
+    }
+
+    /// ⌫ with a pixel region: erase it to transparent on the target image
+    /// layer — or, on the locked Background, fill with the background color
+    /// (Photoshop's delete-on-Background).
+    func deleteRegion() {
+        guard selectionTargetsPixels, selection != nil, let id = regionTargetID(),
+              let layer = document?.layer(id: id) else { return }
+        if layer.isLocked {
+            fillRegion(hex: backgroundFillHex, into: id)
+        } else {
+            bakeRegion(into: id) { RegionOps.erased($0, path: $1) }
+        }
+    }
+
+    /// Layer ▸ New Layer: a canvas-sized transparent image layer on top,
+    /// selected — with the selection region PRESERVED, so select → new layer
+    /// → fill lands paint on the fresh layer (the Photoshop flow).
+    func newEmptyLayer() {
+        guard let document else { return }
+        let size = document.canvasSize
+        let w = Int(size.width.rounded()), h = Int(size.height.rounded())
+        guard w > 0, h > 0, let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8,
+                                      bytesPerRow: w * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let transparent = context.makeImage() else { return }
+        let ref = store.register(transparent)
+        let layer = Layer(name: "Layer", content: .image(ref),
+                          frame: CGRect(origin: .zero, size: size))
+        perform { $0.addLayer(layer) }
+        selectedLayerID = layer.id
     }
 
     /// ⌫ with the (locked) Background selected: reset it to the background
@@ -1665,12 +1765,25 @@ final class EditorState {
     /// stacks it as a new image layer (one undo step). The new layer is
     /// selected; the marquee clears — it has done its job.
     func promoteSelectionToLayer() {
-        guard let document, let region = selection.map({ Geometry.pixelAligned($0.bounds) }),
-              let raster = previewRenderer.rasterize(region: region, of: document, store: store) else { return }
+        guard let document, let selection else { return }
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        let raster: CGImage?
+        let frame: CGRect
+        if selectionTargetsPixels {
+            // Pixel region: the promoted bitmap is clipped to the path —
+            // transparent outside a wand blob or ellipse.
+            frame = selection.path.boundingBoxOfPath.integral.intersection(canvas)
+            raster = previewRenderer.rasterize(region: canvas, of: document, store: store)
+                .flatMap { RegionOps.extracted($0, path: selection.path) }
+        } else {
+            frame = Geometry.pixelAligned(selection.bounds)
+            raster = previewRenderer.rasterize(region: frame, of: document, store: store)
+        }
+        guard let raster, !frame.isNull else { return }
         let ref = store.register(raster)
         var newID: UUID?
-        perform { newID = $0.promoteRegionToLayer(region: region, rasterized: ref, name: "Promoted Layer").id }
-        selection = nil
+        perform { newID = $0.promoteRegionToLayer(region: frame, rasterized: ref, name: "Promoted Layer").id }
+        self.selection = nil // like Photoshop's Layer via Copy, ⌘J consumes the selection
         selectedLayerID = newID
     }
 
@@ -1700,6 +1813,12 @@ final class EditorState {
     /// ⌘A → ⌘C → ⌘V duplicates what you see (background included), and the
     /// PNG also pastes into other apps.
     func copySelectedLayer() {
+        // A pixel region supersedes the layer (even one that's selected —
+        // e.g. the fresh layer from ⌘N): ⌘C copies the region, not the layer.
+        if selectionTargetsPixels, selection != nil {
+            copyRegionFromComposite()
+            return
+        }
         if let id = selectedLayerID, let layer = document?.layer(id: id) {
             var imageData: Data?
             if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
@@ -1712,8 +1831,8 @@ final class EditorState {
             return
         }
         guard let document else { return }
-        let region = selection.map { Geometry.pixelAligned($0.bounds) }
-            ?? CGRect(origin: .zero, size: document.canvasSize)
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        let region = selection.map { Geometry.pixelAligned($0.bounds) } ?? canvas
         guard region.width >= 1, region.height >= 1,
               let raster = previewRenderer.rasterize(region: region, of: document, store: store),
               let png = ImageCodec.encode(raster, format: .png) else { return }
@@ -1721,6 +1840,26 @@ final class EditorState {
         // spot) plus a plain PNG for interoperability.
         let layer = Layer(name: "Copied Selection",
                           content: .image(ImageRef(pixelSize: region.size)), frame: region)
+        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png)) else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+        pasteboard.setData(png, forType: .png)
+    }
+
+    /// The pixel region copied from the composite, CLIPPED to its path —
+    /// transparent outside a wand blob or ellipse. Pastes as a layer over the
+    /// copied spot in Photonz, and as a PNG elsewhere.
+    private func copyRegionFromComposite() {
+        guard let document, let selection else { return }
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        let frame = selection.path.boundingBoxOfPath.integral.intersection(canvas)
+        guard !frame.isNull, frame.width >= 1, frame.height >= 1,
+              let composite = previewRenderer.rasterize(region: canvas, of: document, store: store),
+              let clipped = RegionOps.extracted(composite, path: selection.path),
+              let png = ImageCodec.encode(clipped, format: .png) else { return }
+        let layer = Layer(name: "Copied Selection",
+                          content: .image(ImageRef(pixelSize: frame.size)), frame: frame)
         guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png)) else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()

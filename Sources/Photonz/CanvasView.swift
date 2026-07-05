@@ -25,6 +25,9 @@ struct CanvasView: NSViewRepresentable {
     let viewport: Viewport?
     let document: PhotonzDocument?
     let selection: SelectionRegion?
+    /// True when the region came from a region tool (pixel semantics: ⌫
+    /// erases the region); false for the arrow marquee (layer semantics).
+    let selectionTargetsPixels: Bool
     /// Pending crop rect + aspect lock while the crop tool is active.
     let cropRect: CGRect?
     let cropAspect: CropAspect
@@ -56,6 +59,8 @@ struct CanvasView: NSViewRepresentable {
     /// Magic-wand click: (document point, combine mode). Flood fill runs
     /// app-side (off-main) and lands via the `selection` prop.
     let onWandAt: (CGPoint, SelectionRegion.Mode) -> Void
+    /// ⌫ with a pixel region: erase it (app-side decides erase vs BG-fill).
+    let onDeleteRegion: () -> Void
     let onCropRectChange: (CGRect) -> Void
     let onCropCommit: () -> Void
     let onSelectLayer: (UUID?) -> Void
@@ -95,7 +100,8 @@ struct CanvasView: NSViewRepresentable {
     func updateNSView(_ view: CanvasNSView, context: Context) {
         update(view)
         view.apply(image: image, viewport: viewport, document: document,
-                   selection: selection, cropRect: cropRect, cropAspect: cropAspect,
+                   selection: selection, selectionTargetsPixels: selectionTargetsPixels,
+                   cropRect: cropRect, cropAspect: cropAspect,
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
@@ -109,6 +115,7 @@ struct CanvasView: NSViewRepresentable {
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
         view.onWandAt = onWandAt
+        view.onDeleteRegion = onDeleteRegion
         view.onCropRectChange = onCropRectChange
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
@@ -145,6 +152,7 @@ final class CanvasNSView: NSView {
     var onViewportChange: ((Viewport) -> Void) = { _ in }
     var onSelectionChange: ((SelectionRegion?, Bool) -> Void) = { _, _ in }
     var onWandAt: ((CGPoint, SelectionRegion.Mode) -> Void) = { _, _ in }
+    var onDeleteRegion: () -> Void = {}
     var onCropRectChange: ((CGRect) -> Void) = { _ in }
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
@@ -243,6 +251,9 @@ final class CanvasNSView: NSView {
     private var document: PhotonzDocument?
     /// Committed selection region in document coordinates.
     private var selection: SelectionRegion?
+    /// Whether the committed region has pixel semantics (region tools) —
+    /// routes ⌫/⌥⌫ to region ops instead of layer ops.
+    private var selectionTargetsPixels = false
     /// Pending crop rect (document coordinates), echoed from EditorState.
     private var cropRect: CGRect?
     /// Crop aspect lock, echoed from EditorState; drags constrain through it.
@@ -1227,10 +1238,19 @@ final class CanvasNSView: NSView {
             beginTextSession(layerID: id, at: layer.frame.origin)
             return
         }
-        // ⌥⌫ fills the selected layer with the foreground color (Photoshop).
+        // ⌥⌫ fills the selected layer — or the pixel region — with the
+        // foreground color (Photoshop). EditorState routes region vs layer.
         if event.keyCode == 51 || event.keyCode == 117,
-           event.modifierFlags.contains(.option), selectedLayerID != nil {
+           event.modifierFlags.contains(.option),
+           selectedLayerID != nil || (selectionTargetsPixels && selection != nil) {
             onFillSelected(false)
+            return
+        }
+        // ⌫ with a pixel region erases the region (or fills the locked
+        // Background with the BG color) instead of touching layers.
+        if event.keyCode == 51 || event.keyCode == 117,
+           selectionTargetsPixels, selection != nil {
+            onDeleteRegion()
             return
         }
         // Delete / forward-delete with a marquee multi-selection removes them
@@ -1398,6 +1418,7 @@ final class CanvasNSView: NSView {
 
     private func commit(_ next: Viewport) {
         apply(image: image, viewport: next, document: document, selection: selection,
+              selectionTargetsPixels: selectionTargetsPixels,
               cropRect: cropRect, cropAspect: cropAspect, cropBounds: cropBounds,
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               multiSelectedLayerIDs: multiSelectedLayerIDs,
@@ -1409,7 +1430,8 @@ final class CanvasNSView: NSView {
     // MARK: Display
 
     func apply(image: CGImage?, viewport: Viewport?, document: PhotonzDocument?,
-               selection: SelectionRegion?, cropRect: CGRect?, cropAspect: CropAspect,
+               selection: SelectionRegion?, selectionTargetsPixels: Bool = false,
+               cropRect: CGRect?, cropAspect: CropAspect,
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
@@ -1472,6 +1494,7 @@ final class CanvasNSView: NSView {
         // unrelated SwiftUI update echo stale committed values over it.
         if marquee == nil, regionDrag == nil {
             self.selection = selection
+            self.selectionTargetsPixels = selectionTargetsPixels
         }
         if cropDrag == nil {
             self.cropRect = cropRect

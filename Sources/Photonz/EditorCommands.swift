@@ -223,6 +223,13 @@ struct EditorCommands: Commands {
 
         CommandMenu("Layer") {
             let selectedID = editor?.selectedLayerID
+            // New empty (transparent, canvas-sized) layer. The selection
+            // region is preserved, so select → New Layer → fill paints the
+            // region onto the fresh layer. Shortcut pending a user decision
+            // (⌘N is New from Clipboard today; PS uses ⇧⌘N, taken by New
+            // Window).
+            Button("New Layer") { editor?.newEmptyLayer() }
+                .disabled(editor?.document == nil)
             // Photoshop ⌘J: copy the marquee selection to a new layer, or —
             // with no marquee — duplicate the selected layer.
             Button("New Layer via Copy") {
