@@ -51,14 +51,14 @@ struct EditorCommands: Commands {
             Button("Check for Updates…") { coordinator.checkForUpdates() }
         }
 
-        // Replace the auto "New Window" so ⌘N is Preview-style "New from
-        // Clipboard"; without replacing, WindowGroup's default New Window also
-        // binds ⌘N and the two collide.
+        // Replace the auto "New Window" so its default ⌘N binding doesn't
+        // collide: ⌘N belongs to Layer ▸ New Layer (user decision 2026-07-05
+        // — the select → ⌘N → fill flow), clipboard moved to ⌥⌘N.
         CommandGroup(replacing: .newItem) {
             Button("New Window") { coordinator.newDocumentWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
             Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
-                .keyboardShortcut("n", modifiers: .command)
+                .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }
                 .keyboardShortcut("o", modifiers: .command)
             Divider()
@@ -200,6 +200,10 @@ struct EditorCommands: Commands {
             Button("Deselect") { editor?.deselect() }
                 .keyboardShortcut("a", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)
+            // Photoshop ⇧⌘I: everything outside the current region.
+            Button("Invert Selection") { editor?.invertSelection() }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
+                .disabled(editor?.selection == nil)
         }
 
         // Must REPLACE, not append: SwiftUI's built-in .undoRedo items carry the
@@ -224,11 +228,11 @@ struct EditorCommands: Commands {
         CommandMenu("Layer") {
             let selectedID = editor?.selectedLayerID
             // New empty (transparent, canvas-sized) layer. The selection
-            // region is preserved, so select → New Layer → fill paints the
-            // region onto the fresh layer. Shortcut pending a user decision
-            // (⌘N is New from Clipboard today; PS uses ⇧⌘N, taken by New
-            // Window).
+            // region is preserved, so select → ⌘N → fill paints the region
+            // onto the fresh layer (user decision 2026-07-05; New from
+            // Clipboard moved to ⌥⌘N).
             Button("New Layer") { editor?.newEmptyLayer() }
+                .keyboardShortcut("n", modifiers: .command)
                 .disabled(editor?.document == nil)
             // Photoshop ⌘J: copy the marquee selection to a new layer, or —
             // with no marquee — duplicate the selected layer.

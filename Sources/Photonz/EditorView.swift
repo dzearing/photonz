@@ -220,6 +220,10 @@ struct EditorView: View {
         HStack(spacing: 14) {
             toolButton(.select, "cursorarrow", "Select", "v")
             regionSelectButtons
+            if editorState.activeTool == .wand {
+                wandOptions
+                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
+            }
             toolButton(.arrow, "arrow.up.right", "Arrow", "a")
             toolButton(.line, "line.diagonal", "Line", "l")
             toolButton(.rectangle, "rectangle", "Rectangle", "r")
@@ -249,7 +253,9 @@ struct EditorView: View {
             .disabled(editorState.document == nil)
             .help("Resize Image (⌥⌘I)")
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
-            toolButton(.measure, "ruler", "Measure", "m")
+            // I, not M: M is the Photoshop marquee (rect/ellipse select), and
+            // Photoshop itself files the Ruler under I.
+            toolButton(.measure, "ruler", "Measure", "i")
             toolButton(.fill, help: "Fill", key: "g") {
                 PaintBucketIcon().frame(width: 22, height: 21)
             }
@@ -365,6 +371,26 @@ struct EditorView: View {
     }
 
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.
+    /// Wand tolerance: how far a color may drift (0–255 Euclidean RGBA) and
+    /// still join the flood. Applies to the next wand click.
+    private var wandOptions: some View {
+        HStack(spacing: 6) {
+            Text("Tolerance")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Slider(value: Binding(get: { editorState.wandTolerance },
+                                  set: { editorState.wandTolerance = $0.rounded() }),
+                   in: 0...128)
+                .controlSize(.small)
+                .frame(width: 80)
+            Text("\(Int(editorState.wandTolerance))")
+                .font(.system(.caption, design: .monospaced))
+                .frame(width: 22, alignment: .trailing)
+        }
+        .help("Wand tolerance — how similar a color must be to join the selection")
+    }
+
     private var cropOptions: some View {
         HStack(spacing: 6) {
             ForEach(CropAspect.allCases, id: \.self) { aspect in
@@ -759,10 +785,12 @@ struct EditorView: View {
     }
 
     private func toolButton(_ tool: Tool, help: String, key: KeyEquivalent?,
+                            modifiers: EventModifiers = [],
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
         let isLocked = isActive && editorState.toolLocked
-        let keyHint = key.map { " (\(String(describing: $0.character).uppercased()))" } ?? ""
+        let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
+        let keyHint = key.map { " (\(shiftHint)\(String(describing: $0.character).uppercased()))" } ?? ""
         return Button {
             editorState.setTool(tool)
         } label: {
@@ -787,19 +815,18 @@ struct EditorView: View {
         // Double-click keeps the tool active for repeated drawing.
         .simultaneousGesture(TapGesture(count: 2).onEnded { editorState.lockTool(tool) })
         .help("\(help)\(keyHint) — double-click to keep active")
-        .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: []) })
+        .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 
-    /// Region selection trio (phase 17): rect/ellipse marquee + magic wand.
-    /// ⇧ adds, ⌥ subtracts, ⇧⌥ intersects with the existing region. Only the
-    /// wand has a letter key so far (W, Photoshop's) — Photoshop's M/S are
-    /// taken by measure and the style popover; picks pending a user decision.
+    /// Region selection trio (phase 17), on Photoshop's keys: M marquee
+    /// (⇧M for the ellipse variant), W wand. ⇧ adds, ⌥ subtracts, ⇧⌥
+    /// intersects with the existing region.
     private var regionSelectButtons: some View {
         Group {
-            toolButton(.rectSelect, help: "Rectangle Select", key: nil) {
+            toolButton(.rectSelect, help: "Rectangle Select", key: "m") {
                 Image(systemName: "rectangle.dashed").font(.system(size: 15, weight: .medium))
             }
-            toolButton(.ellipseSelect, help: "Ellipse Select", key: nil) {
+            toolButton(.ellipseSelect, help: "Ellipse Select", key: "m", modifiers: .shift) {
                 Image(systemName: "circle.dashed").font(.system(size: 15, weight: .medium))
             }
             toolButton(.wand, help: "Magic Wand", key: "w") {

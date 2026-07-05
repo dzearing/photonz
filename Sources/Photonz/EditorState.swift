@@ -45,7 +45,11 @@ final class EditorState {
     /// keeps its layer semantics (rubber-band capture, batch delete).
     private(set) var selectionTargetsPixels = false
     /// Magic-wand color tolerance (Euclidean RGBA distance, 0–255 units).
-    var wandTolerance: Double = 32
+    /// Persisted like the fill colors — a tuned tolerance outlives relaunch.
+    var wandTolerance: Double = UserDefaults.standard.object(forKey: "wand.tolerance")
+        .flatMap { $0 as? Double } ?? 32 {
+        didSet { UserDefaults.standard.set(wandTolerance, forKey: "wand.tolerance") }
+    }
     /// The active editor tool. Drawing tools are ONE-SHOT by default: after a
     /// shape is drawn the editor returns to `.select` (and selects the new
     /// shape). Double-clicking a tool in the toolbar sets `toolLocked`, which
@@ -1884,6 +1888,15 @@ final class EditorState {
     /// ⇧⌘A: clear the marquee.
     func deselect() {
         setSelection(nil)
+    }
+
+    /// ⇧⌘I (Photoshop): select everything OUTSIDE the current region. The
+    /// result is a pixel-semantics region regardless of how the original was
+    /// made — "the rest of the canvas" isn't a layer rubber-band.
+    func invertSelection() {
+        guard let document, let selection else { return }
+        let full = SelectionRegion.rect(CGRect(origin: .zero, size: document.canvasSize))
+        setSelection(full?.combining(selection, mode: .subtract), captureLayers: false)
     }
 
     /// File > New from Clipboard (⌘N, Preview convention): a clipboard image
