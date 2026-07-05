@@ -1142,17 +1142,38 @@ final class EditorState {
         return filled
     }
 
-    /// ⌫ with a pixel region: erase it to transparent on the target image
-    /// layer — or, on the locked Background, fill with the background color
-    /// (Photoshop's delete-on-Background).
+    /// ⌫ with a pixel region: SLICE the target image layer — erase the
+    /// region, then tighten the layer's frame to the surviving pixels
+    /// (Photoshop's bounds are derived from content, so deletes shrink
+    /// layers there too). Deleting every pixel removes the layer. The locked
+    /// Background instead fills with the background color and keeps its
+    /// size (it must stay canvas-sized).
     func deleteRegion() {
-        guard selectionTargetsPixels, selection != nil, let id = regionTargetID(),
-              let layer = document?.layer(id: id) else { return }
+        guard selectionTargetsPixels, let region = selection, let id = regionTargetID(),
+              let document, let layer = document.layer(id: id) else { return }
         if layer.isLocked {
             fillRegion(hex: backgroundFillHex, into: id)
-        } else {
-            bakeRegion(into: id) { RegionOps.erased($0, path: $1) }
+            return
         }
+        guard let ref = layer.imageRef, layer.crop == nil, layer.transform.isIdentity,
+              layer.frame.width > 0, layer.frame.height > 0,
+              let bitmap = store.image(for: ref) else { return }
+        var docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
+                                            y: CGFloat(bitmap.height) / layer.frame.height)
+            .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
+        let localPath = region.path.copy(using: &docToBitmap) ?? region.path
+        guard let erased = RegionOps.erased(bitmap, path: localPath) else { return }
+        discardDragPreview()
+        guard let trimmed = RegionOps.trimmed(erased) else {
+            deleteLayer(id: id) // the delete consumed the whole layer
+            return
+        }
+        let newRef = store.register(trimmed.image)
+        let newFrame = trimmed.rect.applying(docToBitmap.inverted())
+        perform { $0.updateLayer(id: id) {
+            $0.content = .image(newRef)
+            $0.frame = newFrame
+        } }
     }
 
     // MARK: Region content move (Photoshop Move-tool semantics)

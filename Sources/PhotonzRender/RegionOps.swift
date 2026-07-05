@@ -72,6 +72,46 @@ public enum RegionOps {
         }
     }
 
+    /// The tight bounding box of the image's non-transparent pixels, cropped
+    /// — how a layer "slices down" after a region delete (Photoshop-style
+    /// derived bounds). `rect` is in image pixel coordinates (top-left).
+    /// `nil` when every pixel is fully transparent.
+    public static func trimmed(_ image: CGImage) -> (image: CGImage, rect: CGRect)? {
+        let w = image.width, h = image.height
+        guard w > 0, h > 0, let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+        var rgba = [UInt8](repeating: 0, count: w * h * 4)
+        let drew = rgba.withUnsafeMutableBytes { raw -> Bool in
+            guard let base = raw.baseAddress,
+                  let cg = CGContext(data: base, width: w, height: h,
+                                     bitsPerComponent: 8, bytesPerRow: w * 4,
+                                     space: space,
+                                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            cg.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+            return true
+        }
+        guard drew else { return nil }
+        var minX = w, minY = h, maxX = -1, maxY = -1
+        rgba.withUnsafeBufferPointer { px in
+            for y in 0..<h {
+                let row = y * w
+                for x in 0..<w where px[(row + x) * 4 + 3] > 0 {
+                    if x < minX { minX = x }
+                    if x > maxX { maxX = x }
+                    if y < minY { minY = y }
+                    if y > maxY { maxY = y }
+                }
+            }
+        }
+        guard maxX >= minX, maxY >= minY else { return nil }
+        let rect = CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+        if rect == CGRect(x: 0, y: 0, width: w, height: h) { return (image, rect) }
+        // CGImage.cropping addresses pixels from the first row — top-left,
+        // same as our rect.
+        guard let cropped = image.cropping(to: rect) else { return nil }
+        return (cropped, rect)
+    }
+
     /// Runs `draw` in a fresh RGBA8 context matching `image`'s size and
     /// returns the result.
     private static func redraw(_ image: CGImage,

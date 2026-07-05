@@ -152,6 +152,51 @@ struct RegionOpsTests {
         #expect(near(pixel(out, 10, 10).g, 255))  // transparent corner shows white base
     }
 
+    // MARK: Trim (slicing a layer down after a region delete)
+
+    @Test func trimTightensToTheSurvivingPixels() throws {
+        // Opaque content only in a sub-rect of a transparent canvas.
+        let content = image(width: 20, height: 20,
+                            color: CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        let blob = try #require(RegionOps.extracted(
+            content, path: CGPath(rect: CGRect(x: 4, y: 6, width: 8, height: 5), transform: nil)))
+        // `extracted` already crops to bounds; re-embed it in a larger
+        // transparent field via stamp to make trimming meaningful.
+        let field = try #require(RegionOps.erased(
+            content, path: CGPath(rect: CGRect(x: 0, y: 0, width: 20, height: 20), transform: nil)))
+        let embedded = try #require(RegionOps.stamped(field, overlay: blob,
+                                                      at: CGRect(x: 4, y: 6, width: 8, height: 5)))
+        let trimmed = try #require(RegionOps.trimmed(embedded))
+        #expect(trimmed.rect == CGRect(x: 4, y: 6, width: 8, height: 5))
+        #expect(trimmed.image.width == 8 && trimmed.image.height == 5)
+        #expect(near(pixel(trimmed.image, 1, 1).r, 255))
+    }
+
+    @Test func trimOfAFullyOpaqueImageIsTheFullRect() throws {
+        let base = image(width: 6, height: 4, color: white)
+        let trimmed = try #require(RegionOps.trimmed(base))
+        #expect(trimmed.rect == CGRect(x: 0, y: 0, width: 6, height: 4))
+        #expect(trimmed.image.width == 6 && trimmed.image.height == 4)
+    }
+
+    @Test func trimOfAFullyTransparentImageIsNil() throws {
+        let base = image(width: 6, height: 4, color: white)
+        let cleared = try #require(RegionOps.erased(
+            base, path: CGPath(rect: CGRect(x: -1, y: -1, width: 8, height: 6), transform: nil)))
+        #expect(RegionOps.trimmed(cleared) == nil)
+    }
+
+    @Test func eraseThenTrimSlicesOffTheDeletedHalf() throws {
+        // The user flow: select the right half of a layer, ⌫ — the surviving
+        // bitmap should be just the left half.
+        let base = image(width: 10, height: 10, color: white)
+        let erased = try #require(RegionOps.erased(
+            base, path: CGPath(rect: CGRect(x: 5, y: 0, width: 5, height: 10), transform: nil)))
+        let trimmed = try #require(RegionOps.trimmed(erased))
+        #expect(trimmed.rect == CGRect(x: 0, y: 0, width: 5, height: 10))
+        #expect(near(pixel(trimmed.image, 2, 5).r, 255))
+    }
+
     @Test func stampClipsOverhangGracefully() throws {
         let base = image(width: 10, height: 10, color: white)
         let red = image(width: 4, height: 4, color: CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))

@@ -697,3 +697,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 
 - User tested 17.7: marquee-selected on Background, dragged from the middle, and the OUTLINE moved — "i expect it to move the pixels. makes no sense to move the selection box only by default." That was my faithful-PS split (marquee drag = outline). Changed: with any selection tool, a plain drag inside the region now moves the PIXELS; ⌘-drag moves just the outline; falls back to outline when nothing under the region is bakeable. Memory updated: PS parity is for shortcuts, not for interactions the user finds unintuitive.
 - 639 tests green; app relaunched.
+
+## 2026-07-05 (later) — ⌫ on a region SLICES the layer (user correction); M inherits arrow selections
+
+- User: arrow-select → M → drag didn't move pixels. Cause: the arrow-made selection kept layer semantics across the tool switch. Now picking up any region tool upgrades a live selection to a pixel region (the tool in hand declares intent).
+- User: "I select a portion of a layer and hit delete — the layer doesn't get smaller. I wanted to slice the layer." ⌫ on an unlocked image layer now erases the region AND trims the layer to the tight bbox of surviving pixels (`RegionOps.trimmed`, TDD ×4 — PS-style derived bounds); deleting every pixel deletes the layer; the locked Background still BG-fills at full size. One undo step.
+- 643 tests green; app relaunched.
