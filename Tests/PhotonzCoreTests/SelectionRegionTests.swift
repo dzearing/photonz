@@ -140,6 +140,24 @@ struct SelectionRegionTests {
         #expect(SelectionRegion.Mode(shift: true, option: true) == .intersect)
     }
 
+    // MARK: Translation (moving the outline / content)
+
+    @Test func translatedShiftsBoundsAndContainment() throws {
+        let outer = try #require(SelectionRegion.rect(CGRect(x: 0, y: 0, width: 40, height: 40)))
+        let inner = try #require(SelectionRegion.rect(CGRect(x: 10, y: 10, width: 20, height: 20)))
+        let donut = try #require(outer.combining(inner, mode: .subtract))
+        let moved = try #require(donut.translated(by: CGVector(dx: 100, dy: 50)))
+        #expect(moved.bounds == CGRect(x: 100, y: 50, width: 40, height: 40))
+        #expect(moved.contains(CGPoint(x: 105, y: 55)))   // ring
+        #expect(!moved.contains(CGPoint(x: 120, y: 70)))  // hole moved too
+        #expect(!moved.contains(CGPoint(x: 5, y: 5)))     // old spot vacated
+    }
+
+    @Test func zeroTranslationIsIdentity() throws {
+        let region = try #require(SelectionRegion.rect(CGRect(x: 3, y: 4, width: 10, height: 10)))
+        #expect(region.translated(by: .zero) == region)
+    }
+
     // MARK: Equatable
 
     @Test func equalityFollowsThePath() throws {

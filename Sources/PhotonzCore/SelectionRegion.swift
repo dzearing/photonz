@@ -71,6 +71,15 @@ public struct SelectionRegion: Equatable, @unchecked Sendable {
         }
     }
 
+    /// The region shifted by `delta` — moving the outline, or following
+    /// content that moved. (A translation can't empty a region, but the
+    /// optional keeps the `SelectionRegion?` call sites uniform.)
+    public func translated(by delta: CGVector) -> SelectionRegion? {
+        guard delta != .zero else { return self }
+        var transform = CGAffineTransform(translationX: delta.dx, y: delta.dy)
+        return path.copy(using: &transform).flatMap(SelectionRegion.init)
+    }
+
     /// Combines against an optional existing selection: with no base, replace
     /// and add start from the shape; subtract and intersect select nothing.
     public static func combine(_ base: SelectionRegion?, with shape: SelectionRegion, mode: Mode) -> SelectionRegion? {

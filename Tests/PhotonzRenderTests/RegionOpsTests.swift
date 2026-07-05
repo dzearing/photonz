@@ -123,4 +123,41 @@ struct RegionOpsTests {
         let path = CGPath(rect: CGRect(x: 20, y: 20, width: 5, height: 5), transform: nil)
         #expect(RegionOps.extracted(base, path: path) == nil)
     }
+
+    // MARK: Stamp (dropping moved region content back into the layer)
+
+    @Test func stampDrawsTheOverlayAtTopLeftRect() throws {
+        let base = image(width: 10, height: 10, color: white)
+        let red = image(width: 2, height: 2, color: CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        let out = try #require(RegionOps.stamped(base, overlay: red,
+                                                 at: CGRect(x: 3, y: 4, width: 2, height: 2)))
+        #expect(near(pixel(out, 3, 4).r, 255) && near(pixel(out, 3, 4).g, 0))
+        #expect(near(pixel(out, 4, 5).r, 255) && near(pixel(out, 4, 5).g, 0))
+        #expect(near(pixel(out, 2, 4).g, 255))   // left of the stamp untouched
+        #expect(near(pixel(out, 3, 3).g, 255))   // above it untouched
+        #expect(near(pixel(out, 5, 6).g, 255))   // past its far corner untouched
+    }
+
+    @Test func stampCompositesTransparencyOverTheBase() throws {
+        // An extracted ellipse keeps its transparent corners: stamping it must
+        // let the base show through there (source-over, not copy).
+        let base = image(width: 20, height: 20, color: white)
+        let source = image(width: 20, height: 20,
+                           color: CGColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        let ellipse = CGPath(ellipseIn: CGRect(x: 0, y: 0, width: 8, height: 8), transform: nil)
+        let blob = try #require(RegionOps.extracted(source, path: ellipse))
+        let out = try #require(RegionOps.stamped(base, overlay: blob,
+                                                 at: CGRect(x: 10, y: 10, width: 8, height: 8)))
+        #expect(near(pixel(out, 14, 14).b, 255))  // ellipse center is blue
+        #expect(near(pixel(out, 10, 10).g, 255))  // transparent corner shows white base
+    }
+
+    @Test func stampClipsOverhangGracefully() throws {
+        let base = image(width: 10, height: 10, color: white)
+        let red = image(width: 4, height: 4, color: CGColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        let out = try #require(RegionOps.stamped(base, overlay: red,
+                                                 at: CGRect(x: 8, y: 8, width: 4, height: 4)))
+        #expect(near(pixel(out, 9, 9).r, 255) && near(pixel(out, 9, 9).g, 0))
+        #expect(near(pixel(out, 7, 7).g, 255))
+    }
 }

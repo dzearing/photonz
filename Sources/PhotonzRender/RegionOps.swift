@@ -60,6 +60,18 @@ public enum RegionOps {
         return context.makeImage()
     }
 
+    /// `base` with `overlay` composited over it (source-over) at `rect` —
+    /// top-left image coordinates. The "drop the moved region content back
+    /// into the layer" primitive.
+    public static func stamped(_ base: CGImage, overlay: CGImage, at rect: CGRect) -> CGImage? {
+        redraw(base) { context, height in
+            context.draw(base, in: CGRect(x: 0, y: 0, width: base.width, height: height))
+            let flipped = CGRect(x: rect.minX, y: CGFloat(height) - rect.maxY,
+                                 width: rect.width, height: rect.height)
+            context.draw(overlay, in: flipped)
+        }
+    }
+
     /// Runs `draw` in a fresh RGBA8 context matching `image`'s size and
     /// returns the result.
     private static func redraw(_ image: CGImage,

@@ -686,3 +686,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - **⌘D = Deselect** (user confirmed PS parity); Duplicate Layer lost its shortcut (PS has none; ⌘J already duplicates when nothing is marqueed).
 - **Live mode cursor (user request)**: with a selection tool active, holding ⇧ shows a "+" badge next to the crosshair, ⌥ shows "−", ⇧⌥ shows "×" — `SelectionCursor` draws haloed cursors, `flagsChanged` swaps them live (canvas must be first responder, i.e. after one click in it).
 - 634 tests green; debug binary relaunched. Phase 17 tasks all done — awaiting user verify of the full selection workflow (plus older 16.9–16.11 verifies).
+
+## 2026-07-05 (later) — Move region content / outline (17.7, user question → PS semantics)
+
+- User asked how PS handles moving selected content within a layer. Answer, built: **Select (V) drag inside a pixel region moves the region's PIXELS** — lifted off the target layer (transparent hole; BG color on the locked Background), floated live through the existing DragPreview sprite path, baked back into the same layer on drop as one undo step; the ants travel with the content; **⌥-drag moves a copy**; Esc cancels cleanly. **Marquee-tool plain drag inside the region moves only the OUTLINE** (modifier drags still combine shapes). Deltas snap to whole pixels.
+- New primitives: `SelectionRegion.translated(by:)` (core, TDD) and `RegionOps.stamped` (render, TDD — source-over at a top-left rect).
+- 639 tests green; app relaunched. Follow-up candidates: arrow-key nudge of region content, move-cursor over the region.

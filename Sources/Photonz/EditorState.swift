@@ -1150,6 +1150,109 @@ final class EditorState {
         }
     }
 
+    // MARK: Region content move (Photoshop Move-tool semantics)
+
+    /// In-flight region content move: the region's pixels lifted from the
+    /// target layer. `holed` is the layer bitmap with the region removed
+    /// (transparent, or BG color on the locked Background); `content` is the
+    /// extracted pixels; `contentFrame` is where they sit in DOC coords.
+    private var regionMove: (targetID: UUID, content: CGImage, contentFrame: CGRect,
+                             holed: CGImage, copy: Bool)?
+
+    /// Select(V)-tool drag starting inside a pixel region: lift the region's
+    /// pixels off the target layer and float them (⌥ floats a COPY, leaving
+    /// the original). Returns the floating content's doc frame — the canvas
+    /// drives the sprite with it — or nil when nothing bakeable is under the
+    /// region. Preview pieces render off-main like a layer drag.
+    func beginRegionMove(copy: Bool) -> CGRect? {
+        guard selectionTargetsPixels, let region = selection, let document,
+              let targetID = regionTargetID(), let layer = document.layer(id: targetID),
+              let ref = layer.imageRef, layer.crop == nil, layer.transform.isIdentity,
+              layer.frame.width > 0, layer.frame.height > 0,
+              let bitmap = store.image(for: ref) else { return nil }
+        var docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
+                                            y: CGFloat(bitmap.height) / layer.frame.height)
+            .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
+        let localPath = region.path.copy(using: &docToBitmap) ?? region.path
+        // The hole: transparent on normal layers; the locked Background gets
+        // the background color (Photoshop's Move-from-Background behavior).
+        let holed = layer.isLocked
+            ? RegionOps.filled(bitmap, path: localPath, hex: backgroundFillHex)
+            : RegionOps.erased(bitmap, path: localPath)
+        guard let holed, let content = RegionOps.extracted(bitmap, path: localPath) else { return nil }
+        let localBounds = localPath.boundingBoxOfPath.integral
+            .intersection(CGRect(x: 0, y: 0, width: bitmap.width, height: bitmap.height))
+        let contentFrame = localBounds.applying(docToBitmap.inverted())
+        regionMove = (targetID, content, contentFrame, holed, copy)
+
+        // Preview pieces (async, like beginLayerDrag): underlay = composite
+        // with the hole showing (or unchanged for a copy), sprite = content.
+        dragPreview = nil
+        clearPreviewAfterNextFrame = false
+        dragPreviewGeneration += 1
+        let generation = dragPreviewGeneration
+        var underlayDoc = document
+        var tempRef: ImageRef?
+        if !copy {
+            let holedRef = store.register(holed)
+            tempRef = holedRef
+            underlayDoc.updateLayer(id: targetID) { $0.content = .image(holedRef) }
+        }
+        let blend = layer.effectiveBlendMode
+        let renderer = previewRenderer
+        let store = store
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let underlay = renderer.render(underlayDoc, store: store)
+            if let tempRef { store.remove(tempRef) }
+            await MainActor.run {
+                guard let self, self.dragPreviewGeneration == generation, let underlay else { return }
+                self.dragPreview = DragPreview(layerID: targetID, underlay: underlay,
+                                               sprite: content, padding: 0, blendMode: blend)
+            }
+        }
+        return contentFrame
+    }
+
+    /// Mouse-up: bake the floated content into the target layer at its new
+    /// spot — ONE undo step — and move the selection outline with it. A zero
+    /// delta (a mere click) bakes nothing.
+    func commitRegionMove(delta: CGPoint) {
+        guard let session = regionMove, delta != .zero,
+              let document, let layer = document.layer(id: session.targetID),
+              let ref = layer.imageRef, let bitmap = store.image(for: ref),
+              layer.frame.width > 0, layer.frame.height > 0 else {
+            cancelRegionMove()
+            return
+        }
+        let base = session.copy ? bitmap : session.holed
+        // The stamp rect in bitmap pixels: content frame + delta, mapped back.
+        let docToBitmap = CGAffineTransform(scaleX: CGFloat(bitmap.width) / layer.frame.width,
+                                            y: CGFloat(bitmap.height) / layer.frame.height)
+            .translatedBy(x: -layer.frame.minX, y: -layer.frame.minY)
+        let stampRect = session.contentFrame.offsetBy(dx: delta.x, dy: delta.y)
+            .applying(docToBitmap)
+        guard let stamped = RegionOps.stamped(base, overlay: session.content, at: stampRect) else {
+            cancelRegionMove()
+            return
+        }
+        regionMove = nil
+        dragPreviewGeneration += 1 // cancels an in-flight preview session
+        clearPreviewAfterNextFrame = dragPreview != nil
+        let newRef = store.register(stamped)
+        perform { $0.updateLayer(id: session.targetID) { $0.content = .image(newRef) } }
+        // The selection follows its content (Photoshop).
+        if let moved = selection?.translated(by: CGVector(dx: delta.x, dy: delta.y)) {
+            setSelection(moved, captureLayers: false)
+        }
+    }
+
+    /// Esc / zero-move: drop the float; the document never changed.
+    func cancelRegionMove() {
+        regionMove = nil
+        dragPreviewGeneration += 1
+        dragPreview = nil
+    }
+
     /// Layer ▸ New Layer: a canvas-sized transparent image layer on top,
     /// selected — with the selection region PRESERVED, so select → new layer
     /// → fill lands paint on the fresh layer (the Photoshop flow).

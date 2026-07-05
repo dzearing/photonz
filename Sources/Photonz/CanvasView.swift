@@ -61,6 +61,14 @@ struct CanvasView: NSViewRepresentable {
     let onWandAt: (CGPoint, SelectionRegion.Mode) -> Void
     /// ⌫ with a pixel region: erase it (app-side decides erase vs BG-fill).
     let onDeleteRegion: () -> Void
+    /// Select-tool drag inside a pixel region: lift and float the region's
+    /// content (arg = ⌥, move a copy). Returns the floating content's doc
+    /// frame, or nil when nothing under the region can be baked.
+    let onRegionMoveBegin: (Bool) -> CGRect?
+    /// Mouse-up: bake the floated content at start + delta (doc coords).
+    let onRegionMoveCommit: (CGPoint) -> Void
+    /// Esc / no movement: drop the float without touching the document.
+    let onRegionMoveCancel: () -> Void
     let onCropRectChange: (CGRect) -> Void
     let onCropCommit: () -> Void
     let onSelectLayer: (UUID?) -> Void
@@ -116,6 +124,9 @@ struct CanvasView: NSViewRepresentable {
         view.onSelectionChange = onSelectionChange
         view.onWandAt = onWandAt
         view.onDeleteRegion = onDeleteRegion
+        view.onRegionMoveBegin = onRegionMoveBegin
+        view.onRegionMoveCommit = onRegionMoveCommit
+        view.onRegionMoveCancel = onRegionMoveCancel
         view.onCropRectChange = onCropRectChange
         view.onCropCommit = onCropCommit
         view.onSelectLayer = onSelectLayer
@@ -153,6 +164,9 @@ final class CanvasNSView: NSView {
     var onSelectionChange: ((SelectionRegion?, Bool) -> Void) = { _, _ in }
     var onWandAt: ((CGPoint, SelectionRegion.Mode) -> Void) = { _, _ in }
     var onDeleteRegion: () -> Void = {}
+    var onRegionMoveBegin: ((Bool) -> CGRect?) = { _ in nil }
+    var onRegionMoveCommit: ((CGPoint) -> Void) = { _ in }
+    var onRegionMoveCancel: () -> Void = {}
     var onCropRectChange: ((CGRect) -> Void) = { _ in }
     var onCropCommit: (() -> Void) = {}
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
@@ -293,6 +307,21 @@ final class CanvasNSView: NSView {
     private var regionDrag: (drag: MarqueeDrag, mode: SelectionRegion.Mode, isEllipse: Bool)?
     /// Live modifier state, for the selection cursor's +/−/× badge.
     private var pointerModifiers: NSEvent.ModifierFlags = []
+    /// In-flight region CONTENT move (select tool dragging inside a pixel
+    /// region — Photoshop Move-tool semantics). EditorState holds the lifted
+    /// bitmaps; `frame` is the content's doc frame at drag start.
+    private var regionContentDrag: (start: CGPoint, current: CGPoint, frame: CGRect)?
+    /// Post-commit sprite hold for a region move: the content frame isn't the
+    /// layer frame, so the standard selectedLayerFrame hold can't cover it.
+    private var regionMoveHoldFrame: CGRect?
+    /// In-flight outline-only move (marquee tool plain-drag starting inside
+    /// the region): moves the ants, never pixels (Photoshop).
+    private var regionOutlineDrag: (start: CGPoint, current: CGPoint, base: SelectionRegion)?
+
+    /// Whole-pixel drag delta so moved content/outlines stay pixel-aligned.
+    private func roundedDelta(from start: CGPoint, to current: CGPoint) -> CGPoint {
+        CGPoint(x: (current.x - start.x).rounded(), y: (current.y - start.y).rounded())
+    }
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     private var tool: Tool = .select
@@ -758,6 +787,13 @@ final class CanvasNSView: NSView {
         if tool == .rectSelect || tool == .ellipseSelect {
             let mode = SelectionRegion.Mode(shift: event.modifierFlags.contains(.shift),
                                             option: event.modifierFlags.contains(.option))
+            // A plain drag starting INSIDE the region moves the outline (not
+            // pixels — Photoshop); a modifier means a new combining shape.
+            if mode == .replace, let base = selection, base.contains(p) {
+                regionOutlineDrag = (p, p, base)
+                refreshOverlays()
+                return
+            }
             var anchor = p
             if !event.modifierFlags.contains(.command) {
                 anchor = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom).point
@@ -885,6 +921,15 @@ final class CanvasNSView: NSView {
            let slot = Collage.slotIndex(at: p, in: layer),
            content.slots[slot].imageRef != nil {
             slotDrag = (id, slot)
+            refreshOverlays()
+            return
+        }
+        // Select (V) drag starting inside a pixel region moves the region's
+        // CONTENT within its layer (Photoshop Move tool); ⌥ moves a copy.
+        // Falls through to normal layer moves when nothing bakeable is there.
+        if selectionTargetsPixels, let region = selection, region.contains(p),
+           let frame = onRegionMoveBegin(event.modifierFlags.contains(.option)) {
+            regionContentDrag = (p, p, frame)
             refreshOverlays()
             return
         }
@@ -1060,6 +1105,14 @@ final class CanvasNSView: NSView {
             drag.rect = rect
             canvasResizeDrag = drag
             refreshOverlays()
+        } else if var session = regionContentDrag {
+            session.current = p
+            regionContentDrag = session
+            refreshOverlays()
+        } else if var session = regionOutlineDrag {
+            session.current = p
+            regionOutlineDrag = session
+            refreshOverlays()
         } else if var session = regionDrag {
             // Same corner magnetizing as a measure drag: the growing edges
             // window the candidates; ⌘ drags free.
@@ -1189,6 +1242,27 @@ final class CanvasNSView: NSView {
                 onCanvasResize(size, drag.centered ? .center : .fixing(oppositeOf: drag.handle))
             }
             refreshOverlays()
+        } else if let session = regionContentDrag {
+            regionContentDrag = nil
+            let delta = roundedDelta(from: session.start, to: session.current)
+            if delta == .zero {
+                onRegionMoveCancel()
+            } else {
+                // Hold the sprite at its destination until the baked
+                // composite lands (the standard no-flash trick).
+                regionMoveHoldFrame = session.frame.offsetBy(dx: delta.x, dy: delta.y)
+                onRegionMoveCommit(delta)
+            }
+            refreshOverlays()
+        } else if let session = regionOutlineDrag {
+            regionOutlineDrag = nil
+            let delta = roundedDelta(from: session.start, to: session.current)
+            if delta != .zero,
+               let moved = session.base.translated(by: CGVector(dx: delta.x, dy: delta.y)) {
+                commitSelection(moved, capture: false)
+            } else {
+                refreshOverlays()
+            }
         } else if let session = regionDrag {
             regionDrag = nil
             snapGuide = nil
@@ -1343,6 +1417,17 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
+            if regionContentDrag != nil {
+                regionContentDrag = nil
+                onRegionMoveCancel()
+                refreshOverlays()
+                return
+            }
+            if regionOutlineDrag != nil {
+                regionOutlineDrag = nil
+                refreshOverlays()
+                return
+            }
             if regionDrag != nil {
                 regionDrag = nil
                 snapGuide = nil
@@ -1457,6 +1542,11 @@ final class CanvasNSView: NSView {
             measureDrag = nil
             measureCornerDrag = nil
             regionDrag = nil
+            regionOutlineDrag = nil
+            if regionContentDrag != nil {
+                regionContentDrag = nil
+                onRegionMoveCancel()
+            }
             snapGuide = nil
             endpointDrag = nil
             cropDrag = nil
@@ -1487,14 +1577,17 @@ final class CanvasNSView: NSView {
         self.dragPreview = dragPreview
         // The post-commit composite has landed once the preview is cleared; the
         // sprite hold is no longer needed (and must not linger over a selection).
-        if dragPreview == nil { holdSpriteUntilRender = false }
+        if dragPreview == nil {
+            holdSpriteUntilRender = false
+            regionMoveHoldFrame = nil
+        }
         // The held delta is only needed while the sprite is still floating.
         if let hold = transformHold, dragPreview?.layerID != hold.layerID {
             transformHold = nil
         }
         // While the user is mid-drag the local state is the truth; don't let an
         // unrelated SwiftUI update echo stale committed values over it.
-        if marquee == nil, regionDrag == nil {
+        if marquee == nil, regionDrag == nil, regionOutlineDrag == nil, regionContentDrag == nil {
             self.selection = selection
             self.selectionTargetsPixels = selectionTargetsPixels
         }
@@ -1678,6 +1771,16 @@ final class CanvasNSView: NSView {
         if let moveDrag, moveDrag.layerID == dragPreview.layerID, moveDrag.moved {
             return CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
         }
+        // Region content move: the sprite is the lifted region, positioned by
+        // its own content frame (not the layer's).
+        if let session = regionContentDrag {
+            let delta = roundedDelta(from: session.start, to: session.current)
+            guard delta != .zero else { return nil }
+            return session.frame.offsetBy(dx: delta.x, dy: delta.y)
+        }
+        if let hold = regionMoveHoldFrame, moveDrag == nil, resizeDrag == nil {
+            return hold
+        }
         // Drag ended but the post-commit render hasn't landed yet: hold the
         // sprite at the committed frame so nothing flashes. Only after a real
         // commit — never for a static selection (see `holdSpriteUntilRender`).
@@ -1745,7 +1848,15 @@ final class CanvasNSView: NSView {
         // marquee, else the committed region.
         var antsDocPath: CGPath?
         var marqueeRect: CGRect? // the arrow marquee's live rubber-band rect
-        if let viewport, let session = regionDrag {
+        if let session = regionOutlineDrag {
+            // Outline-only move: the ants slide with the pointer.
+            let delta = roundedDelta(from: session.start, to: session.current)
+            antsDocPath = session.base.translated(by: CGVector(dx: delta.x, dy: delta.y))?.path
+        } else if let session = regionContentDrag {
+            // Content move: the outline travels with the floated pixels.
+            let delta = roundedDelta(from: session.start, to: session.current)
+            antsDocPath = selection?.translated(by: CGVector(dx: delta.x, dy: delta.y))?.path
+        } else if let viewport, let session = regionDrag {
             let shape = session.drag.selectionRect(in: viewport.documentSize)
                 .flatMap { session.isEllipse ? SelectionRegion.ellipse(in: $0) : SelectionRegion.rect($0) }
             if let shape {
