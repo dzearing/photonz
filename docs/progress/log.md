@@ -703,3 +703,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User: arrow-select → M → drag didn't move pixels. Cause: the arrow-made selection kept layer semantics across the tool switch. Now picking up any region tool upgrades a live selection to a pixel region (the tool in hand declares intent).
 - User: "I select a portion of a layer and hit delete — the layer doesn't get smaller. I wanted to slice the layer." ⌫ on an unlocked image layer now erases the region AND trims the layer to the tight bbox of surviving pixels (`RegionOps.trimmed`, TDD ×4 — PS-style derived bounds); deleting every pixel deletes the layer; the locked Background still BG-fills at full size. One undo step.
 - 643 tests green; app relaunched.
+
+## 2026-07-05 (later) — Layer selection survives switching to selection/fill tools (user correction)
+
+- User: "when I select a layer and then select marquee it unselected the layer, wtf." The old any-non-select-tool-clears-layer-selection rule silently retargeted region ops at the Background. Now the selected layer carries into M/⇧M/W/G (it's the region-op target); its outline/handles hide while those tools are active (grabbing them does nothing there) and the layers panel keeps showing the selection. Drawing/text/crop/measure still clear it as before.
+- 643 tests green; app relaunched.

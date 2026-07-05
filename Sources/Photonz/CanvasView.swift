@@ -1936,6 +1936,16 @@ final class CanvasNSView: NSView {
             handlesLayer.isHidden = false
             return
         }
+        // A selected layer carries into the region/fill tools (it's the
+        // target of region ops), but its outline/handles are SELECT-mode
+        // chrome — grabbing them does nothing elsewhere, so hide them.
+        guard tool == .select else {
+            layerOutlineLayer.isHidden = true
+            snapGuideLayer.isHidden = true
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            return
+        }
         let frame: CGRect?
         if let resizeDrag {
             frame = resizeDrag.frame

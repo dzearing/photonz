@@ -514,7 +514,11 @@ final class EditorState {
             // on drag, erase on ⌫, etc. — the tool in hand declares intent.
             selectionTargetsPixels = true
         }
-        if tool != .select {
+        // The LAYER selection also survives into the selection family + fill:
+        // it's the target of region ops (fill/⌫/move bake into the selected
+        // layer). Its handles are select-mode chrome and hide meanwhile —
+        // the canvas gates them on the active tool.
+        if !tool.preservesSelectionRegion {
             selectedLayerID = nil
         }
     }
