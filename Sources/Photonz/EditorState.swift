@@ -508,6 +508,11 @@ final class EditorState {
         // (Photoshop keeps the ants up; filling the region needs it).
         if !tool.preservesSelectionRegion {
             selection = nil
+        } else if tool.isRegionSelectionTool, selection != nil {
+            // Picking up a region tool makes any live selection a PIXEL
+            // region: an arrow-made marquee carried into M must move pixels
+            // on drag, erase on ⌫, etc. — the tool in hand declares intent.
+            selectionTargetsPixels = true
         }
         if tool != .select {
             selectedLayerID = nil
