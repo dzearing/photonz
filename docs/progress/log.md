@@ -692,3 +692,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User asked how PS handles moving selected content within a layer. Answer, built: **Select (V) drag inside a pixel region moves the region's PIXELS** — lifted off the target layer (transparent hole; BG color on the locked Background), floated live through the existing DragPreview sprite path, baked back into the same layer on drop as one undo step; the ants travel with the content; **⌥-drag moves a copy**; Esc cancels cleanly. **Marquee-tool plain drag inside the region moves only the OUTLINE** (modifier drags still combine shapes). Deltas snap to whole pixels.
 - New primitives: `SelectionRegion.translated(by:)` (core, TDD) and `RegionOps.stamped` (render, TDD — source-over at a top-left rect).
 - 639 tests green; app relaunched. Follow-up candidates: arrow-key nudge of region content, move-cursor over the region.
+
+## 2026-07-05 (later) — Drag-inside-selection moves pixels by default (user correction)
+
+- User tested 17.7: marquee-selected on Background, dragged from the middle, and the OUTLINE moved — "i expect it to move the pixels. makes no sense to move the selection box only by default." That was my faithful-PS split (marquee drag = outline). Changed: with any selection tool, a plain drag inside the region now moves the PIXELS; ⌘-drag moves just the outline; falls back to outline when nothing under the region is bakeable. Memory updated: PS parity is for shortcuts, not for interactions the user finds unintuitive.
+- 639 tests green; app relaunched.

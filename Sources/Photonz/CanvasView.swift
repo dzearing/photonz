@@ -787,10 +787,18 @@ final class CanvasNSView: NSView {
         if tool == .rectSelect || tool == .ellipseSelect {
             let mode = SelectionRegion.Mode(shift: event.modifierFlags.contains(.shift),
                                             option: event.modifierFlags.contains(.option))
-            // A plain drag starting INSIDE the region moves the outline (not
-            // pixels — Photoshop); a modifier means a new combining shape.
+            // A plain drag starting INSIDE the region moves its PIXELS (user
+            // expectation 2026-07-05 — deliberate deviation from Photoshop,
+            // where a marquee drag moves only the outline). ⌘-drag moves
+            // just the outline; so does a region with nothing bakeable under
+            // it. A ⇧/⌥ modifier still starts a new combining shape.
             if mode == .replace, let base = selection, base.contains(p) {
-                regionOutlineDrag = (p, p, base)
+                if !event.modifierFlags.contains(.command), selectionTargetsPixels,
+                   let frame = onRegionMoveBegin(false) {
+                    regionContentDrag = (p, p, frame)
+                } else {
+                    regionOutlineDrag = (p, p, base)
+                }
                 refreshOverlays()
                 return
             }
