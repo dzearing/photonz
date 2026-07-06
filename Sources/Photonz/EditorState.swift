@@ -2047,6 +2047,10 @@ final class EditorState {
     /// system image (screenshot, copied web image) pastes as a new layer —
     /// or opens as a document when none is open.
     func paste() {
+        // Pasting lands a NEW layer — the marquee belonged to the moment
+        // before it; keeping stale ants over fresh content misleads
+        // (Photoshop also deselects on a plain paste).
+        setSelection(nil)
         let pasteboard = NSPasteboard.general
         if let data = pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)),
            let transfer = try? JSONDecoder().decode(LayerTransfer.self, from: data) {
