@@ -725,3 +725,19 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 
 - Per user ("ok do that"): the release pipeline now notarizes + staples the APP first (Scripts/notarize.sh — shared retry/perl-alarm logic), packages the DMG from the stapled bundle (build-app.sh --dmg-only), then notarizes + staples the DMG. Both artifacts carry tickets; a copied-to-/Applications app launches clean even fully offline.
 - v0.3.1 released to exercise it: both submissions Accepted; verified on the published asset — stapler validate passes on the DMG AND the app inside; spctl = "accepted, source=Notarized Developer ID". release.md updated.
+
+## 2026-07-06 — First-run permissions walkthrough (17.8, interjected)
+
+- User: fresh installs hit the Screen Recording failure with no guidance until their first capture — scary. Built a welcome window that presents at launch until setup is done (`welcome.setupCompleted` defaults flag; closing it with Screen Recording granted counts as done, otherwise it returns next launch).
+- Corrected assumption: Photonz does NOT need Accessibility — Carbon `RegisterEventHotKey` fires without it. The real needs: Screen Recording (required, relaunch to take effect) + Microphone (optional). Third first-run hurdle covered: macOS's own screenshot shortcuts swallowing ⌘⇧3/4/5 (symbolichotkeys IDs 28/30/184) — card appears only while conflicting, with a Keyboard Settings deep link.
+- New: `PhotonzCore/SystemScreenshotShortcuts` (TDD, 8 tests), `Photonz/Welcome/` (controller + view, 1s live-status poll, in-app mic grant, relaunch helper), menu item "Welcome & Permissions…", history-overlay hint now opens the walkthrough. 651 tests green; both granted and tccutil-reset first-run states screenshot-verified.
+- NOTE: I reset this machine's Screen Recording grant (`tccutil reset ScreenCapture com.dzearing.photonz`) to test — the user re-grants via the new flow.
+- Open: user to verify the live green-flip on grant, the relaunch handoff, and mic prompt copy. Uncommitted.
+
+## 2026-07-06 — Recording copy/export honors trim everywhere; Copy Video / Copy GIF (17.9, interjected)
+
+- User: (1) copying a recording then pasting into Teams did nothing, and the copy button should offer video vs GIF; (2) trimming then exporting GIF still produced the full clip.
+- Repro'd (2) with harnesses compiled against the real classes: the editor's own export DID honor trim (live and applied) — the failure is the **history overlay's** export/copy, which knew nothing about editor-window edits (in-memory only). Fix: edits persist to a `<basename>.photonzedits` JSON sidecar (`VideoEdits`/`VideoEditsSidecar` in PhotonzCore, TDD, 9 tests; debounced saves from `VideoEditorState` on every trim/crop mutation; reload on open — trim returns as live handles; deleting a capture trashes the sidecar too). History export, the new copy paths, and the editor all honor the same edits now (verified: 1.05s GIF from a 7.45s source via the sidecar path).
+- (1): new `ClipboardWriter` writes `public.file-url` + legacy `NSFilenamesPboardType` (Finder's exact flavor set — old Electron builds like Teams read only the legacy one) + inline `com.compuserve.gif` for GIF copies. History overlay video Copy is now a menu (Copy Video / Copy GIF); the video editor gained the same menu next to Export; auto-copy-after-recording uses the new writer. Edited copies re-encode to a temp file (nice filename) and confirm with a toast.
+- Verified: real ⌘V into Chromium delivers `files: [Recording….mp4]` / `[….gif (image/gif)]`. Teams itself not installed here — if an mp4 paste still fails there, a Finder copy would fail identically (Teams-side limitation); Copy GIF is the fallback. 661 tests green.
+- Open: user to paste-test in Teams (video + GIF). Uncommitted.
