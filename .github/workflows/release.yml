@@ -85,9 +85,12 @@ jobs:
           ok=0
           for attempt in 1 2 3; do
             echo "::group::Notarization attempt $attempt"
-            # `timeout 720` hard-kills a stalled upload (notarytool --timeout
-            # only bounds the post-upload wait); --timeout 10m bounds the wait.
-            if timeout 720 xcrun notarytool submit dist/Photonz.dmg \
+            # A perl alarm hard-kills a stalled upload after 720s (notarytool
+            # --timeout only bounds the post-upload wait). NOT GNU `timeout`:
+            # macOS runners don't have it on PATH — v0.3.0 shipped unnotarized
+            # because `timeout: command not found` failed every attempt in 50ms.
+            if perl -e 'alarm shift @ARGV; exec @ARGV or die "exec failed: $!"' 720 \
+                 xcrun notarytool submit dist/Photonz.dmg \
                  --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
                  --password "$APPLE_APP_PASSWORD" --wait --timeout 10m --verbose; then
               ok=1; echo "::endgroup::"; break
