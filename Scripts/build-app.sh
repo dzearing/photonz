@@ -1,14 +1,35 @@
 #!/bin/bash
 # Builds Photonz.app (arm64 release) into dist/.
 #
-# Usage: Scripts/build-app.sh [--dmg]
-#   --dmg  also produce dist/Photonz.dmg
+# Usage: Scripts/build-app.sh [--dmg|--dmg-only]
+#   --dmg       also produce dist/Photonz.dmg
+#   --dmg-only  skip the build and package the EXISTING dist/Photonz.app into
+#               the DMG — the release pipeline uses this after notarizing and
+#               stapling the app, so the DMG contains the stapled bundle
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="$(cat VERSION)"
 DIST="dist"
 APP="$DIST/Photonz.app"
+
+make_dmg() {
+  echo "==> Creating dist/Photonz.dmg"
+  STAGING="$DIST/dmg-staging"
+  rm -rf "$STAGING" "$DIST/Photonz.dmg"
+  mkdir -p "$STAGING"
+  cp -R "$APP" "$STAGING/"
+  ln -s /Applications "$STAGING/Applications"
+  hdiutil create -volname "Photonz $VERSION" -srcfolder "$STAGING" -ov -format UDZO "$DIST/Photonz.dmg"
+  rm -rf "$STAGING"
+}
+
+if [[ "${1:-}" == "--dmg-only" ]]; then
+  [[ -d "$APP" ]] || { echo "--dmg-only: $APP does not exist; build first" >&2; exit 1; }
+  make_dmg
+  echo "==> Done: $DIST/Photonz.dmg"
+  exit 0
+fi
 
 echo "==> Building Photonz $VERSION (release, arm64)"
 swift build -c release --arch arm64
@@ -113,14 +134,7 @@ else
 fi
 
 if [[ "${1:-}" == "--dmg" ]]; then
-  echo "==> Creating dist/Photonz.dmg"
-  STAGING="$DIST/dmg-staging"
-  rm -rf "$STAGING" "$DIST/Photonz.dmg"
-  mkdir -p "$STAGING"
-  cp -R "$APP" "$STAGING/"
-  ln -s /Applications "$STAGING/Applications"
-  hdiutil create -volname "Photonz $VERSION" -srcfolder "$STAGING" -ov -format UDZO "$DIST/Photonz.dmg"
-  rm -rf "$STAGING"
+  make_dmg
 fi
 
 echo "==> Done: $APP"

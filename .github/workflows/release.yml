@@ -61,20 +61,19 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" login.keychain
           rm "$RUNNER_TEMP/cert.p12"
 
-      - name: Build app + DMG
+      - name: Build app
         env:
           # Empty when unsigned: build-app.sh falls back to ad-hoc signing.
           CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-        run: Scripts/build-app.sh --dmg
+        run: Scripts/build-app.sh
 
-      # Best-effort: the build is already Developer ID signed, which is what
-      # matters. Notarization removes the first-launch Gatekeeper prompt, but
-      # Apple's notary *ingestion* has been hanging at the upload stage (no
-      # submission id, so notarytool's own --timeout — which only covers the
-      # result wait — never fires). So we wrap submit in a shell `timeout` to
-      # kill a stalled upload, retry a few times, and if it still won't go
-      # through we PUBLISH THE SIGNED DMG ANYWAY and notarize on a later build.
-      - name: Notarize & staple (best-effort)
+      # Two-submission flow so BOTH artifacts carry tickets: notarize + staple
+      # the app first (a stapled bundle in /Applications launches clean even
+      # fully offline), then build the DMG from the stapled app and notarize +
+      # staple that too. Best-effort: the build is already Developer ID
+      # signed; if Apple's notary service won't cooperate after retries we
+      # publish the signed build anyway rather than block the release.
+      - name: Notarize & staple the app (best-effort)
         if: env.HAVE_SIGNING == 'true'
         continue-on-error: true
         env:
@@ -82,28 +81,25 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
-          ok=0
-          for attempt in 1 2 3; do
-            echo "::group::Notarization attempt $attempt"
-            # A perl alarm hard-kills a stalled upload after 720s (notarytool
-            # --timeout only bounds the post-upload wait). NOT GNU `timeout`:
-            # macOS runners don't have it on PATH — v0.3.0 shipped unnotarized
-            # because `timeout: command not found` failed every attempt in 50ms.
-            if perl -e 'alarm shift @ARGV; exec @ARGV or die "exec failed: $!"' 720 \
-                 xcrun notarytool submit dist/Photonz.dmg \
-                 --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
-                 --password "$APPLE_APP_PASSWORD" --wait --timeout 10m --verbose; then
-              ok=1; echo "::endgroup::"; break
-            fi
-            echo "attempt $attempt did not complete (upload stall or timeout)"
-            echo "::endgroup::"; sleep 20
-          done
-          if [ "$ok" = 1 ]; then
-            xcrun stapler staple dist/Photonz.dmg
-            xcrun stapler validate dist/Photonz.dmg
-            echo "NOTARIZED=1" >> "$GITHUB_ENV"
+          if Scripts/notarize.sh dist/Photonz.app; then
+            echo "APP_NOTARIZED=1" >> "$GITHUB_ENV"
           else
-            echo "::warning::Notarization did not complete after retries; publishing the signed-but-unnotarized DMG. It will notarize on a future release once Apple's notary ingestion is healthy."
+            echo "::warning::App notarization did not complete after retries; publishing the signed-but-unnotarized build."
+          fi
+
+      - name: Package DMG
+        run: Scripts/build-app.sh --dmg-only
+
+      - name: Notarize & staple the DMG (best-effort)
+        if: env.APP_NOTARIZED == '1'
+        continue-on-error: true
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          if ! Scripts/notarize.sh dist/Photonz.dmg; then
+            echo "::warning::DMG notarization did not complete; the stapled app inside still validates."
           fi
 
       - name: Extract release notes from CHANGELOG
