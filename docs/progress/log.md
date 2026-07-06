@@ -720,3 +720,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User opened the DMG on another Mac: "Apple could not verify Photonz is free of malware." Root cause was NOT Apple's notary service: release.yml wrapped notarytool in GNU `timeout`, which doesn't exist on GitHub's macOS runners — every attempt died in 50ms with `command not found` and the workflow published signed-but-unnotarized with a misleading warning.
 - Fix: perl `alarm` wrapper (always present on macOS; verified pass-through + timeout paths locally). Per the release skill's failure handling: fixed on main, deleted the v0.3.0 tag + release, re-tagged. Notarization Accepted in ~20s, ticket stapled to the DMG. Verified end-to-end: downloaded the published DMG → `stapler validate` OK → `spctl -t exec` on the app = "accepted, source=Notarized Developer ID".
 - Future polish candidate: also staple the app bundle itself before DMG creation (covers fully-offline first launch).
+
+## 2026-07-05 (later) — v0.3.1: app bundle stapled too (two-submission notarization)
+
+- Per user ("ok do that"): the release pipeline now notarizes + staples the APP first (Scripts/notarize.sh — shared retry/perl-alarm logic), packages the DMG from the stapled bundle (build-app.sh --dmg-only), then notarizes + staples the DMG. Both artifacts carry tickets; a copied-to-/Applications app launches clean even fully offline.
+- v0.3.1 released to exercise it: both submissions Accepted; verified on the published asset — stapler validate passes on the DMG AND the app inside; spctl = "accepted, source=Notarized Developer ID". release.md updated.
