@@ -57,7 +57,7 @@ struct WelcomeView: View {
                 ? (state.needsRelaunch
                     ? "Access granted! macOS applies it when Photonz reopens — one click and you're done."
                     : "Photonz can capture your screen. You're all set here.")
-                : "This is how Photonz takes screenshots and records video. macOS keeps the switch in System Settings — turn on Photonz there and come back; this window updates by itself."
+                : "This is how Photonz takes screenshots and records video. macOS keeps the switch in System Settings — turn on Photonz there and come back; this window updates by itself. If Photonz isn't in the list, click the + button under it and add Photonz yourself (or drag it in from Finder)."
         ) {
             if state.needsRelaunch {
                 Button("Relaunch Photonz") { onRelaunch() }
@@ -65,6 +65,11 @@ struct WelcomeView: View {
             } else if !state.screenRecordingGranted {
                 Button("Open Screen Recording Settings…") { onGrantScreenRecording() }
                     .buttonStyle(.borderedProminent)
+                // For the click-+-and-add fallback: puts the app bundle in hand
+                // so the user can pick or drag it without hunting for it.
+                Button("Show Photonz in Finder") {
+                    NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+                }
             }
         }
     }
