@@ -68,9 +68,9 @@ struct HistoryOverlay: View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.shield")
             Text("Photonz needs Screen Recording access to take screenshots.")
-            Button("Open Privacy Settings") {
-                let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
-                if let url { NSWorkspace.shared.open(url) }
+            Button("Open Setup…") {
+                coordinator.hideHistory()
+                coordinator.showWelcome()
             }
         }
         .font(.callout)

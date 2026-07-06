@@ -51,6 +51,11 @@ final class AppCoordinator {
     /// history overlay — it stacks a small "Copied to clipboard" toast instead.
     @ObservationIgnored private let toasts = ToastController()
 
+    /// First-run permissions walkthrough. Created at launch so it can record
+    /// whether Screen Recording was granted when the process started (a grant
+    /// mid-session needs a relaunch to take effect).
+    @ObservationIgnored private let welcome = WelcomeController()
+
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
     func start() {
@@ -80,6 +85,16 @@ final class AppCoordinator {
             DispatchQueue.main.async { self?.syncActivationPolicy() }
         }
         capture.start()
+        // First-run walkthrough: guide the user through the one-time macOS
+        // permissions before their first capture fails scarily. No-op once
+        // completed (window closed with Screen Recording granted).
+        welcome.presentIfNeeded(capture: capture)
+    }
+
+    /// Menu "Welcome & Permissions…" and the history overlay's permission hint:
+    /// reopen the setup walkthrough on demand.
+    func showWelcome() {
+        welcome.present(capture: capture)
     }
 
     // MARK: - Post-capture feedback

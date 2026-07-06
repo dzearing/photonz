@@ -206,6 +206,7 @@ struct MenuBarMenu: View {
             coordinator.checkForUpdates()
         }
         .disabled(coordinator.isCheckingForUpdates)
+        Button("Welcome & Permissions…") { coordinator.showWelcome() }
         Button("Preferences…") {}
             .disabled(true)  // settings UI lands in a later phase
         Button("About Photonz") { coordinator.showAbout() }
