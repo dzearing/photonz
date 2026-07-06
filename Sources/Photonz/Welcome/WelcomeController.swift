@@ -64,6 +64,10 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true
         panel.level = .floating
+        // Floating panels hide when the app deactivates BY DEFAULT — which made
+        // this window vanish the instant the microphone TCC prompt (a separate
+        // process) took focus, stranding the user mid-walkthrough.
+        panel.hidesOnDeactivate = false
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.delegate = self
@@ -106,6 +110,11 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         }
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .notDetermined:
+            // Photonz is an accessory app, so without activating first the
+            // system prompt appears behind whatever is frontmost — easy to
+            // never see, and until it's answered macOS doesn't list Photonz in
+            // the Microphone settings pane at all.
+            NSApp.activate(ignoringOtherApps: true)
             AVCaptureDevice.requestAccess(for: .audio) { _ in
                 Task { @MainActor [weak self] in self?.state?.refresh() }
             }
