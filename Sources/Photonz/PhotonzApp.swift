@@ -62,6 +62,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
+    /// Self-update hand-off: once the new bundle is swapped in and the app is
+    /// really quitting, spawn a detached relauncher. Living here (not in the
+    /// update flow) means a user-cancelled quit never spawns a stray reopen.
+    func applicationWillTerminate(_ notification: Notification) {
+        MainActor.assumeIsolated {
+            guard let path = AppDelegate.coordinator?.pendingRelaunchBundlePath else { return }
+            let relauncher = Process()
+            relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")
+            relauncher.arguments = ["-c", "sleep 0.5; /usr/bin/open \"\(path)\""]
+            try? relauncher.run()
+        }
+    }
+
     /// ⌘Q with unsaved editor windows gets the standard quit protection:
     /// review each window's save sheet, discard everything, or cancel.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -82,12 +95,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch alert.runModal() {
             case .alertFirstButtonReturn:
                 CloseGuards.reviewAndClose(windows: dirty) { allResolved in
+                    // A cancelled review keeps the app alive — a later,
+                    // unrelated Quit must not fire a stale update-relaunch.
+                    if !allResolved { AppDelegate.coordinator?.pendingRelaunchBundlePath = nil }
                     NSApp.reply(toApplicationShouldTerminate: allResolved)
                 }
                 return .terminateLater
             case .alertThirdButtonReturn:
                 return .terminateNow
             default:
+                AppDelegate.coordinator?.pendingRelaunchBundlePath = nil
                 return .terminateCancel
             }
         }
@@ -154,16 +171,18 @@ private struct VideoEditorRootView: View {
 }
 
 /// The menu-bar icon. Always rendered, so its `.task` is a reliable launch-time
-/// hook to capture `openWindow` for the agent (the menu content is lazy).
+/// hook to capture `openWindow` for the agent (the menu content is lazy). Gains
+/// a dot badge when an update is available (17.10).
 struct MenuBarLabel: View {
     let coordinator: AppCoordinator
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Image(systemName: "camera.viewfinder")
+        Image(nsImage: MenuBarIcon.image(updateAvailable: coordinator.availableUpdate != nil))
             .task { coordinator.openWindowAction = { openWindow(value: $0) } }
     }
 }
+
 
 /// The resident agent's status-item drop-down (phase 11.2). Every action works
 /// with no editor window open — capture, history, window-spawning, and the
@@ -202,6 +221,13 @@ struct MenuBarMenu: View {
         Divider()
 
         // App
+        if let update = coordinator.availableUpdate {
+            // One click: download, verify, swap the bundle, relaunch (17.10).
+            Button(coordinator.updateStatus ?? "Update to v\(update) & Restart") {
+                coordinator.installAvailableUpdate()
+            }
+            .disabled(coordinator.updateStatus != nil)
+        }
         Button(coordinator.isCheckingForUpdates ? "Checking for Updates…" : "Check for Updates…") {
             coordinator.checkForUpdates()
         }

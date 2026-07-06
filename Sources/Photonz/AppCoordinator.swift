@@ -89,6 +89,8 @@ final class AppCoordinator {
         // permissions before their first capture fails scarily. No-op once
         // completed (window closed with Screen Recording granted).
         welcome.presentIfNeeded(capture: capture)
+        // Background update discovery (badge on the menu-bar icon).
+        startUpdateChecks()
     }
 
     /// Menu "Welcome & Permissions…" and the history overlay's permission hint:
@@ -482,16 +484,90 @@ final class AppCoordinator {
         openFileWindow(url)
     }
 
-    // MARK: - Updater (phase 11.6)
+    // MARK: - Updater (phase 11.6; self-update 17.10)
 
     /// True while an update check is in flight, so the menu can disable the item
     /// and avoid overlapping checks.
     private(set) var isCheckingForUpdates = false
 
+    /// A newer published version, found by the background check (or a manual
+    /// one). Non-nil puts the dot on the menu-bar icon and the "Update &
+    /// Restart" item in the menu.
+    private(set) var availableUpdate: SemanticVersion?
+
+    /// User-facing phase string while an install is running ("Downloading…" /
+    /// "Verifying…" / "Installing…"); nil when idle. Drives the menu item label
+    /// and re-entrancy.
+    private(set) var updateStatus: String?
+
+    /// Set right before the update flow terminates the app; the app delegate's
+    /// `applicationWillTerminate` spawns the relauncher only when this is set,
+    /// so a cancelled quit (unsaved changes) doesn't spawn a stray reopen.
+    @ObservationIgnored var pendingRelaunchBundlePath: String?
+
+    /// Hours between background update checks while the agent is resident.
+    private static let updateCheckInterval: Duration = .seconds(6 * 3600)
+
+    /// Background update discovery, started from `start()`. Skipped for dev
+    /// builds (`swift build` runs report 0.0.0 — every release would look new
+    /// and the badge would never clear). Purely reveals availability; installing
+    /// stays a user action.
+    func startUpdateChecks() {
+        guard UpdateChecker.currentVersion > SemanticVersion(major: 0, minor: 0, patch: 0) else { return }
+        Task { [weak self] in
+            // Small delay so launch isn't competing with the network check.
+            try? await Task.sleep(for: .seconds(10))
+            while let self, !Task.isCancelled {
+                if case .updateAvailable(_, let latest) = await UpdateChecker.check() {
+                    self.availableUpdate = latest
+                }
+                try? await Task.sleep(for: Self.updateCheckInterval)
+            }
+        }
+    }
+
+    /// Menu "Update to vX.Y.Z & Restart": download, verify, swap the bundle,
+    /// and relaunch. On failure nothing was installed (the swap is the last
+    /// step) and the alert offers the manual download page as a fallback.
+    func installAvailableUpdate() {
+        guard let version = availableUpdate, updateStatus == nil else { return }
+        updateStatus = "Preparing…"
+        Task {
+            do {
+                try await SelfUpdater.install(version: version, over: Bundle.main.bundleURL) { phase in
+                    self.updateStatus = phase
+                }
+                updateStatus = nil
+                availableUpdate = nil
+                // Relaunch via the delegate hook: the helper only spawns if the
+                // app really terminates (unsaved-changes review can cancel it —
+                // then the new version simply starts on the next launch).
+                pendingRelaunchBundlePath = Bundle.main.bundlePath
+                NSApp.terminate(nil)
+            } catch {
+                updateStatus = nil
+                presentUpdateInstallFailure(error)
+            }
+        }
+    }
+
+    private func presentUpdateInstallFailure(_ error: Error) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn't install the update"
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Download Manually…")
+        if alert.runModal() == .alertSecondButtonReturn {
+            NSWorkspace.shared.open(UpdateChecker.downloadPageURL)
+        }
+    }
+
     /// Menu "Check for Updates…": compares the running build against the
     /// published `version.json` and reports the outcome in an alert. The
     /// comparison logic is the testable `SemanticVersion`; this just fetches and
-    /// presents.
+    /// presents. An available update offers the in-place Update & Restart.
     func checkForUpdates() {
         guard !isCheckingForUpdates else { return }
         isCheckingForUpdates = true
@@ -512,13 +588,22 @@ final class AppCoordinator {
             alert.addButton(withTitle: "OK")
             alert.runModal()
         case .updateAvailable(let current, let latest):
+            availableUpdate = latest
+            // Dev builds (0.0.0) can't swap themselves meaningfully — they'd
+            // "update" a dist/ bundle mid-development. Offer the page instead.
+            let canSelfUpdate = current > SemanticVersion(major: 0, minor: 0, patch: 0)
+                && Bundle.main.bundleURL.pathExtension == "app"
             alert.messageText = "Update available"
             alert.informativeText =
-                "Photonz \(latest) is available — you have \(current). Download the latest version?"
-            alert.addButton(withTitle: "Download…")
+                "Photonz \(latest) is available — you have \(current)."
+            alert.addButton(withTitle: canSelfUpdate ? "Update & Restart" : "Download…")
             alert.addButton(withTitle: "Later")
             if alert.runModal() == .alertFirstButtonReturn {
-                NSWorkspace.shared.open(UpdateChecker.downloadPageURL)
+                if canSelfUpdate {
+                    installAvailableUpdate()
+                } else {
+                    NSWorkspace.shared.open(UpdateChecker.downloadPageURL)
+                }
             }
         case .failed(let message):
             alert.alertStyle = .warning
