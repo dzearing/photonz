@@ -61,6 +61,7 @@ final class VideoEditorState {
     /// True once metadata (duration/size) has loaded, so the timeline can render.
     private(set) var isReady = false
 
+    @ObservationIgnored private var sidecarSaveTask: Task<Void, Never>?
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var didPlayToEndObserver: NSObjectProtocol?
 
@@ -142,6 +143,17 @@ final class VideoEditorState {
         self.poster = poster
         self.frameRate = fps
         self.trim = VideoTrim(duration: seconds)
+        // Recall persisted edits (sidecar) so a trim/crop made in an earlier
+        // session survives the window closing. The trim comes back as a *live*
+        // selection over the full clip, so the handles show it and it stays
+        // adjustable.
+        if let edits = VideoEditsSidecar.load(for: url) {
+            if let saved = edits.trim, saved.isTrimmed {
+                self.trim = VideoTrim(inPoint: saved.inPoint, outPoint: saved.outPoint,
+                                      duration: seconds)
+            }
+            self.crop = edits.crop
+        }
         self.isReady = seconds > 0
     }
 
@@ -218,6 +230,27 @@ final class VideoEditorState {
         seek(to: min(max(trim.inPoint, seconds), trim.outPoint))
     }
 
+    // MARK: - Edits persistence
+
+    /// The cumulative edits every export/copy path should honor — the composed
+    /// trim plus the crop, with no-op edits dropped.
+    var exportEdits: VideoEdits {
+        VideoEdits(trim: exportTrim, crop: crop).normalized(videoSize: naturalSize)
+    }
+
+    /// Persist the current edits to the `.photonzedits` sidecar (debounced —
+    /// handle drags mutate the trim once per pointer move). This is what lets
+    /// the history overlay's export/copy honor edits after this window closes.
+    private func persistEdits() {
+        guard url != nil, isReady else { return }
+        sidecarSaveTask?.cancel()
+        sidecarSaveTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled, let self, let url = self.url else { return }
+            VideoEditsSidecar.save(self.exportEdits, for: url)
+        }
+    }
+
     // MARK: - Trim editing
 
     /// Drag the in-handle; seeking to the new in-point so the preview shows it.
@@ -225,6 +258,7 @@ final class VideoEditorState {
         pause()
         trim.setIn(seconds, duration: duration)
         seek(to: trim.inPoint)
+        persistEdits()
     }
 
     /// Drag the out-handle; seeking to the out-point so the preview shows it.
@@ -232,6 +266,7 @@ final class VideoEditorState {
         pause()
         trim.setOut(seconds, duration: duration)
         seek(to: trim.outPoint)
+        persistEdits()
     }
 
     /// True when the live trim selects anything narrower than the working clip,
@@ -253,6 +288,7 @@ final class VideoEditorState {
         trim = VideoTrim(duration: duration)
         pause()
         seek(to: 0)
+        persistEdits()
     }
 
     /// Undo the most recent Apply Trim, restoring the prior working window and its
@@ -264,6 +300,7 @@ final class VideoEditorState {
         trim = prev.trim
         pause()
         seek(to: trim.inPoint)
+        persistEdits()
     }
 
     // MARK: - Crop editing (phase 13.4)
@@ -279,6 +316,7 @@ final class VideoEditorState {
     /// Replace the crop region (already in natural-video pixels; clamped here).
     func setCropRect(_ rect: CGRect) {
         crop = VideoCrop(rect: rect, videoSize: naturalSize, aspect: crop?.aspect ?? .free)
+        persistEdits()
     }
 
     /// Set the crop aspect lock, re-fitting any existing crop (or starting one).
@@ -289,24 +327,28 @@ final class VideoEditorState {
         } else if naturalSize.width > 0 {
             crop = VideoCrop(fullFrame: naturalSize, aspect: aspect)
         }
+        persistEdits()
     }
 
     /// Finish cropping, keeping the chosen region (cleared if it's full-frame).
     func commitCrop() {
         isCropping = false
         if let c = crop, !c.isCropped(videoSize: naturalSize) { crop = nil }
+        persistEdits()
     }
 
     /// Cancel cropping, dropping the region.
     func cancelCrop() {
         isCropping = false
         crop = nil
+        persistEdits()
     }
 
     /// Reset to the full frame.
     func clearCrop() {
         crop = nil
         isCropping = false
+        persistEdits()
     }
 
     /// The trim to apply at export, in **source-file** seconds: the cumulative

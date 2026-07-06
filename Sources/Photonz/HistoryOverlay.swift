@@ -128,11 +128,24 @@ private struct HistoryOverlayCell: View {
 
     private var actions: some View {
         HStack(spacing: 6) {
-            iconButton("Copy", "doc.on.doc") {
-                store.copyToPasteboard(entry)
-                coordinator.hideHistory()
-            }
             if entry.kind == .video {
+                // Recordings copy as the video file or as an animated GIF —
+                // both honor trim/crop edits persisted by the video editor.
+                Menu {
+                    Button("Copy Video") {
+                        coordinator.copyRecording(entry, as: .mp4)
+                        coordinator.hideHistory()
+                    }
+                    Button("Copy GIF") {
+                        coordinator.copyRecording(entry, as: .gif)
+                        coordinator.hideHistory()
+                    }
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .menuIndicator(.hidden)
+                .frame(width: 22)
+                .historyTooltip("Copy", coordinator: coordinator)
                 iconButton("Play", "play.fill") {
                     coordinator.openRecording(entry.url)
                     coordinator.hideHistory()
@@ -147,6 +160,10 @@ private struct HistoryOverlayCell: View {
                 .frame(width: 22)
                 .historyTooltip("Export", coordinator: coordinator)
             } else {
+                iconButton("Copy", "doc.on.doc") {
+                    store.copyToPasteboard(entry)
+                    coordinator.hideHistory()
+                }
                 iconButton("Edit", "square.and.pencil") {
                     coordinator.editCapture(entry.url)
                 }

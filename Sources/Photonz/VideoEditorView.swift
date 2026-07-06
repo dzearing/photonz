@@ -135,6 +135,7 @@ struct VideoEditorView: View {
                 .buttonStyle(IconActionButtonStyle())
                 .help("Crop to Region")
 
+                copyMenu
                 exportMenu
             }
 
@@ -169,6 +170,21 @@ struct VideoEditorView: View {
             .help(state.isPlaying ? "Forward 1 second (→)" : "Next frame (→)")
         }
         .disabled(state.isCropping)
+    }
+
+    /// Copy the (trimmed/cropped) recording to the clipboard as the video file
+    /// or as an animated GIF — the paste-into-chat counterpart of Export.
+    private var copyMenu: some View {
+        Menu {
+            Button("Copy Video") { coordinator.copyRecording(state, as: .mp4) }
+            Button("Copy GIF") { coordinator.copyRecording(state, as: .gif) }
+        } label: {
+            Image(systemName: "doc.on.doc")
+        }
+        .menuIndicator(.hidden)
+        .frame(width: 28)
+        .disabled(coordinator.isExportingRecording)
+        .help("Copy to Clipboard…")
     }
 
     private var exportMenu: some View {

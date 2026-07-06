@@ -138,8 +138,8 @@ final class CaptureStore {
     }
 
     private func trashSidecar(for url: URL) {
-        let sidecar = EditorState.sidecarURL(for: url)
-        if FileManager.default.fileExists(atPath: sidecar.path) {
+        for sidecar in [EditorState.sidecarURL(for: url), VideoEditsSidecar.url(for: url)]
+        where FileManager.default.fileExists(atPath: sidecar.path) {
             try? FileManager.default.trashItem(at: sidecar, resultingItemURL: nil)
         }
     }
@@ -168,13 +168,16 @@ final class CaptureStore {
     }
 
     func copyToPasteboard(_ entry: CaptureEntry) {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-
         if entry.kind == .video {
-            pasteboard.writeObjects([entry.url as NSURL])
+            // File flavors only — including the legacy one Electron apps
+            // (Teams/Slack) need. Edits-aware copy (trim/crop, GIF) is the
+            // coordinator's `copyRecording`.
+            ClipboardWriter.writeFile(entry.url)
             return
         }
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
 
         // One item carrying every flavor a paste target might want:
         // - the file URL (apps like Claude / Mail / Finder attach the file),

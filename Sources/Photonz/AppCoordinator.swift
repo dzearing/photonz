@@ -140,6 +140,9 @@ final class AppCoordinator {
 
     /// Convert a recording to an animated GIF / HEIC and save it where the user
     /// picks (the "quick convert" path of 12.5; the MP4 is already auto-saved).
+    /// Honors trim/crop persisted by the video editor (the `.photonzedits`
+    /// sidecar) — an export from history must match what the editor would
+    /// export, or a trimmed recording silently exports full-length.
     func saveRecording(_ sourceURL: URL, as format: RecordingFormat) {
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSSavePanel()
@@ -147,17 +150,108 @@ final class AppCoordinator {
         panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        if format == .mp4 {
+        let edits = VideoEditsSidecar.load(for: sourceURL) ?? VideoEdits()
+        if format == .mp4, edits.isEmpty {
+            // Fast path: no edits → verbatim copy, no re-encode.
             try? FileManager.default.removeItem(at: url)
             try? FileManager.default.copyItem(at: sourceURL, to: url)
-        } else {
-            Task {
-                do {
-                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format)
-                } catch {
-                    NSLog("Recording export failed: \(error)")
+            return
+        }
+        isExportingRecording = true
+        Task {
+            do {
+                if format == .mp4 {
+                    let seconds = await VideoExporter.duration(of: sourceURL)
+                    try await VideoExporter.exportMP4(from: sourceURL, to: url,
+                                                      trim: edits.trim ?? VideoTrim(duration: seconds),
+                                                      crop: edits.crop)
+                } else {
+                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
+                                                           trim: edits.trim, crop: edits.crop)
                 }
+            } catch {
+                reportExportFailure(error)
             }
+            isExportingRecording = false
+        }
+    }
+
+    // MARK: - Copy recording to clipboard (video / GIF)
+
+    /// History overlay: copy a recording to the clipboard as an MP4 file or an
+    /// animated GIF, honoring persisted trim/crop edits.
+    func copyRecording(_ entry: CaptureEntry, as format: RecordingFormat) {
+        let edits = VideoEditsSidecar.load(for: entry.url) ?? VideoEdits()
+        copyRecording(sourceURL: entry.url, as: format, trim: edits.trim, crop: edits.crop)
+    }
+
+    /// Video editor: same, but with the window's live (possibly not-yet-saved)
+    /// edits.
+    func copyRecording(_ state: VideoEditorState, as format: RecordingFormat) {
+        guard let url = state.url else { return }
+        let edits = state.exportEdits
+        copyRecording(sourceURL: url, as: format, trim: edits.trim, crop: edits.crop)
+    }
+
+    /// MP4 with no edits copies the source file directly; everything else
+    /// re-encodes into a clipboard scratch file first, then copies that. Ends
+    /// with a toast — re-encodes take a moment and the app may have no window
+    /// up, so the user needs to see when the clipboard is actually ready.
+    private func copyRecording(sourceURL: URL, as format: RecordingFormat,
+                               trim: VideoTrim?, crop: VideoCrop?) {
+        if format == .mp4, trim == nil, crop == nil {
+            ClipboardWriter.writeFile(sourceURL)
+            presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
+            return
+        }
+        guard !isExportingRecording else { return }
+        isExportingRecording = true
+        Task {
+            do {
+                let destination = Self.clipboardScratchURL(for: sourceURL, format: format)
+                if format == .mp4 {
+                    let seconds = await VideoExporter.duration(of: sourceURL)
+                    try await VideoExporter.exportMP4(from: sourceURL, to: destination,
+                                                      trim: trim ?? VideoTrim(duration: seconds),
+                                                      crop: crop)
+                    ClipboardWriter.writeFile(destination)
+                    presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
+                } else {
+                    try await VideoExporter.exportAnimated(from: sourceURL, to: destination, format: format,
+                                                           trim: trim, crop: crop)
+                    // Inline GIF bytes ride along for targets that paste content
+                    // instead of attaching files.
+                    let data = format == .gif ? try? Data(contentsOf: destination) : nil
+                    ClipboardWriter.writeFile(destination, data: data, dataType: format == .gif ? .gif : nil)
+                    presentCopyToast(for: sourceURL, message: "GIF copied to clipboard!")
+                }
+            } catch {
+                reportExportFailure(error)
+            }
+            isExportingRecording = false
+        }
+    }
+
+    /// Where clipboard re-encodes land: a temp folder, file named after the
+    /// recording so pastes carry a meaningful filename. Overwritten per copy.
+    private static func clipboardScratchURL(for sourceURL: URL, format: RecordingFormat) -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PhotonzClipboard", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent(
+            sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)")
+    }
+
+    private func presentCopyToast(for sourceURL: URL, message: String) {
+        let thumbnail: NSImage
+        if let entry = capture.store.entries.first(where: { $0.url == sourceURL }),
+           let image = capture.store.image(for: entry) {
+            thumbnail = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        } else {
+            thumbnail = NSImage(systemSymbolName: "film", accessibilityDescription: nil) ?? NSImage()
+        }
+        toasts.present(image: thumbnail, message: message, on: activeScreen()) { [weak self] in
+            self?.openRecording(sourceURL)
         }
     }
 

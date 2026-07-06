@@ -115,6 +115,62 @@ public struct VideoTrim: Codable, Sendable, Hashable {
     }
 }
 
+/// The persisted non-destructive edits for a recording: the trim window and
+/// crop region, stored in a `.photonzedits` sidecar next to the media file (the
+/// video sibling of the image editor's layered `.photonz` sidecar). Persisting
+/// them is what lets the history overlay's export/copy honor edits made in a
+/// video-editor window — the source MP4 is never modified.
+public struct VideoEdits: Codable, Sendable, Hashable {
+    /// Kept window in source-file seconds; nil = whole clip.
+    public var trim: VideoTrim?
+    /// Kept region in natural-video pixels; nil = full frame.
+    public var crop: VideoCrop?
+
+    public init(trim: VideoTrim? = nil, crop: VideoCrop? = nil) {
+        self.trim = trim
+        self.crop = crop
+    }
+
+    /// True when there is nothing to apply at export.
+    public var isEmpty: Bool { trim == nil && crop == nil }
+
+    /// Drops a full-clip trim and a full-frame crop, so only *real* edits
+    /// persist (an empty result means the sidecar can be deleted). A zero
+    /// `videoSize` (metadata not loaded) leaves the crop untouched.
+    public func normalized(videoSize: CGSize) -> VideoEdits {
+        var edits = self
+        if let trim, !trim.isTrimmed { edits.trim = nil }
+        if let crop, videoSize != .zero, !crop.isCropped(videoSize: videoSize) { edits.crop = nil }
+        return edits
+    }
+}
+
+/// Sidecar IO for `VideoEdits`: same folder, same basename as the recording,
+/// `.photonzedits` extension (deliberately not a media extension, so the
+/// capture-folder scan never lists it as history). Best-effort like the image
+/// sidecar — a failed write loses edits persistence, never media.
+public enum VideoEditsSidecar {
+    public static func url(for mediaURL: URL) -> URL {
+        mediaURL.deletingPathExtension().appendingPathExtension("photonzedits")
+    }
+
+    public static func load(for mediaURL: URL) -> VideoEdits? {
+        guard let data = try? Data(contentsOf: url(for: mediaURL)) else { return nil }
+        return try? JSONDecoder().decode(VideoEdits.self, from: data)
+    }
+
+    /// Writes the sidecar; empty edits remove it instead, so a cleared trim
+    /// doesn't leave a stale file behind.
+    public static func save(_ edits: VideoEdits, for mediaURL: URL) {
+        let sidecar = url(for: mediaURL)
+        if edits.isEmpty {
+            try? FileManager.default.removeItem(at: sidecar)
+        } else if let data = try? JSONEncoder().encode(edits) {
+            try? data.write(to: sidecar, options: .atomic)
+        }
+    }
+}
+
 /// Non-destructive crop region for a recording (phase 13.4). Stores a `CGRect`
 /// in **natural-video-pixel space, top-left origin** (the same convention the
 /// document model uses), plus an optional aspect lock. All editing reuses the
