@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.4.0 — 2026-07-06
+
+**Copy recordings as video or GIF.** The copy button on a recording (history overlay and video editor) now lets you choose: **Copy Video** puts the MP4 on the clipboard, **Copy GIF** re-encodes and copies an animated GIF — and both paste properly into chat apps like Microsoft Teams and Slack (the clipboard now carries the same file flavors a Finder copy does). Edited copies confirm with a toast when the clipboard is ready.
+
+**Your trim sticks.** Trims and crops made in the video editor are now remembered next to the recording, so exporting or copying from the capture history produces the trimmed clip — not the full-length original. Reopen a recording and your trim handles are right where you left them.
+
+**Friendlier first run.** A welcome walkthrough now guides new installs through the one-time macOS setup: granting Screen Recording (with a relaunch handoff), optionally enabling the microphone for narrated recordings, and freeing <kbd>⌘⇧3/4/5</kbd> when macOS's own screenshot shortcuts are holding them. Reopen it anytime via "Welcome & Permissions…" in the menu.
+
 ## 0.3.1 — 2026-07-05
 
 No app changes — a cleaner install. The app bundle itself is now notarized and stapled (not just the DMG), so Photonz launches without any Gatekeeper prompt on other Macs, even on first launch with no network. If an earlier download warned that Apple "could not verify" the app, re-download — that build predated the fix.
