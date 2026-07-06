@@ -2,6 +2,10 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.3.1 — 2026-07-05
+
+No app changes — a cleaner install. The app bundle itself is now notarized and stapled (not just the DMG), so Photonz launches without any Gatekeeper prompt on other Macs, even on first launch with no network. If an earlier download warned that Apple "could not verify" the app, re-download — that build predated the fix.
+
 ## 0.3.0 — 2026-07-05
 
 Photonz grew from an editor into a resident screenshot studio: it now lives in your menu bar, records your screen, measures UI like a design tool, and selects regions like Photoshop.

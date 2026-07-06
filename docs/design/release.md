@@ -45,10 +45,15 @@ To enable Developer ID releases, add these repo secrets (Settings → Secrets �
 | `APPLE_TEAM_ID` | 10-character team id |
 | `APPLE_APP_PASSWORD` | app-specific password (appleid.apple.com → App-Specific Passwords) |
 
-Flow: import cert into a throwaway keychain → `build-app.sh --dmg` with
-`CODESIGN_IDENTITY` (hardened runtime + timestamp) → `notarytool submit --wait` on the
-DMG → `stapler staple`. Locally, `CODESIGN_IDENTITY="Developer ID Application: …"
-Scripts/build-app.sh` signs the same way if the identity is in your keychain.
+Flow (two notarization submissions so BOTH artifacts carry tickets): import cert into a
+throwaway keychain → `build-app.sh` with `CODESIGN_IDENTITY` (hardened runtime +
+timestamp) → `Scripts/notarize.sh dist/Photonz.app` (zip, submit, staple the BUNDLE — a
+stapled app in /Applications launches clean even fully offline) → `build-app.sh
+--dmg-only` (packages the stapled app) → `Scripts/notarize.sh dist/Photonz.dmg`.
+`notarize.sh` wraps the upload in a perl alarm (NOT GNU `timeout` — absent on macOS
+runners; that's how v0.3.0 first shipped unnotarized) and retries 3×. Locally,
+`CODESIGN_IDENTITY="Developer ID Application: …" Scripts/build-app.sh` signs the same
+way if the identity is in your keychain.
 
 ## Future: Windows
 
