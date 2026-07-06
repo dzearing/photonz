@@ -741,3 +741,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - (1): new `ClipboardWriter` writes `public.file-url` + legacy `NSFilenamesPboardType` (Finder's exact flavor set — old Electron builds like Teams read only the legacy one) + inline `com.compuserve.gif` for GIF copies. History overlay video Copy is now a menu (Copy Video / Copy GIF); the video editor gained the same menu next to Export; auto-copy-after-recording uses the new writer. Edited copies re-encode to a temp file (nice filename) and confirm with a toast.
 - Verified: real ⌘V into Chromium delivers `files: [Recording….mp4]` / `[….gif (image/gif)]`. Teams itself not installed here — if an mp4 paste still fails there, a Finder copy would fail identically (Teams-side limitation); Copy GIF is the fallback. 661 tests green.
 - Open: user to paste-test in Teams (video + GIF). Uncommitted.
+
+## 2026-07-06 — v0.4.0 released
+
+- Committed the two pending efforts as separate features (welcome walkthrough 17.8; video copy/trim persistence 17.9 — mixed files split by hunk), then released v0.4.0 via the release skill: preflight green (661 tests, local DMG), all three pipelines green in ~3m, DMG notarized+stapled (spot-checked the published asset), latest-download URL 200, site serves 0.4.0.
+- CHANGELOG headlines: Copy Video / Copy GIF that pastes into Teams/Slack, trims persist across export paths, first-run permissions walkthrough.
+- Reminder surfaced during release: the app has NO auto-update — only the manual "Check for Updates…" menu item (compares version.json, opens the releases page). Backlog candidate if update adoption matters.
