@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.5.0 — 2026-07-06
+
+**Photonz updates itself.** When a new version ships, a small dot appears on the menu-bar icon and the menu offers "Update to vX.Y.Z & Restart" — one click downloads the release, verifies its signature and notarization, swaps it in, and relaunches. "Check for Updates…" offers the same in-place update. No more manual DMG downloads.
+
+**A menu-bar icon that's actually Photonz.** The status item now shows the app icon's ring-and-aperture mark instead of a generic camera symbol, so it's easy to spot at a glance.
+
+**Smoother permission setup.** The microphone prompt now comes to the front instead of appearing behind other windows, and the welcome panel no longer vanishes while you answer it. If macOS refuses to add Photonz to the Screen Recording list (it happens), the walkthrough now explains the fix — use the + button in System Settings — with a "Show Photonz in Finder" button that puts the app in hand for picking.
+
 ## 0.4.0 — 2026-07-06
 
 **Copy recordings as video or GIF.** The copy button on a recording (history overlay and video editor) now lets you choose: **Copy Video** puts the MP4 on the clipboard, **Copy GIF** re-encodes and copies an animated GIF — and both paste properly into chat apps like Microsoft Teams and Slack (the clipboard now carries the same file flavors a Finder copy does). Edited copies confirm with a toast when the clipboard is ready.
