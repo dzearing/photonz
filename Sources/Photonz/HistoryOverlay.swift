@@ -24,7 +24,7 @@ struct HistoryOverlay: View {
                 permissionHint
             }
             if capture.store.entries.isEmpty {
-                Text("No captures yet — ⌘⇧4 grabs a rectangle, ⌘⇧3 the full screen, ⌘⇧5 records.")
+                Text("No captures yet. ⌘⇧4 grabs a rectangle, ⌘⇧3 the full screen, ⌘⇧5 records.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

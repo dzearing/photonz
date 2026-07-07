@@ -323,8 +323,8 @@ struct EditorView: View {
                     .strokeBorder(.primary.opacity(0.25), lineWidth: 1))
         }
         .help(isForeground
-              ? "Foreground fill — bucket and ⌥⌫ fill with this"
-              : "Background fill — new canvas space and ⌫-cleared backgrounds use this")
+              ? "Foreground fill: bucket and ⌥⌫ fill with this"
+              : "Background fill: new canvas space and ⌫-cleared backgrounds use this")
         .popover(isPresented: isForeground ? $isFgPickerShown : $isBgPickerShown,
                  arrowEdge: .top) {
             ColorPickerPopover(initialHex: hex) { newHex in
@@ -391,7 +391,7 @@ struct EditorView: View {
                 .font(.system(.caption, design: .monospaced))
                 .frame(width: 22, alignment: .trailing)
         }
-        .help("Wand tolerance — how similar a color must be to join the selection")
+        .help("Wand tolerance: how similar a color must be to join the selection")
     }
 
     private var cropOptions: some View {
@@ -817,7 +817,7 @@ struct EditorView: View {
         }
         // Double-click keeps the tool active for repeated drawing.
         .simultaneousGesture(TapGesture(count: 2).onEnded { editorState.lockTool(tool) })
-        .help("\(help)\(keyHint) — double-click to keep active")
+        .help("\(help)\(keyHint). Double-click to keep active.")
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 
@@ -865,7 +865,7 @@ struct EditorView: View {
         .menuStyle(.button)
         .buttonStyle(.borderless)
         .fixedSize()
-        .help("\(remembered == .ellipseSelect ? "Ellipse" : "Rectangle") Select (M, ⇧M switches) — ⇧ add, ⌥ subtract, ⇧⌥ intersect")
+        .help("\(remembered == .ellipseSelect ? "Ellipse" : "Rectangle") Select (M, ⇧M switches). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
         // The shortcuts live on invisible stand-ins (Menu can't carry them):
         // M = the remembered marquee, ⇧M = cycle to the other (Photoshop).
         .background {
