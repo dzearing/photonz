@@ -814,3 +814,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User hit a "Screen Recording" dialog for "Photonz" that reappeared after every Deny. Not our app: the dialogs were STALE, queued with the system notification agents during the morning prompt storm for the old prod-named build (deleted since). Denying one revealed the next in the queue. Flushed by killing UserNotificationCenter + universalAccessAuthWarn (they respawn). Meanwhile the Screen Recording grant for com.dzearing.photonz.dev landed (Allowed, System Set); relaunched the dev app and tccd confirms Allowed for the new pid. Capture is live for Photonz (Dev).
 - Side finding for another repo: Ztabby-Debug (com.dzearing.ztabby.debug) is firing kTCCServiceScreenCapture requests every few seconds, feeding the same dialog queue. It needs the same once-per-launch prompt gate Photonz got today.
 - All five commits from today pushed to main.
+
+## 2026-07-07 — Release v0.5.1
+
+- Shipped v0.5.1 (patch: fixes only since v0.5.0). User-visible: TCC prompts bounded to once per launch with registration before the user reaches System Settings, plus the em-dash-free copy sweep. The dev-build variant (`Photonz Dev.app`) landed in the same window but is developer-facing, so it stays out of the user changelog.
+- Preflight green: 670 tests (perf budget 5.9ms median), local `--dmg` build OK. Release workflow published `Photonz.dmg`; site deploy green; verified `releases/latest/download/Photonz.dmg` → 200 and live `version.json` reports 0.5.1.
