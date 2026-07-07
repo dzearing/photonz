@@ -30,28 +30,32 @@ swift build && .build/debug/Photonz
   append `&`) and redirect to a log if you need to keep working:
   `swift build && .build/debug/Photonz > /tmp/photonz.log 2>&1 &`
 
-### B. Signed app bundle — `dist/Photonz.app`
+### B. Signed app bundle — `dist/Photonz Dev.app`
 For the real thing: stamped version, `LSUIElement`, self-signed, Finder/TCC
-integration.
+integration. Local builds produce the **dev variant** — bundle id
+`com.dzearing.photonz.dev`, display name "Photonz (Dev)" — so it holds its own
+TCC grants/defaults and runs side by side with an installed release Photonz.app.
+(`--dmg` or `CODESIGN_IDENTITY` switch to release naming — see build-app.sh.)
 
 ```bash
-Scripts/build-app.sh        # add --dmg for a disposable DMG
-open dist/Photonz.app
+Scripts/build-app.sh
+open "dist/Photonz Dev.app"
 ```
 
-- `CFBundleShortVersionString` = the `VERSION` file, so version-dependent
-  behavior (Check for Updates) is real.
+- `CFBundleShortVersionString` = the `VERSION` file. (Background update checks
+  are OFF for dev bundles by design — `AppInfo.isDevBuild`.)
 - Output does **not** go to your terminal (launched via `open`).
 
-Always kill stale instances first so you're testing the new build:
+Always kill stale DEV instances first so you're testing the new build — match
+the dev paths only, so a running release Photonz.app is left alone:
 ```bash
-pkill -f "Photonz.app/Contents/MacOS/Photonz"; pkill -f ".build/debug/Photonz"
+pkill -f "Photonz Dev.app/Contents/MacOS"; pkill -f ".build/debug/Photonz"
 ```
 
 ## Confirm it's actually running (as an agent)
 
 ```bash
-lsappinfo info -only ApplicationType `lsappinfo find LSDisplayName=Photonz`
+lsappinfo info -only ApplicationType `lsappinfo find "LSDisplayName=Photonz (Dev)"`
 # => "ApplicationType"="UIElement"   (menu-bar agent, no Dock icon)
 pgrep -lf "Photonz"
 ```
@@ -95,5 +99,6 @@ self-test only for the AppKit shell wiring the tests can't reach.
 
 ## Quit
 
-`pkill -f "Photonz"`, or **Quit Photonz** in the menu (⌘Q). Closing the last
-editor window does **not** quit — it's a resident agent by design.
+`pkill -f "Photonz Dev.app"` (dev only — a bare `pkill -f Photonz` also kills a
+running release app), or **Quit Photonz (Dev)** in the menu (⌘Q). Closing the
+last editor window does **not** quit — it's a resident agent by design.

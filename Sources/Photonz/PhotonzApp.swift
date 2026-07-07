@@ -235,11 +235,11 @@ struct MenuBarMenu: View {
         Button("Welcome & Permissions…") { coordinator.showWelcome() }
         Button("Preferences…") {}
             .disabled(true)  // settings UI lands in a later phase
-        Button("About Photonz") { coordinator.showAbout() }
+        Button("About \(AppInfo.name)") { coordinator.showAbout() }
 
         Divider()
 
-        Button("Quit Photonz") { NSApplication.shared.terminate(nil) }
+        Button("Quit \(AppInfo.name)") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q", modifiers: .command)
     }
 }

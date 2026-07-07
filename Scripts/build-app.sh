@@ -1,17 +1,41 @@
 #!/bin/bash
-# Builds Photonz.app (arm64 release) into dist/.
+# Builds the Photonz app bundle (arm64 release) into dist/.
 #
 # Usage: Scripts/build-app.sh [--dmg|--dmg-only]
 #   --dmg       also produce dist/Photonz.dmg
 #   --dmg-only  skip the build and package the EXISTING dist/Photonz.app into
 #               the DMG — the release pipeline uses this after notarizing and
 #               stapling the app, so the DMG contains the stapled bundle
+#
+# Variants — dev and release must coexist on one machine:
+#   dev (default)        → "dist/Photonz Dev.app", bundle id
+#                          com.dzearing.photonz.dev, display name "Photonz (Dev)".
+#                          Own TCC grants / defaults / LaunchServices identity, so
+#                          it runs side by side with the installed release app and
+#                          a release re-sign can never invalidate the dev Screen
+#                          Recording grant again (the 2026-07-07 prompt-loop bug).
+#   release              → dist/Photonz.app, com.dzearing.photonz. Chosen when
+#                          CODESIGN_IDENTITY is set (CI) or a DMG is requested
+#                          (a DMG is always a release artifact; the local release
+#                          preflight runs `--dmg` without the identity).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="$(cat VERSION)"
 DIST="dist"
-APP="$DIST/Photonz.app"
+
+if [[ -n "${CODESIGN_IDENTITY:-}" || "${1:-}" == "--dmg" || "${1:-}" == "--dmg-only" ]]; then
+  VARIANT="release"
+  APP_NAME="Photonz"
+  DISPLAY_NAME="Photonz"
+  BUNDLE_ID="com.dzearing.photonz"
+else
+  VARIANT="dev"
+  APP_NAME="Photonz Dev"
+  DISPLAY_NAME="Photonz (Dev)"
+  BUNDLE_ID="com.dzearing.photonz.dev"
+fi
+APP="$DIST/$APP_NAME.app"
 
 make_dmg() {
   echo "==> Creating dist/Photonz.dmg"
@@ -31,25 +55,27 @@ if [[ "${1:-}" == "--dmg-only" ]]; then
   exit 0
 fi
 
-echo "==> Building Photonz $VERSION (release, arm64)"
+echo "==> Building Photonz $VERSION ($VARIANT, arm64)"
 swift build -c release --arch arm64
 
 echo "==> Assembling $APP"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/Photonz"
+# The executable carries the variant name too, so `ps`/Activity Monitor make
+# unmistakable which build is running.
+cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/$APP_NAME"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Photonz</string>
-    <key>CFBundleDisplayName</key><string>Photonz</string>
-    <key>CFBundleIdentifier</key><string>com.dzearing.photonz</string>
+    <key>CFBundleName</key><string>${DISPLAY_NAME}</string>
+    <key>CFBundleDisplayName</key><string>${DISPLAY_NAME}</string>
+    <key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
     <key>CFBundleVersion</key><string>${VERSION}</string>
     <key>CFBundleShortVersionString</key><string>${VERSION}</string>
-    <key>CFBundleExecutable</key><string>Photonz</string>
+    <key>CFBundleExecutable</key><string>${APP_NAME}</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>LSMinimumSystemVersion</key><string>26.0</string>

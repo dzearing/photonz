@@ -509,10 +509,12 @@ final class AppCoordinator {
     private static let updateCheckInterval: Duration = .seconds(6 * 3600)
 
     /// Background update discovery, started from `start()`. Skipped for dev
-    /// builds (`swift build` runs report 0.0.0 — every release would look new
-    /// and the badge would never clear). Purely reveals availability; installing
-    /// stays a user action.
+    /// builds — both the bare `swift build` kind (reports 0.0.0, every release
+    /// would look new) and "Photonz Dev.app" bundles (self-updating would swap
+    /// the dev bundle for the release app, defeating side-by-side installs).
+    /// Purely reveals availability; installing stays a user action.
     func startUpdateChecks() {
+        guard !AppInfo.isDevBuild else { return }
         guard UpdateChecker.currentVersion > SemanticVersion(major: 0, minor: 0, patch: 0) else { return }
         Task { [weak self] in
             // Small delay so launch isn't competing with the network check.
@@ -595,7 +597,7 @@ final class AppCoordinator {
                 && Bundle.main.bundleURL.pathExtension == "app"
             alert.messageText = "Update available"
             alert.informativeText =
-                "Photonz \(latest) is available — you have \(current)."
+                "Photonz \(latest) is available. You have \(current)."
             alert.addButton(withTitle: canSelfUpdate ? "Update & Restart" : "Download…")
             alert.addButton(withTitle: "Later")
             if alert.runModal() == .alertFirstButtonReturn {

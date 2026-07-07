@@ -31,9 +31,9 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | --- | --- |
 | Run tests | `Scripts/test.sh` (wrapper handles CommandLineTools quirks; plain `swift test` only works with full Xcode) |
 | Debug build | `swift build` |
-| App bundle | `Scripts/build-app.sh` → `dist/Photonz.app` |
+| App bundle | `Scripts/build-app.sh` → `dist/Photonz Dev.app` (dev variant: own bundle id `….photonz.dev`, coexists with the release app; `--dmg`/`CODESIGN_IDENTITY` produce release-named `dist/Photonz.app`) |
 | App + DMG | `Scripts/build-app.sh --dmg` |
-| Run the app | `open dist/Photonz.app` |
+| Run the app | `open "dist/Photonz Dev.app"` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
 
 ## Architecture invariants

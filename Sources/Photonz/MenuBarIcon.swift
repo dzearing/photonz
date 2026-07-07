@@ -24,7 +24,7 @@ enum MenuBarIcon {
             return true
         }
         icon.isTemplate = true
-        icon.accessibilityDescription = updateAvailable ? "Photonz — update available" : "Photonz"
+        icon.accessibilityDescription = updateAvailable ? "\(AppInfo.name), update available" : AppInfo.name
         return icon
     }
 

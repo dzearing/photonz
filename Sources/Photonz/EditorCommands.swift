@@ -47,7 +47,7 @@ struct EditorCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About Photonz") { coordinator.showAbout() }
+            Button("About \(AppInfo.name)") { coordinator.showAbout() }
             Button("Check for Updates…") { coordinator.checkForUpdates() }
         }
 
