@@ -808,3 +808,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - User rule now in memory and applied repo-wide: NO em dashes in any user-facing copy (UI strings, tooltips, site). Swept Sources/Photonz strings and site/index.html clean; also never mention Claude/Anthropic in user-facing content, plain short language always.
 - 670 tests green; dev app rebuilt + relaunched. All work from today remains uncommitted.
 - NEXT: user restarts the Mac, launches Photonz (Dev), welcome should already have it registered; flip the switch. If registration still fails post-reboot, that is a new macOS bug to chase.
+
+## 2026-07-07 (later) — Dialog loop explained; Photonz (Dev) granted and working
+
+- User hit a "Screen Recording" dialog for "Photonz" that reappeared after every Deny. Not our app: the dialogs were STALE, queued with the system notification agents during the morning prompt storm for the old prod-named build (deleted since). Denying one revealed the next in the queue. Flushed by killing UserNotificationCenter + universalAccessAuthWarn (they respawn). Meanwhile the Screen Recording grant for com.dzearing.photonz.dev landed (Allowed, System Set); relaunched the dev app and tccd confirms Allowed for the new pid. Capture is live for Photonz (Dev).
+- Side finding for another repo: Ztabby-Debug (com.dzearing.ztabby.debug) is firing kTCCServiceScreenCapture requests every few seconds, feeding the same dialog queue. It needs the same once-per-launch prompt gate Photonz got today.
+- All five commits from today pushed to main.
