@@ -162,12 +162,24 @@ final class CaptureCenter {
     /// opens the Settings pane. This is what gets Photonz listed so the toggle
     /// can be flipped. Must run frontmost.
     func requestScreenRecordingAccess() {
+        promptedScreenRecordingThisLaunch = true
         NSApp.activate(ignoringOtherApps: true)
         Task {
             await ScreenCapturer.primePermissionRegistration()
             ScreenCapturer.openScreenRecordingSettings()
             needsScreenRecordingPermission = !ScreenCapturer.hasPermission
         }
+    }
+
+    /// Registration only — no Settings pane. Fired when the welcome window
+    /// presents (the app is frontmost then), so Photonz is already listed in
+    /// the Screen Recording pane by the time the user gets there; they should
+    /// never have to hunt for the bundle with the + button. Shares the
+    /// once-per-launch gate with `ensurePermission`.
+    func registerScreenRecordingClient() {
+        guard !ScreenCapturer.hasPermission, !promptedScreenRecordingThisLaunch else { return }
+        promptedScreenRecordingThisLaunch = true
+        Task { await ScreenCapturer.primePermissionRegistration() }
     }
 
     // MARK: - Internals
@@ -187,6 +199,17 @@ final class CaptureCenter {
         }
     }
 
+    /// TCC prompts must never storm. Each `primePermissionRegistration` call
+    /// can put TWO system dialogs on screen (CGRequest via WindowServer, the
+    /// SCK query via replayd) — and when the stored grant no longer matches the
+    /// app's code signature (e.g. a rebuilt bundle at the same path), macOS
+    /// re-prompts on EVERY attempt even though Settings shows Photonz enabled.
+    /// Re-requesting can never fix that state, so we ask once per launch and
+    /// after that only surface the in-app hint (verified live 2026-07-07: a
+    /// stale "Photonz Dev"-pinned grant + the release-signed build produced an
+    /// endless prompt loop).
+    private var promptedScreenRecordingThisLaunch = false
+
     private func ensurePermission() -> Bool {
         if ScreenCapturer.hasPermission {
             needsScreenRecordingPermission = false
@@ -194,6 +217,8 @@ final class CaptureCenter {
         }
         needsScreenRecordingPermission = true
         onRequestHistory?() // the overlay hosts the permission hint
+        guard !promptedScreenRecordingThisLaunch else { return false }
+        promptedScreenRecordingThisLaunch = true
         // User-initiated and frontmost: issue the real request that registers
         // Photonz as a ScreenCaptureKit client (CGRequest + an SCK query), then
         // open the Screen Recording pane so they can grant it.

@@ -50,7 +50,10 @@ final class WelcomeController: NSObject, NSWindowDelegate {
 
         let view = WelcomeView(
             state: state,
-            onGrantScreenRecording: { [weak self] in self?.capture?.requestScreenRecordingAccess() },
+            onGrantScreenRecording: { [weak self] in
+                self?.state?.noteScreenRecordingGrantAttempt()
+                self?.capture?.requestScreenRecordingAccess()
+            },
             onGrantMicrophone: { [weak self] in self?.grantMicrophone() },
             onOpenKeyboardSettings: { Self.openKeyboardSettings() },
             onRelaunch: { [weak self] in self?.relaunch() },
@@ -78,6 +81,11 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
+
+        // Register with TCC right away (we're frontmost) so the Screen
+        // Recording pane already lists Photonz when the user opens it —
+        // they should never have to add the bundle by hand.
+        capture.registerScreenRecordingClient()
 
         // Live status: flip rows to green the moment the user grants access in
         // System Settings, without them having to come back and click anything.
@@ -169,6 +177,12 @@ final class WelcomeState {
     /// until Photonz relaunches, so surface a relaunch affordance.
     private(set) var needsRelaunch = false
 
+    /// The user tried granting and it hasn't stuck. The usual cause is a TCC
+    /// grant recorded for a differently-signed build of Photonz at the same
+    /// path — Settings shows the toggle ON, but macOS ignores it and re-prompts.
+    /// The card escalates to remove-and-re-add guidance in that state.
+    private(set) var screenRecordingGrantAttempted = false
+
     private let screenGrantedAtLaunch: Bool
     /// Keep the shortcuts card visible (as a green success row) once the user
     /// has seen it, instead of vanishing mid-glance when they fix it.
@@ -186,6 +200,10 @@ final class WelcomeState {
 
     var everythingReady: Bool {
         screenRecordingGranted && !needsRelaunch && conflictingShortcuts.isEmpty
+    }
+
+    func noteScreenRecordingGrantAttempt() {
+        screenRecordingGrantAttempted = true
     }
 
     func refresh() {

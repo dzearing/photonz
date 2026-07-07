@@ -34,7 +34,7 @@ struct WelcomeView: View {
                 .resizable()
                 .frame(width: 56, height: 56)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Welcome to Photonz")
+                Text("Welcome to \(AppInfo.name)")
                     .font(.title2.weight(.semibold))
                 Text("Photonz lives in your menu bar. Two quick macOS settings and you're ready to capture anything.")
                     .font(.callout)
@@ -53,11 +53,7 @@ struct WelcomeView: View {
             icon: "rectangle.dashed.badge.record",
             title: "Screen Recording",
             badge: "Required",
-            body: state.screenRecordingGranted
-                ? (state.needsRelaunch
-                    ? "Access granted! macOS applies it when Photonz reopens — one click and you're done."
-                    : "Photonz can capture your screen. You're all set here.")
-                : "This is how Photonz takes screenshots and records video. macOS keeps the switch in System Settings — turn on Photonz there and come back; this window updates by itself. If Photonz isn't in the list, click the + button under it and add Photonz yourself (or drag it in from Finder)."
+            body: screenRecordingBody
         ) {
             if state.needsRelaunch {
                 Button("Relaunch Photonz") { onRelaunch() }
@@ -65,13 +61,21 @@ struct WelcomeView: View {
             } else if !state.screenRecordingGranted {
                 Button("Open Screen Recording Settings…") { onGrantScreenRecording() }
                     .buttonStyle(.borderedProminent)
-                // For the click-+-and-add fallback: puts the app bundle in hand
-                // so the user can pick or drag it without hunting for it.
-                Button("Show Photonz in Finder") {
-                    NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
-                }
             }
         }
+    }
+
+    private var screenRecordingBody: String {
+        if state.screenRecordingGranted {
+            return state.needsRelaunch
+                ? "Access granted! macOS applies it when \(AppInfo.name) reopens. One click and you're done."
+                : "\(AppInfo.name) can capture your screen. You're all set here."
+        }
+        var text = "Lets \(AppInfo.name) take screenshots and record video. Click below, then turn on \(AppInfo.name). This window updates by itself."
+        if state.screenRecordingGrantAttempted {
+            text += "\n\nNot in the list? macOS's list gets stuck sometimes. Restart your Mac and try again."
+        }
+        return text
     }
 
     private var microphoneStep: some View {
@@ -98,9 +102,9 @@ struct WelcomeView: View {
         case .authorized:
             "Your voice can be included in screen recordings."
         case .denied, .restricted:
-            "Microphone access is turned off. Only needed if you narrate screen recordings — enable it in System Settings if you'd like that."
+            "Microphone access is turned off. Only needed if you narrate screen recordings. Enable it in System Settings if you'd like that."
         default:
-            "Adds your voice to screen recordings. Skip it if you never narrate — you can allow it later when you first record with a mic."
+            "Adds your voice to screen recordings. Skip it if you never narrate. You can allow it later when you first record with a mic."
         }
     }
 
