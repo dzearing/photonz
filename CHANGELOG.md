@@ -2,6 +2,12 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.5.1 — 2026-07-07
+
+**No more permission prompt loops.** Photonz now asks for Screen Recording and Microphone access at most once per launch. If macOS has already recorded a decision, the app respects it instead of re-prompting, and it registers itself with the system before sending you to System Settings, so the Photonz row is already there when you arrive.
+
+**Copy polish.** All in-app text got a pass for plainer, friendlier wording.
+
 ## 0.5.0 — 2026-07-06
 
 **Photonz updates itself.** When a new version ships, a small dot appears on the menu-bar icon and the menu offers "Update to vX.Y.Z & Restart" — one click downloads the release, verifies its signature and notarization, swaps it in, and relaunches. "Check for Updates…" offers the same in-place update. No more manual DMG downloads.
