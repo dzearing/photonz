@@ -767,3 +767,9 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Shipped fallback: welcome's Screen Recording card now explains the pane's + button and gains "Show Photonz in Finder" so add/drag is easy. 670 green; app relaunched.
 - User action: EITHER reboot (then the normal grant flow should work) OR System Settings → Privacy & Security → Screen & System Audio Recording → "+" → add dist/Photonz.app.
 - Machine state note: Photonz's TCC was fully reset today (tccutil reset All); mic re-granted; Screen Recording still ungranted pending the user. An Accessibility prompt for Photonz appeared during automation — deny it; Photonz doesn't need it.
+
+## 2026-07-07 — v0.5.0 released
+
+- Released v0.5.0 via the release skill: preflight green (670 tests, local DMG), all three pipelines green in ~3m (a transient api.github.com outage on this machine delayed watching, not the release), DMG asset on the release, latest-download URL 200, site serves 0.5.0.
+- CHANGELOG headlines: in-app self-update (dot badge + one-click Update & Restart, 17.10), aperture menu-bar icon matching the product icon, mic-prompt fronting + welcome panel persistence, Screen Recording +-button fallback guidance.
+- This is the first release carrying the self-updater — meaning v0.5.0 is the last manual install; future releases should surface the dot badge and update in place.
