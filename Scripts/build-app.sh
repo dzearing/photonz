@@ -143,20 +143,32 @@ fi
 # Signing priority:
 #  1. Developer ID (CODESIGN_IDENTITY set) — CI/release. Hardened runtime +
 #     secure timestamp are notarization requirements.
-#  2. "Photonz Dev" self-signed identity, if present — stable local signature so
-#     TCC permissions (Screen Recording) survive rebuilds. See
+#  2. "Photonz Dev" self-signed identity — stable local signature so TCC
+#     permissions (Screen Recording) survive rebuilds. Auto-created on the first
+#     dev build (keychain-wide, shared by every worktree). See
 #     Scripts/dev-codesign-setup.sh.
-#  3. Ad-hoc — fallback; permissions reset every rebuild.
+#  3. Ad-hoc — last resort only if the identity can't be created (e.g. no
+#     openssl@3); permissions reset every rebuild.
 DEV_IDENTITY="Photonz Dev"
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   echo "==> Codesigning (Developer ID)"
   codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
-elif security find-identity -p codesigning 2>/dev/null | grep -q "$DEV_IDENTITY"; then
-  echo "==> Codesigning (stable self-signed: $DEV_IDENTITY)"
-  codesign --force --deep --sign "$DEV_IDENTITY" "$APP"
 else
-  echo "==> Codesigning (ad-hoc — run Scripts/dev-codesign-setup.sh for stable Screen Recording permission)"
-  codesign --force --deep --sign - "$APP"
+  # Self-heal: a fresh machine/worktree won't have the stable dev cert yet.
+  # Create it once rather than ad-hoc signing (which changes the code identity
+  # every build and forces re-granting Screen Recording). The cert lives in the
+  # login keychain, so all worktrees on this machine share it thereafter.
+  if ! security find-identity -p codesigning 2>/dev/null | grep -q "$DEV_IDENTITY"; then
+    echo "==> '$DEV_IDENTITY' signing identity missing — creating it once…"
+    "$(dirname "$0")/dev-codesign-setup.sh" || echo "    (setup failed — ad-hoc signing this build)"
+  fi
+  if security find-identity -p codesigning 2>/dev/null | grep -q "$DEV_IDENTITY"; then
+    echo "==> Codesigning (stable self-signed: $DEV_IDENTITY)"
+    codesign --force --deep --sign "$DEV_IDENTITY" "$APP"
+  else
+    echo "==> Codesigning (ad-hoc — stable identity unavailable; Screen Recording resets each build)"
+    codesign --force --deep --sign - "$APP"
+  fi
 fi
 
 if [[ "${1:-}" == "--dmg" ]]; then

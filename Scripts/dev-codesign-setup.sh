@@ -18,6 +18,25 @@ set -euo pipefail
 CERT_NAME="Photonz Dev"
 KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 
+# We need a real OpenSSL 3 (Homebrew): macOS's built-in /usr/bin/openssl is
+# LibreSSL, which can't do the -legacy PKCS12 export that `security import`
+# requires. Prefer a Homebrew openssl@3, then any `openssl` on PATH that reports
+# as OpenSSL (not LibreSSL); bail with instructions if only LibreSSL is present.
+OPENSSL=""
+for cand in /opt/homebrew/opt/openssl@3/bin/openssl \
+            /usr/local/opt/openssl@3/bin/openssl \
+            "$(command -v openssl || true)"; do
+  if [[ -x "$cand" ]] && "$cand" version 2>/dev/null | grep -q "^OpenSSL"; then
+    OPENSSL="$cand"; break
+  fi
+done
+if [[ -z "$OPENSSL" ]]; then
+  echo "!! Need OpenSSL 3 — the built-in LibreSSL can't export the legacy PKCS12 MAC." >&2
+  echo "   Install it with:  brew install openssl@3" >&2
+  exit 1
+fi
+echo "==> Using $("$OPENSSL" version) at $OPENSSL"
+
 if security find-identity -p codesigning "$KEYCHAIN" 2>/dev/null | grep -q "$CERT_NAME"; then
   echo "==> '$CERT_NAME' identity already present — nothing to do."
   exit 0
@@ -27,16 +46,18 @@ echo "==> Generating self-signed code-signing certificate '$CERT_NAME'"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-openssl req -x509 -newkey rsa:2048 -keyout "$TMP/key.pem" -out "$TMP/cert.pem" \
+# Errors are NOT sent to /dev/null: a silent failure here is exactly what made
+# this hard to diagnose. Only the RSA key-gen progress dots go to /dev/null.
+"$OPENSSL" req -x509 -newkey rsa:2048 -keyout "$TMP/key.pem" -out "$TMP/cert.pem" \
   -days 3650 -nodes -subj "/CN=$CERT_NAME" \
   -addext "basicConstraints=critical,CA:false" \
   -addext "keyUsage=critical,digitalSignature" \
-  -addext "extendedKeyUsage=critical,codeSigning" >/dev/null 2>&1
+  -addext "extendedKeyUsage=critical,codeSigning" 2>/dev/null
 
 # -legacy: macOS `security` can't read OpenSSL 3's default PKCS12 MAC.
-openssl pkcs12 -export -out "$TMP/id.p12" -inkey "$TMP/key.pem" -in "$TMP/cert.pem" \
+"$OPENSSL" pkcs12 -export -out "$TMP/id.p12" -inkey "$TMP/key.pem" -in "$TMP/cert.pem" \
   -passout pass:photonz -name "$CERT_NAME" \
-  -legacy -macalg sha1 -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES >/dev/null 2>&1
+  -legacy -macalg sha1 -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES
 
 echo "==> Importing into the login keychain (codesign-only access)"
 security import "$TMP/id.p12" -k "$KEYCHAIN" -P photonz -T /usr/bin/codesign

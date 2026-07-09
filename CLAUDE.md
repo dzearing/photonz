@@ -36,6 +36,19 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | Run the app | `open "dist/Photonz Dev.app"` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
 
+### Dev signing & Screen Recording permission (grant once per machine)
+
+Dev builds are signed with a stable self-signed **"Photonz Dev"** cert so macOS
+TCC grants (Screen Recording, etc.) survive rebuilds — grant once, never again.
+`Scripts/build-app.sh` **auto-creates this cert on the first dev build** (needs
+Homebrew `openssl@3`: `brew install openssl@3`); it lives in the login keychain,
+so every worktree on the machine shares it. NEVER ad-hoc sign a dev build — that
+changes the code identity each rebuild and re-breaks the grant (symptom: the app
+shows as granted/on in System Settings but still can't capture). Per machine you
+grant Screen Recording once; a new machine re-creates the cert on first build and
+you grant once there. If a grant ever gets wedged after signing changes:
+`tccutil reset ScreenCapture com.dzearing.photonz.dev`, relaunch, re-grant.
+
 ## Architecture invariants
 
 - Pixel data NEVER lives in the document model. Documents hold `ImageRef`s; bitmaps live in `ImageStore` (PhotonzRender).
