@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.6.0 — 2026-07-10
+
+**The video editor grew up.** Recordings now open in a window sized to show the video at its real size, appearing in one step instead of opening small and resizing. You can pinch to zoom and two-finger scroll to pan the video just like images, double-tap the trackpad to jump between fit and 100%, and double-click the empty background to maximize the window.
+
+**Crop by drawing a rectangle.** Cropping a video now works the way you expect: drag a rectangle around the part you want to keep, then fine-tune with the handles. The moment you hit Done, the preview shows just the cropped region, so what you see is what exports. Cancel puts things back the way they were.
+
+**Thumbnails tell the truth.** After you trim or crop a recording, its thumbnail in the capture history updates to match: the picture shows the cropped region from inside the trimmed range, and the length badge shows the trimmed duration. Recording toasts now show a real thumbnail too, with the same play button and length badge as history.
+
 ## 0.5.1 — 2026-07-07
 
 **No more permission prompt loops.** Photonz now asks for Screen Recording and Microphone access at most once per launch. If macOS has already recorded a decision, the app respects it instead of re-prompting, and it registers itself with the system before sending you to System Settings, so the Photonz row is already there when you arrive.
