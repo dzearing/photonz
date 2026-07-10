@@ -27,6 +27,9 @@ final class CaptureStore {
     private var imageCache: [URL: CGImage] = [:]
     private var durations: [URL: TimeInterval] = [:]
     private var posterLoading: Set<URL> = []
+    /// Edits-sidecar fingerprint each cached poster/duration was derived from,
+    /// so a trim/crop saved in the video editor refreshes the thumbnail.
+    @ObservationIgnored private var editsStamps: [URL: String?] = [:]
 
     @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
     @ObservationIgnored private var watchedFD: Int32 = -1
@@ -71,7 +74,32 @@ final class CaptureStore {
         imageCache = imageCache.filter { live.contains($0.key) }
         durations = durations.filter { live.contains($0.key) }
 
+        // Drop video caches whose edits sidecar changed (saved from the video
+        // editor, also into this watched folder): the poster and duration are
+        // derived from trim/crop, so they regenerate on next display.
+        for entry in sorted where entry.kind == .video {
+            let stamp = editsStamp(for: entry.url)
+            if editsStamps[entry.url] != stamp {
+                editsStamps[entry.url] = stamp
+                imageCache[entry.url] = nil
+                durations[entry.url] = nil
+            }
+        }
+        editsStamps = editsStamps.filter { live.contains($0.key) }
+
         entries = sorted
+    }
+
+    /// Fingerprint of a recording's `.photonzedits` sidecar (mtime + size);
+    /// `nil` when there is none.
+    private func editsStamp(for url: URL) -> String? {
+        let sidecar = VideoEditsSidecar.url(for: url)
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: sidecar.path) else {
+            return nil
+        }
+        let mtime = (attrs[.modificationDate] as? Date)?.timeIntervalSinceReferenceDate ?? 0
+        let size = (attrs[.size] as? Int) ?? 0
+        return "\(mtime)-\(size)"
     }
 
     // MARK: - Adding
@@ -212,14 +240,21 @@ final class CaptureStore {
         let url = entry.url
         guard !posterLoading.contains(url) else { return }
         posterLoading.insert(url)
+        // Honor persisted trim/crop, so the thumbnail and duration pill show
+        // what an export of this recording would actually produce.
+        let edits = VideoEditsSidecar.load(for: url) ?? VideoEdits()
         Task {
-            let poster = await VideoExporter.posterFrame(of: url)
+            let poster = await VideoExporter.posterFrame(of: url, edits: edits)
             let duration = await VideoExporter.duration(of: url)
             posterLoading.remove(url)
             // Only keep if the file is still present in history.
             guard entries.contains(where: { $0.url == url }) else { return }
             if let poster { imageCache[url] = poster }
-            durations[url] = duration
+            if let trim = edits.trim {
+                durations[url] = min(max(0, trim.effectiveDuration), duration)
+            } else {
+                durations[url] = duration
+            }
         }
     }
 

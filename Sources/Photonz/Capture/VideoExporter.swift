@@ -51,15 +51,39 @@ enum VideoExporter {
     }
 
     /// A representative frame for the history thumbnail — sampled a hair into the
-    /// clip so it isn't a black first frame.
-    static func posterFrame(of url: URL, maxDimension: CGFloat = 600) async -> CGImage? {
+    /// clip so it isn't a black first frame. Honors persisted edits so the
+    /// thumbnail shows what an export would produce: sampled inside the trim
+    /// window, cropped to the crop region.
+    static func posterFrame(of url: URL, maxDimension: CGFloat = 600,
+                            edits: VideoEdits = VideoEdits()) async -> CGImage? {
         let asset = AVURLAsset(url: url)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
-        generator.maximumSize = CGSize(width: maxDimension, height: maxDimension)
+        // With a crop we must keep full resolution until after cropping.
+        if edits.crop == nil {
+            generator.maximumSize = CGSize(width: maxDimension, height: maxDimension)
+        }
+        // A trimmed clip must sample inside the kept window — the default
+        // (loose) tolerance could snap to a keyframe outside it.
+        if edits.trim != nil {
+            generator.requestedTimeToleranceBefore = .zero
+            generator.requestedTimeToleranceAfter = .zero
+        }
         let seconds = await duration(of: url)
-        let at = CMTime(seconds: min(0.2, seconds / 2), preferredTimescale: 600)
-        return try? await generator.image(at: at).image
+        let start = edits.trim?.inPoint ?? 0
+        let end = edits.trim?.outPoint ?? seconds
+        let at = CMTime(seconds: min(start + 0.2, (start + end) / 2), preferredTimescale: 600)
+        guard var frame = try? await generator.image(at: at).image else { return nil }
+        if let crop = edits.crop, let cropped = frame.cropping(to: Geometry.pixelAligned(crop.rect)) {
+            let size = CGSize(width: cropped.width, height: cropped.height)
+            if max(size.width, size.height) > maxDimension {
+                let fit = Geometry.aspectFit(size, in: CGSize(width: maxDimension, height: maxDimension))
+                frame = scaled(cropped, to: fit) ?? cropped
+            } else {
+                frame = cropped
+            }
+        }
+        return frame
     }
 
     enum ExportError: Error { case noDestination, generationFailed, noVideoTrack, exportFailed }

@@ -12,11 +12,18 @@ struct VideoEditorView: View {
     /// Keeps keyboard transport (space / ←·→) routed to this view rather than the
     /// AVPlayerView. Re-asserted once the clip is ready.
     @FocusState private var keyboardFocused: Bool
+    /// Live size of the preview area, for sizing the window to the recording.
+    @State private var playerAreaSize: CGSize = .zero
 
     var body: some View {
         ZStack {
             Color(nsColor: .underPageBackgroundColor)
                 .ignoresSafeArea()
+                .contentShape(Rectangle())
+                // The title bar is hidden; a double-click on the empty
+                // background stands in for double-clicking it (zoom/minimize
+                // per the system preference), matching the image canvas.
+                .onTapGesture(count: 2) { WindowTitleBarAction.perform(on: state.hostWindow) }
 
             VStack(spacing: 0) {
                 player
@@ -49,7 +56,42 @@ struct VideoEditorView: View {
         .focused($keyboardFocused)
         .onAppear { keyboardFocused = true }
         .onChange(of: state.isReady) { _, ready in if ready { keyboardFocused = true } }
+        .onChange(of: state.metadataDidLoad) { _, loaded in
+            guard loaded else { return }
+            // Next runloop tick: the timeline panel has just appeared, so let
+            // layout settle before measuring the player area for the resize.
+            // The window was kept invisible for this; reveal it once sized so
+            // it opens fully formed instead of visibly bouncing.
+            DispatchQueue.main.async {
+                sizeWindowToRecording()
+                if let window = state.hostWindow, window.alphaValue < 1 {
+                    window.alphaValue = 1
+                }
+            }
+        }
         .onKeyPress(phases: [.down, .repeat]) { press in handleKey(press) }
+    }
+
+    /// Open at "100% video": grow/shrink the window so the preview area shows
+    /// the recording (or its committed crop) pixel-exact, clamped to the
+    /// screen. One video pixel maps to one device pixel, so the clip appears
+    /// exactly as recorded.
+    private func sizeWindowToRecording() {
+        guard let window = state.hostWindow, state.displayContentSize != .zero,
+              playerAreaSize != .zero,
+              let screen = window.screen ?? NSScreen.main else { return }
+        let scale = max(1, window.backingScaleFactor)
+        let target = CGSize(width: state.displayContentSize.width / scale,
+                            height: state.displayContentSize.height / scale)
+        let minSize = CGSize(width: max(window.minSize.width, 760),
+                             height: max(window.minSize.height, 520))
+        let frame = VideoWindowLayout.frame(
+            current: window.frame, playerArea: playerAreaSize,
+            targetPlayerArea: target, minSize: minSize,
+            visible: screen.visibleFrame)
+        // Invisible while opening → snap straight to the target frame; visible
+        // (shouldn't normally happen) → animate.
+        window.setFrame(frame, display: true, animate: window.alphaValue >= 1)
     }
 
     /// Transport keys. Space toggles play/pause on key-down only (so holding it
@@ -76,7 +118,7 @@ struct VideoEditorView: View {
     @ViewBuilder
     private var player: some View {
         if let player = state.player {
-            VideoPlayerView(player: player)
+            VideoPreviewView(player: player, state: state)
                 .background(Color.black)
                 .overlay {
                     if state.isCropping {
@@ -85,6 +127,7 @@ struct VideoEditorView: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .shadow(radius: 12, y: 4)
+                .onGeometryChange(for: CGSize.self, of: { $0.size }) { playerAreaSize = $0 }
         } else if let poster = state.poster {
             Image(decorative: poster, scale: 1)
                 .resizable()
@@ -219,13 +262,14 @@ struct VideoEditorView: View {
             ForEach(CropAspect.allCases, id: \.self) { aspect in
                 Button(aspect.label) { state.setCropAspect(aspect) }
                     .buttonStyle(.plain)
-                    .font(.caption.weight(state.crop?.aspect == aspect ? .bold : .regular))
-                    .foregroundStyle(state.crop?.aspect == aspect ? Color.accentColor : .secondary)
+                    .font(.caption.weight(state.cropAspectSelection == aspect ? .bold : .regular))
+                    .foregroundStyle(state.cropAspectSelection == aspect ? Color.accentColor : .secondary)
             }
             Spacer()
-            Button("Reset") { state.setCropRect(CGRect(origin: .zero, size: state.naturalSize)) }
+            Button("Reset") { state.resetCropRegion() }
                 .buttonStyle(.plain)
                 .font(.caption)
+                .disabled(state.crop == nil)
             Button("Cancel") { state.cancelCrop() }
                 .keyboardShortcut(.cancelAction)
             Button("Done") { state.commitCrop() }
@@ -233,25 +277,6 @@ struct VideoEditorView: View {
                 .buttonStyle(.borderedProminent)
         }
         .frame(height: 44)
-    }
-}
-
-/// AVKit player surface. `VideoPlayer` (SwiftUI) doesn't expose enough control
-/// for our chromeless preview, so we wrap `AVPlayerView` directly with its own
-/// controls hidden — the Liquid-Glass timeline IS the transport.
-private struct VideoPlayerView: NSViewRepresentable {
-    let player: AVPlayer
-
-    func makeNSView(context: Context) -> AVPlayerView {
-        let view = AVPlayerView()
-        view.player = player
-        view.controlsStyle = .none
-        view.videoGravity = .resizeAspect
-        return view
-    }
-
-    func updateNSView(_ nsView: AVPlayerView, context: Context) {
-        if nsView.player !== player { nsView.player = player }
     }
 }
 

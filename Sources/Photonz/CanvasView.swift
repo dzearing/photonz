@@ -1500,15 +1500,7 @@ final class CanvasNSView: NSView {
     /// Mirrors the system "Double-click a window's title bar to" preference for
     /// a double-click on the empty surround (we hide the real title bar).
     private func performWindowTitleBarAction() {
-        guard let window else { return }
-        switch UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick") {
-        case "Minimize":
-            window.performMiniaturize(nil)
-        case "None":
-            break
-        default: // "Maximize" (Zoom) is the modern default.
-            window.performZoom(nil)
-        }
+        WindowTitleBarAction.perform(on: window)
     }
 
     private func commit(_ next: Viewport) {

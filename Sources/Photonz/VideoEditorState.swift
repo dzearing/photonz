@@ -51,6 +51,19 @@ final class VideoEditorState {
     private(set) var crop: VideoCrop?
     /// Whether the crop overlay is active (the user is choosing a region).
     var isCropping = false
+    /// Aspect lock for the crop UI. Kept outside `VideoCrop` so it applies to
+    /// the next drag-defined region when no crop exists yet.
+    private(set) var cropAspectSelection: CropAspect = .free
+    /// The crop as it was when the overlay opened, so Cancel restores it.
+    @ObservationIgnored private var cropBeforeSession: VideoCrop?
+
+    /// The preview's camera (pan/zoom over the video), published by
+    /// `VideoPreviewNSView` so the crop overlay maps video pixels ↔ view
+    /// points through the same transform the player is drawn with.
+    var previewViewport: Viewport?
+    /// The window hosting this editor, captured by the preview view: used to
+    /// size the window to the recording and for double-click-to-zoom.
+    @ObservationIgnored weak var hostWindow: NSWindow?
 
     /// Live playback head in seconds, updated by the periodic observer so the
     /// scrubber's playhead tracks playback.
@@ -60,6 +73,17 @@ final class VideoEditorState {
 
     /// True once metadata (duration/size) has loaded, so the timeline can render.
     private(set) var isReady = false
+    /// True once the metadata load finished, ready or not — the window stays
+    /// hidden until then so it can open already sized to the recording
+    /// (instead of appearing small and visibly resizing).
+    private(set) var metadataDidLoad = false
+
+    /// What the preview frames when not cropping: the committed crop region,
+    /// or the whole video. The window is sized to show this pixel-exact.
+    var displayContentSize: CGSize {
+        guard let crop, !crop.rect.isEmpty else { return naturalSize }
+        return crop.rect.size
+    }
 
     @ObservationIgnored private var sidecarSaveTask: Task<Void, Never>?
     @ObservationIgnored private var timeObserver: Any?
@@ -155,6 +179,7 @@ final class VideoEditorState {
             self.crop = edits.crop
         }
         self.isReady = seconds > 0
+        self.metadataDidLoad = true
     }
 
     // MARK: - Playback
@@ -305,28 +330,36 @@ final class VideoEditorState {
 
     // MARK: - Crop editing (phase 13.4)
 
-    /// Begin cropping: show the overlay, seeding a full-frame region if none.
+    /// Begin cropping: show the overlay. No region is seeded — the user drags
+    /// one out (an existing crop comes back adjustable).
     func beginCrop() {
         guard naturalSize.width > 0, naturalSize.height > 0 else { return }
-        if crop == nil { crop = VideoCrop(fullFrame: naturalSize) }
+        cropBeforeSession = crop
+        cropAspectSelection = crop?.aspect ?? .free
         isCropping = true
         pause()
     }
 
     /// Replace the crop region (already in natural-video pixels; clamped here).
     func setCropRect(_ rect: CGRect) {
-        crop = VideoCrop(rect: rect, videoSize: naturalSize, aspect: crop?.aspect ?? .free)
+        crop = VideoCrop(rect: rect, videoSize: naturalSize, aspect: cropAspectSelection)
         persistEdits()
     }
 
-    /// Set the crop aspect lock, re-fitting any existing crop (or starting one).
+    /// Set the crop aspect lock, re-fitting any existing crop; with none yet,
+    /// it applies to the next drag-defined region.
     func setCropAspect(_ aspect: CropAspect) {
+        cropAspectSelection = aspect
         if var c = crop {
             c.setAspect(aspect, videoSize: naturalSize)
             crop = c
-        } else if naturalSize.width > 0 {
-            crop = VideoCrop(fullFrame: naturalSize, aspect: aspect)
+            persistEdits()
         }
+    }
+
+    /// Clear the region but stay in crop mode — back to drag-to-select.
+    func resetCropRegion() {
+        crop = nil
         persistEdits()
     }
 
@@ -337,10 +370,10 @@ final class VideoEditorState {
         persistEdits()
     }
 
-    /// Cancel cropping, dropping the region.
+    /// Cancel cropping, restoring whatever region existed when it began.
     func cancelCrop() {
         isCropping = false
-        crop = nil
+        crop = cropBeforeSession
         persistEdits()
     }
 
