@@ -830,3 +830,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - **History thumbnails honor saved edits**: `VideoExporter.posterFrame` takes `VideoEdits` (samples inside the trim window with zero tolerance, crops the frame); `CaptureStore` passes the sidecar edits, reports trimmed duration, and invalidates cached poster/duration when the sidecar fingerprint (mtime+size) changes — the folder watcher already fires on the atomic sidecar write.
 - 676 tests green (6 new for `VideoWindowLayout`). Verified live by user through the session (crop feedback + window bounce were caught by them mid-session and fixed).
 - Open: single-click on a history video tile during scripted UI automation didn't visibly open an editor window once — unconfirmed whether real; user has been opening recordings fine afterward. Watch for it.
+
+## 2026-07-10 — Release v0.6.0
+
+- Shipped v0.6.0 (minor: video editor UX features). User-visible: video editor windows open at real size with no resize bounce, pinch/pan/double-tap zoom on video, drag-to-select crop with instant preview, edits-aware history thumbnails and durations, video thumbnails with play badge in capture toasts.
+- Preflight green: 676 tests, local --dmg build OK. Release workflow published Photonz.dmg; site deploy green; verified releases/latest/download/Photonz.dmg → 200 and live version.json reports 0.6.0.
