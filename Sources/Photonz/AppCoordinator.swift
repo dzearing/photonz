@@ -108,15 +108,8 @@ final class AppCoordinator {
     /// overlay, keep that behavior in sync.
     func showCaptureToast(_ entry: CaptureEntry) {
         if historyOverlay.isShown { highlightedCaptureURL = entry.url }
-        let thumbnail: NSImage
-        if let image = capture.store.image(for: entry) {
-            thumbnail = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        } else {
-            // Recording posters load async; show the toast now with a placeholder.
-            let symbol = entry.kind == .video ? "film" : "photo"
-            thumbnail = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) ?? NSImage()
-        }
-        toasts.present(image: thumbnail, message: "Copied to clipboard!", on: activeScreen()) { [weak self] in
+        toasts.present(entry: entry, store: capture.store,
+                       message: "Copied to clipboard!", on: activeScreen()) { [weak self] in
             guard let self else { return }
             if entry.kind == .video {
                 self.openRecording(entry.url)
@@ -245,14 +238,9 @@ final class AppCoordinator {
     }
 
     private func presentCopyToast(for sourceURL: URL, message: String) {
-        let thumbnail: NSImage
-        if let entry = capture.store.entries.first(where: { $0.url == sourceURL }),
-           let image = capture.store.image(for: entry) {
-            thumbnail = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        } else {
-            thumbnail = NSImage(systemSymbolName: "film", accessibilityDescription: nil) ?? NSImage()
-        }
-        toasts.present(image: thumbnail, message: message, on: activeScreen()) { [weak self] in
+        let entry = capture.store.entries.first(where: { $0.url == sourceURL })
+        toasts.present(entry: entry, store: capture.store,
+                       message: message, on: activeScreen()) { [weak self] in
             self?.openRecording(sourceURL)
         }
     }

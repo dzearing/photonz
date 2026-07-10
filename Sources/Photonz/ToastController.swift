@@ -1,4 +1,5 @@
 import AppKit
+import PhotonzCore
 import SwiftUI
 
 /// Bottom-right capture toasts (replaces popping the whole history overlay after
@@ -27,8 +28,11 @@ final class ToastController {
     /// Keep the stack from marching off the top of the screen on a capture burst.
     private let maxVisible = 5
 
-    /// Show a toast for a freshly captured image. `onEdit` opens it for editing.
-    func present(image: NSImage, message: String, on screen: NSScreen,
+    /// Show a toast for a freshly captured image or recording. The thumbnail is
+    /// read live from the store so a recording's poster frame (generated async)
+    /// pops in when it lands; a nil entry shows a generic placeholder. `onEdit`
+    /// opens the capture for editing.
+    func present(entry: CaptureEntry?, store: CaptureStore, message: String, on screen: NSScreen,
                  onEdit: @escaping () -> Void) {
         self.screen = screen
 
@@ -42,7 +46,8 @@ final class ToastController {
         let id = item.id
 
         let view = ToastView(
-            image: image,
+            entry: entry,
+            store: store,
             message: message,
             onEdit: { [weak self] in onEdit(); self?.remove(id, animated: true) },
             onDismiss: { [weak self] in self?.remove(id, animated: true) })
@@ -159,7 +164,8 @@ private final class ToastPanel: NSPanel {
 /// Liquid Glass surface. Self-driving lifecycle (hold → fade → dismiss); hover
 /// pins it open at full opacity and reveals Edit / Dismiss.
 private struct ToastView: View {
-    let image: NSImage
+    let entry: CaptureEntry?
+    let store: CaptureStore
     let message: String
     var onEdit: () -> Void
     var onDismiss: () -> Void
@@ -173,12 +179,7 @@ private struct ToastView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Image(nsImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 196, height: 124)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
+            thumbnail
             HStack(spacing: 6) {
                 Image(systemName: "checkmark.circle")
                     .font(.system(size: 14, weight: .semibold))
@@ -211,6 +212,35 @@ private struct ToastView: View {
             }
         }
         .animation(.easeOut(duration: 0.14), value: hovering)
+    }
+
+    /// The capture's thumbnail, read live from the store: screenshots show
+    /// immediately; a recording's poster frame pops in when its async generation
+    /// lands (a placeholder holds the slot until then). Recordings get the same
+    /// play badge + duration pill as their history tiles.
+    private var thumbnail: some View {
+        Group {
+            if let entry, let image = store.image(for: entry) {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .overlay {
+                        if entry.kind == .video {
+                            VideoBadgeOverlay(duration: store.duration(for: entry))
+                        }
+                    }
+            } else {
+                ZStack {
+                    Rectangle().fill(.quaternary)
+                    Image(systemName: entry?.kind == .image ? "photo" : "film")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(width: 196, height: 124)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
     }
 
     @ViewBuilder

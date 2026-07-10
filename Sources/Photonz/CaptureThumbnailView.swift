@@ -49,24 +49,34 @@ struct CaptureThumbnailView: View {
     @ViewBuilder
     private var videoBadge: some View {
         if entry.kind == .video {
-            ZStack {
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 34))
-                    .foregroundStyle(.white, .black.opacity(0.45))
-                    .shadow(radius: 3)
-                if let duration = store.duration(for: entry) {
-                    VStack {
+            VideoBadgeOverlay(duration: store.duration(for: entry))
+        }
+    }
+}
+
+/// Play badge + duration pill overlaid on a recording's poster frame. Shared by
+/// the history tiles and the capture toasts so videos read the same everywhere.
+struct VideoBadgeOverlay: View {
+    let duration: TimeInterval?
+
+    var body: some View {
+        ZStack {
+            Image(systemName: "play.circle.fill")
+                .font(.system(size: 34))
+                .foregroundStyle(.white, .black.opacity(0.45))
+                .shadow(radius: 3)
+            if let duration {
+                VStack {
+                    Spacer()
+                    HStack {
                         Spacer()
-                        HStack {
-                            Spacer()
-                            Text(RecordingClock.elapsedString(duration))
-                                .font(.caption2.weight(.semibold).monospacedDigit())
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 2)
-                                .background(.black.opacity(0.55), in: Capsule())
-                                .foregroundStyle(.white)
-                                .padding(5)
-                        }
+                        Text(RecordingClock.elapsedString(duration))
+                            .font(.caption2.weight(.semibold).monospacedDigit())
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(.black.opacity(0.55), in: Capsule())
+                            .foregroundStyle(.white)
+                            .padding(5)
                     }
                 }
             }
