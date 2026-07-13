@@ -8,11 +8,23 @@ import SwiftUI
 @MainActor
 final class RecordingSetupController {
     private var panel: NSPanel?
+    /// Whoever was frontmost when the card appeared. The card is non-activating,
+    /// so it floats over the user's current app without pulling Photonz forward —
+    /// but `orderOut`ing a key panel makes AppKit hand key status to the next
+    /// window (an open editor), which drags the app to the foreground. Restoring
+    /// this app on dismiss keeps focus where the user left it.
+    private var previousApp: NSRunningApplication?
 
     func present(initial: RecordingConfig,
                  microphones: [(id: String, name: String)],
                  onStart: @escaping (RecordingConfig) -> Void) {
         dismiss()
+
+        // The hotkey fires without activating Photonz, so the frontmost app here
+        // is still whatever the user was in (the browser, an editor, …). Remember
+        // it so dismiss can return focus rather than let an editor window claim it.
+        let current = NSRunningApplication.current
+        previousApp = NSWorkspace.shared.frontmostApplication.flatMap { $0 == current ? nil : $0 }
 
         let view = RecordingSetupView(
             initial: initial,
@@ -44,6 +56,14 @@ final class RecordingSetupController {
     }
 
     func dismiss() {
+        // Hand focus back BEFORE ordering the panel out: re-activating the prior
+        // app first means AppKit never promotes an editor window to key, so the
+        // app doesn't flash to the foreground. Regifting focus only when a *different*
+        // app was frontmost keeps the "invoked from within Photonz" case put.
+        if let previousApp, !previousApp.isTerminated {
+            previousApp.activate()
+        }
+        previousApp = nil
         panel?.orderOut(nil)
         panel = nil
     }
