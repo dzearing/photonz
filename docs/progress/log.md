@@ -866,3 +866,8 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Fix: remember `NSWorkspace.shared.frontmostApplication` (unless it's Photonz) when the card presents, and re-activate it *before* `orderOut` on dismiss — so AppKit never promotes an editor. No-op when invoked from within Photonz (editor rightly stays). Handles both Enter (start recording) and Esc (cancel) paths, so the whole record flow never brings Photonz forward. Mirrors the ⌘⇧4 region overlay, which already works without activating the app.
 - Verified live by the user ("perfect") on the dev build. 680 tests green; `swift build` + `Scripts/build-app.sh` clean.
 - Note: the slide-down History overlay uses the same non-activating-panel pattern and likely has the same latent behavior; left untouched (not reported).
+
+## 2026-07-13 — Release v0.7.0
+
+- Shipped v0.7.0 (minor: unreleased capture-toast copy feature since v0.6.0 + the focus fix). User-visible: Copy Video/Copy GIF straight from the capture toast with source-fps GIF export; recordings started with ⌘⇧5 from another app no longer pull a Photonz editor window to the front.
+- Preflight green: 680 tests, local --dmg build OK. Release workflow published Photonz.dmg (notarized + stapled); site deploy green; verified releases/latest/download/Photonz.dmg → 200 and live version.json reports 0.7.0.
