@@ -2,6 +2,12 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.7.0 — 2026-07-13
+
+**Copy straight from the capture toast.** Right after a recording finishes, the toast now has a Copy button: pick **Copy Video** for the MP4 or **Copy GIF** for an animated GIF — no need to open history first. GIFs export at the recording's own frame rate, so the motion is as smooth as what you captured.
+
+**Recording never steals your focus.** Kicking off a recording with <kbd>⌘⇧5</kbd> from another app (say, your browser) no longer yanks an open Photonz editor window to the front. Focus stays right where you left it — whether you start the recording or cancel the setup card.
+
 ## 0.6.0 — 2026-07-10
 
 **The video editor grew up.** Recordings now open in a window sized to show the video at its real size, appearing in one step instead of opening small and resizing. You can pinch to zoom and two-finger scroll to pan the video just like images, double-tap the trackpad to jump between fit and 100%, and double-click the empty background to maximize the window.
