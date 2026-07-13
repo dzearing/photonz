@@ -13,7 +13,6 @@ final class RecordingSetupController {
                  microphones: [(id: String, name: String)],
                  onStart: @escaping (RecordingConfig) -> Void) {
         dismiss()
-        NSApp.activate(ignoringOtherApps: true)
 
         let view = RecordingSetupView(
             initial: initial,
@@ -22,18 +21,25 @@ final class RecordingSetupController {
             onCancel: { [weak self] in self?.dismiss() })
 
         let size = CGSize(width: 360, height: 260)
+        // A non-activating panel: it takes key focus on its own (so its buttons
+        // and the default Return action work even when the agent has no other
+        // window) WITHOUT activating Photonz. Activating the app here would drag
+        // every open editor/recording window to the foreground — exactly what
+        // the history overlay avoids for the same reason.
         let panel = KeyPanel(
             contentRect: CGRect(origin: .zero, size: size),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered, defer: false)
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true
         panel.level = .floating
+        panel.hidesOnDeactivate = false
         panel.isMovableByWindowBackground = true
         panel.contentView = NSHostingView(rootView: view)
         panel.center()
-        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
+        panel.makeKey()
         self.panel = panel
     }
 
@@ -44,8 +50,11 @@ final class RecordingSetupController {
 }
 
 private final class KeyPanel: NSPanel {
+    // Key (so the segmented control, toggles, and Return/Escape work) but never
+    // main — a main window would pull the app forward, defeating the whole point
+    // of the non-activating panel.
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    override var canBecomeMain: Bool { false }
 }
 
 private struct RecordingSetupView: View {

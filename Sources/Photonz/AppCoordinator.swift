@@ -108,15 +108,18 @@ final class AppCoordinator {
     /// overlay, keep that behavior in sync.
     func showCaptureToast(_ entry: CaptureEntry) {
         if historyOverlay.isShown { highlightedCaptureURL = entry.url }
-        toasts.present(entry: entry, store: capture.store,
-                       message: "Copied to clipboard!", on: activeScreen()) { [weak self] in
-            guard let self else { return }
-            if entry.kind == .video {
-                self.openRecording(entry.url)
-            } else {
-                self.editCapture(entry.url)
-            }
-        }
+        let isVideo = entry.kind == .video
+        toasts.present(
+            entry: entry, store: capture.store,
+            message: "Copied to clipboard!", on: activeScreen(),
+            onEdit: { [weak self] in
+                guard let self else { return }
+                if isVideo { self.openRecording(entry.url) } else { self.editCapture(entry.url) }
+            },
+            // Recordings get a Copy menu (video / GIF); screenshots are already an
+            // image on the clipboard, so they don't.
+            onCopyVideo: isVideo ? { [weak self] in self?.copyRecording(entry, as: .mp4) } : nil,
+            onCopyGIF: isVideo ? { [weak self] in self?.copyRecording(entry, as: .gif) } : nil)
     }
 
     // MARK: - Recordings (phase 12.4 / 12.5)
@@ -212,8 +215,16 @@ final class AppCoordinator {
                     ClipboardWriter.writeFile(destination)
                     presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
                 } else {
+                    // Preserve the recording's smoothness: match the source fps
+                    // (capped at the format's ceiling) instead of the exporter's
+                    // fixed 15fps default, which made pasted GIFs look choppy.
+                    // Keep full (physical) resolution up to the exporter's cap so
+                    // the GIF stays crisp on Retina — Chromium apps (Teams) render
+                    // it larger, but a downscale to logical size looks blurry.
+                    let sourceFPS = await VideoExporter.frameRate(of: sourceURL)
+                    let targetFPS = AnimatedExportPlanner.clipboardFPS(sourceFPS: sourceFPS, format: format)
                     try await VideoExporter.exportAnimated(from: sourceURL, to: destination, format: format,
-                                                           trim: trim, crop: crop)
+                                                           trim: trim, crop: crop, targetFPS: targetFPS)
                     // Inline GIF bytes ride along for targets that paste content
                     // instead of attaching files.
                     let data = format == .gif ? try? Data(contentsOf: destination) : nil

@@ -54,6 +54,12 @@ public enum RecordingFormat: String, Codable, Sendable, CaseIterable {
     /// MP4 is recorded directly; GIF/HEIC are derived by re-encoding frames.
     public var isAnimatedImage: Bool { self == .gif || self == .heic }
 
+    /// Frame-rate ceiling when copying a recording to the clipboard as this
+    /// animated format. GIF stores per-frame delays in centiseconds, so ~50fps
+    /// is the practical maximum decoders honor; HEIC has headroom to the 60fps
+    /// capture rate.
+    public var clipboardFPSCap: Double { self == .gif ? 50 : 60 }
+
     public var displayName: String {
         switch self {
         case .mp4: return "MP4 Video"
@@ -203,6 +209,14 @@ public enum AnimatedExportPlanner {
         let size = PinnedImageMetrics.fittedSize(imageSize: baseSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
                                   trimStart: trim.inPoint)
+    }
+
+    /// Frame rate to use when copying a recording to the clipboard as an animated
+    /// image: the recording's own fps, floored at 1 and capped at the format's
+    /// ceiling. Preserves the source's smoothness instead of the old fixed 15fps
+    /// that made pasted GIFs look choppy.
+    public static func clipboardFPS(sourceFPS: Double, format: RecordingFormat) -> Double {
+        min(max(1, sourceFPS), format.clipboardFPSCap)
     }
 
     /// Preset overload: derives fps + max-dimension from a `VideoExportQuality`.

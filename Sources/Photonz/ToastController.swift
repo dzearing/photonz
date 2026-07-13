@@ -31,9 +31,13 @@ final class ToastController {
     /// Show a toast for a freshly captured image or recording. The thumbnail is
     /// read live from the store so a recording's poster frame (generated async)
     /// pops in when it lands; a nil entry shows a generic placeholder. `onEdit`
-    /// opens the capture for editing.
+    /// opens the capture for editing. For recordings, `onCopyVideo`/`onCopyGIF`
+    /// add a Copy button whose menu re-copies the clip as an MP4 or animated GIF;
+    /// pass nil (the default) for screenshots, which are already on the clipboard.
     func present(entry: CaptureEntry?, store: CaptureStore, message: String, on screen: NSScreen,
-                 onEdit: @escaping () -> Void) {
+                 onEdit: @escaping () -> Void,
+                 onCopyVideo: (() -> Void)? = nil,
+                 onCopyGIF: (() -> Void)? = nil) {
         self.screen = screen
 
         // Soft-cap the stack: drop the oldest before adding a new one.
@@ -50,6 +54,8 @@ final class ToastController {
             store: store,
             message: message,
             onEdit: { [weak self] in onEdit(); self?.remove(id, animated: true) },
+            onCopyVideo: onCopyVideo.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
+            onCopyGIF: onCopyGIF.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
             onDismiss: { [weak self] in self?.remove(id, animated: true) })
         let hosting = NSHostingView(rootView: view)
         let size = hosting.fittingSize
@@ -160,6 +166,20 @@ private final class ToastPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
+/// An NSMenuItem that runs a Swift closure — lets the toast build its Copy menu
+/// without wiring up @objc selector targets.
+private final class ClosureMenuItem: NSMenuItem {
+    private let handler: () -> Void
+    init(title: String, handler: @escaping () -> Void) {
+        self.handler = handler
+        super.init(title: title, action: #selector(fire), keyEquivalent: "")
+        target = self
+    }
+    @available(*, unavailable)
+    required init(coder: NSCoder) { fatalError("init(coder:) is not used") }
+    @objc private func fire() { handler() }
+}
+
 /// One capture toast: the thumbnail with a "Copied to clipboard" caption,
 /// Liquid Glass surface. Self-driving lifecycle (hold → fade → dismiss); hover
 /// pins it open at full opacity and reveals Edit / Dismiss.
@@ -168,7 +188,13 @@ private struct ToastView: View {
     let store: CaptureStore
     let message: String
     var onEdit: () -> Void
+    /// Non-nil only for recordings: the Copy button's menu re-copies the clip.
+    var onCopyVideo: (() -> Void)?
+    var onCopyGIF: (() -> Void)?
     var onDismiss: () -> Void
+
+    /// Anchors the Copy menu so it pops from the (non-key) toast panel correctly.
+    private let copyMenuAnchor = MenuAnchor.Handle()
 
     @State private var hovering = false
     @State private var opacity: Double = 0 // fades in on appear
@@ -249,6 +275,11 @@ private struct ToastView: View {
             HStack(spacing: 4) {
                 Button(action: onEdit) { Image(systemName: "square.and.pencil") }
                     .help("Edit")
+                if onCopyVideo != nil || onCopyGIF != nil {
+                    Button(action: presentCopyMenu) { Image(systemName: "doc.on.doc") }
+                        .help("Copy as…")
+                        .background(MenuAnchor(handle: copyMenuAnchor))
+                }
                 Button(action: onDismiss) { Image(systemName: "xmark") }
                     .help("Dismiss")
             }
@@ -258,6 +289,37 @@ private struct ToastView: View {
             .padding(6)
             .transition(.opacity.combined(with: .scale(scale: 0.9)))
         }
+    }
+
+    /// Pop the "Copy Video / Copy GIF" menu below the Copy button. Uses an
+    /// NSMenu (not a SwiftUI `Menu`) because the toast panel never becomes key.
+    private func presentCopyMenu() {
+        guard let anchor = copyMenuAnchor.view else { return }
+        let menu = NSMenu()
+        if let onCopyVideo {
+            menu.addItem(ClosureMenuItem(title: "Copy Video", handler: onCopyVideo))
+        }
+        if let onCopyGIF {
+            menu.addItem(ClosureMenuItem(title: "Copy GIF", handler: onCopyGIF))
+        }
+        menu.popUp(positioning: nil,
+                   at: NSPoint(x: 0, y: anchor.bounds.height + 4),
+                   in: anchor)
+    }
+
+    /// A zero-cost NSView living behind the Copy button, used purely as the
+    /// anchor for `NSMenu.popUp(_:at:in:)`. SwiftUI actions have no NSView of
+    /// their own, and the toast panel can't become key (so a SwiftUI `Menu`
+    /// would misbehave), so we bridge to AppKit for the popup.
+    private struct MenuAnchor: NSViewRepresentable {
+        @MainActor final class Handle { weak var view: NSView? }
+        let handle: Handle
+        func makeNSView(context: Context) -> NSView {
+            let view = NSView()
+            handle.view = view
+            return view
+        }
+        func updateNSView(_ nsView: NSView, context: Context) { handle.view = nsView }
     }
 
     /// Hold at full opacity, fade out, then ask to be removed. Restarted on

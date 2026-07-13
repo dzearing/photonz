@@ -161,4 +161,27 @@ struct RecordingTests {
         // 1920×1080 capped at 480 → 480×270.
         #expect(plan.size == CGSize(width: 480, height: 270))
     }
+
+    // MARK: - Clipboard fps (copy-as-GIF preserves the recording's framerate)
+
+    @Test func gifClipboardFpsCapsAtFifty() {
+        // GIF stores per-frame delays in centiseconds, so ~50fps is the ceiling.
+        #expect(RecordingFormat.gif.clipboardFPSCap == 50)
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: 60, format: .gif) == 50)
+    }
+
+    @Test func heicClipboardFpsHasHeadroomToSixty() {
+        #expect(RecordingFormat.heic.clipboardFPSCap == 60)
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: 60, format: .heic) == 60)
+    }
+
+    @Test func clipboardFpsKeepsSourceRateWhenBelowCap() {
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: 24, format: .gif) == 24)
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: 30, format: .gif) == 30)
+    }
+
+    @Test func clipboardFpsFloorsAtOneForDegenerateInput() {
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: 0, format: .gif) == 1)
+        #expect(AnimatedExportPlanner.clipboardFPS(sourceFPS: -5, format: .gif) == 1)
+    }
 }

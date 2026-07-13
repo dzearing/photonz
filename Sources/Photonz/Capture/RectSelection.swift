@@ -174,12 +174,20 @@ private final class SelectionView: NSView {
     override func mouseMoved(with event: NSEvent) { NSCursor.crosshair.set() }
 
     override func mouseDown(with event: NSEvent) {
+        // Re-assert on press: the app is inactive (non-activating overlay), so
+        // AppKit's cursor management is unreliable and the one-shot crosshair may
+        // have been clobbered back to the arrow before the first move.
+        NSCursor.crosshair.set()
         dragStart = convert(event.locationInWindow, from: nil)
         dragCurrent = dragStart
         needsDisplay = true
     }
 
     override func mouseDragged(with event: NSEvent) {
+        // A drag delivers only `mouseDragged` (never `mouseMoved`/`cursorUpdate`),
+        // so this is the ONLY place the cursor can be kept as the crosshair while
+        // dragging out the region — without it the pointer reverts to the arrow.
+        NSCursor.crosshair.set()
         dragCurrent = convert(event.locationInWindow, from: nil)
         needsDisplay = true
     }
