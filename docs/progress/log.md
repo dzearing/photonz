@@ -871,3 +871,12 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 
 - Shipped v0.7.0 (minor: unreleased capture-toast copy feature since v0.6.0 + the focus fix). User-visible: Copy Video/Copy GIF straight from the capture toast with source-fps GIF export; recordings started with ⌘⇧5 from another app no longer pull a Photonz editor window to the front.
 - Preflight green: 680 tests, local --dmg build OK. Release workflow published Photonz.dmg (notarized + stapled); site deploy green; verified releases/latest/download/Photonz.dmg → 200 and live version.json reports 0.7.0.
+
+## 2026-07-17 — Video player rework: standard scrubber + trim as an edit mode
+
+- Reworked the video editor to feel like a normal macOS player. On open: no trim UI, a QuickTime-style scrubber (new `PlaybackScrubber.swift` — slim track, draggable thumb, click-to-seek, resumes playback after a scrub that started while playing), timecodes flanking the track, transport centered below, and autoplay (loops within the trim window as before).
+- Trim is now an explicit edit mode mirroring crop: a scissors button (immediately left of crop) enters it; the old `TrimTimeline` shows only there, with Reset/Cancel/Done in the controls row (Esc/Return bound). Done folds the selection into the applied window via the existing `applyTrim` (undoable); Cancel restores the selection from mode entry. "Apply Trim" button is gone.
+- Sidecar trims now fold straight into the applied window on load (pushed onto the undo stack) instead of coming back as always-visible live handles; `undoApplyTrim` re-opens trim mode when it restores a real selection, since handles are only visible there.
+- Edit buttons normalized: copy/export menus use `.menuStyle(.button)` + `IconActionButtonStyle`, so trim/crop/copy/export are all the same circular hover style.
+- The top strip is height-locked (44pt) so mode switches don't jump the panel.
+- Verified live on the dev build: autoplay, scrubber seek, trim mode enter/drag(in→3.02s)/Done, applied duration 8.98s, sidecar persist + reopen fold-in with undo affordance. Left to hand-check: undo button re-opening trim mode (code mirrors the verified beginTrim path; automated clicks were unreliable — three other agent sessions were injecting synthetic mouse events on this machine during verification). 680 tests green.

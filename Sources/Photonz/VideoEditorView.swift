@@ -3,9 +3,10 @@ import AVKit
 import PhotonzCore
 import SwiftUI
 
-/// Root of a video-editor window (phase 13.3): an AVKit preview above a custom
-/// Liquid-Glass timeline with draggable in/out trim handles. Trim is
-/// non-destructive (applied at export). Mirrors `EditorView`'s layout idioms.
+/// Root of a video-editor window (phase 13.3): an AVKit preview above a
+/// standard player strip — scrubber with centered transport — plus explicit
+/// trim and crop edit modes. Trim is non-destructive (applied at export).
+/// Mirrors `EditorView`'s layout idioms.
 struct VideoEditorView: View {
     @Environment(VideoEditorState.self) private var state
     @Environment(AppCoordinator.self) private var coordinator
@@ -32,12 +33,20 @@ struct VideoEditorView: View {
 
                 if state.isReady {
                     VStack(spacing: 10) {
-                        if state.isCropping {
-                            cropRow
-                        } else {
-                            TrimTimeline(state: state)
+                        // Constant-height strip so switching into trim/crop
+                        // mode doesn't jump the panel (timeline/crop = 44pt,
+                        // scrubber is slimmer and centers within it).
+                        Group {
+                            if state.isCropping {
+                                cropRow
+                            } else if state.isTrimming {
+                                TrimTimeline(state: state)
+                            } else {
+                                scrubberRow
+                            }
                         }
-                        transportRow
+                        .frame(height: 44)
+                        controlsRow
                     }
                     .padding(.horizontal, 18)
                     .padding(.vertical, 14)
@@ -137,54 +146,96 @@ struct VideoEditorView: View {
         }
     }
 
-    private var transportRow: some View {
-        HStack(spacing: 14) {
+    /// Playback position line: current time · scrubber · total duration.
+    private var scrubberRow: some View {
+        HStack(spacing: 10) {
+            timecode(state.currentTime)
+            PlaybackScrubber(state: state)
+            timecode(state.duration)
+        }
+    }
+
+    private func timecode(_ seconds: TimeInterval) -> some View {
+        Text(VideoTimecode.label(seconds))
+            .font(.system(.caption, design: .monospaced))
+            .foregroundStyle(.secondary)
+    }
+
+    /// Bottom row: transport centered like a normal player, status labels on
+    /// the left, and the mode-dependent action cluster on the right (edit
+    /// buttons normally; Reset/Cancel/Done while trimming; crop mode keeps its
+    /// own chrome in `cropRow`).
+    private var controlsRow: some View {
+        ZStack {
             transportCluster
 
-            Text(VideoTimecode.label(state.currentTime))
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            if state.canApplyTrim {
-                Label(VideoTimecode.label(state.trim.effectiveDuration),
-                      systemImage: "scissors")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Button("Apply Trim") { state.applyTrim() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .help("Shrink the working clip to the selected range")
-            }
-            if state.canUndoTrim {
-                Button { state.undoApplyTrim() } label: {
-                    Image(systemName: "arrow.uturn.backward")
+            HStack(spacing: 14) {
+                statusCluster
+                Spacer()
+                if state.isTrimming {
+                    trimModeButtons
+                } else if !state.isCropping {
+                    editButtons
                 }
-                .buttonStyle(IconActionButtonStyle())
-                .help("Undo applied trim")
             }
-            if let crop = state.crop, crop.isCropped(videoSize: state.naturalSize) {
-                Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))",
-                      systemImage: "crop")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Quiet left-corner readouts: undo-trim, trimmed length, crop size.
+    @ViewBuilder
+    private var statusCluster: some View {
+        if state.canUndoTrim, !state.isCropping {
+            Button { state.undoApplyTrim() } label: {
+                Image(systemName: "arrow.uturn.backward")
             }
-
-            if !state.isCropping {
-                Button { state.beginCrop() } label: {
-                    Image(systemName: "crop")
-                }
-                .buttonStyle(IconActionButtonStyle())
-                .help("Crop to Region")
-
-                copyMenu
-                exportMenu
-            }
-
-            Text(VideoTimecode.label(state.duration))
-                .font(.system(.caption, design: .monospaced))
+            .buttonStyle(IconActionButtonStyle())
+            .help("Undo applied trim")
+        }
+        if state.isTrimming, state.trim.isTrimmed {
+            Label(VideoTimecode.label(state.trim.effectiveDuration),
+                  systemImage: "scissors")
+                .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+        if let crop = state.crop, crop.isCropped(videoSize: state.naturalSize), !state.isCropping {
+            Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))",
+                  systemImage: "crop")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// The right-side edit actions, all sharing the circular icon style.
+    @ViewBuilder
+    private var editButtons: some View {
+        Button { state.beginTrim() } label: {
+            Image(systemName: "scissors")
+        }
+        .buttonStyle(IconActionButtonStyle())
+        .help("Trim")
+
+        Button { state.beginCrop() } label: {
+            Image(systemName: "crop")
+        }
+        .buttonStyle(IconActionButtonStyle())
+        .help("Crop to Region")
+
+        copyMenu
+        exportMenu
+    }
+
+    /// Trim-mode session chrome, mirroring the crop row's Reset/Cancel/Done.
+    private var trimModeButtons: some View {
+        HStack(spacing: 12) {
+            Button("Reset") { state.resetTrimSelection() }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .disabled(!state.trim.isTrimmed)
+            Button("Cancel") { state.cancelTrim() }
+                .keyboardShortcut(.cancelAction)
+            Button("Done") { state.commitTrim() }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
         }
     }
 
@@ -224,8 +275,10 @@ struct VideoEditorView: View {
         } label: {
             Image(systemName: "doc.on.doc")
         }
+        .menuStyle(.button)
+        .buttonStyle(IconActionButtonStyle())
         .menuIndicator(.hidden)
-        .frame(width: 28)
+        .fixedSize()
         .disabled(coordinator.isExportingRecording)
         .help("Copy to Clipboard…")
     }
@@ -250,8 +303,10 @@ struct VideoEditorView: View {
                 Image(systemName: "square.and.arrow.down")
             }
         }
+        .menuStyle(.button)
+        .buttonStyle(IconActionButtonStyle())
         .menuIndicator(.hidden)
-        .frame(width: 28)
+        .fixedSize()
         .disabled(coordinator.isExportingRecording)
         .help("Export…")
     }

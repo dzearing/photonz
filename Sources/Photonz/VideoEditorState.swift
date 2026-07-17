@@ -51,6 +51,10 @@ final class VideoEditorState {
     private(set) var crop: VideoCrop?
     /// Whether the crop overlay is active (the user is choosing a region).
     var isCropping = false
+    /// Whether trim mode is active (the timeline with in/out handles is shown).
+    var isTrimming = false
+    /// The live trim as it was when trim mode opened, so Cancel restores it.
+    @ObservationIgnored private var trimBeforeSession: VideoTrim?
     /// Aspect lock for the crop UI. Kept outside `VideoCrop` so it applies to
     /// the next drag-defined region when no crop exists yet.
     private(set) var cropAspectSelection: CropAspect = .free
@@ -168,35 +172,44 @@ final class VideoEditorState {
         self.frameRate = fps
         self.trim = VideoTrim(duration: seconds)
         // Recall persisted edits (sidecar) so a trim/crop made in an earlier
-        // session survives the window closing. The trim comes back as a *live*
-        // selection over the full clip, so the handles show it and it stays
-        // adjustable.
+        // session survives the window closing. The trim folds straight into the
+        // applied window (trim handles only show in trim mode now), pushed onto
+        // the undo stack so it stays reversible.
         if let edits = VideoEditsSidecar.load(for: url) {
             if let saved = edits.trim, saved.isTrimmed {
-                self.trim = VideoTrim(inPoint: saved.inPoint, outPoint: saved.outPoint,
-                                      duration: seconds)
+                trimUndo.append(TrimSnapshot(
+                    appliedIn: 0, appliedOut: seconds,
+                    trim: VideoTrim(inPoint: saved.inPoint, outPoint: saved.outPoint,
+                                    duration: seconds)))
+                self.appliedIn = saved.inPoint
+                self.appliedOut = saved.outPoint
+                self.trim = VideoTrim(duration: duration)
             }
             self.crop = edits.crop
         }
         self.isReady = seconds > 0
         self.metadataDidLoad = true
+        if isReady {
+            // Autoplay from the top of the working clip, like a normal player.
+            seek(to: 0)
+            play()
+        }
     }
 
     // MARK: - Playback
 
     func togglePlayPause() {
+        isPlaying ? pause() : play()
+    }
+
+    func play() {
         guard let player else { return }
-        if isPlaying {
-            player.pause()
-            isPlaying = false
-        } else {
-            // Restart from the in-point if we're at/after the out-point.
-            if currentTime >= trim.outPoint - 1e-3 || currentTime < trim.inPoint {
-                seek(to: trim.inPoint)
-            }
-            player.play()
-            isPlaying = true
+        // Restart from the in-point if we're at/after the out-point.
+        if currentTime >= trim.outPoint - 1e-3 || currentTime < trim.inPoint {
+            seek(to: trim.inPoint)
         }
+        player.play()
+        isPlaying = true
     }
 
     func pause() {
@@ -294,12 +307,41 @@ final class VideoEditorState {
         persistEdits()
     }
 
-    /// True when the live trim selects anything narrower than the working clip,
-    /// i.e. there's something to Apply.
-    var canApplyTrim: Bool { trim.isTrimmed }
-
     /// True when at least one Apply Trim can be undone.
     var canUndoTrim: Bool { !trimUndo.isEmpty }
+
+    // MARK: - Trim mode (mirrors crop mode: begin → adjust → cancel/commit)
+
+    /// Begin trimming: show the timeline with in/out handles over the working
+    /// clip. Paused, like crop, so the handles scrub the preview.
+    func beginTrim() {
+        guard isReady else { return }
+        trimBeforeSession = trim
+        isTrimming = true
+        pause()
+    }
+
+    /// Clear the selection back to the whole working clip (stay in trim mode).
+    func resetTrimSelection() {
+        trim = VideoTrim(duration: duration)
+        persistEdits()
+    }
+
+    /// Finish trimming: fold any selection into the working window (undoable
+    /// via `undoApplyTrim`, same as the old Apply Trim).
+    func commitTrim() {
+        isTrimming = false
+        trimBeforeSession = nil
+        if trim.isTrimmed { applyTrim() } else { persistEdits() }
+    }
+
+    /// Cancel trimming, restoring the selection from when the mode began.
+    func cancelTrim() {
+        isTrimming = false
+        if let prev = trimBeforeSession { trim = prev }
+        trimBeforeSession = nil
+        persistEdits()
+    }
 
     /// Apply the live trim: shrink the working clip to `[in, out]`. The timeline,
     /// duration, and playhead re-seat to the kept range so further edits compose
@@ -317,12 +359,17 @@ final class VideoEditorState {
     }
 
     /// Undo the most recent Apply Trim, restoring the prior working window and its
-    /// live trim selection.
+    /// live trim selection. A restored selection re-opens trim mode — handles are
+    /// only visible there, and undo should show what it brought back.
     func undoApplyTrim() {
         guard let prev = trimUndo.popLast() else { return }
         appliedIn = prev.appliedIn
         appliedOut = prev.appliedOut
         trim = prev.trim
+        if trim.isTrimmed, !isCropping {
+            trimBeforeSession = trim
+            isTrimming = true
+        }
         pause()
         seek(to: trim.inPoint)
         persistEdits()
