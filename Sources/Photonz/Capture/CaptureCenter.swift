@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Carbon.HIToolbox
 import Observation
 import PhotonzCore
@@ -83,7 +84,7 @@ final class CaptureCenter {
 
     /// Presents the recording setup card, then starts on the chosen source.
     func beginRecordingFlow() {
-        guard !recording.isRecording else { return }
+        guard !recording.isRecording, !recording.isStarting else { return }
         guard ensurePermission() else { return }
         recordingSetup.present(
             initial: recording.config,
@@ -93,7 +94,76 @@ final class CaptureCenter {
         }
     }
 
+    /// Resolve microphone access BEFORE any stream exists. If SCStream is left
+    /// to trip the TCC prompt inside `startCapture`, the start either blocks
+    /// until the prompt is answered (stop HUD frozen at 0:00) or fails
+    /// instantly and silently when access is denied and the prompt suppressed:
+    /// the HUD vanished in under a second and the recording just never
+    /// happened. That silent flash was reported as "recording with the
+    /// microphone crashes".
     private func startRecording(with config: RecordingConfig) {
+        Task { await resolveMicrophoneAccessThenStart(config) }
+    }
+
+    private func resolveMicrophoneAccessThenStart(_ config: RecordingConfig) async {
+        switch MicrophonePermissionGate.decision(wantsMicrophone: config.audio.capturesMicrophone,
+                                                 authorization: Self.microphoneAuthorization()) {
+        case .proceed:
+            launchRecording(with: config)
+        case .requestAccess:
+            // Accessory app: without activating first, the mic prompt can land
+            // behind the frontmost app and never be seen (same reason the
+            // welcome flow activates). This OS prompt only exists while the
+            // status is notDetermined, so it inherently fires at most once.
+            NSApp.activate(ignoringOtherApps: true)
+            if await AVCaptureDevice.requestAccess(for: .audio) {
+                launchRecording(with: config)
+            } else {
+                presentMicrophoneBlocked(for: config)
+            }
+        case .blocked:
+            presentMicrophoneBlocked(for: config)
+        }
+    }
+
+    /// Maps AVFoundation's status into the pure gate's terms. A bundle without
+    /// the mic usage description (bare `swift build` runs) counts as denied:
+    /// requesting access there would get the process killed by TCC.
+    private static func microphoneAuthorization() -> MicrophoneAuthorization {
+        guard Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") != nil else {
+            return .denied
+        }
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized: return .authorized
+        case .notDetermined: return .notDetermined
+        default: return .denied
+        }
+    }
+
+    /// Blocked mic is surfaced, never swallowed: offer to record without the
+    /// microphone, jump to Settings, or bail. User-initiated each time, so this
+    /// is feedback, not a prompt loop.
+    private func presentMicrophoneBlocked(for config: RecordingConfig) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Microphone access is turned off"
+        alert.informativeText = "macOS is blocking Photonz from using the microphone, so the recording can't include it. You can record without the microphone, or turn it on in System Settings and try again."
+        alert.addButton(withTitle: "Record Without Microphone")
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Cancel")
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            launchRecording(with: config.withoutMicrophone)
+        case .alertSecondButtonReturn:
+            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+                NSWorkspace.shared.open(url)
+            }
+        default:
+            break
+        }
+    }
+
+    private func launchRecording(with config: RecordingConfig) {
         if case .region = config.source {
             // Drag a region first, then record exactly that rect on its screen.
             guard rectSelection == nil else { return }

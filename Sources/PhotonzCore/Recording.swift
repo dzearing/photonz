@@ -89,6 +89,52 @@ public struct RecordingConfig: Codable, Sendable, Hashable {
     }
 }
 
+extension RecordingConfig {
+    /// The same recording with the microphone dropped: the fallback offered when
+    /// mic access is blocked so the user can still capture video/system audio.
+    public var withoutMicrophone: RecordingConfig {
+        var copy = self
+        copy.audio.remove(.microphone)
+        copy.microphoneDeviceID = nil
+        return copy
+    }
+}
+
+/// The app's microphone authorization, mirrored from AVFoundation so the gate
+/// below stays pure. `denied` also covers restricted.
+public enum MicrophoneAuthorization: Sendable, Hashable {
+    case notDetermined
+    case denied
+    case authorized
+}
+
+/// Decides what the recording flow must do about microphone access BEFORE any
+/// capture stream exists. Letting ScreenCaptureKit trip the TCC prompt in the
+/// middle of `startCapture` either blocks the start until the prompt is
+/// answered (the stop HUD sits frozen at 0:00) or, when the prompt is
+/// suppressed or already denied, fails the start instantly so the HUD vanishes
+/// in under a second with no explanation.
+public enum MicrophonePermissionGate {
+    public enum Decision: Sendable, Hashable {
+        /// Start the recording as configured.
+        case proceed
+        /// Ask the OS for microphone access first, then re-evaluate.
+        case requestAccess
+        /// Microphone access is off: tell the user instead of failing silently.
+        case blocked
+    }
+
+    public static func decision(wantsMicrophone: Bool,
+                                authorization: MicrophoneAuthorization) -> Decision {
+        guard wantsMicrophone else { return .proceed }
+        switch authorization {
+        case .authorized: return .proceed
+        case .notDetermined: return .requestAccess
+        case .denied: return .blocked
+        }
+    }
+}
+
 /// Elapsed-time formatting for the floating stop control (phase 12.3). Pure so
 /// the HUD label stays testable.
 public enum RecordingClock {
