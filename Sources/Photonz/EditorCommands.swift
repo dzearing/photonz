@@ -214,14 +214,14 @@ struct EditorCommands: Commands {
         // docs/progress/log.md 2026-06-17.
         CommandGroup(replacing: .undoRedo) {
             // ⌘Z targets the focused window: image history in an image window, or
-            // the applied-trim stack in a recording window (where `editor` is nil
-            // and `video` is set).
+            // the applied-edit stack (trim/crop) in a recording window (where
+            // `editor` is nil and `video` is set).
             Button("Undo") {
                 if let editor { editor.undo() }
-                else { video?.undoApplyTrim() }
+                else { video?.undoLastEdit() }
             }
             .keyboardShortcut("z", modifiers: .command)
-            .disabled(!(editor?.canUndo ?? false) && !(video?.canUndoTrim ?? false))
+            .disabled(!(editor?.canUndo ?? false) && !(video?.canUndoEdit ?? false))
             Button("Redo") { editor?.redo() }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .disabled(!(editor?.canRedo ?? false))

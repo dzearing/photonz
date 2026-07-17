@@ -43,9 +43,12 @@ final class VideoEditorState {
     /// Non-destructive live trim window, in working seconds. Full working clip
     /// until the user drags a handle; Apply Trim folds it into the applied window.
     private(set) var trim = VideoTrim(duration: 0)
-    /// Snapshots for undoing Apply Trim. Observed so the Undo affordance toggles
-    /// live; a stack so repeated applies undo one at a time.
-    private var trimUndo: [TrimSnapshot] = []
+    /// Snapshots for undoing edits applied this session (trim and crop). Observed
+    /// so the Undo affordance toggles live; a stack so repeated edits undo one at
+    /// a time, newest first. Only edits the user applies here are recorded —
+    /// edits recalled from a sidecar are the recording's saved state, not
+    /// pending actions, so they never seed this.
+    private var editUndo: [EditStep] = []
     /// Non-destructive crop region in natural-video-pixel space, top-left
     /// origin (phase 13.4). Nil = full frame.
     private(set) var crop: VideoCrop?
@@ -172,15 +175,13 @@ final class VideoEditorState {
         self.frameRate = fps
         self.trim = VideoTrim(duration: seconds)
         // Recall persisted edits (sidecar) so a trim/crop made in an earlier
-        // session survives the window closing. The trim folds straight into the
-        // applied window (trim handles only show in trim mode now), pushed onto
-        // the undo stack so it stays reversible.
+        // session survives the window closing. A saved trim is the recording's
+        // state, not a pending action, so it folds straight into the applied
+        // window with NO undo step — opening a previously trimmed video shows it
+        // trimmed with nothing to undo. Trim handles only appear in trim mode,
+        // where Reset restores the full length.
         if let edits = VideoEditsSidecar.load(for: url) {
             if let saved = edits.trim, saved.isTrimmed {
-                trimUndo.append(TrimSnapshot(
-                    appliedIn: 0, appliedOut: seconds,
-                    trim: VideoTrim(inPoint: saved.inPoint, outPoint: saved.outPoint,
-                                    duration: seconds)))
                 self.appliedIn = saved.inPoint
                 self.appliedOut = saved.outPoint
                 self.trim = VideoTrim(duration: duration)
@@ -307,8 +308,13 @@ final class VideoEditorState {
         persistEdits()
     }
 
-    /// True when at least one Apply Trim can be undone.
-    var canUndoTrim: Bool { !trimUndo.isEmpty }
+    /// True when at least one applied edit can be undone this session.
+    var canUndoEdit: Bool { !editUndo.isEmpty }
+
+    /// The most recent undoable edit's name ("Trim", "Crop"), or nil when there
+    /// is nothing to undo. Drives the Undo affordance's visibility and its
+    /// action-specific tooltip, so it never reads "Undo Trim" after a crop.
+    var lastEditActionName: String? { editUndo.last?.kind.name }
 
     // MARK: - Trim mode (mirrors crop mode: begin → adjust → cancel/commit)
 
@@ -328,7 +334,7 @@ final class VideoEditorState {
     }
 
     /// Finish trimming: fold any selection into the working window (undoable
-    /// via `undoApplyTrim`, same as the old Apply Trim).
+    /// via `undoLastEdit`, same as the old Apply Trim).
     func commitTrim() {
         isTrimming = false
         trimBeforeSession = nil
@@ -346,10 +352,11 @@ final class VideoEditorState {
     /// Apply the live trim: shrink the working clip to `[in, out]`. The timeline,
     /// duration, and playhead re-seat to the kept range so further edits compose
     /// on top; export maps the cumulative window back onto the source file. The
-    /// source file is never modified — undo via `undoApplyTrim`.
+    /// source file is never modified — undo via `undoLastEdit`.
     func applyTrim() {
         guard trim.isTrimmed else { return }
-        trimUndo.append(TrimSnapshot(appliedIn: appliedIn, appliedOut: appliedOut, trim: trim))
+        editUndo.append(EditStep(kind: .trim, appliedIn: appliedIn, appliedOut: appliedOut,
+                                 trim: trim, crop: crop))
         appliedOut = appliedIn + trim.outPoint
         appliedIn += trim.inPoint
         trim = VideoTrim(duration: duration)
@@ -358,20 +365,24 @@ final class VideoEditorState {
         persistEdits()
     }
 
-    /// Undo the most recent Apply Trim, restoring the prior working window and its
-    /// live trim selection. A restored selection re-opens trim mode — handles are
-    /// only visible there, and undo should show what it brought back.
-    func undoApplyTrim() {
-        guard let prev = trimUndo.popLast() else { return }
+    /// Undo the most recent applied edit, restoring the editable state captured
+    /// before it. Undoing a trim re-opens trim mode so the restored selection is
+    /// visible (handles only show there); undoing a crop just puts the region
+    /// back without disturbing the working window or playback.
+    func undoLastEdit() {
+        guard let prev = editUndo.popLast() else { return }
         appliedIn = prev.appliedIn
         appliedOut = prev.appliedOut
         trim = prev.trim
-        if trim.isTrimmed, !isCropping {
-            trimBeforeSession = trim
-            isTrimming = true
+        crop = prev.crop
+        if prev.kind == .trim {
+            pause()
+            if trim.isTrimmed, !isCropping {
+                trimBeforeSession = trim
+                isTrimming = true
+            }
+            seek(to: trim.inPoint)
         }
-        pause()
-        seek(to: trim.inPoint)
         persistEdits()
     }
 
@@ -411,9 +422,16 @@ final class VideoEditorState {
     }
 
     /// Finish cropping, keeping the chosen region (cleared if it's full-frame).
+    /// A region that actually changed becomes an undoable step, so Undo restores
+    /// the crop that existed before this cropping session.
     func commitCrop() {
         isCropping = false
         if let c = crop, !c.isCropped(videoSize: naturalSize) { crop = nil }
+        if crop != cropBeforeSession {
+            editUndo.append(EditStep(kind: .crop, appliedIn: appliedIn, appliedOut: appliedOut,
+                                     trim: trim, crop: cropBeforeSession))
+        }
+        cropBeforeSession = nil
         persistEdits()
     }
 
@@ -444,10 +462,25 @@ final class VideoEditorState {
         exportTrim.isTrimmed || (crop?.isCropped(videoSize: naturalSize) ?? false)
     }
 
-    /// A working-window snapshot for undoing Apply Trim.
-    private struct TrimSnapshot {
+    /// The kind of applied edit an undo step reverts, carrying its user-facing
+    /// name for the action-specific Undo tooltip.
+    private enum EditKind {
+        case trim, crop
+        var name: String {
+            switch self {
+            case .trim: "Trim"
+            case .crop: "Crop"
+            }
+        }
+    }
+
+    /// A snapshot of the editable state before an applied edit, so `undoLastEdit`
+    /// can revert the most recent trim/crop one step at a time.
+    private struct EditStep {
+        let kind: EditKind
         let appliedIn: TimeInterval
         let appliedOut: TimeInterval
         let trim: VideoTrim
+        let crop: VideoCrop?
     }
 }

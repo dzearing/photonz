@@ -181,15 +181,15 @@ struct VideoEditorView: View {
         }
     }
 
-    /// Quiet left-corner readouts: undo-trim, trimmed length, crop size.
+    /// Quiet left-corner readouts: undo-last-edit, trimmed length, crop size.
     @ViewBuilder
     private var statusCluster: some View {
-        if state.canUndoTrim, !state.isCropping {
-            Button { state.undoApplyTrim() } label: {
+        if let action = state.lastEditActionName, !state.isCropping {
+            Button { state.undoLastEdit() } label: {
                 Image(systemName: "arrow.uturn.backward")
             }
             .buttonStyle(IconActionButtonStyle())
-            .help("Undo applied trim")
+            .help("Undo \(action)")
         }
         if state.isTrimming, state.trim.isTrimmed {
             Label(VideoTimecode.label(state.trim.effectiveDuration),
