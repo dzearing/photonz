@@ -6,3 +6,4 @@ dist/
 *.dmg
 *.app
 .claude/settings.local.json
+temp/
