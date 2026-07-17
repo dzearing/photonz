@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.8.0 — 2026-07-17
+
+**The video editor plays like a real player.** Recordings now autoplay when opened and get a proper scrubber: a progress line with a draggable thumb, click-to-seek, and timecodes at each end, with the playback controls centered beneath it. Trim handles no longer take over the window the moment a video opens.
+
+**Trim is now a mode, like crop.** A new scissors button (next to crop) opens trim mode with the familiar Reset, Cancel, and Done controls. Done applies your selection (undo brings it back), Cancel restores things as they were. All the edit buttons on the right side now share the same circular style, so copy and export no longer look out of place.
+
+**Mic recordings can't fail silently anymore.** Starting a recording with a microphone selected used to hang or quietly discard the capture if macOS hadn't settled mic permission yet. Photonz now resolves microphone access before the recording starts, and if something does go wrong you get told instead of losing the take.
+
 ## 0.7.0 — 2026-07-13
 
 **Copy straight from the capture toast.** Right after a recording finishes, the toast now has a Copy button: pick **Copy Video** for the MP4 or **Copy GIF** for an animated GIF — no need to open history first. GIFs export at the recording's own frame rate, so the motion is as smooth as what you captured.
