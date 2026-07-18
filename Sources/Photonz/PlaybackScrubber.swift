@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Standard player scrubber (QuickTime style): a slim neutral track showing
-/// playback progress with a prominent white thumb. Click anywhere to jump; drag
-/// to scrub. Scrubbing pauses, then playback resumes if it was playing when the
-/// drag began. Trim editing lives in `TrimTimeline` (trim mode) — this is purely
-/// the playback position line.
+/// Standard player scrubber (QuickTime style): a rounded neutral track showing
+/// playback progress with a prominent white pill thumb. Click anywhere to jump;
+/// drag to scrub. Scrubbing pauses, then playback resumes if it was playing when
+/// the drag began. Trim editing lives in `TrimTimeline` (trim mode) — this is
+/// purely the playback position line.
 struct PlaybackScrubber: View {
     let state: VideoEditorState
 
@@ -12,18 +12,19 @@ struct PlaybackScrubber: View {
     @State private var dragging = false
     @State private var wasPlayingBeforeDrag = false
 
-    private let trackHeight: CGFloat = 4
-    /// Full-height hit area so the slim track is easy to grab.
-    private let hitHeight: CGFloat = 22
-    private let thumbSize: CGFloat = 14
+    private let trackHeight: CGFloat = 6
+    /// Full-height hit area so the track is easy to grab.
+    private let hitHeight: CGFloat = 24
+    private let thumbW: CGFloat = 20
+    private let thumbH: CGFloat = 14
 
     var body: some View {
         GeometryReader { geo in
             let duration = max(state.duration, 0.0001)
             // The thumb center travels an inset span so it never clips at 0/100%.
-            let usable = max(1, geo.size.width - thumbSize)
+            let usable = max(1, geo.size.width - thumbW)
             let progress = CGFloat(min(max(0, state.currentTime), duration) / duration)
-            let thumbX = thumbSize / 2 + progress * usable
+            let thumbX = thumbW / 2 + progress * usable
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -33,12 +34,12 @@ struct PlaybackScrubber: View {
                 Capsule()
                     .fill(.primary.opacity(0.85))
                     .frame(width: max(trackHeight, thumbX), height: trackHeight)
-                Circle()
+                Capsule()
                     .fill(.white)
-                    .frame(width: thumbSize, height: thumbSize)
-                    .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
-                    .scaleEffect(dragging ? 1.2 : (hovering ? 1.08 : 1))
-                    .offset(x: thumbX - thumbSize / 2)
+                    .frame(width: thumbW, height: thumbH)
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+                    .scaleEffect(dragging ? 1.15 : (hovering ? 1.06 : 1))
+                    .offset(x: thumbX - thumbW / 2)
             }
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -49,7 +50,7 @@ struct PlaybackScrubber: View {
                             dragging = true
                             wasPlayingBeforeDrag = state.isPlaying
                         }
-                        let fraction = min(max(0, (value.location.x - thumbSize / 2) / usable), 1)
+                        let fraction = min(max(0, (value.location.x - thumbW / 2) / usable), 1)
                         state.scrub(to: TimeInterval(fraction) * duration)
                     }
                     .onEnded { _ in
@@ -73,9 +74,10 @@ struct VolumeControl: View {
 
     @State private var hovering = false
 
-    private let trackWidth: CGFloat = 56
-    private let trackHeight: CGFloat = 4
-    private let thumbSize: CGFloat = 11
+    private let trackWidth: CGFloat = 60
+    private let trackHeight: CGFloat = 6
+    private let thumbW: CGFloat = 16
+    private let thumbH: CGFloat = 12
 
     private var speakerSymbol: String {
         if state.isMuted { return "speaker.slash.fill" }
@@ -94,9 +96,9 @@ struct VolumeControl: View {
             .help(state.isMuted ? "Unmute" : "Mute")
 
             GeometryReader { geo in
-                let usable = max(1, geo.size.width - thumbSize)
+                let usable = max(1, geo.size.width - thumbW)
                 let progress = CGFloat(min(max(0, state.volume), 1))
-                let thumbX = thumbSize / 2 + progress * usable
+                let thumbX = thumbW / 2 + progress * usable
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(.primary.opacity(0.2))
@@ -104,26 +106,26 @@ struct VolumeControl: View {
                     Capsule()
                         .fill(.primary.opacity(0.85))
                         .frame(width: max(trackHeight, thumbX), height: trackHeight)
-                    Circle()
+                    Capsule()
                         .fill(.white)
-                        .frame(width: thumbSize, height: thumbSize)
-                        .shadow(color: .black.opacity(0.4), radius: 1.5, y: 1)
-                        .scaleEffect(hovering ? 1.1 : 1)
-                        .offset(x: thumbX - thumbSize / 2)
+                        .frame(width: thumbW, height: thumbH)
+                        .shadow(color: .black.opacity(0.35), radius: 1.5, y: 1)
+                        .scaleEffect(hovering ? 1.08 : 1)
+                        .offset(x: thumbX - thumbW / 2)
                 }
                 .frame(maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            let fraction = min(max(0, (value.location.x - thumbSize / 2) / usable), 1)
+                            let fraction = min(max(0, (value.location.x - thumbW / 2) / usable), 1)
                             state.setVolume(Double(fraction))
                         }
                 )
                 .onHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
             }
-            .frame(width: trackWidth, height: 22)
+            .frame(width: trackWidth, height: 24)
         }
     }
 }

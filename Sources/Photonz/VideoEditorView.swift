@@ -18,11 +18,23 @@ struct VideoEditorView: View {
     @State private var playerAreaSize: CGSize = .zero
 
     // Auto-hide + drag state for the floating controller.
-    @State private var controlsVisible = true
+    /// Controls start hidden and only reveal when the pointer moves into the
+    /// bottom band (or a transport key is pressed); they fade back out shortly
+    /// after the pointer leaves, whether playing or paused.
+    @State private var controlsVisible = false
+    /// True while the pointer rests on the controller itself — pins it visible
+    /// (no auto-fade) until the pointer leaves or the user hits play.
     @State private var hoveringControls = false
     @State private var hideTask: Task<Void, Never>?
+    /// Local size of the root view, so hover locations can be tested against the
+    /// bottom reveal band.
+    @State private var viewSize: CGSize = .zero
     @State private var controlsDragOffset: CGSize = .zero
     @GestureState private var controlsDragTranslation: CGSize = .zero
+
+    /// Height of the bottom-of-window band that reveals the controller on mouse
+    /// movement — sized to comfortably cover the controller plus a little above.
+    private let revealBand: CGFloat = 200
 
     /// True while an explicit edit mode is active — the controller stays pinned
     /// (never auto-hides) so the mode's chrome is always reachable.
@@ -56,14 +68,18 @@ struct VideoEditorView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onGeometryChange(for: CGSize.self, of: { $0.size }) { viewSize = $0 }
         .focusable(state.isReady)
         .focusEffectDisabled()
         .focused($keyboardFocused)
         .onAppear { keyboardFocused = true }
         .onChange(of: state.isReady) { _, ready in if ready { keyboardFocused = true } }
-        // Reveal the controller (and re-arm the hide timer) whenever playback,
-        // trim, or crop state flips — pausing or entering a mode keeps it up.
-        .onChange(of: state.isPlaying) { _, _ in reveal() }
+        // Hitting play hides the controller even if the pointer is resting on
+        // it (the one case that overrides the hover pin); moving the mouse
+        // brings it back. Pausing reveals it.
+        .onChange(of: state.isPlaying) { _, playing in playing ? forceHide() : reveal() }
+        // Entering an edit mode reveals the controller and pins it (it never
+        // auto-hides while editing). Leaving a mode re-arms the fade.
         .onChange(of: state.isTrimming) { _, _ in reveal() }
         .onChange(of: state.isCropping) { _, _ in reveal() }
         .onChange(of: state.metadataDidLoad) { _, loaded in
@@ -79,12 +95,14 @@ struct VideoEditorView: View {
                 }
             }
         }
-        // Mousing over the video reveals the controller; the mouse leaving lets
-        // it fade again (only while playing).
+        // Moving the pointer into the bottom band reveals the controller;
+        // moving elsewhere (or off the window) fades it back out.
         .onContinuousHover { phase in
             switch phase {
-            case .active: reveal()
-            case .ended: scheduleHideIfPlaying()
+            case .active(let location):
+                if pointerInRevealBand(location) { reveal() } else { hideSoon() }
+            case .ended:
+                hideSoon()
             }
         }
         .onKeyPress(phases: [.down, .repeat]) { press in
@@ -96,25 +114,43 @@ struct VideoEditorView: View {
 
     // MARK: - Auto-hide
 
-    /// Show the controller now and re-arm the fade-out (a no-op timer unless
-    /// playing and not editing/hovering).
+    /// True when a hover location sits within the reveal band at the bottom of
+    /// the window, where the controller lives.
+    private func pointerInRevealBand(_ location: CGPoint) -> Bool {
+        guard viewSize.height > 0 else { return false }
+        return location.y >= viewSize.height - revealBand
+    }
+
+    /// Show the controller now and re-arm the fade-out.
     private func reveal() {
         if !controlsVisible {
             withAnimation(.easeOut(duration: 0.18)) { controlsVisible = true }
         }
-        scheduleHideIfPlaying()
+        scheduleHide()
     }
 
-    /// Fade the controller after a beat, but only when playback is running and
-    /// nothing wants it pinned (an edit mode, or the pointer resting on it).
-    private func scheduleHideIfPlaying() {
+    /// Fade the controller after a beat. Stays pinned while the pointer rests on
+    /// it or an edit mode is active, so it never vanishes out from under the
+    /// cursor; only leaving it (or hitting play) starts the fade.
+    private func scheduleHide(after seconds: Double = 2.4) {
         hideTask?.cancel()
-        guard state.isPlaying, !editing, !hoveringControls else { return }
+        guard !editing, !hoveringControls, controlsVisible else { return }
         hideTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(2.4))
+            try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
             withAnimation(.easeInOut(duration: 0.45)) { controlsVisible = false }
         }
+    }
+
+    /// Fade sooner when the pointer leaves the band or the window entirely.
+    private func hideSoon() { scheduleHide(after: 0.5) }
+
+    /// Hide immediately, overriding the hover pin — used when playback starts so
+    /// the controller gets out of the way even with the cursor on it.
+    private func forceHide() {
+        hideTask?.cancel()
+        guard controlsVisible else { return }
+        withAnimation(.easeInOut(duration: 0.35)) { controlsVisible = false }
     }
 
     /// Open at "100% video": grow/shrink the window so the preview area shows
@@ -195,11 +231,13 @@ struct VideoEditorView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
-        .frame(maxWidth: 660)
+        .frame(maxWidth: .infinity)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .offset(x: controlsDragOffset.width + controlsDragTranslation.width,
                 y: controlsDragOffset.height + controlsDragTranslation.height)
         .gesture(panelDrag)
+        // Resting the pointer on the controller pins it (never fades); leaving
+        // re-arms the fade. Hitting play still overrides this via forceHide().
         .onHover { hovering in
             hoveringControls = hovering
             if hovering {
@@ -208,7 +246,7 @@ struct VideoEditorView: View {
                     withAnimation(.easeOut(duration: 0.18)) { controlsVisible = true }
                 }
             } else {
-                scheduleHideIfPlaying()
+                scheduleHide(after: 0.5)
             }
         }
     }
@@ -281,7 +319,7 @@ struct VideoEditorView: View {
 
     private func timecode(_ seconds: TimeInterval) -> some View {
         Text(VideoTimecode.label(seconds))
-            .font(.system(size: 12, weight: .regular, design: .monospaced))
+            .font(.system(size: 12, weight: .regular))
             .monospacedDigit()
             .foregroundStyle(.secondary)
     }
@@ -358,7 +396,7 @@ struct VideoEditorView: View {
 
             Button { state.togglePlayPause() } label: {
                 Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 21, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
             }
             .buttonStyle(IconActionButtonStyle(diameter: 50))
             .help(state.isPlaying ? "Pause (space)" : "Play (space)")
