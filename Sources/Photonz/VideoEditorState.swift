@@ -78,6 +78,13 @@ final class VideoEditorState {
     /// Whether the player is currently playing (drives the play/pause button).
     private(set) var isPlaying = false
 
+    /// Playback volume, 0...1, applied straight to the AVPlayer. Muting drops it
+    /// to 0 but remembers the prior level so unmuting restores it.
+    private(set) var volume: Double = 1
+    @ObservationIgnored private var volumeBeforeMute: Double = 1
+    /// True when effectively silent, for the speaker-icon glyph.
+    var isMuted: Bool { volume <= 0.0001 }
+
     /// True once metadata (duration/size) has loaded, so the timeline can render.
     private(set) var isReady = false
     /// True once the metadata load finished, ready or not — the window stays
@@ -201,6 +208,25 @@ final class VideoEditorState {
 
     func togglePlayPause() {
         isPlaying ? pause() : play()
+    }
+
+    /// Set the playback volume (0...1); a non-zero value also becomes the level
+    /// unmute will restore.
+    func setVolume(_ value: Double) {
+        volume = min(max(0, value), 1)
+        player?.volume = Float(volume)
+        if volume > 0 { volumeBeforeMute = volume }
+    }
+
+    /// Toggle mute, restoring the pre-mute level (or full volume if it was
+    /// already near-silent).
+    func toggleMute() {
+        if isMuted {
+            setVolume(volumeBeforeMute > 0.05 ? volumeBeforeMute : 1)
+        } else {
+            volumeBeforeMute = volume
+            setVolume(0)
+        }
     }
 
     func play() {

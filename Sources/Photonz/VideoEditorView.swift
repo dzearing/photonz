@@ -3,10 +3,11 @@ import AVKit
 import PhotonzCore
 import SwiftUI
 
-/// Root of a video-editor window (phase 13.3): an AVKit preview above a
-/// standard player strip — scrubber with centered transport — plus explicit
-/// trim and crop edit modes. Trim is non-destructive (applied at export).
-/// Mirrors `EditorView`'s layout idioms.
+/// Root of a video-editor window (phase 13.3): an AVKit preview with a floating,
+/// QuickTime-style glass controller that auto-hides during playback and returns
+/// on mouse movement or a keypress. The controller carries a neutral scrubber,
+/// centered transport, volume, and the explicit trim/crop edit modes. Trim and
+/// crop are non-destructive (applied at export). Mirrors `EditorView`'s idioms.
 struct VideoEditorView: View {
     @Environment(VideoEditorState.self) private var state
     @Environment(AppCoordinator.self) private var coordinator
@@ -15,6 +16,17 @@ struct VideoEditorView: View {
     @FocusState private var keyboardFocused: Bool
     /// Live size of the preview area, for sizing the window to the recording.
     @State private var playerAreaSize: CGSize = .zero
+
+    // Auto-hide + drag state for the floating controller.
+    @State private var controlsVisible = true
+    @State private var hoveringControls = false
+    @State private var hideTask: Task<Void, Never>?
+    @State private var controlsDragOffset: CGSize = .zero
+    @GestureState private var controlsDragTranslation: CGSize = .zero
+
+    /// True while an explicit edit mode is active — the controller stays pinned
+    /// (never auto-hides) so the mode's chrome is always reachable.
+    private var editing: Bool { state.isTrimming || state.isCropping }
 
     var body: some View {
         ZStack {
@@ -26,37 +38,21 @@ struct VideoEditorView: View {
                 // per the system preference), matching the image canvas.
                 .onTapGesture(count: 2) { WindowTitleBarAction.perform(on: state.hostWindow) }
 
-            VStack(spacing: 0) {
-                player
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(16)
+            player
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(16)
 
-                if state.isReady {
-                    VStack(spacing: 10) {
-                        // Constant-height strip so switching into trim/crop
-                        // mode doesn't jump the panel (timeline/crop = 44pt,
-                        // scrubber is slimmer and centers within it).
-                        Group {
-                            if state.isCropping {
-                                cropRow
-                            } else if state.isTrimming {
-                                TrimTimeline(state: state)
-                            } else {
-                                scrubberRow
-                            }
-                        }
-                        .frame(height: 44)
-                        controlsRow
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 14)
-                    .glassEffect(.regular, in: .rect(cornerRadius: 18))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-                } else {
-                    ProgressView()
-                        .padding(.bottom, 24)
+            if state.isReady {
+                VStack {
+                    Spacer()
+                    controlsPanel
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 20)
                 }
+                .opacity(controlsVisible ? 1 : 0)
+                .allowsHitTesting(controlsVisible)
+            } else {
+                ProgressView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -65,6 +61,11 @@ struct VideoEditorView: View {
         .focused($keyboardFocused)
         .onAppear { keyboardFocused = true }
         .onChange(of: state.isReady) { _, ready in if ready { keyboardFocused = true } }
+        // Reveal the controller (and re-arm the hide timer) whenever playback,
+        // trim, or crop state flips — pausing or entering a mode keeps it up.
+        .onChange(of: state.isPlaying) { _, _ in reveal() }
+        .onChange(of: state.isTrimming) { _, _ in reveal() }
+        .onChange(of: state.isCropping) { _, _ in reveal() }
         .onChange(of: state.metadataDidLoad) { _, loaded in
             guard loaded else { return }
             // Next runloop tick: the timeline panel has just appeared, so let
@@ -78,7 +79,42 @@ struct VideoEditorView: View {
                 }
             }
         }
-        .onKeyPress(phases: [.down, .repeat]) { press in handleKey(press) }
+        // Mousing over the video reveals the controller; the mouse leaving lets
+        // it fade again (only while playing).
+        .onContinuousHover { phase in
+            switch phase {
+            case .active: reveal()
+            case .ended: scheduleHideIfPlaying()
+            }
+        }
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            let result = handleKey(press)
+            if result == .handled { reveal() }
+            return result
+        }
+    }
+
+    // MARK: - Auto-hide
+
+    /// Show the controller now and re-arm the fade-out (a no-op timer unless
+    /// playing and not editing/hovering).
+    private func reveal() {
+        if !controlsVisible {
+            withAnimation(.easeOut(duration: 0.18)) { controlsVisible = true }
+        }
+        scheduleHideIfPlaying()
+    }
+
+    /// Fade the controller after a beat, but only when playback is running and
+    /// nothing wants it pinned (an edit mode, or the pointer resting on it).
+    private func scheduleHideIfPlaying() {
+        hideTask?.cancel()
+        guard state.isPlaying, !editing, !hoveringControls else { return }
+        hideTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2.4))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.45)) { controlsVisible = false }
+        }
     }
 
     /// Open at "100% video": grow/shrink the window so the preview area shows
@@ -146,6 +182,94 @@ struct VideoEditorView: View {
         }
     }
 
+    // MARK: - Floating controller
+
+    /// The glass controller: transport row on top (volume · transport · edit),
+    /// scrubber (or the active mode's timeline) below — QuickTime's order. It
+    /// floats over the video, auto-hides, and can be dragged to reposition.
+    private var controlsPanel: some View {
+        VStack(spacing: 8) {
+            topRow
+            bottomRow
+                .frame(height: 44)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 660)
+        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        .offset(x: controlsDragOffset.width + controlsDragTranslation.width,
+                y: controlsDragOffset.height + controlsDragTranslation.height)
+        .gesture(panelDrag)
+        .onHover { hovering in
+            hoveringControls = hovering
+            if hovering {
+                hideTask?.cancel()
+                if !controlsVisible {
+                    withAnimation(.easeOut(duration: 0.18)) { controlsVisible = true }
+                }
+            } else {
+                scheduleHideIfPlaying()
+            }
+        }
+    }
+
+    /// Drag the whole controller to reposition it, like QuickTime. Child controls
+    /// (buttons, scrubber, volume) keep gesture priority in their own areas, so
+    /// only a drag on the panel chrome moves it.
+    private var panelDrag: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .updating($controlsDragTranslation) { value, translation, _ in
+                translation = value.translation
+            }
+            .onEnded { value in
+                var offset = controlsDragOffset
+                offset.width += value.translation.width
+                offset.height += value.translation.height
+                controlsDragOffset = clampOffset(offset)
+            }
+    }
+
+    /// Keep the dragged controller within the player area so it stays grabbable.
+    private func clampOffset(_ offset: CGSize) -> CGSize {
+        guard playerAreaSize != .zero else { return offset }
+        let maxX = max(0, playerAreaSize.width / 2 - 80)
+        let maxUp = max(0, playerAreaSize.height - 130)
+        return CGSize(width: min(max(offset.width, -maxX), maxX),
+                      height: min(max(offset.height, -maxUp), 8))
+    }
+
+    /// Top row: volume + status on the left, transport centered, edit actions
+    /// (or the active mode's session buttons) on the right.
+    private var topRow: some View {
+        ZStack {
+            transportCluster
+
+            HStack(spacing: 10) {
+                VolumeControl(state: state)
+                statusLabels
+                Spacer(minLength: 12)
+                if state.isTrimming {
+                    trimModeButtons
+                } else if !state.isCropping {
+                    editButtons
+                }
+            }
+        }
+    }
+
+    /// Bottom row: the playback scrubber, or the active edit mode's timeline.
+    /// Constant 44pt height so switching modes never jumps the controller.
+    @ViewBuilder
+    private var bottomRow: some View {
+        if state.isCropping {
+            cropRow
+        } else if state.isTrimming {
+            TrimTimeline(state: state)
+        } else {
+            scrubberRow
+        }
+    }
+
     /// Playback position line: current time · scrubber · total duration.
     private var scrubberRow: some View {
         HStack(spacing: 10) {
@@ -157,71 +281,53 @@ struct VideoEditorView: View {
 
     private func timecode(_ seconds: TimeInterval) -> some View {
         Text(VideoTimecode.label(seconds))
-            .font(.system(.caption, design: .monospaced))
+            .font(.system(size: 12, weight: .regular, design: .monospaced))
+            .monospacedDigit()
             .foregroundStyle(.secondary)
     }
 
-    /// Bottom row: transport centered like a normal player, status labels on
-    /// the left, and the mode-dependent action cluster on the right (edit
-    /// buttons normally; Reset/Cancel/Done while trimming; crop mode keeps its
-    /// own chrome in `cropRow`).
-    private var controlsRow: some View {
-        ZStack {
-            transportCluster
-
-            HStack(spacing: 14) {
-                statusCluster
-                Spacer()
-                if state.isTrimming {
-                    trimModeButtons
-                } else if !state.isCropping {
-                    editButtons
-                }
-            }
-        }
-    }
-
-    /// Quiet left-corner readouts: undo-last-edit, trimmed length, crop size.
+    /// Quiet secondary readouts beside the volume control: trimmed length while
+    /// trimming, cropped output size once a crop exists.
     @ViewBuilder
-    private var statusCluster: some View {
-        if let action = state.lastEditActionName, !state.isCropping {
-            Button { state.undoLastEdit() } label: {
-                Image(systemName: "arrow.uturn.backward")
-            }
-            .buttonStyle(IconActionButtonStyle())
-            .help("Undo \(action)")
-        }
+    private var statusLabels: some View {
         if state.isTrimming, state.trim.isTrimmed {
-            Label(VideoTimecode.label(state.trim.effectiveDuration),
-                  systemImage: "scissors")
-                .font(.caption)
+            Label(VideoTimecode.label(state.trim.effectiveDuration), systemImage: "scissors")
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
         if let crop = state.crop, crop.isCropped(videoSize: state.naturalSize), !state.isCropping {
-            Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))",
-                  systemImage: "crop")
-                .font(.caption)
+            Label("\(Int(crop.outputSize.width))×\(Int(crop.outputSize.height))", systemImage: "crop")
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
     }
 
-    /// The right-side edit actions, all sharing the circular icon style.
-    @ViewBuilder
+    /// The right-side actions, all sharing the circular icon style: undo (when
+    /// there's an applied edit to revert), trim, crop, copy, export.
     private var editButtons: some View {
-        Button { state.beginTrim() } label: {
-            Image(systemName: "scissors")
-        }
-        .buttonStyle(IconActionButtonStyle())
-        .help("Trim")
+        HStack(spacing: 6) {
+            if let action = state.lastEditActionName {
+                Button { state.undoLastEdit() } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(IconActionButtonStyle())
+                .help("Undo \(action)")
+            }
+            Button { state.beginTrim() } label: {
+                Image(systemName: "scissors")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help("Trim")
 
-        Button { state.beginCrop() } label: {
-            Image(systemName: "crop")
-        }
-        .buttonStyle(IconActionButtonStyle())
-        .help("Crop to Region")
+            Button { state.beginCrop() } label: {
+                Image(systemName: "crop")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help("Crop to Region")
 
-        copyMenu
-        exportMenu
+            copyMenu
+            exportMenu
+        }
     }
 
     /// Trim-mode session chrome, mirroring the crop row's Reset/Cancel/Done.
@@ -239,11 +345,11 @@ struct VideoEditorView: View {
         }
     }
 
-    /// Step-back · play/pause · step-forward, sharing the app's circular icon
-    /// design language. The step buttons follow the keyboard: ±5s while playing,
-    /// ±1 frame while paused (icons + tooltips reflect the active mode).
+    /// Step-back · play/pause · step-forward. The play button is deliberately
+    /// larger than the step buttons, QuickTime-style. Steps follow the keyboard:
+    /// ±5s while playing, ±1 frame while paused (icons/tooltips reflect the mode).
     private var transportCluster: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Button { state.stepBackward() } label: {
                 Image(systemName: state.isPlaying ? "gobackward" : "backward.frame.fill")
             }
@@ -252,9 +358,9 @@ struct VideoEditorView: View {
 
             Button { state.togglePlayPause() } label: {
                 Image(systemName: state.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: 21, weight: .bold))
             }
-            .buttonStyle(IconActionButtonStyle(diameter: 42))
+            .buttonStyle(IconActionButtonStyle(diameter: 50))
             .help(state.isPlaying ? "Pause (space)" : "Play (space)")
 
             Button { state.stepForward() } label: {
