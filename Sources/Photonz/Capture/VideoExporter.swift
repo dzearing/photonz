@@ -95,10 +95,14 @@ enum VideoExporter {
     /// — the same space `AVAssetImageGenerator` produces with
     /// `appliesPreferredTrackTransform = true`, so the crop is applied directly
     /// with `cropping(to:)` before the down-scale to `plan.size`.
+    /// `onProgress(completedFrames, totalFrames)` fires after each frame is
+    /// appended, so a caller can surface GIF-prep progress. It's invoked off the
+    /// main actor (this whole function runs off-main) — hop before touching UI.
     static func exportAnimated(from url: URL, to destination: URL,
                                format: RecordingFormat,
                                trim: VideoTrim? = nil, crop: VideoCrop? = nil,
-                               targetFPS: Double = 15, maxDimension: CGFloat = 800) async throws {
+                               targetFPS: Double = 15, maxDimension: CGFloat = 800,
+                               onProgress: (@Sendable (Int, Int) -> Void)? = nil) async throws {
         let asset = AVURLAsset(url: url)
         let seconds = await duration(of: url)
         let naturalSize = await orientedNaturalSize(of: url)
@@ -136,6 +140,7 @@ enum VideoExporter {
             }
             CGImageDestinationAddImage(dest, frame, frameProps as CFDictionary)
             wroteAny = true
+            onProgress?(index + 1, plan.frameCount)
         }
         guard wroteAny, CGImageDestinationFinalize(dest) else { throw ExportError.generationFailed }
     }

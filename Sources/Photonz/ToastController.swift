@@ -16,7 +16,13 @@ final class ToastController {
     private final class Item {
         let id = UUID()
         let panel: NSPanel
-        init(panel: NSPanel) { self.panel = panel }
+        /// Non-nil for a progress toast (GIF prep), so it can be updated/dismissed
+        /// via its handle instead of the auto-fade lifecycle.
+        let progress: ToastProgress?
+        init(panel: NSPanel, progress: ToastProgress? = nil) {
+            self.panel = panel
+            self.progress = progress
+        }
     }
 
     /// Index 0 is the newest (corner-most) toast; later indices stack upward.
@@ -76,6 +82,49 @@ final class ToastController {
         panel.alphaValue = 1
         panel.orderFrontRegardless()
         layout(animated: true)
+    }
+
+    // MARK: - Progress toast (GIF prep)
+
+    /// Show a non-fading progress toast in the same bottom-right stack (e.g. while
+    /// "Copy as GIF" re-encodes). Returns the `ToastProgress` to drive from the
+    /// export loop; call `dismissProgress(_:)` when the work finishes. Unlike a
+    /// capture toast, it has no auto-fade lifecycle — it lives until dismissed.
+    @discardableResult
+    func presentProgress(title: String, on screen: NSScreen) -> ToastProgress {
+        self.screen = screen
+
+        // Soft-cap the stack: drop the oldest before adding a new one.
+        while items.count >= maxVisible, let oldest = items.last {
+            remove(oldest.id, animated: false)
+        }
+
+        let panel = makePanel()
+        let progress = ToastProgress(title: title)
+        let item = Item(panel: panel, progress: progress)
+
+        let hosting = NSHostingView(rootView: ProgressToastView(progress: progress))
+        let size = hosting.fittingSize
+        hosting.frame = CGRect(origin: .zero, size: size)
+        panel.setContentSize(size)
+        panel.contentView = hosting
+
+        items.insert(item, at: 0)
+
+        let vf = screen.visibleFrame
+        panel.setFrame(CGRect(x: vf.maxX - margin - size.width,
+                              y: vf.minY + margin,
+                              width: size.width, height: size.height), display: true)
+        panel.alphaValue = 1
+        panel.orderFrontRegardless()
+        layout(animated: true)
+        return progress
+    }
+
+    /// Remove a progress toast once its work is done (or failed).
+    func dismissProgress(_ progress: ToastProgress) {
+        guard let item = items.first(where: { $0.progress === progress }) else { return }
+        remove(item.id, animated: true)
     }
 
     private func remove(_ id: UUID, animated: Bool) {
@@ -155,6 +204,63 @@ final class ToastController {
         panel.ignoresMouseEvents = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         return panel
+    }
+}
+
+/// Observable progress for a `ProgressToastView` — the reusable model the GIF
+/// export loop drives. `@MainActor` (and thus implicitly `Sendable`) so the
+/// off-main exporter can hop back to update it. Fraction is clamped and
+/// monotonic so out-of-order frame callbacks never make the bar jump backward.
+@MainActor
+@Observable
+final class ToastProgress {
+    /// Caption above the bar (e.g. "Preparing GIF…").
+    var title: String
+    /// Completion in 0...1.
+    private(set) var fraction: Double = 0
+
+    init(title: String) { self.title = title }
+
+    func update(fraction newValue: Double) {
+        fraction = min(1, max(fraction, newValue))
+    }
+}
+
+/// A compact, reusable progress toast for the bottom-right stack: an icon, a
+/// caption, and a determinate bar with a percentage. Used for GIF prep, but it
+/// takes any `ToastProgress`, so any longer job can surface progress here.
+struct ProgressToastView: View {
+    var progress: ToastProgress
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle().fill(.quaternary)
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(progress.title)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Spacer(minLength: 8)
+                    Text("\(Int((progress.fraction * 100).rounded()))%")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                ProgressView(value: progress.fraction)
+                    .progressViewStyle(.linear)
+                    .tint(.accentColor)
+            }
+        }
+        .frame(width: 216)
+        .padding(12)
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .padding(8) // room for the shadow so it isn't clipped, matching ToastView
     }
 }
 

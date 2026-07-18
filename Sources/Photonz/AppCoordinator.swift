@@ -204,6 +204,11 @@ final class AppCoordinator {
         }
         guard !isExportingRecording else { return }
         isExportingRecording = true
+        // A GIF re-encode takes ~a second; show a live progress toast in the
+        // bottom-right stack so the wait isn't a mystery. (MP4 copies are quick
+        // and stay silent until the "copied" toast.)
+        let progress: ToastProgress? = format == .gif
+            ? toasts.presentProgress(title: "Preparing GIF…", on: activeScreen()) : nil
         Task {
             do {
                 let destination = Self.clipboardScratchURL(for: sourceURL, format: format)
@@ -223,15 +228,26 @@ final class AppCoordinator {
                     // it larger, but a downscale to logical size looks blurry.
                     let sourceFPS = await VideoExporter.frameRate(of: sourceURL)
                     let targetFPS = AnimatedExportPlanner.clipboardFPS(sourceFPS: sourceFPS, format: format)
-                    try await VideoExporter.exportAnimated(from: sourceURL, to: destination, format: format,
-                                                           trim: trim, crop: crop, targetFPS: targetFPS)
+                    // Reserve the last sliver for the encode/finalize step so the
+                    // bar doesn't sit at 100% while ImageIO writes the file.
+                    try await VideoExporter.exportAnimated(
+                        from: sourceURL, to: destination, format: format,
+                        trim: trim, crop: crop, targetFPS: targetFPS,
+                        onProgress: { done, total in
+                            Task { @MainActor in
+                                progress?.update(fraction: 0.95 * Double(done) / Double(max(1, total)))
+                            }
+                        })
+                    progress?.update(fraction: 1)
                     // Inline GIF bytes ride along for targets that paste content
                     // instead of attaching files.
                     let data = format == .gif ? try? Data(contentsOf: destination) : nil
                     ClipboardWriter.writeFile(destination, data: data, dataType: format == .gif ? .gif : nil)
+                    if let progress { toasts.dismissProgress(progress) }
                     presentCopyToast(for: sourceURL, message: "GIF copied to clipboard!")
                 }
             } catch {
+                if let progress { toasts.dismissProgress(progress) }
                 reportExportFailure(error)
             }
             isExportingRecording = false
@@ -340,7 +356,8 @@ final class AppCoordinator {
         // itself front and becomes key on its own — DON'T activate the app, or
         // every editor window would be dragged forward with it. "Show history"
         // means show history, not the editor windows.
-        historyOverlay.show(content: HistoryOverlay(coordinator: self), on: activeScreen())
+        historyOverlay.show(content: HistoryOverlay(coordinator: self), on: activeScreen(),
+                            reserveForPermissionHint: capture.needsScreenRecordingPermission)
         isHistoryShown = true
     }
 

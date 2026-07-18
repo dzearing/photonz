@@ -898,3 +898,40 @@ User testing the new overlay drove four changes (some outside the strict 11.x ta
 - Shipped v0.9.0 (minor: floating video controller since v0.8.0). User-visible: the video playback controls now float over the video QuickTime-style instead of a fixed strip — hidden by default, revealed when the pointer enters the bottom band, and faded out on leave (resting the pointer on them pins them; pressing play tucks them away even under the cursor; the whole controller is draggable). Added a volume slider + mute button with remembered pre-mute level, widened the controller to full width, switched timecodes to the system font with monospaced digits, thickened the scrubber/volume rail to 6pt with white pill thumbs, and enlarged the play glyph. Undo affordance now appears only for edits applied this session with an action-specific tooltip.
 - Auto-hide model (VideoEditorView): `controlsVisible` starts false; `onContinuousHover` reveals when the location is within the bottom `revealBand` (200pt) and `hideSoon()`s otherwise; `.onHover` on the panel pins via `hoveringControls` (guards `scheduleHide`); `onChange(isPlaying)` calls `forceHide()` on play (overrides the hover pin) and `reveal()` on pause; edit modes pin via the `editing` guard.
 - Preflight green: 686 tests, local --dmg build OK (only pre-existing AVFoundation deprecation warnings). Release workflow published Photonz.dmg (notarized + stapled); site deploy green; verified releases/latest/download/Photonz.dmg → 200 and live version.json reports 0.9.0.
+
+## 2026-07-18 — History overlay polish (5 improvements)
+
+Polished the global slide-down history overlay (`HistoryOverlay.swift`,
+`HistoryOverlayController.swift`) with five changes; pure logic pushed into
+PhotonzCore with TDD (703 tests green, +17 new).
+
+- **Equal insets.** `HistoryOverlayController.show` now computes the side inset
+  as `menuBar + topInset` (per-display) and lifts the old 1100pt `maxWidth` cap,
+  so the overlay's left/right screen margin matches its physical top margin. Verified
+  numerically on a 14" MBP (via a temporary env-guarded self-test, since removed):
+  settled gaps are 41pt panel / **49pt glass on top, left and right — all equal**
+  (~98px on Retina, matching the requested 80–100px). Content width grew 1100→1646pt.
+- **Keyboard selection.** New `HistorySelection` (PhotonzCore, tested): `move`
+  (nil→first, clamped, no wrap) + `clamp` (revalidate after list changes). The
+  overlay is `.focusable()` and focuses on open; ← / → move the selection,
+  Return opens/edits the focused item, ⌫ trashes it (recoverable). ScrollViewReader
+  keeps the focused tile centered. First item gets an accent selection outline.
+- **Focused vs idle chrome.** A tile shows its action buttons when focused or
+  hovered; otherwise a friendly "last taken" caption fills the same fixed-height
+  slot (no reflow). String comes from new `RelativeTime` (PhotonzCore, tested):
+  "just now" / "15 seconds ago" / "2 hours ago" / "yesterday" / weeks / months /
+  years, elapsed-second buckets (deterministic, no timezone, no em dashes).
+- **Segmented filter.** New `CaptureFilter` (PhotonzCore, tested: All /
+  Screenshots / Videos, `matches`/`apply`). Segmented Picker shares the top row
+  with Clear All; empty states are filter-aware.
+- **GIF-prep progress toast.** Reusable `ProgressToastView` + `@MainActor`
+  `ToastProgress` in `ToastController`; `presentProgress`/`dismissProgress` render
+  a non-fading progress toast in the same bottom-right stack. `VideoExporter.exportAnimated`
+  gained an `onProgress(done,total)` hook (fires per frame, off-main); the GIF
+  copy path in `AppCoordinator.copyRecording` shows the toast during prep (bar to
+  95% over frames, 100% on finalize), then dismisses and shows the "GIF copied" toast.
+
+Left to hand-verify interactively (Screen Recording isn't granted to the agent
+process, so no pixel capture): the keyboard outline/nav feel, filter switching,
+the idle "last taken" caption, and the GIF progress toast during a real Copy GIF.
+Dev build launched for the user to check.

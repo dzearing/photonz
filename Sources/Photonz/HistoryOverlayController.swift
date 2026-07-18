@@ -32,10 +32,29 @@ final class HistoryOverlayController {
     var panelFrame: CGRect? { panel?.frame }
 
     private static let panelHeight: CGFloat = 208
+    /// Gap between the screen's visible top edge and the panel's top.
+    private static let topInset: CGFloat = 8
+    /// Extra panel height reserved when the Screen-Recording permission hint is
+    /// shown, so the banner adds to the panel instead of stealing height from the
+    /// capture strip (which clipped the thumbnails' action buttons). The banner is
+    /// a fixed `HistoryOverlay.permissionHintHeight`; add the VStack's inter-row
+    /// spacing (8) so the strip keeps its full height.
+    private static let permissionHintReserve: CGFloat = HistoryOverlay.permissionHintHeight + 8
 
-    func show(content: some View, on screen: NSScreen) {
+    func show(content: some View, on screen: NSScreen, reserveForPermissionHint: Bool = false) {
         if panel != nil { return }
-        let layout = HistoryOverlayLayout(screen: screen.visibleFrame, height: Self.panelHeight)
+        let panelHeight = Self.panelHeight + (reserveForPermissionHint ? Self.permissionHintReserve : 0)
+        // Equal insets: make the left/right screen margin match the *physical*
+        // top margin (the menu-bar strip plus `topInset`), so the overlay is
+        // framed evenly and the content area is much wider than the old fixed
+        // 1100pt cap. Computed per-display so it's exact on notch vs external
+        // screens. `maxWidth` is lifted so the inset — not a cap — sets the width.
+        let menuBar = max(0, screen.frame.maxY - screen.visibleFrame.maxY)
+        let sideInset = menuBar + Self.topInset
+        let layout = HistoryOverlayLayout(screen: screen.visibleFrame, height: panelHeight,
+                                          maxWidth: .greatestFiniteMagnitude,
+                                          horizontalInset: sideInset,
+                                          topInset: Self.topInset)
         self.layout = layout
 
         let panel = HistoryOverlayPanel(
