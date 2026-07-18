@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.9.0 — 2026-07-18
+
+**Video controls float and stay out of your way.** The playback controls now hover over the video, QuickTime style, instead of sitting in a fixed strip below it. They stay hidden until you move the pointer toward the bottom of the window, then fade away again once you move off, so nothing covers the video while it plays. Resting the pointer on the controls keeps them up; pressing play tucks them away. You can drag the whole controller to reposition it.
+
+**A real volume control.** The controller now carries a volume slider and a speaker button to mute or unmute, and it remembers your level when you toggle mute. The scrubber and volume slider also got a cleaner, more native look, with a thicker rail and rounded thumbs.
+
+**Undo only when there's something to undo.** The undo button now appears only for an edit you made this session, and its tooltip spells out exactly which action it will reverse.
+
 ## 0.8.0 — 2026-07-17
 
 **The video editor plays like a real player.** Recordings now autoplay when opened and get a proper scrubber: a progress line with a draggable thumb, click-to-seek, and timecodes at each end, with the playback controls centered beneath it. Trim handles no longer take over the window the moment a video opens.
