@@ -1174,3 +1174,13 @@ session: copyToPasteboard is byte-for-byte the original (file URL + PNG + TIFF, 
 item); removed the NSFilePromiseProvider path + retained delegate. Kept the unrelated
 DPI/scale capture fix (writePNG embeds 72xscale; open reads DPI -> pixelScale). 712
 tests green.
+
+### 2026-07-19 (cont.) — Release v0.11.0
+
+Cut v0.11.0 (minor). Since v0.10.0: `feat(editor): responsive layout + UX polish
+(17.11–17.15)` — responsive editor chrome (overflow "…" toolbar overlay, auto-
+collapsing inspector, window floor), content-sized resizable layers panel, unified
+color control with per-tool memory + Fill/Border toggles, solid shapes by default,
+sticky drawing tools, Retina-aware zoom (DPI embed/read). Preflight green (712 tests,
+DMG builds). Release + Deploy site workflows both green. Verified: release asset
+Photonz.dmg present, latest DMG redirect -> 200, site version.json reports 0.11.0.
