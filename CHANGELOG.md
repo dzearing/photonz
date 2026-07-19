@@ -2,6 +2,20 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.11.0 — 2026-07-19
+
+**The editor works at any window size.** The floating toolbar now tucks its overflow into a "…" menu when space runs short, and it floats over the canvas instead of pushing the inspector off-screen. The inspector collapses on its own when the window gets narrow, with a toggle to bring it back, and the window has a sensible minimum size so nothing gets squeezed into an unusable state.
+
+**A roomier, resizable layers panel.** The layers list no longer clips its top rows. It sizes to its content, stays within bounds, scrolls on its own when you have a lot of layers, and has a drag handle so you can make it taller or shorter.
+
+**One color control, everywhere.** Picking a color now works the same way in every spot: swatches, recent colors, HSB and hex fields, and an eyedropper. Each tool remembers the color you last used with it, and Fill and Border each have their own checkbox so you can turn either off.
+
+**Solid shapes by default.** Rectangles and ellipses now fill when you draw them, with simple No Fill and No Border options when you want an outline or a blank shape. A zero-width border no longer leaves a stray hairline.
+
+**Drawing tools stay put.** Drawing tools now stick after you use them, Photoshop style, instead of snapping back to the last selection. The Magic Wand lives with the other selection tools.
+
+**Zoom matches your screen.** Captures and saved images now carry your display's scale, so 100% in the editor is truly the size you see on screen, whether or not you are on a Retina display.
+
 ## 0.10.0 — 2026-07-18
 
 **The capture history is easier to browse and quicker to navigate.** The history overlay now has matching margins on the left, right, and top, so it opens wider and gives your captures more room. When it opens, the first item is selected with a highlighted outline, and you can move between captures with the left and right arrow keys. The selected item shows its action buttons, while the others show a friendly note like "15 seconds ago" or "30 minutes ago" so you can see at a glance when each one was taken.
