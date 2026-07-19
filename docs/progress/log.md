@@ -1184,3 +1184,32 @@ color control with per-tool memory + Fill/Border toggles, solid shapes by defaul
 sticky drawing tools, Retina-aware zoom (DPI embed/read). Preflight green (712 tests,
 DMG builds). Release + Deploy site workflows both green. Verified: release asset
 Photonz.dmg present, latest DMG redirect -> 200, site version.json reports 0.11.0.
+
+### 2026-07-19 (cont.) — Fix: corner-resize drifts anchor + stretches border
+
+Bug: dragging a rectangle's corner handle stretched its (non-destructive) border
+stroke during the live drag and drifted the anchored/opposite edge, snapping back
+only on mouse-up. Root cause (confirmed in code, not just theory): the live drag
+preview floats a sprite — a bitmap of the layer rendered at its START frame — and
+`CanvasView` scales it to the new frame via `previewSpriteLayer.contentsGravity =
+.resize`. Scaling that bitmap multiplies a fixed-width stroke (stretch) and, since
+the sprite bakes in fixed shadow/blur `padding`, scaling the padding walks the
+content edges (anchored-corner drift). The frame MATH (`Handles.resize`) was always
+correct — only the sprite-scale preview lied. Text/zoom-callouts already opt out of
+the sprite for the same reason; annotation strokes and bordered/rounded/shadowed
+layers did not.
+
+Fix: added tested core predicate `Layer.resizeScalesUniformly` (Layer.swift) — true
+only when content (photo/collage) AND style scale uniformly; false for annotation/
+text/callout/measure content or any border/corner-radius/blur/visible-shadow
+decoration (`LayerStyle.hasNoFixedSizeDecoration`, `LayerContent.scalesUniformlyOnResize`).
+`EditorState.previewLayerFrame` now, on a resize (size change) of a non-uniform
+layer, drops the drag sprite and re-renders the frame live each move so the stroke
+stays true width and the opposite corner stays pinned. Moves keep their sprite
+(same-size scaling is faithful) so that fast path is untouched. Perf: interactive
+re-render is 9.2ms median (12MP/10-layer), well under the 16ms budget.
+
+Tests: new `ResizePreviewScalingTests.swift` (8 cases, incl. the reported bordered-
+rect + annotation-rect cases). Full suite green (720 tests). App builds + launches.
+Pending: user interactive verify in the running dev app (drag a bordered rect corner
+— border should stay crisp, opposite corner pinned throughout the drag).

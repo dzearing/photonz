@@ -2161,6 +2161,18 @@ final class EditorState {
     /// renders the new frame without touching history.
     func previewLayerFrame(id: UUID, frame: CGRect) {
         previewMove = (id, frame)
+        // A RESIZE (size change) of a layer whose look is sized in fixed points —
+        // border/corner-radius/blur/shadow, or annotation strokes, text, callouts,
+        // measures — can't be shown by scaling the drag sprite: the stroke would
+        // stretch and, once the sprite's padding scales too, the anchored edge
+        // would drift. Drop the sprite so the frame re-renders live each move
+        // (moves keep their sprite — same-size scaling is faithful). The doc still
+        // holds the pre-drag frame while a sprite is active, so a differing size
+        // is exactly the resize signal.
+        if dragPreview?.layerID == id, let layer = document?.layer(id: id),
+           frame.size != layer.frame.size, !layer.resizeScalesUniformly {
+            discardDragPreview()
+        }
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
         doc.updateLayer(id: id) { $0 = $0.resized(to: frame) }

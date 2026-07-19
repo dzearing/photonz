@@ -147,6 +147,18 @@ public enum LayerContent: Hashable, Codable, Sendable {
     case zoomCallout(ZoomCalloutContent)
     case measure(MeasureContent)
     case collage(CollageContent)
+
+    /// True when this content's rendered appearance scales uniformly with the
+    /// frame. Photos and collages do — every pixel is frame-relative. Annotation
+    /// strokes, text glyphs, zoom-callout chrome, and measure ticks are all sized
+    /// in fixed points, so scaling a start-frame sprite stretches them; a resize
+    /// of that content must re-render rather than scale a sprite.
+    var scalesUniformlyOnResize: Bool {
+        switch self {
+        case .image, .collage: true
+        case .annotation, .text, .zoomCallout, .measure: false
+        }
+    }
 }
 
 /// How a layer composites against the content below it.
@@ -190,6 +202,16 @@ extension LayerStyle {
                 + max(shadow.spread, 0)
         }
         return padding.rounded(.up)
+    }
+
+    /// True when this style carries no decoration whose pixel size is fixed in
+    /// document points (border stroke, corner radius, blur, drop shadow). Such
+    /// decoration can't be represented by uniformly scaling a start-frame sprite
+    /// during a resize — the stroke would stretch, the blur/shadow would bloat —
+    /// so a resize of a layer with any of it must re-render the frame instead.
+    var hasNoFixedSizeDecoration: Bool {
+        borderWidth == 0 && cornerRadius == 0 && blurRadius == 0
+            && (shadow?.opacity ?? 0) == 0
     }
 }
 
@@ -270,6 +292,17 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             return .multiply
         }
         return style.blendMode
+    }
+
+    /// Whether a frame resize can be faithfully previewed by uniformly scaling a
+    /// bitmap of the layer captured at its *start* frame. True only when both the
+    /// content (photo/collage) and the styling scale uniformly with the frame.
+    /// When false — annotation strokes, text, callouts, measures, or any
+    /// border/corner-radius/blur/shadow decoration — a scaled sprite would
+    /// stretch the fixed-size detail (and drift the anchored edge once padding is
+    /// scaled too), so the live drag must re-render the frame each move instead.
+    public var resizeScalesUniformly: Bool {
+        content.scalesUniformlyOnResize && style.hasNoFixedSizeDecoration
     }
 
     /// Whether a canvas-space point lands on this layer's transformed shape.
