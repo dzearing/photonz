@@ -2,6 +2,14 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.10.0 — 2026-07-18
+
+**The capture history is easier to browse and quicker to navigate.** The history overlay now has matching margins on the left, right, and top, so it opens wider and gives your captures more room. When it opens, the first item is selected with a highlighted outline, and you can move between captures with the left and right arrow keys. The selected item shows its action buttons, while the others show a friendly note like "15 seconds ago" or "30 minutes ago" so you can see at a glance when each one was taken.
+
+**Filter by what you captured.** A new segmented control at the top lets you switch between All, Screenshots, and Videos, so you can zero in on just the kind of capture you're looking for.
+
+**Copy as GIF shows its progress.** Turning a recording into a GIF takes a moment, so a small progress toast now appears in the bottom-right corner while it's being prepared, instead of leaving you wondering whether anything is happening.
+
 ## 0.9.0 — 2026-07-18
 
 **Video controls float and stay out of your way.** The playback controls now hover over the video, QuickTime style, instead of sitting in a fixed strip below it. They stay hidden until you move the pointer toward the bottom of the window, then fade away again once you move off, so nothing covers the video while it plays. Resting the pointer on the controls keeps them up; pressing play tucks them away. You can drag the whole controller to reposition it.
