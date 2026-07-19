@@ -50,15 +50,10 @@ final class EditorState {
         .flatMap { $0 as? Double } ?? 32 {
         didSet { UserDefaults.standard.set(wandTolerance, forKey: "wand.tolerance") }
     }
-    /// The active editor tool. Drawing tools are ONE-SHOT by default: after a
-    /// shape is drawn the editor returns to `.select` (and selects the new
-    /// shape). Double-clicking a tool in the toolbar sets `toolLocked`, which
-    /// keeps it active for repeated drawing until the user leaves it.
+    /// The active editor tool. Drawing tools are STICKY (Photoshop-style, 17.12):
+    /// after a shape is drawn the tool stays active so you can draw more of them.
+    /// Switch to `.select` (V) to adjust a placed shape.
     private(set) var activeTool: Tool = .select
-    /// When true, the active drawing tool stays put after each shape instead of
-    /// reverting to select. Set by double-clicking the tool; cleared whenever
-    /// the tool changes.
-    private(set) var toolLocked = false
     /// The pending crop rect (document coords) while the crop tool is active.
     private(set) var cropRect: CGRect?
     /// Crop aspect lock; the crop rect always honors it.
@@ -172,7 +167,17 @@ final class EditorState {
         }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
-        openCapture(image)
+        // A Retina screenshot embeds 144 DPI (2×); honor it so 100% = its on-
+        // screen point size, not double (17.14).
+        openCapture(image, pixelScale: Self.pixelScale(of: source))
+    }
+
+    /// The display scale implied by an image file's DPI metadata (2 for a Retina
+    /// screenshot, else 1). See `DisplayScale`.
+    private static func pixelScale(of source: CGImageSource) -> CGFloat {
+        guard let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let dpi = props[kCGImagePropertyDPIWidth] as? Double else { return 1 }
+        return DisplayScale.pixelScale(forDPI: dpi)
     }
 
     /// Drag-and-drop / drop of an image URL (from the history overlay, Finder, …):
@@ -191,9 +196,11 @@ final class EditorState {
     }
 
     /// Opens a CGImage (from a file or a screen capture) as a fresh document.
-    func openCapture(_ image: CGImage) {
+    /// `pixelScale` carries the capture's backing scale (2 for a Retina
+    /// screenshot) so zoom and measures read in points.
+    func openCapture(_ image: CGImage, pixelScale: CGFloat = 1) {
         let ref = store.register(image)
-        installDocument(.withBaseImage(ref), url: nil)
+        installDocument(.withBaseImage(ref, pixelScale: pixelScale), url: nil)
     }
 
     /// Seeds a freshly created editor window from its window identity (phase
@@ -320,7 +327,7 @@ final class EditorState {
         } else if let sourceCaptureURL, let store = captureCenter?.store,
                   store.entries.contains(where: { $0.url == sourceCaptureURL }),
                   let image = compositeImage() {
-            store.replace(at: sourceCaptureURL, with: image)
+            store.replace(at: sourceCaptureURL, with: image, scale: documentPixelScale)
             writeCaptureSidecar(nextTo: sourceCaptureURL)
             markSaved()
         } else {
@@ -481,7 +488,7 @@ final class EditorState {
 
     // MARK: - Tools
 
-    func setTool(_ tool: Tool, locked: Bool = false) {
+    func setTool(_ tool: Tool) {
         guard activeTool != tool else { return }
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise
@@ -500,8 +507,6 @@ final class EditorState {
             cropRect = nil
         }
         activeTool = tool
-        // Switching tools always clears any lock; double-clicking re-locks.
-        toolLocked = locked
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't. The
         // selection REGION survives within the selection family + fill
@@ -521,13 +526,6 @@ final class EditorState {
         if !tool.preservesSelectionRegion {
             selectedLayerID = nil
         }
-    }
-
-    /// Double-click a tool: keep it active for repeated drawing (sticky)
-    /// instead of reverting to select after each shape.
-    func lockTool(_ tool: Tool) {
-        setTool(tool)
-        toolLocked = true
     }
 
     // MARK: - Crop mode
@@ -653,12 +651,8 @@ final class EditorState {
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
-        // One-shot by default: return to select and select the new shape so it
-        // can be adjusted immediately. A double-click-locked tool stays put.
-        if !toolLocked {
-            setTool(.select)
-            selectedLayerID = layer.id
-        }
+        // Sticky by default (17.12, Photoshop-style): the tool stays active so
+        // you can draw shape after shape. Switch to Select (V) to adjust one.
     }
 
     /// Completed source-box drag from the zoom tool. One undo step adds the
@@ -682,10 +676,8 @@ final class EditorState {
         let layer = MeasureBuilder.layer(content: content, from: start, to: end)
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.colorHex)
-        if !toolLocked {
-            setTool(.select)
-            selectedLayerID = layer.id
-        }
+        // Sticky by default (17.12): the measure tool stays active for the next
+        // dimension. Switch to Select (V) to adjust one.
     }
 
     // MARK: - Measure styling
@@ -810,14 +802,13 @@ final class EditorState {
     // MARK: - Annotation styling
 
     /// Styled content the active tool would draw, for the canvas drag preview.
-    /// New shapes draw in the CURRENT foreground color — the FG swatch is the
-    /// app-wide "current color" (16.12). Highlights keep their own memory
-    /// (black highlighter ink would be useless); width/heads/fill stay sticky
-    /// per shape.
+    /// Each shape remembers its OWN color (and width/heads/fill) — the toolbar's
+    /// single color swatch edits the active tool's color, so a red line and a
+    /// blue arrow stay independent (17.12; supersedes 16.12's shared-FG model,
+    /// which conflated shape color with the paint-bucket foreground color). The
+    /// FG/BG swatch is now only the fill/bucket paint pair.
     var activeAnnotationContent: AnnotationContent? {
-        guard var content = annotationStyles.content(for: activeTool) else { return nil }
-        if content.shape != .highlight { content.colorHex = foregroundFillHex }
-        return content
+        annotationStyles.content(for: activeTool)
     }
 
     /// The selected annotation layer when the select tool is active — the
@@ -831,21 +822,38 @@ final class EditorState {
     /// A swatch pick restyles the selected annotation (one undo step) when
     /// there is one; either way it becomes the default for new annotations.
     func setAnnotationColor(_ hex: String) {
-        var pickedShape = activeTool.annotationShape
+        // Per-tool color (17.12): a shape's color is its OWN, not the shared
+        // paint-bucket foreground — picking here never touches the FG swatch.
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview() // a click-select's held sprite shows the old style
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, colorHex: hex) } }
             annotationStyles.setColorHex(hex, forShape: shape)
-            pickedShape = shape
         } else {
             annotationStyles.setColorHex(hex, for: activeTool)
         }
-        // Picking a shape color makes it the app-wide current (foreground)
-        // color, so the next shape/text draws with it. Highlights stay a
-        // world of their own.
-        if pickedShape != .highlight { foregroundFillHex = hex }
         saveAnnotationStyles()
         recordRecentColor(hex: hex)
+    }
+
+    /// The interior fill the current selection/tool draws with (rectangle /
+    /// ellipse); nil = no fill.
+    var activeToolFillHex: String? {
+        if let layer = selectedAnnotationLayer { return layer.annotation?.fillColorHex }
+        return annotationStyles.fillColorHex(for: activeTool)
+    }
+
+    /// A fill pick for the selected box (one undo step) or, with none selected,
+    /// the active tool's new-shape default. nil = no fill (outline only).
+    func setAnnotationFillColor(_ hex: String?) {
+        if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
+            discardDragPreview()
+            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, fillColorHex: .some(hex)) } }
+            annotationStyles.setFillColorHex(hex, forShape: shape)
+        } else {
+            annotationStyles.setFillColorHex(hex, for: activeTool)
+        }
+        saveAnnotationStyles()
+        if let hex { recordRecentColor(hex: hex) }
     }
 
     /// The shape a toolbar-popover style edit applies to: the selected
@@ -1474,12 +1482,9 @@ final class EditorState {
                                                   minWidth: TextRasterizer.minimumTextWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
             perform { $0.addLayer(layer) }
-            // One-shot text placement reverts to select (re-edits run with the
-            // select tool already active, so the guard leaves them untouched).
-            if activeTool == .text, !toolLocked {
-                setTool(.select)
-                selectedLayerID = layer.id
-            }
+            // Sticky by default (17.12): the text tool stays active for the next
+            // block. (Re-editing existing text runs with Select already active,
+            // so this leaves that flow untouched.)
         }
     }
 
@@ -2210,10 +2215,19 @@ final class EditorState {
         self.viewport = .fit(documentSize: viewport.documentSize, in: viewport.viewSize)
     }
 
-    func zoomToActualSize() { zoomTowardCenter(1) }
+    /// Actual size = the image at its on-screen POINT size (Preview-style): a
+    /// Retina (pixelScale 2) screenshot shows at half its pixel dimensions so it
+    /// matches how it looked on screen (17.14).
+    func zoomToActualSize() { zoomTowardCenter(1 / documentPixelScale) }
 
     /// Absolute zoom (the toolbar slider / stop menu); Viewport clamps.
     func setZoom(_ newZoom: CGFloat) { zoomTowardCenter(newZoom) }
+
+    /// Zoom expressed in POINTS (logical), not image pixels — what the toolbar
+    /// shows. For a Retina capture (pixelScale 2), displayZoom 100% = actual
+    /// zoom 0.5, so "100%" matches the on-screen size the user expects.
+    var displayZoom: CGFloat { zoom * documentPixelScale }
+    func setDisplayZoom(_ display: CGFloat) { setZoom(display / documentPixelScale) }
 
     private func zoomTowardCenter(_ newZoom: CGFloat) {
         guard let viewport else { return }

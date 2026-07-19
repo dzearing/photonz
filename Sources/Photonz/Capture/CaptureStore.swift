@@ -106,10 +106,10 @@ final class CaptureStore {
 
     /// Write a screenshot into the folder; returns the new entry (after reload).
     @discardableResult
-    func add(_ image: CGImage, takenAt date: Date = .now) -> CaptureEntry? {
+    func add(_ image: CGImage, takenAt date: Date = .now, scale: CGFloat = 1) -> CaptureEntry? {
         ensureDirectory()
         let url = uniqueURL(prefix: "Screenshot", date: date, ext: "png")
-        writePNG(image, to: url)
+        writePNG(image, to: url, scale: scale)
         reload()
         // Match by file name: the URL `contentsOfDirectory` yields can differ
         // (percent-encoding, symlink resolution) from our constructed one.
@@ -134,9 +134,9 @@ final class CaptureStore {
     }
 
     /// Override-in-place (phase 11.5): rewrite an existing capture's pixels.
-    func replace(at url: URL, with image: CGImage) {
+    func replace(at url: URL, with image: CGImage, scale: CGFloat = 1) {
         guard entries.contains(where: { $0.url == url }) else { return }
-        writePNG(image, to: url)
+        writePNG(image, to: url, scale: scale)
         imageCache[url] = image
         reload()
     }
@@ -321,10 +321,19 @@ final class CaptureStore {
         return f
     }()
 
-    private func writePNG(_ image: CGImage, to url: URL) {
+    /// Writes a PNG, embedding the display scale as DPI (72 × scale) so a Retina
+    /// (2×) capture keeps its scale — reopening it then shows at its on-screen
+    /// point size at 100% instead of double. Without this, every capture/save
+    /// flattened to a scale-less 72-DPI PNG (17.14).
+    private func writePNG(_ image: CGImage, to url: URL, scale: CGFloat = 1) {
         guard let destination = CGImageDestinationCreateWithURL(
             url as CFURL, UTType.png.identifier as CFString, 1, nil) else { return }
-        CGImageDestinationAddImage(destination, image, nil)
+        let dpi = 72 * max(1, scale)
+        let props: [CFString: Any] = [
+            kCGImagePropertyDPIWidth: dpi,
+            kCGImagePropertyDPIHeight: dpi,
+        ]
+        CGImageDestinationAddImage(destination, image, props as CFDictionary)
         CGImageDestinationFinalize(destination)
     }
 }

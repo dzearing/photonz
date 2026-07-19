@@ -460,7 +460,7 @@ final class AppCoordinator {
     /// Returns the capture file the composite landed in (nil on cancel), so the
     /// editor can adopt it as its source and refresh its layered sidecar.
     @discardableResult
-    func saveEditedCapture(sourceURL: URL?, image: CGImage) -> URL? {
+    func saveEditedCapture(sourceURL: URL?, image: CGImage, scale: CGFloat = 1) -> URL? {
         NSApp.activate(ignoringOtherApps: true)
         if let sourceURL, capture.store.entries.contains(where: { $0.url == sourceURL }) {
             let alert = NSAlert()
@@ -472,15 +472,15 @@ final class AppCoordinator {
             alert.addButton(withTitle: "Cancel")
             switch alert.runModal() {
             case .alertFirstButtonReturn:
-                capture.store.replace(at: sourceURL, with: image)
+                capture.store.replace(at: sourceURL, with: image, scale: scale)
                 return sourceURL
             case .alertSecondButtonReturn:
-                return capture.store.add(image)?.url
+                return capture.store.add(image, scale: scale)?.url
             default:
                 return nil
             }
         } else {
-            return capture.store.add(image)?.url
+            return capture.store.add(image, scale: scale)?.url
         }
     }
 

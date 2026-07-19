@@ -2,18 +2,25 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// Bespoke, on-brand HSB color picker (13.2): hue/saturation/brightness sliders,
-/// a screen eyedropper (`NSColorSampler`), and a hex field. Commits a canonical
-/// `#RRGGBB` through `onCommit` only on a deliberate action (slider release, hex
-/// submit, eyedropper sample) — never on every drag tick — so the shared recents
-/// list isn't spammed mid-gesture.
+/// The ONE color control used everywhere (fill, border, annotation, text, fg/bg)
+/// so color picking is consistent (17.15). It combines, top to bottom: preset
+/// swatches, a recent-colors row, the bespoke HSB sliders, and a hex field +
+/// screen eyedropper. Commits a canonical `#RRGGBB` through `onCommit` only on a
+/// deliberate action (swatch tap, slider release, hex submit, eyedropper sample),
+/// never on every drag tick, so the shared recents list isn't spammed mid-drag.
 struct ColorPickerPopover: View {
-    /// The color the popover opens on, as the document-model hex.
+    /// The color the picker opens on, as the document-model hex.
     let initialHex: String
+    /// Preset swatches shown at the top.
+    var swatches: [String] = AnnotationStyles.swatches
+    /// Recently used colors (usually `editorState.recentColors.colors`).
+    var recents: [String] = []
+    /// When embedded inside another popover (e.g. the annotation style popover),
+    /// drop the outer padding so it lines up with the sibling controls.
+    var embedded: Bool = false
     /// Called with a canonical `#RRGGBB` when the user commits a color.
     let onCommit: (String) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @State private var hue: Double = 0
     @State private var saturation: Double = 1
     @State private var brightness: Double = 1
@@ -21,8 +28,15 @@ struct ColorPickerPopover: View {
     /// True while the screen sampler is open, to disable the button.
     @State private var isSampling = false
 
+    private static let swatchColumns = [GridItem(.adaptive(minimum: 24), spacing: 8)]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            swatchGrid(swatches, title: nil)
+            if !recents.isEmpty {
+                swatchGrid(recents, title: "Recent")
+            }
+            Divider()
             preview
             slider("Hue", value: $hue, range: 0...1,
                    track: LinearGradient(colors: huePalette, startPoint: .leading, endPoint: .trailing))
@@ -39,12 +53,40 @@ struct ColorPickerPopover: View {
                 eyedropperButton
             }
         }
-        .padding(16)
-        .frame(width: 240)
+        .frame(width: 236)
+        .padding(embedded ? 0 : 16)
         .onAppear { seed(from: initialHex) }
     }
 
     // MARK: - Pieces
+
+    private func swatchGrid(_ hexes: [String], title: String?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let title {
+                Text(title).font(.caption2).foregroundStyle(.secondary)
+            }
+            LazyVGrid(columns: Self.swatchColumns, alignment: .leading, spacing: 8) {
+                ForEach(hexes, id: \.self) { hex in
+                    Button {
+                        seed(from: hex)
+                        commit()
+                    } label: {
+                        Circle()
+                            .fill(Color(hex: hex))
+                            .frame(width: 22, height: 22)
+                            .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+                            .overlay {
+                                if hex.caseInsensitiveCompare(currentHex) == .orderedSame {
+                                    Circle().strokeBorder(Color.accentColor, lineWidth: 2).padding(-3)
+                                }
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .help(hex)
+                }
+            }
+        }
+    }
 
     private var currentColor: Color {
         // Derive from the same HSB→sRGB math the commit uses, so the preview
@@ -59,7 +101,7 @@ struct ColorPickerPopover: View {
     private var preview: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(currentColor)
-            .frame(height: 36)
+            .frame(height: 32)
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.primary.opacity(0.2), lineWidth: 1))
     }
 

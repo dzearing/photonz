@@ -948,3 +948,229 @@ User-visible in this release: history overlay equal insets (wider), keyboard
 arrow selection with focus outline, idle "last taken" relative-time caption,
 All/Screenshots/Videos segmented filter, and a GIF-prep progress toast in the
 bottom-right stack.
+
+## 2026-07-18 — Responsive editor layout (small window sizes)
+
+Fixed the editor breaking when the window is smaller than the ideal layout
+(user report, phase task 17.11). Before: the right inspector was pushed fully
+off-screen, the floating toolbar's tools clipped at both window edges, and the
+layers list truncated silently past ~8 layers.
+
+Root cause: the ~850pt floating toolbar's large intrinsic min width props the
+canvas ZStack open; the fixed-width inspector in the HStack has nothing to yield,
+so the pair overflows the window and the panel is pushed past the right edge. The
+toolbar never overflowed gracefully — it just clipped.
+
+Changes:
+- **Core (TDD):** `PhotonzCore/EditorChromeLayout.swift` — pure policy for the
+  window floor (480×400, low on purpose so responsive behavior kicks in above
+  it), inspector auto-collapse threshold (680), and the toolbar overflow math
+  (`visibleItemCount`). 12 tests.
+- **Window floor:** `PhotonzApp` scene now uses the core min constants (was a
+  hard-coded 760×520 that still clipped).
+- **Toolbar overflow:** `EditorView` measures its fixed neighbors (color+zoom,
+  contextual options) and, when the full tool set won't fit, collapses trailing
+  tools behind an "…" overflow menu (the active tool is never overflowed). When
+  everything fits it renders the original toolbar unchanged — zero regression at
+  large sizes.
+- **Inspector auto-collapse + reveal:** the docked inspector auto-hides below
+  680pt (remembering whether we or the user hid it, and restoring on widen), with
+  a top-trailing glass sidebar toggle as the in-window reveal affordance. The
+  canvas keeps layout priority so the panel never pushes off.
+- **Layers list scroll:** removed the 320pt cap that (with `scrollDisabled`)
+  truncated a tall layer stack; the list grows to fit and the single outer
+  inspector ScrollView scrolls everything (one axis, no nested-scroll jank).
+
+Verified: 715 tests green. Live screenshots are blocked here (Screen Recording /
+Automation TCC not granted to the agent's terminal), so reproduction and the
+fix were validated with an offscreen `ImageRenderer` harness mirroring
+`EditorView`'s exact composition — before: panel clipped even at 760×520, gone at
+500×400; after: inspector fully on-screen when shown, toolbar collapses to "…"
+with color+zoom intact and nothing at the window edge, panel auto-collapses with
+a reveal button when narrow. Real app rebuilt, relaunched with a photo, idles at
+0% CPU (no preference-key feedback loop).
+
+Next / open: interactive resize feel in the real app is pending user verify
+(couldn't pixel-capture here). The auto-collapse threshold (680) is a single
+tunable constant if the panel should stay visible on smaller windows. The
+"You're running a debug build…" banner in the user's screenshot is a macOS
+system notice, not Photonz chrome.
+
+### 2026-07-18 (cont.) — Responsive layout: correction after live testing
+
+User tested the first cut in the real app: it STILL clipped the toolbar and STILL
+pushed the inspector partly off-screen. Two real bugs my offscreen harness didn't
+catch:
+
+1. **Estimate-based overflow was wrong.** The hand-computed `visibleItemCount`
+   under-counted true widths (marquee's chevron, glass padding, the in-row
+   divider), so it declared "fits" when it didn't — and the full toolbar's large
+   intrinsic width kept pushing the panel off.
+2. **A `ViewThatFits` rewrite CRASHED** on launch — stack overflow / excessive
+   recursion in AttributeGraph's preference update, because `ViewThatFits`
+   renders every candidate and doing that with `GlassEffectContainer` (9 glass
+   variants) recurses to death.
+
+Final approach (no estimates, no ViewThatFits):
+- **Toolbar is now an `.overlay(alignment: .bottom)` on the canvas**, not a ZStack
+  sibling. An overlay does NOT contribute to its host's minimum width, so a wide
+  toolbar can never push the inspector off the window edge — the push-off is fixed
+  *structurally*, independent of the overflow math. `.clipped()` keeps any
+  transient over-wide toolbar off the panel.
+- **Overflow via a measured feedback loop:** the toolbar reports its real natural
+  width (preference), the body computes the real available budget from the
+  GeometryReader, and `reconcileToolbarCount()` steps the visible-tool count
+  toward the largest set that fits (grows only when one more tool is sure to fit,
+  so it can't oscillate). Real measurements → it can't mis-count.
+- Removed the now-dead `visibleItemCount` core helper + its tests; kept the
+  inspector auto-collapse + window-floor policy (still pure + tested).
+
+Verified: 707 tests green; app rebuilt, launched with a photo, runs idle at 0%
+CPU with NO crash (the recursion is gone) and no oscillation. Live resize feel
+still needs user eyes — screenshots remain blocked here by TCC.
+
+### 2026-07-18 (cont.) — Color model, sticky tools, wand grouping (task 17.12)
+
+Follow-up UX from live use:
+- **One adaptive color control.** The toolbar's color capsule now morphs by tool:
+  a drawing tool (line/arrow/shape/highlight/text) shows ONE swatch = that tool's
+  own color (opening its style popover); Select/fill/etc. show the FG/BG paint
+  pair. Removed the separate style-color swatch from the tools capsule — there was
+  a confusing second color control that didn't obviously map to the drawn color.
+- **Per-tool color memory.** Annotations draw in their OWN remembered color again
+  (reverted 16.12's shared-FG model): `activeAnnotationContent` no longer forces
+  `foregroundFillHex`, and `setAnnotationColor` no longer writes it. FG/BG is now
+  strictly the fill/bucket paint pair.
+- **Sticky tools by default (Photoshop-style).** Drawing/measure/text tools stay
+  active after each shape (draw a line, draw another). Removed the auto-revert to
+  Select and the double-click-to-lock affordance (`toolLocked`/`lockTool` gone).
+- **Magic Wand grouped with the selectors.** Rectangle/Ellipse/Wand now share one
+  toolbar slot (M = remembered, ⇧M cycles all three, W jumps to wand); dropped the
+  standalone wand button and the `.wand` compact-overflow slot.
+- **Fixed a layers-clip regression.** The earlier full-height fix used
+  `.ignoresSafeArea(.top)` on the whole inspector, which pushed the scrollable
+  layer rows up under the title bar (top row clipped, couldn't scroll up). Now
+  only the 1px resize-handle/divider ignores the safe area; the scroll content
+  stays inset.
+
+707 tests green; app rebuilt, launched with a photo, idles at 0% CPU, no crash.
+Live verification of the color/tool feel is pending user eyes (screenshots
+blocked here by TCC).
+
+### 2026-07-18 (cont.) — Layers-list clip fix + solid shapes (task 17.13)
+
+- **Layers list clipping (real fix).** The list was a `List` (a scroll container
+  with no natural height) forced to a fixed height guessed from a per-row
+  constant; the guess fell short of the real row height, so the List bottom-
+  anchored and clipped its TOP rows with no way to scroll to them. Replaced it
+  with a content-sized `VStack` (naturally top-aligned, exact height) so every row
+  shows and the single outer inspector `ScrollView` scrolls the column. Drag-
+  reorder preserved via the same `onDrag`/`onDrop` delegate the sections use
+  (`LayerRowDropDelegate`, one undo step on drop).
+- **Solid rectangles/ellipses.** Boxes now draw FILLED by default (fill = the
+  shape color); `ShapeDefaults.standard` seeds a fill for rectangle/ellipse (nil
+  for strokes). Added tool-keyed `fillColorHex(for:)`/`setFillColorHex(_:for:)`
+  in core.
+- **Two-tone fill/border control.** For the rectangle/ellipse tools the color
+  capsule shows a fill/border pair (Photoshop fg/bg style): the fill swatch picks
+  the interior color or "No Fill" (outline), the border swatch opens the style
+  popover (border color + width + corner). `EditorState.activeToolFillHex` /
+  `setAnnotationFillColor` drive the active tool's or selected box's fill.
+
+708 tests green (updated the fill-defaults test to the new solid behavior; added a
+tool-keyed fill test); app rebuilt, launched with a photo, idles at 0% CPU, no
+crash. Live check of the shape fill + layers scroll pending user eyes.
+
+### 2026-07-18 (cont.) — Layers panel sizing, resizers, no-border, Retina zoom
+
+- **Bounded, resizable layers area (17.13b).** The layers list was pushing the
+  Effects/Shadow sections off the bottom of the inspector. It now sits in a
+  bounded ScrollView (`min(contentHeight, maxHeight)`, measured) that scrolls
+  independently, with a drag handle beneath it to resize the max height
+  (persisted `inspector.layersHeight`, 120–600pt). Other palettes stay in view.
+- **Fatter resizers.** The 1pt inspector-width divider now has a 14pt invisible
+  grab strip (was 8) with a raised zIndex so the overhang wins hit-testing — it
+  was nearly impossible to grab before.
+- **No Border for boxes (17.13c).** Rectangle/ellipse can now be fill-only: the
+  style popover gets a "Border" toggle (off = stroke width 0), and the rasterizer
+  skips the stroke when width is 0. Combined with "No Fill", boxes cover
+  solid-fill / outline-only / both.
+- **Retina-accurate zoom (17.14).** The zoom readout/slider/stops and Actual Size
+  are now in POINT terms (`displayZoom = zoom × pixelScale`). A 2× screenshot at
+  "100%" now displays at its on-screen size (was 200%); Actual Size = 1/pixelScale.
+  Non-Retina images are unchanged.
+
+708 tests green; app rebuilt, launched with a photo, idles at 0% CPU, no crash.
+
+### 2026-07-18 (cont.) — One color control, fill/border checkboxes, resizer fixes
+
+- **Unified color picker (17.15).** There were two different color UIs (an HSB
+  popover on the fill swatches vs. a swatch grid + "custom color" button in the
+  style popover). Merged into ONE `ColorPickerPopover` used everywhere: preset
+  swatches + recent colors + HSB sliders + hex field + screen eyedropper, with an
+  `embedded` flag so it composes inside the style popover. Removed the old
+  swatch/recentColorsRow/customColorButton.
+- **Fill & Border as checkboxes.** Instead of an "Add/No" button that hid the
+  picker, both now have a checkbox that enables the color control; the picker (and
+  width) stay VISIBLE but disabled/dimmed when off, so it's clear what the box
+  controls. The border swatch shows the red "none" slash when there's no border.
+- **Layers vertical resizer fixes.** It didn't track the cursor (dead zone: the
+  drag was based off the stored max height, which can exceed the actual frame =
+  min(content, max)) and it jiggled (default LOCAL drag space measured against the
+  handle as it moved with the drag). Now bases the drag off the ACTUAL frame
+  height and uses GLOBAL coordinate space — tracks 1:1, no jiggle.
+
+708 tests green; app rebuilt, launched, idles at 0% CPU, no crash.
+
+### 2026-07-18 (cont.) — Retina zoom root cause: PNG writer stripped DPI (17.14b)
+
+The displayZoom fix alone didn't help because the user's screenshots were all
+72 DPI (pixelScale read as 1). Root cause: `CaptureStore.writePNG` wrote every
+capture/edit-save with `nil` properties, stripping the Retina DPI — so a 2×
+screenshot became a scale-less 72-DPI PNG and 100% = pixel size = 2× on screen.
+
+Fix: `writePNG(scale:)` embeds `kCGImagePropertyDPI{Width,Height} = 72 × scale`.
+Threaded the scale through: captures pass the screen's `backingScaleFactor`
+(full-screen / rect / freeze paths), and edit-saves (`saveDocument`,
+`saveEditedCapture`) pass `document.pixelScale`. The open path reads DPI via the
+new pure `DisplayScale.pixelScale(forDPI:)` (144→2, 216→3, else 1; 5 tests) and
+sets `document.pixelScale`, so a marked screenshot opens at 100% = on-screen size.
+
+Caveat: pre-existing 72-DPI files carry no scale marker and can't be auto-
+detected — re-capturing or re-saving in the updated app stamps them. 712 tests
+green; app relaunched idle, no crash.
+
+### 2026-07-19 — Screenshot paste: image before file URL
+
+User: pasting a captured screenshot yields a file PATH, not the image. Verified
+(git diff) the copy path was NOT touched this session — the file-URL clipboard
+flavor dates to commit fbf0d20 ("17.9" plan task, pre-branch). Reproduced with a
+pasteboard probe: `copyToPasteboard` set `.fileURL` FIRST, so `pasteboard.types`
+led with `public.file-url` and apps that take the first understood type pasted the
+path. Fix: write the image flavors (PNG, TIFF) BEFORE the file URL, so `public.png`
+is the preferred type (paste = the picture); the file URL stays on the board for
+apps that request it by name (Mail/Finder/Claude attach). Image data was always
+present — only the preference order changed.
+
+- Follow-up: image-first reorder was insufficient (Claude Code/terminal request file-url by name). Made screenshot copy IMAGE-ONLY (drop file-url); videos unchanged. File-attach becomes an explicit action if needed.
+
+### 2026-07-19 (cont.) — Clipboard: file promise so terminals can attach the image
+
+User: pasting a capture into Claude Code inserts a PATH not the image; their other
+macbook (same release) attaches it. Diagnosed from the two paste paths: the working
+one is under `coreservices.useractivityd/shared-pasteboard` (a STAGED/provided file,
+via Universal Clipboard), which Claude Code materializes + attaches; ours wrote a
+plain `public.file-url` reference, which the terminal pastes as text. Verified with
+pasteboard probes (plain URL -> public.file-url; NSFilePromiseProvider ->
+com.apple.pasteboard.promised-file-*). `copyToPasteboard` now writes a FILE PROMISE
+(FilePromiseDelegate copies the file on materialize, retained on the store) + PNG/TIFF
++ a file-URL fallback. Pending user verify that Claude Code attaches the image.
+
+### 2026-07-19 (cont.) — Reverted all paste/clipboard changes
+
+User concluded the terminal paste issue is a Ghoztty/shell bug, not Photonz (ctrl-C
+dropped them into an unexpected bash shell). Backed out every clipboard change this
+session: copyToPasteboard is byte-for-byte the original (file URL + PNG + TIFF, one
+item); removed the NSFilePromiseProvider path + retained delegate. Kept the unrelated
+DPI/scale capture fix (writePNG embeds 72xscale; open reads DPI -> pixelScale). 712
+tests green.

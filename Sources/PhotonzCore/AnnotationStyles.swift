@@ -131,6 +131,18 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         setColorHex(hex, forShape: shape)
     }
 
+    /// The interior fill `tool` draws with (rectangle/ellipse); nil = no fill,
+    /// and nil for tools that have no interior.
+    public func fillColorHex(for tool: Tool) -> String? {
+        guard let shape = tool.annotationShape else { return nil }
+        return fillColorHex(forShape: shape)
+    }
+
+    public mutating func setFillColorHex(_ hex: String?, for tool: Tool) {
+        guard let shape = tool.annotationShape else { return }
+        setFillColorHex(hex, forShape: shape)
+    }
+
     /// Styled content for a new annotation, nil for non-annotation tools.
     public func content(for tool: Tool) -> AnnotationContent? {
         guard let shape = tool.annotationShape else { return nil }
@@ -213,9 +225,15 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     /// The smart default for a shape: red strokes, yellow highlight (system
     /// palette), 4pt stroke, ×1.0 arrowhead, no effects.
     static func standard(for shape: AnnotationShape) -> ShapeDefaults {
-        ShapeDefaults(colorHex: shape == .highlight ? "#FFD60A" : "#FF3B30",
-                      strokeWidth: AnnotationContent.defaultStrokeWidth,
-                      arrowheadScale: AnnotationStyles.defaultArrowheadScale)
+        let color = shape == .highlight ? "#FFD60A" : "#FF3B30"
+        // Rectangle/ellipse draw SOLID by default (fill = the shape color) — you
+        // reach for a box to fill an area; outline-only is a fill-color choice
+        // away. Nil fill (arrow/line/highlight) means no interior fill.
+        let fill: String? = (shape == .rectangle || shape == .ellipse) ? color : nil
+        return ShapeDefaults(colorHex: color,
+                             strokeWidth: AnnotationContent.defaultStrokeWidth,
+                             arrowheadScale: AnnotationStyles.defaultArrowheadScale,
+                             fillColorHex: fill)
     }
 }
 

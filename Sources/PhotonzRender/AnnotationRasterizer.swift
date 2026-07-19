@@ -75,14 +75,16 @@ public enum AnnotationRasterizer {
                     context.addPath(path)
                     context.fillPath()
                 }
-                context.addPath(path)
-                context.strokePath()
+                if annotation.strokeWidth > 0 {   // 0 = no border (fill only)
+                    context.addPath(path)
+                    context.strokePath()
+                }
             } else {
                 if let fill = fillColor(annotation) {
                     context.setFillColor(fill)
                     context.fill(inset)
                 }
-                context.stroke(inset)
+                if annotation.strokeWidth > 0 { context.stroke(inset) }
             }
 
         case .ellipse:
@@ -91,7 +93,7 @@ public enum AnnotationRasterizer {
                 context.setFillColor(fill)
                 context.fillEllipse(in: inset)
             }
-            context.strokeEllipse(in: inset)
+            if annotation.strokeWidth > 0 { context.strokeEllipse(in: inset) }  // 0 = no border
 
         case .highlight:
             // A filled box; the renderer composites it with multiply blend.

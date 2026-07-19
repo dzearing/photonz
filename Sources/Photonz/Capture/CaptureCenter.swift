@@ -196,8 +196,9 @@ final class CaptureCenter {
         guard ensurePermission() else { return }
         Task {
             do {
+                let scale = NSScreen.main?.backingScaleFactor ?? 2
                 for image in try await ScreenCapturer.captureAllScreens() {
-                    if let entry = store.add(image) { onCaptureComplete?(entry) }
+                    if let entry = store.add(image, scale: scale) { onCaptureComplete?(entry) }
                 }
             } catch {
                 NSLog("Full-screen capture failed: \(error)")
@@ -216,7 +217,9 @@ final class CaptureCenter {
                 // screenshot and the crop comes straight out of that bitmap —
                 // exactly what the user saw. Live re-capture only as fallback.
                 if let frozenCrop {
-                    if let entry = self.store.add(frozenCrop) { self.onCaptureComplete?(entry) }
+                    if let entry = self.store.add(frozenCrop, scale: screen.backingScaleFactor) {
+                        self.onCaptureComplete?(entry)
+                    }
                 } else {
                     self.captureRect(screen: screen, rect: rect)
                 }
@@ -260,7 +263,8 @@ final class CaptureCenter {
             // window server before we sample the screen.
             try? await Task.sleep(for: .milliseconds(60))
             do {
-                if let entry = store.add(try await ScreenCapturer.capture(screen: screen, sourceRect: rect)) {
+                let shot = try await ScreenCapturer.capture(screen: screen, sourceRect: rect)
+                if let entry = store.add(shot, scale: screen.backingScaleFactor) {
                     onCaptureComplete?(entry)
                 }
             } catch {

@@ -11,9 +11,9 @@ struct EditorView: View {
     @Environment(AppCoordinator.self) private var coordinator
     @State private var isStylePopoverPresented = false
     /// The bespoke HSB color picker popover (13.2).
-    @State private var isColorPickerPresented = false
     @State private var isFgPickerShown = false
     @State private var isBgPickerShown = false
+    @State private var isShapeFillPickerShown = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
@@ -21,34 +21,95 @@ struct EditorView: View {
     @AppStorage("inspector.width") private var panelWidth = 264.0
     /// Anchors the active-tool accent circle so it slides between buttons.
     @Namespace private var toolbarNamespace
+    /// True when the inspector was hidden BY the width auto-collapse (not by the
+    /// user). Lets us restore the user's shown/hidden preference when the window
+    /// grows back above the threshold, instead of clobbering it permanently.
+    @State private var inspectorAutoHidden = false
+    /// How many leading tools the floating toolbar currently shows; the rest sit
+    /// in the "…" overflow menu. Driven by the measured-fit loop below.
+    @State private var toolbarVisibleCount = ToolbarSlot.allCases.count
+    /// The toolbar's measured natural width and the width available to it — the
+    /// two inputs to the overflow loop. Real measurements, so no width estimate
+    /// can be wrong (an earlier hand-computed version under-counted and clipped;
+    /// a `ViewThatFits` version recursed to death inside `GlassEffectContainer`).
+    @State private var toolbarContentWidth: CGFloat = 0
+    @State private var toolbarBudget: CGFloat = 0
 
     var body: some View {
         @Bindable var editorState = editorState
-        HStack(spacing: 0) {
-            ZStack {
+        GeometryReader { geo in
+            let inspectorShown = editorState.document != nil
+                && editorState.isLayersPanelVisible
+                && !inspectorAutoHidden
+            // Width the canvas (and thus the floating toolbar) actually gets.
+            let canvasWidth = geo.size.width - (inspectorShown ? panelWidth + 1 : 0)
+            HStack(spacing: 0) {
                 canvas
-                VStack {
-                    Spacer()
-                    GlassEffectContainer {
-                        toolbar
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Canvas surround adapts to the system appearance (Preview-
+                    // style): near-black in dark mode, light gray in light mode.
+                    .background(Color(nsColor: .underPageBackgroundColor))
+                    // The toolbar is an OVERLAY, not a ZStack sibling: an overlay
+                    // does not contribute to the canvas's minimum width, so a wide
+                    // toolbar can never push the inspector off the window edge (the
+                    // original bug). It stays bottom-centered and clips to the
+                    // canvas rather than overhanging the panel.
+                    .overlay(alignment: .bottom) {
+                        GlassEffectContainer {
+                            toolbar
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+                        .background(GeometryReader { proxy in
+                            Color.clear.preference(key: ToolbarContentWidthKey.self,
+                                                   value: proxy.size.width)
+                        })
                     }
-                    .padding(.bottom, 16)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // Canvas surround adapts to the system appearance (Preview-style):
-            // near-black in dark mode, light gray in light mode.
-            .background(Color(nsColor: .underPageBackgroundColor))
-            // The docked, full-height inspector with its 1px left resize handle.
-            if editorState.document != nil, editorState.isLayersPanelVisible {
-                InspectorResizeHandle(width: $panelWidth)
-                InspectorPanel()
-                    .frame(width: panelWidth)
+                    // Sidebar toggle, top-trailing — the in-window affordance to
+                    // collapse/reveal the inspector (Xcode/Finder-style), and the
+                    // way back when the panel has auto-collapsed on a narrow window.
+                    .overlay(alignment: .topTrailing) {
+                        if editorState.document != nil {
+                            inspectorToggle(isShown: inspectorShown)
+                                .padding(12)
+                        }
+                    }
+                    .clipped()  // keep a transient over-wide toolbar off the panel
+                    .onPreferenceChange(ToolbarContentWidthKey.self) { width in
+                        toolbarContentWidth = width
+                        reconcileToolbarCount()
+                    }
+                // The docked inspector. The 1px resize handle is the panel's own
+                // LEADING EDGE (grouped here, not a separate sibling), so the two
+                // slide in together as one surface — the border used to pop in
+                // instantly while the panel slid. It runs the full window height.
+                if inspectorShown {
+                    HStack(spacing: 0) {
+                        InspectorResizeHandle(width: $panelWidth)
+                            // Only the 1px border runs edge-to-edge under the
+                            // title bar; the panel's SCROLL content stays inset so
+                            // its top row isn't clipped / unreachable.
+                            .ignoresSafeArea(.container, edges: .vertical)
+                        InspectorPanel()
+                            .frame(width: panelWidth)
+                    }
                     .frame(maxHeight: .infinity)
                     .transition(.move(edge: .trailing))
+                }
+            }
+            .animation(.spring(duration: 0.3), value: inspectorShown)
+            // Auto-collapse the inspector below the width threshold, and restore
+            // the user's preference when the window grows back. Runs on the
+            // initial size too, so opening small starts collapsed.
+            .onChange(of: geo.size.width, initial: true) { _, width in
+                updateInspectorAutoCollapse(width: width)
+            }
+            // Keep the toolbar's fit budget current as the window / panel changes.
+            .onChange(of: canvasWidth, initial: true) { _, width in
+                toolbarBudget = max(0, width - 32)  // 16 inset each side
+                reconcileToolbarCount()
             }
         }
-        .animation(.spring(duration: 0.3), value: editorState.isLayersPanelVisible)
         // Fill the window even in the empty state — the HStack otherwise hugs
         // the toolbar's width and the background paints as a visible column
         // against the window's own background.
@@ -209,11 +270,43 @@ struct EditorView: View {
         .buttonStyle(.borderless)
     }
 
-    /// Three separate glass bars: tools, fill colors, zoom — grouped in one
-    /// GlassEffectContainer so the capsules morph together.
+    /// Three glass bars: tools, fill colors, zoom — grouped in one
+    /// GlassEffectContainer so the capsules morph together. Shows
+    /// `toolbarVisibleCount` leading tools inline (the full bar when that's all
+    /// of them, so there is zero regression at large sizes); the rest collapse
+    /// into the "…" overflow menu. The count is driven by `reconcileToolbarCount`
+    /// from real measured widths, so nothing clips at the window edge.
     private var toolbar: some View {
         HStack(spacing: 10) {
-            toolsBar
+            if toolbarVisibleCount >= ToolbarSlot.allCases.count {
+                toolsBar
+            } else {
+                compactToolsBar(visibleCount: toolbarVisibleCount)
+            }
+            sideCapsules
+        }
+    }
+
+    /// Grow or shrink the visible tool count by one step toward the largest set
+    /// that fits `toolbarBudget`. Called whenever the measured content width or
+    /// the available budget changes; converges over a couple of frames without
+    /// oscillating (it only grows when one more tool would still fit).
+    private func reconcileToolbarCount() {
+        guard toolbarBudget > 0, toolbarContentWidth > 0 else { return }
+        let maxCount = ToolbarSlot.allCases.count
+        if toolbarContentWidth > toolbarBudget {
+            if toolbarVisibleCount > 0 { toolbarVisibleCount -= 1 }
+        } else if toolbarVisibleCount < maxCount,
+                  toolbarContentWidth + 48 <= toolbarBudget {
+            // 48 ≈ one tool + gap (worst case, the wider marquee slot). Only grow
+            // when the extra tool is sure to still fit, so it can't ping-pong.
+            toolbarVisibleCount += 1
+        }
+    }
+
+    /// The color + zoom capsules, always present at the trailing end.
+    private var sideCapsules: some View {
+        HStack(spacing: 10) {
             colorBar
             zoomBar
         }
@@ -233,28 +326,13 @@ struct EditorView: View {
             toolButton(.ellipse, "circle", "Ellipse", "o")
             toolButton(.highlight, "highlighter", "Highlight", "h")
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
-            if editorState.activeTool.createsAnnotationByDrag || editorState.activeTool == .text
-                || editorState.selectedAnnotationLayer != nil
-                || editorState.selectedTextLayer != nil
-                || editorState.selectedZoomCalloutLayer != nil {
-                styleButton
-                    .transition(.scale(scale: 0.5).combined(with: .opacity))
-            }
             Divider().frame(height: 20)
             toolButton(.crop, "crop", "Crop", "c")
             if editorState.activeTool == .crop {
                 cropOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
-            Button {
-                editorState.isResizeDialogPresented = true
-            } label: {
-                Image(systemName: "arrow.down.right.and.arrow.up.left.rectangle")
-                    .font(.system(size: 15, weight: .medium))
-                    .frame(width: 28, height: 28)
-            }
-            .disabled(editorState.document == nil)
-            .help("Resize Image (⌥⌘I)")
+            resizeButton
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
@@ -280,10 +358,333 @@ struct EditorView: View {
         // above, and the swatch still animates in when you pick the arrow tool.)
     }
 
+    /// The compact tool row used when the full set won't fit: the leading tools
+    /// that fit, then a chevron overflow menu holding the rest, then the
+    /// contextual options for the active tool (which stay reachable). The active
+    /// tool is always kept out of the overflow so its options make sense.
+    private func compactToolsBar(visibleCount: Int) -> some View {
+        let all = ToolbarSlot.allCases
+        let active = activeSlot
+        let visible = all.enumerated().filter { index, slot in
+            index < visibleCount || slot == active
+        }.map(\.element)
+        let overflow = all.filter { !visible.contains($0) }
+        return HStack(spacing: 14) {
+            ForEach(visible, id: \.self) { slotButton($0) }
+            if !overflow.isEmpty {
+                overflowMenu(overflow)
+            }
+            contextualToolOptions
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+        .animation(.spring(duration: 0.3), value: editorState.activeTool)
+    }
+
+    /// The trailing "…" menu that lists the tools that didn't fit. Picking one
+    /// activates it (and, since the active tool is never overflowed, it then
+    /// pops back into the visible row).
+    private func overflowMenu(_ slots: [ToolbarSlot]) -> some View {
+        Menu {
+            ForEach(slots, id: \.self) { slot in
+                Button {
+                    activateSlot(slot)
+                } label: {
+                    Label(slot.title, systemImage: slot.menuSymbol)
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 28, height: 28)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("More tools")
+    }
+
+    /// Contextual options for the active tool (wand tolerance, crop aspects). In
+    /// the compact bar they sit at the trailing edge; the full bar keeps them
+    /// inline. (The color/style swatch lives in the adaptive color capsule now.)
+    @ViewBuilder private var contextualToolOptions: some View {
+        if editorState.activeTool == .wand {
+            wandOptions
+        }
+        if editorState.activeTool == .crop {
+            cropOptions
+        }
+    }
+
+    /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
+    private var resizeButton: some View {
+        Button {
+            editorState.isResizeDialogPresented = true
+        } label: {
+            Image(systemName: "arrow.down.right.and.arrow.up.left.rectangle")
+                .font(.system(size: 15, weight: .medium))
+                .frame(width: 28, height: 28)
+        }
+        .disabled(editorState.document == nil)
+        .help("Resize Image (⌥⌘I)")
+    }
+
+    /// The in-window sidebar toggle (top-trailing): collapse or reveal the
+    /// docked inspector. Also the way back when the panel has auto-collapsed on
+    /// a narrow window — tapping it forces the inspector open.
+    private func inspectorToggle(isShown: Bool) -> some View {
+        Button {
+            if isShown {
+                editorState.isLayersPanelVisible = false
+                inspectorAutoHidden = false
+            } else {
+                editorState.isLayersPanelVisible = true
+                inspectorAutoHidden = false // user override beats auto-collapse
+            }
+        } label: {
+            Image(systemName: isShown ? "sidebar.trailing" : "sidebar.leading")
+                .font(.system(size: 14, weight: .medium))
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(.borderless)
+        .glassEffect(.regular, in: .capsule)
+        .help(isShown ? "Hide Inspector (⌥⌘L)" : "Show Inspector (⌥⌘L)")
+    }
+
+    /// Auto-collapse the inspector below the width threshold, and restore the
+    /// user's preference when the window grows back above it.
+    private func updateInspectorAutoCollapse(width: CGFloat) {
+        if EditorChromeLayout.shouldAutoCollapseInspector(windowWidth: width) {
+            // Too narrow: hide, remembering that WE hid it (not the user).
+            if editorState.isLayersPanelVisible {
+                editorState.isLayersPanelVisible = false
+                inspectorAutoHidden = true
+            }
+        } else if inspectorAutoHidden {
+            // Roomy again: restore what the user had before we auto-hid it.
+            editorState.isLayersPanelVisible = true
+            inspectorAutoHidden = false
+        }
+    }
+
+    // MARK: Toolbar overflow model
+
+    /// The fixed tool-row slots, in bar order. Drives overflow: the leading
+    /// slots that fit stay inline; the rest collapse into the chevron menu.
+    private enum ToolbarSlot: String, CaseIterable {
+        case select, marquee, arrow, line, rectangle, ellipse, highlight, text
+        case crop, resize, zoomCallout, measure, fill
+
+        /// Menu title when the slot is overflowed.
+        var title: String {
+            switch self {
+            case .select: "Select"
+            case .marquee: "Selection"
+            case .arrow: "Arrow"
+            case .line: "Line"
+            case .rectangle: "Rectangle"
+            case .ellipse: "Ellipse"
+            case .highlight: "Highlight"
+            case .text: "Text"
+            case .crop: "Crop"
+            case .resize: "Resize Image"
+            case .zoomCallout: "Zoom Callout"
+            case .measure: "Measure"
+            case .fill: "Fill"
+            }
+        }
+
+        /// SF Symbol for the overflow-menu row.
+        var menuSymbol: String {
+            switch self {
+            case .select: "cursorarrow"
+            case .marquee: "rectangle.dashed"
+            case .arrow: "arrow.up.right"
+            case .line: "line.diagonal"
+            case .rectangle: "rectangle"
+            case .ellipse: "circle"
+            case .highlight: "highlighter"
+            case .text: "character.cursor.ibeam"
+            case .crop: "crop"
+            case .resize: "arrow.down.right.and.arrow.up.left.rectangle"
+            case .zoomCallout: "plus.magnifyingglass"
+            case .measure: "ruler"
+            case .fill: "drop"
+            }
+        }
+
+        /// The `Tool` this slot activates, if any (resize opens a dialog; the
+        /// marquee slot resolves to the remembered variant, so both are nil).
+        var tool: Tool? {
+            switch self {
+            case .select: .select
+            case .arrow: .arrow
+            case .line: .line
+            case .rectangle: .rectangle
+            case .ellipse: .ellipse
+            case .highlight: .highlight
+            case .text: .text
+            case .crop: .crop
+            case .zoomCallout: .zoomCallout
+            case .measure: .measure
+            case .fill: .fill
+            case .marquee, .resize: nil
+            }
+        }
+    }
+
+    /// The slot matching the active tool (all region selectors fold to
+    /// `.marquee`), so the compact bar keeps the active tool out of the overflow.
+    private var activeSlot: ToolbarSlot? {
+        let tool = editorState.activeTool
+        if tool.isRegionSelectionTool { return .marquee }
+        return ToolbarSlot.allCases.first { $0.tool == tool }
+    }
+
+    /// Inline button for a slot in the compact bar — same widgets the full bar
+    /// uses, so the two stay visually identical for the tools that show.
+    @ViewBuilder private func slotButton(_ slot: ToolbarSlot) -> some View {
+        switch slot {
+        case .select: toolButton(.select, "cursorarrow", "Select", "v")
+        case .marquee: selectionGroupButton
+        case .arrow: toolButton(.arrow, "arrow.up.right", "Arrow", "a")
+        case .line: toolButton(.line, "line.diagonal", "Line", "l")
+        case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle", "r")
+        case .ellipse: toolButton(.ellipse, "circle", "Ellipse", "o")
+        case .highlight: toolButton(.highlight, "highlighter", "Highlight", "h")
+        case .text: toolButton(.text, "character.cursor.ibeam", "Text", "t")
+        case .crop: toolButton(.crop, "crop", "Crop", "c")
+        case .resize: resizeButton
+        case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
+        case .measure: toolButton(.measure, "ruler", "Measure", "i")
+        case .fill:
+            toolButton(.fill, help: "Fill", key: "g") {
+                PaintBucketIcon().frame(width: 22, height: 21)
+            }
+        }
+    }
+
+    /// Activate a slot picked from the overflow menu.
+    private func activateSlot(_ slot: ToolbarSlot) {
+        switch slot {
+        case .marquee: activateSelectionTool(lastSelectionTool)
+        case .resize: editorState.isResizeDialogPresented = true
+        default: if let tool = slot.tool { editorState.setTool(tool) }
+        }
+    }
+
+    /// The single color capsule, adaptive to the active tool (17.12): a drawing
+    /// tool (line/arrow/shape/highlight/text) shows ONE swatch — that tool's own
+    /// color, opening its style popover — because a stroke has a single color.
+    /// Select / fill / everything else shows the Photoshop-style FG/BG paint pair
+    /// (the bucket + ⌫/⌥⌫ colors), so there's exactly one color control on
+    /// screen and it means the right thing for the tool in hand.
+    private var colorBar: some View {
+        Group {
+            if activeToolUsesFillAndBorder {
+                shapeFillBorderPair
+            } else if usesToolColor {
+                styleButton
+            } else {
+                fillColorPair
+            }
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .glassEffect(.regular, in: .capsule)
+    }
+
+    /// Rectangle/ellipse have TWO tones — an interior fill and a border — so the
+    /// capsule shows a fill/border pair for them (17.13).
+    private var activeToolUsesFillAndBorder: Bool {
+        editorState.activeTool == .rectangle || editorState.activeTool == .ellipse
+    }
+
+    /// Whether the active tool draws in a single color (so the capsule shows that
+    /// tool's swatch instead of the FG/BG paint pair). Excludes the fill/border
+    /// shapes, which get their own pair.
+    private var usesToolColor: Bool {
+        (editorState.activeTool.createsAnnotationByDrag || editorState.activeTool == .text)
+            && !activeToolUsesFillAndBorder
+    }
+
+    /// Fill (top-left) OVER border (bottom-right), Photoshop-style — the fill is
+    /// primary because you reach for a box to fill an area. The fill swatch picks
+    /// the interior color (or clears it for an outline); the border swatch opens
+    /// the style popover (border color + width + corner radius).
+    private var shapeFillBorderPair: some View {
+        HStack(spacing: 6) {
+            ZStack {
+                shapeBorderSwatch
+                    .frame(width: 29, height: 29, alignment: .bottomTrailing)
+                shapeFillSwatch
+                    .frame(width: 29, height: 29, alignment: .topLeading)
+            }
+        }
+    }
+
+    private var shapeFillSwatch: some View {
+        Button { isShapeFillPickerShown = true } label: {
+            shapeSwatchLabel(hex: editorState.activeToolFillHex)
+        }
+        .help("Fill color — the shape's interior. Uncheck Fill for an outline.")
+        .popover(isPresented: $isShapeFillPickerShown, arrowEdge: .top) {
+            let off = editorState.activeToolFillHex == nil
+            VStack(alignment: .leading, spacing: 14) {
+                // A checkbox enables the fill; the picker stays visible but
+                // disabled (dimmed) when it's off, so it's clear what it controls.
+                Toggle("Fill", isOn: Binding(
+                    get: { !off },
+                    set: { on in
+                        editorState.setAnnotationFillColor(on ? (editorState.activeToolFillHex ?? activeToolColorHex) : nil)
+                    }))
+                    .font(.callout)
+                ColorPickerPopover(initialHex: editorState.activeToolFillHex ?? activeToolColorHex,
+                                   recents: editorState.recentColors.colors,
+                                   embedded: true) { editorState.setAnnotationFillColor($0) }
+                    .disabled(off)
+                    .opacity(off ? 0.4 : 1)
+            }
+            .padding(16)
+        }
+    }
+
+    private var shapeBorderSwatch: some View {
+        Button { isStylePopoverPresented.toggle() } label: {
+            // Show the "none" slash when the box has no border.
+            shapeSwatchLabel(hex: editedStrokeWidth > 0 ? activeToolColorHex : nil)
+        }
+        .help("Border color, width, and corner radius")
+        .popover(isPresented: $isStylePopoverPresented, arrowEdge: .top) {
+            stylePopover
+        }
+    }
+
+    /// A rounded-rect swatch; a nil hex shows the white-with-red-slash "none".
+    private func shapeSwatchLabel(hex: String?) -> some View {
+        RoundedRectangle(cornerRadius: 4)
+            .fill(hex.map { Color(hex: $0) } ?? Color.white)
+            .frame(width: 18, height: 18)
+            .overlay {
+                if hex == nil {
+                    Path { p in
+                        p.move(to: CGPoint(x: 2, y: 16))
+                        p.addLine(to: CGPoint(x: 16, y: 2))
+                    }
+                    .stroke(Color.red, lineWidth: 1.5)
+                }
+            }
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.background, lineWidth: 1.5))
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+    }
+
     /// The Photoshop-style fill pair: foreground swatch top-left OVERLAPPING
     /// the background swatch bottom-right, swap arrows beside them (X). Each
     /// swatch opens the app's HSB/eyedropper picker.
-    private var colorBar: some View {
+    private var fillColorPair: some View {
         HStack(spacing: 6) {
             // Corner-aligned frames (not .offset, which is visual-only and
             // would leave the layout box as just the top swatch, hanging the
@@ -304,10 +705,6 @@ struct EditorView: View {
             .keyboardShortcut("x", modifiers: [])
             .help("Swap Fill Colors (X)")
         }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: .capsule)
     }
 
     private func fillSwatch(hex: String, isForeground: Bool) -> some View {
@@ -327,7 +724,7 @@ struct EditorView: View {
               : "Background fill: new canvas space and ⌫-cleared backgrounds use this")
         .popover(isPresented: isForeground ? $isFgPickerShown : $isBgPickerShown,
                  arrowEdge: .top) {
-            ColorPickerPopover(initialHex: hex) { newHex in
+            ColorPickerPopover(initialHex: hex, recents: editorState.recentColors.colors) { newHex in
                 if isForeground { editorState.foregroundFillHex = newHex }
                 else { editorState.backgroundFillHex = newHex }
                 editorState.recordRecentColor(hex: newHex)
@@ -340,9 +737,11 @@ struct EditorView: View {
     /// Zoom: a log-scale slider plus a % readout that opens a stop menu.
     private var zoomBar: some View {
         HStack(spacing: 8) {
+            // Zoom is shown in POINT terms (displayZoom), so 100% matches the
+            // on-screen size even for Retina (pixelScale 2) screenshots.
             Slider(value: Binding(
-                get: { Double(log2(editorState.zoom)) },
-                set: { editorState.setZoom(CGFloat(pow(2, $0))) }),
+                get: { Double(log2(editorState.displayZoom)) },
+                set: { editorState.setDisplayZoom(CGFloat(pow(2, $0))) }),
                 in: -5...5)
                 .controlSize(.small)
                 .frame(width: 110)
@@ -350,7 +749,7 @@ struct EditorView: View {
             Menu {
                 ForEach(Self.zoomStops, id: \.self) { stop in
                     Button(stop.formatted(.percent.precision(.fractionLength(0)))) {
-                        editorState.setZoom(CGFloat(stop))
+                        editorState.setDisplayZoom(CGFloat(stop))
                     }
                 }
                 Divider()
@@ -359,7 +758,7 @@ struct EditorView: View {
                 Button("Actual Size") { editorState.zoomToActualSize() }
                     .keyboardShortcut("1", modifiers: .command)
             } label: {
-                Text(Double(editorState.zoom).formatted(.percent.precision(.fractionLength(0))))
+                Text(Double(editorState.displayZoom).formatted(.percent.precision(.fractionLength(0))))
                     .font(.callout.monospacedDigit())
                     .frame(width: 46)
             }
@@ -483,6 +882,13 @@ struct EditorView: View {
         return editorState.activeTool.usesStrokeWidth
     }
 
+    /// Rectangle/ellipse can have NO border (width 0, fill only); a line/arrow
+    /// can't (it would vanish), so the toggle is box-only.
+    private var showsBorderToggle: Bool {
+        let shape = selectedAnnotation?.shape ?? editorState.activeTool.annotationShape
+        return shape == .rectangle || shape == .ellipse
+    }
+
     private var editedStrokeWidth: CGFloat {
         editorState.selectedZoomCalloutLayer?.style.borderWidth
             ?? selectedAnnotation?.strokeWidth
@@ -519,24 +925,36 @@ struct EditorView: View {
     }
 
     private var stylePopover: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                ForEach(AnnotationStyles.swatches, id: \.self) { hex in
-                    swatch(hex)
+        let borderOff = showsBorderToggle && editedStrokeWidth <= 0
+        return VStack(alignment: .leading, spacing: 14) {
+            // For boxes, a "Border" CHECKBOX enables/disables the border. The
+            // color + width below stay VISIBLE but disabled (dimmed) when it's
+            // off, so it's obvious what the checkbox controls.
+            if showsBorderToggle {
+                Toggle("Border", isOn: Binding(
+                    get: { editedStrokeWidth > 0 },
+                    set: { on in
+                        editorState.setAnnotationStrokeWidth(on ? AnnotationContent.defaultStrokeWidth : 0)
+                    }))
+                    .font(.callout)
+            }
+            VStack(alignment: .leading, spacing: 14) {
+                // One consistent color control everywhere (swatches + recents +
+                // HSB + hex + eyedropper).
+                ColorPickerPopover(initialHex: activeToolColorHex,
+                                   recents: editorState.recentColors.colors,
+                                   embedded: true) { applyColor($0) }
+                if showsTextControls {
+                    fontPicker
+                } else if showsStrokeWidthRow {
+                    strokeWidthSlider
                 }
-                customColorButton
+                if showsArrowheadRow {
+                    arrowheadSizeSlider
+                }
             }
-            if !editorState.recentColors.colors.isEmpty {
-                recentColorsRow
-            }
-            if showsTextControls {
-                fontPicker
-            } else if showsStrokeWidthRow {
-                strokeWidthSlider
-            }
-            if showsArrowheadRow {
-                arrowheadSizeSlider
-            }
+            .disabled(borderOff)
+            .opacity(borderOff ? 0.4 : 1)
             if editorState.selectedZoomCalloutLayer != nil {
                 calloutInspector
             }
@@ -661,59 +1079,6 @@ struct EditorView: View {
         }
     }
 
-    private func swatch(_ hex: String) -> some View {
-        let isSelected = activeToolColorHex == hex
-        return Button {
-            applyColor(hex)
-        } label: {
-            Circle()
-                .fill(Color(hex: hex))
-                .frame(width: 22, height: 22)
-                .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
-                .overlay {
-                    if isSelected {
-                        Circle().strokeBorder(Color.accentColor, lineWidth: 2)
-                            .padding(-4)
-                    }
-                }
-        }
-        .help(hex)
-    }
-
-    /// The shared recent-colors row (13.2): one click reapplies a color you
-    /// recently committed, regardless of which object you picked it on.
-    private var recentColorsRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Recent").font(.caption2).foregroundStyle(.secondary)
-            HStack(spacing: 10) {
-                ForEach(editorState.recentColors.colors, id: \.self) { hex in
-                    swatch(hex)
-                }
-            }
-        }
-    }
-
-    /// Opens the bespoke HSB color picker with eyedropper + hex entry (13.2).
-    private var customColorButton: some View {
-        Button {
-            isColorPickerPresented.toggle()
-        } label: {
-            Image(systemName: "eyedropper.halffull")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.primary)
-                .frame(width: 22, height: 22)
-                .background(
-                    Circle().fill(.quaternary)
-                        .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1)))
-        }
-        .help("Custom Color…")
-        .popover(isPresented: $isColorPickerPresented, arrowEdge: .bottom) {
-            ColorPickerPopover(initialHex: activeToolColorHex) { hex in
-                applyColor(hex)
-            }
-        }
-    }
-
     /// Stroke width slider with a live numeric readout. Drag previews without
     /// recording undo; release commits one step.
     private var strokeWidthSlider: some View {
@@ -791,7 +1156,6 @@ struct EditorView: View {
                             modifiers: EventModifiers = [],
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
-        let isLocked = isActive && editorState.toolLocked
         let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
         let keyHint = key.map { " (\(shiftHint)\(String(describing: $0.character).uppercased()))" } ?? ""
         return Button {
@@ -806,49 +1170,45 @@ struct EditorView: View {
                             .matchedGeometryEffect(id: "activeTool", in: toolbarNamespace)
                     }
                 }
-                // Locked (double-clicked) tools get an inner ring so it's clear
-                // they'll stay active instead of reverting to select.
-                .overlay {
-                    if isLocked {
-                        Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 1.5)
-                            .padding(3)
-                    }
-                }
         }
-        // Double-click keeps the tool active for repeated drawing.
-        .simultaneousGesture(TapGesture(count: 2).onEnded { editorState.lockTool(tool) })
-        .help("\(help)\(keyHint). Double-click to keep active.")
+        // Tools are sticky (17.12), so no double-click-to-lock is needed.
+        .help("\(help)\(keyHint)")
         .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: modifiers) })
     }
 
-    /// Region selection tools (phase 17), on Photoshop's keys: M marquee
-    /// (a grouped slot — see below), W wand. ⇧ adds, ⌥ subtracts, ⇧⌥
-    /// intersects with the existing region.
+    /// The three region-selection tools share ONE toolbar slot (Photoshop-style):
+    /// rectangle select, ellipse select, and the magic wand. The button shows
+    /// (and a click activates) the last-used one, the chevron menu switches it,
+    /// M picks the remembered one, ⇧M cycles, W jumps to the wand. Keeps the bar
+    /// uncrowded and puts the wand where it belongs — with the other selectors.
     private var regionSelectButtons: some View {
-        Group {
-            marqueeGroupButton
-            toolButton(.wand, help: "Magic Wand", key: "w") {
-                Image(systemName: "wand.and.rays").font(.system(size: 15, weight: .medium))
-            }
+        selectionGroupButton
+    }
+
+    /// The tools in the shared selection slot, in cycle order.
+    private static let selectionGroupTools: [Tool] = [.rectSelect, .ellipseSelect, .wand]
+
+    private func selectionToolSymbol(_ tool: Tool) -> String {
+        switch tool {
+        case .ellipseSelect: "circle.dashed"
+        case .wand: "wand.and.rays"
+        default: "rectangle.dashed"
         }
     }
 
-    /// The marquee tools share ONE toolbar slot, Photoshop-style: the button
-    /// shows (and a click activates) the last-used variant, the chevron menu
-    /// switches it, M picks the remembered one, ⇧M cycles. Keeps the bar
-    /// uncrowded as tool families grow.
-    private var marqueeGroupButton: some View {
-        let remembered = lastMarqueeTool
-        let isActive = editorState.activeTool.isMarqueeSelectTool
+    private var selectionGroupButton: some View {
+        let remembered = lastSelectionTool
+        let isActive = editorState.activeTool.isRegionSelectionTool
         return Menu {
-            Picker("Marquee", selection: Binding(get: { lastMarqueeTool },
-                                                 set: { activateMarquee($0) })) {
+            Picker("Selection", selection: Binding(get: { lastSelectionTool },
+                                                   set: { activateSelectionTool($0) })) {
                 Label("Rectangle Select", systemImage: "rectangle.dashed").tag(Tool.rectSelect)
                 Label("Ellipse Select", systemImage: "circle.dashed").tag(Tool.ellipseSelect)
+                Label("Magic Wand", systemImage: "wand.and.rays").tag(Tool.wand)
             }
             .pickerStyle(.inline)
         } label: {
-            Image(systemName: remembered == .ellipseSelect ? "circle.dashed" : "rectangle.dashed")
+            Image(systemName: selectionToolSymbol(remembered))
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(isActive ? Color.white : Color.primary)
                 .frame(width: 28, height: 28)
@@ -859,37 +1219,44 @@ struct EditorView: View {
                     }
                 }
         } primaryAction: {
-            activateMarquee(remembered)
+            activateSelectionTool(remembered)
         }
         .menuIndicator(.visible)
         .menuStyle(.button)
         .buttonStyle(.borderless)
         .fixedSize()
-        .help("\(remembered == .ellipseSelect ? "Ellipse" : "Rectangle") Select (M, ⇧M switches). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
+        .help("Selection: Rectangle / Ellipse / Magic Wand (M, ⇧M cycles, W wand). ⇧ add, ⌥ subtract, ⇧⌥ intersect.")
         // The shortcuts live on invisible stand-ins (Menu can't carry them):
-        // M = the remembered marquee, ⇧M = cycle to the other (Photoshop).
+        // M = the remembered selector, ⇧M = cycle, W = jump to the wand.
         .background {
             Group {
-                Button("") { activateMarquee(lastMarqueeTool) }
+                Button("") { activateSelectionTool(lastSelectionTool) }
                     .keyboardShortcut("m", modifiers: [])
-                Button("") {
-                    activateMarquee(lastMarqueeTool == .rectSelect ? .ellipseSelect : .rectSelect)
-                }
-                .keyboardShortcut("m", modifiers: .shift)
+                Button("") { activateSelectionTool(cycledSelectionTool) }
+                    .keyboardShortcut("m", modifiers: .shift)
+                Button("") { activateSelectionTool(.wand) }
+                    .keyboardShortcut("w", modifiers: [])
             }
             .opacity(0)
             .allowsHitTesting(false)
         }
     }
 
-    /// The marquee variant the grouped slot remembers (persisted).
-    private var lastMarqueeTool: Tool {
-        let raw = UserDefaults.standard.string(forKey: "tool.marquee.last") ?? ""
-        let tool = Tool(rawValue: raw)
-        return tool?.isMarqueeSelectTool == true ? (tool ?? .rectSelect) : .rectSelect
+    /// The next tool when cycling the selection slot with ⇧M.
+    private var cycledSelectionTool: Tool {
+        let tools = Self.selectionGroupTools
+        let idx = tools.firstIndex(of: lastSelectionTool) ?? 0
+        return tools[(idx + 1) % tools.count]
     }
 
-    private func activateMarquee(_ tool: Tool) {
+    /// The selection tool the grouped slot remembers (persisted).
+    private var lastSelectionTool: Tool {
+        let raw = UserDefaults.standard.string(forKey: "tool.marquee.last") ?? ""
+        let tool = Tool(rawValue: raw)
+        return tool?.isRegionSelectionTool == true ? (tool ?? .rectSelect) : .rectSelect
+    }
+
+    private func activateSelectionTool(_ tool: Tool) {
         UserDefaults.standard.set(tool.rawValue, forKey: "tool.marquee.last")
         editorState.setTool(tool)
     }
@@ -903,6 +1270,15 @@ struct EditorView: View {
         }
         .disabled(true)
         .help(help)
+    }
+}
+
+/// The floating toolbar's measured natural width, read by the overflow loop in
+/// `EditorView` to decide how many tools fit before the "…" menu takes over.
+private struct ToolbarContentWidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 

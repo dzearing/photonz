@@ -71,7 +71,8 @@ struct EditorCommands: Commands {
             Button("Save to Capture History") {
                 if let editor, let image = editor.compositeImage(),
                    let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
-                                                           image: image) {
+                                                           image: image,
+                                                           scale: editor.documentPixelScale) {
                     editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
                 }
             }

@@ -1,4 +1,5 @@
 import AppKit
+import PhotonzCore
 import SwiftUI
 
 @main
@@ -26,7 +27,11 @@ struct PhotonzApp: App {
         WindowGroup(for: EditorWindowID.self) { $windowID in
             EditorRootView(windowID: windowID)
                 .environment(coordinator)
-                .frame(minWidth: 760, minHeight: 520)
+                // A low floor on purpose: the responsive chrome (toolbar
+                // overflow, inspector auto-collapse) must kick in ABOVE this,
+                // since people resize to arbitrary sizes, not just the minimum.
+                .frame(minWidth: EditorChromeLayout.minWindowWidth,
+                       minHeight: EditorChromeLayout.minWindowHeight)
         }
         .windowStyle(.hiddenTitleBar)
         // Don't pop an editor window at launch — Photonz starts as a pure

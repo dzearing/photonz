@@ -201,6 +201,35 @@ private struct SectionDropDelegate: DropDelegate {
     }
 }
 
+/// Measured natural height of the layer rows, so the bounded scroll area hugs
+/// the content until it exceeds the resizable max.
+private struct LayersContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+/// Reorders layers when a dragged row is dropped on another. The move is one
+/// document mutation (undo step) applied on drop, using the same visual-index
+/// convention as the old `List.onMove`.
+private struct LayerRowDropDelegate: DropDelegate {
+    let target: UUID
+    @Binding var dragging: UUID?
+    let editorState: EditorState
+
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+
+    func performDrop(info: DropInfo) -> Bool {
+        defer { dragging = nil }
+        let layers = editorState.panelLayers
+        guard let dragging, dragging != target,
+              let from = layers.firstIndex(where: { $0.id == dragging }),
+              let to = layers.firstIndex(where: { $0.id == target }) else { return false }
+        editorState.moveLayers(visualSources: IndexSet(integer: from),
+                               visualDestination: to > from ? to + 1 : to)
+        return true
+    }
+}
+
 /// A titled section with a chevron (tap to collapse) and a drag affordance on
 /// its header (drag to reorder). Elegant/modern: clean header, smooth collapse.
 private struct CollapsibleSection<Content: View>: View {
@@ -256,9 +285,11 @@ struct InspectorResizeHandle: View {
         Divider()
             .frame(width: 1)
             .overlay {
-                // A wider, invisible strip makes the 1px line easy to grab.
+                // A wide, invisible strip makes the 1px line easy to grab — a
+                // hairline is nearly impossible to hit, so give it a 14pt target
+                // (extends 7pt each side of the divider).
                 Color.clear
-                    .frame(width: 8)
+                    .frame(width: 14)
                     .contentShape(Rectangle())
                     .onHover { inside in
                         if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
@@ -274,6 +305,10 @@ struct InspectorResizeHandle: View {
                             .onEnded { _ in dragStartWidth = nil }
                     )
             }
+            // The 14pt grab strip spills past the 1pt divider; let it receive
+            // hits in that overhang instead of being clipped to 1pt.
+            .frame(width: 1)
+            .zIndex(1)
     }
 }
 
@@ -286,41 +321,95 @@ struct LayersListView: View {
     @Environment(EditorState.self) private var editorState
     @State private var renamingLayerID: UUID?
     @State private var renameText = ""
+    @State private var draggingLayerID: UUID?
     @FocusState private var renameFieldFocused: Bool
 
+    /// The layer area's max height (user-resizable, persisted). Beyond this the
+    /// list scrolls INTERNALLY so a tall stack doesn't shove the Effects/Shadow
+    /// sections off the bottom of the inspector — you keep the other palettes in
+    /// view and scroll layers on their own.
+    @AppStorage("inspector.layersHeight") private var maxHeight = 260.0
+    /// Measured natural height of all the rows, so the area hugs the content when
+    /// it's short and only caps + scrolls once it exceeds `maxHeight`.
+    @State private var contentHeight: CGFloat = 160
+    @State private var dragStartHeight: CGFloat?
+
+    static let minHeight: CGFloat = 120
+    static let maxAllowedHeight: CGFloat = 600
+
+    /// A plain VStack of rows (NOT a `List`: a List has no natural height and its
+    /// fixed-height hack clipped the top rows), inside a bounded ScrollView so it
+    /// scrolls independently, plus a drag handle to resize it. Reordering uses the
+    /// same drag/drop the inspector sections use.
     var body: some View {
-        List {
+        VStack(spacing: 0) {
+            ScrollView(.vertical) {
+                rows
+                    .background(GeometryReader { proxy in
+                        Color.clear.preference(key: LayersContentHeightKey.self,
+                                               value: proxy.size.height)
+                    })
+            }
+            .frame(height: min(contentHeight, maxHeight))
+            .scrollBounceBehavior(.basedOnSize)
+            .onPreferenceChange(LayersContentHeightKey.self) { contentHeight = $0 }
+
+            resizeHandle
+        }
+    }
+
+    private var rows: some View {
+        VStack(spacing: 2) {
             ForEach(editorState.panelLayers) { layer in
                 row(layer)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                    .listRowBackground(Color.clear)
-            }
-            .onMove { source, destination in
-                editorState.moveLayers(visualSources: source, visualDestination: destination)
+                    .onDrag {
+                        draggingLayerID = layer.id
+                        return NSItemProvider(object: layer.id.uuidString as NSString)
+                    }
+                    .onDrop(of: [.text], delegate: LayerRowDropDelegate(
+                        target: layer.id, dragging: $draggingLayerID, editorState: editorState))
             }
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the
             // Background it frames). Not a real layer — no eye/lock/delete/
             // reorder; selecting it puts resize handles on the canvas boundary.
             canvasRow
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 2, leading: 8, bottom: 2, trailing: 8))
-                .listRowBackground(Color.clear)
-                .moveDisabled(true)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .scrollDisabled(true)
-        .frame(height: listHeight)
+        .padding(.horizontal, 8)
+        .padding(.bottom, 2)
         // Rows slide/fade on add, delete, duplicate, and reorder.
         .animation(.spring(duration: 0.25), value: editorState.panelLayers.map(\.id))
     }
 
-    /// Size the list to its rows so the whole panel scrolls as one column; cap
-    /// so a tall stack doesn't crowd out the inspectors below (it scrolls then).
-    private var listHeight: CGFloat {
-        let rows = max(1, editorState.panelLayers.count) + 1 // + the Canvas row
-        return min(CGFloat(rows) * 38 + 6, 320)
+    /// A grabber under the list — drag to resize the layer area's max height.
+    /// Only meaningful once the list is tall enough to scroll, but always shown
+    /// so the affordance is discoverable.
+    private var resizeHandle: some View {
+        Capsule()
+            .fill(.tertiary)
+            .frame(width: 32, height: 4)
+            .frame(maxWidth: .infinity)
+            .frame(height: 12)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+            }
+            .gesture(
+                // GLOBAL space: the handle moves as the area resizes, so a
+                // local-space translation would be measured against the moving
+                // handle and jiggle. Base off the ACTUAL frame height (not the
+                // stored max, which can exceed content) so it tracks the cursor
+                // 1:1 instead of needing a big pull to catch up.
+                DragGesture(coordinateSpace: .global)
+                    .onChanged { value in
+                        let currentFrame = min(contentHeight, maxHeight)
+                        let base = dragStartHeight ?? currentFrame
+                        if dragStartHeight == nil { dragStartHeight = currentFrame }
+                        maxHeight = min(Self.maxAllowedHeight,
+                                        max(Self.minHeight, base + value.translation.height))
+                    }
+                    .onEnded { _ in dragStartHeight = nil }
+            )
+            .help("Drag to resize the layers area")
     }
 
     private var canvasRow: some View {

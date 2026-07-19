@@ -58,17 +58,31 @@ struct AnnotationFillTests {
 
     @Test func stylesRememberFillPerShapeAndSeedNewContent() throws {
         var styles = AnnotationStyles()
-        #expect(styles.fillColorHex(forShape: .rectangle) == nil, "no fill by default")
+        // Rectangle/ellipse draw SOLID by default (fill = the shape color);
+        // stroke-only shapes have no interior fill (17.13).
+        #expect(styles.fillColorHex(forShape: .rectangle) == "#FF3B30", "boxes fill by default")
+        #expect(styles.fillColorHex(forShape: .ellipse) == "#FF3B30")
+        #expect(styles.fillColorHex(forShape: .arrow) == nil, "strokes have no fill")
 
         styles.setFillColorHex("#FFD60A", forShape: .rectangle)
         #expect(styles.content(for: .rectangle)?.fillColorHex == "#FFD60A")
-        #expect(styles.content(for: .ellipse)?.fillColorHex == nil, "fill is per-shape")
+        #expect(styles.content(for: .ellipse)?.fillColorHex == "#FF3B30", "fill is per-shape")
 
-        // Clearing works and it all survives Codable.
+        // Clearing to nil (outline-only) works and it all survives Codable.
         styles.setFillColorHex(nil, forShape: .rectangle)
         let decoded = try JSONDecoder().decode(AnnotationStyles.self,
                                                from: JSONEncoder().encode(styles))
         #expect(decoded == styles)
         #expect(decoded.fillColorHex(forShape: .rectangle) == nil)
+    }
+
+    @Test func toolKeyedFillMirrorsShapeFill() {
+        var styles = AnnotationStyles()
+        #expect(styles.fillColorHex(for: .rectangle) == "#FF3B30")
+        #expect(styles.fillColorHex(for: .arrow) == nil)
+        styles.setFillColorHex("#00FF00", for: .rectangle)
+        #expect(styles.fillColorHex(forShape: .rectangle) == "#00FF00")
+        // Non-annotation tools no-op / read nil.
+        #expect(styles.fillColorHex(for: .select) == nil)
     }
 }
