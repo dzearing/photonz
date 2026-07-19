@@ -102,7 +102,9 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard let editorState, editorState.hasUnsavedChanges else {
-            // Clean — defer to SwiftUI's own decision, if it has one.
+            // Clean — defer to SwiftUI's own decision, if it has one. (Returning
+            // focus to the app behind is handled in AppCoordinator's willClose
+            // observer, the one hook that fires for every close path.)
             return original?.windowShouldClose?(sender) ?? true
         }
         presentSaveConfirmation(on: sender)

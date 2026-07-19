@@ -294,7 +294,7 @@ struct EditorCommands: Commands {
         CommandGroup(after: .sidebar) {
             let hasDocument = editor?.document != nil
             Button((editor?.isLayersPanelVisible ?? false) ? "Hide Layers" : "Show Layers") {
-                editor?.isLayersPanelVisible.toggle()
+                if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
             }
             .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(!hasDocument)

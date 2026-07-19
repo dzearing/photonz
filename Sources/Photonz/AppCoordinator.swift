@@ -56,6 +56,25 @@ final class AppCoordinator {
     /// mid-session needs a relaunch to take effect).
     @ObservationIgnored private let welcome = WelcomeController()
 
+    /// One entry in the global focus history (`focusMRU`).
+    private enum FocusToken {
+        /// A non-Photonz app that came forward. Held strongly — the notification's
+        /// `NSRunningApplication` isn't retained anywhere we control, so a weak
+        /// ref would zero out before we could use it. Apps report `isTerminated`.
+        case app(NSRunningApplication)
+        /// A Photonz editor window that became main, keyed by window number.
+        case editorWindow(Int)
+    }
+
+    /// Most-recently-focused first: a merged history of non-Photonz app
+    /// activations and Photonz editor-window focuses. When an editor window
+    /// closes we consult the most-recent *remaining* entry to decide who gets
+    /// focus, so closing behaves like an ordinary window — it returns to the last
+    /// thing you were in, whether that's another Photonz window or another app.
+    /// (AppKit already promotes the next Photonz window on its own, so we only
+    /// step in when the front of the history is a different app.)
+    @ObservationIgnored private var focusMRU: [FocusToken] = []
+
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
     func start() {
@@ -77,12 +96,39 @@ final class AppCoordinator {
             self?.highlightedCaptureURL = nil
             self?.tooltip.hide()
         }
-        // When the last editor window closes, drop the Dock icon and return to a
-        // pure menu-bar agent. willClose fires before the window leaves
-        // NSApp.windows, so re-evaluate on the next runloop tick.
+        // Record every non-Photonz app that comes forward, most-recent-first.
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            MainActor.assumeIsolated {
+                guard let self, let app,
+                      app.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+                self.recordFocus(.app(app))
+            }
+        }
+        // Record every Photonz editor window that becomes main, most-recent-first.
         NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification, object: nil, queue: .main) { [weak self] _ in
-            DispatchQueue.main.async { self?.syncActivationPolicy() }
+            forName: NSWindow.didBecomeMainNotification, object: nil, queue: .main) { [weak self] note in
+            let win = note.object as? NSWindow
+            MainActor.assumeIsolated {
+                guard let self, let win, Self.isEditorWindow(win) else { return }
+                self.recordFocus(.editorWindow(win.windowNumber))
+            }
+        }
+        // On editor-window close: hand focus to the most-recently-used thing that
+        // remains (another Photonz window or another app), so closing behaves
+        // like an ordinary window. Then re-evaluate the Dock-icon policy once the
+        // window has left the list. willClose fires before it leaves, so the
+        // policy step is deferred a tick; the focus step must NOT be — a deferred
+        // yield lands a frame after AppKit promotes a sibling, flashing it forward.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main) { [weak self] note in
+            let win = note.object as? NSWindow
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let win, Self.isEditorWindow(win) { self.editorWindowWillClose(win) }
+                DispatchQueue.main.async { MainActor.assumeIsolated { self.syncActivationPolicy() } }
+            }
         }
         capture.start()
         // First-run walkthrough: guide the user through the one-time macOS
@@ -432,6 +478,42 @@ final class AppCoordinator {
         }
         let desired: NSApplication.ActivationPolicy = hasEditorWindow ? .regular : .accessory
         if NSApp.activationPolicy() != desired { NSApp.setActivationPolicy(desired) }
+    }
+
+    /// An editor window (titled, non-panel — image or video editor), as opposed
+    /// to the app's panels (history overlay, pinned, tooltip, toast, welcome).
+    private static func isEditorWindow(_ window: NSWindow) -> Bool {
+        !(window is NSPanel) && window.styleMask.contains(.titled)
+    }
+
+    /// Push a freshly focused app/window to the front of the focus history,
+    /// de-duping any earlier entry for the same thing and dropping dead apps.
+    private func recordFocus(_ token: FocusToken) {
+        focusMRU.removeAll { existing in
+            switch (existing, token) {
+            case let (.app(a), .app(b)): return a.processIdentifier == b.processIdentifier
+            case let (.editorWindow(a), .editorWindow(b)): return a == b
+            default: return false
+            }
+        }
+        focusMRU.removeAll { if case .app(let a) = $0 { return a.isTerminated } else { return false } }
+        focusMRU.insert(token, at: 0)
+        if focusMRU.count > 32 { focusMRU.removeLast(focusMRU.count - 32) }
+    }
+
+    /// An editor window is closing: give focus to the most-recently-used thing
+    /// that remains, so closing behaves like an ordinary window. If that's
+    /// another app, activate it now (synchronously — a deferred activation lands
+    /// a frame after AppKit reveals a sibling window, flashing it forward). If
+    /// it's another Photonz window (or nothing), do nothing: AppKit already
+    /// promotes the next window, which is exactly what we want.
+    private func editorWindowWillClose(_ window: NSWindow) {
+        let closing = window.windowNumber
+        focusMRU.removeAll { if case .editorWindow(let n) = $0 { return n == closing } else { return false } }
+        focusMRU.removeAll { if case .app(let a) = $0 { return a.isTerminated } else { return false } }
+        if case .app(let app)? = focusMRU.first {
+            app.activate()
+        }
     }
 
     /// Menu "New Window": a brand-new empty document in its own window.
