@@ -935,3 +935,16 @@ Left to hand-verify interactively (Screen Recording isn't granted to the agent
 process, so no pixel capture): the keyboard outline/nav feel, filter switching,
 the idle "last taken" caption, and the GIF progress toast during a real Copy GIF.
 Dev build launched for the user to check.
+
+## 2026-07-18 — Release v0.10.0
+
+Released **v0.10.0** (history-overlay polish). Preflight green (703 tests, DMG
+built locally). Stamped VERSION / CHANGELOG / site/version.json, committed
+`release: v0.10.0`, tagged, pushed. Release and Deploy site workflows both
+green. Verified: `Photonz.dmg` attached to the release, latest-download redirect
+ends HTTP 200, and https://dzearing.github.io/photonz/version.json reports 0.10.0.
+
+User-visible in this release: history overlay equal insets (wider), keyboard
+arrow selection with focus outline, idle "last taken" relative-time caption,
+All/Screenshots/Videos segmented filter, and a GIF-prep progress toast in the
+bottom-right stack.
