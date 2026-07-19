@@ -98,6 +98,7 @@ struct CanvasView: NSViewRepresentable {
     let onFillAt: (CGPoint, UUID?, Bool) -> Void
     let onFillSelected: (Bool) -> Void
     let onClearBackground: () -> Void
+    let onWindowChange: (NSWindow?) -> Void
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -155,6 +156,7 @@ struct CanvasView: NSViewRepresentable {
         view.onFillAt = onFillAt
         view.onFillSelected = onFillSelected
         view.onClearBackground = onClearBackground
+        view.onWindowChange = onWindowChange
     }
 }
 
@@ -206,6 +208,9 @@ final class CanvasNSView: NSView {
     var onFillSelected: ((Bool) -> Void) = { _ in }
     /// ⌫ with the locked Background selected — reset it to the bg fill color.
     var onClearBackground: (() -> Void) = {}
+    /// The canvas landed in (or left) a window — the reliable moment to size the
+    /// window to a just-opened image (mirrors the video preview's hook).
+    var onWindowChange: ((NSWindow?) -> Void) = { _ in }
 
     private let contentLayer = CALayer()
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
@@ -710,6 +715,11 @@ final class CanvasNSView: NSView {
         sender.draggingPasteboard.readObjects(
             forClasses: [NSURL.self],
             options: [.urlReadingFileURLsOnly: true])?.first as? URL
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        onWindowChange(window)
     }
 
     override func layout() {

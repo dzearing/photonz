@@ -28,8 +28,47 @@ final class EditorState {
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
-    var isLayersPanelVisible = true
+    /// Live inspector visibility. The view drives this from BOTH the user's
+    /// show/hide and the width-based auto-collapse, so it is transient — the
+    /// persisted *preference* that survives relaunch (and feeds window sizing)
+    /// is `inspectorPreferredVisible`, written only on an explicit toggle.
+    var isLayersPanelVisible = EditorState.inspectorPreferredVisibleDefault
     var isExportDialogPresented = false
+
+    /// The user's persisted show/hide preference for the docked inspector.
+    /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,
+    /// so `sizeWindowToImage()` can reserve the pane's width for a fresh window
+    /// even before layout has decided whether the pane is currently shown.
+    var inspectorPreferredVisible = EditorState.inspectorPreferredVisibleDefault {
+        didSet { UserDefaults.standard.set(inspectorPreferredVisible, forKey: Self.inspectorVisibleKey) }
+    }
+
+    // MARK: Persisted inspector state (shared with EditorView's @AppStorage)
+
+    static let inspectorVisibleKey = "inspector.visible"
+    static let inspectorWidthKey = "inspector.width"
+    /// Default matches EditorView's `@AppStorage("inspector.width")` seed.
+    static let inspectorWidthDefault: CGFloat = 264
+    /// A 1pt resize-handle border sits to the left of the panel content, so the
+    /// pane occupies `width + 1` in the window (mirrors EditorView's layout).
+    static let inspectorHandleWidth: CGFloat = 1
+
+    static var inspectorPreferredVisibleDefault: Bool {
+        UserDefaults.standard.object(forKey: inspectorVisibleKey) as? Bool ?? true
+    }
+    /// The persisted docked-inspector width, in points.
+    static var persistedInspectorWidth: CGFloat {
+        (UserDefaults.standard.object(forKey: inspectorWidthKey) as? Double).map { CGFloat($0) }
+            ?? inspectorWidthDefault
+    }
+
+    /// Explicit user show/hide of the inspector (menu or in-window toggle):
+    /// updates the live visibility AND persists the preference. Auto-collapse
+    /// must NOT route through here — it only mutates `isLayersPanelVisible`.
+    func setInspectorVisible(_ visible: Bool) {
+        isLayersPanelVisible = visible
+        inspectorPreferredVisible = visible
+    }
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -313,6 +352,106 @@ final class EditorState {
         thumbnailCache = [:]
         dragPreviewGeneration += 1
         rerender()
+        // Size the window to the image (100% when it fits, reduced only when a
+        // maxed window can't). The `.fit` above is the fallback for when there
+        // is no host window yet — the real sizing runs once one is available.
+        needsOpenSizing = true
+        sizeWindowToImageIfReady()
+    }
+
+    // MARK: - Fit window to image on open
+
+    /// True from `installDocument` until the window has been sized to the image.
+    @ObservationIgnored private var needsOpenSizing = false
+    /// The display scale the open-sizing settled on, waiting to be applied to
+    /// the viewport once the resulting canvas view size is known.
+    @ObservationIgnored private var pendingOpenScale: CGFloat?
+
+    /// Called when the canvas view lands in (or leaves) a window. Adopts the
+    /// window and, for a just-opened document, hides it until it's been sized so
+    /// it appears fully formed instead of snapping from SwiftUI's default size.
+    func canvasDidMoveToWindow(_ window: NSWindow?) {
+        if let window {
+            hostWindow = window
+            // A fresh mount during an open: hide until sized (a re-open into an
+            // already-visible window never reaches here — the canvas doesn't
+            // remount — so it animates its resize instead).
+            if needsOpenSizing {
+                window.alphaValue = 0
+                scheduleOpenRevealSafetyNet(for: window)
+            }
+        }
+        sizeWindowToImageIfReady()
+    }
+
+    /// Grow/shrink the host window to the just-opened image and record the zoom
+    /// to apply once the canvas is laid out. No-op until a window + screen exist.
+    private func sizeWindowToImageIfReady() {
+        guard needsOpenSizing, let document,
+              let window = hostWindow,
+              let screen = window.screen ?? NSScreen.main else { return }
+        needsOpenSizing = false
+
+        let pixelScale = max(1, document.pixelScale)
+        let imagePointSize = CGSize(width: document.canvasSize.width / pixelScale,
+                                    height: document.canvasSize.height / pixelScale)
+        let paneWidth = inspectorPreferredVisible
+            ? Self.persistedInspectorWidth + Self.inspectorHandleWidth : 0
+
+        // Usable window CONTENT area = the screen's visible frame minus this
+        // window's chrome (title bar etc.). With a hidden title bar that's ~0,
+        // but compute it so the math is correct on any window style.
+        let frame = window.frame
+        let content = window.contentRect(forFrameRect: frame)
+        let chrome = CGSize(width: frame.width - content.width,
+                            height: frame.height - content.height)
+        let visible = screen.visibleFrame
+        let maxContent = CGSize(width: max(1, visible.width - chrome.width),
+                                height: max(1, visible.height - chrome.height))
+
+        // Floor: the window won't go below its own enforced content minimum —
+        // which is the SwiftUI `.frame(minWidth:minHeight:)` plus the hidden
+        // title bar's band — so target that, not a smaller ideal the OS ignores.
+        let minContent = CGSize(
+            width: max(EditorChromeLayout.minWindowWidth, window.contentMinSize.width),
+            height: max(EditorChromeLayout.minWindowHeight, window.contentMinSize.height))
+
+        let plan = EditorWindowFit.plan(
+            imagePointSize: imagePointSize,
+            sidePaneWidth: paneWidth,
+            maxContentSize: maxContent,
+            minContentSize: minContent)
+        pendingOpenScale = plan.imageScale
+
+        // Content → frame, top-left anchored (windows grow down/right), clamped
+        // back inside the visible frame.
+        let frameSize = CGSize(width: plan.contentSize.width + chrome.width,
+                               height: plan.contentSize.height + chrome.height)
+        var origin = CGPoint(x: frame.minX, y: frame.maxY - frameSize.height)
+        origin.x = min(max(origin.x, visible.minX), visible.maxX - frameSize.width)
+        origin.y = min(max(origin.y, visible.minY), visible.maxY - frameSize.height)
+        let target = CGRect(origin: origin, size: frameSize)
+
+        // Snap while hidden (fresh window); animate a resize of a visible window
+        // (opening another image into an existing one).
+        let animate = window.isVisible && window.alphaValue >= 1
+        window.setFrame(target, display: true, animate: animate)
+    }
+
+    /// Backstop: if the window is still hidden a beat after an open (canvas never
+    /// reported a size, empty clipboard, …), reveal it anyway so it can't get
+    /// stuck invisible.
+    private func scheduleOpenRevealSafetyNet(for window: NSWindow) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak window] in
+            guard let window, window.alphaValue < 1 else { return }
+            window.alphaValue = 1
+        }
+    }
+
+    /// Reveal the host window once the open-sizing zoom has been applied.
+    private func revealHostWindowIfHidden() {
+        guard let window = hostWindow, window.alphaValue < 1 else { return }
+        window.alphaValue = 1
     }
 
     // MARK: - Save / open packages
@@ -424,6 +563,17 @@ final class EditorState {
         let hadNoSize = canvasViewSize == .zero
         canvasViewSize = size
         guard let current = viewport else { return }
+        // The window was just sized to the image on open: adopt the planned
+        // zoom (100%, or reduced) centered in the now-known canvas, then reveal
+        // the (until-now hidden) window fully formed.
+        if let scale = pendingOpenScale, let document, size.width > 0, size.height > 0 {
+            pendingOpenScale = nil
+            let zoom = scale / max(1, document.pixelScale)
+            viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
+                                zoom: zoom, origin: .zero).clamped()
+            revealHostWindowIfHidden()
+            return
+        }
         // The first real layout after opening re-fits; later resizes keep the
         // user's framing (center-preserving).
         viewport = hadNoSize

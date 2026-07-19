@@ -1184,3 +1184,67 @@ color control with per-tool memory + Fill/Border toggles, solid shapes by defaul
 sticky drawing tools, Retina-aware zoom (DPI embed/read). Preflight green (712 tests,
 DMG builds). Release + Deploy site workflows both green. Verified: release asset
 Photonz.dmg present, latest DMG redirect -> 200, site version.json reports 0.11.0.
+
+### 2026-07-19 (cont.) — Fit editor window to image on open (17.16)
+
+Opening a capture now sizes the window to the image on a strict priority: prefer
+100%; if the image at 100% fits the usable screen, grow the window to exactly
+image + side-pane + ~100px padding per canvas edge at 100%; only when even a maxed
+window can't hold 100%, max out and reduce the zoom to fit with ~100px per side.
+The side pane's expanded/collapsed + width persist across sessions and feed the
+sizing math.
+
+- **Core (TDD, 11 tests):** `Sources/PhotonzCore/EditorWindowFit.swift` — pure
+  `EditorWindowFit.plan(imagePointSize:sidePaneWidth:maxContentSize:minContentSize:
+  padding=100) -> Plan{contentSize, imageScale}`. Steps 2 & 3 unified: if the
+  image at 100% + padding (+ pane on width) fits the max → scale 1, window hugs
+  it; else scale to fit the maxed canvas and the window hugs the *reduced* image
+  on both axes (binding axis lands on max, the other stays tight — so a wide-short
+  image doesn't force a full-height window), floored at minContent. All in points
+  (pixels ÷ pixelScale); caller maps scale → viewport zoom = scale/pixelScale.
+- **Glue (thin, `Sources/Photonz`):** `EditorState.sizeWindowToImageIfReady()`
+  builds maxContent = `screen.visibleFrame − window chrome`, minContent =
+  `window.contentMinSize` (the SwiftUI `.frame` min + the hidden-title-bar 32pt
+  band — needed so the OS doesn't silently clamp wide-short windows), sets the
+  frame top-left-anchored + clamped on-screen, and stashes the zoom;
+  `canvasViewSizeChanged` applies it centered once the real canvas size is known,
+  then reveals the window. Fresh windows are held at `alphaValue 0` via a new
+  `CanvasNSView.viewDidMoveToWindow → onWindowChange` hook until sized (no bounce;
+  0.35s safety-net reveal); re-opening into a visible window animates the resize.
+- **Persistence:** added `inspectorPreferredVisible` (UserDefaults
+  `inspector.visible`, default true) DISTINCT from the transient
+  `isLayersPanelVisible` (the view also drives that from width auto-collapse);
+  explicit menu / in-window toggles route through `EditorState.setInspectorVisible`
+  which writes both. Width was already `@AppStorage("inspector.width")`. Dev/release
+  get separate defaults via distinct bundle ids, so no key suffixing.
+- **Verified in the real app** (CGWindowList bounds; TCC blocks screenshots here),
+  1728×1028 visible frame: small 400×300 → 851×500 @100% with pane, or 600×500 when
+  the persisted pref is collapsed (proves persisted state feeds sizing); large
+  6000×4000 → 1693×1028 (height maxed, width hugs, zoom 20.7%); wide 5000×300 →
+  1728×432 (width maxed, height at floor, zoom 25.5%, not full-height). 722 tests
+  green (+11).
+
+Next: user to verify the open-time feel live (animation smoothness / no flash).
+
+### 2026-07-19 (cont.) — Editor window open-fit polish + close-focus behavior (17.16/17.17)
+
+Two UX fixes on top of the fit-to-image work, both verified live by the user:
+
+- **Inspector no longer animates in on open.** The show/hide spring is gated off
+  until one runloop after the first document loads (`EditorView
+  .inspectorAnimationEnabled`), so the pane is just *there* (or collapsed) when a
+  window opens — no slide-in slowing the entrance. Later toggles / width
+  auto-collapse still spring.
+- **Closing an editor window behaves like an ordinary window (17.17).** It no
+  longer force-focuses another Photonz window; it returns focus to the
+  most-recently-used thing — another editor window *or* another app. Implemented
+  as a global focus MRU in `AppCoordinator`: `FocusToken.app` (non-Photonz
+  activations, held strongly — a weak ref deallocated before we could use it) +
+  `FocusToken.editorWindow(windowNumber)` (editor windows becoming main). On the
+  `willCloseNotification` (the one hook that fires for every close path — SwiftUI
+  closes clean windows via `NSWindow.close()`, which skips `windowShouldClose`),
+  drop the closing window and look at the most-recent remaining entry: if it's an
+  app, `activate()` it synchronously (same tick, so it beats AppKit's sibling
+  promotion → no flash); if it's another editor window (or nothing), do nothing
+  and let AppKit promote the next window. Swift 6 clean (`MainActor
+  .assumeIsolated` around the main-queue observer bodies). 722 tests green.

@@ -25,6 +25,10 @@ struct EditorView: View {
     /// user). Lets us restore the user's shown/hidden preference when the window
     /// grows back above the threshold, instead of clobbering it permanently.
     @State private var inspectorAutoHidden = false
+    /// False until the document has first appeared, so the inspector pane doesn't
+    /// slide in on open (it should just be there, or not). Armed one runloop
+    /// after the first document load; user toggles / auto-collapse animate after.
+    @State private var inspectorAnimationEnabled = false
     /// How many leading tools the floating toolbar currently shows; the rest sit
     /// in the "…" overflow menu. Driven by the measured-fit loop below.
     @State private var toolbarVisibleCount = ToolbarSlot.allCases.count
@@ -97,12 +101,24 @@ struct EditorView: View {
                     .transition(.move(edge: .trailing))
                 }
             }
-            .animation(.spring(duration: 0.3), value: inspectorShown)
+            // Animate show/hide only AFTER the first appearance: on open the pane
+            // should just be there (or not), instantly — animating it in slows
+            // the window's entrance. Later user toggles / auto-collapse animate.
+            .animation(inspectorAnimationEnabled ? .spring(duration: 0.3) : nil,
+                       value: inspectorShown)
             // Auto-collapse the inspector below the width threshold, and restore
             // the user's preference when the window grows back. Runs on the
             // initial size too, so opening small starts collapsed.
             .onChange(of: geo.size.width, initial: true) { _, width in
                 updateInspectorAutoCollapse(width: width)
+            }
+            // Arm the show/hide animation one runloop after the document first
+            // loads (the same pass that inserts the pane at its opening state),
+            // so that first insertion is instant but every change thereafter
+            // springs.
+            .onChange(of: editorState.document != nil, initial: true) { _, hasDoc in
+                guard hasDoc, !inspectorAnimationEnabled else { return }
+                DispatchQueue.main.async { inspectorAnimationEnabled = true }
             }
             // Keep the toolbar's fit budget current as the window / panel changes.
             .onChange(of: canvasWidth, initial: true) { _, width in
@@ -212,7 +228,8 @@ struct EditorView: View {
                            editorState.fillLayer(at: point, hit: hit, useBackground: useBackground)
                        },
                        onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
-                       onClearBackground: { editorState.clearBackgroundLayer() })
+                       onClearBackground: { editorState.clearBackgroundLayer() },
+                       onWindowChange: { editorState.canvasDidMoveToWindow($0) })
         } else {
             emptyState
         }
@@ -437,10 +454,10 @@ struct EditorView: View {
     private func inspectorToggle(isShown: Bool) -> some View {
         Button {
             if isShown {
-                editorState.isLayersPanelVisible = false
+                editorState.setInspectorVisible(false)
                 inspectorAutoHidden = false
             } else {
-                editorState.isLayersPanelVisible = true
+                editorState.setInspectorVisible(true)
                 inspectorAutoHidden = false // user override beats auto-collapse
             }
         } label: {
