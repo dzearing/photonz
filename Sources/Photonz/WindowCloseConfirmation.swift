@@ -9,22 +9,41 @@ import SwiftUI
 struct WindowCloseGuard: NSViewRepresentable {
     let editorState: EditorState
 
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        // The window exists only after the view lands in the hierarchy.
-        DispatchQueue.main.async { [weak editorState] in
-            guard let editorState, let window = view.window,
-                  editorState.hostWindow !== window else { return }
-            editorState.hostWindow = window
-            let proxy = CloseGuardDelegate(original: window.delegate, editorState: editorState)
-            objc_setAssociatedObject(window, &CloseGuardDelegate.associationKey,
-                                     proxy, .OBJC_ASSOCIATION_RETAIN)
-            window.delegate = proxy
-        }
+    func makeNSView(context: Context) -> InstallerView {
+        let view = InstallerView()
+        view.editorState = editorState
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ nsView: InstallerView, context: Context) {
+        nsView.editorState = editorState
+    }
+
+    /// Installs the guard whenever the view lands in a window. Keyed on the
+    /// window's associated proxy — NOT on `editorState.hostWindow`, which the
+    /// fit-window-on-open path (`canvasDidMoveToWindow`) also sets, and usually
+    /// sets first. Using it as the "already installed" marker silently disabled
+    /// the guard entirely (the v0.12.0 silent-discard regression).
+    final class InstallerView: NSView {
+        weak var editorState: EditorState?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let window else { return }
+            // Deferred a tick so SwiftUI's own window delegate is in place
+            // first — the proxy must capture it to keep scene teardown working.
+            DispatchQueue.main.async { [weak self, weak window] in
+                guard let editorState = self?.editorState, let window,
+                      objc_getAssociatedObject(window, &CloseGuardDelegate.associationKey) == nil
+                else { return }
+                editorState.hostWindow = window
+                let proxy = CloseGuardDelegate(original: window.delegate, editorState: editorState)
+                objc_setAssociatedObject(window, &CloseGuardDelegate.associationKey,
+                                         proxy, .OBJC_ASSOCIATION_RETAIN)
+                window.delegate = proxy
+            }
+        }
+    }
 }
 
 /// App-termination support: quitting must offer the same protection as

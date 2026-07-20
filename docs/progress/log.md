@@ -1391,3 +1391,23 @@ pixels, 2× on Retina"). Updated MeasureTests ("100 pt"→"100 px") and MeasureR
 fixture ("200 pt"→"200 px"). NOTE: layer-style edit fields (blur/corner/border/stroke/shadow) still
 show "pt" — separate from measurement units; left as-is pending a decision. 721 tests green;
 rebuilt + relaunched.
+
+### 2026-07-19 (cont.) — Silent-discard regression: close guard never installed
+
+BUG (reproduced headlessly with a temp env-guarded self-test before touching anything): open a
+capture from history, draw a line, close the window — no save prompt, edits gone. Every editor
+window logged delegate=SwiftUI.AppKitWindowController and guarded=false: the CloseGuardDelegate
+proxy from aa8f3cc was never installed. ROOT CAUSE: WindowCloseGuard.makeNSView used
+`editorState.hostWindow !== window` as its "already installed" sentinel, but 17.16's fit-window
+path (EditorState.canvasDidMoveToWindow) now also sets hostWindow — and runs first — so the
+install bailed on every window. The whole close/quit protection was silently dead in v0.12.0.
+
+FIX: WindowCloseGuard now installs from a real NSView subclass's viewDidMoveToWindow (no
+one-shot async race) and keys idempotence on the window's associated proxy object, not
+hostWindow. Dirty decision extracted to PhotonzCore/ClosePrompt.needsSavePrompt(current:
+savedBaseline:) (TDD, 6 tests) and EditorState.hasUnsavedChanges delegates to it. VERIFIED in
+the running app via the self-test (removed after): sheet appears on close; Save → capture PNG
+replaced + .photonz sidecar written, window closes, reopening shows the drawn line (2 layers);
+Don't Save → closes, file untouched; Cancel → window stays open. Video editor checked: trim/crop
+auto-persist to the .photonzedits sidecar on every edit, so it has no silent-discard problem —
+no prompt needed there. 745 tests green.

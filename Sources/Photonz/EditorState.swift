@@ -281,8 +281,7 @@ final class EditorState {
 
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool {
-        guard let document else { return false }
-        return document != savedDocument
+        ClosePrompt.needsSavePrompt(current: document, savedBaseline: savedDocument)
     }
 
     /// The document was persisted somewhere the user considers safe (package
