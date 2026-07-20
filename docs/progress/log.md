@@ -2,6 +2,12 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-07-19 — Release v0.12.0
+
+Cut **v0.12.0** via the release skill. Preflight green (739 tests, `build-app.sh --dmg` clean). Stamped VERSION/CHANGELOG/`site/version.json`, committed `275ab37`, tagged `v0.12.0`, pushed. Release + Deploy site + CI workflows all green. Verified end-to-end: `gh release view v0.12.0` shows `Photonz.dmg`; `releases/latest/download/Photonz.dmg` returns HTTP 200; `dzearing.github.io/photonz/version.json` reports 0.12.0.
+
+User-visible in this release (commits `20fadd7..a442ff3`): fit-window-to-image on open + persisted inspector width/visibility; MRU window-close focus (no force-raise of other Photonz windows); Rasterize Layer (right-click bake to pixels, undoable); load layer pixels as a selection (⌘-click / Select Pixels); border-only rectangle live preview fix; corner-resize keeps border crisp + opposite corner pinned; measure readouts default to logical px with a Logical/Actual toggle.
+
 ## 2026-06-28 (pm) — Phase 16.1–16.3 built + user-verified; measure/ruler tool shipped; capture window-raise bug fixed
 
 Long interactive session building the measure/ruler tool with the user. **502 tests green.** Commits `af34f1c..328bf04` on `main`.
