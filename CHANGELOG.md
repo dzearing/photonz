@@ -2,6 +2,22 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.12.0 — 2026-07-19
+
+**Windows open at the right size.** Opening a capture now sizes the window to the image. It shows at 100% whenever it fits, growing the window to give the canvas room to breathe, and only reduces the zoom when even a full-screen window can't hold the whole image at 100%. Your inspector panel's width and whether it's open carry over between sessions and factor into the sizing.
+
+**Closing a window returns you where you were.** Closing an editor window now hands focus back to whatever you were using last, the way any normal window does, instead of pulling another Photonz window forward.
+
+**Rasterize a layer.** Right-click a shape or annotation to bake it into a plain pixel layer in one step, effects and all. Undo brings the editable version right back.
+
+**Load a layer as a selection.** Command-click a layer row, or use "Select Pixels," to turn the layer's shape into a selection you can work with.
+
+**Outline shapes preview as you draw.** A rectangle with just a border now shows up while you're drawing it, instead of looking empty until you let go.
+
+**Crisp borders while resizing.** Dragging a shape's corner now keeps its border at the right thickness and holds the opposite corner in place, instead of stretching until you release the mouse.
+
+**Measurements read in logical pixels.** Measure readouts now default to logical pixels, so a Retina screenshot no longer reads at twice its size. A toggle switches to actual device pixels when you want them.
+
 ## 0.11.0 — 2026-07-19
 
 **The editor works at any window size.** The floating toolbar now tucks its overflow into a "…" menu when space runs short, and it floats over the canvas instead of pushing the inspector off-screen. The inspector collapses on its own when the window gets narrow, with a toggle to bring it back, and the window has a sensible minimum size so nothing gets squeezed into an unusable state.
