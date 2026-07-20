@@ -121,7 +121,7 @@ struct MeasureRenderingTests {
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
                            mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
             size: CGSize(width: 240, height: 120), pixelScale: 1)!
-        let text = TextContent(string: "200 pt", fontName: "SF Pro",
+        let text = TextContent(string: "200 px", fontName: "SF Pro",
                                fontSize: MeasureContent.labelFontSize, colorHex: "#FFFFFF")
         let textImg = TextRasterizer.rasterize(text, size: TextRasterizer.naturalSize(text))!
 

@@ -493,12 +493,21 @@ struct LayersListView: View {
             }
         }
         .contentShape(Rectangle())
+        // ⌘-click loads the layer's opaque pixels as a selection (Photoshop's
+        // load-transparency); a plain click just selects the layer.
+        .highPriorityGesture(
+            TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: layer.id) }
+        )
         .onTapGesture { editorState.selectLayer(layer.id) }
         .contextMenu {
             Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
                 .keyboardShortcut("d", modifiers: .command)
+            Button("Select Pixels") { editorState.selectLayerPixels(id: layer.id) }
             Button("Merge Down") { editorState.mergeDown(id: layer.id) }
                 .keyboardShortcut("e", modifiers: .command)
+            if layer.isRasterizable {
+                Button("Rasterize Layer") { editorState.rasterizeLayer(id: layer.id) }
+            }
             Divider()
             Button("Bring to Front") { editorState.bringLayerToFront(id: layer.id) }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
@@ -951,10 +960,14 @@ struct MeasureInspector: View {
                     Picker("Unit", selection: Binding(
                         get: { c.unit },
                         set: { editorState.setMeasureUnit($0) })) {
-                        Text("Pixels").tag(MeasureUnit.pixels)
-                        Text("Points").tag(MeasureUnit.points)
+                        // "Logical" = on-screen/design size (points); "Actual" =
+                        // raw bitmap pixels (2× on a Retina screenshot).
+                        Text("Logical").tag(MeasureUnit.points)
+                        Text("Actual").tag(MeasureUnit.pixels)
                     }
                     .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                    .help("Both read out in px. Logical is the on-screen size (like CSS px, the "
+                          + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
                 }
                 field("Thickness") {
                     Picker("Thickness", selection: Binding(

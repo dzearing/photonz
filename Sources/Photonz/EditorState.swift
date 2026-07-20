@@ -110,8 +110,11 @@ final class EditorState {
     /// In-memory default for now; start/end are ignored (set per drag).
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
+    // Default to LOGICAL points, not raw bitmap pixels: redlining a UI expects
+    // on-screen (design) sizes, and a 2× Retina screenshot's raw pixels read
+    // double that. Actual pixels stay one toggle away in the measure inspector.
     private(set) var measureStyle = MeasureContent(mode: .vertical, strokeWidth: 1, colorHex: "#FF3B30",
-                                                   showLabel: true, unit: .pixels, form: .bracket)
+                                                   showLabel: true, unit: .points, form: .bracket)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -630,6 +633,18 @@ final class EditorState {
         }
     }
 
+    /// ⌘-click a layer row: load its opaque pixels as a selection (Photoshop's
+    /// "load layer transparency"). The shape's silhouette becomes a pixel-region
+    /// selection so fill/copy/delete/promote target it; the layer stays selected.
+    /// No-op (leaving any existing selection) when the layer draws nothing opaque.
+    func selectLayerPixels(id: UUID) {
+        guard let document, document.layer(id: id) != nil else { return }
+        selectedLayerID = id
+        guard let path = previewRenderer.layerSelectionPath(for: id, in: document, store: store),
+              let region = SelectionRegion(path: path) else { return }
+        setSelection(region, captureLayers: false)
+    }
+
     /// Whether a layer is part of the current selection — the primary single
     /// selection or the marquee multi-selection.
     func isLayerSelected(_ id: UUID) -> Bool {
@@ -959,6 +974,16 @@ final class EditorState {
     /// FG/BG swatch is now only the fill/bucket paint pair.
     var activeAnnotationContent: AnnotationContent? {
         annotationStyles.content(for: activeTool)
+    }
+
+    /// The non-destructive style a freshly drawn shape inherits (border, corner
+    /// radius, shadow…). The live draw preview needs it because a shape's visible
+    /// outline can live in the LAYER border (rectangles: strokeWidth 0 + a border
+    /// width) rather than the annotation's own stroke — without it the draft looks
+    /// empty until commit. Nil for non-shape tools.
+    var activeAnnotationStyle: LayerStyle? {
+        guard let shape = activeTool.annotationShape else { return nil }
+        return annotationStyles.layerStyle(forShape: shape)
     }
 
     /// The selected annotation layer when the select tool is active — the
@@ -1999,6 +2024,50 @@ final class EditorState {
             doc.addLayer(merged, at: insertAt)
         }
         selectedLayerID = merged.id
+    }
+
+    // MARK: - Rasterize (vector shape → pixels)
+
+    /// Whether "Rasterize Layer" applies to the given layer (menu enablement).
+    func canRasterizeLayer(id: UUID) -> Bool {
+        document?.layer(id: id)?.isRasterizable ?? false
+    }
+
+    /// Bakes a vector shape/annotation layer into pixels in one undo step: the
+    /// shape is rendered WITH all its style effects (blur, shadow, border, corner
+    /// radius, opacity) and geometry (crop, transform) into a bitmap covering its
+    /// padded on-canvas footprint, that bitmap is stored, and the layer's content
+    /// becomes `.image` with its now-baked style reset. Looks pixel-identical;
+    /// undo restores the editable vector shape. The layer keeps its slot/name/id.
+    func rasterizeLayer(id: UUID) {
+        guard let document, let layer = document.layer(id: id), layer.isRasterizable else { return }
+
+        // The baked bitmap covers everything the layer can draw: its transformed
+        // bounds padded by the style's reach (shadow/blur), clamped to canvas —
+        // exactly how merge-down sizes its result, so nothing is clipped.
+        var bounds = layer.frame
+        if !layer.transform.isIdentity {
+            let corners = layer.transformedCorners
+            if let first = corners.first {
+                bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
+                    $0.union(CGRect(origin: $1, size: .zero))
+                }
+            }
+        }
+        let pad = layer.style.previewPadding
+        let region = Geometry.clampCrop(bounds.insetBy(dx: -pad, dy: -pad), toCanvas: document.canvasSize)
+        guard region.width >= 1, region.height >= 1 else { return }
+
+        // Composite ONLY this layer (over transparency) so nothing below leaks in.
+        var temp = document
+        var only = layer
+        only.isVisible = true
+        temp.layers = [only]
+        guard let raster = previewRenderer.rasterize(region: region, of: temp, store: store) else { return }
+        let ref = store.register(raster)
+        discardDragPreview()
+        perform { $0.rasterizeLayer(id: id, rasterized: ref, frame: region) }
+        selectedLayerID = id
     }
 
     // MARK: - Restacking (Photoshop ⌘] ⌘[ ⌘⇧] ⌘⇧[)

@@ -161,6 +161,27 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         return (blur, focus)
     }
 
+    /// Bakes a vector layer into pixels ("Rasterize Layer"). The caller renders
+    /// the layer WITH all its style effects (blur, shadow, border, corner radius,
+    /// opacity) and geometry (crop, transform) into `ref`, covering the padded
+    /// on-canvas `frame`, then hands both here. This swaps the layer's content to
+    /// the bitmap and resets the now-baked style/crop/transform to their defaults
+    /// so nothing is applied twice, while keeping the layer's identity, name,
+    /// stacking slot, visibility, and lock. Blend mode is the one exception: it
+    /// composites against the layers BELOW, which an isolated bitmap can't bake,
+    /// so the layer's effective blend mode is carried onto the image layer (a
+    /// rasterized highlight keeps multiplying). Undo restores the vector layer.
+    public mutating func rasterizeLayer(id: UUID, rasterized ref: ImageRef, frame: CGRect) {
+        updateLayer(id: id) { layer in
+            let blend = layer.effectiveBlendMode
+            layer.content = .image(ref)
+            layer.frame = frame
+            layer.crop = nil
+            layer.transform = .identity
+            layer.style = LayerStyle(blendMode: blend)
+        }
+    }
+
     // MARK: - Canvas operations
 
     /// Crops the whole document. Layer frames are re-expressed relative to the

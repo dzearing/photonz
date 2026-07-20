@@ -179,6 +179,7 @@ struct EditorView: View {
                        dragPreview: editorState.dragPreview,
                        tool: editorState.activeTool,
                        annotationContent: editorState.activeAnnotationContent,
+                       annotationStyle: editorState.activeAnnotationStyle,
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyle,
                        edgeMap: editorState.snappingEdgeMap,

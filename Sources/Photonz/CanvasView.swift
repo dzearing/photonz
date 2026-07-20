@@ -42,6 +42,11 @@ struct CanvasView: NSViewRepresentable {
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
+    /// The non-destructive style a freshly drawn shape inherits (border, corner
+    /// radius…). The live preview needs it because a shape's visible outline can
+    /// live in the LAYER border (rectangles) instead of the annotation's own
+    /// stroke — without it, an outline-only rectangle draft looks empty.
+    let annotationStyle: LayerStyle?
     /// Current text style (string empty); the inline editor mirrors it so the
     /// draft matches what commit will rasterize.
     let textContent: TextContent?
@@ -114,7 +119,8 @@ struct CanvasView: NSViewRepresentable {
                    cropBounds: cropBounds, selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame,
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
-                   tool: tool, annotationContent: annotationContent, textContent: textContent,
+                   tool: tool, annotationContent: annotationContent,
+                   annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent, edgeMap: edgeMap,
                    isCanvasSelected: isCanvasSelected)
     }
@@ -335,6 +341,9 @@ final class CanvasNSView: NSView {
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
     private var annotationContent: AnnotationContent?
+    /// The draft layer style for the active shape tool (border/corner radius);
+    /// the create preview draws its border so outline-only rectangles show.
+    private var annotationStyle: LayerStyle?
     private var measureContent: MeasureContent?
     /// In-flight measure drag (reuses AnnotationDrag for the anchor/current pair).
     private var measureDrag: AnnotationDrag?
@@ -1532,6 +1541,7 @@ final class CanvasNSView: NSView {
                cropBounds: CGRect?, selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                multiSelectedLayerIDs: Set<UUID>,
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
+               annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
                edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
@@ -1540,6 +1550,7 @@ final class CanvasNSView: NSView {
             if !isCanvasSelected { canvasResizeDrag = nil }
         }
         self.annotationContent = annotationContent
+        self.annotationStyle = annotationStyle
         self.textContent = textContent
         self.measureContent = measureContent
         self.edgeMap = edgeMap
@@ -2137,7 +2148,8 @@ final class CanvasNSView: NSView {
             return
         }
         displayAnnotationPreview(content: content, docStart: drag.anchor,
-                                 docEnd: drag.end(constrained: constrained, shape: content.shape))
+                                 docEnd: drag.end(constrained: constrained, shape: content.shape),
+                                 style: annotationStyle)
     }
 
     /// In-flight endpoint drag: preview the selected layer's content with the
@@ -2148,14 +2160,16 @@ final class CanvasNSView: NSView {
             return
         }
         let (docStart, docEnd) = session.drag.endpoints(constrained: constrained)
-        displayAnnotationPreview(content: session.content, docStart: docStart, docEnd: docEnd)
+        displayAnnotationPreview(content: session.content, docStart: docStart, docEnd: docEnd,
+                                 style: document?.layer(id: session.layerID)?.style)
     }
 
     /// Draws an annotation as vector shapes in view coordinates — faithful to
     /// the rasterizer so the held preview swaps invisibly for the real
     /// composite after commit.
     private func displayAnnotationPreview(content: AnnotationContent,
-                                          docStart: CGPoint, docEnd: CGPoint) {
+                                          docStart: CGPoint, docEnd: CGPoint,
+                                          style: LayerStyle? = nil) {
         guard let viewport else {
             clearAnnotationPreview()
             return
@@ -2172,6 +2186,10 @@ final class CanvasNSView: NSView {
         let headPath = CGMutablePath()
         var fill: CGColor?
         var stroke: CGColor? = color
+        // The outline width the preview strokes with — the annotation's own
+        // stroke by default, overridden below for box shapes whose outline is a
+        // layer-style border.
+        var lineWidth = strokeWidth
         var compositing: Any?
         switch content.shape {
         case .line:
@@ -2193,10 +2211,27 @@ final class CanvasNSView: NSView {
             headPath.addLines(between: head.map { viewport.viewPoint(fromDocument: $0) })
             headPath.closeSubpath()
         case .rectangle, .ellipse:
-            let inset = box.insetBy(dx: strokeWidth / 2, dy: strokeWidth / 2)
+            // A box shape's outline can be the annotation's own stroke OR a
+            // layer-style border (the Border toggle — rectangles use this, with
+            // strokeWidth 0). Draw whichever is set so the draft isn't invisible.
+            if content.strokeWidth == 0, let border = style, border.borderWidth > 0 {
+                lineWidth = border.borderWidth * viewport.zoom
+                if let brgba = RGBA(hex: border.borderColorHex) {
+                    stroke = CGColor(srgbRed: brgba.r, green: brgba.g, blue: brgba.b, alpha: brgba.a)
+                }
+            }
+            // Inset by half the outline so it reads as an inner stroke, matching
+            // the rasterizer and the layer border.
+            let inset = box.insetBy(dx: lineWidth / 2, dy: lineWidth / 2)
             if inset.width > 0, inset.height > 0 {
                 if content.shape == .rectangle {
-                    path.addRect(inset)
+                    let radius = min(content.cornerRadius * viewport.zoom,
+                                     min(inset.width, inset.height) / 2)
+                    if radius > 0 {
+                        path.addRoundedRect(in: inset, cornerWidth: radius, cornerHeight: radius)
+                    } else {
+                        path.addRect(inset)
+                    }
                 } else {
                     path.addEllipse(in: inset)
                 }
@@ -2205,6 +2240,9 @@ final class CanvasNSView: NSView {
             if let fillHex = content.fillColorHex, let rgba = RGBA(hex: fillHex) {
                 fill = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
             }
+            // Nothing to stroke if the shape carries no outline at all (fill
+            // only): a zero line width would still draw a hairline.
+            if lineWidth <= 0 { stroke = nil }
         case .highlight:
             path.addRect(box)
             fill = color
@@ -2217,7 +2255,7 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.path = path
         annotationPreviewLayer.strokeColor = stroke
         annotationPreviewLayer.fillColor = fill
-        annotationPreviewLayer.lineWidth = strokeWidth
+        annotationPreviewLayer.lineWidth = lineWidth
         // Match the rasterizer: rectangles corner with miters (no fake radius).
         annotationPreviewLayer.lineJoin = content.shape == .rectangle ? .miter : .round
         annotationPreviewLayer.compositingFilter = compositing

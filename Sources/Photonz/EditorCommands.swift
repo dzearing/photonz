@@ -258,6 +258,10 @@ struct EditorCommands: Commands {
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))
+            Button("Rasterize Layer") {
+                if let selectedID { editor?.rasterizeLayer(id: selectedID) }
+            }
+            .disabled(!(selectedID.map { editor?.canRasterizeLayer(id: $0) ?? false } ?? false))
             Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
                 .disabled(!(editor?.canArrangeCollage ?? false))
             Button("New Collage Layer") { editor?.newEmptyCollageLayer() }

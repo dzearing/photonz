@@ -21,19 +21,19 @@ public enum MeasureForm: String, CaseIterable, Hashable, Codable, Sendable {
     case bracket
 }
 
-/// The unit a measure's readout is shown in. `points` divides the raw bitmap
-/// distance by the document's `pixelScale` (a 2× Retina capture reads in logical
-/// points); `pixels` shows the raw bitmap distance.
+/// The unit a measure's readout is shown in. Both read out as "px" — the
+/// distinction is logical vs device pixels, matching how CSS treats `px` as a
+/// logical unit. `points` divides the raw bitmap distance by the document's
+/// `pixelScale`, so a 2× Retina capture reads in LOGICAL pixels (on-screen /
+/// design size — the default); `pixels` shows the raw DEVICE-pixel distance
+/// (2× larger on Retina — an opt-in for when you truly want bitmap pixels).
 public enum MeasureUnit: String, CaseIterable, Hashable, Codable, Sendable {
     case points
     case pixels
 
-    public var suffix: String {
-        switch self {
-        case .points: "pt"
-        case .pixels: "px"
-        }
-    }
+    /// Both units are pixels; the mode (Logical vs Actual) carries the
+    /// distinction, so the readout stays a plain, familiar "px".
+    public var suffix: String { "px" }
 }
 
 /// How the ends of the dimension line are terminated.
@@ -144,7 +144,8 @@ extension MeasureContent {
         }
     }
 
-    /// The formatted readout, e.g. "120 pt" or "240.0 px".
+    /// The formatted readout, e.g. "120 px" (both units read out in px; the
+    /// Logical/Actual mode is what differs, not the suffix).
     public func label(pixelScale: CGFloat) -> String {
         let value = displayDistance(pixelScale: pixelScale)
         return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix)

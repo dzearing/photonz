@@ -284,6 +284,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
               isVisible: isVisible, isLocked: false)
     }
 
+    /// Whether "Rasterize Layer" applies: the layer is a vector shape/annotation
+    /// that can be baked into pixels. Image layers are already pixels; the other
+    /// vector kinds (text, measure, zoom callout, collage) draw chrome outside
+    /// their frame or carry semantics that a lone bitmap can't reproduce, so
+    /// they're excluded for now.
+    public var isRasterizable: Bool {
+        if case .annotation = content { return true }
+        return false
+    }
+
     /// The blend mode the renderer actually uses: highlight annotations always
     /// multiply so underlying detail shows through; everything else follows
     /// the layer's style.

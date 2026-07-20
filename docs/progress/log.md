@@ -1276,3 +1276,112 @@ re-render is 9.2ms median (12MP/10-layer), well under the 16ms budget.
 Tests: new `ResizePreviewScalingTests.swift` (8 cases, incl. the reported bordered-
 rect + annotation-rect cases). Full suite green. User verified the fix live in the
 dev app (border stays crisp, opposite corner pinned throughout the drag).
+### 2026-07-19 (cont.) — Rasterize Layer (vector shape → pixels)
+
+Added a "Rasterize Layer" action that bakes a vector annotation/shape layer into a
+committed pixel layer. Right-click a shape layer in the Layers panel (or Layer ▸
+Rasterize Layer); the shape is rendered WITH all non-destructive effects (blur,
+shadow, border, corner radius, opacity) and geometry (crop, transform) flattened into
+a bitmap, the bitmap goes into `ImageStore`, and the layer's content becomes
+`.image(ImageRef)` with its now-baked style reset to default. One undo step restores
+the editable vector shape.
+
+- Core (TDD): `Layer.isRasterizable` (annotation content only for now — text/measure/
+  zoomCallout/collage draw chrome outside the frame or carry semantics a lone bitmap
+  can't reproduce; image is already pixels). `PhotonzDocument.rasterizeLayer(id:
+  rasterized:frame:)` swaps content→image, resets style/crop/transform, keeps id/name/
+  slot/visibility/lock. KEY DECISION: blend mode is relational (composites against
+  layers BELOW) and can't be baked into an isolated bitmap, so the layer's
+  `effectiveBlendMode` is carried onto the image layer — a rasterized highlight keeps
+  multiplying, so it stays pixel-identical. RasterizeLayerTests (4).
+- Render (TDD): RasterizeLayerRenderTests renders a styled rectangle (opacity + rounded
+  corners + white border + drop shadow) before/after rasterizing and asserts the
+  composite is pixel-stable (max per-channel delta ≤12, <2% of channels drift >6).
+- App: `EditorState.rasterizeLayer(id:)` mirrors `mergeLayers` for a single participant
+  — computes the padded transformed-bounds footprint clamped to canvas, composites ONLY
+  that layer via the existing `DocumentRenderer.rasterize(region:)` path (reuses the one
+  coordinate flip), registers the bitmap, and applies the core mutation through
+  `History.perform`. `canRasterizeLayer(id:)` gates the menu. Wired into the LayersPanel
+  row context menu (shown only for rasterizable layers) and the Layer menu (disabled
+  otherwise).
+- 717 tests green. App bundle built + launched (dev). PENDING user verify: right-click a
+  shape → Rasterize Layer looks identical, undo brings back the editable vector.
+
+### 2026-07-19 (cont.) — Load layer pixels as a selection (⌘-click a layer row)
+
+USER: "when i ctrl click a layer, i'd like it to select the pixels in the layer." Clarified
+(ctrl-click already opens the new layer context menu): went with ⌘-click (Photoshop parity)
+on the Layers panel row.
+
+- Render (TDD): `DocumentRenderer.layerSelectionPath(for:in:store:alphaThreshold:)` in
+  LayerSelectionMask.swift renders the layer ALONE at full opacity with soft effects stripped
+  (shadow/blur/opacity removed so the selection hugs the shape, not its glow; border + corner
+  radius kept), reads the RGBA, thresholds alpha ≥128 to a mask, and traces it to a canvas-space
+  even-odd CGPath via the existing ContourTracer (17.2). Footprint = transformed frame corners
+  clamped to canvas + integral so the traced path lines up 1:1 with canvas pixels. nil when
+  nothing opaque. LayerSelectionMaskTests (4): filled rect silhouette (bounds + interior/exterior
+  contains), soft effects don't bleed/empty, solid image → full frame, fully-transparent → nil.
+- App: `EditorState.selectLayerPixels(id:)` builds the path, wraps it in SelectionRegion, and
+  calls `setSelection(region, captureLayers: false)` → a PIXEL-targeting selection (fill/copy/
+  delete/promote target it), keeping the layer selected. No-op if nothing opaque.
+- UI: LayersPanel row gains a `.highPriorityGesture(TapGesture().modifiers(.command))` that loads
+  pixels (plain tap still just selects); also a "Select Pixels" context-menu item for discovery.
+- 721 tests green; dev bundle rebuilt + relaunched. PENDING user verify: ⌘-click a shape layer
+  row shows marching ants around the shape; fill/copy then targets it.
+
+### 2026-07-19 (cont.) — Fix: rectangle draw preview invisible while dragging
+
+USER: "when i drag a rectangle, i can no longer see it while im dragging." Only the rectangle
+draw tool; persisted across relaunch; unrelated to the ⌘-click selection feature.
+
+REPRO (TCC blocks screenshots here): added an env-guarded headless probe (PHOTONZ_DEBUG_RECTPREVIEW)
+that drives the real CanvasNSView.displayAnnotationPreview and logs the resulting CAShapeLayer.
+Fresh-default rectangle content previewed fine — so the bug was state-specific. Decoded the dev
+app's persisted `annotationStyles` (UserDefaults): the RECTANGLE is stored with annotation
+strokeWidth 0 and NO fillColorHex; its visible outline is a LAYER-STYLE border (borderWidth 9.85,
+#FF2600). Ellipse/arrow/line use the annotation stroke (4/14), which the preview draws — hence
+only rectangle broke. ROOT CAUSE: displayAnnotationPreview only drew the annotation's own
+fill/stroke, never the layer-style border, so a border-only rectangle draft had a 0-width stroke
+and no fill = invisible until commit rendered the layer border. Pre-existing since v0.11.0's
+Fill/Border split (NOT this session's work).
+
+FIX (app/UI): thread the draft LayerStyle to the preview — EditorState.activeAnnotationStyle
+(= annotationStyles.layerStyle(forShape:)) → CanvasView.annotationStyle → apply() → CanvasNSView.
+displayAnnotationPreview gained a `style:` param. For box shapes, when the annotation's own stroke
+is 0 and the layer border > 0, the preview strokes the border (border color + width, inset by
+half so it reads as an inner stroke like the rasterizer). Also added rounded-corner preview
+(content.cornerRadius) and suppress a hairline when there's no outline at all. Endpoint-edit
+preview passes the edited layer's real style too. VERIFIED headlessly against the user's exact
+config: borderOnly → stroke=true, lineWidth=9.848, path present (was invisible); fresh default
+still stroke+fill. Probe removed after. 721 tests green; dev bundle rebuilt + relaunched.
+PENDING user verify: dragging a border-only rectangle now shows the live outline.
+
+### 2026-07-19 (cont.) — Measure default unit: logical, not raw pixels
+
+USER: measure tool reads "twice as big as I expect"; "I don't really understand pt". DIAGNOSIS
+(code, not a math bug): the measure model already supports .points (logical = raw ÷ pixelScale)
+vs .pixels (raw bitmap), and the capture→open DPI round-trip sets pixelScale=2 for Retina — but
+the DEFAULT measure template (EditorState.measureStyle) was created with unit: .pixels, so new
+measures showed RAW device pixels = 2× the logical/design size a redliner expects. Confirmed via
+the persisted state + reading the exact default line.
+
+FIX (app, user confirmed direction — logical default + Logical/Actual labels): measureStyle unit
+.pixels → .points (logical is universally correct: 2× image ÷2 = design size; 1× image ÷1 = same).
+Measure inspector Unit picker relabeled "Pixels"/"Points" → "Logical"/"Actual" (Logical first),
+with a .help() tooltip explaining Logical = on-screen design size, Actual = raw bitmap px (2× on
+Retina). Kept the compact "pt"/"px" plate suffixes (tests assert them; the picker + right value
+resolve the confusion). 721 tests green; dev bundle rebuilt + relaunched. PENDING user verify:
+new measures now read the on-screen size; Actual toggle still gives raw device px.
+
+### 2026-07-19 (cont.) — Measure readout: always "px" (logical default)
+
+USER (after the logical-default fix + a units discussion): "can we just say px and default to
+logical and only let the user step on their own toes if they want actual px." CSS px is itself a
+logical unit, so "px" is the intuitive label. CHANGE: MeasureUnit.suffix now returns "px" for
+BOTH modes (was pt/px) — the Logical/Actual mode carries the distinction, not the suffix. Default
+stays Logical (previous change). Inspector picker keeps Logical/Actual with an updated tooltip
+("Both read out in px. Logical is on-screen size like CSS px, the default; Actual is raw device
+pixels, 2× on Retina"). Updated MeasureTests ("100 pt"→"100 px") and MeasureRenderingTests label
+fixture ("200 pt"→"200 px"). NOTE: layer-style edit fields (blur/corner/border/stroke/shadow) still
+show "pt" — separate from measurement units; left as-is pending a decision. 721 tests green;
+rebuilt + relaunched.

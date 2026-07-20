@@ -71,12 +71,13 @@ struct MeasureUnitsTests {
         var m = measureContent(mode: .horizontal, unit: .points, decimals: 0)
         m.start = .zero
         m.end = CGPoint(x: 201, y: 0)
-        #expect(m.label(pixelScale: 2) == "100 pt") // 100.5 rounds to 100 at 0 decimals (banker's-free %f)
+        // Both units read out as "px"; Logical (points) divides by pixelScale.
+        #expect(m.label(pixelScale: 2) == "100 px") // 201 bitmap px @2× → 100.5 → 100 at 0 decimals
 
         var p = measureContent(mode: .horizontal, unit: .pixels, decimals: 1)
         p.start = .zero
         p.end = CGPoint(x: 201, y: 0)
-        #expect(p.label(pixelScale: 2) == "201.0 px")
+        #expect(p.label(pixelScale: 2) == "201.0 px") // Actual = raw device pixels
     }
 }
 
