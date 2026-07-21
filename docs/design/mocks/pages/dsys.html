@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · dsys</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* dsys · page-local bits only. The shell, dock, panel groups, Library group,
+     tiles, overlays and rail are all shared DS classes. A design system is not a
+     third window: it is the Library group's Components and Styles scopes, plus a
+     Tokens group, over the same document. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #dsys .win.shell{height:740px;min-height:0}
+  /* the specimen on the canvas: whatever the Library selection is */
+  #dsys .canvas>.selwrap{width:min(460px,calc(100% - var(--s6)))}
+  .dspec{position:relative;width:100%;min-height:210px;border-radius:var(--r4);
+    display:grid;place-items:center;padding:var(--s6);
+    background:radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.07),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d);
+    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
+  .dspec .plabel{position:absolute;left:10px;top:8px;font-family:var(--mono);font-size:9px;
+    letter-spacing:.04em;color:rgba(255,255,255,.42)}
+  .dspec .big{width:180px;height:96px;border-radius:var(--r4);border:1px solid rgba(255,255,255,.22)}
+  .dspec .ramp{width:220px}
+
+  /* token rows live in their own bounded, scrolling group */
+  .tokline{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;color:var(--dim);
+    padding:5px var(--pad-sm)}
+  .tokline .sw{width:18px;height:18px;border-radius:5px;flex:none;border:1px solid rgba(0,0,0,.14)}
+  .tokline .nm{color:var(--ink);font-weight:520;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tokline .hex{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .tokline:hover{background:var(--panel-2)}  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
+  .actrow .btn{flex:1 1 auto}
+  /* ---- reference cards below the shell (documentation, not app chrome) ---- */
+  .dsref-list{display:flex;flex-direction:column;gap:var(--gap)}
+  .dsref{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .dsref-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
+    padding:var(--pad-sm) var(--pad);display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+  .dsref-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+  .dsref-h .sp{flex:1}
+  .dsref-b{padding:0 var(--pad) var(--pad)}
+
+  /* semantic typeface rows */
+  .tfhead,.tfrow{display:grid;grid-template-columns:172px 148px 1fr 190px;gap:var(--gap);align-items:center}
+  .tfhead{padding:0 0 var(--s1);font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660}
+  .tflist{display:flex;flex-direction:column;gap:var(--gap-sm);max-height:280px;overflow-y:auto;
+    overscroll-behavior:contain;padding-right:var(--s1)}
+  .tfrow{background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r-md);
+    padding:var(--pad-sm) var(--pad);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .tfrow:hover{border-color:var(--accent-line)}
+  .tfname{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .tfname .top{display:flex;align-items:center;gap:var(--gap-sm)}
+  .tfname .en{font-weight:640;color:var(--ink);font-size:13.5px;outline:none;border-bottom:1px dashed transparent;line-height:1.2}
+  .tfrow:hover .en{border-bottom-color:var(--line-strong)}
+  .tfname .en:focus{border-bottom-color:var(--accent)}
+  .tfname .tok{font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  .tfspec{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--ink);font-size:24px;line-height:1}
+  .tfnote{font-size:10.5px;color:var(--dim);line-height:1.4}
+  .refstrip{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;padding:var(--pad) 0 0;
+    border-top:1px solid var(--edge-lo);margin-top:var(--pad)}
+  .refstrip .lead{font-size:10.5px;color:var(--faint);font-weight:560}
+
+  /* portable artifact */
+  .dsref-grid{display:grid;grid-template-columns:300px 1fr;gap:var(--gap)}
+  .dsref-side{display:flex;flex-direction:column;gap:var(--pad-sm);min-width:0}
+  .dsref-main{display:flex;flex-direction:column;gap:var(--gap-sm);min-width:0}
+  .artcard{background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r-md);
+    padding:var(--pad-sm) var(--pad);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .artcard .nm{font-size:15px;font-weight:700;font-family:var(--serif);display:flex;align-items:center;gap:var(--gap-sm);color:var(--ink)}
+  .artcard .ver{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);padding:1px 7px;border-radius:999px;font-weight:600}
+  .artcard .meta{font-size:10.5px;color:var(--faint);margin-top:4px;font-variant-numeric:tabular-nums;line-height:1.5}
+  .exgrp{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660;margin:var(--s2) 0 0}
+  .exrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+  .exrow .btn{flex:1 1 auto}
+  .exmeta{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-sm);
+    font-size:10.5px;color:var(--faint);font-family:var(--mono);flex-wrap:wrap}
+  .exmeta .fname{color:var(--dim)}
+  .verlist{display:flex;flex-direction:column;gap:2px;border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--s1)}
+  .verlist .menuitem .sc{color:var(--faint)}
+  .verlist .menuitem .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+
+  @media (max-width:820px){
+    .tfhead{display:none}
+    .tfrow{grid-template-columns:1fr;gap:var(--gap-sm)}
+    .dsref-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="dsys">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Design system</h2><span class="k">· tokens, styles &amp; components, in the Library</span></div>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <!-- Document identity ONLY. The active system is a toolbar chip, not part
+           of the document's name (PRODUCT-MODEL §4c). -->
+      <div class="wtitle"><b>brand-kit</b><span class="meta">· 1440 × 900</span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#dsCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#dsHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <button class="btn ghost sm" data-sheet="#dsSystems" title="Browse design systems"><i class="ic ic-library"></i> Systems</button>
+      <span class="tspacer"></span>
+      <span class="chip style"><span class="sw"></span>Brand v2.3.0 <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="dsCmd" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
+          <div class="mlabel">System</div>
+          <div class="menuitem"><i class="ic ic-save"></i> Save as version <span class="sc">⌘S</span></div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export system <span class="sc">⌘⇧E</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
+          <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Extract a system from a URL</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="dsShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label" id="dsArtLabel">Brand · component specimen</div>
+          <div class="selwrap">
+            <div class="dspec">
+              <span class="plabel" id="dsPlabel">component · Button</span>
+              <div id="dsSpec"><span class="mini-btn" style="transform:scale(1.6)">Get Photonz <i class="ic ic-chevron-right xs"></i></span></div>
+            </div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="dsTag">Button · 42 instances</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#dsShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#dsHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · the D4 UI inventory -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)" data-target="editor"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (U)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Text (T)" data-target="typography"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#dsOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="dsOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">U</span></div>
+            <div class="menuitem" data-target="typography"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · pick a whole system, the catalog that would crowd the canvas -->
+        <div class="sheet down" id="dsSystems" aria-hidden="true" aria-label="Design systems">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-library"></i> Design systems</span>
+            <span class="sp"></span>
+            <span class="val">applying a system re-resolves every component</span>
+            <button class="btn ghost sm" data-target="agent"><i class="ic ic-sparkle"></i> Extract from a URL</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="libgrid" style="grid-template-columns:repeat(4,1fr)">
+              <div class="libtile sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand</span><span class="mt">v2.3.0 · active</span></span></div>
+              <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Mint</span><span class="mt">v1.4.0</span></span></div>
+              <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#f4f6fb,#c3c9d6)"></span><span class="cap"><span class="nm">Paper</span><span class="mt">v0.9.2</span></span></div>
+              <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#1a1030,#3a1b52)"></span><span class="cap"><span class="nm">Midnight</span><span class="mt">v3.0.1</span></span></div>
+            </div>
+            <p class="note" style="margin:0">Components bind to <b style="color:var(--ink)">semantic</b> token slots, not hardcoded values, so applying another system re-themes every instance at once.</p>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="dsHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Settings window</span><span class="ago">40 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Brand sheet</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Open a capture and the active system paints it. Same document, same tokens.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="230" data-max="430"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock">
+
+        <!-- TOKENS · the raw values, a long list inside its own bounded scroller -->
+        <div class="dgrp" id="dsTokens" style="--gh:140px">
+          <div class="dgrp-h"><span class="ttl">Tokens</span><span class="cnt">14</span>
+            <button class="btn ghost icon sm" title="Add token" data-menu="#dsTokMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="mlabel">Color</div>
+            <div class="tokline"><span class="sw" style="background:#7c4dff"></span><span class="nm">brand/500</span><span class="hex">#7C4DFF</span></div>
+            <div class="tokline"><span class="sw" style="background:#b14dff"></span><span class="nm">brand/400</span><span class="hex">#B14DFF</span></div>
+            <div class="tokline"><span class="sw" style="background:#ff5d8f"></span><span class="nm">accent/pink</span><span class="hex">#FF5D8F</span></div>
+            <div class="tokline"><span class="sw" style="background:#ffb057"></span><span class="nm">accent/amber</span><span class="hex">#FFB057</span></div>
+            <div class="tokline"><span class="sw" style="background:#0c0e14"></span><span class="nm">ink/900</span><span class="hex">#0C0E14</span></div>
+            <div class="tokline"><span class="sw" style="background:#f1f3f7"></span><span class="nm">surface/50</span><span class="hex">#F1F3F7</span></div>
+            <div class="mlabel">Type scale</div>
+            <div class="tokline"><span class="nm" style="font-family:var(--serif);font-size:15px">Display</span><span class="hex">44 / 700</span></div>
+            <div class="tokline"><span class="nm" style="font-weight:600">Title</span><span class="hex">24 / 600</span></div>
+            <div class="tokline"><span class="nm">Body</span><span class="hex">15 / 400</span></div>
+            <div class="tokline"><span class="nm" style="color:var(--dim)">Caption</span><span class="hex">12 / 400</span></div>
+            <div class="mlabel">Spacing · radius</div>
+            <div class="tokline"><span class="nm">space</span><span class="hex">4 · 8 · 12 · 16 · 24</span></div>
+            <div class="tokline"><span class="nm">radius/card</span><span class="hex">12</span></div>
+            <div class="tokline"><span class="nm">radius/pill</span><span class="hex">999</span></div>
+            <div class="tokline"><span class="nm">radius/tile</span><span class="hex">22</span></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties, contextual to the Library selection -->
+        <div class="dgrp" id="dsProps" style="--gh:220px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="dsPropCnt">Component</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#dsPropMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h comp" id="dsSecH">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> main</span></div>
+              <div class="setrow"><span class="rl">Name</span><span class="val" id="dsName">Button</span></div>
+              <div class="setrow"><span class="rl">Uses</span><span class="val" id="dsUses">42 instances</span></div>
+              <div class="setrow"><span class="rl">Kind</span><span class="val" id="dsKind">component</span></div>
+              <p class="note" id="dsDesc">Reusable and paintable. Drop an instance, swap its variant, or re-paint it with any Paint or Effect Style. Edit the main and every instance updates.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">Bound tokens</div>
+              <div class="irow"><span class="rl">Fill</span><span class="select"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Face</span><span class="select" data-target="typography"><span class="lead">font/text</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <p class="note">Components bind <b style="color:var(--ink)">semantic</b> slots, never raw hex, so swapping the active system re-themes them.</p>
+            </div>
+            <div class="section" style="border-bottom:0">
+              <div class="sec-h">Do</div>
+              <div class="actrow">
+                <button class="btn sm primary" data-target="editor"><i class="ic ic-component"></i> Place instance</button>
+                <button class="btn sm secondary" data-target="editor"><i class="ic ic-pen"></i> Edit main</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes. This IS the design system browser. -->
+        <div class="dgrp grow" id="dsLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="dsScopeLbl">Components</span>
+            <button class="btn ghost icon sm" title="Browse systems" data-sheet="#dsSystems"><i class="ic ic-maximize"></i></button>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#dsLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="dsScope">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input id="dsSearch" name="library-search" placeholder="Search the system" aria-label="Search the system"></span>
+            </div>
+            <div class="libgrid" id="dsGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#dsTokens" title="Tokens"><i class="ic sm ic-swatch"></i><span class="lb">Tokens</span></button>
+        <button class="drailtab" data-group="#dsProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#dsLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="dsTokMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-swatch"></i> New color token</div>
+        <div class="menuitem" data-target="typography"><i class="ic ic-text"></i> New type token</div>
+        <div class="menuitem"><i class="ic ic-grid"></i> New spacing token</div>
+      </div>
+      <div class="popover menu pop" id="dsPropMenu" style="position:absolute;right:var(--s4);top:220px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy token path</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to system default</div>
+      </div>
+      <div class="popover menu pop" id="dsLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
+        <div class="menuitem" data-target="editor"><i class="ic ic-component"></i> Add selection as component</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Add fill as a Style</div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Extract a system from a URL</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A design system is not its own window. <b>Tokens</b> are a panel group, <b>Styles</b> and <b>Components</b> are scopes of the same <b>Library</b> group, and picking one drives the specimen on the canvas and the <b>Properties</b> group, exactly like picking a layer.</p></div>
+    <div class="c"><div class="lab g2">Direction</div><p>Tokens → Styles → Components → Systems is one ladder. A whole system is browsable in a slide-down <b>overlay</b> rather than a permanent column, so applying <b>Brand v2</b> or a system the agent extracted from a URL is one click away without costing canvas width.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should <b>Tokens</b> stay its own group, or become a fifth Library scope so there is exactly one reuse surface? And when an imported system and a local override disagree, which wins by default?</p></div>
+  </div>
+
+  <!-- ============ REFERENCE · how the system is written down ============ -->
+  <div class="dsref-list">
+
+    <!-- semantic typefaces (fonts as tokens) -->
+    <div class="dsref">
+      <div class="dsref-h"><i class="ic sm ic-text"></i> Typefaces <span class="sub">semantic font tokens · a Text Style points at the name, never the family</span>
+        <span class="sp"></span>
+        <button class="btn ghost sm" data-target="typography">Open type detail <i class="ic ic-chevron-right"></i></button>
+      </div>
+      <div class="dsref-b">
+        <div class="tfhead"><span>Semantic name · rename</span><span>Resolved family</span><span>Live specimen</span><span>Role</span></div>
+        <div class="tflist">
+          <div class="tfrow">
+            <div class="tfname"><div class="top"><span class="en" contenteditable="true" spellcheck="false">Display</span><button class="btn ghost icon sm" title="Rename"><i class="ic ic-pen"></i></button></div><span class="tok">font/display</span></div>
+            <span class="select"><span class="lead">New York</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+            <span class="tfspec" style="font-family:var(--serif);font-weight:700;letter-spacing:-.02em">Northern light</span>
+            <span class="tfnote">Headlines and posters. Carries the voice.</span>
+          </div>
+          <div class="tfrow">
+            <div class="tfname"><div class="top"><span class="en" contenteditable="true" spellcheck="false">Text</span><button class="btn ghost icon sm" title="Rename"><i class="ic ic-pen"></i></button></div><span class="tok">font/text</span></div>
+            <span class="select"><span class="lead">SF Pro</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+            <span class="tfspec" style="font-family:var(--sans);font-weight:480">The quick brown fox</span>
+            <span class="tfnote">UI and reading. Does the work.</span>
+          </div>
+          <div class="tfrow">
+            <div class="tfname"><div class="top"><span class="en" contenteditable="true" spellcheck="false">Mono</span><button class="btn ghost icon sm" title="Rename"><i class="ic ic-pen"></i></button></div><span class="tok">font/mono</span></div>
+            <span class="select"><span class="lead">SF Mono</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+            <span class="tfspec" style="font-family:var(--mono);font-size:19px">const x = 42</span>
+            <span class="tfnote">Code, metrics, tabular numbers.</span>
+          </div>
+          <div class="tfrow">
+            <div class="tfname"><div class="top"><span class="en" contenteditable="true" spellcheck="false">Brand</span><button class="btn ghost icon sm" title="Rename"><i class="ic ic-pen"></i></button></div><span class="tok">font/brand · renamed</span></div>
+            <span class="select"><span class="lead">New York</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+            <span class="tfspec" style="font-family:var(--serif);font-weight:700;letter-spacing:-.02em">Photonz</span>
+            <span class="tfnote">Custom face. Wordmark and hero copy.</span>
+          </div>
+        </div>
+        <div class="refstrip">
+          <button class="btn secondary sm"><i class="ic ic-plus"></i> Add typeface</button>
+          <span class="lead">A Text Style points at the semantic face:</span>
+          <button class="btn ghost sm" data-target="typography">Display / 44 <i class="ic ic-chevron-right"></i> Display</button>
+          <button class="btn ghost sm" data-target="typography">Eyebrow <i class="ic ic-chevron-right"></i> Text</button>
+          <span class="lead" style="flex:1;min-width:180px">Re-point <b style="color:var(--ink)">Display</b> to another font and every headline updates at once.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- portable, versioned artifact -->
+    <div class="dsref">
+      <div class="dsref-h"><i class="ic sm ic-export"></i> Portable system <span class="sub">export · import · version · share</span>
+        <span class="sp"></span>
+        <button class="btn ghost sm" data-target="agent">The agent reads this <i class="ic ic-chevron-right"></i></button>
+      </div>
+      <div class="dsref-b">
+        <div class="dsref-grid">
+          <div class="dsref-side">
+            <div class="artcard">
+              <div class="nm">Brand <span class="ver">v2.3.0</span></div>
+              <div class="meta">Bundle: tokens · typefaces · styles · components<br>Updated Jul 18, 2026 · 14 tokens · 4 faces · 7 styles · 4 components</div>
+            </div>
+
+            <div class="exgrp">Export</div>
+            <div class="exrow">
+              <button class="btn secondary sm"><i class="ic ic-export"></i> Brand.json</button>
+              <button class="btn secondary sm"><i class="ic ic-export"></i> Brand.photonz-ds</button>
+            </div>
+            <div class="exmeta"><span>size</span><span class="fname">14.2 KB · portable</span></div>
+
+            <div class="exgrp">Bring in</div>
+            <div class="exrow">
+              <button class="btn secondary sm"><i class="ic ic-import"></i> Import file</button>
+              <button class="btn primary sm"><i class="ic ic-save"></i> Save as version</button>
+            </div>
+
+            <div class="exgrp">Team</div>
+            <div class="verlist">
+              <div class="menuitem"><span class="dot"></span>Apply team system<span class="sc">Brand v2.3.0</span></div>
+              <div class="menu-sep"></div>
+              <div class="menuitem"><i class="ic ic-undo"></i>v2.2.0<span class="sc">Jun 30</span></div>
+              <div class="menuitem"><i class="ic ic-undo"></i>v2.1.0<span class="sc">May 12</span></div>
+            </div>
+          </div>
+
+          <div class="dsref-main">
+            <div class="exmeta"><span class="fname" style="color:var(--dim);font-weight:600">Brand.photonz-ds</span><span>JSON · versioned · shareable</span></div>
+            <div class="codeblk">{
+  <span class="k">"system"</span>: <span class="s">"Brand"</span>, <span class="k">"version"</span>: <span class="s">"2.3.0"</span>, <span class="k">"updated"</span>: <span class="s">"2026-07-18"</span>,
+  <span class="k">"tokens"</span>: {
+    <span class="k">"color"</span>: { <span class="k">"brand/500"</span>:<span class="s">"#7C4DFF"</span>, <span class="k">"accent/pink"</span>:<span class="s">"#FF5D8F"</span>, <span class="k">"ink/900"</span>:<span class="s">"#0C0E14"</span> },
+    <span class="k">"space"</span>: [<span class="p">4</span>,<span class="p">8</span>,<span class="p">12</span>,<span class="p">16</span>,<span class="p">24</span>,<span class="p">32</span>], <span class="k">"radius"</span>: { <span class="k">"card"</span>:<span class="p">12</span>, <span class="k">"pill"</span>:<span class="p">999</span> }
+  },
+  <span class="c">// semantic name → resolved family</span>
+  <span class="k">"typefaces"</span>: { <span class="k">"Display"</span>:<span class="s">"New York"</span>, <span class="k">"Text"</span>:<span class="s">"SF Pro"</span>, <span class="k">"Mono"</span>:<span class="s">"SF Mono"</span>, <span class="k">"Brand"</span>:<span class="s">"New York"</span> },
+  <span class="k">"styles"</span>: {
+    <span class="k">"paint"</span>: { <span class="k">"Brand/gradient"</span>:<span class="s">"linear-gradient(135deg,#7C4DFF,#FF5D8F)"</span> },
+    <span class="c">// text style references the SEMANTIC face, not the family</span>
+    <span class="k">"text"</span>:  { <span class="k">"Display/44"</span>:{ <span class="k">"face"</span>:<span class="s">"Display"</span>, <span class="k">"size"</span>:<span class="p">44</span>, <span class="k">"weight"</span>:<span class="p">700</span> } }
+  },
+  <span class="k">"components"</span>: [ { <span class="k">"name"</span>:<span class="s">"Button"</span>, <span class="k">"instances"</span>:<span class="p">42</span> }, { <span class="k">"name"</span>:<span class="s">"Badge"</span>, <span class="k">"instances"</span>:<span class="p">17</span> } ]
+}</div>
+            <div class="codeblk" data-target="agent"><span class="c">// the agent uses the same system</span>
+<span class="k">const</span> ds = system.<span class="p">export</span>(<span class="s">"photonz-ds"</span>)
+system.<span class="p">import</span>(file)
+system.<span class="p">apply</span>(<span class="s">"Brand v2"</span>)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Fonts are tokens too</div><p>Each typeface is a <b>semantic name</b> mapped to a resolved family: <b>Display</b> → New York, <b>Text</b> → SF Pro, <b>Mono</b> → SF Mono. Rename or add your own, like a custom <b>Brand</b>.</p></div>
+    <div class="c"><div class="lab g2">The whole system is data</div><p>Tokens, typefaces, styles and components bundle with a name and a version, export to <b>.json</b> or <b>.photonz-ds</b>, and round-trip between people and projects. Ship it like a package and a team applies <b>Brand v2</b> in one call.</p></div>
+    <div class="c"><div class="lab g2">API mirror</div><p><code>font("Display")</code> resolves through the system · <code>text(face:"Display")</code> stays stable when the family changes · <code>system.apply("Brand v2")</code> re-themes every instance.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* dsys · the Library group IS the design system browser. Picking a tile drives
+   the canvas specimen and the Properties group, the same selection model as a
+   layer. Collapse, resize, rail, overlays and the tool strip are shared DS
+   behavior. All selectors guarded; a missing node is a no-op. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  var DATA = {
+    components: [
+      { id:"button", nm:"Button", mt:"42 instances", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
+        kind:"component", uses:"42 instances", plabel:"component · Button",
+        spec:'<span class="mini-btn" style="transform:scale(1.6)">Get Photonz <i class="ic ic-chevron-right xs"></i></span>',
+        desc:"Reusable and paintable. Drop an instance, swap its variant, or re-paint it with any Paint or Effect Style. Edit the main and every instance updates." },
+      { id:"badge", nm:"Badge", mt:"17 instances", th:"linear-gradient(135deg,#ffe9a8,#f6c453)",
+        kind:"component", uses:"17 instances", plabel:"component · Badge",
+        spec:'<span class="mini-badge" style="transform:scale(2)"><i class="ic ic-sparkle xs"></i> New</span>',
+        desc:"A small status component. Its fill binds to a semantic slot, so a foreign system re-themes it without touching the layer tree." },
+      { id:"tile", nm:"Feature tile", mt:"9 instances", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
+        kind:"component", uses:"9 instances", plabel:"component · Feature tile",
+        spec:'<span class="mini-tile" style="transform:scale(2.2)"></span>',
+        desc:"A layout component. Auto-layout keeps its padding on the 4pt scale wherever it is instanced." },
+      { id:"avatar", nm:"Avatar", mt:"23 instances", th:"linear-gradient(135deg,#12c2e9,#7c4dff)",
+        kind:"component", uses:"23 instances", plabel:"component · Avatar",
+        spec:'<span class="mini-avatar" style="transform:scale(2.4)"></span>',
+        desc:"A round image component with a size variant set. The ring color is a semantic token, not a hex." },
+      { id:"card", nm:"Card", mt:"12 instances", th:"linear-gradient(135deg,#3ecf8e,#12c2e9)",
+        kind:"component", uses:"12 instances", plabel:"component · Card",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>',
+        desc:"A container component. Radius comes from radius/card, so re-pointing the token reshapes every card." },
+      { id:"nav", nm:"Nav bar", mt:"3 instances", th:"linear-gradient(135deg,#5c6680,#26463a)",
+        kind:"component", uses:"3 instances", plabel:"component · Nav bar",
+        spec:'<span class="big" style="display:block;height:44px;background:linear-gradient(135deg,#5c6680,#26463a)"></span>',
+        desc:"A composed component made of other components. Editing the Button main updates it too." }
+    ],
+    styles: [
+      { id:"grad", nm:"Brand / gradient", mt:"18 uses", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
+        kind:"paint style", uses:"18 uses", plabel:"style · Brand / gradient",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>',
+        desc:"A named Paint. Change it here and every layer wearing it re-paints, on a UI frame or a photo alike." },
+      { id:"sunset", nm:"Sunset", mt:"4 uses", th:"linear-gradient(135deg,#ffb36b,#7b4397)",
+        kind:"paint style", uses:"4 uses", plabel:"style · Sunset",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#ffb36b,#7b4397)"></span>',
+        desc:"A warm Paint style built from accent/amber and brand/500." },
+      { id:"glass", nm:"Glass", mt:"9 uses", th:"linear-gradient(135deg,rgba(255,255,255,.35),rgba(255,255,255,.08))",
+        kind:"paint style", uses:"9 uses", plabel:"style · Glass",
+        spec:'<span class="big" style="display:block;background:rgba(255,255,255,.22);backdrop-filter:blur(3px)"></span>',
+        desc:"A translucent Paint. Liquid Glass surfaces reference this instead of hardcoding an alpha." },
+      { id:"glow", nm:"Card glow", mt:"12 uses", th:"linear-gradient(135deg,#141826,#3a1b52)",
+        kind:"effect style", uses:"12 uses", plabel:"style · Card glow",
+        spec:'<span class="big" style="display:block;background:#141826;box-shadow:0 0 26px 3px rgba(177,77,255,.8) inset"></span>',
+        desc:"A named Effect. Effects are non-destructive, so a style change never touches pixels." },
+      { id:"shadow", nm:"Soft shadow", mt:"30 uses", th:"linear-gradient(135deg,#f4f6fb,#c3c9d6)",
+        kind:"effect style", uses:"30 uses", plabel:"style · Soft shadow",
+        spec:'<span class="big" style="display:block;background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.4)"></span>',
+        desc:"The default elevation for cards and popovers, 0 / 8 / 20 on the 4pt scale." },
+      { id:"display", nm:"Display / 44", mt:"6 uses", th:"linear-gradient(135deg,#20242f,#14161d)",
+        kind:"text style", uses:"6 uses", plabel:"style · Display / 44",
+        spec:'<span style="font-family:var(--serif);font-weight:700;font-size:44px;color:#fff;letter-spacing:-.02em">Ship it</span>',
+        desc:"A Text style bound to the semantic face font/display, never to a raw family." }
+    ],
+    media: [
+      { id:"sky", nm:"skyline.jpg", mt:"2560 × 1440", th:"linear-gradient(135deg,#12c2e9,#7c4dff)",
+        kind:"media", uses:"1 use", plabel:"media · skyline.jpg",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>',
+        desc:"An imported capture. Media is the same Library surface, a different scope." },
+      { id:"grain", nm:"grain.png", mt:"512 × 512", th:"linear-gradient(135deg,#5c6680,#20242f)",
+        kind:"media", uses:"3 uses", plabel:"media · grain.png",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#5c6680,#20242f)"></span>',
+        desc:"A texture used by the Charcoal brush and the Grain effect." }
+    ],
+    assets: [
+      { id:"logo", nm:"Wordmark", mt:"svg", th:"linear-gradient(135deg,#7c4dff,#ffb057)",
+        kind:"asset", uses:"7 uses", plabel:"asset · Wordmark",
+        spec:'<span style="font-family:var(--serif);font-weight:700;font-size:38px;color:#fff">Photonz</span>',
+        desc:"A vector asset. Drop it anywhere and it stays crisp, because it is still a vector Layer." },
+      { id:"mark", nm:"Sunset mark", mt:"svg", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
+        kind:"asset", uses:"4 uses", plabel:"asset · Sunset mark",
+        spec:'<span class="big" style="display:block;border-radius:22px;background:linear-gradient(180deg,#7c4dff,#ff5d8f 55%,#ffb057)"></span>',
+        desc:"The mark from the vector walkthrough, saved back into the system." }
+    ]
+  };
+
+  var SCOPE_NAMES = { media:"Media", components:"Components", styles:"Styles", assets:"Assets" };
+  var scope = "components";
+  var selId = "button";
+  var search = "";
+
+  function list(){
+    return (DATA[scope] || []).filter(function(it){
+      return !search || it.nm.toLowerCase().indexOf(search) >= 0;
+    });
+  }
+  function find(id){
+    var arr = DATA[scope] || [];
+    for(var i=0;i<arr.length;i++){ if(arr[i].id === id) return arr[i]; }
+    return arr[0] || null;
+  }
+
+  function paintGrid(){
+    var g = $("dsGrid"); if(!g) return;
+    var items = list();
+    if(!items.length){
+      g.innerHTML = '<p class="note" style="padding:0 var(--pad-sm)">Nothing in this scope matches that name.</p>';
+      return;
+    }
+    g.innerHTML = items.map(function(it){
+      var comp = (scope === "components") ? " comp" : "";
+      return '<div class="libtile' + comp + (it.id === selId ? " sel" : "") + '" tabindex="0" role="button" data-id="' + it.id + '">' +
+        '<span class="th" style="background:' + it.th + '"></span>' +
+        '<span class="cap"><span class="nm">' + it.nm + '</span><span class="mt">' + it.mt + '</span></span></div>';
+    }).join("");
+  }
+
+  function paintSelection(){
+    var it = find(selId); if(!it) return;
+    selId = it.id;
+    var set = function(id, v){ var e = $(id); if(e) e.textContent = v; };
+    var specEl = $("dsSpec"); if(specEl) specEl.innerHTML = it.spec;
+    set("dsPlabel", it.plabel);
+    set("dsTag", it.nm + " · " + it.uses);
+    set("dsName", it.nm);
+    set("dsUses", it.uses);
+    set("dsKind", it.kind);
+    set("dsDesc", it.desc);
+    set("dsPropCnt", it.kind.indexOf("component") === 0 ? "Component" : "Style");
+    set("dsArtLabel", "Brand · " + it.kind + " specimen");
+    var sh = $("dsSecH");
+    if(sh){
+      var isComp = (scope === "components");
+      sh.classList.toggle("comp", isComp);
+      sh.innerHTML = (isComp ? "Component" : "Style") +
+        ' <span class="mut"' + (isComp ? ' style="color:var(--comp)"' : "") + '>' +
+        (isComp ? '<i class="ic xs ic-component"></i> main' : "named · reusable") + "</span>";
+    }
+  }
+
+  var grid = $("dsGrid");
+  function pick(el){
+    var id = el.getAttribute("data-id"); if(!id) return;
+    selId = id;
+    paintGrid();
+    paintSelection();
+  }
+  if(grid){
+    grid.addEventListener("click", function(e){
+      var t = e.target.closest(".libtile"); if(t) pick(t);
+    });
+    grid.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      var t = e.target.closest(".libtile"); if(!t) return;
+      e.preventDefault(); pick(t);
+    });
+  }
+
+  var seg = $("dsScope");
+  if(seg){
+    var btns = [].slice.call(seg.querySelectorAll("button"));
+    btns.forEach(function(b){
+      b.addEventListener("click", function(){
+        btns.forEach(function(x){ x.classList.toggle("on", x === b); });
+        scope = b.getAttribute("data-scope") || "components";
+        var lbl = $("dsScopeLbl"); if(lbl) lbl.textContent = SCOPE_NAMES[scope] || "";
+        var first = (DATA[scope] || [])[0];
+        selId = first ? first.id : "";
+        paintGrid();
+        paintSelection();
+      });
+    });
+  }
+
+  var srch = $("dsSearch");
+  if(srch) srch.addEventListener("input", function(){
+    search = srch.value.trim().toLowerCase();
+    paintGrid();
+  });
+
+  // the systems overlay behaves like any other tile grid
+  [].slice.call(document.querySelectorAll('#dsSystems .libgrid')).forEach(function(g){
+    var tiles = [].slice.call(g.querySelectorAll(".libtile"));
+    tiles.forEach(function(t){
+      t.addEventListener("click", function(){
+        tiles.forEach(function(x){ x.classList.toggle("sel", x === t); });
+      });
+    });
+  });
+
+  paintGrid();
+  paintSelection();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · draw-boolean</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* draw-boolean · page-local bits only. The shell, dock, panel groups,
+     overlays, tool bar and rail are all shared DS classes.
+     Vector art may use color; the dark artboard is fixed in both themes. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #draw-boolean .win.shell{height:740px;min-height:0}
+  #draw-boolean .canvas>.selwrap{width:min(560px,calc(100% - var(--s6)))}
+  .bwrap{position:relative;width:100%}
+  .bwrap svg{display:block;width:100%;height:auto;overflow:visible;touch-action:none}
+  /* dashed source outlines that sit behind the boolean result */
+  .bsrc{fill:none;stroke:rgba(255,255,255,.5);stroke-width:1.6;stroke-dasharray:6 5;pointer-events:none}
+  .bres{pointer-events:none}
+  .blab{font-family:var(--mono);font-size:12px;fill:rgba(255,255,255,.68);pointer-events:none}
+  .blab.dim{fill:rgba(255,255,255,.42);font-size:11px}
+  #bDrag:active{cursor:grabbing}
+  .bhint{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+    background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);pointer-events:none;white-space:nowrap;display:flex;gap:6px;align-items:center}
+
+  /* the four-op gallery, shown in the slide-down overlay */
+  .bgal{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap-sm);
+    max-height:236px;overflow-y:auto;overscroll-behavior:contain;padding:var(--s1) 0 var(--s2)}
+  @container shell (max-width:880px){ .bgal{grid-template-columns:repeat(2,1fr)} }
+  .bcell{background:var(--artboard);border:1px solid var(--edge-lo);border-radius:var(--r3);
+    padding:var(--pad-sm);display:flex;flex-direction:column;gap:6px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .bcell svg{display:block;width:100%;height:auto;overflow:visible}
+  .bcell .nm{font-size:11.5px;font-weight:640;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .bcell .op{font-family:var(--mono);font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+  .bcell .ds{font-size:10.5px;color:var(--dim);line-height:1.4}  .apiline{margin:0}
+  .apiline .codeblk{white-space:pre-wrap;word-break:break-word}</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="draw-boolean">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Boolean operations</h2><span class="k">· union, subtract, intersect, exclude</span></div>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>combine-mark</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
+        <button class="btn primary sm" data-target="vector-wt">Done</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#bCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#bHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <button class="btn ghost sm" data-sheet="#bOpsSheet" title="Browse the four boolean operations"><i class="ic ic-boolean-union"></i> All operations</button>
+      <span class="tspacer"></span>
+      <span class="val" id="bReadout">union · 1 path</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="bCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+          <div class="mlabel">Path</div>
+          <div class="menuitem"><i class="ic ic-boolean-union"></i> Union <span class="sc">⌘⌥U</span></div>
+          <div class="menuitem"><i class="ic ic-boolean-union"></i> Subtract <span class="sc">⌘⌥S</span></div>
+          <div class="menuitem"><i class="ic ic-boolean-union"></i> Intersect <span class="sc">⌘⌥I</span></div>
+          <div class="menuitem"><i class="ic ic-boolean-union"></i> Exclude <span class="sc">⌘⌥X</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Release combine</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="dbShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · vector</div>
+          <div class="selwrap">
+            <div class="bwrap">
+              <svg id="bSvg" viewBox="0 0 640 330" role="img" aria-label="A circle and a square combined with a boolean operation, result updates live">
+                <defs>
+                  <linearGradient id="bG" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#ff5d8f"/>
+                  </linearGradient>
+                  <filter id="bGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#ff5d8f" flood-opacity="0.4"/>
+                  </filter>
+                  <!-- the two live source shapes, referenced everywhere so a drag updates all of it -->
+                  <circle id="shpA" cx="286" cy="168" r="96"/>
+                  <rect id="shpB" x="258" y="82" width="172" height="172" rx="14"/>
+                  <clipPath id="bClipB"><use href="#shpB"/></clipPath>
+                  <mask id="bAmB"><use href="#shpA" fill="#fff"/><use href="#shpB" fill="#000"/></mask>
+                  <mask id="bBmA"><use href="#shpB" fill="#fff"/><use href="#shpA" fill="#000"/></mask>
+                </defs>
+
+                <!-- dashed source outlines behind the result -->
+                <use href="#shpA" class="bsrc"/>
+                <use href="#shpB" class="bsrc"/>
+
+                <!-- boolean result groups; JS shows exactly one -->
+                <g id="gUnion" class="bres" fill="url(#bG)" fill-opacity="0.72" filter="url(#bGlow)"><use href="#shpA"/><use href="#shpB" mask="url(#bBmA)"/></g>
+                <g id="gInter" class="bres" fill="url(#bG)" fill-opacity="0.72" filter="url(#bGlow)" style="display:none"><use href="#shpA" clip-path="url(#bClipB)"/></g>
+                <g id="gSubAB" class="bres" fill="url(#bG)" fill-opacity="0.72" filter="url(#bGlow)" style="display:none"><use href="#shpA" mask="url(#bAmB)"/></g>
+                <g id="gSubBA" class="bres" fill="url(#bG)" fill-opacity="0.72" filter="url(#bGlow)" style="display:none"><use href="#shpB" mask="url(#bBmA)"/></g>
+                <g id="gExcl" class="bres" fill="url(#bG)" fill-opacity="0.72" filter="url(#bGlow)" style="display:none"><use href="#shpA" mask="url(#bAmB)"/><use href="#shpB" mask="url(#bBmA)"/></g>
+
+                <!-- shape labels -->
+                <text id="bLabA" class="blab" x="180" y="172">A</text>
+                <text id="bLabB" class="blab" x="404" y="172">B</text>
+
+                <!-- transparent drag handle over the circle -->
+                <circle id="bDrag" cx="286" cy="168" r="96" fill="#fff" fill-opacity="0" style="cursor:grab"/>
+              </svg>
+              <div class="bhint" id="bHint"><i class="ic ic-move" style="width:13px;height:13px"></i> Drag circle A to change the overlap</div>
+            </div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="bTag">Combine · union · 1 path</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#dbShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#bHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · the D4 Draw inventory, Select active -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Pen (P)" data-target="draw"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Brush (B)" data-target="draw"><i class="ic sm ic-brush"></i></button>
+            <button class="tool ovf" title="Eraser (E)" data-target="draw"><i class="ic sm ic-eraser"></i></button>
+            <button class="tool" title="Shape (U)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#bOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="bOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem" data-target="draw"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+            <div class="menuitem" data-target="draw"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · the four operations, browsed without crowding the canvas -->
+        <div class="sheet down" id="bOpsSheet" aria-hidden="true" aria-label="Boolean operations">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-boolean-union"></i> Boolean operations</span>
+            <span class="sp"></span>
+            <span class="val">same two shapes · four outcomes</span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="bgal">
+
+              <!-- UNION -->
+              <div class="bcell">
+                <svg viewBox="0 0 190 150" role="img" aria-label="Union of a circle and a square">
+                  <defs>
+                    <linearGradient id="uG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#ff5d8f"/></linearGradient>
+                    <circle id="uA" cx="76" cy="82" r="46"/>
+                    <rect id="uB" x="74" y="32" width="82" height="82" rx="12"/>
+                    <mask id="uBmA"><use href="#uB" fill="#fff"/><use href="#uA" fill="#000"/></mask>
+                  </defs>
+                  <use href="#uA" class="bsrc"/><use href="#uB" class="bsrc"/>
+                  <g fill="url(#uG)" fill-opacity="0.72"><use href="#uA"/><use href="#uB" mask="url(#uBmA)"/></g>
+                </svg>
+                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Union</div>
+                <div class="op">boolean · add</div>
+                <div class="ds">Keeps every pixel covered by A <b style="color:var(--ink)">or</b> B. The two silhouettes merge into one.</div>
+              </div>
+
+              <!-- SUBTRACT -->
+              <div class="bcell">
+                <svg viewBox="0 0 190 150" role="img" aria-label="Square B subtracted from circle A">
+                  <defs>
+                    <linearGradient id="sG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#ff5d8f"/></linearGradient>
+                    <circle id="sA" cx="76" cy="82" r="46"/>
+                    <rect id="sB" x="74" y="32" width="82" height="82" rx="12"/>
+                    <mask id="sAmB"><use href="#sA" fill="#fff"/><use href="#sB" fill="#000"/></mask>
+                  </defs>
+                  <use href="#sA" class="bsrc"/><use href="#sB" class="bsrc"/>
+                  <g fill="url(#sG)" fill-opacity="0.72"><use href="#sA" mask="url(#sAmB)"/></g>
+                </svg>
+                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Subtract</div>
+                <div class="op">boolean · A minus B</div>
+                <div class="ds">Punches B out of A. Order matters, so a swap gives B minus A instead.</div>
+              </div>
+
+              <!-- INTERSECT -->
+              <div class="bcell">
+                <svg viewBox="0 0 190 150" role="img" aria-label="Intersection of a circle and a square">
+                  <defs>
+                    <linearGradient id="iG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#ff5d8f"/></linearGradient>
+                    <circle id="iA" cx="76" cy="82" r="46"/>
+                    <rect id="iB" x="74" y="32" width="82" height="82" rx="12"/>
+                    <clipPath id="iClipB"><use href="#iB"/></clipPath>
+                  </defs>
+                  <use href="#iA" class="bsrc"/><use href="#iB" class="bsrc"/>
+                  <g fill="url(#iG)" fill-opacity="0.72"><use href="#iA" clip-path="url(#iClipB)"/></g>
+                </svg>
+                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Intersect</div>
+                <div class="op">boolean · and</div>
+                <div class="ds">Keeps only the region covered by A <b style="color:var(--ink)">and</b> B. Just the overlap survives.</div>
+              </div>
+
+              <!-- EXCLUDE -->
+              <div class="bcell">
+                <svg viewBox="0 0 190 150" role="img" aria-label="Exclusive-or of a circle and a square">
+                  <defs>
+                    <linearGradient id="xG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset="1" stop-color="#ff5d8f"/></linearGradient>
+                    <circle id="xA" cx="76" cy="82" r="46"/>
+                    <rect id="xB" x="74" y="32" width="82" height="82" rx="12"/>
+                    <mask id="xAmB"><use href="#xA" fill="#fff"/><use href="#xB" fill="#000"/></mask>
+                    <mask id="xBmA"><use href="#xB" fill="#fff"/><use href="#xA" fill="#000"/></mask>
+                  </defs>
+                  <use href="#xA" class="bsrc"/><use href="#xB" class="bsrc"/>
+                  <g fill="url(#xG)" fill-opacity="0.72"><use href="#xA" mask="url(#xAmB)"/><use href="#xB" mask="url(#xBmA)"/></g>
+                </svg>
+                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Exclude</div>
+                <div class="op">boolean · xor</div>
+                <div class="ds">Keeps A and B but drops the overlap, leaving a clean hole where they met.</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="bHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Combine study</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Icon sheet</span><span class="ago">22 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Logo marks</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock">
+
+        <!-- LAYERS · circle A, square B, and the combine result they feed -->
+        <div class="dgrp" id="bLayers" style="--gh:108px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span>
+            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#bAdjMenu"><i class="ic ic-sliders"></i></button>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#bLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow sel"><i class="ic ic-boolean-union"></i><span class="nm" id="bLayerNm">Combine · union</span><i class="ic sm ic-eye eye"></i></div>
+            <div id="bSrcRows">
+              <div class="lrow child" data-src="a"><i class="ic ic-circle"></i><span class="nm">Circle A</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child" data-src="b"><i class="ic ic-square"></i><span class="nm">Square B</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties, contextual to the combine result -->
+        <div class="dgrp" id="bProps" style="--gh:220px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="bSel">2 shapes</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#bPropMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Boolean <span class="mut">live, non-destructive</span></div>
+              <div class="seg" id="bOps" style="margin-bottom:var(--s2)">
+                <button class="on" data-op="union">Union</button><button data-op="subtract">Subtract</button><button data-op="intersect">Intersect</button><button data-op="exclude">Exclude</button>
+              </div>
+              <div class="setrow"><span class="rl">Order</span><span class="val" id="bOrder">A minus B</span></div>
+              <div class="actstack">
+                <button class="btn sm secondary block" id="bSwap" disabled><i class="ic ic-swap"></i> Swap order</button>
+                <button class="btn sm secondary block" id="bRelease"><i class="ic ic-undo"></i> Release combine</button>
+                <button class="btn sm secondary block" id="bReset"><i class="ic ic-undo"></i> Reset</button>
+              </div>
+              <p class="note">Circle A and square B stay live underneath, so drag a shape, retune the op, or release the combine and get the two originals back.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">Fill <span class="mut">Paint style</span></div>
+              <div class="irow"><span class="rl">Style</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Stroke</span><span class="select"><span class="lead"><span class="sw" style="background:#ff5d8f"></span> Pink 60</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <p class="note">One result path, painted with one named Style. Swap the Style once and every shape wearing it follows.</p>
+            </div>
+            <div class="section" style="border-bottom:0">
+              <div class="sec-h">In the API</div>
+              <p class="apiline"><span class="codeblk"><span class="c">// a boolean is one command · reflects the canvas</span>
+<span class="k">result</span> = shape.<span class="p">boolean</span>(<span class="s" id="bApiOp">"union"</span>, [<span id="bApiArgs">circle, square</span>])
+<span class="k">result</span>.<span class="p">release</span>()   <span class="c">// back to [circle, square]</span></span></p>
+              <p class="note">Ops take two shapes or a whole list, so an agent can combine shapes from a plain sentence.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp collapsed" id="bEffects" style="--gh:84px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#bEfxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">pink 40</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes. Styles is what a path wears. -->
+        <div class="dgrp grow" id="bLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="bScopeLbl">Styles</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#bLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="bScope">
+                <button data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button class="on" data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search styles" aria-label="Search styles"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / grad</span><span class="mt">18 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#7b4397)"></span><span class="cap"><span class="nm">Sunset</span><span class="mt">4 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Mint</span><span class="mt">7 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:#ff5d8f"></span><span class="cap"><span class="nm">Pink 60</span><span class="mt">stroke</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:#f4f6fb"></span><span class="cap"><span class="nm">White 100</span><span class="mt">stroke</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#141826,#3a1b52)"></span><span class="cap"><span class="nm">Card glow</span><span class="mt">effect</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#bLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#bProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#bEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#bLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="bAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+        <div class="mlabel">Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+      </div>
+      <div class="popover menu pop" id="bLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-boolean-union"></i> Combine selection <span class="sc">⌘⌥U</span></div>
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="bPropMenu" style="position:absolute;right:var(--s4);top:180px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to default</div>
+      </div>
+      <div class="popover menu pop" id="bEfxMenu" style="position:absolute;right:var(--s4);top:392px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
+        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Border</div>
+      </div>
+      <div class="popover menu pop" id="bLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:208px;z-index:11">
+        <div class="menuitem"><i class="ic ic-swatch"></i> Add fill as a Style</div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Booleans turn two overlapping shapes into one, four ways: <b>Union</b> adds, <b>Subtract</b> removes, <b>Intersect</b> keeps the overlap, <b>Exclude</b> drops it. The op is a property of the selected layer, so it lives in <b>Properties</b>, and the four outcomes browse in an overlay instead of crowding the canvas. <span data-target="draw" style="color:var(--accent);cursor:pointer">Open the raw Pen tool →</span></p></div>
+    <div class="c"><div class="lab g2">Direction</div><p>Keep the op <b>live</b> by default. The sources stay underneath as child rows in <b>Layers</b>, so you can drag circle A, change the operation, or swap subtract order and watch the result retune, then <b>Release</b> to get the two originals back. Nothing is baked into pixels.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should a boolean stay a re-tunable group forever, or offer a one tap <b>Flatten</b> to a plain path once you are happy? And when a subtract fully erases a shape, should the agent warn you or just leave an empty path?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* draw-boolean · the live boolean demo. Collapse, resize, rail, overlays,
+   overflow and tool selection are all shared DS behavior.
+   All selectors guarded; a missing node is a no-op. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
+
+  var svg = $("bSvg"); if(!svg) return;
+  var shpA = $("shpA"), drag = $("bDrag"), labA = $("bLabA");
+  var swap = $("bSwap"), reset = $("bReset"), release = $("bRelease"), ops = $("bOps");
+  var readout = $("bReadout"), apiOp = $("bApiOp"), apiArgs = $("bApiArgs"), hint = $("bHint");
+  var tag = $("bTag"), layerNm = $("bLayerNm"), orderVal = $("bOrder"), srcRows = $("bSrcRows");
+  var VW = 640, VH = 330;
+  var DEF = { cx:286, cy:168 };
+  var op = "union", order = "ab";
+
+  var groups = {
+    union:    $("gUnion"),
+    intersect:$("gInter"),
+    subAB:    $("gSubAB"),
+    subBA:    $("gSubBA"),
+    exclude:  $("gExcl")
+  };
+
+  var LABELS = {
+    union:     "union · 1 path",
+    subtractAB:"subtract · A minus B",
+    subtractBA:"subtract · B minus A",
+    intersect: "intersect · overlap only",
+    exclude:   "exclude · overlap dropped"
+  };
+
+  function localPt(el, e){
+    var r = el.getBoundingClientRect();
+    if(!r.width || !r.height) return {x:0,y:0};
+    return { x:(e.clientX - r.left) * (VW / r.width), y:(e.clientY - r.top) * (VH / r.height) };
+  }
+
+  function activeKey(){
+    if(op === "union") return "union";
+    if(op === "intersect") return "intersect";
+    if(op === "exclude") return "exclude";
+    return order === "ab" ? "subAB" : "subBA"; // subtract
+  }
+
+  function apply(){
+    var key = activeKey();
+    Object.keys(groups).forEach(function(k){
+      if(groups[k]) groups[k].style.display = (k === key) ? "" : "none";
+    });
+    // swap only means something for subtract
+    if(swap) swap.disabled = (op !== "subtract");
+    // readouts, in all three places the selection shows up
+    var rk = (op === "subtract") ? (order === "ab" ? "subtractAB" : "subtractBA") : op;
+    var label = LABELS[rk] || (op + " · 1 path");
+    if(readout) readout.textContent = label;
+    if(tag) tag.textContent = "Combine · " + label;
+    if(layerNm) layerNm.textContent = "Combine · " + op;
+    if(orderVal) orderVal.textContent = (op !== "subtract") ? "not used" : (order === "ab" ? "A minus B" : "B minus A");
+    if(apiOp) apiOp.textContent = '"' + op + '"';
+    if(apiArgs) apiArgs.textContent = (op === "subtract" && order === "ba") ? "square, circle" : "circle, square";
+    // the source rows in Layers follow the real order
+    if(srcRows){
+      var a = srcRows.querySelector('[data-src="a"]'), b = srcRows.querySelector('[data-src="b"]');
+      if(a && b){
+        var first = (op === "subtract" && order === "ba") ? b : a;
+        if(srcRows.firstElementChild !== first) srcRows.insertBefore(first, srcRows.firstElementChild);
+      }
+    }
+  }
+
+  // op selection
+  if(ops) ops.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    ops.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
+    op = b.getAttribute("data-op") || "union";
+    apply();
+  });
+
+  if(swap) swap.addEventListener("click", function(){
+    if(op !== "subtract") return;
+    order = (order === "ab") ? "ba" : "ab";
+    apply();
+  });
+
+  function setCircle(cx, cy){
+    cx = clamp(cx, 150, 470); cy = clamp(cy, 118, 236);
+    shpA.setAttribute("cx", cx); shpA.setAttribute("cy", cy);
+    drag.setAttribute("cx", cx); drag.setAttribute("cy", cy);
+    if(labA){ labA.setAttribute("x", cx - 106); labA.setAttribute("y", cy + 4); }
+  }
+
+  function toUnion(){
+    op = "union"; order = "ab";
+    if(ops) ops.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-op") === "union"); });
+  }
+
+  if(reset) reset.addEventListener("click", function(){
+    toUnion();
+    setCircle(DEF.cx, DEF.cy);
+    if(hint) hint.style.display = "";
+    apply();
+  });
+
+  // Release puts the sources back side by side, still live
+  if(release) release.addEventListener("click", function(){
+    toUnion();
+    setCircle(196, 168);
+    if(hint) hint.style.display = "";
+    apply();
+  });
+
+  // drag the circle to change the overlap
+  var dragging = false, grab = null;
+  drag.addEventListener("pointerdown", function(e){
+    e.preventDefault();
+    dragging = true;
+    var p = localPt(svg, e);
+    grab = { dx: parseFloat(shpA.getAttribute("cx")) - p.x, dy: parseFloat(shpA.getAttribute("cy")) - p.y };
+    try{ drag.setPointerCapture(e.pointerId); }catch(_){}
+    if(hint) hint.style.display = "none";
+  });
+  drag.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    var p = localPt(svg, e);
+    setCircle(p.x + grab.dx, p.y + grab.dy);
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging = false;
+    try{ drag.releasePointerCapture(e.pointerId); }catch(_){}
+  }
+  drag.addEventListener("pointerup", endDrag);
+  drag.addEventListener("pointercancel", endDrag);
+
+  /* Library scope switch + tile selection, same behavior as every other shell */
+  var scope = $("bScope");
+  if(scope){
+    var sbtns = [].slice.call(scope.querySelectorAll("button"));
+    var slabel = $("bScopeLbl");
+    var names = { media:"Media", components:"Components", styles:"Styles", assets:"Assets" };
+    sbtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        sbtns.forEach(function(x){ x.classList.toggle("on", x === b); });
+        if(slabel) slabel.textContent = names[b.getAttribute("data-scope")] || "";
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll(".libgrid")).forEach(function(grid){
+    var tiles = [].slice.call(grid.querySelectorAll(".libtile"));
+    tiles.forEach(function(tile){
+      tile.addEventListener("click", function(){
+        tiles.forEach(function(x){ x.classList.toggle("sel", x === tile); });
+      });
+    });
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>

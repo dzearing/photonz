@@ -1,0 +1,1517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · draw</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* draw · page-local bits only. The shell, dock, panel groups, Library group,
+     tiles, overlays, tool bar and rail are all shared DS classes. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #draw .win.shell{height:900px;min-height:0}
+  /* one canvas, three tool surfaces; the active tool shows exactly one.
+     The surface is the grid child, so its percentage width resolves against the
+     canvas and never collapses to zero. */
+  .canvas>.surf{display:none;width:min(560px,calc(100% - var(--s6)))}
+  .canvas>.surf.on{display:block}
+  .surf>.selwrap{width:100%}
+
+  .draw-art{position:relative;width:100%;height:300px;border-radius:var(--r4);overflow:hidden;
+    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18);touch-action:none}
+  /* .ar keeps the box on the artboard's own aspect ratio so the SVG geometry and
+     the raster brush canvas map to exactly the same pixels at any width. */
+  .draw-art.ar{height:auto;aspect-ratio:56 / 30}
+  .draw-art.paper{background:
+    radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.06),transparent 55%),
+    linear-gradient(180deg,#20242f,#14161d)}
+  .draw-art .plabel{position:absolute;left:10px;top:8px;z-index:4;font-family:var(--mono);font-size:9px;
+    letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
+  .draw-art svg,.draw-art canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .draw-art .surface{cursor:crosshair}
+  /* pen editing overlay glyphs */
+  .anchor{fill:var(--panel);stroke:#ff5d8f;stroke-width:1.4;cursor:grab}
+  .anchor.first{fill:#ff5d8f}
+  .anchor.on{fill:#ff5d8f;stroke:#fff}
+  .hline{stroke:#7fb0ff;stroke-width:1;opacity:.85}
+  .hdot{fill:#7fb0ff;stroke:var(--panel);stroke-width:1;cursor:grab}
+  /* the exact bezier geometry, ghosted under the brushed mark */
+  #penPath.geo{stroke:rgba(255,255,255,.32);stroke-width:1;stroke-dasharray:4 5}
+  #penPath.geo.off{stroke:none}
+  .hint-badge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
+    background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
+  /* eraser: two side-by-side artboards */
+  .erase-row{display:flex;gap:var(--gap);flex-wrap:wrap;justify-content:center}
+  .erase-cell{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:center;
+    width:258px;max-width:100%}
+  .erase-cell .draw-art{width:100%;height:200px}
+  .erase-cap{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:560;color:rgba(255,255,255,.72)}
+  .erase-cap .tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    padding:1px 6px;border-radius:5px}
+  .erase-cap .tag.d{color:#ff8b8b;background:rgba(255,90,90,.16);border:1px solid rgba(255,90,90,.4)}
+  .erase-cap .tag.m{color:#7ff0b6;background:rgba(62,207,142,.16);border:1px solid rgba(62,207,142,.4)}
+
+  /* a brush preset tile hosts a REAL stroke, rendered by the same engine that
+     paints the path, inside the shared .th */
+  .libtile .th.bth{position:relative;height:46px;
+    background:radial-gradient(120% 120% at 22% 0%,rgba(255,255,255,.05),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d)}
+  .libtile .th.bth canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* the Stroke brush picker inside Properties · same engine, chip sized */
+  .bpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:var(--s2) 0 0}
+  .bchip{position:relative;border:1px solid var(--edge-lo);border-radius:var(--r2,7px);overflow:hidden;
+    background:linear-gradient(180deg,#20242f,#14161d);height:34px;padding:0;cursor:pointer;
+    transition:border-color .12s ease,transform .1s ease}
+  .bchip canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .bchip:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--edge-lo));transform:translateY(-1px)}
+  .bchip:active{transform:translateY(0) scale(.97)}
+  .bchip:focus-visible{outline:none;box-shadow:var(--ring)}
+  .bchip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .apiline{margin:0}
+  .apiline .codeblk{display:block;white-space:pre-wrap;word-break:break-word}
+
+  /* range control on the 4pt scale, accent themed */
+  .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
+    background:var(--line-strong);outline:none;margin:0}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
+  .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
+    border:2px solid var(--panel);cursor:pointer}
+  .rng:focus-visible{box-shadow:var(--ring);border-radius:999px}
+  .rrow{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:var(--s2);margin:8px 0}  .rrow .val{text-align:right}  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
+  .actrow .btn{flex:1 1 auto}
+
+  /* color swatches */
+  .swatches{display:flex;gap:6px;flex-wrap:wrap}
+  .sw-btn{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.2);cursor:pointer;
+    padding:0;transition:transform .1s ease}
+  .sw-btn:hover{transform:scale(1.08)}
+  .sw-btn:focus-visible{outline:none;box-shadow:var(--ring)}
+  .sw-btn.on{outline:2px solid var(--accent);outline-offset:1px}</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="draw">
+  <div class="scen-head"><span class="pip" style="background:#ff5d8f"></span><h2>Draw and paint</h2><span class="k">· one shell · pen, brush, eraser · a vector path's stroke is a Brush</span></div>
+
+  <p class="pglead">Pen, Brush, and Eraser are three <b>tools</b> in the same Draw shell, not three apps. And the Pen is
+    the interesting one: its path stays exact, editable bezier geometry while its <b>stroke is painted by a Brush</b>.
+    Drag an anchor and the brushed mark re-renders; close the path and you get a shape you can <b>fill</b>; swap the
+    brush in the <b>Library</b> and the same geometry wears a completely different mark. The canvas is live, try it.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>sketch-sheet</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
+        <button class="btn primary sm" data-target="image">Done</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#dwCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#dwHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="val" id="dwReadout">Pen · vector path</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="dwCmd" style="position:absolute;right:0;top:26px;width:226px;z-index:12">
+          <div class="mlabel">Tools</div>
+          <div class="menuitem" data-tool="pen"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+          <div class="menuitem" data-tool="brush"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+          <div class="menuitem" data-tool="eraser"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menuitem" data-target="draw-boolean"><i class="ic ic-boolean-union"></i> Combine shapes <span class="sc">⌘⌥U</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="dwShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label" id="dwArtLabel">1200 × 630 · vector</div>
+
+          <!-- PEN SURFACE · one object: exact bezier geometry, brush-painted stroke -->
+          <div class="surf on" id="surfPen">
+            <div class="selwrap">
+              <div class="draw-art paper ar">
+                <span class="plabel">path · brushed stroke · editable</span>
+                <!-- the mark: fill + brush dabs stamped along the path -->
+                <canvas id="penPaint" width="1120" height="600" aria-label="The path's fill and its brush-painted stroke"></canvas>
+                <!-- the geometry: ghosted bezier + the anchors and handles you drag -->
+                <svg class="surface" id="penSvg" viewBox="0 0 560 300" preserveAspectRatio="xMidYMid meet" aria-label="Vector pen surface">
+                  <path id="penPath" class="geo" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
+                  <g id="penOverlay"></g>
+                </svg>
+                <div class="hint-badge" id="penHint">Drag an anchor or a handle · the brushed stroke re-renders live</div>
+              </div>
+              <!-- SELECTION, place 1 of 3: on the canvas -->
+              <div class="sel-ring"></div>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag" id="penMtag">Path 1 · vector · Marker</span>
+            </div>
+          </div>
+
+          <!-- BRUSH SURFACE -->
+          <div class="surf" id="surfBrush">
+            <div class="selwrap">
+              <div class="draw-art paper ar">
+                <span class="plabel">paint · pixels</span>
+                <canvas class="surface" id="brushCanvas" width="1120" height="600"></canvas>
+                <div class="hint-badge" id="brushHint">Drag on the canvas to paint with the same brush, freehand</div>
+              </div>
+              <div class="sel-ring"></div>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Paint 1 · raster</span>
+            </div>
+          </div>
+
+          <!-- ERASER SURFACE -->
+          <div class="surf" id="surfEraser">
+            <div class="selwrap">
+              <div class="erase-row">
+                <div class="erase-cell">
+                  <div class="draw-art">
+                    <span class="plabel">pixels removed</span>
+                    <canvas class="surface" id="eraseDest" width="258" height="200"></canvas>
+                  </div>
+                  <div class="erase-cap"><span class="tag d">Destructive</span><span>gone unless you undo</span></div>
+                </div>
+                <div class="erase-cell">
+                  <div class="draw-art">
+                    <span class="plabel">mask · reversible</span>
+                    <canvas class="surface" id="eraseMask" width="258" height="200"></canvas>
+                  </div>
+                  <div class="erase-cap"><span class="tag m">Layer mask</span><span>restore any time</span></div>
+                </div>
+              </div>
+              <div class="sel-ring"></div>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Paint 1 · raster + mask</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#dwShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#dwHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · the full D4 Draw inventory -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool" title="Select (V)" data-tool="select"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool on" title="Pen (P)" data-tool="pen"><i class="ic sm ic-pen"></i></button>
+            <button class="tool" title="Brush (B)" data-tool="brush"><i class="ic sm ic-brush"></i></button>
+            <button class="tool" title="Eraser (E)" data-tool="eraser"><i class="ic sm ic-eraser"></i></button>
+            <button class="tool ovf" title="Shape (U)" data-tool="shape"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Text (T)" data-tool="text"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-tool="measure"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)" data-tool="hand"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)" data-tool="zoom"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#dwOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" id="dwFg" style="background:#ff5d8f"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="dwOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+            <div class="menuitem" data-tool="shape"><i class="ic ic-square"></i> Shape <span class="sc">U</span></div>
+            <div class="menuitem" data-tool="text"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-tool="measure"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="dwHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Sketch sheet</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Ink test</span><span class="ago">9 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Cover art</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="230" data-max="430"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock">
+
+        <div class="dgrp" id="dwLayers" style="--gh:88px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span>
+            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#dwAdjMenu"><i class="ic ic-sliders"></i></button>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#dwLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow sel" data-layer="pen"><i class="ic ic-pen"></i><span class="nm" id="dwPenRow">Path 1 · vector · Marker</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow" data-layer="raster"><span class="layer-swatch" id="dwLayerSw" style="width:14px;height:14px;border-radius:4px;flex:none;background:#ff5d8f"></span><span class="nm">Paint 1 · raster</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties, contextual to the active tool -->
+        <div class="dgrp" id="dwProps" style="--gh:226px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="dwPropCnt">Vector · Path 1</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#dwPropMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <!-- SELECT -->
+            <div class="tprop" id="propSelect" style="display:none">
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Selection</div>
+                <p class="note" style="margin-top:0">Nothing is being drawn. Pick <b style="color:var(--ink)">Pen</b>, <b style="color:var(--ink)">Brush</b>, or <b style="color:var(--ink)">Eraser</b> in the tool bar and this panel fills with that tool's settings.</p>
+                <div class="actstack">
+                  <button class="btn sm secondary block" data-tool="pen"><i class="ic ic-pen"></i> Pen</button>
+                  <button class="btn sm secondary block" data-tool="brush"><i class="ic ic-brush"></i> Brush</button>
+                  <button class="btn sm secondary block" data-tool="eraser"><i class="ic ic-eraser"></i> Eraser</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PEN · the selected path: geometry, a Paint fill, a Brush stroke -->
+            <div class="tprop" id="propPen">
+              <div class="section">
+                <div class="sec-h">Path <span class="mut" id="penCount">0 nodes</span></div>
+                <div class="seg" id="penMode" style="margin-bottom:var(--s2)">
+                  <button class="on" data-mode="smooth">Smooth</button><button data-mode="corner">Corner</button>
+                </div>
+                <div class="irow"><span class="rl">Geometry</span>
+                  <div class="seg" id="penGeo">
+                    <button class="on" data-geo="show">Show</button><button data-geo="hide">Hide</button>
+                  </div>
+                </div>
+                <div class="actrow">
+                  <button class="btn sm secondary" id="penClose"><i class="ic ic-boolean-union"></i> Close</button>
+                  <button class="btn sm secondary" id="penUndo"><i class="ic ic-undo"></i> Undo</button>
+                  <button class="btn sm secondary" id="penClear"><i class="ic ic-trash"></i> Clear</button>
+                </div>
+                <p class="note">Drag any <b style="color:var(--ink)">anchor</b> or <b style="color:var(--ink)">handle</b> on the canvas. The geometry stays exact bezier data; the brushed stroke re-renders as you drag.</p>
+              </div>
+
+              <!-- FILL · only a closed path can be filled -->
+              <div class="section">
+                <div class="sec-h">Fill <span class="mut" id="penFillState">closed shape</span></div>
+                <div class="seg" id="penFillMode" style="margin-bottom:var(--s2)">
+                  <button data-fill="none">None</button><button data-fill="solid">Solid</button><button class="on" data-fill="grad">Gradient</button>
+                </div>
+                <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" id="penFillSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"></span> <span id="penFillName">Brand / gradient</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="penFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="58"><span class="val" id="penFillOpV">58%</span></div>
+                <p class="note" id="penFillNote">Close the path and it becomes a shape you can fill. The fill is a named <b style="color:var(--ink)">Paint</b>; the stroke is a <b style="color:var(--ink)">Brush</b>. One object carries both.</p>
+              </div>
+
+              <!-- STROKE · a brush picker, not a width slider -->
+              <div class="section">
+                <div class="sec-h">Stroke <span class="mut" id="penBrushName">Marker</span></div>
+                <div class="irow"><span class="rl">Brush</span>
+                  <div class="bpick" id="penBrushPick" role="radiogroup" aria-label="Stroke brush"></div>
+                </div>
+                <div class="rrow"><span class="rl">Size</span><input class="rng" id="penSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"><span class="val" id="penSizeV">26</span></div>
+                <div class="rrow"><span class="rl">Flow</span><input class="rng" id="penFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"><span class="val" id="penFlowV">42%</span></div>
+                <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" id="penStrokeSw" style="background:#ff5d8f"></span> <span id="penStrokeName">Pink 60</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="actrow">
+                  <button class="btn sm secondary" id="penBrowseBrush"><i class="ic ic-library"></i> Browse brushes</button>
+                  <button class="btn sm secondary" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush</button>
+                </div>
+                <p class="note">The stroke is not a 1&nbsp;px vector line: it is <b style="color:var(--ink)">stamped by the brush</b> along the path, at the brush's own spacing, scatter, tip angle and flow. Swap the brush and the same geometry wears a different mark.</p>
+              </div>
+
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Node <span class="mut">selected</span></div>
+                <div class="grid2">
+                  <div class="field"><span class="k">X</span><span class="v" id="penNX">·</span></div>
+                  <div class="field"><span class="k">Y</span><span class="v" id="penNY">·</span></div>
+                  <div class="field"><span class="k">Type</span><span class="v" id="penNT">·</span></div>
+                  <div class="field"><span class="k">Nodes</span><span class="v" id="penNN">0</span></div>
+                </div>
+                <p class="note">A vector Path is a <b style="color:var(--ink)">Layer</b> of anchor points, not pixels. Scale it to any size, edit the nodes forever. <span data-target="draw-boolean" style="color:var(--accent);cursor:pointer">Combine two paths →</span></p>
+              </div>
+            </div>
+
+            <!-- BRUSH -->
+            <div class="tprop" id="propBrush" style="display:none">
+              <div class="section">
+                <div class="sec-h">Brush <span class="mut" id="brBrushName">Marker</span></div>
+                <div class="irow"><span class="rl">Brush</span>
+                  <div class="bpick" id="brBrushPick" role="radiogroup" aria-label="Paint brush"></div>
+                </div>
+                <p class="note">The same brush the selected <b style="color:var(--ink)">Path</b> strokes with. A brush is a <b style="color:var(--ink)">Style</b>, so freehand pixels and a vector stroke share one definition.</p>
+              </div>
+              <div class="section">
+                <div class="sec-h">Shape <span class="mut" id="brushRO">0 strokes</span></div>
+                <div class="rrow"><span class="rl">Size</span><input class="rng" id="bSize" name="brush-size" type="range" min="2" max="80" step="1" value="26"><span class="val" id="bSizeV">26</span></div>
+                <div class="rrow"><span class="rl">Flow</span><input class="rng" id="bFlow" name="brush-flow" type="range" min="5" max="100" step="1" value="42"><span class="val" id="bFlowV">42%</span></div>
+                <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="bOpac" name="brush-opacity" type="range" min="10" max="100" step="1" value="100"><span class="val" id="bOpacV">100%</span></div>
+                <div class="actrow">
+                  <button class="btn sm secondary" id="brushClear"><i class="ic ic-trash"></i> Clear layer</button>
+                  <button class="btn sm secondary" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush</button>
+                </div>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Color <span class="mut">Paint</span></div>
+                <div class="swatches" id="brushSwatches">
+                  <button class="sw-btn on" style="background:#ff5d8f" data-color="#ff5d8f" title="Pink"></button>
+                  <button class="sw-btn" style="background:#7c4dff" data-color="#7c4dff" title="Purple"></button>
+                  <button class="sw-btn" style="background:#4c6fff" data-color="#4c6fff" title="Blue"></button>
+                  <button class="sw-btn" style="background:#12c2e9" data-color="#12c2e9" title="Cyan"></button>
+                  <button class="sw-btn" style="background:#f6c453" data-color="#f6c453" title="Amber"></button>
+                  <button class="sw-btn" style="background:#3ecf8e" data-color="#3ecf8e" title="Green"></button>
+                  <button class="sw-btn" style="background:#f4f6fb" data-color="#f4f6fb" title="White"></button>
+                </div>
+                <p class="note">Brush paints pixels into <b style="color:var(--ink)">Paint 1</b>, a raster Layer. Color comes from a <b style="color:var(--ink)">Paint</b>, the same swatch pair the tool bar shows.</p>
+              </div>
+            </div>
+
+            <!-- ERASER -->
+            <div class="tprop" id="propEraser" style="display:none">
+              <div class="section">
+                <div class="sec-h">Eraser</div>
+                <div class="rrow"><span class="rl">Size</span><input class="rng" id="eSize" name="eraser-size" type="range" min="10" max="70" step="1" value="34"><span class="val" id="eSizeV">34</span></div>
+                <div class="setrow"><span class="rl">Mode</span><span class="val">both, side by side</span></div>
+                <p class="note">Drag on either artboard. The left one deletes pixels, the right one paints into a mask.</p>
+              </div>
+              <div class="section">
+                <div class="sec-h">Destructive</div>
+                <div class="actstack">
+                  <button class="btn sm danger block" id="eraseDestReset"><i class="ic ic-undo"></i> Repaint layer</button>
+                </div>
+                <p class="note"><b style="color:var(--crit)">Destructive erase</b> deletes pixels from the raster layer. Gone unless you undo.</p>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Layer mask <span class="mut">non-destructive</span></div>
+                <div class="actrow">
+                  <button class="btn sm secondary" id="maskToggle"><i class="ic ic-eye"></i> Show hidden</button>
+                  <button class="btn sm secondary" id="maskRestore"><i class="ic ic-undo"></i> Restore all</button>
+                </div>
+                <p class="note"><b style="color:var(--good)">Mask erase</b> paints black into a Layer mask, an alpha <b style="color:var(--ink)">Paint</b>, so nothing is lost. Prefer the mask: reversible, re-editable, scriptable. <span data-target="image" style="color:var(--accent);cursor:pointer">See masks in image editing →</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <!-- AGENT · exact coordinates in, a hand-drawn mark out -->
+        <div class="dgrp" id="dwAgent" style="--gh:186px">
+          <div class="dgrp-h"><span class="ttl">Agent</span><span class="cnt" id="dwAgentCnt">path.add</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#dwAgentMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="section" style="border-bottom:0">
+              <div class="sec-h"><i class="ic ic-sparkle sm" style="color:var(--accent)"></i> This path, as commands</div>
+              <p class="apiline"><span class="codeblk" id="dwAgentCode"></span></p>
+              <div class="actrow">
+                <button class="btn sm primary" id="agentRun"><i class="ic ic-sparkle"></i> Run agent path</button>
+                <button class="btn sm secondary" id="agentRestyle"><i class="ic ic-brush"></i> Restyle</button>
+              </div>
+              <p class="note">The agent sends <b style="color:var(--ink)">exact bezier control points</b>, which is what makes its output diffable and re-editable. Painted by a brush, those precise coordinates still land as a hand-drawn mark: <b style="color:var(--ink)">machine-precise structure, human surface</b>. Restyle everything it drew by swapping one brush.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · brush presets are reusable content, so they live here as a scope -->
+        <div class="dgrp grow" id="dwLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="dwScopeLbl">Brushes</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#dwLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="dwScope">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="brushes">Brush</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search brushes" aria-label="Search brushes"></span>
+            </div>
+            <!-- tiles are rendered by the brush engine, so a tile previews the real mark -->
+            <div class="libgrid" id="brushPresets"></div>
+            <p class="note" id="dwLibNote" style="padding:0 var(--pad-sm) var(--pad)">Pick a brush and the selected <b style="color:var(--ink)">Path</b> restyles instantly. Same geometry, different mark.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#dwLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#dwProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#dwAgent" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+        <button class="drailtab" data-group="#dwLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="dwAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+        <div class="mlabel">Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+      </div>
+      <div class="popover menu pop" id="dwLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘J</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="dwPropMenu" style="position:absolute;right:var(--s4);top:200px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to default</div>
+      </div>
+      <div class="popover menu pop" id="dwAgentMenu" style="position:absolute;right:var(--s4);top:300px;width:212px;z-index:11">
+        <div class="menuitem" id="agentCopy"><i class="ic ic-copy"></i> Copy as script</div>
+        <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Ask the agent</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Brush library</div>
+      </div>
+      <div class="popover menu pop" id="dwLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem" data-target="brush-editor"><i class="ic ic-plus"></i> New brush</div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-import"></i> Import a brush file</div>
+        <div class="menuitem"><i class="ic ic-lasso"></i> Make brush from selection</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Vector and raster stop being separate. A <b>Path</b> keeps exact bezier geometry, and its <b>stroke is painted by a Brush</b>, so the structure is precise and the mark is expressive. Close the path and the same object also carries a <b>Paint</b> fill. <span data-target="dsys" style="color:var(--accent);cursor:pointer">Open the design system →</span></p></div>
+    <div class="c"><div class="lab g2">Direction</div><p>Because the brush is a <b>Style</b> and not baked pixels, restyling is one swap: pick a different brush in the <b>Library</b> group and every path drawn with it re-renders. That is the payoff for the <b>agent</b> too, since it emits precise coordinates and still gets a hand-drawn result. Brush presets live where the <span data-target="brush-library" style="color:var(--accent);cursor:pointer">brush library</span> keeps them.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should a brushed stroke bake to pixels on export only, or should the app also offer a one-click rasterize so the mark can be smudged and blended like paint? And should the Pen auto convert a freehand brush stroke into an editable path on request?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* draw · one shell, three tool surfaces. Collapse, resize, rail, overlays,
+   overflow and tool-strip selection are all shared DS behavior.
+   All selectors guarded; a missing node is a no-op. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var all = function(sel,root){ return [].slice.call((root||document).querySelectorAll(sel)); };
+
+  /* ---------- shared: local point from a pointer event on an element ---------- */
+  function localPt(el, e, vw, vh){
+    var r = el.getBoundingClientRect();
+    if(!r.width || !r.height) return {x:0,y:0};
+    return { x:(e.clientX - r.left) * (vw / r.width), y:(e.clientY - r.top) * (vh / r.height) };
+  }
+
+  /* ========================================================================
+     BRUSH ENGINE · a brush is a Style (tip shape, spacing, scatter, dynamics),
+     not baked pixels. ONE engine stamps dabs, and it is used three ways:
+       · freehand, along a pointer drag  (raster paint)
+       · along a vector path's geometry  (the path's STROKE)
+       · into a preset tile              (the Library / picker previews)
+     That is what makes "a vector path's stroke is a brush" literal here.
+     ======================================================================== */
+  var TAU = Math.PI * 2;
+
+  var BRUSHES = [
+    { id:"ink.marker",     name:"Marker",        cat:"Ink",      color:"#ff5d8f", tip:"chisel",
+      size:26, hard:0.80, flow:0.42, spacing:0.05, scatter:0.02, sizeJit:0.04, flowJit:0.08, taper:0.06, ratio:0.30, tilt:38, follow:false },
+    { id:"ink.pen",        name:"Technical pen", cat:"Ink",      color:"#ff5d8f", tip:"round",
+      size:6,  hard:0.97, flow:1.00, spacing:0.055,scatter:0.00, sizeJit:0.06, flowJit:0.04, taper:0.50 },
+    { id:"ink.brush",      name:"Brush pen",     cat:"Ink",      color:"#ff5d8f", tip:"chisel",
+      size:22, hard:0.94, flow:0.92, spacing:0.035,scatter:0.00, sizeJit:0.05, flowJit:0.04, taper:0.82, ratio:0.44, tilt:0, follow:true },
+    { id:"sketch.pencil",  name:"Pencil",        cat:"Sketch",   color:"#ff5d8f", tip:"grain",
+      size:11, hard:0.80, flow:0.60, spacing:0.11, scatter:0.30, sizeJit:0.30, flowJit:0.45, taper:0.32, grains:5 },
+    { id:"sketch.charcoal",name:"Charcoal",      cat:"Sketch",   color:"#ff5d8f", tip:"grain",
+      size:32, hard:0.35, flow:0.44, spacing:0.15, scatter:0.50, sizeJit:0.40, flowJit:0.50, taper:0.26, grains:20 },
+    { id:"paint.bristle",  name:"Dry bristle",   cat:"Paint",    color:"#ff5d8f", tip:"bristle",
+      size:28, hard:0.70, flow:0.60, spacing:0.05, scatter:0.05, sizeJit:0.12, flowJit:0.28, taper:0.30, bristles:7 },
+    { id:"air.soft",       name:"Soft airbrush", cat:"Airbrush", color:"#ff5d8f", tip:"round",
+      size:46, hard:0.03, flow:0.10, spacing:0.04, scatter:0.12, sizeJit:0.08, flowJit:0.12, taper:0.45 },
+    { id:"air.spatter",    name:"Spatter",       cat:"Airbrush", color:"#ff5d8f", tip:"stipple",
+      size:38, hard:0.85, flow:0.85, spacing:0.20, scatter:0.85, sizeJit:0.55, flowJit:0.40, taper:0.20, dots:5 }
+  ];
+  var BRISTLE_A = [0.95, 0.30, 1, 0.12, 0.85, 0.42, 0.9, 0.22, 0.7];
+
+  function brushById(id){
+    for(var i=0;i<BRUSHES.length;i++){ if(BRUSHES[i].id === id) return BRUSHES[i]; }
+    return BRUSHES[0];
+  }
+  /* deterministic PRNG so a re-render of the SAME path is pixel-stable while
+     you drag a handle (no shimmering), yet each brush has its own grain. */
+  function mkRand(seed){
+    var a = (seed >>> 0) || 1;
+    return function(){
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s){
+    var h = 2166136261, i;
+    for(i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function hexRgb(h){
+    h = String(h||"").replace("#","");
+    if(h.length === 3){ h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
+    var n = parseInt(h, 16);
+    if(isNaN(n)) return {r:255,g:93,b:143};
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  }
+  function rgba(c, a){ a = a < 0 ? 0 : (a > 1 ? 1 : a); return "rgba("+c.r+","+c.g+","+c.b+","+a.toFixed(3)+")"; }
+
+  /* one dab of the tip, at a point, at an angle. This is the whole brush. */
+  function dab(ctx, br, x, y, ang, s, alpha, c, rnd){
+    var r = Math.max(0.35, s/2), tip = br.tip || "round", k, i;
+    if(tip === "chisel"){
+      ctx.save(); ctx.translate(x, y);
+      ctx.rotate(br.follow ? ang : (br.tilt || 0) * Math.PI / 180);
+      ctx.fillStyle = rgba(c, alpha);
+      ctx.beginPath(); ctx.ellipse(0, 0, r, Math.max(0.4, r * (br.ratio || 0.3)), 0, 0, TAU); ctx.fill();
+      ctx.restore(); return;
+    }
+    if(tip === "bristle"){
+      var n = br.bristles || 7;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+      for(k=0;k<n;k++){
+        var off = ((k / (n - 1)) - 0.5) * s;
+        var w = Math.max(0.35, r * 0.20);
+        ctx.fillStyle = rgba(c, alpha * BRISTLE_A[k % BRISTLE_A.length]);
+        ctx.beginPath(); ctx.ellipse(0, off, w * 1.7, w, 0, 0, TAU); ctx.fill();
+      }
+      ctx.restore(); return;
+    }
+    if(tip === "grain" || tip === "stipple"){
+      var m = tip === "stipple" ? (br.dots || 5) : (br.grains || 12);
+      var spread = tip === "stipple" ? r * 1.5 : r;
+      for(i=0;i<m;i++){
+        var a2 = rnd() * TAU, rad = Math.sqrt(rnd()) * spread;
+        var sr = Math.max(0.45, r * (0.10 + rnd() * 0.22));
+        if(tip === "grain" && rnd() < (1 - br.hard) * 0.35) continue;   // dry holes
+        ctx.fillStyle = rgba(c, alpha * (0.32 + rnd() * 0.68));
+        ctx.beginPath(); ctx.arc(x + Math.cos(a2) * rad, y + Math.sin(a2) * rad, sr, 0, TAU); ctx.fill();
+      }
+      return;
+    }
+    var solid = Math.max(0.02, Math.min(0.96, br.hard));
+    var g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, rgba(c, alpha));
+    g.addColorStop(solid, rgba(c, alpha));
+    g.addColorStop(1, rgba(c, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  }
+
+  /* stamp the brush ALONG a real SVG path: sample by arc length at the brush's
+     own spacing, take the tangent for the tip angle, jitter by its dynamics.
+     Returns the number of dabs laid down. */
+  function strokeAlongPath(ctx, pathEl, o){
+    var len = 0;
+    try { len = pathEl.getTotalLength(); } catch(_){ return 0; }
+    if(!(len > 0)) return 0;
+    var br = o.br, size = o.size, flow = o.flow;
+    var step = Math.max(0.5, size * (br.spacing || 0.08));
+    var n = Math.floor(len / step);
+    var rnd = mkRand(o.seed || 1);
+    var taper = o.closed ? 0 : (br.taper || 0);
+    var count = 0, i;
+    ctx.save();
+    ctx.globalAlpha = o.opacity == null ? 1 : o.opacity;
+    ctx.globalCompositeOperation = "source-over";
+    for(i=0;i<=n;i++){
+      var d = Math.min(len, i * step);
+      var p = pathEl.getPointAtLength(d);
+      var q = pathEl.getPointAtLength(Math.min(len, d + Math.max(0.6, step * 0.5)));
+      var ang = Math.atan2(q.y - p.y, q.x - p.x);
+      var t = d / len;
+      var env = 1 - taper * Math.pow(Math.abs(2 * t - 1), 1.8);
+      var sc = (br.scatter || 0) * size;
+      var off = sc ? (rnd() * 2 - 1) * sc : 0;
+      var x = p.x + Math.cos(ang + Math.PI / 2) * off;
+      var y = p.y + Math.sin(ang + Math.PI / 2) * off;
+      var s = Math.max(0.6, size * env * (1 + (rnd() * 2 - 1) * (br.sizeJit || 0)));
+      var a = flow * (1 - rnd() * (br.flowJit || 0));
+      dab(ctx, br, x, y, ang, s, a, o.color, rnd);
+      count++;
+    }
+    ctx.restore();
+    return count;
+  }
+
+  /* an offscreen path element, so tile previews use the exact same code path */
+  var scratchPath = (function(){
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+    svg.setAttribute("aria-hidden", "true");
+    svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+    var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    svg.appendChild(p);
+    document.body.appendChild(svg);
+    return p;
+  })();
+
+  /* a preview stroke of one brush, into any canvas */
+  function drawPreview(cv, br, color){
+    if(!cv) return 0;
+    var ctx = cv.getContext("2d"); if(!ctx) return 0;
+    var W = cv.width, H = cv.height;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0, 0, W, H);
+    var pad = Math.max(4, H * 0.22);
+    scratchPath.setAttribute("d",
+      "M " + pad + " " + (H - pad) +
+      " C " + (W * 0.30) + " " + (H * 0.02) +
+      ", " + (W * 0.66) + " " + (H * 1.00) +
+      ", " + (W - pad) + " " + pad);
+    var size = Math.min(br.size, H * 0.58);
+    return strokeAlongPath(ctx, scratchPath, {
+      br: br, size: size, flow: br.flow, opacity: 1, closed: false,
+      color: hexRgb(color || br.color), seed: hashStr(br.id)
+    });
+  }
+
+  /* ---------- shared brush state · the ONE selected brush ---------- */
+  var App = {
+    brushId: "ink.marker",
+    size: 26,
+    flow: 0.42,
+    opacity: 1,
+    color: "#ff5d8f",
+    colorName: "Pink 60",
+    listeners: [],
+    brush: function(){ return brushById(this.brushId); },
+    on: function(fn){ this.listeners.push(fn); },
+    emit: function(){ this.listeners.forEach(function(f){ try { f(); } catch(_){} }); },
+    pick: function(id, keepSize){
+      var b = brushById(id);
+      this.brushId = b.id;
+      if(!keepSize){ this.size = b.size; this.flow = b.flow; }
+      this.emit();
+    }
+  };
+
+  /* ========================================================================
+     TOOL SWITCHING · the active tool drives the canvas surface, the selected
+     layer row, the Properties group, and the toolbar readout.
+     ======================================================================== */
+  (function tools(){
+    var MAP = {
+      select:  { surf:null,          prop:"propSelect",  layer:null,     cnt:"Nothing selected",  read:"Select · click a layer",   art:"1200 × 630" },
+      pen:     { surf:"surfPen",     prop:"propPen",     layer:"pen",    cnt:"Vector · Path 1",   read:"Pen · vector path",        art:"1200 × 630 · vector" },
+      brush:   { surf:"surfBrush",   prop:"propBrush",   layer:"raster", cnt:"Brush · Paint 1",   read:"Brush · raster paint",     art:"1200 × 630 · raster" },
+      eraser:  { surf:"surfEraser",  prop:"propEraser",  layer:"raster", cnt:"Eraser · Paint 1",  read:"Eraser · destructive vs mask", art:"1200 × 630 · raster + mask" },
+      shape:   { surf:"surfPen",     prop:"propPen",     layer:"pen",    cnt:"Shape · Path 1",    read:"Shape · vector",           art:"1200 × 630 · vector" },
+      text:    { surf:"surfPen",     prop:"propSelect",  layer:null,     cnt:"Text",              read:"Text · click to place",    art:"1200 × 630" },
+      measure: { surf:"surfPen",     prop:"propSelect",  layer:null,     cnt:"Measure",           read:"Measure · drag to measure",art:"1200 × 630" },
+      hand:    { surf:null,          prop:"propSelect",  layer:null,     cnt:"Hand",              read:"Hand · drag to pan",       art:"1200 × 630" },
+      zoom:    { surf:null,          prop:"propSelect",  layer:null,     cnt:"Zoom",              read:"Zoom · click to zoom",     art:"1200 × 630" }
+    };
+    var surfs = all(".surf");
+    var props = all(".tprop");
+    var lastSurf = "surfPen";
+
+    function setTool(name){
+      var m = MAP[name]; if(!m) return;
+      var surfId = m.surf || lastSurf;
+      if(m.surf) lastSurf = m.surf;
+      surfs.forEach(function(s){ s.classList.toggle("on", s.id === surfId); });
+      props.forEach(function(p){ p.style.display = (p.id === m.prop) ? "" : "none"; });
+      all(".lrow[data-layer]").forEach(function(r){
+        r.classList.toggle("sel", !!m.layer && r.getAttribute("data-layer") === m.layer);
+      });
+      var cnt = $("dwPropCnt"); if(cnt) cnt.textContent = m.cnt;
+      var read = $("dwReadout"); if(read) read.textContent = m.read;
+      var art = $("dwArtLabel"); if(art) art.textContent = m.art;
+      // keep the tool strip in sync when the tool came from a menu
+      all('.tstrip .tool[data-tool]').forEach(function(b){
+        b.classList.toggle("on", b.getAttribute("data-tool") === name);
+      });
+      // the path's readouts name the brush it is stroked with, so refresh them
+      if(m.prop === "propPen" && typeof Pen !== "undefined" && Pen && Pen.redraw) Pen.redraw();
+    }
+
+    all("[data-tool]").forEach(function(el){
+      el.addEventListener("click", function(){ setTool(el.getAttribute("data-tool")); });
+    });
+    setTool("pen");
+  })();
+
+  /* ========================================================================
+     1 · VECTOR PATH, BRUSH-STROKED.
+       · the SVG <path> holds the geometry and the draggable anchors/handles
+       · the <canvas> under it carries the MARK: a Paint fill (closed only)
+         plus the brush stamped along that same geometry
+     Drag an anchor or a handle and the brushed stroke re-renders live.
+     ======================================================================== */
+  var Pen = (function(){
+    var svg = $("penSvg"), path = $("penPath"), overlay = $("penOverlay");
+    var cv = $("penPaint");
+    if(!svg || !path || !overlay || !cv) return { ok:false, load:function(){}, redraw:function(){} };
+    var ctx = cv.getContext("2d");
+    if(!ctx) return { ok:false, load:function(){}, redraw:function(){} };
+
+    var VW = 560, VH = 300, DPR = cv.width / VW;
+    var anchors = [];        // {x,y,hOut:{x,y}|null,hIn:{x,y}|null}
+    var closed = false;
+    var mode = "smooth";     // 'smooth' | 'corner'
+    var fillMode = "grad";   // 'none' | 'solid' | 'grad'
+    var fillOpacity = 0.58;
+    var showGeo = true;
+    var selIdx = -1;
+    var drag = null;         // {i, kind:'a'|'in'|'out'|'new', ox, oy}
+    var moved = false;
+    var lastDabs = 0;
+    var raf = null;
+
+    var SVGNS = "http://www.w3.org/2000/svg";
+    function el(name, attrs){
+      var n = document.createElementNS(SVGNS, name);
+      for(var k in attrs){ n.setAttribute(k, attrs[k]); }
+      return n;
+    }
+    function co(p){ return p.x.toFixed(1) + " " + p.y.toFixed(1); }
+    function dist(a, b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+    function buildD(){
+      if(!anchors.length) return "";
+      var d = "M " + co(anchors[0]);
+      var seg = function(a, b){
+        var c1 = a.hOut || a, c2 = b.hIn || b;
+        return " C " + co(c1) + " " + co(c2) + " " + co(b);
+      };
+      for(var i=1;i<anchors.length;i++){ d += seg(anchors[i-1], anchors[i]); }
+      if(closed && anchors.length > 2){ d += seg(anchors[anchors.length-1], anchors[0]) + " Z"; }
+      return d;
+    }
+
+    /* ---- the mark: fill under, brushed stroke over ---- */
+    function paint(){
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, VW, VH);
+      lastDabs = 0;
+      var d = path.getAttribute("d");
+      if(!d) return;
+
+      if(closed && fillMode !== "none" && anchors.length > 2 && typeof Path2D === "function"){
+        var bb;
+        try { bb = path.getBBox(); } catch(_){ bb = {x:0,y:0,width:VW,height:VH}; }
+        var p2 = new Path2D(d);
+        if(fillMode === "grad"){
+          var g = ctx.createLinearGradient(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
+          g.addColorStop(0, "#7c4dff"); g.addColorStop(0.55, "#ff5d8f"); g.addColorStop(1, "#ffb057");
+          ctx.fillStyle = g;
+        } else {
+          ctx.fillStyle = "#7c4dff";
+        }
+        ctx.globalAlpha = fillOpacity;
+        ctx.fill(p2);
+        ctx.globalAlpha = 1;
+      }
+
+      lastDabs = strokeAlongPath(ctx, path, {
+        br: App.brush(),
+        size: App.size,
+        flow: App.flow,
+        opacity: App.opacity,
+        closed: closed,
+        color: hexRgb(App.color),
+        seed: hashStr(App.brushId) ^ 0x9e37
+      });
+    }
+
+    function readouts(){
+      var n = anchors.length, br = App.brush();
+      var cnt = $("penCount");
+      if(cnt) cnt.textContent = n + (n===1?" node":" nodes") + (closed ? " · closed" : " · open");
+      if($("penNN")) $("penNN").textContent = String(n);
+      var a = anchors[selIdx] || anchors[n-1];
+      if($("penNX")) $("penNX").textContent = a ? String(Math.round(a.x)) : "·";
+      if($("penNY")) $("penNY").textContent = a ? String(Math.round(a.y)) : "·";
+      if($("penNT")) $("penNT").textContent = a ? (a.hOut || a.hIn ? "smooth" : "corner") : "·";
+      if($("penBrushName")) $("penBrushName").textContent = br.name;
+      if($("penFillState")) $("penFillState").textContent = closed ? "closed shape" : "open path · no fill";
+      if($("penMtag")) $("penMtag").textContent = "Path 1 · vector · " + br.name;
+      if($("dwPenRow")) $("dwPenRow").textContent = "Path 1 · vector · " + br.name;
+      if($("dwPropCnt") && $("propPen") && $("propPen").style.display !== "none"){
+        $("dwPropCnt").textContent = "Vector · Path 1";
+      }
+      var note = $("penFillNote");
+      if(note){
+        note.innerHTML = closed
+          ? 'A closed path is a <b style="color:var(--ink)">shape</b>. It carries a <b style="color:var(--ink)">Paint</b> fill and a <b style="color:var(--ink)">Brush</b> stroke at the same time, on one object.'
+          : 'Close the path (click the first anchor, or <b style="color:var(--ink)">Close</b>) and it becomes a shape you can fill. Fill is a <b style="color:var(--ink)">Paint</b>; stroke is a <b style="color:var(--ink)">Brush</b>.';
+      }
+      var hint = $("penHint");
+      if(hint) hint.textContent = closed
+        ? "Drag an anchor or a handle · the fill and the brushed stroke re-render live"
+        : "Drag an anchor or a handle · click the first anchor to close the shape";
+      var read = $("dwReadout");
+      if(read && $("propPen") && $("propPen").style.display !== "none"){
+        read.textContent = "Pen · path stroked with " + br.name;
+      }
+      if(typeof Agent !== "undefined" && Agent && Agent.sync) Agent.sync();
+    }
+
+    function render(){
+      path.setAttribute("d", buildD());
+      path.classList.toggle("off", !showGeo);
+      while(overlay.firstChild){ overlay.removeChild(overlay.firstChild); }
+      if(showGeo){
+        anchors.forEach(function(a){
+          [a.hIn, a.hOut].forEach(function(h){
+            if(!h) return;
+            overlay.appendChild(el("line", {x1:a.x, y1:a.y, x2:h.x, y2:h.y, "class":"hline"}));
+            overlay.appendChild(el("circle", {cx:h.x, cy:h.y, r:3.6, "class":"hdot"}));
+          });
+        });
+        anchors.forEach(function(a, i){
+          overlay.appendChild(el("rect", {x:a.x-4.5, y:a.y-4.5, width:9, height:9, rx:1.5,
+            "class":"anchor" + (i===0 ? " first" : "") + (i===selIdx ? " on" : "")}));
+        });
+      }
+      paint();
+      readouts();
+    }
+    function schedule(){
+      if(raf) return;
+      raf = requestAnimationFrame(function(){ raf = null; render(); });
+    }
+
+    /* ---- hit testing: handles win over anchors ---- */
+    function hit(p){
+      var i;
+      for(i=anchors.length-1;i>=0;i--){
+        var a = anchors[i];
+        if(a.hOut && dist(p, a.hOut) < 9) return { i:i, kind:"out" };
+        if(a.hIn  && dist(p, a.hIn)  < 9) return { i:i, kind:"in" };
+      }
+      for(i=anchors.length-1;i>=0;i--){
+        if(dist(p, anchors[i]) < 10) return { i:i, kind:"a" };
+      }
+      return null;
+    }
+
+    svg.addEventListener("pointerdown", function(e){
+      e.preventDefault();
+      var p = localPt(svg, e, VW, VH);
+      var h = showGeo ? hit(p) : null;
+      // clicking the first anchor of an open path with 3+ nodes closes it
+      if(h && h.kind === "a" && h.i === 0 && !closed && anchors.length > 2){
+        closed = true; selIdx = 0; drag = null; render(); return;
+      }
+      if(h){
+        selIdx = h.i;
+        var a = anchors[h.i];
+        drag = { i:h.i, kind:h.kind, ox:p.x - a.x, oy:p.y - a.y };
+        moved = true;
+        try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+        render();
+        return;
+      }
+      if(closed) { selIdx = -1; render(); return; }
+      anchors.push({ x:p.x, y:p.y, hOut:null, hIn:null });
+      selIdx = anchors.length - 1;
+      drag = { i:selIdx, kind:"new", ox:0, oy:0 };
+      moved = false;
+      try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+      render();
+    });
+
+    svg.addEventListener("pointermove", function(e){
+      if(!drag) return;
+      var p = localPt(svg, e, VW, VH);
+      var a = anchors[drag.i];
+      if(!a) return;
+      if(drag.kind === "new"){
+        if(mode === "corner") return;
+        if(dist(p, a) > 2) moved = true;
+        a.hOut = { x:p.x, y:p.y };
+        a.hIn  = { x:2*a.x - p.x, y:2*a.y - p.y };
+      } else if(drag.kind === "a"){
+        var nx = p.x - drag.ox, ny = p.y - drag.oy;
+        var dx = nx - a.x, dy = ny - a.y;
+        a.x = nx; a.y = ny;
+        if(a.hOut){ a.hOut.x += dx; a.hOut.y += dy; }
+        if(a.hIn){  a.hIn.x  += dx; a.hIn.y  += dy; }
+      } else if(drag.kind === "out"){
+        a.hOut = { x:p.x, y:p.y };
+        if(mode === "smooth") a.hIn = { x:2*a.x - p.x, y:2*a.y - p.y };
+      } else if(drag.kind === "in"){
+        a.hIn = { x:p.x, y:p.y };
+        if(mode === "smooth") a.hOut = { x:2*a.x - p.x, y:2*a.y - p.y };
+      }
+      schedule();
+    });
+
+    function endDrag(e){
+      if(!drag) return;
+      if(drag.kind === "new" && !moved){
+        var a = anchors[drag.i];
+        if(a){ a.hOut = null; a.hIn = null; }
+      }
+      drag = null;
+      try{ svg.releasePointerCapture(e.pointerId); }catch(_){}
+      render();
+    }
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointercancel", endDrag);
+
+    /* ---- Properties controls ---- */
+    function segWire(id, attr, fn){
+      var seg = $(id); if(!seg) return;
+      seg.addEventListener("click", function(e){
+        var b = e.target.closest("button"); if(!b) return;
+        all("button", seg).forEach(function(x){ x.classList.toggle("on", x === b); });
+        fn(b.getAttribute(attr));
+      });
+    }
+    segWire("penMode", "data-mode", function(v){ mode = v || "smooth"; });
+    segWire("penGeo",  "data-geo",  function(v){ showGeo = (v !== "hide"); render(); });
+    segWire("penFillMode", "data-fill", function(v){
+      fillMode = v || "grad";
+      if($("penFillSw")) $("penFillSw").style.background =
+        fillMode === "grad" ? "linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"
+        : (fillMode === "solid" ? "#7c4dff" : "repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)");
+      if($("penFillName")) $("penFillName").textContent =
+        fillMode === "grad" ? "Brand / gradient" : (fillMode === "solid" ? "Purple 50" : "No fill");
+      render();
+    });
+
+    if($("penClose")) $("penClose").addEventListener("click", function(){
+      if(anchors.length > 2 && !closed){ closed = true; render(); }
+      else if(closed){ closed = false; render(); }
+    });
+    if($("penUndo")) $("penUndo").addEventListener("click", function(){
+      if(closed){ closed = false; } else { anchors.pop(); selIdx = anchors.length - 1; }
+      render();
+    });
+    if($("penClear")) $("penClear").addEventListener("click", function(){
+      anchors = []; closed = false; drag = null; selIdx = -1; render();
+    });
+
+    function slider(id, vid, fmt, set){
+      var s = $(id), v = $(vid); if(!s) return;
+      s.addEventListener("input", function(){
+        var x = parseFloat(s.value);
+        set(x);
+        if(v) v.textContent = fmt(x);
+        render();
+      });
+    }
+    slider("penSize", "penSizeV", function(x){ return String(Math.round(x)); }, function(x){ App.size = x; App.emit(); });
+    slider("penFlow", "penFlowV", function(x){ return Math.round(x) + "%"; }, function(x){ App.flow = x/100; App.emit(); });
+    slider("penFillOp", "penFillOpV", function(x){ return Math.round(x) + "%"; }, function(x){ fillOpacity = x/100; });
+
+    if($("penBrowseBrush")) $("penBrowseBrush").addEventListener("click", function(){
+      var lib = $("dwLibrary");
+      if(!lib) return;
+      lib.classList.remove("collapsed");
+      var shell = $("dwShell");
+      if(shell && shell.getAttribute("data-dock") === "closed"){
+        var t = document.querySelector('[data-dock-toggle="#dwShell"]');
+        if(t) t.click();
+      }
+      var body = lib.querySelector(".dgrp-b");
+      if(body && body.scrollIntoView) body.scrollIntoView({ block:"nearest", behavior:"smooth" });
+      var first = lib.querySelector(".libtile");
+      if(first && first.focus) first.focus();
+    });
+
+    /* seeded artwork: an open curve so the taper and tip angle read immediately */
+    var SEED_PATH = [
+      { x:104, y:214, hOut:{x:118, y:126}, hIn:null },
+      { x:236, y:96,  hOut:{x:318, y:78},  hIn:{x:170, y:80} },
+      { x:392, y:150, hOut:{x:452, y:186}, hIn:{x:346, y:120} },
+      { x:474, y:212, hOut:null,           hIn:{x:474, y:196} }
+    ];
+    /* what the agent emits: exact control points, closed, filled, brushed */
+    var AGENT_PATH = [
+      { x:118, y:206, hOut:{x:126, y:96},  hIn:{x:150, y:262} },
+      { x:284, y:70,  hOut:{x:392, y:70},  hIn:{x:190, y:70} },
+      { x:462, y:180, hOut:{x:462, y:250}, hIn:{x:462, y:112} },
+      { x:288, y:238, hOut:{x:196, y:250}, hIn:{x:390, y:246} }
+    ];
+    function clone(list){
+      return list.map(function(a){
+        return { x:a.x, y:a.y,
+          hOut: a.hOut ? {x:a.hOut.x, y:a.hOut.y} : null,
+          hIn:  a.hIn  ? {x:a.hIn.x,  y:a.hIn.y}  : null };
+      });
+    }
+
+    App.on(function(){
+      if($("penSize")){ $("penSize").value = App.size; if($("penSizeV")) $("penSizeV").textContent = String(Math.round(App.size)); }
+      if($("penFlow")){ $("penFlow").value = Math.round(App.flow*100); if($("penFlowV")) $("penFlowV").textContent = Math.round(App.flow*100) + "%"; }
+      render();
+    });
+
+    anchors = clone(SEED_PATH);
+    selIdx = 1;
+
+    return {
+      ok: true,
+      redraw: render,
+      dabs: function(){ return lastDabs; },
+      d: function(){ return path.getAttribute("d") || ""; },
+      isClosed: function(){ return closed; },
+      fillMode: function(){ return fillMode; },
+      fillOpacity: function(){ return fillOpacity; },
+      nodes: function(){ return anchors.length; },
+      loadAgentPath: function(){
+        anchors = clone(AGENT_PATH);
+        closed = true;
+        selIdx = 0;
+        fillMode = "grad";
+        all("#penFillMode button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-fill") === "grad"); });
+        render();
+      }
+    };
+  })();
+
+  /* ========================================================================
+     2 · FREEHAND BRUSH - the SAME engine, driven by a pointer drag instead of
+     a path. Whatever brush the path is stroked with is the brush that paints
+     here, because a brush is one Style shared by both.
+     ======================================================================== */
+  (function brush(){
+    var cv = $("brushCanvas"); if(!cv) return;
+    var ctx = cv.getContext("2d"); if(!ctx) return;
+    var VW = 560, VH = 300, DPR = cv.width / VW;
+    var painting = false, last = null, strokes = 0, rnd = mkRand(7);
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    function line(a, b){
+      var br = App.brush();
+      var c = hexRgb(App.color);
+      var d = Math.hypot(b.x-a.x, b.y-a.y);
+      var ang = Math.atan2(b.y-a.y, b.x-a.x);
+      var step = Math.max(0.6, App.size * (br.spacing || 0.08));
+      var steps = Math.max(1, Math.ceil(d / step));
+      ctx.globalAlpha = App.opacity;
+      ctx.globalCompositeOperation = "source-over";
+      for(var i=0;i<=steps;i++){
+        var t = i/steps;
+        var sc = (br.scatter || 0) * App.size;
+        var off = sc ? (rnd()*2 - 1) * sc : 0;
+        var x = a.x + (b.x-a.x)*t + Math.cos(ang + Math.PI/2)*off;
+        var y = a.y + (b.y-a.y)*t + Math.sin(ang + Math.PI/2)*off;
+        var s = Math.max(0.6, App.size * (1 + (rnd()*2 - 1) * (br.sizeJit || 0)));
+        dab(ctx, br, x, y, ang, s, App.flow * (1 - rnd()*(br.flowJit || 0)), c, rnd);
+      }
+      ctx.globalAlpha = 1;
+    }
+    function down(e){
+      e.preventDefault();
+      painting = true; last = localPt(cv, e, VW, VH);
+      line(last, { x:last.x + 0.01, y:last.y });
+      try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+      var h = $("brushHint"); if(h) h.style.display = "none";
+    }
+    function move(e){
+      if(!painting) return;
+      var p = localPt(cv, e, VW, VH);
+      line(last, p); last = p;
+    }
+    function up(e){
+      if(!painting) return;
+      painting = false; strokes++;
+      if($("brushRO")) $("brushRO").textContent = strokes + (strokes===1?" stroke":" strokes");
+      try{ cv.releasePointerCapture(e.pointerId); }catch(_){}
+    }
+    cv.addEventListener("pointerdown", down);
+    cv.addEventListener("pointermove", move);
+    cv.addEventListener("pointerup", up);
+    cv.addEventListener("pointercancel", up);
+
+    // sliders write into the shared brush state, so the path restyles too
+    function bind(id, vid, fmt, set){
+      var s = $(id), v = $(vid); if(!s) return;
+      s.addEventListener("input", function(){
+        var x = parseFloat(s.value);
+        set(x);
+        if(v) v.textContent = fmt(x);
+        App.emit();
+      });
+    }
+    bind("bSize","bSizeV", function(x){ return String(Math.round(x)); }, function(x){ App.size = x; });
+    bind("bFlow","bFlowV", function(x){ return Math.round(x)+"%"; }, function(x){ App.flow = x/100; });
+    bind("bOpac","bOpacV", function(x){ return Math.round(x)+"%"; }, function(x){ App.opacity = x/100; });
+
+    // color swatches, mirrored into the tool bar's foreground swatch
+    var NAMES = { "#ff5d8f":"Pink 60", "#7c4dff":"Purple 50", "#4c6fff":"Blue 55",
+                  "#12c2e9":"Cyan 55", "#f6c453":"Amber 60", "#3ecf8e":"Green 55", "#f4f6fb":"White 98" };
+    var sws = $("brushSwatches");
+    function setColor(hex){
+      App.color = hex;
+      App.colorName = NAMES[hex] || hex;
+      if(sws) all(".sw-btn", sws).forEach(function(b){
+        b.classList.toggle("on", b.getAttribute("data-color") === hex);
+      });
+      if($("dwFg")) $("dwFg").style.background = hex;
+      if($("dwLayerSw")) $("dwLayerSw").style.background = hex;
+      if($("penStrokeSw")) $("penStrokeSw").style.background = hex;
+      if($("penStrokeName")) $("penStrokeName").textContent = App.colorName;
+      App.emit();
+    }
+    if(sws) sws.addEventListener("click", function(e){
+      var b = e.target.closest(".sw-btn"); if(!b) return;
+      setColor(b.getAttribute("data-color"));
+    });
+
+    App.on(function(){
+      if($("bSize")){ $("bSize").value = App.size; if($("bSizeV")) $("bSizeV").textContent = String(Math.round(App.size)); }
+      if($("bFlow")){ $("bFlow").value = Math.round(App.flow*100); if($("bFlowV")) $("bFlowV").textContent = Math.round(App.flow*100)+"%"; }
+      if($("brBrushName")) $("brBrushName").textContent = App.brush().name;
+    });
+
+    if($("brushClear")) $("brushClear").addEventListener("click", function(){
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      ctx.clearRect(0,0,VW,VH); strokes = 0;
+      if($("brushRO")) $("brushRO").textContent = "0 strokes";
+      var h = $("brushHint"); if(h) h.style.display = "";
+    });
+  })();
+
+  /* ========================================================================
+     BRUSH PICKERS · the Library group (scope = Brushes) and the compact picker
+     in the Stroke section of Properties. Both write the SAME App.brushId, so
+     picking a brush anywhere restyles the selected path instantly.
+     ======================================================================== */
+  (function pickers(){
+    var grid = $("brushPresets");
+    var scopeState = "brushes";
+
+    function tile(b){
+      var t = document.createElement("div");
+      t.className = "libtile";
+      t.setAttribute("tabindex", "0");
+      t.setAttribute("role", "button");
+      t.setAttribute("data-brush", b.id);
+      t.setAttribute("title", b.name + " · " + b.cat + " · " + Math.round(b.size) + " px");
+      t.innerHTML = '<span class="th bth"><canvas width="150" height="92"></canvas></span>' +
+        '<span class="cap"><span class="nm">' + b.name + '</span>' +
+        '<span class="mt">' + b.cat.toLowerCase() + ' · ' + Math.round(b.size) + 'px</span></span>';
+      return t;
+    }
+    function renderGrid(){
+      if(!grid) return;
+      grid.innerHTML = "";
+      if(scopeState !== "brushes"){
+        var e = document.createElement("div");
+        e.className = "empty";
+        e.style.gridColumn = "1 / -1";
+        e.innerHTML = '<i class="ic lg ic-library"></i><div>Nothing in this scope yet.</div>' +
+          '<div class="note">Switch back to <b>Brush</b> to restyle the selected path, or import content here.</div>';
+        grid.appendChild(e);
+        return;
+      }
+      BRUSHES.forEach(function(b){
+        var t = tile(b);
+        grid.appendChild(t);
+        drawPreview(t.querySelector("canvas"), b, App.color);
+      });
+      syncSel();
+    }
+    function chips(host){
+      if(!host) return;
+      host.innerHTML = "";
+      BRUSHES.forEach(function(b){
+        var c = document.createElement("button");
+        c.type = "button";
+        c.className = "bchip";
+        c.setAttribute("data-brush", b.id);
+        c.setAttribute("role", "radio");
+        c.setAttribute("aria-checked", "false");
+        c.setAttribute("title", b.name);
+        c.setAttribute("aria-label", b.name);
+        c.innerHTML = '<canvas width="120" height="68"></canvas>';
+        host.appendChild(c);
+        drawPreview(c.querySelector("canvas"), b, App.color);
+      });
+    }
+    function syncSel(){
+      all("[data-brush]").forEach(function(n){
+        var on = n.getAttribute("data-brush") === App.brushId;
+        n.classList.toggle(n.classList.contains("libtile") ? "sel" : "on", on);
+        if(n.hasAttribute("role") && n.getAttribute("role") === "radio") n.setAttribute("aria-checked", on ? "true" : "false");
+      });
+      var lbl = $("dwScopeLbl");
+      if(lbl && scopeState === "brushes") lbl.textContent = "Brushes · " + App.brush().name;
+    }
+    function repreview(){
+      all("[data-brush] canvas").forEach(function(c){
+        var host = c.closest("[data-brush]");
+        if(host) drawPreview(c, brushById(host.getAttribute("data-brush")), App.color);
+      });
+    }
+
+    document.addEventListener("click", function(e){
+      var n = e.target.closest("[data-brush]");
+      if(!n) return;
+      App.pick(n.getAttribute("data-brush"));
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      var n = e.target && e.target.closest ? e.target.closest(".libtile[data-brush]") : null;
+      if(!n) return;
+      e.preventDefault();
+      App.pick(n.getAttribute("data-brush"));
+    });
+
+    /* Library scope switch, same behavior as every other shell */
+    var seg = $("dwScope");
+    if(seg){
+      var names = { media:"Media", brushes:"Brushes", styles:"Styles", assets:"Assets" };
+      all("button", seg).forEach(function(b){
+        b.addEventListener("click", function(){
+          all("button", seg).forEach(function(x){ x.classList.toggle("on", x === b); });
+          scopeState = b.getAttribute("data-scope") || "brushes";
+          var lbl = $("dwScopeLbl");
+          if(lbl) lbl.textContent = names[scopeState] || "";
+          var note = $("dwLibNote");
+          if(note) note.style.display = scopeState === "brushes" ? "" : "none";
+          renderGrid();
+        });
+      });
+    }
+
+    chips($("penBrushPick"));
+    chips($("brBrushPick"));
+    renderGrid();
+    App.on(function(){ syncSel(); });
+    // repaint previews when the Paint color changes
+    var lastColor = App.color;
+    App.on(function(){
+      if(App.color !== lastColor){ lastColor = App.color; repreview(); }
+    });
+  })();
+
+  /* ========================================================================
+     THE AGENT MOMENT · the same path, written as the commands that produce it.
+     Exact bezier control points in; a hand-drawn mark out; restyle by swapping
+     one brush. The block is generated from live state, so it is never a lie.
+     ======================================================================== */
+  var Agent = (function(){
+    var box = $("dwAgentCode");
+    var order = ["ink.marker","sketch.charcoal","paint.bristle","ink.brush","sketch.pencil","air.soft","air.spatter","ink.pen"];
+    function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    function sync(){
+      if(!box || !Pen.ok) return;
+      var d = (Pen.d() || "(empty)").replace(/(\d+)\.\d+/g, "$1");   // agents emit round numbers
+      var br = App.brush();
+      var lines = [];
+      lines.push('run(<span class="s">"path.add"</span>, { d:<span class="s">"' + esc(d) + '"</span> })');
+      if(Pen.isClosed()) lines.push('run(<span class="s">"path.close"</span>)');
+      if(Pen.isClosed() && Pen.fillMode() !== "none"){
+        lines.push('run(<span class="s">"path.fill"</span>,   { paint:<span class="s">"' +
+          (Pen.fillMode() === "grad" ? "Brand/gradient" : "Purple 50") + '"</span>, opacity:' +
+          Pen.fillOpacity().toFixed(2) + ' })');
+      }
+      lines.push('run(<span class="s">"path.stroke"</span>, { brush:<span class="s">"' + br.id +
+        '"</span>, size:' + Math.round(App.size) + ', flow:' + App.flow.toFixed(2) + ' })');
+      box.innerHTML = '<span class="c">// ' + Pen.nodes() + ' anchors · ' + Pen.dabs() +
+        ' brush dabs stamped along them</span>\n' + lines.join("\n");
+      var cnt = $("dwAgentCnt");
+      if(cnt) cnt.textContent = Pen.isClosed() ? "shape · brushed" : "path · brushed";
+    }
+    if($("agentRun")) $("agentRun").addEventListener("click", function(){
+      Pen.loadAgentPath();
+      App.pick("ink.marker");
+    });
+    if($("agentRestyle")) $("agentRestyle").addEventListener("click", function(){
+      var i = order.indexOf(App.brushId);
+      App.pick(order[(i + 1) % order.length]);
+    });
+    if($("agentCopy")) $("agentCopy").addEventListener("click", function(){
+      if(!box) return;
+      var txt = box.textContent || "";
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt);
+    });
+    return { sync: sync };
+  })();
+
+  /* ========================================================================
+     3 · ERASER - two canvases.
+       (a) destructive: destination-out removes pixels permanently.
+       (b) mask: erase punches holes in a separate mask layer, fully reversible.
+     ======================================================================== */
+  (function eraser(){
+    var eSize = 34;
+    var sz = $("eSize");
+    if(sz) sz.addEventListener("input", function(){
+      eSize = parseFloat(sz.value);
+      if($("eSizeV")) $("eSizeV").textContent = String(Math.round(eSize));
+    });
+
+    // paint a sample artwork into a context
+    function paintArt(ctx, w, h){
+      ctx.clearRect(0,0,w,h);
+      var g = ctx.createLinearGradient(0,0,w,h);
+      g.addColorStop(0,"#7c4dff"); g.addColorStop(.5,"#ff5d8f"); g.addColorStop(1,"#12c2e9");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(w*0.5, h*0.52, w*0.36, h*0.34, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "700 18px -apple-system,system-ui,sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("paint", w*0.5, h*0.52);
+    }
+
+    /* ---- (a) destructive ---- */
+    (function(){
+      var cv = $("eraseDest"); if(!cv) return;
+      var ctx = cv.getContext("2d"); if(!ctx) return;
+      var W = cv.width, H = cv.height, era = false, last = null;
+      function reset(){ ctx.globalCompositeOperation = "source-over"; paintArt(ctx, W, H); }
+      function erase(x,y){
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath(); ctx.arc(x, y, eSize/2, 0, Math.PI*2); ctx.fill();
+      }
+      function seg(a,b){
+        var d = Math.hypot(b.x-a.x,b.y-a.y), steps = Math.max(1, Math.ceil(d/(eSize*0.3)));
+        for(var i=0;i<=steps;i++){ var t=i/steps; erase(a.x+(b.x-a.x)*t, a.y+(b.y-a.y)*t); }
+      }
+      cv.addEventListener("pointerdown", function(e){ e.preventDefault(); era=true; last=localPt(cv,e,W,H); erase(last.x,last.y); try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+      cv.addEventListener("pointermove", function(e){ if(!era)return; var p=localPt(cv,e,W,H); seg(last,p); last=p; });
+      var stop = function(){ era=false; };
+      cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
+      if($("eraseDestReset")) $("eraseDestReset").addEventListener("click", reset);
+      reset();
+    })();
+
+    /* ---- (b) mask (non-destructive) ---- */
+    (function(){
+      var cv = $("eraseMask"); if(!cv) return;
+      var disp = cv.getContext("2d"); if(!disp) return;
+      var W = cv.width, H = cv.height;
+      // offscreen paint + mask
+      var art = document.createElement("canvas"); art.width=W; art.height=H;
+      var actx = art.getContext("2d");
+      var mask = document.createElement("canvas"); mask.width=W; mask.height=H;
+      var mctx = mask.getContext("2d");
+      var era = false, last = null, showHidden = false;
+
+      function fillMask(){ mctx.globalCompositeOperation="source-over"; mctx.fillStyle="#fff"; mctx.fillRect(0,0,W,H); }
+      function compose(){
+        disp.clearRect(0,0,W,H);
+        if(showHidden){
+          disp.globalAlpha = 0.28; disp.drawImage(art,0,0); disp.globalAlpha = 1;
+        }
+        disp.save();
+        disp.drawImage(art,0,0);
+        disp.globalCompositeOperation = "destination-in";
+        disp.drawImage(mask,0,0);
+        disp.restore();
+        disp.globalCompositeOperation = "source-over";
+        if(showHidden){
+          disp.strokeStyle = "rgba(62,207,142,.9)"; disp.setLineDash([5,4]); disp.lineWidth = 1.5;
+          disp.strokeRect(1,1,W-2,H-2); disp.setLineDash([]);
+        }
+      }
+      function erase(x,y){
+        mctx.globalCompositeOperation = "destination-out";
+        mctx.beginPath(); mctx.arc(x, y, eSize/2, 0, Math.PI*2); mctx.fill();
+      }
+      function seg(a,b){
+        var d = Math.hypot(b.x-a.x,b.y-a.y), steps = Math.max(1, Math.ceil(d/(eSize*0.3)));
+        for(var i=0;i<=steps;i++){ var t=i/steps; erase(a.x+(b.x-a.x)*t, a.y+(b.y-a.y)*t); }
+        compose();
+      }
+      cv.addEventListener("pointerdown", function(e){ e.preventDefault(); era=true; last=localPt(cv,e,W,H); erase(last.x,last.y); compose(); try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+      cv.addEventListener("pointermove", function(e){ if(!era)return; var p=localPt(cv,e,W,H); seg(last,p); last=p; });
+      var stop = function(){ era=false; };
+      cv.addEventListener("pointerup", stop); cv.addEventListener("pointercancel", stop);
+
+      if($("maskRestore")) $("maskRestore").addEventListener("click", function(){ fillMask(); compose(); });
+      if($("maskToggle")) $("maskToggle").addEventListener("click", function(){
+        showHidden = !showHidden;
+        this.innerHTML = showHidden
+          ? '<i class="ic ic-eye-off"></i> Hide hidden'
+          : '<i class="ic ic-eye"></i> Show hidden';
+        compose();
+      });
+
+      paintArt(actx, W, H);
+      fillMask();
+      compose();
+    })();
+  })();
+
+  /* ---------- boot: pick the starting brush, which renders everything ---------- */
+  App.pick("ink.marker");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · brush-library</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* brush-library · page-local bits only. The shell, dock, Library group,
+     tiles, search, and overlay are all shared DS classes. */
+
+  /* the window gets a DEFINITE height so the dock is bounded and each group's
+     own scroller does the work instead of the window stretching */
+  #brush-library .win.shell{height:640px;min-height:0}
+  /* a brush tile thumbnail hosts a live stroke canvas inside the shared .th */
+  .libtile .th.bth{position:relative;height:46px;
+    background:radial-gradient(120% 120% at 22% 0%,rgba(255,255,255,.05),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d)}
+  .libtile .th.bth canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* the browse overlay gets roomier tiles than the dock */
+  .libgrid.wide{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:var(--gap);
+    padding:var(--gap-sm) 0 var(--s2);max-height:238px;overflow-y:auto}
+  .libgrid.wide .th.bth{height:76px}
+
+  /* the sample stroke on the canvas: the document this page is looking at */
+  /* .canvas is a centering grid, so .selwrap (the grid child) carries the definite
+     width. A percentage width on .bstage would resolve against a shrink-to-fit
+     parent and collapse to 0, which hid the sample stroke entirely. */
+  .selwrap{width:min(560px,100%)}
+  .bstage{position:relative;width:100%;height:250px;border-radius:var(--r4);overflow:hidden;
+    background:radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.06),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d);
+    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
+  .bstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .bstage .plabel{position:absolute;left:10px;top:8px;font-family:var(--mono);font-size:9px;
+    letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
+  .bstage .live{position:absolute;right:10px;top:8px;display:flex;align-items:center;gap:5px;
+    font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:rgba(126,255,183,.8);pointer-events:none}
+  .bstage .live .d{width:6px;height:6px;border-radius:50%;background:#3ecf8e;box-shadow:0 0 6px #3ecf8e}
+
+  /* category filter chips inside the Library group / overlay header */
+  .catseg{flex-wrap:wrap}  .apiline{margin:0}
+  .apiline .codeblk{white-space:pre-wrap;word-break:break-word}
+  .note{font-size:10.5px;color:var(--faint);line-height:1.45;margin-top:var(--s2)}
+  .btag{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    padding:1px 6px;border-radius:5px;white-space:nowrap}
+  .libstat{font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap}
+  /* grouped-menu section label (same as the app-shell reference page) */
+  .mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 10px 3px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="brush-library">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Brush library</h2><span class="k">· the Library group, scope Brushes</span></div>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>brush-sheet</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
+        <button class="btn primary sm" data-target="draw">Done</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#blCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#blHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <button class="btn ghost sm" data-sheet="#blBrowse" title="Browse the whole library"><i class="ic ic-library"></i> Browse library <span class="kbd">⌥⌘L</span></button>
+      <span class="tspacer"></span>
+      <span class="libstat" id="libStat" aria-live="polite"></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="blCmd" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+          <div class="mlabel">Brush</div>
+          <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
+          <div class="menuitem" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush <span class="sc">⌘⌥B</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Import brush file <span class="sc">⌘⇧I</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="blShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · raster</div>
+          <div class="selwrap">
+            <div class="bstage">
+              <span class="plabel">sample stroke · redraws on pick</span>
+              <span class="live"><span class="d"></span> live</span>
+              <canvas id="smpCanvas" width="560" height="242"></canvas>
+            </div>
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="smpTag">Marker · sample stroke</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#blShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#blHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · the D4 Draw inventory, Brush active -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool on" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+            <button class="tool" title="Eraser (E)"><i class="ic sm ic-eraser"></i></button>
+            <button class="tool ovf" title="Shape (U)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#blOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" id="blFg" style="background:#ff5d8f"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="blOvf" style="position:absolute;right:0;bottom:44px;width:172px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">U</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · the same Library content with room to browse -->
+        <div class="sheet down" id="blBrowse" aria-hidden="true" aria-label="Library">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-library"></i> Library · Brushes</span>
+            <span class="sp"></span>
+            <span class="srch" style="max-width:200px"><i class="ic sm ic-search"></i><input id="libSearch2" name="library-search-overlay" placeholder="Search brushes" aria-label="Search brushes"></span>
+            <button class="btn ghost sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="seg catseg" data-cats style="margin-bottom:var(--s2)">
+              <button class="on" data-cat="All">All</button>
+              <button data-cat="Sketch">Sketch</button>
+              <button data-cat="Ink">Ink</button>
+              <button data-cat="Paint">Paint</button>
+              <button data-cat="Airbrush">Airbrush</button>
+              <button data-cat="Texture">Texture</button>
+              <button data-cat="Custom">Custom</button>
+            </div>
+            <div class="libgrid wide" id="libGridWide"></div>
+            <p class="note" style="margin:0">Same content as the Library group in the dock, just with room to browse. Pick a brush and it becomes the active brush, drives Properties, and repaints the sample stroke.</p>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="blHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Ink test sheet</span><span class="ago">3 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Cover sketch</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>
+                <span class="cap"><span class="nm">Texture pass</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock">
+
+        <div class="dgrp" id="blLayers" style="--gh:112px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#blLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lrow sel"><i class="ic ic-brush"></i><span class="nm">Sample stroke</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Contrast</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Paper</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <!-- PROPERTIES · driven by the selected brush tile -->
+        <div class="dgrp" id="blProps" style="--gh:236px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="smpCnt">Brush</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Brush <span class="mut" id="smpCat">Ink</span></div>
+              <div class="setrow"><span class="rl">Name</span><span class="val" id="smpName">Marker</span></div>
+              <div class="setrow"><span class="rl">Size</span><span class="val" id="smpSize">26 px</span></div>
+              <div class="setrow"><span class="rl">Hardness</span><span class="val" id="smpHard">70%</span></div>
+              <div class="setrow"><span class="rl">Flow</span><span class="val" id="smpFlow">55%</span></div>
+              <div class="setrow"><span class="rl">Tip</span><span class="val" id="smpTip">flat</span></div>
+              <p class="note" id="smpDesc">A broad, wet marker with a flat nib.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">Do</div>
+              <div class="actstack">
+                <button class="btn sm primary block" data-target="draw"><i class="ic ic-brush"></i> Use in Draw</button>
+                <button class="btn sm secondary block" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit in brush editor</button>
+                <button class="btn sm danger block" id="libDelete" disabled><i class="ic ic-trash"></i> Delete brush</button>
+              </div>
+              <p class="note">New brushes land in <b style="color:var(--ink)">Custom</b>. Only custom brushes can be deleted.</p>
+            </div>
+            <div class="section" style="border-bottom:0">
+              <div class="sec-h">In the API</div>
+              <p class="apiline"><span class="codeblk" id="libApi"></span></p>
+              <p class="note">Picking a brush is one call, so the agent can choose the right brush from a plain sentence.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · brushes are reusable content, so they live here as a scope -->
+        <div class="dgrp grow" id="blLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libCount">15</span>
+            <button class="btn ghost icon sm" title="Browse in an overlay" data-sheet="#blBrowse"><i class="ic ic-maximize"></i></button>
+            <button class="btn ghost icon sm" title="Add" data-menu="#blLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="blScope">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="brushes">Brushes</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input id="libSearch" name="library-search" placeholder="Search brushes" aria-label="Search brushes"></span>
+            </div>
+            <div style="padding:0 var(--pad-sm)">
+              <div class="seg catseg" data-cats style="width:100%">
+                <button class="on" data-cat="All">All</button>
+                <button data-cat="Sketch">Sketch</button>
+                <button data-cat="Ink">Ink</button>
+                <button data-cat="Paint">Paint</button>
+                <button data-cat="Airbrush">Air</button>
+                <button data-cat="Texture">Texture</button>
+                <button data-cat="Custom">Custom</button>
+              </div>
+            </div>
+            <div class="libgrid" id="libGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#blLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#blProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#blLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <div class="popover menu pop" id="blLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘J</span></div>
+      </div>
+      <div class="popover menu pop" id="blLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:200px;z-index:11">
+        <div class="menuitem" id="libNew"><i class="ic ic-plus"></i> New brush</div>
+        <div class="menuitem" id="libImport2"><i class="ic ic-import"></i> Import a brush file</div>
+        <div class="menuitem" id="libFromSel"><i class="ic ic-lasso"></i> Make brush from selection</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem" id="libReset"><i class="ic ic-undo"></i> Reset library</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A brush library is not its own window. It is the <b>Library</b> panel group with its scope set to <b>Brushes</b>, sitting in the same dock as Layers and Properties. Picking a tile sets the active brush, drives Properties, and repaints the sample stroke on the canvas, exactly the way picking a media tile behaves. Designing one brush lives in the <span data-target="brush-editor" style="color:var(--accent);cursor:pointer">brush editor</span>.</p></div>
+    <div class="c"><div class="lab g2">Direction</div><p>Because a brush is data, the library is a filtered list of objects. Import a <b>.brush</b> file, make one from a selection, or start fresh, and it drops into <b>Custom</b> next to the built in sets. When you want room to browse, the same content opens as a slide-down <b>overlay</b> instead of widening the dock.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should tiles preview against the <b>current Paint</b> and canvas so a brush shows how it will actually read in this document, and should Brushes be a first class Library scope alongside Media, Styles, and Assets, or a filter inside Assets?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* brush-library · the Library surface: browse, search, pick, import, create.
+   All selectors guarded; a missing node is a no-op. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
+  var all = function(sel,root){ return [].slice.call((root||document).querySelectorAll(sel)); };
+
+  var CATCOLOR = {
+    Sketch:"#f6c453", Ink:"#4c6fff", Paint:"#ff5d8f",
+    Airbrush:"#12c2e9", Texture:"#9a5cff", Custom:"#9aa1af"
+  };
+
+  /* ---------- brush catalog ----------
+     A brush is a value object: id, name, category, plus the few numbers that
+     drive its stroke. style picks how a dab is stamped. */
+  function DEFAULTS(){
+    return [
+      { id:"sketch.pencil",   name:"Pencil",       cat:"Sketch",   style:"hard",     color:"#c3c9d6", size:6,  hard:0.92, flow:1.0, tip:"round" },
+      { id:"sketch.graphite", name:"Graphite",     cat:"Sketch",   style:"textured", color:"#aeb6c4", size:22, hard:0.5,  flow:0.8, tip:"round" },
+      { id:"sketch.charcoal", name:"Charcoal",     cat:"Sketch",   style:"chalk",    color:"#e9edf3", size:30, hard:0.4,  flow:0.85,tip:"round" },
+      { id:"ink.pen",         name:"Technical pen",cat:"Ink",      style:"hard",     color:"#3a4658", size:4,  hard:0.98, flow:1.0, tip:"round" },
+      { id:"ink.marker",      name:"Marker",       cat:"Ink",      style:"flat",     color:"#ff5d8f", size:26, hard:0.7,  flow:0.55,tip:"flat" },
+      { id:"ink.brush",       name:"Brush pen",    cat:"Ink",      style:"flat",     color:"#12243a", size:20, hard:0.82, flow:1.0, tip:"flat" },
+      { id:"paint.round",     name:"Round paint",  cat:"Paint",    style:"soft",     color:"#ff7e5f", size:34, hard:0.3,  flow:0.8, tip:"round" },
+      { id:"paint.bristle",   name:"Bristle",      cat:"Paint",    style:"textured", color:"#7c4dff", size:30, hard:0.5,  flow:0.7, tip:"round" },
+      { id:"paint.oil",       name:"Oil impasto",  cat:"Paint",    style:"textured", color:"#f6c453", size:40, hard:0.6,  flow:0.9, tip:"round" },
+      { id:"air.soft",        name:"Soft airbrush",cat:"Airbrush", style:"soft",     color:"#12c2e9", size:48, hard:0.08, flow:0.35,tip:"round" },
+      { id:"air.spatter",     name:"Spatter",      cat:"Airbrush", style:"spatter",  color:"#3ecf8e", size:40, hard:0.3,  flow:0.5, tip:"round" },
+      { id:"tex.chalk",       name:"Chalk",        cat:"Texture",  style:"chalk",    color:"#f4f6fb", size:28, hard:0.35, flow:0.85,tip:"round" },
+      { id:"tex.grain",       name:"Grain",        cat:"Texture",  style:"textured", color:"#b98cff", size:30, hard:0.4,  flow:0.8, tip:"round" },
+      { id:"tex.canvas",      name:"Canvas",       cat:"Texture",  style:"textured", color:"#ff9d7e", size:34, hard:0.5,  flow:0.75,tip:"round" },
+      { id:"custom.fromsel",  name:"From selection",cat:"Custom",  style:"textured", color:"#b98cff", size:26, hard:0.5,  flow:0.85,tip:"round", made:"selection" }
+    ];
+  }
+
+  var TIP_DESC = {
+    "sketch.pencil":"A crisp graphite pencil for tight, controlled sketching.",
+    "sketch.graphite":"A soft graphite stick that grabs the tooth of the paper.",
+    "sketch.charcoal":"Loose, dusty charcoal that smears into rich darks.",
+    "ink.pen":"A dead sharp technical pen for line art and hatching.",
+    "ink.marker":"A broad, wet marker with a flat nib and even flow.",
+    "ink.brush":"A springy brush pen with pressure driven thick and thin.",
+    "paint.round":"A soft round that lays down smooth, blended color.",
+    "paint.bristle":"A bristle brush that streaks with visible hairs.",
+    "paint.oil":"A loaded oil brush that builds thick, textured strokes.",
+    "air.soft":"A wide soft airbrush that fades gently into the paper.",
+    "air.spatter":"A scattered spatter for grit, stars, and speckle.",
+    "tex.chalk":"Dry chalk with a broken, grainy edge.",
+    "tex.grain":"A grainy texture brush for tooth and noise.",
+    "tex.canvas":"A canvas weave brush for tactile, woven marks."
+  };
+
+  var brushes = DEFAULTS();
+  var filter = "All";
+  var search = "";
+  var selectedId = "ink.marker";
+  var customSeq = 0;
+
+  function rgb(hex){
+    hex = (hex||"").replace("#","");
+    if(hex.length===3){ hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; }
+    var n = parseInt(hex,16);
+    if(isNaN(n)) return {r:255,g:157,b:126};
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  }
+  function byId(id){ for(var i=0;i<brushes.length;i++){ if(brushes[i].id===id) return brushes[i]; } return null; }
+  function hashStr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  function mkRand(seed){ var s=seed>>>0; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+  /* ========================================================================
+     STROKE RENDERER · draws a representative stroke for a brush onto a canvas.
+     Used for the tile thumbnails and the large canvas sample.
+     ======================================================================== */
+  function strokePts(W,H){
+    var pad = Math.max(10, W*0.07);
+    var A={x:pad,y:H*0.70}, B={x:W*0.28,y:H*0.08}, C={x:W*0.46,y:H*0.20}, D={x:W*0.55,y:H*0.52},
+        E={x:W*0.64,y:H*0.86}, F={x:W*0.80,y:H*0.92}, G={x:W-pad,y:H*0.30};
+    function bez(p0,p1,p2,p3,t){
+      var u=1-t;
+      return { x:u*u*u*p0.x+3*u*u*t*p1.x+3*u*t*t*p2.x+t*t*t*p3.x,
+               y:u*u*u*p0.y+3*u*u*t*p1.y+3*u*t*t*p2.y+t*t*t*p3.y };
+    }
+    var pts=[], N=190;
+    for(var i=0;i<=N;i++){ var t=i/N; pts.push(t<0.5 ? bez(A,B,C,D,t/0.5) : bez(D,E,F,G,(t-0.5)/0.5)); }
+    var acc=0; pts[0].s=0;
+    for(var j=1;j<pts.length;j++){ acc += Math.hypot(pts[j].x-pts[j-1].x, pts[j].y-pts[j-1].y); pts[j].s=acc; }
+    return { pts:pts, len:acc };
+  }
+  function pressureAt(t){
+    var ramp=0.22, a=clamp(t/ramp,0,1), b=clamp((1-t)/ramp,0,1);
+    var edge=Math.pow(Math.min(a,b),0.8);
+    return clamp(0.14+0.86*edge,0,1);
+  }
+  function dab(ctx, x, y, r, br, alpha, rnd){
+    if(r<0.3 || alpha<=0.003) return;
+    var c = br.rgb, st = br.style;
+    var rgba = function(a){ return "rgba("+c.r+","+c.g+","+c.b+","+a+")"; };
+    if(st==="textured" || st==="chalk" || st==="spatter"){
+      var dens = st==="spatter" ? 0.24 : (st==="chalk" ? 0.7 : 0.5);
+      var specks = Math.max(5, Math.round(r*r*dens));
+      var spread = st==="spatter" ? r*1.8 : r;
+      for(var k=0;k<specks;k++){
+        var a2 = rnd()*Math.PI*2, rad = Math.sqrt(rnd())*spread;
+        var sr = 0.5 + rnd()*(r*0.15);
+        var sa = alpha * (0.3 + rnd()*0.6) * (st==="spatter" ? 0.7 : 1);
+        if(st!=="spatter" && rnd() < (1-br.hard)*0.32) continue; // dry holes
+        ctx.globalAlpha = clamp(sa,0,1);
+        ctx.fillStyle = rgba(1);
+        ctx.beginPath(); ctx.arc(x+Math.cos(a2)*rad, y+Math.sin(a2)*rad, sr, 0, Math.PI*2); ctx.fill();
+      }
+    } else if(st==="flat"){
+      ctx.save(); ctx.translate(x,y); ctx.rotate(-0.5); ctx.scale(1,0.42);
+      var solid = clamp(br.hard,0.1,0.96);
+      var g = ctx.createRadialGradient(0,0,0,0,0,r);
+      g.addColorStop(0, rgba(1)); g.addColorStop(solid, rgba(1)); g.addColorStop(1, rgba(0));
+      ctx.globalAlpha = clamp(alpha,0,1); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); ctx.restore();
+    } else {
+      var solid2 = clamp(br.hard,0.02,0.96);
+      var g2 = ctx.createRadialGradient(x,y,0,x,y,r);
+      g2.addColorStop(0, rgba(1)); g2.addColorStop(solid2, rgba(1)); g2.addColorStop(1, rgba(0));
+      ctx.globalAlpha = clamp(alpha,0,1); ctx.fillStyle = g2;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+  }
+  function drawStroke(cv, br){
+    if(!cv) return;
+    var ctx = cv.getContext("2d"); if(!ctx) return;
+    var W = cv.width, H = cv.height;
+    if(!br.rgb) br.rgb = rgb(br.color);
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation = "source-over";
+    var P = strokePts(W,H), pts = P.pts, len = P.len;
+    var rnd = mkRand(hashStr(br.id) ^ Math.round(br.size*7) ^ br.style.length*13);
+    var k = (H/240)*1.15;
+    var baseR = clamp(br.size,3,60) * k;
+    var step = Math.max(1.2, baseR*0.3);
+    var d=0, idx=1;
+    while(d<=len){
+      while(idx<pts.length && pts[idx].s<d) idx++;
+      var p1 = pts[Math.min(idx,pts.length-1)], p0 = pts[Math.max(0,idx-1)];
+      var span = Math.max(0.0001, p1.s-p0.s), f = clamp((d-p0.s)/span,0,1);
+      var x = p0.x+(p1.x-p0.x)*f, y = p0.y+(p1.y-p0.y)*f;
+      var t = d/len, pr = pressureAt(t);
+      var r = baseR * (0.38 + 0.62*pr);
+      var a = br.flow * (0.42 + 0.58*pr);
+      dab(ctx, x, y, r, br, a, rnd);
+      d += step;
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- filtering ---------- */
+  function visible(){
+    var q = search.trim().toLowerCase();
+    return brushes.filter(function(b){
+      if(filter!=="All" && b.cat!==filter) return false;
+      if(q && b.name.toLowerCase().indexOf(q)<0 && b.id.toLowerCase().indexOf(q)<0) return false;
+      return true;
+    });
+  }
+  function tagStyle(cat){
+    var col = CATCOLOR[cat] || "#9aa1af";
+    return "color:"+col+";background:color-mix(in srgb,"+col+" 16%,transparent);"+
+           "border:1px solid color-mix(in srgb,"+col+" 34%,transparent)";
+  }
+
+  /* ---------- tile grids (dock group + browse overlay) ---------- */
+  function renderGrid(grid, thumbW, thumbH){
+    if(!grid) return;
+    grid.innerHTML = "";
+    var list = visible();
+    if(!list.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.style.gridColumn = "1 / -1";
+      e.innerHTML = '<i class="ic lg ic-search"></i><div>No brushes match this filter.</div>'+
+        '<div class="note">Clear the search, switch category, or make a new brush.</div>';
+      grid.appendChild(e);
+      return;
+    }
+    list.forEach(function(b){
+      if(!b.rgb) b.rgb = rgb(b.color);
+      var tile = document.createElement("div");
+      tile.className = "libtile" + (b.id===selectedId ? " sel" : "");
+      tile.setAttribute("tabindex","0");
+      tile.setAttribute("role","button");
+      tile.setAttribute("data-id", b.id);
+      tile.setAttribute("title", b.name + " · " + b.cat);
+      tile.innerHTML =
+        '<span class="th bth"><canvas width="'+thumbW+'" height="'+thumbH+'"></canvas></span>'+
+        '<span class="cap"><span class="nm">'+b.name+'</span>'+
+        '<span class="mt">'+b.cat.toLowerCase()+' · '+Math.round(b.size)+'px</span></span>';
+      grid.appendChild(tile);
+      drawStroke(tile.querySelector("canvas"), b);
+    });
+  }
+
+  /* ---------- Properties group ---------- */
+  function renderProps(){
+    var b = byId(selectedId) || visible()[0] || brushes[0];
+    if(!b) return;
+    selectedId = b.id;
+    if(!b.rgb) b.rgb = rgb(b.color);
+    drawStroke($("smpCanvas"), b);
+    var set = function(id,v){ var e=$(id); if(e) e.textContent = v; };
+    set("smpName", b.name);
+    set("smpSize", Math.round(b.size)+" px");
+    set("smpHard", Math.round(b.hard*100)+"%");
+    set("smpFlow", Math.round(b.flow*100)+"%");
+    set("smpTip", b.tip || "round");
+    set("smpCnt", b.cat);
+    set("smpTag", b.name + " · sample stroke");
+    var cat = $("smpCat");
+    if(cat){ cat.textContent = b.cat; cat.setAttribute("class","mut btag"); cat.setAttribute("style", tagStyle(b.cat)); }
+    var fg = $("blFg"); if(fg) fg.style.background = b.color;
+    var desc = TIP_DESC[b.id];
+    if(!desc){
+      desc = b.made==="import" ? "An imported brush, dropped into your Custom set." :
+             b.made==="selection" ? "A brush made from a selection, saved into Custom." :
+             "A custom brush you created. Open the editor to shape it further.";
+    }
+    set("smpDesc", desc);
+    var del = $("libDelete");
+    if(del) del.disabled = (b.cat!=="Custom");
+    var api = $("libApi");
+    if(api){
+      api.textContent = 'run("brush.pick", {id:"'+b.id+'"})\n' +
+                        'run("panel.library", {scope:"brushes"})';
+    }
+  }
+
+  function renderCount(){
+    var shown = visible().length, total = brushes.length;
+    var c = $("libCount");
+    if(c) c.textContent = shown===total ? String(total) : (shown+" / "+total);
+  }
+  function syncCats(){
+    all("[data-cats]").forEach(function(seg){
+      all("button", seg).forEach(function(x){
+        x.classList.toggle("on", x.getAttribute("data-cat")===filter);
+      });
+    });
+  }
+  function refresh(){
+    syncCats();
+    renderGrid($("libGrid"), 280, 110);
+    renderGrid($("libGridWide"), 300, 150);
+    renderProps();
+    renderCount();
+  }
+  function status(msg){
+    var s = $("libStat"); if(!s) return;
+    s.textContent = msg || "";
+    if(msg){ clearTimeout(status._t); status._t = setTimeout(function(){ if($("libStat")) $("libStat").textContent=""; }, 2600); }
+  }
+
+  /* ---------- interactions ---------- */
+  function wireGrid(grid){
+    if(!grid) return;
+    grid.addEventListener("click", function(e){
+      var tile = e.target.closest(".libtile"); if(!tile) return;
+      selectedId = tile.getAttribute("data-id");
+      all(".libtile").forEach(function(x){ x.classList.toggle("sel", x.getAttribute("data-id")===selectedId); });
+      renderProps();
+    });
+    grid.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      var tile = e.target.closest(".libtile"); if(!tile) return;
+      e.preventDefault(); tile.click();
+    });
+  }
+  wireGrid($("libGrid"));
+  wireGrid($("libGridWide"));
+
+  all("[data-cats]").forEach(function(seg){
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      filter = b.getAttribute("data-cat") || "All";
+      refresh();
+    });
+  });
+
+  ["libSearch","libSearch2"].forEach(function(id){
+    var s = $(id); if(!s) return;
+    s.addEventListener("input", function(){
+      search = s.value || "";
+      ["libSearch","libSearch2"].forEach(function(o){ if(o!==id && $(o)) $(o).value = search; });
+      refresh();
+    });
+  });
+
+  // Library scope switch · Brushes is the scope this page is showing.
+  var scope = $("blScope");
+  if(scope) scope.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    all("button", scope).forEach(function(x){ x.classList.toggle("on", x===b); });
+    status("Scope: " + b.textContent.trim());
+  });
+
+  function addCustom(kind){
+    customSeq++;
+    var styles = ["soft","hard","flat","textured","spatter","chalk"];
+    var colors = ["#ff7e5f","#7c4dff","#12c2e9","#3ecf8e","#f6c453","#ff5d8f"];
+    var st = styles[customSeq % styles.length];
+    var id = "custom." + (kind==="import" ? "imported" : kind==="selection" ? "sel" : "new") + customSeq;
+    var name = kind==="import" ? ("Imported "+customSeq) :
+               kind==="selection" ? ("From selection "+customSeq) : ("Custom "+customSeq);
+    var b = {
+      id:id, name:name, cat:"Custom", style:st, color:colors[customSeq % colors.length],
+      size:8 + Math.round(Math.random()*36),
+      hard:+(0.2 + Math.random()*0.7).toFixed(2),
+      flow:+(0.5 + Math.random()*0.5).toFixed(2),
+      tip: st==="flat" ? "flat" : "round",
+      made: kind
+    };
+    b.rgb = rgb(b.color);
+    brushes.push(b);
+    filter = "Custom";
+    search = "";
+    ["libSearch","libSearch2"].forEach(function(o){ if($(o)) $(o).value = ""; });
+    selectedId = id;
+    refresh();
+    status(kind==="import" ? "Imported my.brush" : "Added "+name);
+  }
+  ["libImport","libImport2"].forEach(function(id){
+    if($(id)) $(id).addEventListener("click", function(){ addCustom("import"); });
+  });
+  if($("libNew")) $("libNew").addEventListener("click", function(){ addCustom("new"); });
+  if($("libFromSel")) $("libFromSel").addEventListener("click", function(){ addCustom("selection"); });
+
+  if($("libDelete")) $("libDelete").addEventListener("click", function(){
+    var b = byId(selectedId); if(!b || b.cat!=="Custom") return;
+    brushes.splice(brushes.indexOf(b),1);
+    var vis = visible();
+    selectedId = (vis[0] && vis[0].id) || (brushes[0] && brushes[0].id) || null;
+    refresh();
+    status("Deleted "+b.name);
+  });
+
+  if($("libReset")) $("libReset").addEventListener("click", function(){
+    brushes = DEFAULTS();
+    filter = "All"; search = ""; customSeq = 0; selectedId = "ink.marker";
+    ["libSearch","libSearch2"].forEach(function(o){ if($(o)) $(o).value = ""; });
+    refresh();
+    status("Library reset");
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · editor</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local: only a definite window height so the dock is bounded and each
+     panel group's own scroller does the work. Everything else is shared DS. */
+  #editor .win.shell{height:620px;min-height:0}</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="editor">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>UI &amp; content design</h2><span class="k">· editor · canvas, components, inspector</span></div>
+
+  <p class="pglead">The <b>UI workspace</b> is a lens over the same document: the tool strip swaps to frames and
+    components, the dock foregrounds Properties and Library, and the layer stack never changes. The CTA on this card is a
+    linked <b>component instance</b>, painted with a named Style.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR · document · workspace lens · document actions -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>hero-card</b> · 1200 × 630</div>
+      <div class="wsw" id="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar is
+         the real command surface; the mock never draws a fake one. -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+          <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · Brand tokens</div>
+          <div class="selwrap">
+            <div class="hero-card">
+              <span class="hc-badge"><i class="ic xs ic-component"></i> New</span>
+              <div class="hc-h">Ship it faster.</div>
+              <p class="hc-sub">Capture, design, and automate. All in one fast canvas.</p>
+              <span class="hc-cta">Get started <i class="ic ic-chevron-right"></i>
+                <span class="cinst"></span>
+                <span class="cbadge" data-target="dsys"><i class="ic xs ic-component"></i> Button · Primary</span>
+              </span>
+            </div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag">Hero card · 400 × 268</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 UI inventory · overflow folds into more -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" data-target="dsys" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) · the front door, slides over the canvas -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Settings window</span><span class="ago">12 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+      <div class="pdock" id="dock">
+
+        <div class="dgrp" id="gLayers" style="--gh:172px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">12</span>
+            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Hero card</div>
+            <div class="lrow child"><i class="ic ic-frame"></i><span class="nm">Card · Brand/grad</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Feature grid</div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 1</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 2</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 3</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-text"></i><span class="nm">Footer note</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties, contextual to what is selected -->
+        <div class="dgrp" id="gProps" style="--gh:210px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+              <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+              <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Size</span><span class="select"><span class="lead">Large</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+            </div>
+            <div class="section">
+              <div class="sec-h">Fill <span class="mut">Paint style</span></div>
+              <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <p class="note">Painted with a named Style. Change it in the design system and every instance follows.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">Transform</div>
+              <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div><div class="field"><span class="k">R</span><span class="v">12</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp" id="gEffects" style="--gh:136px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes (D1/D2). A dock group, never a left dock. -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Components</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search components" aria-label="Search components"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffe9a8,#f6c453)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Card</span><span class="mt">2 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Field</span><span class="mt">5 states</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">Nav bar</span><span class="mt">1 variant</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span><span class="cap"><span class="nm">Toast</span><span class="mt">3 variants</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL · what the dock collapses to -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+        <div class="mlabel">Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
+      </div>
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:230px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to main</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:392px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
+        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Border</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Reusable in action</div><p>The CTA is a <b style="color:var(--comp)"><i class="ic xs ic-component"></i> Button instance</b> linked to a main component, set to the <b>Primary</b> variant, and <b>painted</b> with the <b>Brand/gradient</b> Style. Edit the style or the main and all 42 instances update.</p></div>
+    <div class="c"><div class="lab g2">One selection, three places</div><p>The ring on the canvas, the highlighted row in <b>Layers</b>, and the <b>Properties</b> group are the same selection. Look right to see what the current selection can do.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Properties leads with <b>Component</b> when an instance is selected, so the reuse relationship comes first and raw transform trails. Should a detached layer reorder those sections, or keep one fixed order so the panel never moves under you?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: Library scope switch + tile selection. Collapse, resize, rail,
+     overlay, overflow and tool selection are all shared DS behavior. */
+  (function () {
+    var seg = document.getElementById('scopeSeg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('button'));
+      var label = document.querySelector('#gLibrary .dgrp-h .cnt');
+      var names = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          if (label) label.textContent = names[b.getAttribute('data-scope')] || '';
+        });
+      });
+    }
+    [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+      var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+      tiles.forEach(function (tile) {
+        tile.addEventListener('click', function () {
+          tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

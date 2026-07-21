@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · img-masking</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* img-masking page extras · spacing on the 4pt scale, chrome colors from tokens.
+     Scene art is allowed raw color; the shell and every control come from the DS. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #img-masking .win.shell{height:748px;min-height:0}  /* ---- the scene: a believable dusk landscape from gradients ---- */
+  .scenewrap{position:relative;width:min(468px,100%);margin:0 auto}
+  .scene{position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--r4);overflow:hidden;
+    box-shadow:0 22px 48px -16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.14)}
+  .scene .lay{position:absolute;inset:0}
+  /* selection ring follows the scene's corner radius */
+  #img-masking .scenewrap .sel-ring{border-radius:16px;inset:-8px}
+
+  /* dusk sky: deep blue at the top warming into a low sun band */
+  .scene .sky{background:linear-gradient(180deg,#16233f 0%,#2c4676 26%,#6d6a92 48%,#d08a63 66%,#f4c184 78%,#e88a52 100%)}
+  /* low sun glow just above the ridge */
+  .scene .glow{background:radial-gradient(circle at 50% 62%,rgba(255,240,200,.95),rgba(255,210,150,.42) 8%,transparent 24%)}
+  /* soft atmospheric haze along the horizon */
+  .scene .haze{background:linear-gradient(180deg,transparent 52%,rgba(255,225,190,.28) 60%,transparent 70%)}
+
+  /* the non-destructive Warm / Darken adjustment, revealed only through the mask.
+     multiply of a warm amber darkens + warms whatever it covers. */
+  .scene .adj{mix-blend-mode:multiply;background:linear-gradient(180deg,#d98a3c,#6f3410);
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;
+    transition:opacity .2s ease}
+  .scene.before .adj{opacity:0!important}
+
+  /* quick-mask visualization: the mask itself painted in red, like a pro editor */
+  .scene .maskviz{opacity:0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-size:100% 100%;mask-size:100% 100%;transition:opacity .2s ease;pointer-events:none}
+  .scene.showmask .maskviz{opacity:.72}
+
+  /* subject selection: marching ants tracing the sky above the ridge */
+  .selsvg{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+  .ants{fill:none;stroke:#fff;stroke-width:2;stroke-dasharray:7 5;
+    filter:drop-shadow(0 0 1.2px rgba(0,0,0,.7));opacity:0;transition:opacity .2s ease}
+  .scene.ai .ants{opacity:1;animation:march 1s linear infinite}
+  @keyframes march{to{stroke-dashoffset:-24}}
+  @media (prefers-reduced-motion:reduce){.scene.ai .ants{animation:none}}
+
+  /* the ridge silhouettes sit above the adjustment so the foreground stays solid */
+  .ridgeSvg{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+
+  /* on-canvas mask badge + coach line, matching the image editor */
+  .maskbadge{position:absolute;left:10px;top:10px;z-index:4;display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.02em;color:#fff;
+    background:rgba(10,12,20,.52);padding:4px 9px;border-radius:7px;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:opacity .18s ease}
+  .maskbadge .dot{width:8px;height:8px;border-radius:2px;flex:none}
+  .scene.before .maskbadge{opacity:.4}
+  .cvhint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:4;white-space:nowrap;
+    font-size:10.5px;color:rgba(255,255,255,.86);background:rgba(10,12,20,.5);
+    padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none}
+  .cvhint b{color:#fff;font-weight:640}
+  .artboard-label{z-index:4}
+
+  /* ---- inspector range control (4pt scale, accent themed) ---- */
+  .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
+    background:var(--line-strong);outline:none;margin:0}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
+  .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
+    border:2px solid var(--panel);cursor:pointer}
+  .rng:focus-visible{box-shadow:var(--ring)}
+  .rng:disabled{opacity:.42;cursor:default}
+  .rrow{display:grid;grid-template-columns:60px 1fr 42px;align-items:center;gap:var(--s2);margin:var(--s2) 0}  .rrow .rv{font-family:var(--mono);font-size:10.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+
+  /* mask-type segmented control: let each option carry an icon + label */
+  /* .seg.wrap deleted: the shared DS now lays every panel scope control out as
+     an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  /* a small designed gradient chip for the Gradient option (not a glyph) */
+  .gswatch{width:12px;height:12px;border-radius:3px;flex:none;
+    background:linear-gradient(180deg,#111,#fff);border:1px solid rgba(0,0,0,.2)}
+
+  /* live mask thumbnail in the Layers group */
+  .lthumb{width:16px;height:16px;border-radius:4px;flex:none;border:1px solid var(--edge-lo)}
+  .lrow .rmtag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:1px 6px;border-radius:5px}
+
+  .optrow{display:flex;flex-wrap:wrap;gap:var(--s2)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="img-masking">
+    <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Masking</h2><span class="k">· hide and reveal, non-destructive</span></div>
+
+    <p class="pglead">A mask decides <b>where</b> an edit lands. It is a property of the selected adjustment layer, so it
+      lives in <b>Properties</b>, not in a mask-only mode with its own chrome. The tool strip stays the normal Image
+      inventory: the brush paints the mask, the wand selects a subject, the eraser takes it back.</p>
+
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>golden-ridge</b> · 6000 × 3750</div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" data-ws="video" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <button class="btn ghost sm" data-target="agent" title="Ask the agent"><i class="ic ic-sparkle"></i> Ask agent</button>
+        <span class="val" title="Mask precision">Mask · 8-bit alpha</span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:226px;z-index:12">
+            <div class="mlabel">Layer</div>
+            <div class="menuitem"><i class="ic ic-layers"></i> Add layer mask</div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Invert mask <span class="sc">⌘I</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Select</div>
+            <div class="menuitem"><i class="ic ic-wand"></i> Select sky <span class="sc">⌘⇧A</span></div>
+            <div class="menuitem" data-target="img-bg-remove"><i class="ic ic-eraser"></i> Remove background</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="cnv">
+          <!-- CANVAS: the landscape + the masked adjustment, live -->
+          <div class="canvas" style="background:radial-gradient(700px 420px at 50% 30%,#141826,#0a0c11)">
+            <div class="artboard-label">6000 × 3750 · 32-bit float · Display P3</div>
+            <div class="scenewrap selwrap">
+              <div class="scene ai" id="scene">
+                <div class="lay sky"></div>
+                <div class="lay glow"></div>
+                <div class="lay haze"></div>
+
+                <!-- the masked adjustment (multiply warm/darken) -->
+                <div class="lay adj" id="adj"></div>
+
+                <!-- ridges sit above the adjustment so the near hills read as solid foreground -->
+                <svg class="ridgeSvg" viewBox="0 0 460 288" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="farRidge" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#5a4a63"/><stop offset="1" stop-color="#3c3450"/>
+                    </linearGradient>
+                    <linearGradient id="nearRidge" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#241a33"/><stop offset="1" stop-color="#120c1e"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 175 L60 150 L110 168 L170 132 L230 160 L300 138 L360 166 L420 145 L460 168 L460 288 L0 288 Z" fill="url(#farRidge)" opacity=".92"/>
+                  <path d="M0 208 L70 190 L140 214 L210 184 L280 210 L350 192 L430 216 L460 202 L460 288 L0 288 Z" fill="url(#nearRidge)"/>
+                </svg>
+
+                <!-- red quick-mask visualization (same mask, painted) -->
+                <div class="lay maskviz" id="maskviz"></div>
+
+                <!-- marching ants tracing the sky boundary along the ridge -->
+                <svg class="selsvg" viewBox="0 0 460 288" preserveAspectRatio="none" aria-label="Sky selection">
+                  <path class="ants" d="M0 175 L60 150 L110 168 L170 132 L230 160 L300 138 L360 166 L420 145 L460 168"/>
+                  <path class="ants" d="M0 2 L460 2"/>
+                </svg>
+
+                <div class="maskbadge" id="maskBadge"><span class="dot" id="maskBadgeDot"></span><span id="maskBadgeTx">Agent mask · sky</span></div>
+                <div class="cvhint" id="cvhint">The agent selected the <b>sky</b> · the warm adjustment only touches what the mask reveals.</div>
+              </div>
+              <!-- SELECTION, place 1 of 3: the Warm / darken layer on the canvas -->
+              <div class="sel-ring"></div>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Warm · darken · masked</span>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" id="beforeBtn" title="Show the original frame"><i class="ic sm ic-eye-off"></i></button>
+            <button class="tool" id="showMaskBtn" title="Show the mask as a red overlay"><i class="ic sm ic-layers"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · the canonical D4 Image inventory.
+               Mask painting is what the brush DOES on a masked layer, so there is
+               no separate mask-mode strip. -->
+          <div class="tbar">
+            <span class="tstrip" id="mkTools" data-radio=".tool">
+              <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <button class="tool" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+              <button class="tool on" id="toolAi" title="Subject / sky select (W)"><i class="ic sm ic-wand"></i></button>
+              <span class="tsep"></span>
+              <button class="tool ovf" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+              <button class="tool" id="toolPaint" title="Brush · paint the mask, black hides and white reveals (B)"><i class="ic sm ic-brush"></i></button>
+              <button class="tool" id="toolErase" title="Eraser · take the mask back (E)"><i class="ic sm ic-eraser"></i></button>
+              <button class="tool ovf" title="Heal (J)"><i class="ic sm ic-heal"></i></button>
+              <button class="tool ovf" title="Clone stamp (S)"><i class="ic sm ic-clone"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Mask paint: white reveals, black hides">
+              <span class="fg" style="background:#ffffff"></span>
+              <span class="bg" style="background:#111318"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:186px;z-index:12">
+              <div class="menuitem"><i class="ic ic-crop"></i> Crop <span class="sc">C</span></div>
+              <div class="menuitem"><i class="ic ic-heal"></i> Heal <span class="sc">J</span></div>
+              <div class="menuitem"><i class="ic ic-clone"></i> Clone stamp <span class="sc">S</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <!-- HISTORY OVERLAY (⌘⇧H) -->
+          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(180deg,#16233f,#6d6a92 55%,#e88a52)"></span>
+                  <span class="cap"><span class="nm">golden-ridge</span><span class="ago">just now</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(160deg,#ffb36b,#ff7e5f 45%,#7b4397)"></span>
+                  <span class="cap"><span class="nm">sunset-edit</span><span class="ago">40 min ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(160deg,#f0c39c,#2b6f7a)"></span>
+                  <span class="cap"><span class="nm">portrait-cutout</span><span class="ago">2 hr ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="228" data-max="420"></div>
+
+        <div class="pdock" id="dock" style="--dock-w:282px">
+
+          <!-- LAYERS: the adjustment carries a live mask thumbnail -->
+          <div class="dgrp" id="gLayers" style="--gh:150px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span>
+              <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+              <div class="lrow sel adj" id="lrAdj">
+                <i class="ic ic-sliders" style="color:#ff9a44"></i><span class="clipmark"></span><span class="nm">Warm · darken</span>
+                <span class="lthumb" id="maskThumb" title="Layer mask"></span>
+                <i class="ic sm ic-eye eye"></i>
+              </div>
+              <div class="lrow adj"><i class="ic ic-sliders" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">Clarity</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow adj"><i class="ic ic-sliders" style="color:#7f9bff"></i><span class="clipmark"></span><span class="nm">Vignette</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-brush"></i><span class="nm">Dodge · ridge line</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow" id="lrPhoto">
+                <i class="ic ic-image"></i><span class="nm">golden-ridge · RAW</span><span class="val">6K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="96" data-max="320"></div>
+
+          <!-- SELECTION, place 3 of 3: Properties. The mask belongs to the layer,
+               so it is a property, not a mode. -->
+          <div class="dgrp" id="gProps" style="--gh:300px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Warm · darken</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+
+              <div class="section">
+                <div class="sec-h">Mask <span class="mut" id="maskKind">Agent · sky</span></div>
+                <div class="masklist" id="maskRow"><span class="mm" id="maskRowSw"></span><span id="maskRowName">Sky select</span><span class="rmtag" id="maskRowTag">live</span></div>
+                <p class="note">The mask is a real alpha <b style="color:var(--ink)">Paint</b> channel on this layer. Paint it with the brush, take it back with the eraser, or hand it to the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span>. The pixels never change.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Mask type <span class="mut">where it applies</span></div>
+                <div class="seg" id="typeSeg">
+                  <button data-type="layer" title="Layer mask"><i class="ic sm ic-layers"></i>Layer</button>
+                  <button data-type="luminosity" title="Luminosity mask"><i class="ic sm ic-sliders"></i>Luma</button>
+                  <button data-type="gradient" title="Gradient mask"><span class="gswatch"></span>Gradient</button>
+                  <button data-type="ai" class="on" title="Agent select mask"><i class="ic sm ic-wand"></i>Agent</button>
+                </div>
+                <p class="note" id="typeNote">The agent selects the <b style="color:var(--ink)">sky</b> or subject and masks to it · one call, local model by default.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Target <span class="mut" id="targetMut">by brightness</span></div>
+                <div class="seg" id="targetSeg">
+                  <button data-lum="highlights" class="on">Highlights</button>
+                  <button data-lum="midtones">Midtones</button>
+                  <button data-lum="shadows">Shadows</button>
+                </div>
+                <p class="note">Luminosity masks pick pixels by brightness · protect the <b style="color:var(--ink)">shadows</b> while you warm only the <b style="color:var(--ink)">highlights</b>. Available on the Luminosity type.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Mask shape <span class="mut">feather + strength</span></div>
+                <div class="rrow"><span class="rl">Feather</span><input class="rng" id="featherR" type="range" min="0" max="100" step="1" value="33"><span class="rv" id="featherV">8px</span></div>
+                <div class="rrow"><span class="rl">Strength</span><input class="rng" id="amountR" type="range" min="0" max="100" step="1" value="72"><span class="rv" id="amountV">72%</span></div>
+                <div class="optrow" style="margin-top:10px">
+                  <button class="btn ghost sm" id="invertBtn"><i class="ic ic-undo"></i> Invert mask</button>
+                  <button class="btn ghost sm" id="showMaskBtn2"><i class="ic ic-eye"></i> Show mask</button>
+                  <button class="btn ghost sm" id="resetBtn"><i class="ic ic-undo"></i> Reset</button>
+                </div>
+                <p class="note">Feather softens the mask edge live · watch the horizon line and the painted daub. Strength is the adjustment opacity through the mask.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">In the API <span class="mut">one call, agent-ready</span></div>
+                <div class="codeblk"><span class="c">// mask the adjustment, non-destructive</span>
+<span class="k">layer</span>.<span class="k">mask</span>({ <span class="p">type</span>: <span class="s" id="apiType">"ai"</span>, <span class="p">target</span>: <span class="s" id="apiTarget">"sky"</span>, <span class="p">feather</span>: <span id="apiFeather">8</span> })
+<span class="c">// strength = adjustment opacity through the mask</span>
+<span class="k">layer</span>.<span class="k">set</span>({ <span class="p">opacity</span>: <span id="apiAmount">0.72</span> })</div>
+                <p class="note">Every control here is one call, so the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span> can build the same mask from a plain sentence.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+          <div class="dgrp grow" id="gLibrary">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Styles</span>
+              <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" id="scopeSeg">
+                  <button data-scope="media">Media</button>
+                  <button data-scope="components">Comp</button>
+                  <button class="on" data-scope="styles">Styles</button>
+                  <button data-scope="assets">Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search masks and grades" aria-label="Search masks and grades"></span>
+              </div>
+              <div class="libgrid">
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#fff,#111)"></span><span class="cap"><span class="nm">Grad ND</span><span class="mt">mask preset</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:radial-gradient(ellipse 60% 42% at 50% 80%,#fff,#111 70%)"></span><span class="cap"><span class="nm">Foreground</span><span class="mt">mask preset</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#fff 30%,#111 55%)"></span><span class="cap"><span class="nm">Highlights</span><span class="mt">luma preset</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#d98a3c,#6f3410)"></span><span class="cap"><span class="nm">Warm dusk</span><span class="mt">grade style</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#4c7cd6,#1a2a4a)"></span><span class="cap"><span class="nm">Cool blue</span><span class="mt">grade style</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#f6c453,#3ecf8e)"></span><span class="cap"><span class="nm">Split tone</span><span class="mt">grade style</span></span></div>
+              </div>
+              <p class="note" style="padding:0 var(--pad-sm) var(--pad)">Mask presets and grade styles are reusable content, so they live in the one Library. Drop one on any layer in any document.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="drail">
+          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+
+        <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+          <div class="mlabel">Add adjustment</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Warm / darken</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Clarity</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Vignette</div>
+          <div class="menuitem" data-target="img-grade-wt"><i class="ic ic-swatch"></i> Split tone</div>
+        </div>
+        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+          <div class="menuitem"><i class="ic ic-layers"></i> Add layer mask</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Invert mask <span class="sc">⌘I</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+        </div>
+        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:210px;width:198px;z-index:11">
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy mask</div>
+          <div class="menuitem"><i class="ic ic-library"></i> Save mask preset</div>
+        </div>
+        <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
+          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save this mask as a preset</div>
+          <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A mask decides <b>where</b> an edit lands, without touching a pixel. Flip between a painted <b>Layer</b> mask, a <b>Luminosity</b> mask that targets highlights or shadows, a smooth <b>Gradient</b> mask, and an agent-selected mask locked to the sky · the warm adjustment moves with it, live.</p></div>
+      <div class="c"><div class="lab g2">Direction</div><p>All four are the same primitive: an alpha <b>Paint</b> channel on the layer. Feather reshapes the edge, Strength is the layer opacity, and <b>Show mask</b> paints the channel red like a quick mask. Any mask is editable by hand after the fact · the agent select is just a starting point, not a lock-in.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>When two masks make sense at once, say a sky select intersected with a highlights luminosity mask, should the UI stack them as a small mask list with blend modes, or fold it into one sentence to the agent and show the combined result?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* img-masking · scoped, self-guarding masking demo. The Warm/Darken adjustment is
+   revealed through a live CSS mask; changing the mask type, target, feather and
+   strength re-derives the mask so you SEE where the edit lands. Every selector is
+   guarded; a missing node is a no-op and nothing leaks to globals. The shell
+   (dock, groups, splitters, rail, overlay, tool overflow) is shared DS. */
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var scene = $("scene");
+  if (!scene) return;
+
+  var TOOLS = ".tbar .tstrip .tool";
+  var state = { type: "ai", target: "highlights", feather: 8, amount: 72, before: false, showMask: false, invert: false };
+
+  var TYPE_LABEL = { layer: "Layer", luminosity: "Luminosity", gradient: "Gradient", ai: "Agent" };
+  var TYPE_DOT = { layer: "#4c6fff", luminosity: "#f6c453", gradient: "#3ecf8e", ai: "#12c2e9" };
+
+  // Build a mask gradient for a given type/target. cA = opaque (adjustment shows),
+  // cB = clear (adjustment hidden). fp is the feather in mask-percent.
+  function grad(type, target, fp, cA, cB) {
+    if (type === "layer") {
+      // a hand-painted daub over the lower-center foreground
+      return "radial-gradient(ellipse 60% 42% at 50% 80%, " + cA + " " + Math.max(0, 34 - fp) + "%, " + cB + " " + (56 + fp) + "%)";
+    }
+    if (type === "gradient") {
+      // a smooth graduated reveal, darkening the sky top-down (like an ND grad)
+      return "linear-gradient(180deg, " + cA + " 4%, " + cB + " " + (60 + fp) + "%)";
+    }
+    if (type === "ai") {
+      // sky = everything above the ridge line (~57%)
+      return "linear-gradient(180deg, " + cA + " " + Math.max(6, 50 - fp * 0.4) + "%, " + cB + " " + (58 + fp) + "%)";
+    }
+    // luminosity: map brightness to position · sky/sun bright (top), hills dark (bottom)
+    if (target === "highlights") return "linear-gradient(180deg, " + cA + " " + Math.max(6, 30 - fp * 0.4) + "%, " + cB + " " + (48 + fp) + "%)";
+    if (target === "shadows")    return "linear-gradient(180deg, " + cB + " " + Math.max(0, 60 - fp) + "%, " + cA + " " + Math.min(96, 76 + fp * 0.3) + "%)";
+    // midtones: a soft band across the middle
+    return "linear-gradient(180deg, " + cB + " " + Math.max(0, 30 - fp) + "%, " + cA + " 46%, " + cA + " 60%, " + cB + " " + (74 + fp) + "%)";
+  }
+
+  function setMask(el, css) {
+    if (!el) return;
+    el.style.webkitMaskImage = css;
+    el.style.maskImage = css;
+  }
+
+  function render() {
+    var t = state.type, tg = state.target;
+    var fp = state.feather * 0.9;              // px -> mask-percent softness
+    var lumInvert = state.invert;             // invert flips opaque/clear
+    var cA = lumInvert ? "transparent" : "#000";
+    var cB = lumInvert ? "#000" : "transparent";
+
+    var adj = $("adj");
+    setMask(adj, grad(t, tg, fp, cA, cB));
+    if (adj) adj.style.opacity = (state.amount / 100).toFixed(2);
+
+    // red quick-mask viz uses the same shape
+    setMask($("maskviz"), grad(t, tg, fp, "rgba(255,60,90,.9)", "transparent"));
+    var mv = $("maskviz");
+    if (mv) mv.style.background = "rgba(255,60,90,.9)";
+
+    // scene classes: before/after, quick-mask, ants only in select mode
+    scene.classList.toggle("before", state.before);
+    scene.classList.toggle("showmask", state.showMask);
+    scene.classList.toggle("ai", t === "ai" && !state.before);
+
+    // live mask thumbnail (Layers group) · white reveal on dark
+    var thumbCss = grad(t, tg, fp, cA === "#000" ? "#e9edff" : "transparent", cB === "#000" ? "#e9edff" : "#12151c");
+    var thumb = $("maskThumb");
+    if (thumb) { thumb.style.background = "#12151c"; thumb.style.backgroundImage = thumbCss; }
+    var rowSw = $("maskRowSw");
+    if (rowSw) { rowSw.style.background = "#12151c"; rowSw.style.backgroundImage = thumbCss; }
+
+    // target seg only meaningful for luminosity · show a real disabled state otherwise
+    var isLum = t === "luminosity";
+    var targetSeg = $("targetSeg");
+    if (targetSeg) targetSeg.querySelectorAll("button").forEach(function (b) { b.disabled = !isLum; });
+    var targetMut = $("targetMut");
+    if (targetMut) targetMut.textContent = isLum ? "by brightness" : "luminosity only";
+
+    // badge + labels
+    var badgeTx = $("maskBadgeTx");
+    var kindLabel = t === "ai" ? "Agent mask · sky"
+      : t === "luminosity" ? ("Luminosity · " + tg)
+      : t === "gradient" ? "Gradient mask"
+      : "Layer mask · painted";
+    if (badgeTx) badgeTx.textContent = state.before ? "Before · no adjustment" : kindLabel;
+    var badgeDot = $("maskBadgeDot");
+    if (badgeDot) badgeDot.style.background = TYPE_DOT[t];
+
+    var maskKind = $("maskKind");
+    if (maskKind) maskKind.textContent = t === "ai" ? "Agent · sky" : t === "luminosity" ? ("Luma · " + tg) : TYPE_LABEL[t];
+    var rowName = $("maskRowName");
+    if (rowName) rowName.textContent = kindLabel.replace(" · painted", " · brush");
+    var rowTag = $("maskRowTag");
+    if (rowTag) rowTag.textContent = state.invert ? "inverted" : "live";
+
+    // type notes
+    var note = $("typeNote");
+    if (note) {
+      var n = {
+        layer: "Paint <b style=\"color:var(--ink)\">black to hide</b>, white to reveal · here a soft brush daub over the foreground.",
+        luminosity: "Target pixels <b style=\"color:var(--ink)\">by brightness</b> · warm the highlights, protect the shadows.",
+        gradient: "A <b style=\"color:var(--ink)\">smooth reveal</b> across the frame · darkens the sky like a graduated ND filter.",
+        ai: "The agent selects the <b style=\"color:var(--ink)\">sky</b> or subject and masks to it · one call, local model by default."
+      };
+      note.innerHTML = n[t] || "";
+    }
+
+    // coach line
+    var cv = $("cvhint");
+    if (cv) {
+      if (state.before) cv.innerHTML = "<b>Before</b> · the original frame, the adjustment is off.";
+      else if (state.showMask) cv.innerHTML = "The <b>red overlay</b> is the mask itself · red = adjusted, clear = protected.";
+      else cv.innerHTML = ({
+        layer: "Painted <b>Layer</b> mask · drag Feather to soften the brushed edge.",
+        luminosity: "<b>Luminosity</b> mask on the " + tg + " · brightness, not a shape, decides what changes.",
+        gradient: "<b>Gradient</b> mask · a smooth top-down reveal, no hard edge.",
+        ai: "The agent selected the <b>sky</b> · the warm adjustment only touches what the mask reveals."
+      })[t];
+    }
+
+    // the active tool follows the mask type only where a real tool maps to it;
+    // Luminosity and Gradient are mask TYPES, not tools, so the strip is left alone.
+    var toolFor = { layer: "toolPaint", ai: "toolAi" };
+    if (toolFor[t]) {
+      document.querySelectorAll(TOOLS).forEach(function (x) { x.classList.remove("on"); });
+      var active = $(toolFor[t]);
+      if (active) active.classList.add("on");
+    }
+
+    // canvas action toggles (before / quick mask) live in the canvas cluster
+    var bb = $("beforeBtn");
+    if (bb) {
+      bb.classList.toggle("on", state.before);
+      var bi = bb.querySelector(".ic");
+      if (bi) { bi.classList.toggle("ic-eye", state.before); bi.classList.toggle("ic-eye-off", !state.before); }
+      bb.setAttribute("title", state.before ? "Show the graded frame" : "Show the original frame");
+    }
+    var smb = $("showMaskBtn");
+    if (smb) smb.classList.toggle("on", state.showMask);
+    var smb2 = $("showMaskBtn2");
+    if (smb2) smb2.classList.toggle("primary", state.showMask);
+
+    // readouts + live API
+    var fv = $("featherV"); if (fv) fv.textContent = state.feather + "px";
+    var av = $("amountV"); if (av) av.textContent = state.amount + "%";
+    var aT = $("apiType"); if (aT) aT.textContent = '"' + t + '"';
+    var aTg = $("apiTarget"); if (aTg) aTg.textContent = '"' + (t === "ai" ? "sky" : t === "luminosity" ? tg : "full") + '"';
+    var aF = $("apiFeather"); if (aF) aF.textContent = state.feather;
+    var aA = $("apiAmount"); if (aA) aA.textContent = (state.amount / 100).toFixed(2);
+  }
+
+  // mask-type segmented control
+  var typeSeg = $("typeSeg");
+  if (typeSeg) typeSeg.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    typeSeg.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    state.type = b.getAttribute("data-type");
+    render();
+  });
+
+  // luminosity target
+  var targetSeg = $("targetSeg");
+  if (targetSeg) targetSeg.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || b.disabled) return;
+    targetSeg.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    state.target = b.getAttribute("data-lum");
+    render();
+  });
+
+  // sliders
+  var fR = $("featherR");
+  if (fR) fR.addEventListener("input", function () { state.feather = Math.round(+fR.value / 100 * 24); render(); });
+  var aR = $("amountR");
+  if (aR) aR.addEventListener("input", function () { state.amount = +aR.value; render(); });
+
+  // before / after (canvas action cluster)
+  var bb = $("beforeBtn");
+  if (bb) bb.addEventListener("click", function () { state.before = !state.before; render(); });
+
+  // show mask (two entry points: canvas cluster + Properties)
+  [$("showMaskBtn"), $("showMaskBtn2")].forEach(function (b) {
+    if (b) b.addEventListener("click", function () { state.showMask = !state.showMask; render(); });
+  });
+
+  // invert
+  var ib = $("invertBtn");
+  if (ib) ib.addEventListener("click", function () { state.invert = !state.invert; ib.classList.toggle("primary", state.invert); render(); });
+
+  // the brush paints the mask, the wand selects the sky: real tools, not a mode
+  var toolType = { toolPaint: "layer", toolAi: "ai" };
+  Object.keys(toolType).forEach(function (id) {
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener("click", function () {
+      state.type = toolType[id];
+      if (typeSeg) typeSeg.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-type") === state.type); });
+      render();
+    });
+  });
+  var toolErase = $("toolErase");
+  if (toolErase) toolErase.addEventListener("click", function () { state.invert = true; if (ib) ib.classList.add("primary"); render(); });
+
+  // reset
+  var resetBtn = $("resetBtn");
+  if (resetBtn) resetBtn.addEventListener("click", function () {
+    state = { type: "ai", target: "highlights", feather: 8, amount: 72, before: false, showMask: false, invert: false };
+    if (fR) fR.value = 33;
+    if (aR) aR.value = 72;
+    if (ib) ib.classList.remove("primary");
+    if (typeSeg) typeSeg.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-type") === "ai"); });
+    if (targetSeg) targetSeg.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-lum") === "highlights"); });
+    render();
+  });
+
+  // Library scope switch + tile selection
+  var seg = $("scopeSeg");
+  if (seg) {
+    var btns = [].slice.call(seg.querySelectorAll("button"));
+    var label = document.querySelector("#gLibrary .dgrp-h .cnt");
+    var names = { media: "Media", components: "Components", styles: "Styles", assets: "Assets" };
+    btns.forEach(function (b) {
+      b.addEventListener("click", function () {
+        btns.forEach(function (x) { x.classList.toggle("on", x === b); });
+        if (label) label.textContent = names[b.getAttribute("data-scope")] || "";
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll(".libgrid")).forEach(function (grid) {
+    var tiles = [].slice.call(grid.querySelectorAll(".libtile"));
+    tiles.forEach(function (tile) {
+      tile.addEventListener("click", function () {
+        tiles.forEach(function (x) { x.classList.toggle("sel", x === tile); });
+      });
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

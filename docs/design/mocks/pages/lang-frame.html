@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-frame</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local reference scaffolding ONLY. Every window, title bar and
+     control on this page is the shared DS (.win/.titlebar/.lights/
+     .wtitle/.wsw/.tbtns/.btn/.edit.lean/.tbar/.pdock). Local names are
+     all prefixed `lf-` so nothing can collide with a DS class
+     (bar/btn/card/sw/val/tool/sheet/rail/dock/tbar are all left alone).
+     Spacing/radii/colors come from the 4pt tokens.
+     ============================================================ */
+  #lang-frame .lf-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:820px}
+  #lang-frame .lf-lead b{color:var(--ink);font-weight:600}
+
+  /* stacked reference block: numbered header + body */
+  #lang-frame .lf-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-frame .lf-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #lang-frame .lf-blk-h .lf-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-frame .lf-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-frame .lf-blk-h .lf-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-frame .lf-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* KIND 2 · a specimen card. It never wears app chrome of its own: it is a
+     labeled, bordered slice. On THIS page the slice happens to contain a title
+     bar, because the title bar is the thing being documented. The torn bottom
+     edge says out loud "this is a cut piece of a window, not a window". */
+  #lang-frame .lf-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #lang-frame .lf-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border-bottom:1px solid var(--line-soft)}
+  #lang-frame .lf-spec-h .lf-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
+    text-transform:none;font-weight:520;color:var(--faint)}
+  #lang-frame .lf-spec-h .lf-tag.acc{color:var(--accent)}
+  #lang-frame .lf-spec-b{padding:var(--pad-sm)}
+  #lang-frame .lf-cut{border:1px solid var(--edge-lo);border-radius:var(--r3) var(--r3) 0 0;overflow:hidden}
+  /* the full-width bar specimens scroll inside their own card rather than clip */
+  #lang-frame .lf-cut.wide{overflow-x:auto}
+  #lang-frame .lf-cut.wide .titlebar{min-width:640px}
+  #lang-frame .lf-cut .titlebar{border-bottom:0}
+  #lang-frame .lf-tear{height:7px;background:repeating-linear-gradient(90deg,var(--line-strong) 0 5px,transparent 5px 10px);
+    opacity:.55;border-radius:0 0 var(--r3) var(--r3)}
+  #lang-frame .lf-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-frame .lf-cap b{color:var(--ink);font-weight:600}
+
+  /* unfocused (background) window title bar */
+  #lang-frame .lf-off .lights i{background:#c2c6cf;box-shadow:0 0 0 .5px rgba(0,0,0,.1) inset}
+  #lang-frame .lf-off .titlebar{background:var(--panel-2)}
+  #lang-frame .lf-off .wtitle,#lang-frame .lf-off .wtitle b{color:var(--faint)}
+  #lang-frame .lf-off .lf-dot{background:var(--faint);box-shadow:none}
+  #lang-frame .lf-off .btn,#lang-frame .lf-off .wsw{opacity:.5}
+
+  /* edited dot + saved tick, part of document identity */
+  #lang-frame .lf-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+  #lang-frame .lf-id{display:inline-flex;align-items:center;justify-content:center;gap:var(--gap-sm)}
+  #lang-frame .lf-id .lf-meta{color:var(--faint);font-weight:520}
+  #lang-frame .lf-tick{color:var(--good);display:inline-flex}
+
+  /* numbered callout pins + legend */
+  #lang-frame .lf-pin{flex:none;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9.5px;font-weight:700;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums;
+    font-family:var(--mono)}
+  #lang-frame .lf-pin.abs{position:absolute;z-index:7;box-shadow:0 2px 6px -2px rgba(0,0,0,.45)}
+  #lang-frame .lf-leg{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm) var(--gap)}
+  #lang-frame .lf-leg .lf-li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #lang-frame .lf-leg .lf-li b{color:var(--ink);font-weight:600}
+  #lang-frame .lf-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* grids */
+  #lang-frame .lf-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #lang-frame .lf-grid.three{grid-template-columns:1fr 1fr 1fr}
+
+  /* do / don't */
+  #lang-frame .lf-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap)}
+  #lang-frame .lf-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-frame .lf-dd .lf-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-frame .lf-dd .lf-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-frame .lf-dd code{font-family:var(--mono);font-size:10px}
+
+  /* API mapping */
+  #lang-frame .lf-api{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-frame .lf-api .lf-r{display:grid;grid-template-columns:220px 1fr;gap:var(--gap);align-items:baseline;
+    font-size:11px;color:var(--dim);line-height:1.5}
+  #lang-frame .lf-api code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
+    padding:1px 6px;border-radius:5px}
+  #lang-frame .lf-api .lf-r b{color:var(--ink);font-weight:600}
+
+  #lang-frame .lf-note{font-size:11px;color:var(--dim);line-height:1.5;margin:0;padding:var(--pad-sm) var(--pad);
+    border:1px dashed var(--line-strong);border-radius:var(--r3);background:var(--panel-2)}
+  #lang-frame .lf-note b{color:var(--ink);font-weight:600}
+  #lang-frame .lf-note code{font-family:var(--mono);font-size:10px}
+
+  /* Kind-1 app screens get a DEFINITE height so the dock is bounded and each
+     panel group's own scroller does the work. */
+  #lang-frame .lf-app{height:520px;min-height:0}
+  #lang-frame .lf-app .canvas{min-height:0}
+  #lang-frame .lf-narrow{max-width:430px}
+  #lang-frame .lf-narrow .win{height:420px;min-height:0}
+  #lang-frame .lf-narrow .canvas{min-height:0}
+
+  @media (max-width:760px){
+    #lang-frame .lf-leg,#lang-frame .lf-grid,#lang-frame .lf-grid.three,#lang-frame .lf-dd{grid-template-columns:1fr}
+    #lang-frame .lf-api .lf-r{grid-template-columns:1fr}
+  }
+
+  /* The title bar's responsive contract now lives in shared/photonz-ds.css and
+     applies to every window, so the local block that used to sit here is gone.
+     This page documents the contract; it no longer has to implement it. */
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-frame">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>The window frame</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
+    <p class="lf-lead">The frame is the glass boundary around one document: traffic lights, the <b>document identity</b>, the
+      <b>workspace switcher</b>, and the document actions. Photonz is one document per window, so the window <i>is</i> the document.
+      The title bar is the only chrome that is always on screen, which is exactly why it carries <b>nothing but the document</b>.
+      Tools live in the floating tool bar, panels live in the dock, and commands live in the menu bar and ⌘K. On this page the
+      complete windows are real app screens; the cut strips are labeled title-bar specimens.</p>
+
+    <!-- 2 · ANATOMY · one complete app screen, parts pinned -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">01</span><h3>Anatomy</h3><span class="lf-sub">App screen · the frame in its real shell</span></div>
+      <div class="lf-blk-b">
+        <div class="win tall cq lf-app">
+          <div class="titlebar">
+            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+            <span class="lf-pin">1</span>
+            <div class="wtitle lf-id"><span class="lf-pin">2</span><span class="lf-dot" title="Unsaved changes"></span><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
+            <span class="lf-pin">3</span>
+            <div class="wsw" role="tablist" aria-label="Workspace">
+              <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+              <button class="wsw-seg" data-ws="ui" role="tab" aria-selected="false" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+              <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+            </div>
+            <div class="tbtns">
+              <span class="lf-pin">4</span>
+              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+              <button class="btn sm"><i class="ic ic-export"></i> Export</button>
+              <button class="btn primary sm">Done</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="tool" title="Commands" data-menu="#lfCmd"><i class="ic sm ic-more"></i></button>
+            <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" data-sheet="#lfHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <span class="tspacer"></span>
+            <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+            <div style="position:relative">
+              <div class="popover menu pop" id="lfCmd" style="position:absolute;right:0;top:26px;width:210px;z-index:12">
+                <div class="menuitem"><i class="ic ic-save"></i> Save <span class="sc">⌘S</span></div>
+                <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘E</span></div>
+                <div class="menu-sep"></div>
+                <div class="menuitem"><i class="ic ic-maximize"></i> Zoom window <span class="sc">⌃⌘F</span></div>
+                <div class="menuitem"><i class="ic ic-x"></i> Close document <span class="sc">⌘W</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit lean" id="lfShell" data-dock="open">
+            <div class="cnv">
+              <div class="canvas">
+                <span class="lf-pin abs" style="top:10px;left:10px">5</span>
+                <div class="artboard-label">2560 × 1440 · Screen capture</div>
+                <div class="selwrap">
+                  <div class="hero-card">
+                    <span class="hc-badge"><i class="ic xs ic-image"></i> Capture</span>
+                    <div class="hc-h">General</div>
+                    <p class="hc-sub">Appearance, accent color, and the menu bar agent live here.</p>
+                    <span class="hc-cta">Open settings <i class="ic ic-chevron-right"></i></span>
+                  </div>
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag">Window shot · 420 × 260</span>
+                </div>
+              </div>
+
+              <div class="cnv-act">
+                <button class="tool on" data-dock-toggle="#lfShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                <button class="tool" data-sheet="#lfHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+              </div>
+
+              <div class="tbar">
+                <span class="lf-pin abs" style="top:8px;left:-24px">6</span>
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <button class="tool" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                  <button class="tool ovf" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                  <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep ovf"></span>
+                  <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                </span>
+                <button class="tool tbar-more" title="More tools" data-menu="#lfOvf"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-anatomy" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="lfOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                </div>
+              </div>
+
+              <div class="sheet down" id="lfHist" aria-hidden="true" aria-label="Capture history">
+                <div class="sheet-h">
+                  <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                  <span class="sp"></span>
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="sp"></span>
+                  <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                </div>
+                <div class="sheet-b">
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                    <div class="filmcard sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                      <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
+                      <span class="acts">
+                        <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                        <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                        <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                      </span>
+                    </div>
+                    <div class="filmcard" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                      <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                      <span class="acts">
+                        <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                        <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                        <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter v" data-min="220" data-max="400"></div>
+
+            <div class="pdock">
+              <div class="dgrp" id="lfLayers" style="--gh:150px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow adj"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow sel"><i class="ic ic-image"></i><span class="nm">Window shot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Highlight</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="splitter h" data-min="90" data-max="280"></div>
+              <div class="dgrp grow" id="lfProps">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Image</span></div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h">Document <span class="mut">2560 × 1440</span></div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">2560</span></div><div class="field"><span class="k">H</span><span class="v">1440</span></div></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Transform</div>
+                    <div class="grid2"><div class="field"><span class="k">X</span><span class="v">0</span></div><div class="field"><span class="k">Y</span><span class="v">0</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="drail">
+              <button class="drailtab" data-group="#lfLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              <button class="drailtab" data-group="#lfProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lf-leg">
+          <div class="lf-li"><span class="lf-pin">1</span><span><b>Traffic lights</b> · close, minimize, zoom. macOS-standard, left-aligned. <code>.lights</code></span></div>
+          <div class="lf-li"><span class="lf-pin">2</span><span><b>Document identity</b> · the name, an edited dot, and the document's context (<code>2560 × 1440</code>, or <code>0:18</code> for a timed document). Nothing else. <code>.wtitle</code></span></div>
+          <div class="lf-li"><span class="lf-pin">3</span><span><b>Workspace switcher</b> · Image · UI · Video are lenses over the SAME document, so the lens belongs to the document, not to a toolbar. <code>.wsw</code></span></div>
+          <div class="lf-li"><span class="lf-pin">4</span><span><b>Document actions</b> · right-aligned and document-scoped: Share, Export, Done. Rare ones overflow to a menu. <code>.tbtns</code></span></div>
+          <div class="lf-li"><span class="lf-pin">5</span><span><b>Canvas</b> · the only region that grows when everything else collapses. The frame exists to hold it. <code>.cnv &gt; .canvas</code></span></div>
+          <div class="lf-li"><span class="lf-pin">6</span><span><b>Floating tool bar</b> · where zoom actually lives, next to the tools and the color pair. It is never in the title bar. <code>.tbar</code></span></div>
+        </div>
+
+        <p class="lf-note"><b>The one rule that keeps every window honest:</b> the title bar carries <b>document identity only</b>.
+          A lesson title, a feature name, or an explanatory phrase (<code>"Vector pen · resolution-independent shape"</code>) is teaching
+          copy, and teaching copy belongs in the page heading or a caption, outside the window. If a window wears traffic lights it is
+          claiming to be the app, so it has to be the whole app: title bar, command surface, canvas with its floating tool bar, and the
+          dock. Anything less should be a labeled specimen instead.</p>
+      </div>
+    </div>
+
+    <!-- 3 · VARIANTS · title-bar specimens (no app claims) -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">02</span><h3>Variants</h3><span class="lf-sub">Specimens · title bar only, cut from the window</span></div>
+      <div class="lf-blk-b">
+        <p class="lf-note">Each card below is a <b>cut strip</b>, not a window: a title bar with a torn edge where the rest of the app would
+          continue. This is the only page in the study where a specimen contains traffic lights, because on this page the lights are the
+          subject being documented. Everywhere else a specimen wears no app chrome at all, and anything with a real title bar is a real,
+          complete app screen.</p>
+        <div class="lf-spec">
+          <div class="lf-spec-h">Image document<span class="lf-tag acc">42px · full</span></div>
+          <div class="lf-spec-b">
+              <div class="lf-cut wide">
+                <div class="titlebar">
+                  <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                  <div class="wtitle lf-id"><span class="lf-dot"></span><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
+                  <div class="wsw" role="tablist" aria-label="Workspace">
+                    <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
+                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
+                  </div>
+                  <div class="tbtns">
+                    <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+                  </div>
+                </div>
+              </div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">The default. Pixel dimensions are the document's context, so they sit with the name.</p>
+            </div>
+          </div>
+
+          <div class="lf-spec">
+            <div class="lf-spec-h">Timed document<span class="lf-tag">context = duration</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut wide">
+                <div class="titlebar">
+                  <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                  <div class="wtitle lf-id"><b>onboarding-run</b><span class="lf-meta meta">· 1920 × 1080 · 0:18</span></div>
+                  <div class="wsw" role="tablist" aria-label="Workspace">
+                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-image"></i> Image</button>
+                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
+                    <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+                  </div>
+                  <div class="tbtns">
+                    <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+                  </div>
+                </div>
+              </div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">Same frame, same slots. A document with time adds its duration and lands on the Video lens; the transport and timeline appear below, never up here.</p>
+            </div>
+          </div>
+
+        <div class="lf-grid">
+          <div class="lf-spec">
+            <div class="lf-spec-h">Narrow window<span class="lf-tag">≤ 880px</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut">
+                <div class="titlebar" style="height:36px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
+                  <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                  <div class="wtitle lf-id" style="font-size:11.5px"><span class="lf-dot"></span><b>settings-capture</b></div>
+                  <div class="tbtns" style="min-width:0">
+                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+                    <button class="btn ghost icon sm" title="More document actions" data-menu="#lfMoreA"><i class="ic ic-more"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="lf-tear"></div>
+              <div style="position:relative">
+                <div class="popover menu pop" id="lfMoreA" style="position:absolute;right:0;top:var(--s1);width:190px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-image"></i> Image · UI · Video</div>
+                  <div class="menuitem"><i class="ic ic-import"></i> Share</div>
+                  <div class="menuitem"><i class="ic ic-check"></i> Done</div>
+                </div>
+              </div>
+              <p class="lf-cap">The size drops out of the identity, the workspace switcher and the secondary actions fold into one overflow menu. The primary action survives longest.</p>
+            </div>
+          </div>
+
+          <div class="lf-spec">
+            <div class="lf-spec-h">Tight window<span class="lf-tag">≤ 620px</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut">
+                <div class="titlebar" style="height:32px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
+                  <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                  <div class="wtitle lf-id" style="font-size:11px"><span class="lf-dot"></span><b>settings-capture</b></div>
+                  <div class="tbtns" style="min-width:0">
+                    <button class="btn primary icon sm" title="Export"><i class="ic ic-export"></i></button>
+                    <button class="btn ghost icon sm" title="More document actions"><i class="ic ic-more"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">Labels go, glyphs stay, and the name truncates from the middle so the tail stays readable. The frame never grows a second row.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">03</span><h3>States</h3><span class="lf-sub">Specimens · key / background · edited / saved</span></div>
+      <div class="lf-blk-b">
+        <div class="lf-grid">
+          <div class="lf-spec">
+            <div class="lf-spec-h">Key window<span class="lf-tag acc">focused</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut"><div class="titlebar">
+                <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
+                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+              </div></div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">Full-colour lights, ink title, actions live.</p>
+            </div>
+          </div>
+          <div class="lf-spec lf-off">
+            <div class="lf-spec-h">Background window<span class="lf-tag">unfocused</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut"><div class="titlebar">
+                <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
+                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+              </div></div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">Lights desaturate, the identity and the actions dim together. Nothing moves.</p>
+            </div>
+          </div>
+          <div class="lf-spec">
+            <div class="lf-spec-h">Edited<span class="lf-tag acc">unsaved changes</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut"><div class="titlebar">
+                <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                <div class="wtitle lf-id"><span class="lf-dot"></span><b>settings-capture</b><span class="lf-meta meta">· edited</span></div>
+                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+              </div></div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">The accent dot leads the name the instant a change lands. Closing prompts to save.</p>
+            </div>
+          </div>
+          <div class="lf-spec">
+            <div class="lf-spec-h">Saved<span class="lf-tag">on disk</span></div>
+            <div class="lf-spec-b">
+              <div class="lf-cut"><div class="titlebar">
+                <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+                <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-tick"><i class="ic xs ic-check"></i></span><span class="lf-meta meta">· 2560 × 1440</span></div>
+                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+              </div></div>
+              <div class="lf-tear"></div>
+              <p class="lf-cap">No dot, a brief tick, then quiet. The bar never shouts.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 · LIVE EXAMPLE · the same frame, narrow, still complete -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">04</span><h3>Live example</h3><span class="lf-sub">App screen · the same markup at 430px</span></div>
+      <div class="lf-blk-b">
+        <div class="lf-narrow">
+          <div class="win cq" style="display:flex;flex-direction:column">
+            <div class="titlebar" style="height:34px">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle lf-id" style="font-size:11.5px"><span class="lf-dot"></span><b>settings-capture</b></div>
+              <div class="tbtns" style="min-width:0">
+                <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+                <button class="btn ghost icon sm" title="More document actions" data-menu="#lfMoreB"><i class="ic ic-more"></i></button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <button class="tool" title="Commands" data-menu="#lfCmdB"><i class="ic sm ic-more"></i></button>
+              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> <span class="kbd">⌘K</span></span>
+              <span class="tspacer"></span>
+              <button class="btn ghost icon sm" data-sheet="#lfHistB" title="Capture history"><i class="ic ic-history"></i></button>
+              <div style="position:relative">
+                <div class="popover menu pop" id="lfMoreB" style="position:absolute;right:0;top:-4px;width:186px;z-index:13">
+                  <div class="menuitem"><i class="ic ic-image"></i> Image workspace</div>
+                  <div class="menuitem"><i class="ic ic-frame"></i> UI workspace</div>
+                  <div class="menuitem"><i class="ic ic-play"></i> Video workspace</div>
+                  <div class="menu-sep"></div>
+                  <div class="menuitem"><i class="ic ic-import"></i> Share</div>
+                </div>
+                <div class="popover menu pop" id="lfCmdB" style="position:absolute;left:0;top:22px;width:180px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-save"></i> Save <span class="sc">⌘S</span></div>
+                  <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘E</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="edit lean" id="lfShellB" data-dock="open" style="flex:1">
+              <div class="cnv">
+                <div class="canvas"><div class="vframe" style="width:190px;height:112px"></div></div>
+                <div class="cnv-act">
+                  <button class="tool" data-dock-toggle="#lfShellB" title="Show or hide the panel dock"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <button class="tool ovf" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                    <button class="tool ovf" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                    <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#lfOvfB"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="swpair" title="Foreground and background color">
+                    <span class="fg" style="background:#ff5d8f"></span><span class="bg" style="background:#ffffff"></span>
+                  </span>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom-narrow" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="lfOvfB" style="position:absolute;right:0;bottom:44px;width:170px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-crop"></i> Crop <span class="sc">C</span></div>
+                    <div class="menuitem"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+                    <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+                <div class="sheet down" id="lfHistB" aria-hidden="true">
+                  <div class="sheet-h">
+                    <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                    <span class="sp"></span>
+                    <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                  </div>
+                  <div class="sheet-b">
+                    <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                      <div class="filmcard sel" tabindex="0" role="button" style="width:120px">
+                        <span class="th" style="height:62px;background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                        <span class="cap"><span class="nm">Settings</span><span class="ago">2 min ago</span></span>
+                        <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                      </div>
+                      <div class="filmcard" tabindex="0" role="button" style="width:120px">
+                        <span class="th" style="height:62px;background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                        <span class="cap"><span class="nm">Pricing</span><span class="ago">1 hr ago</span></span>
+                        <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter v"></div>
+              <div class="pdock">
+                <div class="dgrp grow" id="lfLayersB">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-image"></i><span class="nm">Window shot</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-text"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-square"></i><span class="nm">Highlight</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab" data-group="#lfLayersB" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lf-cap">Not a redrawn small mock: this is the same shell markup in a 430px column, so the container query fires for real.
+          The dock railed itself, the overflow tools folded into <b>more</b>, and the title bar shed the size and the switcher while keeping
+          the name, the edited dot, and Export.</p>
+      </div>
+    </div>
+
+    <!-- 6 · RULES -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">05</span><h3>Rules</h3><span class="lf-sub">Do / Don't</span></div>
+      <div class="lf-blk-b">
+        <div class="lf-dd">
+          <span class="lf-do">Carry document identity and nothing else: name, edited dot, context.</span>
+          <span class="lf-no">Put a lesson title or a feature name in the title bar.</span>
+          <span class="lf-do">Keep the lens switcher centre-right and the document actions hard right.</span>
+          <span class="lf-no">Put zoom, a tool, or a panel toggle up here. Those live in the tool bar and on the canvas.</span>
+          <span class="lf-do">Show the edited dot the instant a change lands, and clear it on save.</span>
+          <span class="lf-no">Close destructively without a save prompt.</span>
+          <span class="lf-do">Fold actions into one overflow menu before the name truncates.</span>
+          <span class="lf-no">Grow a second row of buttons, or stack two documents in one window.</span>
+          <span class="lf-do">Dim the whole frame together when the window is not key.</span>
+          <span class="lf-no">Wear traffic lights on anything that is not the complete app.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 · IN THE API -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">06</span><h3>In the API</h3><span class="lf-sub">One command per part</span></div>
+      <div class="lf-blk-b">
+        <div class="lf-api">
+          <div class="lf-r"><code>window.open("settings-capture")</code><span>Opens the document in its own frame. <b>One document per window</b>, always.</span></div>
+          <div class="lf-r"><code>document.name = "launch-hero"</code><span>Renames the file; the identity in the title bar reflects it live.</span></div>
+          <div class="lf-r"><code>document.edited</code><span>Read-only. <code>true</code> drives the edited dot; <code>document.save()</code> clears it.</span></div>
+          <div class="lf-r"><code>workspace.set("video")</code><span>The lens switcher. Same document, different tool strip and panels, timeline only when the document has time.</span></div>
+          <div class="lf-r"><code>run("export")</code><span>Every title-bar action is a named command, and the overflow order is declared, not guessed.</span></div>
+        </div>
+        <p class="lf-cap">Every part of the frame an agent might touch is one call, so the surface a person drives is the surface the
+          <b>agent</b> drives. See the whole shell in <b class="backchip" data-target="app-shell">App shell</b> or a working document in
+          <b class="backchip" data-target="editor">the editor</b>.</p>
+      </div>
+    </div>
+
+    <!-- 8 · RESPONSIVE -->
+    <div class="lf-blk">
+      <div class="lf-blk-h"><span class="lf-n">07</span><h3>Responsive</h3><span class="lf-sub">Two breakpoints, one markup</span></div>
+      <div class="lf-blk-b">
+        <p class="lf-note">The window is the container-query root (<code>.win.cq</code>), so the frame answers to the <b>window</b> width, not
+          the screen. At <b>880px</b> the dock rails and becomes an overlay, the tool bar's overflow tools fold into <b>more</b>, and the title
+          bar drops the document size and the workspace switcher into an overflow menu. At <b>620px</b> the rail drops its labels, the zoom
+          slider drops out, and the title-bar actions become glyphs. Verify by narrowing the window, never by drawing a separate small mock.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>The frame is the one piece of chrome always on screen, so it stays <b>calm and literal</b>: which document, is it saved, which lens, what can I do with the whole file. Everything else has a home somewhere closer to the work.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The edited dot could double as the save affordance: click to save, hover for a one-line summary of what changed since the last save, so the state indicator is also the control.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Strict one document per window is clean, but a redlining session opens a dozen crops at once. Do we add a lightweight window switcher in the frame, or lean on macOS tabs and Stage Manager and keep the bar empty?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

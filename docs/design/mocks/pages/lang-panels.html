@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-panels</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local reference scaffolding ONLY. Every panel on this page is the
+     real DS: `.pdock` › `.dgrp` (`.dgrp-h` + `.dgrp-b`), `.splitter.v/.h`,
+     `.drail` › `.drailtab`. Local names are prefixed `lp-` so they cannot
+     collide with DS names (bar, btn, card, sw, val, tool, sheet, rail,
+     dock, tbar, panel, timeline were all colliding before).
+     ============================================================ */
+  #lang-panels .lp-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:840px}
+  #lang-panels .lp-lead b{color:var(--ink);font-weight:600}
+
+  #lang-panels .lp-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-panels .lp-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #lang-panels .lp-blk-h .lp-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-panels .lp-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-panels .lp-blk-h .lp-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-panels .lp-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
+  #lang-panels .lp-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #lang-panels .lp-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border-bottom:1px solid var(--line-soft)}
+  #lang-panels .lp-spec-h .lp-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
+    text-transform:none;font-weight:520;color:var(--faint)}
+  #lang-panels .lp-spec-h .lp-tag.acc{color:var(--accent)}
+  #lang-panels .lp-spec-b{padding:var(--pad-sm)}
+  #lang-panels .lp-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-panels .lp-cap b{color:var(--ink);font-weight:600}
+  #lang-panels .lp-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* a plinth the colour of the dock, so a lone group reads as docked */
+  #lang-panels .lp-plinth{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;
+    background:color-mix(in srgb, var(--panel-2) 45%, transparent)}
+  #lang-panels .lp-dockspec{width:264px;max-width:100%;height:392px;border:1px solid var(--edge-lo);
+    border-radius:var(--r3);overflow:hidden}
+  #lang-panels .lp-dockspec .pdock{height:100%;border-left:0;width:100%;max-width:none}
+
+  /* numbered callouts */
+  #lang-panels .lp-pin{flex:none;width:15px;height:15px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #lang-panels .lp-pin.abs{position:absolute;z-index:8;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  #lang-panels .lp-anat{display:grid;grid-template-columns:280px 1fr;gap:var(--gap-lg);align-items:start}
+  #lang-panels .lp-leg{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-panels .lp-leg .lp-li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #lang-panels .lp-leg .lp-li b{color:var(--ink);font-weight:600}
+  #lang-panels .lp-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  #lang-panels .lp-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #lang-panels .lp-grid.four{grid-template-columns:repeat(4,1fr)}
+
+  /* state ladder: real controls plus forced hover/focus paint that reuses the
+     exact DS declarations, so the ladder cannot drift from the real thing. */
+  #lang-panels .lp-states{display:flex;gap:var(--gap);flex-wrap:wrap;align-items:flex-start}
+  #lang-panels .lp-st{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:flex-start;min-width:150px}
+  #lang-panels .lp-st .lp-lbl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:660}
+  #lang-panels .lp-hoverh{color:var(--ink)}
+  #lang-panels .lp-focush{box-shadow:var(--ring);border-radius:var(--r-sm)}
+  #lang-panels .lp-railwrap{display:flex;gap:var(--s1);background:var(--glass-thin);border:1px solid var(--edge-lo);
+    border-radius:var(--r3);padding:var(--s1)}
+  #lang-panels .lp-splitspec{width:150px;height:34px;position:relative;display:flex;align-items:center;
+    background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2)}
+  #lang-panels .lp-splitspec .splitter{width:100%;height:100%;margin:0}
+
+  /* do / don't */
+  #lang-panels .lp-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #lang-panels .lp-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-panels .lp-dd .lp-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-panels .lp-dd .lp-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* api */
+  #lang-panels .lp-api{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-panels .lp-api .lp-r{display:grid;grid-template-columns:230px 1fr;gap:var(--gap);align-items:baseline;
+    font-size:11px;color:var(--dim);line-height:1.5}
+  #lang-panels .lp-api code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
+    padding:1px 6px;border-radius:5px}
+  #lang-panels .lp-api .lp-r b{color:var(--ink);font-weight:600}
+
+  #lang-panels .lp-note{font-size:11px;color:var(--dim);line-height:1.5;margin:0;padding:var(--pad-sm) var(--pad);
+    border:1px dashed var(--line-strong);border-radius:var(--r3);background:var(--panel-2)}
+  #lang-panels .lp-note b{color:var(--ink);font-weight:600}
+  #lang-panels .lp-note code{font-family:var(--mono);font-size:10px}
+
+  /* Kind-1 app screens: definite height so the dock is bounded. */
+  #lang-panels .lp-app{height:700px;min-height:0}
+  #lang-panels .lp-app .canvas{min-height:0}
+  #lang-panels .lp-narrow{max-width:420px}
+  #lang-panels .lp-narrow .win{height:424px;min-height:0}
+  #lang-panels .lp-narrow .canvas{min-height:0}
+
+  @media (max-width:820px){
+    #lang-panels .lp-grid,#lang-panels .lp-dd{grid-template-columns:1fr}
+    #lang-panels .lp-grid.four{grid-template-columns:1fr 1fr}
+    #lang-panels .lp-anat{grid-template-columns:1fr}
+    #lang-panels .lp-api .lp-r{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-panels">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Panels &amp; the dock</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
+    <p class="lp-lead">There is <b>one dock</b>, on the right, and it holds <b>stacked panel groups</b>: Layers, Properties, Effects,
+      Library. There is no left dock, no floating panel, and no tearing off. Every group is independently <b>collapsible</b> and
+      independently <b>scrollable</b> inside its own bounded height. The dock <b>resizes</b> by dragging a splitter and <b>collapses
+      entirely</b> to a labeled rail. That small vocabulary is what lets the app grow into UI design, components and richer video without
+      becoming a different app: <b>new capability is a new group, never new chrome</b>.</p>
+
+    <!-- 2 · ANATOMY of a panel group -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">01</span><h3>Anatomy · the panel group</h3><span class="lp-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.dgrp</code></span></div>
+      <div class="lp-blk-b">
+        <div class="lp-anat">
+          <div class="lp-spec">
+            <div class="lp-spec-h">One group<span class="lp-tag acc">not a window</span></div>
+            <div class="lp-spec-b">
+              <div class="lp-plinth" style="position:relative">
+                <span class="lp-pin abs" style="top:10px;left:6px">1</span>
+                <span class="lp-pin abs" style="top:10px;left:64px">2</span>
+                <span class="lp-pin abs" style="top:10px;left:104px">3</span>
+                <span class="lp-pin abs" style="top:10px;right:8px">4</span>
+                <span class="lp-pin abs" style="top:56px;left:6px">5</span>
+                <div class="dgrp" id="lpAnat" style="--gh:132px">
+                  <div class="dgrp-h">
+                    <span class="ttl">Layers</span><span class="cnt">14</span>
+                    <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#lpAdj"><i class="ic ic-sliders"></i></button>
+                    <button class="btn ghost icon sm" title="Panel menu" data-menu="#lpMenu"><i class="ic ic-more"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <div class="lrow adj"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Hero card</div>
+                    <div class="lrow child sel"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Feature grid</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Grain overlay</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div style="position:relative">
+                  <div class="popover menu pop" id="lpAdj" style="position:absolute;right:var(--s3);top:var(--s1);width:186px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+                    <div class="menuitem"><i class="ic ic-sliders"></i> Colour grade</div>
+                    <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+                  </div>
+                  <div class="popover menu pop" id="lpMenu" style="position:absolute;right:var(--s3);top:var(--s1);width:190px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                    <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+                    <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+                  </div>
+                </div>
+              </div>
+              <p class="lp-cap">Click the header to collapse. Scroll inside the body. Both are the shared behaviour, not page code.</p>
+            </div>
+          </div>
+
+          <div class="lp-leg">
+            <div class="lp-li"><span class="lp-pin">1</span><span><b>Chevron</b> · the disclosure affordance. It is injected, so every group gets one and they all rotate the same way. <code>.chev</code></span></div>
+            <div class="lp-li"><span class="lp-pin">2</span><span><b>Title</b> · the group's name, one word where possible. The whole header is the hit target, not just the chevron. <code>.ttl</code></span></div>
+            <div class="lp-li"><span class="lp-pin">3</span><span><b>Count or summary</b> · how many items, or what the group currently resolves to, so a collapsed group still answers a question. <code>.cnt</code></span></div>
+            <div class="lp-li"><span class="lp-pin">4</span><span><b>Header buttons</b> · add and panel-menu actions scoped to this group. Always <code>.btn.ghost.icon.sm</code>, never a bespoke square.</span></div>
+            <div class="lp-li"><span class="lp-pin">5</span><span><b>Body</b> · the content, with its <b>own bounded height</b> (<code>--gh</code>) and its <b>own scroller</b>. This is the rule that makes the dock scale. <code>.dgrp-b</code></span></div>
+            <div class="lp-li"><span class="lp-pin">·</span><span><b>Grow</b> · exactly one group per dock may be <code>.grow</code> and take the leftover space instead of a fixed bound.</span></div>
+          </div>
+        </div>
+
+        <p class="lp-note"><b>The bounded body is the whole trick.</b> A sixty-layer document scrolls <i>inside</i> Layers. It never pushes
+          Effects or Library off the bottom of the dock, and it never stretches the window. That is why adding a panel group is cheap: the
+          dock's shape does not change when scope grows, only the number of groups in it. Give the window a definite height and put every
+          long list in a <code>.dgrp-b</code>, and the layout takes care of itself.</p>
+      </div>
+    </div>
+
+    <!-- 3 · THE DOCK · groups + splitters + rail -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">02</span><h3>Anatomy · the dock</h3><span class="lp-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.pdock</code> of stacked groups</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-anat">
+          <div class="lp-spec">
+            <div class="lp-spec-h">The right dock<span class="lp-tag acc">four groups, one column</span></div>
+            <div class="lp-spec-b">
+              <div class="lp-dockspec">
+                <div class="pdock">
+                  <div class="dgrp" style="--gh:96px">
+                    <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">12</span></div>
+                    <div class="dgrp-b">
+                      <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+                      <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                      <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                      <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-eye eye"></i></div>
+                    </div>
+                  </div>
+                  <div class="splitter h" data-min="70" data-max="200"></div>
+                  <div class="dgrp" style="--gh:64px">
+                    <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+                    <div class="dgrp-b">
+                      <div class="section"><div class="sec-h">Layout <span class="mut">400 × 268</span></div>
+                        <div class="grid2"><div class="field"><span class="k">W</span><span class="v">400</span></div><div class="field"><span class="k">H</span><span class="v">268</span></div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dgrp collapsed">
+                    <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span></div>
+                    <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+                      <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                    </div>
+                  </div>
+                  <div class="dgrp grow">
+                    <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Components</span>
+                      <button class="btn ghost icon sm" title="Add to library"><i class="ic ic-plus"></i></button>
+                    </div>
+                    <div class="dgrp-b">
+                      <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                        <div class="seg" data-radio="button">
+                          <button>Media</button><button class="on">Comp</button><button>Styles</button><button>Assets</button>
+                        </div>
+                      </div>
+                      <div class="libgrid">
+                        <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+                        <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Card</span><span class="mt">2 variants</span></span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="lp-cap">Drag the divider between Layers and Properties. Click the Effects header to open it. Both are shared behaviour.</p>
+            </div>
+          </div>
+
+          <div class="lp-leg">
+            <div class="lp-li"><span class="lp-pin">1</span><span><b>Dock</b> · one persistent column on the right. It never moves to another edge and it never becomes two columns. <code>.pdock</code></span></div>
+            <div class="lp-li"><span class="lp-pin">2</span><span><b>Stacked groups</b> · in a fixed order: Layers, Properties, Effects, Library. Order is the same in every workspace so muscle memory holds.</span></div>
+            <div class="lp-li"><span class="lp-pin">3</span><span><b>Horizontal splitter</b> · drag to resize the group above it, bounded by <code>data-min</code> and <code>data-max</code>, keyboard-resizable. <code>.splitter.h</code></span></div>
+            <div class="lp-li"><span class="lp-pin">4</span><span><b>Vertical splitter</b> · the dock's own width, dragged from the canvas edge. Sizes persist for the session. <code>.splitter.v</code></span></div>
+            <div class="lp-li"><span class="lp-pin">5</span><span><b>Grow group</b> · one group takes the leftover height. Library is usually the one, because browsing wants room. <code>.dgrp.grow</code></span></div>
+            <div class="lp-li"><span class="lp-pin">6</span><span><b>Rail</b> · what the whole dock collapses to. A tab restores the dock and reveals that group. <code>.drail</code> › <code>.drailtab</code></span></div>
+            <div class="lp-li"><span class="lp-pin">·</span><span><b>Library</b> is a group, not a surface of its own: one Library with a scope switch for Media · Components · Styles · Assets. The video "media pool" is this group with scope set to Media.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · VARIANTS · the four canonical groups -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">03</span><h3>Variants · the four groups</h3><span class="lp-sub">Specimens · the whole vocabulary</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-grid">
+          <div class="lp-spec">
+            <div class="lp-spec-h">Layers<span class="lp-tag">one tree, flat or grouped</span></div>
+            <div class="lp-spec-b"><div class="lp-plinth">
+              <div class="dgrp" style="--gh:130px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span>
+                  <button class="btn ghost icon sm" title="Add adjustment layer"><i class="ic ic-sliders"></i></button>
+                </div>
+                <div class="dgrp-b">
+                  <div class="lrow adj"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Hero card</div>
+                  <div class="lrow child sel"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div><p class="lp-cap">Adjustment layers are just layers, with a clip mark showing they apply to what is below.</p></div>
+          </div>
+
+          <div class="lp-spec">
+            <div class="lp-spec-h">Properties<span class="lp-tag">contextual to selection</span></div>
+            <div class="lp-spec-b"><div class="lp-plinth">
+              <div class="dgrp" style="--gh:130px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                    <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Transform</div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div><p class="lp-cap">Nothing selected shows the document. One layer shows that layer. Multi-select shows what they share.</p></div>
+          </div>
+
+          <div class="lp-spec">
+            <div class="lp-spec-h">Effects<span class="lp-tag">non-destructive stack</span></div>
+            <div class="lp-spec-b"><div class="lp-plinth">
+              <div class="dgrp" style="--gh:130px">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">3</span>
+                  <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
+                </div>
+                <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Border</span><span class="meta">1px</span></div>
+                </div>
+              </div>
+            </div><p class="lp-cap">Blur, shadow, border, radius, opacity. Applied at render time, never baked into pixels.</p></div>
+          </div>
+
+          <div class="lp-spec">
+            <div class="lp-spec-h">Library<span class="lp-tag">one surface, four scopes</span></div>
+            <div class="lp-spec-b"><div class="lp-plinth">
+              <div class="dgrp" style="--gh:152px">
+                <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Media</span>
+                  <button class="btn ghost icon sm" title="Add to library"><i class="ic ic-plus"></i></button>
+                </div>
+                <div class="dgrp-b">
+                  <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                    <div class="seg" data-radio="button">
+                      <button class="on">Media</button><button>Comp</button><button>Styles</button><button>Assets</button>
+                    </div>
+                  </div>
+                  <div class="libtools">
+                    <span class="srch"><i class="ic sm ic-search"></i><input name="lp-lib-search" placeholder="Search media" aria-label="Search media"></span>
+                    <button class="btn secondary sm"><i class="ic ic-import"></i> Import</button>
+                  </div>
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">onboarding.mov</span><span class="mt">0:12</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span><span class="cap"><span class="nm">pricing.png</span><span class="mt">2560 × 1440</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div><p class="lp-cap">Media, Components, Styles and Assets are the same surface with a scope switch, never four competing panels.</p></div>
+          </div>
+        </div>
+
+        <p class="lp-note"><b>That is the complete list.</b> A feature that seems to need chrome outside dock, group, splitter, rail,
+          floating tool bar, transport bar and overlay is a signal to adjust the foundation, not to invent locally. A component catalog is
+          the Library group with scope set to Components. A media pool is the Library group with scope set to Media. A style browser is the
+          Library group with scope set to Styles. One place, one shape, one thing to learn.</p>
+      </div>
+    </div>
+
+    <!-- 5 · STATES -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">04</span><h3>States</h3><span class="lp-sub">Specimens · header · splitter · rail tab</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-states">
+          <div class="lp-st">
+            <span class="lp-lbl">Header · rest</span>
+            <div class="lp-plinth" style="width:200px"><div class="dgrp"><div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span></div><div class="dgrp-b" style="padding:0 var(--s3) var(--s2)"><div class="efx"><span class="en"></span><span class="nm">Card glow</span></div></div></div></div>
+          </div>
+          <div class="lp-st">
+            <span class="lp-lbl">Header · hover</span>
+            <div class="lp-plinth" style="width:200px"><div class="dgrp"><div class="dgrp-h lp-hoverh"><span class="ttl">Effects</span><span class="cnt">2</span></div><div class="dgrp-b" style="padding:0 var(--s3) var(--s2)"><div class="efx"><span class="en"></span><span class="nm">Card glow</span></div></div></div></div>
+          </div>
+          <div class="lp-st">
+            <span class="lp-lbl">Header · keyboard focus</span>
+            <div class="lp-plinth" style="width:200px"><div class="dgrp"><div class="dgrp-h lp-focush"><span class="ttl">Effects</span><span class="cnt">2</span></div><div class="dgrp-b" style="padding:0 var(--s3) var(--s2)"><div class="efx"><span class="en"></span><span class="nm">Card glow</span></div></div></div></div>
+          </div>
+          <div class="lp-st">
+            <span class="lp-lbl">Group · collapsed</span>
+            <div class="lp-plinth" style="width:200px"><div class="dgrp collapsed"><div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span></div><div class="dgrp-b" style="padding:0 var(--s3) var(--s2)"><div class="efx"><span class="en"></span><span class="nm">Card glow</span></div></div></div></div>
+          </div>
+        </div>
+
+        <div class="lp-states">
+          <div class="lp-st">
+            <span class="lp-lbl">Splitter · rest and hover</span>
+            <div class="lp-splitspec"><div class="splitter h" data-min="20" data-max="60"></div></div>
+            <p class="lp-cap" style="margin:0">A visible grip at rest, accent on hover and while dragging, and it takes arrow keys when focused.</p>
+          </div>
+          <div class="lp-st">
+            <span class="lp-lbl">Rail tab · rest · hover · revealed</span>
+            <div class="lp-railwrap">
+              <button class="drailtab" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              <button class="drailtab" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              <button class="drailtab on" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+            </div>
+            <p class="lp-cap" style="margin:0">Vertical labels while there is room, icons only at tight widths. The revealed group's tab carries the accent.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 · LIVE EXAMPLE · a complete app screen -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">05</span><h3>Live example</h3><span class="lp-sub">App screen · the dock doing its job</span></div>
+      <div class="lp-blk-b">
+        <div class="win tall cq lp-app">
+          <div class="titlebar">
+            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+            <div class="wtitle"><b>hero-card</b> · 1200 × 630</div>
+            <div class="wsw" role="tablist" aria-label="Workspace">
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+              <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+            </div>
+            <div class="tbtns">
+              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+              <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="tool" title="Commands" data-menu="#lpCmd"><i class="ic sm ic-more"></i></button>
+            <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" data-sheet="#lpHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <span class="tspacer"></span>
+            <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+            <div style="position:relative">
+              <div class="popover menu pop" id="lpCmd" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+                <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+                <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+                <div class="menuitem"><i class="ic ic-layers"></i> Layers</div>
+                <div class="menu-sep"></div>
+                <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit lean" id="lpShell" data-dock="open">
+            <div class="cnv">
+              <div class="canvas">
+                <div class="artboard-label">1200 × 630 · Brand tokens</div>
+                <div class="selwrap">
+                  <div class="hero-card">
+                    <span class="hc-badge"><i class="ic xs ic-component"></i> New</span>
+                    <div class="hc-h">Ship it faster.</div>
+                    <p class="hc-sub">Capture, design, and automate. All in one fast canvas.</p>
+                    <span class="hc-cta">Get started <i class="ic ic-chevron-right"></i><span class="cinst"></span></span>
+                  </div>
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag">Hero card · 400 × 268</span>
+                </div>
+              </div>
+
+              <div class="cnv-act">
+                <button class="tool on" data-dock-toggle="#lpShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                <button class="tool" data-sheet="#lpHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+              </div>
+
+              <div class="tbar">
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                  <button class="tool" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                  <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                  <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                  <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep ovf"></span>
+                  <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                </span>
+                <button class="tool tbar-more" title="More tools" data-menu="#lpOvf"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-live" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="lpOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                  <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                </div>
+              </div>
+
+              <div class="sheet down" id="lpHist" aria-hidden="true" aria-label="Capture history">
+                <div class="sheet-h">
+                  <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                  <span class="sp"></span>
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="sp"></span>
+                  <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                </div>
+                <div class="sheet-b">
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                    <div class="filmcard sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                      <span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                    <div class="filmcard" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                      <span class="cap"><span class="nm">Settings window</span><span class="ago">12 min ago</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter v" data-min="220" data-max="420"></div>
+
+            <div class="pdock">
+              <div class="dgrp" id="lpLayers" style="--gh:150px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">24</span>
+                  <button class="btn ghost icon sm" title="Add adjustment layer"><i class="ic ic-sliders"></i></button>
+                  <button class="btn ghost icon sm" title="Panel menu"><i class="ic ic-more"></i></button>
+                </div>
+                <div class="dgrp-b">
+                  <div class="lrow adj"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Hero card</div>
+                  <div class="lrow child"><i class="ic ic-frame"></i><span class="nm">Card · Brand/grad</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child sel"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Feature grid</div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 1</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 2</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 3</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Feature card 4</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Footer</div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Footer note</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Legal</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Social row</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Grain overlay</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+
+              <div class="splitter h" data-min="90" data-max="320"></div>
+
+              <div class="dgrp" id="lpProps" style="--gh:96px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                    <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+                    <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Transform</div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div><div class="field"><span class="k">R</span><span class="v">12</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dgrp" id="lpEffects" style="--gh:52px">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span>
+                  <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
+                </div>
+                <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                </div>
+              </div>
+
+              <div class="dgrp grow" id="lpLibrary">
+                <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="lpScopeName">Components</span>
+                  <button class="btn ghost icon sm" title="Add to library"><i class="ic ic-plus"></i></button>
+                </div>
+                <div class="dgrp-b">
+                  <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                    <div class="seg" id="lpScope">
+                      <button data-scope="Media">Media</button>
+                      <button class="on" data-scope="Components">Comp</button>
+                      <button data-scope="Styles">Styles</button>
+                      <button data-scope="Assets">Assets</button>
+                    </div>
+                  </div>
+                  <div class="libtools">
+                    <span class="srch"><i class="ic sm ic-search"></i><input name="lp-library-search" placeholder="Search components" aria-label="Search components"></span>
+                    <button class="btn secondary sm"><i class="ic ic-import"></i> Import</button>
+                  </div>
+                  <div class="libgrid">
+                    <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffe9a8,#f6c453)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span></div>
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Card</span><span class="mt">2 variants</span></span></div>
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Field</span><span class="mt">5 states</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="drail">
+              <button class="drailtab" data-group="#lpLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              <button class="drailtab" data-group="#lpProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              <button class="drailtab" data-group="#lpEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+              <button class="drailtab" data-group="#lpLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+            </div>
+          </div>
+        </div>
+        <p class="lp-cap">Twenty-four layers, and the dock is unbothered: Layers scrolls inside its own bound while Properties, Effects and
+          Library keep their places. Drag the divider between the canvas and the dock to resize it, drag the one under Layers to give the
+          list more room, click any header to collapse a group, or hit the <b>panel toggle</b> at the top right of the canvas to rail the
+          whole dock and let the canvas take the width.</p>
+      </div>
+    </div>
+
+    <!-- 7 · RESPONSIVE -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">06</span><h3>Responsive</h3><span class="lp-sub">App screen · the same markup at 420px</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-narrow">
+          <div class="win cq" style="display:flex;flex-direction:column">
+            <div class="titlebar" style="height:32px">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle" style="font-size:11.5px"><b>hero-card</b></div>
+              <div class="tbtns" style="min-width:0"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+            </div>
+            <div class="toolbar">
+              <button class="tool" title="Commands" data-menu="#lpCmdN"><i class="ic sm ic-more"></i></button>
+              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> <span class="kbd">⌘K</span></span>
+              <span class="tspacer"></span>
+              <button class="btn ghost icon sm" title="Capture history (⌘⇧H)"><i class="ic ic-history"></i></button>
+              <div style="position:relative">
+                <div class="popover menu pop" id="lpCmdN" style="position:absolute;left:0;top:22px;width:190px;z-index:13">
+                  <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+                  <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="edit lean" id="lpShellN" data-dock="overlay" style="flex:1">
+              <div class="cnv">
+                <div class="canvas"><div class="vframe" style="width:170px;height:100px"></div></div>
+                <div class="cnv-act">
+                  <button class="tool on" data-dock-toggle="#lpShellN" title="Show or hide the panel dock" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <button class="tool ovf" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                    <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#lpOvfN"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom-narrow" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="lpOvfN" style="position:absolute;right:0;bottom:44px;width:166px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-frame"></i> Frame <span class="sc">F</span></div>
+                    <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter v"></div>
+              <div class="pdock">
+                <div class="dgrp" id="lpLayersN" style="--gh:120px">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp grow" id="lpLibraryN">
+                  <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Comp</span></div>
+                  <div class="dgrp-b">
+                    <div class="libgrid">
+                      <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span></span></div>
+                      <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Card</span></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab" data-group="#lpLayersN" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-group="#lpLibraryN" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lp-note">Below <b>880px</b> the dock stops consuming width. It becomes a <b>rail</b> plus an on-demand <b>overlay</b> that
+          floats beside the rail over the canvas, and the vertical splitter goes away because there is nothing to resize. Below <b>620px</b>
+          the rail drops its labels and becomes icons only. Same markup, no narrow-only page: press the panel toggle above to slide the
+          overlay in and out.</p>
+      </div>
+    </div>
+
+    <!-- 8 · RULES -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">07</span><h3>Rules</h3><span class="lp-sub">Do / Don't</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-dd">
+          <span class="lp-do">Put every long list in a <code>.dgrp-b</code> with its own bound and scroller.</span>
+          <span class="lp-no">Let a list stretch the window instead of scrolling inside its group.</span>
+          <span class="lp-do">Add a new group when scope grows. The dock's shape never changes.</span>
+          <span class="lp-no">Invent a second dock, a left dock, or a bespoke panel for one feature.</span>
+          <span class="lp-do">Keep the group order the same in every workspace.</span>
+          <span class="lp-no">Tear a panel off into a floating window. Nothing floats except overlays and the tool bar.</span>
+          <span class="lp-do">Give exactly one group <code>.grow</code>, and let the rest carry a bound.</span>
+          <span class="lp-no">Promote a Library scope to its own panel. One Library, four scopes.</span>
+          <span class="lp-do">Keep the panel toggle on the canvas, where the space is being spent.</span>
+          <span class="lp-no">Drop the group header when the dock rails. The rail is labeled for a reason.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 · IN THE API -->
+    <div class="lp-blk">
+      <div class="lp-blk-h"><span class="lp-n">08</span><h3>In the API</h3><span class="lp-sub">Every layout move is one command</span></div>
+      <div class="lp-blk-b">
+        <div class="lp-api">
+          <div class="lp-r"><code>panel.dock("right")</code><span>The dock's state: <b>open</b>, <b>closed</b> (railed), or <b>overlay</b> (narrow).</span></div>
+          <div class="lp-r"><code>group("Layers").collapsed = true</code><span>Collapse one group to its header. The count or summary stays readable.</span></div>
+          <div class="lp-r"><code>group("Library").reveal()</code><span>What a rail tab does: restore the dock and scroll that group into view.</span></div>
+          <div class="lp-r"><code>group("Layers").height = 240</code><span>What dragging a horizontal splitter does. Bounded by the group's min and max.</span></div>
+          <div class="lp-r"><code>dock.width = 300</code><span>What dragging the vertical splitter does. Sizes persist for the session.</span></div>
+          <div class="lp-r"><code>library.scope = "media"</code><span>The Library scope switch: media, components, styles, assets.</span></div>
+        </div>
+        <p class="lp-cap">A layout you can build by hand an <b data-target="agent">agent</b> can build for you, because it is the same set of
+          calls. See the dock in the whole shell in <b class="backchip" data-target="app-shell">App shell</b>, or working in
+          <b class="backchip" data-target="editor">the editor</b>.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>One dock, stacked groups, and three moves: <b>collapse, resize, scroll</b>. Learn them once and every panel in the app behaves the same, whether you are grading a photo, laying out a screen, or cutting a video.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because the layout is just commands, a <b>workspace preset</b> could ship per task: Retouch, Compose, Cut. Switching one runs a handful of collapse and resize calls, and a single <b>reset layout</b> puts everything back.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>The dock remembers one layout per document today. Should a workspace lens carry its own dock layout, so switching to Video restores the panel set you last used there, or does that break the promise that a lens only re-arranges chrome around the same document?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch label and tile selection. Collapse,
+     resize, rail, overlay and overflow are all shared DS behavior. */
+  (function () {
+    var seg = document.getElementById('lpScope');
+    var label = document.getElementById('lpScopeName');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('button'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          if (label) label.textContent = b.getAttribute('data-scope');
+        });
+      });
+    }
+    [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+      var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+      tiles.forEach(function (tile) {
+        tile.addEventListener('click', function () {
+          tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

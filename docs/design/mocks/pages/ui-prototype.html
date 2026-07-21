@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-prototype</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Prototyping · wire component STATES together with triggers, see the
+     connection graph on the canvas, and play the flow for real. It sits in the
+     ONE shell: the frames and states ARE layers, the connections are their own
+     panel group, and the selected connection drives Properties. Only what the
+     shared DS does not cover lives here; 4pt spacing only. */
+
+  /* definite window height so the dock is bounded and each group scrolls */
+  #ui-prototype .win.shell{height:840px;min-height:0}
+  /* the canvas holds the flow: graph + live device + run status */
+  .flowcv{display:block;overflow-y:auto;padding:var(--s7) var(--s5) var(--s7)}
+  .flowcv .artboard-label{position:static;transform:none;display:block;text-align:center;margin-bottom:var(--s5)}
+  .flowrow{display:flex;gap:var(--s5);align-items:flex-start;flex-wrap:wrap;justify-content:center}
+
+  /* ---- connections graph ---- */
+  .pt-wire{position:relative;flex:1 1 360px;min-width:300px;height:296px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:var(--r4);overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+  .pt-wire svg{position:absolute;inset:0;width:100%;height:100%}
+  .wpath{fill:none;stroke:rgba(255,255,255,.28);stroke-width:2;transition:stroke .15s}
+  .wpath.sel{stroke:var(--accent);stroke-width:2.5}
+  .wnode{position:absolute;transform:translate(-50%,-50%);width:132px;background:var(--panel);
+    border:1px solid var(--line-strong);border-radius:var(--r3);padding:0;cursor:pointer;
+    box-shadow:0 8px 22px -14px rgba(0,0,0,.5);transition:var(--ctl-tr)}
+  .wnode:hover{border-color:var(--accent-line)}
+  .wnode:active{transform:translate(-50%,-50%) scale(.98)}
+  .wnode:focus-visible{outline:none;box-shadow:var(--ring)}
+  .wnode.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 22px -14px rgba(0,0,0,.5)}
+  .wnode .nh{font-size:10px;font-weight:700;letter-spacing:.04em;padding:var(--s1) var(--gap-sm);display:flex;
+    align-items:center;gap:var(--s1);color:var(--dim);border-bottom:1px solid var(--line-soft);
+    border-radius:var(--r3) var(--r3) 0 0}
+  .wnode .nh .ic{color:var(--faint)}
+  .wnode.comp .nh{color:var(--comp)}.wnode.comp{border-color:var(--comp-line)}
+  .wnode .nb{display:block;height:52px;position:relative;overflow:hidden;background:linear-gradient(160deg,#171a26,#0b0d14);
+    border-radius:0 0 var(--r3) var(--r3)}
+  /* the current frame is the canvas selection: the shared ring + measure tag */
+  .wnode .selmark{position:absolute;inset:0;pointer-events:none;display:none}
+  .wnode.on .selmark{display:block}
+  .wnode .sel-ring{inset:-5px;border-radius:calc(var(--r3) + 5px)}
+  .wnode .mtag{top:-26px}
+  .wchip{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:var(--s1);
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px var(--gap-sm);font-size:10px;
+    font-weight:560;color:var(--dim);white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px -4px rgba(0,0,0,.3);
+    transition:var(--ctl-tr);z-index:2}
+  .wchip:hover{border-color:var(--accent-line);color:var(--ink)}
+  .wchip:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
+  .wchip:active{transform:translate(-50%,-50%) scale(.96)}
+  .wchip.sel{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+  .wchip .tp{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--comp)}
+  .wchip .ms{font-family:var(--mono);font-size:9px;opacity:.75}
+
+  /* tiny wireframes drawn inside each node */
+  .wf{position:absolute;inset:8px;display:flex;flex-direction:column;gap:5px}
+  .wf .wfbar{height:9px;border-radius:3px;background:rgba(255,255,255,.14)}
+  .wf .wfbar.sm{width:42%}
+  .wf .card{flex:1;border-radius:7px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 6px 14px -8px rgba(177,77,255,.7)}
+  .wf .ov{position:absolute;right:6px;top:6px;bottom:6px;width:60%;border-radius:7px;background:rgba(20,22,32,.86);
+    border:1px solid rgba(255,255,255,.18);box-shadow:-8px 0 18px -8px rgba(0,0,0,.6)}
+  .wf .ov i{display:block;height:7px;margin:8px 8px 0;border-radius:3px;background:rgba(255,255,255,.3)}
+  .wf .big{flex:2;border-radius:7px;background:linear-gradient(135deg,#12c2e9,#7c4dff 60%,#ff5d8f)}
+
+  /* ---- live device demo ---- */
+  .pt-device{width:250px;height:434px;border-radius:30px;padding:9px;flex:none;position:relative;
+    background:linear-gradient(160deg,#2a2d38,#0d0e13);box-shadow:0 26px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(0,0,0,.5)}
+  .pt-device::before{content:"";position:absolute;top:15px;left:50%;transform:translateX(-50%);width:74px;height:5px;
+    border-radius:999px;background:rgba(255,255,255,.22);z-index:9}
+  .viewport{position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;background:#0b0d14;isolation:isolate}
+  .dscreen{position:absolute;inset:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#12141d,#0b0d14);will-change:transform,opacity}
+  /* the flow starts on Home; every other frame waits off-screen */
+  #scr-home{z-index:1}
+  #scr-detail{transform:translateX(100%);opacity:0;pointer-events:none;z-index:0}
+  .dtop{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad) var(--pad-sm) var(--pad-sm);padding-top:var(--s6)}
+  .dtop .dttl{flex:1;text-align:center;font-size:13px;font-weight:640;color:#fff;letter-spacing:-.01em}
+  .dicon{width:30px;height:30px;border-radius:var(--r2);display:grid;place-items:center;color:rgba(255,255,255,.85);
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+  .dicon.mute{color:rgba(255,255,255,.4);background:transparent;border-color:transparent}
+  .dscroll{flex:1;overflow:hidden;padding:0 var(--pad-sm) var(--pad-sm);display:flex;flex-direction:column;gap:var(--pad-sm)}
+  .dhero{border-radius:var(--r5);padding:var(--pad);position:relative;overflow:hidden;
+    background:linear-gradient(140deg,#7c4dff,#b14dff 45%,#ff5d8f);box-shadow:0 14px 30px -14px rgba(177,77,255,.6)}
+  .dhero::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 82% -10%,rgba(255,255,255,.4),transparent 46%);mix-blend-mode:soft-light}
+  .dbadge{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;
+    background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);padding:3px var(--gap-sm);border-radius:999px}
+  .dhero .dh{font-family:var(--serif);font-size:23px;line-height:1.05;font-weight:700;color:#fff;margin:var(--gap-sm) 0 var(--s1)}
+  .dhero .dhsub{font-size:11px;color:rgba(255,255,255,.9);margin:0 0 var(--pad-sm);line-height:1.4}
+  .dcta{display:inline-flex;align-items:center;gap:var(--s1);font-size:12px;font-weight:660;color:#3a1d6e;
+    background:linear-gradient(180deg,#fff,#f0eaff);padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r3);border:0;
+    box-shadow:0 6px 16px -6px rgba(255,255,255,.5)}
+  .dgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm)}
+  .dthumb{height:46px;border-radius:var(--r3)}
+  .dthumb.t1{background:linear-gradient(135deg,#ffb36b,#ff7e5f)}
+  .dthumb.t2{background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+  .dthumb.t3{background:linear-gradient(135deg,#3a2352,#7b4397)}
+  .dthumb.t4{background:linear-gradient(135deg,#1a9e6a,#12c2e9)}
+  .dbig{height:172px;position:relative;background:linear-gradient(135deg,#ffb36b 0%,#ff7e5f 42%,#7b4397 100%)}
+  .dbig .sun{position:absolute;top:30%;left:50%;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;
+    background:radial-gradient(circle,#fff6d6,#ffd27a);box-shadow:0 0 40px 10px rgba(255,210,122,.6)}
+  .dbig .hill{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(180deg,#3a2352,#1a1030)}
+  .dbig .kt{position:absolute;left:var(--pad-sm);bottom:var(--pad-sm);font-family:var(--serif);font-size:22px;font-weight:700;
+    color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5)}
+  .dbody{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .dbody p{margin:0;font-size:11px;line-height:1.5;color:rgba(255,255,255,.66)}
+  .dlike{align-self:flex-start;display:inline-flex;align-items:center;gap:var(--s2);font-size:11.5px;font-weight:640;color:#fff;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);padding:var(--gap-sm) var(--pad-sm);border-radius:999px;
+    transition:background .16s,color .16s,border-color .16s}
+  .dlike.liked{background:linear-gradient(180deg,#ff8ab3,#ff5d8f);border-color:transparent;color:#fff}
+  .dmenu{position:absolute;inset:0;z-index:5;background:rgba(8,9,14,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;pointer-events:none;transition:opacity .16s ease;display:flex;flex-direction:column;justify-content:flex-end}
+  .dmenu.open{opacity:1;pointer-events:auto}
+  .dmenu .msheet{margin:var(--pad-sm);background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    border:1px solid rgba(255,255,255,.16);border-radius:var(--r5);padding:var(--pad-sm);transform:translateY(12px);
+    transition:transform .18s cubic-bezier(.4,0,.2,1)}
+  .dmenu.open .msheet{transform:translateY(0)}
+  .dmenu .mh{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:rgba(255,255,255,.5);
+    padding:var(--s1) var(--gap-sm) var(--gap-sm)}
+  .dmenu-i{display:flex;align-items:center;gap:var(--gap-sm);width:100%;text-align:left;background:transparent;border:0;
+    border-radius:var(--r2);padding:var(--gap-sm);font-size:12.5px;font-weight:560;color:#fff}
+  .dmenu-i .ic{color:rgba(255,255,255,.7)}
+  .dmenu-i:hover{background:rgba(255,255,255,.1)}
+  .dmenu-i.pri{background:linear-gradient(180deg,rgba(127,155,255,.35),rgba(127,155,255,.18));border:1px solid rgba(127,155,255,.4)}
+
+  /* hotspots: real tap targets. Pulse when playing to reveal them. */
+  .hot{cursor:pointer;position:relative}
+  .viewport.playing .hot::after{content:"";position:absolute;inset:-4px;border-radius:inherit;border:1.5px solid var(--accent);
+    opacity:0;animation:hotpulse 1.8s ease-out infinite;pointer-events:none}
+  .viewport.playing .dcta.hot::after,.viewport.playing .dmenu-i.hot::after{border-radius:999px}
+  @keyframes hotpulse{0%{opacity:.9;transform:scale(.96)}70%{opacity:0;transform:scale(1.06)}100%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.viewport.playing .hot::after{animation:none;opacity:.5}}
+
+  /* run status beside the device */
+  .pt-side{display:flex;flex-direction:column;gap:var(--pad-sm);min-width:196px;flex:0 1 220px}
+  .pt-status{display:flex;flex-direction:column;gap:var(--gap-sm);background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);border-radius:var(--r4);padding:var(--pad);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+  .pt-status .sr{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;color:rgba(255,255,255,.62)}
+  .pt-status .sr .k{color:rgba(255,255,255,.45);font-size:10.5px;width:56px}
+  .pt-status .sr .v{color:#fff;font-weight:600;font-family:var(--mono);font-size:11px}
+  .pt-log{font-family:var(--mono);font-size:10px;line-height:1.6;color:rgba(255,255,255,.5);background:rgba(0,0,0,.3);
+    border:1px solid rgba(255,255,255,.1);border-radius:var(--r3);padding:var(--gap-sm) var(--pad-sm);max-height:120px;overflow-y:auto}
+  .pt-log b{color:#7f9bff;font-weight:600}
+  .pt-log .fn{color:#e0a5ff}
+
+  /* Connections group rows */
+  .cxrow{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--pad-sm);border-radius:0;font-size:11.5px;
+    color:var(--dim);cursor:pointer;border:0;border-left:2px solid transparent;background:transparent;text-align:left;width:100%;
+    transition:var(--ctl-tr)}
+  .cxrow:hover{background:var(--panel-2)}
+  .cxrow:focus-visible{outline:none;box-shadow:var(--ring)}
+  .cxrow.sel{background:var(--accent-soft);border-left-color:var(--accent);color:var(--ink)}
+  .cxrow .frm{font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap}
+  .cxrow.sel .frm{color:var(--accent)}
+  .cxrow .nm{font-weight:560;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cxrow .kd{margin-left:auto;font-size:8.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;color:var(--faint)}
+  .cxrow.sel .kd{color:var(--comp)}
+
+  /* Properties bits the DS does not ship */
+  .pblock{margin:var(--gap-sm) 0}
+  .pblock .pl{font-size:10.5px;color:var(--faint);margin-bottom:var(--s2)}
+  /* .pblock .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  .trigbadge{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px var(--s2);
+    border-radius:var(--r1);white-space:nowrap}
+  .trigbadge.act{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+  .trigbadge.logic{background:var(--panel-2);color:var(--dim);border:1px solid var(--line-strong)}
+  .trigbadge.ai{background:linear-gradient(120deg,#6E8BFF,#c56cff);color:#fff;border:0;cursor:pointer}
+
+  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
+  @container shell (max-width:880px){ .toolbar .chip{display:none} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="ui-prototype">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Prototyping</h2><span class="k">· wire states together</span></div>
+
+    <!-- ============ THE ONE SHELL · UI workspace, a wired flow ============ -->
+    <div class="win tall cq shell">
+
+      <!-- TITLE BAR -->
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>aurora</b> · 390 × 844 · 3 frames</div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" data-ws="image" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm" id="btnReset" disabled><i class="ic ic-undo"></i> Reset</button>
+          <button class="btn primary sm" id="btnPlay"><i class="ic ic-play"></i> Play</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The agent is its own path. -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip">3 frames</span>
+        <span class="chip">4 connections</span>
+        <button class="pill ai" data-target="agent"><i class="ic sm ic-sparkle"></i> Ask the agent</button>
+        <div style="position:relative">
+          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:238px;z-index:12">
+            <div class="menuitem"><i class="ic ic-transition"></i> Connect selection <span class="sc">⌘⌥C</span></div>
+            <div class="menuitem"><i class="ic ic-play"></i> Play flow <span class="sc">⌘⏎</span></div>
+            <div class="menuitem" data-target="states"><i class="ic ic-component"></i> Component states</div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+      <div class="edit lean" id="shellProto" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas flowcv" id="canvas">
+            <div class="artboard-label">Flow · 3 frames · 4 connections · tap a hotspot in the preview to run one</div>
+
+            <div class="flowrow">
+
+              <!-- the connection graph: frames wired to destination states -->
+              <div class="pt-wire">
+                <svg viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <marker id="ah" markerWidth="7" markerHeight="7" refX="5.4" refY="3" orient="auto">
+                      <path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,.28)"></path>
+                    </marker>
+                    <marker id="ahs" markerWidth="7" markerHeight="7" refX="5.4" refY="3" orient="auto">
+                      <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent)"></path>
+                    </marker>
+                  </defs>
+                  <path class="wpath" id="p_menu" d="M206,150 C 420,118 580,92 770,90" marker-end="url(#ah)"></path>
+                  <path class="wpath" id="p_cta"  d="M206,182 C 430,206 570,236 770,240" marker-end="url(#ah)"></path>
+                  <path class="wpath" id="p_item" d="M840,120 L840,204" marker-end="url(#ah)"></path>
+                  <path class="wpath" id="p_back" d="M772,268 C 470,336 300,300 158,208" marker-end="url(#ah)"></path>
+                </svg>
+
+                <button class="wnode on" data-goto="home" data-menu-state="0" style="left:14%;top:50%">
+                  <span class="nh"><i class="ic sm ic-frame"></i> Home</span>
+                  <span class="nb"><span class="wf"><span class="wfbar sm"></span><span class="card"></span></span></span>
+                  <span class="selmark"><span class="sel-ring"></span><span class="mtag">Home · Default</span></span>
+                </button>
+                <button class="wnode comp" data-goto="home" data-menu-state="1" style="left:84%;top:26%">
+                  <span class="nh"><i class="ic sm ic-component"></i> Menu</span>
+                  <span class="nb"><span class="wf"><span class="ov"><i></i><i style="width:70%"></i></span></span></span>
+                  <span class="selmark"><span class="sel-ring"></span><span class="mtag">Home · Menu open</span></span>
+                </button>
+                <button class="wnode" data-goto="detail" data-menu-state="0" style="left:84%;top:78%">
+                  <span class="nh"><i class="ic sm ic-frame"></i> Detail</span>
+                  <span class="nb"><span class="wf"><span class="big"></span></span></span>
+                  <span class="selmark"><span class="sel-ring"></span><span class="mtag">Detail</span></span>
+                </button>
+
+                <button class="wchip" data-conn="menu" style="left:47%;top:24%"><span class="tp">tap</span> #menu <i class="ic xs ic-chevron-right"></i> Menu <span class="ms">dissolve 160</span></button>
+                <button class="wchip sel" data-conn="cta" style="left:47%;top:70%"><span class="tp">tap</span> #cta <i class="ic xs ic-chevron-right"></i> Detail <span class="ms">slide 240</span></button>
+                <button class="wchip" data-conn="item" style="left:76%;top:52%"><span class="tp">tap</span> #item <i class="ic xs ic-chevron-right"></i> Detail <span class="ms">slide 220</span></button>
+                <button class="wchip" data-conn="back" style="left:40%;top:93%"><span class="tp">tap</span> #back <i class="ic xs ic-chevron-right"></i> Home <span class="ms">slide 240</span></button>
+              </div>
+
+              <!-- the live device: real transitions, real hotspots -->
+              <div class="pt-device">
+                <div class="viewport" id="viewport">
+
+                  <div class="dscreen" id="scr-home">
+                    <div class="dtop">
+                      <button class="dicon hot" data-conn="menu" title="Open menu"><i class="ic sm ic-more"></i></button>
+                      <span class="dttl">Aurora</span>
+                      <span class="dicon mute"><i class="ic sm ic-search"></i></span>
+                    </div>
+                    <div class="dscroll">
+                      <div class="dhero">
+                        <span class="dbadge">Featured</span>
+                        <div class="dh">Golden hour</div>
+                        <p class="dhsub">A short field guide to warm, low light.</p>
+                        <button class="dcta hot" data-conn="cta">Open story <i class="ic xs ic-chevron-right"></i></button>
+                      </div>
+                      <div class="dgrid">
+                        <span class="dthumb t1"></span><span class="dthumb t2"></span>
+                        <span class="dthumb t3"></span><span class="dthumb t4"></span>
+                      </div>
+                    </div>
+                    <div class="dmenu" id="dmenu">
+                      <div class="msheet">
+                        <div class="mh">Go to</div>
+                        <button class="dmenu-i hot pri" data-conn="item"><i class="ic sm ic-image"></i> Story</button>
+                        <button class="dmenu-i"><i class="ic sm ic-grid"></i> Collections</button>
+                        <button class="dmenu-i"><i class="ic sm ic-sliders"></i> Settings</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dscreen" id="scr-detail">
+                    <div class="dtop">
+                      <button class="dicon hot" data-conn="back" title="Back"><i class="ic sm ic-chevron-left"></i></button>
+                      <span class="dttl">Story</span>
+                      <button class="dicon hot detail-like" data-conn="like" title="Save"><i class="ic sm ic-star"></i></button>
+                    </div>
+                    <div class="dbig"><span class="sun"></span><span class="hill"></span><span class="kt">Golden hour</span></div>
+                    <div class="dbody">
+                      <p>Warm light rakes low across the field. Meter for the highlights, let the shadows fall, and let the color stay honest.</p>
+                      <button class="dlike hot detail-like" data-conn="like"><i class="ic sm ic-check"></i> <span class="lktxt">Save</span></button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- run status + log -->
+              <div class="pt-side">
+                <div class="pt-status">
+                  <div class="sr"><span class="k">Frame</span><span class="v" id="stFrame">Default</span></div>
+                  <div class="sr"><span class="k">Menu</span><span class="v" id="stMenu">closed</span></div>
+                  <div class="sr"><span class="k">Last</span><span class="v" id="stLast">idle</span></div>
+                </div>
+                <div class="pt-log" id="ptLog"><b>ready</b> · press Play, then tap a hotspot</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- canvas action cluster -->
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#shellProto" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING BOTTOM TOOL BAR (D4 · UI inventory + the Connect tool) -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="components"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <button class="tool ovf" title="Connect (X)"><i class="ic sm ic-transition"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              <div class="menuitem"><i class="ic ic-transition"></i> Connect <span class="sc">X</span></div>
+            </div>
+          </div>
+
+          <!-- HISTORY OVERLAY (⌘⇧H) -->
+          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                  <span class="cap"><span class="nm">Flow run</span><span class="ago">5 min ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#4c6fff)"></span>
+                  <span class="cap"><span class="nm">Menu state</span><span class="ago">40 min ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff7e5f)"></span>
+                  <span class="cap"><span class="nm">Detail screen</span><span class="ago">Yesterday</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Record a run and it lands here, so a flow review is the same fast path as a screenshot.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPLITTER -->
+        <div class="splitter v" data-min="220" data-max="420"></div>
+
+        <!-- THE RIGHT DOCK -->
+        <div class="pdock" id="dock" style="--dock-w:296px">
+
+          <!-- LAYERS · frames and states ARE layers, and they jump the preview -->
+          <div class="dgrp" id="gLayers" style="--gh:142px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Flow</div>
+              <div class="lrow child sel" data-goto="home" data-menu-state="0" tabindex="0" role="button">
+                <i class="ic ic-frame"></i><span class="nm">Home · Default</span><i class="ic sm ic-eye eye"></i>
+              </div>
+              <div class="lrow child" style="padding-left:40px" data-goto="home" data-menu-state="1" tabindex="0" role="button">
+                <i class="ic ic-component"></i><span class="nm">Menu open</span><i class="ic sm ic-eye eye"></i>
+              </div>
+              <div class="lrow child" data-goto="detail" data-menu-state="0" tabindex="0" role="button">
+                <i class="ic ic-frame"></i><span class="nm">Detail</span><i class="ic sm ic-eye eye"></i>
+              </div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="300"></div>
+
+          <!-- PROPERTIES · the selected connection -->
+          <div class="dgrp" id="gProps" style="--gh:218px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="selName">CTA</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h comp">Interaction <span class="mut" style="color:var(--comp)"><i class="ic xs ic-transition"></i> connection</span></div>
+                <div class="row"><span class="rl">Trigger</span><span class="trigbadge act">on tap</span><span class="val" id="selTarget" style="margin-left:auto">#cta</span></div>
+                <div class="row"><span class="rl">Action</span><span class="val" id="selAction">navigate</span><span class="val" id="selDest" style="margin-left:auto;color:var(--comp)">Detail</span></div>
+
+                <div class="pblock">
+                  <div class="pl">Transition</div>
+                  <div class="seg" id="segTrans" role="group" aria-label="Transition type">
+                    <button data-t="instant">Instant</button>
+                    <button data-t="dissolve">Dissolve</button>
+                    <button class="on" data-t="slide">Slide</button>
+                  </div>
+                </div>
+                <div class="pblock">
+                  <div class="pl">Duration <span class="val">ms</span></div>
+                  <div class="seg" id="segMs" role="group" aria-label="Duration">
+                    <button data-ms="120">120</button>
+                    <button data-ms="160">160</button>
+                    <button class="on" data-ms="240">240</button>
+                    <button data-ms="320">320</button>
+                  </div>
+                </div>
+                <p class="note">Change these and the live preview obeys instantly. Instant is disabled for the Menu state, which needs a visible fade.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">In the API <span class="mut">one call, same as the UI</span></div>
+                <div class="codeblk" id="apiLine" style="font-size:10px"></div>
+                <div class="row" style="margin-top:var(--pad-sm)"><span class="rl">Set by</span>
+                  <span class="trigbadge act">interaction</span>
+                  <span class="trigbadge logic">logic</span>
+                  <button class="trigbadge ai" data-target="agent"><i class="ic xs ic-sparkle"></i> agent</button>
+                </div>
+                <p class="note">A tap fires it in the preview. The same command can come from app logic or from an <b style="color:var(--comp)">agent</b> over the shared schema, so a flow you wire by hand is a flow anything can drive.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Reuse <span class="mut">frames are just states</span></div>
+                <p class="note" style="margin-top:0">Every frame here is a saved <b style="color:var(--ink)" data-target="states">state</b> of the same tree. A connection stores <b style="color:var(--ink)">token names</b> for its motion, so retiming or retheming the flow never touches the wiring.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONNECTIONS · a long list with its own bounded scroller -->
+          <div class="dgrp" id="gConn" style="--gh:116px">
+            <div class="dgrp-h"><span class="ttl">Connections</span><span class="cnt">4</span>
+              <button class="btn ghost icon sm" title="Add connection" data-menu="#connMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b" style="padding:var(--s1) 0">
+              <div id="cxlist">
+                <button class="cxrow" data-conn="menu"><span class="frm">Home</span><span class="nm">tap #menu</span><span class="kd">state</span></button>
+                <button class="cxrow sel" data-conn="cta"><span class="frm">Home</span><span class="nm">tap #cta</span><span class="kd">nav</span></button>
+                <button class="cxrow" data-conn="item"><span class="frm">Menu</span><span class="nm">tap #item</span><span class="kd">nav</span></button>
+                <button class="cxrow" data-conn="back"><span class="frm">Detail</span><span class="nm">tap #back</span><span class="kd">nav</span></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIBRARY (D1/D2): one surface, four scopes -->
+          <div class="dgrp grow" id="gLibrary">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
+              <button class="btn ghost icon sm" title="Add to Library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" id="scopeSeg">
+                  <button data-scope="media">Media</button>
+                  <button class="on" data-scope="components">Comp</button>
+                  <button data-scope="styles">Styles</button>
+                  <button data-scope="assets">Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" type="text" placeholder="Search components" autocomplete="off" spellcheck="false" aria-label="Search components"></span>
+              </div>
+              <div class="libgrid">
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(140deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero</span><span class="mt">2 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:rgba(20,22,32,.9)"></span><span class="cap"><span class="nm">Menu sheet</span><span class="mt">1 state</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Nav bar</span><span class="mt">3 states</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff7e5f)"></span><span class="cap"><span class="nm">Story card</span><span class="mt">2 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Save button</span><span class="mt">2 states</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">Tab bar</span><span class="mt">1 variant</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL -->
+        <div class="drail">
+          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#gConn" title="Connections"><i class="ic sm ic-transition"></i><span class="lb">Connections</span></button>
+          <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+
+        <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:210px;z-index:11">
+          <div class="menuitem" data-target="states"><i class="ic ic-component"></i> Save as state</div>
+          <div class="menuitem"><i class="ic ic-transition"></i> Connect to frame <span class="sc">⌘⌥C</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+        </div>
+        <div class="popover menu pop" id="connMenu" style="position:absolute;right:var(--s4);top:280px;width:210px;z-index:11">
+          <div class="menuitem"><i class="ic ic-transition"></i> On tap</div>
+          <div class="menuitem"><i class="ic ic-cursor"></i> On hover</div>
+          <div class="menuitem"><i class="ic ic-keyframe"></i> After delay</div>
+        </div>
+        <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+          <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A prototype is just <b>states</b> plus <b>triggers</b>. Point a tap target at a destination state, pick a transition, and the flow runs for real. No separate prototyping mode: the same <b style="color:var(--comp)" data-target="states">component states</b> you design are the frames you wire, and they sit in Layers like every other layer.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because a connection is data, the whole graph is addressable. <code>on("tap", "#cta").navigate("Detail", {transition:"slide", ms:240})</code> is exactly what the panel writes, so an <b data-target="agent" style="color:var(--accent);font-weight:600">agent</b> can wire, retime, or audit a flow the same way you do.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should a transition be able to carry per-layer motion (a hero image that persists and grows between two frames), or stay a whole-screen dissolve or slide? Shared-element motion is gorgeous but much harder to keep predictable across every wired pair.</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Live prototype demo. Self-contained; drives the device preview from a small
+   connections model that the Properties group edits in place. Guarded so a
+   missing node is a no-op. */
+(function () {
+  var viewport = document.getElementById('viewport');
+  var scrHome = document.getElementById('scr-home');
+  var scrDetail = document.getElementById('scr-detail');
+  var dmenu = document.getElementById('dmenu');
+  if (!viewport || !scrHome || !scrDetail || !dmenu) return;
+  var screens = { home: scrHome, detail: scrDetail };
+
+  // connections model: the single source of truth the panel edits
+  var conns = {
+    menu: { frame:'Home', target:'#menu', kind:'setState', dest:'menuOpen', trans:'dissolve', ms:160 },
+    cta:  { frame:'Home', target:'#cta',  kind:'navigate', dest:'Detail',   trans:'slide',    ms:240 },
+    item: { frame:'Menu', target:'#item', kind:'navigate', dest:'Detail',   trans:'slide',    ms:220 },
+    back: { frame:'Detail',target:'#back',kind:'navigate', dest:'Home',     trans:'slide',    ms:240 }
+  };
+
+  var current = scrHome, busy = false, playing = false, touched = false;
+  var selected = 'cta';
+
+  function byId(id) { return document.getElementById(id); }
+  var stFrame = byId('stFrame'), stMenu = byId('stMenu'), stLast = byId('stLast');
+  var logEl = byId('ptLog');
+  var btnPlay = byId('btnPlay'), btnReset = byId('btnReset');
+
+  function log(html) {
+    if (!logEl) return;
+    var line = document.createElement('div');
+    line.innerHTML = html;
+    logEl.insertBefore(line, logEl.firstChild);
+    while (logEl.children.length > 8) logEl.removeChild(logEl.lastChild);
+  }
+  function markTouched() {
+    if (touched) return;
+    touched = true;
+    if (btnReset) btnReset.disabled = false;
+  }
+  function frameName() {
+    if (current === scrDetail) return 'Detail';
+    return dmenu.classList.contains('open') ? 'Menu open' : 'Default';
+  }
+  function refreshStatus(lastTxt) {
+    if (stFrame) stFrame.textContent = frameName();
+    if (stMenu) stMenu.textContent = dmenu.classList.contains('open') ? 'open' : 'closed';
+    if (lastTxt && stLast) stLast.textContent = lastTxt;
+    syncFrameSelection();
+  }
+
+  /* the current frame reads as the selected layer row and graph node */
+  function syncFrameSelection() {
+    var onDetail = current === scrDetail;
+    var menuOpen = dmenu.classList.contains('open');
+    [].slice.call(document.querySelectorAll('.lrow[data-goto], .wnode[data-goto]')).forEach(function (n) {
+      var goTo = n.getAttribute('data-goto');
+      var wantMenu = n.getAttribute('data-menu-state') === '1';
+      var on = onDetail ? goTo === 'detail'
+        : (goTo === 'home' && wantMenu === menuOpen);
+      n.classList.toggle(n.classList.contains('wnode') ? 'on' : 'sel', on);
+    });
+  }
+
+  /* screen-to-screen navigation with a chosen transition */
+  function navigate(destKey, trans, ms) {
+    var next = screens[destKey];
+    if (!next || busy || next === current) return;
+    busy = true;
+    var prev = current;
+    var dir = destKey === 'detail' ? 1 : -1;
+    var dur = trans === 'instant' ? 0 : ms;
+    var tr = 'transform ' + dur + 'ms cubic-bezier(.4,0,.2,1), opacity ' + dur + 'ms ease';
+    prev.style.transition = next.style.transition = tr;
+
+    if (trans === 'slide') {
+      if (dir > 0) { next.style.transform = 'translateX(100%)'; next.style.opacity = '1'; }
+      else { next.style.transform = 'translateX(-26%)'; next.style.opacity = '.55'; }
+    } else if (trans === 'dissolve') {
+      next.style.transform = 'translateX(0)'; next.style.opacity = '0';
+    } else {
+      next.style.transform = 'translateX(0)'; next.style.opacity = '1';
+    }
+    next.style.zIndex = '2'; prev.style.zIndex = '1';
+    next.style.pointerEvents = 'none';
+    void next.offsetWidth;
+
+    requestAnimationFrame(function () {
+      if (trans === 'slide') {
+        next.style.transform = 'translateX(0)'; next.style.opacity = '1';
+        if (dir > 0) { prev.style.transform = 'translateX(-26%)'; prev.style.opacity = '.55'; }
+        else { prev.style.transform = 'translateX(100%)'; prev.style.opacity = '0'; }
+      } else if (trans === 'dissolve') {
+        next.style.opacity = '1'; prev.style.opacity = '0';
+      } else {
+        prev.style.opacity = '0';
+      }
+    });
+
+    setTimeout(function () {
+      prev.style.transition = 'none';
+      prev.style.transform = 'translateX(100%)';
+      prev.style.opacity = '0';
+      prev.style.zIndex = '0';
+      prev.style.pointerEvents = 'none';
+      next.style.pointerEvents = 'auto';
+      current = next;
+      busy = false;
+      refreshStatus();
+    }, dur + 40);
+  }
+
+  function setMenu(open, trans) {
+    dmenu.style.transitionDuration = (trans === 'instant' ? 0 : conns.menu.ms) + 'ms';
+    var sheet = dmenu.querySelector('.msheet');
+    if (sheet) sheet.style.transitionDuration = (trans === 'instant' ? 0 : conns.menu.ms) + 'ms';
+    dmenu.classList.toggle('open', open);
+  }
+
+  /* fire a wired connection by id */
+  function fire(id) {
+    if (busy) return;
+    markTouched();
+    if (id === 'like') {
+      [].slice.call(document.querySelectorAll('.detail-like')).forEach(function (b) { b.classList.toggle('liked'); });
+      var dl = document.querySelector('.dlike');
+      var liked = dl && dl.classList.contains('liked');
+      var lk = document.querySelector('.lktxt'); if (lk) lk.textContent = liked ? 'Saved' : 'Save';
+      refreshStatus('setState like=' + (liked ? 'on' : 'off'));
+      log('<b>#like</b> · <span class="fn">setState</span>("liked") · instant');
+      return;
+    }
+    var c = conns[id];
+    if (!c) return;
+    if (c.kind === 'setState') {
+      var willOpen = !dmenu.classList.contains('open');
+      setMenu(willOpen, c.trans);
+      refreshStatus('setState menuOpen=' + willOpen);
+      log('<b>' + c.target + '</b> · <span class="fn">setState</span>("menuOpen") · ' + c.trans + ' ' + c.ms);
+    } else {
+      if (dmenu.classList.contains('open')) setMenu(false, 'instant');
+      navigate(c.dest.toLowerCase(), c.trans, c.ms);
+      refreshStatus('navigate ' + c.dest);
+      log('<b>' + c.target + '</b> · <span class="fn">navigate</span>("' + c.dest + '") · ' + c.trans + ' ' + c.ms);
+    }
+  }
+
+  // delegate every hotspot tap in the device
+  viewport.addEventListener('click', function (e) {
+    var h = e.target.closest('.hot');
+    if (!h) return;
+    e.preventDefault();
+    fire(h.getAttribute('data-conn'));
+  });
+
+  /* a frame layer row or a graph node jumps the preview to that state */
+  function jumpTo(node) {
+    markTouched();
+    var goTo = node.getAttribute('data-goto');
+    var wantMenu = node.getAttribute('data-menu-state') === '1';
+    if (goTo === 'detail') { setMenu(false, 'instant'); navigate('detail', 'slide', 240); }
+    else {
+      var wasDetail = current === scrDetail;
+      if (wasDetail) {
+        navigate('home', 'slide', 240);
+        setTimeout(function () { setMenu(wantMenu, 'dissolve'); refreshStatus('jump ' + frameName()); }, 260);
+      } else {
+        setMenu(wantMenu, 'dissolve');
+        refreshStatus('jump ' + frameName());
+      }
+    }
+    log('<b>frame</b> · jump to ' + (goTo === 'detail' ? 'Detail' : (wantMenu ? 'Menu open' : 'Default')));
+  }
+  [].slice.call(document.querySelectorAll('.lrow[data-goto], .wnode[data-goto]')).forEach(function (n) {
+    n.addEventListener('click', function () { jumpTo(n); });
+    n.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpTo(n); }
+    });
+  });
+
+  /* Play / Reset */
+  if (btnPlay) btnPlay.addEventListener('click', function () {
+    playing = !playing;
+    viewport.classList.toggle('playing', playing);
+    btnPlay.innerHTML = playing
+      ? '<i class="ic ic-pause"></i> Playing'
+      : '<i class="ic ic-play"></i> Play';
+    if (playing) { markTouched(); log('<b>play</b> · hotspots live'); }
+  });
+  function reset() {
+    setMenu(false, 'instant');
+    [].slice.call(document.querySelectorAll('.detail-like')).forEach(function (b) { b.classList.remove('liked'); });
+    var lk = document.querySelector('.lktxt'); if (lk) lk.textContent = 'Save';
+    if (current !== scrHome) navigate('home', 'slide', 240);
+    refreshStatus('reset');
+    log('<b>reset</b> · back to start');
+  }
+  if (btnReset) btnReset.addEventListener('click', reset);
+
+  /* ---- Properties: select + edit a connection ---- */
+  var segTrans = byId('segTrans');
+  var segMs = byId('segMs');
+  var apiLine = byId('apiLine');
+  var selName = byId('selName');
+  var selTarget = byId('selTarget');
+  var selAction = byId('selAction');
+  var selDest = byId('selDest');
+  var LABEL = { menu:'Menu', cta:'CTA', item:'Item', back:'Back' };
+
+  function renderApi() {
+    if (!apiLine) return;
+    var c = conns[selected];
+    var head = '<span class="p">on</span>("tap", <span class="s">"' + c.target + '"</span>).';
+    var body;
+    if (c.kind === 'setState')
+      body = '<span class="p">setState</span>(<span class="s">"menuOpen"</span>, {transition:<span class="s">"' + c.trans + '"</span>, ms:' + c.ms + '})';
+    else
+      body = '<span class="p">navigate</span>(<span class="s">"' + c.dest + '"</span>, {transition:<span class="s">"' + c.trans + '"</span>, ms:' + c.ms + '})';
+    apiLine.innerHTML = head + body;
+  }
+  function syncSegs() {
+    var c = conns[selected];
+    if (segTrans) [].slice.call(segTrans.querySelectorAll('button')).forEach(function (b) {
+      var t = b.getAttribute('data-t');
+      b.classList.toggle('on', t === c.trans);
+      b.disabled = (selected === 'menu' && t === 'instant');
+    });
+    if (segMs) [].slice.call(segMs.querySelectorAll('button')).forEach(function (b) {
+      b.classList.toggle('on', parseInt(b.getAttribute('data-ms'), 10) === c.ms);
+      b.disabled = (c.trans === 'instant');
+    });
+  }
+  function selectConn(id) {
+    selected = id;
+    var c = conns[id];
+    if (!c) return;
+    [].slice.call(document.querySelectorAll('.cxrow')).forEach(function (r) { r.classList.toggle('sel', r.getAttribute('data-conn') === id); });
+    [].slice.call(document.querySelectorAll('.wchip')).forEach(function (r) { r.classList.toggle('sel', r.getAttribute('data-conn') === id); });
+    [].slice.call(document.querySelectorAll('.wpath')).forEach(function (p) { p.classList.remove('sel'); p.setAttribute('marker-end', 'url(#ah)'); });
+    var path = byId('p_' + id);
+    if (path) { path.classList.add('sel'); path.setAttribute('marker-end', 'url(#ahs)'); }
+    if (selName) selName.textContent = LABEL[id];
+    if (selTarget) selTarget.textContent = c.target;
+    if (selAction) selAction.textContent = c.kind === 'setState' ? 'set state' : 'navigate';
+    if (selDest) selDest.textContent = c.kind === 'setState' ? 'menuOpen' : c.dest;
+    syncSegs();
+    renderApi();
+  }
+  var cxlist = byId('cxlist');
+  if (cxlist) cxlist.addEventListener('click', function (e) {
+    var r = e.target.closest('.cxrow');
+    if (r) selectConn(r.getAttribute('data-conn'));
+  });
+  [].slice.call(document.querySelectorAll('.wchip')).forEach(function (chip) {
+    chip.addEventListener('click', function (e) {
+      e.stopPropagation();
+      selectConn(chip.getAttribute('data-conn'));
+    });
+  });
+  if (segTrans) segTrans.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    conns[selected].trans = b.getAttribute('data-t');
+    if (conns[selected].trans === 'instant') conns[selected].ms = 0;
+    else if (conns[selected].ms === 0) conns[selected].ms = 240;
+    updateChipLabel(selected);
+    syncSegs(); renderApi();
+  });
+  if (segMs) segMs.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || b.disabled) return;
+    conns[selected].ms = parseInt(b.getAttribute('data-ms'), 10);
+    updateChipLabel(selected);
+    syncSegs(); renderApi();
+  });
+  function updateChipLabel(id) {
+    var c = conns[id];
+    var chip = document.querySelector('.wchip[data-conn="' + id + '"] .ms');
+    if (chip) chip.textContent = c.trans + (c.ms ? ' ' + c.ms : '');
+  }
+
+  /* Library scope switch (Media · Components · Styles · Assets) */
+  var seg = byId('scopeSeg');
+  var scopeCnt = byId('scopeCnt');
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  if (seg) {
+    var sbtns = [].slice.call(seg.querySelectorAll('button'));
+    sbtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        if (scopeCnt) scopeCnt.textContent = NAMES[b.getAttribute('data-scope')] || 'Components';
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+    var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+    tiles.forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+      });
+    });
+  });
+
+  selectConn('cta');
+  refreshStatus('idle');
+})();
+</script>
+</body>
+</html>

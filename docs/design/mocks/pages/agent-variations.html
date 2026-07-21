@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · agent-variations</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-only additions · batch VARIATIONS flow.
+
+     SCREEN CONTRACT (PRODUCT-MODEL §4c). ONE window, and it is a KIND 1 APP
+     SCREEN: the complete shell. The title bar carries document identity only
+     (it used to read "launch-poster · variations", a feature name). The bespoke
+     control bar that sat under it is gone: the engine, the seed, the counts and
+     the run actions are an **Agent panel group** in the one right dock, because
+     new capability is a new group, never new chrome (UX-PATTERNS §3). The four
+     options are the document, so they live on the canvas. 4pt tokens only. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #agent-variations .win.shell{height:720px;min-height:0}
+  /* the canvas holds a tall generated set, so it scrolls instead of clipping.
+     The definite width goes on the DIRECT grid child (.vstage), never inside. */
+  #agent-variations .canvas{min-height:0;overflow:auto;place-items:stretch}
+  #agent-variations .canvas>.vstage{width:100%;align-self:stretch}
+
+  #agent-variations .av-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;padding:6px 10px 3px}
+
+  /* the dock's Agent group body */
+  .vrun{display:flex;flex-direction:column;gap:var(--pad-sm);padding:var(--pad-sm)}
+  .vrun .eng{background:var(--good);color:#fff;border-color:transparent;font-weight:600;margin:0}
+  .vrd{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-sm);
+    font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+  .vrow2{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+  .vrow2 .btn{flex:1 1 auto}
+
+  /* canvas holds two states: start prompt and the generated grid */
+  .vstage{min-height:452px;padding:var(--inset)}
+  .vstart{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--pad);min-height:404px;text-align:center}
+  .vprompt{display:flex;align-items:center;gap:var(--pad-sm);background:var(--glass);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--pad-sm) var(--pad-sm) var(--pad-sm) var(--pad);box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow);width:min(460px,92%)}
+  .vprompt .pglow{width:30px;height:30px;border-radius:9px;background:linear-gradient(120deg,#6E8BFF,#c56cff);display:grid;place-items:center;color:#fff;flex:none}
+  .vprompt .ptext{flex:1;font-size:13.5px;color:var(--ink);text-align:left;line-height:1.25}
+  .vprompt .ptext b{font-weight:660}
+  .vstart .hint{font-size:11.5px;color:var(--faint);line-height:1.5;max-width:340px}
+
+  .vwrap{display:none;flex-direction:column;gap:var(--pad)}
+  .vstage.gen .vstart{display:none}
+  .vstage.gen .vwrap{display:flex}
+
+  /* the grid of variation specimens */
+  .vgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+  @media (max-width:860px){.vgrid{grid-template-columns:repeat(2,1fr)}}
+
+  .vcell{display:flex;flex-direction:column;gap:var(--gap-sm);animation:vpop .34s cubic-bezier(.2,.7,.3,1) both}
+  .vcell:nth-child(2){animation-delay:.05s}
+  .vcell:nth-child(3){animation-delay:.1s}
+  .vcell:nth-child(4){animation-delay:.15s}
+  @keyframes vpop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.vcell{animation:none}}
+  .vcell.gone{display:none}
+  /* when one is kept, calm the others down */
+  .vwrap.haskept .vcell:not(.kept){opacity:.5;filter:saturate(.7)}
+  .vcell{transition:opacity .18s ease,filter .18s ease}
+
+  /* the poster specimen · a real designed card, brand palette only */
+  .vcard{position:relative;height:224px;border-radius:var(--r-lg);padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);overflow:hidden;cursor:pointer;color:#fff;
+    background:var(--g,linear-gradient(160deg,#7c4dff,#b14dff 55%,#ff5d8f));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 16px 34px -16px rgba(0,0,0,.6);
+    transition:transform .16s ease,box-shadow .16s ease,outline-color .16s ease;
+    outline:2px solid transparent;outline-offset:3px}
+  .vcard::after{content:"";position:absolute;inset:0;background:radial-gradient(130% 90% at 82% -12%,rgba(255,255,255,.34),transparent 46%);mix-blend-mode:soft-light;pointer-events:none}
+  .vcell:not(.kept) .vcard:hover{transform:translateY(-3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.32),0 22px 44px -16px rgba(0,0,0,.62)}
+  .vcard:active{transform:translateY(0) scale(.99)}
+
+  /* accent token sets · all on-brand */
+  .v-violet{--g:linear-gradient(160deg,#7c4dff,#b14dff 55%,#ff5d8f)}
+  .v-cyan{--g:linear-gradient(160deg,#12c2e9,#5b6bff 60%,#7c4dff)}
+  .v-rose{--g:linear-gradient(160deg,#ff5d8f,#ff7e5f 55%,#ff9a44)}
+  .v-indigo{--g:linear-gradient(160deg,#6E8BFF,#8f7bff 45%,#12c2e9)}
+
+  /* specimen parts */
+  .vbadge{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.32);padding:3px 8px;border-radius:999px;position:relative;z-index:1}
+  .vbody{display:flex;flex-direction:column;gap:5px;position:relative;z-index:1}
+  .vh{font-family:var(--serif);font-size:21px;line-height:1.03;font-weight:700;letter-spacing:-.02em;color:#fff}
+  .vsub{margin:0;font-size:11px;line-height:1.4;color:rgba(255,255,255,.9)}
+  .vcta{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-size:11.5px;font-weight:660;color:#3a1d6e;background:linear-gradient(180deg,#fff,#f0eaff);padding:7px 13px;border-radius:10px;box-shadow:0 6px 16px -6px rgba(0,0,0,.35);position:relative;z-index:1;white-space:nowrap;margin-top:auto}
+
+  /* layout token sets · reflow the same parts */
+  .lay-a{}                                              /* editorial · left */
+  .lay-b{align-items:center;text-align:center}
+  .lay-b .vbadge,.lay-b .vcta{align-self:center}
+  .lay-c .vcta{align-self:stretch;justify-content:center}          /* stacked · block cta */
+  .lay-c .vh{font-size:19px}
+  .lay-d{align-items:center;text-align:center;justify-content:flex-end}   /* poster · badge low */
+  .lay-d .vbadge{order:3;margin-top:var(--gap-sm);align-self:center}
+  .lay-d .vbody{margin-top:auto}
+  .lay-d .vh{font-size:26px}
+  .lay-d .vsub{display:none}
+  .lay-d .vcta{align-self:center;margin-top:var(--gap-sm)}
+
+  /* selection ring + kept badge */
+  .vsel{position:absolute;inset:0;border-radius:var(--r-lg);border:2px solid #fff;box-shadow:0 0 0 3px var(--accent);pointer-events:none;opacity:0;transition:opacity .16s ease;z-index:2}
+  .vcell.kept .vsel{opacity:1}
+  .vcell.kept .vcard{outline-color:var(--accent)}
+  .vkept{position:absolute;top:var(--gap-sm);right:var(--gap-sm);display:none;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);padding:4px 9px;border-radius:999px;z-index:3;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)}
+  .vcell.kept .vkept{display:inline-flex}
+
+  /* footer row under each specimen */
+  .vfoot{display:flex;align-items:center;gap:var(--gap-sm)}
+  .vlabel{font-size:11px;font-weight:620;color:var(--ink)}
+  .vmeta{font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .vfoot .sp{flex:1}
+
+  /* action row below the grid */
+  .vactions{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+  .vactions .reuse{display:inline-flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;font-size:11px;color:var(--dim)}
+  .vactions .sp{flex:1;min-width:12px}
+
+  /* API line */
+  .apiline{font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--dim);background:var(--artboard);border:1px solid #20263a;border-radius:var(--r2);padding:10px 12px;overflow-x:auto;white-space:nowrap}
+  .apiline .fn{color:#7f9bff}.apiline .s{color:#7fd7a6}.apiline .p{color:#e0a5ff}.apiline .n{color:#e6b877}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="agent-variations">
+    <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Generate variations</h2><span class="k">· 4 on-brand options, pick one</span></div>
+
+    <!-- =====================================================================
+         KIND 1 · APP SCREEN. The complete shell: title bar (document identity
+         only) › command surface › canvas + floating tool bar › splitter › the
+         one right dock, where Agent is a panel group › the rail.
+         ===================================================================== -->
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>launch-poster</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#avCmd"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#avHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="avCmd" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+            <div class="av-mlabel">Agent</div>
+            <div class="menuitem"><i class="ic ic-grid"></i> Generate variations <span class="sc">⌘⌥G</span></div>
+            <div class="menuitem"><i class="ic ic-redo"></i> Regenerate set <span class="sc">⌘⌥R</span></div>
+            <div class="menu-sep"></div>
+            <div class="av-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="avShell" data-dock="open">
+        <div class="cnv">
+        <div class="canvas">
+        <div class="vstage" id="stage">
+        <!-- START STATE -->
+        <div class="vstart">
+          <div class="vprompt">
+            <span class="pglow"><i class="ic ic-sparkle sm"></i></span>
+            <div class="ptext">Make <b>4 launch posters</b> on brand · same Poster component, vary <b>accent</b> and <b>layout</b></div>
+          </div>
+          <button class="btn primary lg" id="genBtn"><i class="ic ic-grid"></i> Generate 4 variations</button>
+          <div class="hint">The agent runs the same command four times with different parameters. Every option is a live layer tree built from your Poster component and Brand style · nothing is a flat picture.</div>
+        </div>
+
+        <!-- GENERATED GRID -->
+        <div class="vwrap" id="wrap">
+          <div class="vgrid" id="grid">
+            <!-- Version A -->
+            <div class="vcell" data-i="0">
+              <div class="vcard">
+                <span class="vsel"></span>
+                <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
+                <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
+                <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
+                <span class="vcta">Get Photonz <i class="ic ic-chevron-right xs"></i></span>
+              </div>
+              <div class="vfoot">
+                <span class="vlabel">Version A</span><span class="vmeta" data-role="meta">violet · editorial</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" data-role="dismiss" title="Dismiss"><i class="ic ic-x"></i></button>
+                <button class="btn secondary sm" data-role="keep"><i class="ic ic-check"></i> Keep</button>
+              </div>
+            </div>
+            <!-- Version B -->
+            <div class="vcell" data-i="1">
+              <div class="vcard">
+                <span class="vsel"></span>
+                <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
+                <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
+                <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
+                <span class="vcta">Get Photonz <i class="ic ic-chevron-right xs"></i></span>
+              </div>
+              <div class="vfoot">
+                <span class="vlabel">Version B</span><span class="vmeta" data-role="meta">cyan · centered</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" data-role="dismiss" title="Dismiss"><i class="ic ic-x"></i></button>
+                <button class="btn secondary sm" data-role="keep"><i class="ic ic-check"></i> Keep</button>
+              </div>
+            </div>
+            <!-- Version C -->
+            <div class="vcell" data-i="2">
+              <div class="vcard">
+                <span class="vsel"></span>
+                <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
+                <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
+                <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
+                <span class="vcta">Get Photonz <i class="ic ic-chevron-right xs"></i></span>
+              </div>
+              <div class="vfoot">
+                <span class="vlabel">Version C</span><span class="vmeta" data-role="meta">rose · stacked</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" data-role="dismiss" title="Dismiss"><i class="ic ic-x"></i></button>
+                <button class="btn secondary sm" data-role="keep"><i class="ic ic-check"></i> Keep</button>
+              </div>
+            </div>
+            <!-- Version D -->
+            <div class="vcell" data-i="3">
+              <div class="vcard">
+                <span class="vsel"></span>
+                <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
+                <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
+                <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
+                <span class="vcta">Get Photonz <i class="ic ic-chevron-right xs"></i></span>
+              </div>
+              <div class="vfoot">
+                <span class="vlabel">Version D</span><span class="vmeta" data-role="meta">indigo · poster</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" data-role="dismiss" title="Dismiss"><i class="ic ic-x"></i></button>
+                <button class="btn secondary sm" data-role="keep"><i class="ic ic-check"></i> Keep</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="vactions">
+            <span class="reuse"><span class="chip comp" style="margin:0"><i class="ic ic-component xs"></i> Poster ×4</span><span class="chip style" style="margin:0"><span class="sw"></span> Brand</span> reused across every option, only tokens differ</span>
+            <span class="sp"></span>
+            <button class="btn ghost" id="regenBtn2"><i class="ic ic-redo"></i> Regenerate set</button>
+            <button class="btn primary" id="keepDoneBtn" disabled><i class="ic ic-check"></i> Keep selected</button>
+          </div>
+
+          <div class="apiline"><span class="fn">agent.variations</span>(design, {count:<span class="n">4</span>, vary:[<span class="s">"accent"</span>, <span class="s">"layout"</span>]})</div>
+        </div><!-- /#wrap -->
+        </div><!-- /.vstage -->
+        </div><!-- /.canvas -->
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#avShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#avHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · D4 UI inventory -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#avOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="av-zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="avOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            </div>
+          </div>
+
+          <!-- OVERLAY · capture history, the front door -->
+          <div class="sheet down" id="avHist" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(160deg,#7c4dff,#b14dff 55%,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">Launch poster</span><span class="ago">just now</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(160deg,#12c2e9,#5b6bff 60%,#7c4dff)"></span>
+                  <span class="cap"><span class="nm">Feature grid</span><span class="ago">31 min ago</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Open a capture and fan it out the same way. One command, four on-brand options.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="240" data-max="420"></div>
+
+        <!-- THE RIGHT DOCK · Agent is a panel group, not a bespoke control bar -->
+        <div class="pdock">
+
+          <div class="dgrp" id="avAgent" style="--gh:260px">
+            <div class="dgrp-h"><span class="ttl">Agent</span><span class="cnt val" id="statusVal">ready</span>
+              <button class="btn ghost icon sm" title="Reset" id="resetBtn" disabled><i class="ic ic-undo"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="vrun">
+                <div class="ap-h" style="display:flex;align-items:center;gap:var(--gap-sm);font-size:11px;font-weight:660;color:var(--ink)">
+                  <i class="ic sm ic-sparkle" style="color:var(--accent)"></i> Generate variations
+                  <span class="chip eng" style="margin-left:auto">Local · Qwen</span>
+                </div>
+                <div class="vrd"><span id="seedVal"><i class="ic ic-sparkle xs" style="opacity:.6"></i> seed idle</span><span id="countVal">0 variations</span></div>
+                <div class="vrow2">
+                  <button class="btn secondary sm" id="regenBtn" disabled><i class="ic ic-redo"></i> Regenerate</button>
+                </div>
+                <div class="apiline" style="font-size:10px;white-space:normal"><span class="fn">agent.variations</span>(design, {count:<span class="n">4</span>, vary:[<span class="s">"accent"</span>,<span class="s">"layout"</span>]})</div>
+                <p class="note" style="margin:0">Model-agnostic. A local <b>Qwen</b> (MLX) runs it privately by default; a <b>frontier model via MCP</b> when you want more. Same safe, undoable commands.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="320"></div>
+
+          <div class="dgrp" id="avProps" style="--gh:170px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Poster</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                <div class="irow"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Poster</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Varies</div>
+                <div class="irow"><span class="rl">Accent</span><span class="select"><span class="lead">color/accent</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Layout</span><span class="select"><span class="lead">layout/preset</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrp grow" id="avLibrary">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Components</span></div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" data-radio="button">
+                  <button>Media</button><button class="on">Comp</button><button>Styles</button><button>Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search components" aria-label="Search components"></span>
+              </div>
+              <div class="libgrid">
+                <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#7c4dff,#b14dff 55%,#ff5d8f)"></span><span class="cap"><span class="nm">Poster</span><span class="mt">4 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffe9a8,#f6c453)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Card</span><span class="mt">2 variants</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL · what the dock collapses to -->
+        <div class="drail">
+          <button class="drailtab" data-group="#avAgent" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+          <button class="drailtab" data-group="#avProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#avLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>One command fans out into <b>four on-brand options</b> at once · each the same <b>Poster</b> component painted with your <b>Brand</b> style, differing only in accent and layout tokens. Pick the one you like, dismiss or regenerate the rest.</p></div>
+      <div class="c"><div class="lab g2">Direction · model-agnostic</div><p>Every option is the same command schema with different parameters · <code>agent.variations(design, {count, vary})</code>. Local <b>Qwen</b> (MLX) runs it privately by default; a <b>frontier model via MCP</b> when you want more. Same safe, undoable commands either way.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should a kept option feed the next round · lock its layout and only reshuffle color · or should regenerate always explore wide from the original prompt? And do dismissed options teach the agent what to avoid?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Real interactive VARIATIONS demo: generate reveals the grid, each option is
+   pickable (ring + kept badge), regenerate reshuffles accent/layout tokens and
+   bumps the seed, everything resettable. The 4 specimens are the same markup;
+   only token classes + the meta readout change per option. */
+(function () {
+  var stage = document.getElementById('stage');
+  var wrap = document.getElementById('wrap');
+  var grid = document.getElementById('grid');
+  var cells = [].slice.call(grid.querySelectorAll('.vcell'));
+  var genBtn = document.getElementById('genBtn');
+  var regenBtn = document.getElementById('regenBtn');
+  var regenBtn2 = document.getElementById('regenBtn2');
+  var resetBtn = document.getElementById('resetBtn');
+  var keepDoneBtn = document.getElementById('keepDoneBtn');
+  var seedVal = document.getElementById('seedVal');
+  var countVal = document.getElementById('countVal');
+  var statusVal = document.getElementById('statusVal');
+
+  var ACCENTS = ['v-violet', 'v-cyan', 'v-rose', 'v-indigo'];
+  var ANAMES  = ['violet', 'cyan', 'rose', 'indigo'];
+  var LAYOUTS = ['lay-a', 'lay-b', 'lay-c', 'lay-d'];
+  var LNAMES  = ['editorial', 'centered', 'stacked', 'poster'];
+  var ALL = ACCENTS.concat(LAYOUTS);
+
+  var generated = false;
+  var offset = 0;                 // rotation applied by regenerate
+  var seed = 1042;
+  var kept = null;                // index of kept cell, or null
+
+  function paint() {
+    cells.forEach(function (cell, i) {
+      var card = cell.querySelector('.vcard');
+      var ai = (i + offset) % 4;                 // accent rotation
+      var li = (i + offset * 2 + Math.floor(i / 2)) % 4; // layout rotation, offset differently
+      ALL.forEach(function (c) { card.classList.remove(c); });
+      card.classList.add(ACCENTS[ai]);
+      card.classList.add(LAYOUTS[li]);
+      cell.querySelector('[data-role="meta"]').textContent = ANAMES[ai] + ' · ' + LNAMES[li];
+    });
+  }
+
+  function updateReadouts() {
+    var visible = cells.filter(function (c) { return !c.classList.contains('gone'); }).length;
+    countVal.textContent = visible + (visible === 1 ? ' variation' : ' variations');
+    seedVal.innerHTML = '<i class="ic ic-sparkle xs"></i> seed #' + seed;
+  }
+
+  function setKept(i) {
+    kept = i;
+    cells.forEach(function (c, k) { c.classList.toggle('kept', k === i); });
+    wrap.classList.toggle('haskept', i !== null);
+    cells.forEach(function (c) {
+      var kb = c.querySelector('[data-role="keep"]');
+      var on = c.classList.contains('kept');
+      kb.classList.toggle('primary', on);
+      kb.classList.toggle('secondary', !on);
+      kb.innerHTML = on ? '<i class="ic ic-check"></i> Kept' : '<i class="ic ic-check"></i> Keep';
+    });
+    keepDoneBtn.disabled = (i === null);
+    statusVal.textContent = (i === null) ? 'pick one' : 'Version ' + 'ABCD'[i] + ' kept';
+  }
+
+  function generate() {
+    generated = true;
+    stage.classList.add('gen');
+    offset = 0; seed = 1042;
+    paint();
+    setKept(null);
+    updateReadouts();
+    regenBtn.disabled = false;
+    resetBtn.disabled = false;
+    statusVal.textContent = 'pick one';
+  }
+
+  function regenerate() {
+    if (!generated) return;
+    offset = (offset + 1) % 4;
+    seed += 1;
+    // bring any dismissed options back for a fresh set
+    cells.forEach(function (c) { c.classList.remove('gone'); });
+    // replay the pop animation
+    cells.forEach(function (c) { c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; });
+    paint();
+    setKept(null);
+    updateReadouts();
+    statusVal.textContent = 'reshuffled · pick one';
+  }
+
+  function dismiss(i) {
+    cells[i].classList.add('gone');
+    if (kept === i) setKept(null);
+    updateReadouts();
+    var visible = cells.filter(function (c) { return !c.classList.contains('gone'); }).length;
+    if (visible === 0) { statusVal.textContent = 'all dismissed · regenerate'; }
+  }
+
+  function reset() {
+    generated = false;
+    stage.classList.remove('gen');
+    offset = 0; seed = 1042; kept = null;
+    cells.forEach(function (c) { c.classList.remove('gone', 'kept'); });
+    wrap.classList.remove('haskept');
+    regenBtn.disabled = true;
+    resetBtn.disabled = true;
+    keepDoneBtn.disabled = true;
+    countVal.textContent = '0 variations';
+    seedVal.innerHTML = '<i class="ic ic-sparkle xs" style="opacity:.6"></i> seed idle';
+    statusVal.textContent = 'ready';
+  }
+
+  // wire the specimens: card click and Keep button both pick; dismiss removes.
+  cells.forEach(function (cell, i) {
+    cell.querySelector('.vcard').addEventListener('click', function () { setKept(i); });
+    cell.querySelector('[data-role="keep"]').addEventListener('click', function (e) { e.stopPropagation(); setKept(i); });
+    cell.querySelector('[data-role="dismiss"]').addEventListener('click', function (e) { e.stopPropagation(); dismiss(i); });
+  });
+
+  genBtn.addEventListener('click', generate);
+  regenBtn.addEventListener('click', regenerate);
+  regenBtn2.addEventListener('click', regenerate);
+  resetBtn.addEventListener('click', reset);
+  keepDoneBtn.addEventListener('click', function () {
+    if (kept === null) return;
+    statusVal.textContent = 'Version ' + 'ABCD'[kept] + ' saved';
+  });
+})();
+</script>
+</body>
+</html>

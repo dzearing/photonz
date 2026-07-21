@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · img-retouch-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* img-retouch-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. Page-local CSS is only
+     the window height and the portrait artwork (gradients and shapes, no
+     stock photo). Every piece of chrome is the shared DS. */
+  #img-retouch-wt .win.shell{height:668px;min-height:0}  /* ---- the portrait · a believable studio headshot from layered gradients ---- */
+  #img-retouch-wt .portrait{position:relative;width:290px;height:386px;border-radius:var(--r4);overflow:hidden}
+  #img-retouch-wt .pt-bg{position:absolute;inset:0;background:radial-gradient(80% 70% at 50% 12%,#4a5b7a,#26314a 55%,#141b2b)}
+  #img-retouch-wt .pt-shoulder{position:absolute;left:50%;bottom:-4%;width:112%;height:30%;transform:translateX(-50%);background:linear-gradient(180deg,#2f3f59,#1c2536);border-radius:52% 52% 0 0;box-shadow:inset 0 6px 18px rgba(0,0,0,.35)}
+  #img-retouch-wt .pt-hair{position:absolute;left:50%;top:9%;width:60%;height:74%;transform:translateX(-50%);background:radial-gradient(58% 60% at 50% 36%,#54402c,#33241a 68%,#1f150e);border-radius:48% 48% 42% 42%}
+  #img-retouch-wt .pt-neck{position:absolute;left:50%;top:60%;width:22%;height:20%;transform:translateX(-50%);background:linear-gradient(180deg,#cf9d74,#b6835c);border-radius:0 0 34% 34%}
+  #img-retouch-wt .pt-face{position:absolute;left:50%;top:19%;width:44%;height:55%;transform:translateX(-50%);background:radial-gradient(60% 56% at 50% 40%,#f2c8a1,#e6b088 60%,#d29a72);border-radius:46% 46% 45% 45%;box-shadow:inset -10px -6px 22px rgba(150,90,55,.30),inset 8px 4px 18px rgba(255,236,214,.35)}
+  #img-retouch-wt .pt-fhl{position:absolute;left:50%;top:5%;width:58%;height:28%;transform:translateX(-50%);background:radial-gradient(circle at 50% 40%,rgba(255,244,228,.55),transparent 70%);border-radius:50%}
+  #img-retouch-wt .pt-cheek{position:absolute;top:50%;width:26%;height:17%;background:radial-gradient(circle,rgba(226,124,108,.45),transparent 68%);border-radius:50%}
+  #img-retouch-wt .pt-cheek.l{left:7%}
+  #img-retouch-wt .pt-cheek.r{right:7%}
+  #img-retouch-wt .pt-brow{position:absolute;top:31%;width:25%;height:4.5%;background:linear-gradient(90deg,#4a3323,#3a2718);border-radius:40%}
+  #img-retouch-wt .pt-brow.l{left:15%;transform:rotate(-6deg)}
+  #img-retouch-wt .pt-brow.r{right:15%;transform:rotate(6deg)}
+  #img-retouch-wt .pt-eye{position:absolute;top:37%;width:22%;height:10%;background:radial-gradient(60% 90% at 50% 45%,#fff,#e9dccb 70%);border-radius:50%;overflow:hidden;box-shadow:inset 0 2px 3px rgba(80,45,25,.4)}
+  #img-retouch-wt .pt-eye.l{left:14%}
+  #img-retouch-wt .pt-eye.r{right:14%}
+  #img-retouch-wt .pt-eye i{position:absolute;left:50%;top:50%;width:52%;height:96%;transform:translate(-50%,-50%);background:radial-gradient(circle at 42% 40%,#7a5636,#3a2414 62%,#1c1109);border-radius:50%}
+  #img-retouch-wt .pt-eye i::after{content:"";position:absolute;left:26%;top:20%;width:26%;height:26%;background:rgba(255,255,255,.9);border-radius:50%}
+  #img-retouch-wt .pt-nose{position:absolute;left:50%;top:44%;width:12%;height:24%;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(150,92,58,.22) 42%,rgba(255,232,208,.28) 58%,transparent);border-radius:40% 40% 46% 46%}
+  #img-retouch-wt .pt-lips{position:absolute;left:50%;top:76%;width:32%;height:9%;transform:translateX(-50%);background:linear-gradient(180deg,#c86a5b,#a84a41);border-radius:44% 44% 52% 52%}
+  #img-retouch-wt .pt-lips::after{content:"";position:absolute;left:8%;top:46%;right:8%;height:1.5px;background:rgba(70,20,18,.55);border-radius:2px}
+
+  /* blemishes + the stray hair the clone stamp removes */
+  #img-retouch-wt .pt-spot{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(176,72,60,.72),rgba(176,72,60,.16) 70%,transparent);z-index:3}
+  #img-retouch-wt .pt-hairline{position:absolute;left:56%;top:26%;width:12%;height:16%;border-left:1.5px solid rgba(38,26,16,.75);border-radius:60% 0 0 40%;transform:rotate(12deg);z-index:3}
+
+  /* tool cursors · these are the app's own brush overlays, not decoration */
+  #img-retouch-wt .brushring{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);
+    border:1.5px dashed var(--accent);border-radius:50%;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent);z-index:6}
+  #img-retouch-wt .brushring::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;transform:translate(-50%,-50%);background:var(--accent);border-radius:50%}
+  #img-retouch-wt .clonesrc{position:absolute;width:30px;height:30px;transform:translate(-50%,-50%);border:1.5px solid var(--comp);border-radius:50%;z-index:6}
+  #img-retouch-wt .clonesrc::before,#img-retouch-wt .clonesrc::after{content:"";position:absolute;background:var(--comp)}
+  #img-retouch-wt .clonesrc::before{left:50%;top:15%;bottom:15%;width:1.5px;transform:translateX(-50%)}
+  #img-retouch-wt .clonesrc::after{top:50%;left:15%;right:15%;height:1.5px;transform:translateY(-50%)}
+  #img-retouch-wt .clonedst{position:absolute;width:34px;height:34px;transform:translate(-50%,-50%);border:1.5px dashed var(--comp);border-radius:50%;box-shadow:0 0 0 4px color-mix(in srgb,var(--comp) 14%,transparent);z-index:6}
+  #img-retouch-wt .clonelink{position:absolute;border-top:1.5px dotted var(--comp);transform-origin:left center;z-index:5;opacity:.85}
+
+  /* dodge and burn shaping, painted on a 50% gray layer */
+  #img-retouch-wt .db{position:absolute;border-radius:50%;z-index:4;pointer-events:none}
+  #img-retouch-wt .db.dodge{background:radial-gradient(circle,rgba(255,246,228,.55),transparent 70%)}
+  #img-retouch-wt .db.burn{background:radial-gradient(circle,rgba(58,32,18,.5),transparent 72%)}
+  #img-retouch-wt .dbmk{position:absolute;z-index:6;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;
+    transform:translate(-50%,-50%);box-shadow:0 3px 8px -2px rgba(0,0,0,.5)}
+  #img-retouch-wt .dbmk.d{background:#f6c453;color:#3a2a08}
+  #img-retouch-wt .dbmk.b{background:#5b3a22;color:#fff}
+  #img-retouch-wt .dbmk .ic{width:10px;height:10px}
+
+  /* before / after compare · the left half is the untouched Base · RAW */
+  #img-retouch-wt .cmpbefore{position:absolute;inset:0;z-index:5;clip-path:inset(0 50% 0 0);filter:saturate(.86) brightness(.96) contrast(.98)}
+  #img-retouch-wt .cmpdiv{position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.9);z-index:7;box-shadow:0 0 10px rgba(0,0,0,.45)}
+  #img-retouch-wt .cmpdiv .grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
+    background:rgba(12,16,24,.72);border:1.5px solid rgba(255,255,255,.85);display:grid;place-items:center;color:#fff}
+  #img-retouch-wt .cmpdiv .grip .ic{width:13px;height:13px}
+  #img-retouch-wt .ctag{position:absolute;top:10px;z-index:7;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    color:#fff;background:rgba(10,12,20,.6);padding:3px 8px;border-radius:6px}
+  #img-retouch-wt .ctag.b{left:10px}
+  #img-retouch-wt .ctag.a{right:10px}
+
+  /* the skin-split readout that frequency separation puts on the canvas */
+  #img-retouch-wt .fqtag{position:absolute;left:50%;bottom:-26px;transform:translateX(-50%);z-index:6;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:640;color:#fff;background:rgba(10,12,20,.6);
+    padding:4px 9px;border-radius:7px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+
+  /* narrow window: the artwork scales instead of being clipped */
+  @container shell (max-width:880px){
+    #img-retouch-wt .portrait{width:224px;height:298px}
+    #img-retouch-wt .brushring{width:34px;height:34px}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="img-retouch-wt">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Retouch a portrait</h2><span class="k">· usage clickthrough · image workspace</span></div>
+
+  <p class="pglead">A pro retouch is a stack of small, honest moves: <b>heal</b>, <b>clone</b>, <b>frequency separation</b>,
+    <b>dodge and burn</b>. Nine real clicks on ONE screen, which never re-renders below. Every move lands on its own layer
+    over an untouched <b>Base · RAW</b>, so the last step is just a toggle that proves it.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtRetouch">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>portrait-01</b> · 4032 × 3024</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-image"></i> RAW · 16-bit</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
+              <div class="mlabel">Layer</div>
+              <div class="menuitem"><i class="ic ic-layers"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
+              <div class="menuitem"><i class="ic ic-sliders"></i> Frequency separation…</div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">View</div>
+              <div class="menuitem"><i class="ic ic-flip-horizontal"></i> Before / after <span class="sc">\</span></div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="artboard-label">4032 × 3024 · portrait-01</div>
+
+              <div class="selwrap">
+                <div class="portrait" id="cvPortrait">
+                  <div class="pt-bg"></div><div class="pt-shoulder"></div><div class="pt-hair"></div><div class="pt-neck"></div>
+                  <div class="pt-face" id="cvFace">
+                    <div class="pt-fhl"></div><div class="pt-cheek l"></div><div class="pt-cheek r"></div>
+                    <div class="pt-brow l"></div><div class="pt-brow r"></div>
+                    <div class="pt-eye l"><i></i></div><div class="pt-eye r"><i></i></div>
+                    <div class="pt-nose"></div><div class="pt-lips"></div>
+                  </div>
+                  <!-- what the retouch removes -->
+                  <div class="pt-spot" id="spotA" style="left:37%;top:44%;width:12px;height:12px"></div>
+                  <div class="pt-spot" id="spotB" style="left:58%;top:52%;width:9px;height:9px"></div>
+                  <div class="pt-spot" id="spotC" style="left:47%;top:31%;width:8px;height:8px"></div>
+                  <div class="pt-hairline" id="strayHair"></div>
+
+                  <!-- dodge and burn, painted on a 50% gray layer -->
+                  <span class="wt-off" id="dbShapes">
+                    <span class="db dodge" style="left:38%;top:22%;width:70px;height:36px"></span>
+                    <span class="db dodge" style="left:29%;top:41%;width:46px;height:32px"></span>
+                    <span class="db dodge" style="left:58%;top:41%;width:46px;height:32px"></span>
+                    <span class="db dodge" style="left:45%;top:40%;width:22px;height:58px"></span>
+                    <span class="db burn" style="left:25%;top:47%;width:40px;height:54px"></span>
+                    <span class="db burn" style="left:64%;top:47%;width:40px;height:54px"></span>
+                    <span class="db burn" style="left:42%;top:68%;width:44px;height:26px"></span>
+                    <span class="dbmk d" id="dbMark" style="left:50%;top:47%"><i class="ic ic-plus"></i></span>
+                    <span class="dbmk b" style="left:29%;top:57%"><i class="ic ic-minus"></i></span>
+                    <span class="dbmk b" style="left:71%;top:57%"><i class="ic ic-minus"></i></span>
+                  </span>
+
+                  <!-- tool overlays: the brush ring and the clone source / destination -->
+                  <span class="brushring wt-off" id="healRing" style="left:41%;top:47%"></span>
+                  <span class="clonelink wt-off" id="cloneLink" style="left:60%;top:36%;width:64px;transform:rotate(24deg)"></span>
+                  <span class="clonesrc wt-off" id="cloneSrc" style="left:60%;top:36%"></span>
+                  <span class="clonedst wt-off" id="cloneDst" style="left:62%;top:31%"></span>
+
+                  <!-- before / after: the left half is the untouched original -->
+                  <span class="cmpbefore wt-off" id="cmpBefore">
+                    <span class="pt-bg"></span><span class="pt-shoulder"></span><span class="pt-hair"></span><span class="pt-neck"></span>
+                    <span class="pt-face">
+                      <span class="pt-fhl"></span><span class="pt-cheek l"></span><span class="pt-cheek r"></span>
+                      <span class="pt-brow l"></span><span class="pt-brow r"></span>
+                      <span class="pt-eye l"><i></i></span><span class="pt-eye r"><i></i></span>
+                      <span class="pt-nose"></span><span class="pt-lips"></span>
+                    </span>
+                    <span class="pt-spot" style="left:37%;top:44%;width:12px;height:12px"></span>
+                    <span class="pt-spot" style="left:58%;top:52%;width:9px;height:9px"></span>
+                    <span class="pt-spot" style="left:47%;top:31%;width:8px;height:8px"></span>
+                    <span class="pt-hairline"></span>
+                  </span>
+                  <span class="cmpdiv wt-off" id="cmpDiv"><span class="grip"><i class="ic ic-move"></i></span></span>
+                  <span class="ctag b wt-off" id="cmpTagB">Before</span>
+                  <span class="ctag a wt-off" id="cmpTagA">After</span>
+                </div>
+                <span class="fqtag wt-off" id="fqTag"><i class="ic xs ic-layers"></i> skin split · color + detail</span>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+              <button class="cmp tool" id="btnCompare" title="Before / after (\)"><i class="ic sm ic-flip-horizontal"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 image inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <button class="tool ovf" id="tLasso" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+                <button class="tool ovf" id="tWand" title="Select subject (W)"><i class="ic sm ic-wand"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tCrop" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                <button class="tool" id="tBrush" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                <button class="tool ovf" id="tEraser" title="Eraser (E)"><i class="ic sm ic-eraser"></i></button>
+                <button class="tool" id="tHeal" title="Heal (J)"><i class="ic sm ic-heal"></i></button>
+                <button class="tool" id="tClone" title="Clone stamp (S)"><i class="ic sm ic-clone"></i></button>
+                <button class="tool" id="tDodge" title="Dodge and burn (O)"><i class="ic sm ic-dodge-burn"></i></button>
+                <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:#f2c8a1"></span>
+                <span class="bg" style="background:#3a2718"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+                <div class="menuitem"><i class="ic ic-lasso"></i> Lasso <span class="sc">L</span></div>
+                <div class="menuitem"><i class="ic ic-wand"></i> Select subject <span class="sc">W</span></div>
+                <div class="menuitem"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+                <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) ·
+                 chromeless: no title bar, no header row (PRODUCT-MODEL 4b req 5).
+                 Shown here as the in-window convenience entry; the canonical
+                 invocation is global. -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(160deg,#4a5b7a,#26314a)"></span>
+                    <span class="cap"><span class="nm">portrait-01</span><span class="ago">8 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">14 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                    <span class="cap"><span class="nm">settings-window</span><span class="ago">3 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">pricing-page</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span>
+                    <span class="cap"><span class="nm">toast-states</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span>
+                    <span class="cap"><span class="nm">nav-bar</span><span class="ago">3 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:148px">
+              <div class="dgrp-h" id="gLayersH">
+                <span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span>
+                <button class="btn ghost icon sm" id="btnLayerMenu" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+                <div class="lrow wt-off" id="lrDb"><i class="ic ic-dodge-burn"></i><span class="nm">Dodge &amp; burn</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow adj wt-off" id="lrFreqD"><i class="ic ic-sliders"></i><span class="nm">Freq · detail</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow adj wt-off" id="lrFreqC"><i class="ic ic-sliders"></i><span class="nm">Freq · color</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrClone"><i class="ic ic-clone"></i><span class="nm">Clone · texture</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrHeal"><i class="ic ic-heal"></i><span class="nm">Heal · spots</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrBase"><i class="ic ic-image"></i><span class="nm">Base · RAW</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- SELECTION, place 3 of 3: Properties, contextual to the tool and the layer -->
+            <div class="dgrp" id="gProps" style="--gh:214px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Select tool</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Pick a tool or a layer to edit it</div>
+
+                <div id="propsBrush" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h" id="pBrushTitle">Heal brush</div>
+                    <div class="irow"><span class="rl">Size</span><span class="field"><span class="v" id="pSize">42 px</span></span></div>
+                    <div class="irow"><span class="rl">Hardness</span><span class="bar"><i style="width:32%"></i></span></div>
+                    <div class="irow"><span class="rl">Flow</span><span class="bar"><i style="width:76%" id="pFlow"></i></span></div>
+                    <div class="irow"><span class="rl" id="pModeLabel">Sample</span><span class="select"><span class="lead" id="pMode">Nearby skin</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <p class="note" id="pBrushNote">Every stroke lands on the layer named in the Layers group, so the Base · RAW pixels are never written to.</p>
+                  </div>
+                </div>
+
+                <div class="section wt-off" id="propsFreq">
+                  <div class="sec-h">Frequency separation <span class="mut">2 layers</span></div>
+                  <div class="irow"><span class="rl">Radius</span><span class="field"><span class="v">6.0 px</span></span></div>
+                  <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead">Gaussian · smooth</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <div class="irow"><span class="rl">Detail</span><span class="select"><span class="lead">High pass · linear light</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <p class="note">Smooth tone on the color layer, keep pores on the detail layer. Both clip to the layers below, so they stay adjustments, not baked pixels.</p>
+                </div>
+
+                <div class="section wt-off" id="propsLayer">
+                  <div class="sec-h">Layer <span class="mut" id="pLayerName">Heal · spots</span></div>
+                  <div class="irow"><span class="rl">Blend</span><span class="select"><span class="lead" id="pBlend">Normal</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <div class="irow"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2). A dock group, never a left dock. -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#4a5b7a,#26314a)"></span><span class="cap"><span class="nm">portrait-01</span><span class="mt">RAW</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#6d5a44,#2b2016)"></span><span class="cap"><span class="nm">portrait-02</span><span class="mt">RAW</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-component"></i></span>No components in this document</div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#f2c8a1,#c98d63)"></span><span class="cap"><span class="nm">Skin / neutral</span><span class="mt">grade</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#2f3f59,#141b2b)"></span><span class="cap"><span class="nm">Studio / cool</span><span class="mt">grade</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:216px;z-index:11">
+            <div class="menuitem"><i class="ic ic-layers"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
+            <div class="menuitem" id="miFreq"><i class="ic ic-sliders"></i> Frequency separation…</div>
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save grade as style</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Pick up the Heal brush"
+          data-cue="#tHeal" data-cue-label="Click the Heal tool" data-cue-place="top"
+          data-tool="#tHeal" data-show="#lrHeal,#propsBrush" data-hide="#propsEmpty"
+          data-select="#lrHeal"
+          data-set="#layerCount=2|#propKind=Heal brush">
+        <div class="wt-cap img">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Heal</b> tool</p>
+          <p class="wt-where">the floating tool bar, under the canvas</p>
+          <p class="wt-res">Heal becomes the active tool, Properties switches to its brush options, and a fresh <b>Heal · spots</b> layer appears above <b>Base · RAW</b> so the repair has somewhere to land.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Paint out the blemishes"
+          data-cue="#healRing" data-cue-label="Drag over each blemish" data-cue-place="right"
+          data-tool="#tHeal" data-select="#lrHeal"
+          data-show="#lrHeal,#propsBrush,#healRing" data-hide="#propsEmpty,#spotA,#spotB,#spotC"
+          data-set="#layerCount=2|#propKind=Heal brush">
+        <div class="wt-cap img">
+          <span class="wt-n">2</span>
+          <p class="wt-do" data-verb="Drag"><b>over each blemish</b> on the cheek and forehead</p>
+          <p class="wt-where">the canvas, with the Heal brush</p>
+          <p class="wt-res">the spots are gone. Heal sampled clean skin next to each one and matched its texture, tone, and lighting. Every repair sits on the <b>Heal · spots</b> layer.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up the Clone stamp"
+          data-cue="#tClone" data-cue-label="Click the Clone stamp" data-cue-place="top"
+          data-tool="#tClone" data-show="#lrClone" data-hide="#healRing"
+          data-select="#lrClone"
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.">
+        <div class="wt-cap img">
+          <span class="wt-n">3</span>
+          <p class="wt-do">the <b>Clone stamp</b></p>
+          <p class="wt-where">the floating tool bar, two slots along from Heal</p>
+          <p class="wt-res">Clone takes over, Properties swaps to its options, and a <b>Clone · texture</b> layer joins the stack. Same tool bar, same slot, different job.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Clone out the stray hair"
+          data-cue="#cloneDst" data-cue-label="Drag from the source onto the stray hair" data-cue-place="right"
+          data-tool="#tClone" data-select="#lrClone"
+          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink" data-hide="#strayHair,#healRing"
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.">
+        <div class="wt-cap img">
+          <span class="wt-n">4</span>
+          <p class="wt-do" data-verb="Drag"><b>from the source crosshair onto the stray hair</b></p>
+          <p class="wt-where">the canvas. <code>⌥</code>-click first to set the source</p>
+          <p class="wt-res">real skin texture is copied over the stray hair, and the dotted link shows the offset the source keeps as you paint. It builds up on <b>Clone · texture</b>, not on the original.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the Layers panel menu"
+          data-cue="#btnLayerMenu" data-cue-label="Click the Layers panel menu" data-cue-place="left"
+          data-tool="#tClone" data-select="#lrClone"
+          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink" data-hide="#strayHair,#healRing"
+          data-pop="#layerMenu"
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set">
+        <div class="wt-cap img">
+          <span class="wt-n">5</span>
+          <p class="wt-do">the <b>panel menu</b></p>
+          <p class="wt-where">the <b>Layers</b> group header, in the right dock</p>
+          <p class="wt-res">the layer commands open: new retouch layer, frequency separation, group. Every panel group carries its own menu in the same corner, so you learn the position once.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Split the skin into two layers"
+          data-cue="#miFreq" data-cue-label="Click Frequency separation" data-cue-place="left"
+          data-tool="#tClone" data-pop="#layerMenu"
+          data-show="#lrFreqC,#lrFreqD,#propsFreq,#fqTag" data-hide="#propsBrush,#strayHair,#cloneSrc,#cloneDst,#cloneLink"
+          data-select="#lrFreqC"
+          data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
+          data-set="#layerCount=5|#propKind=Adjustment">
+        <div class="wt-cap img">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Frequency separation…</b></p>
+          <p class="wt-where">the Layers panel menu you just opened</p>
+          <p class="wt-res">the skin splits into <b>Freq · color</b> and <b>Freq · detail</b>, two adjustment layers that clip to everything below. Tone evens out; the pores stay exactly where they were.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up Dodge and burn"
+          data-cue="#tDodge" data-cue-label="Click Dodge and burn" data-cue-place="top"
+          data-tool="#tDodge"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush" data-hide="#propsFreq,#strayHair"
+          data-select="#lrDb"
+          data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
+          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.">
+        <div class="wt-cap img">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Dodge and burn</b></p>
+          <p class="wt-where">the floating tool bar, next to Clone</p>
+          <p class="wt-res">a <b>Dodge &amp; burn</b> layer is added as 50% gray on soft light, and Properties shows its range and exposure. Nothing on the canvas has changed yet.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Shape the light"
+          data-cue="#dbMark" data-cue-label="Drag along the cheekbones and jaw" data-cue-place="right"
+          data-tool="#tDodge"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush,#dbShapes" data-hide="#propsFreq,#strayHair"
+          data-select="#lrDb"
+          data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
+          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.">
+        <div class="wt-cap img">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag"><b>along the cheekbones, nose bridge, and jaw</b></p>
+          <p class="wt-where">the canvas, with Dodge and burn</p>
+          <p class="wt-res">the face gains depth: the plus marks show where light was added, the minus marks where it was pulled back. It is all paint on the gray layer, so a lower opacity dials the whole thing back.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Compare with the original"
+          data-cue="#btnCompare" data-cue-label="Click Before / after" data-cue-place="left"
+          data-tool="#tSelect"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#dbShapes,#cmpBefore,#cmpDiv,#cmpTagB,#cmpTagA,#propsLayer"
+          data-hide="#propsFreq,#propsBrush,#strayHair"
+          data-activate="#btnCompare" data-select="#lrDb"
+          data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
+          data-set="#layerCount=6|#propKind=Layer|#pLayerName=Dodge &amp; burn|#pBlend=Soft light">
+        <div class="wt-cap img">
+          <span class="wt-n">9</span>
+          <p class="wt-do"><b>Before / after</b></p>
+          <p class="wt-where">the canvas actions cluster, top right of the canvas</p>
+          <p class="wt-res">the divider drops in and the left half falls back to the untouched <b>Base · RAW</b>. Heal, Clone, the two frequency layers, and Dodge &amp; burn each stayed on their own row, so any one of them can be dialled back or switched off months from now.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the untouched original"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Retouching is <b>not a mode</b>. It is the ordinary shell with the image tool inventory in the floating bar, and each move adding one layer to the same stack. Because a filter is just a layer, frequency separation shows up in Layers next to a paint layer and clips to what is below it.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Save the whole stack as a reusable <b>retouch recipe</b> in the Library at scope Styles. Drop it on the next portrait and it re-fits to that face, every layer still there to nudge. The agent can run the recipe and hand you the layers to finish by hand.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Every step here is one API call (<code>tool.heal</code>, <code>layer.frequencySplit</code>, <code>view.compare</code>), so an <b data-target="agent" style="color:#ff7e5f;cursor:pointer">agent</b> could run the pass. How strong should its defaults be, given a believable portrait keeps pores and asymmetry?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch a live control when a person
+     clicks it directly (the walkthrough drives the same state declaratively).
+     Everything else is shared DS behavior. */
+  (function () {
+    var seg = document.querySelector('#img-retouch-wt .scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

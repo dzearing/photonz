@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · foundations</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding ONLY, all prefixed `fo-` so nothing can collide with a
+     DS class. Every block on this page is a KIND 2 SPECIMEN (PRODUCT-MODEL §4c):
+     it depicts a concept, not the app, so it wears NO traffic lights and NO
+     title bar. It is a plain labeled bordered card. Spacing on the 4pt tokens. */
+  #foundations .fo-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #foundations .fo-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #foundations .fo-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #foundations .fo-blk-h .fo-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px}
+  #foundations .fo-blk-h .fo-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="foundations">
+        <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Foundations</h2><span class="k">· primitives, the API, and the reuse tier</span></div>
+        <div class="thesis">
+          Design order (not build order): <b>Primitives → API → UI</b>. A scriptable command model can't be vague, so defining it <i>forces</i> a shared vocabulary. That serialized model <b>is</b> the design system · the thing that keeps every scenario (UI, image, video) predictable and lets <b>Agent drive all of it</b>.
+        </div>
+        <!-- KIND 2 · SPECIMEN. A concept diagram, so it wears no app chrome. -->
+        <div class="fo-blk">
+          <div class="fo-blk-h"><span class="fo-kind">Specimen</span><h3>Primitives <i class="ic xs ic-chevron-right"></i> API <i class="ic xs ic-chevron-right"></i> UI</h3><span class="fo-sub">Design order, not build order</span></div>
+          <div class="flow">
+            <div class="fcol">
+              <h3>Primitives</h3>
+              <p class="sub">Five shared building blocks. Everything is expressed in these.</p>
+              <div class="prim" data-target="paint"><span class="d" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Paint · solid/gradient/image/noise</div>
+              <div class="prim" data-target="effects"><span class="d" style="background:#3ecf8e"></span>Effect stack · glow/shadow/blur</div>
+              <div class="prim" data-target="editor"><span class="d" style="background:#7f9bff"></span>Layer · raster/vector/text/group</div>
+              <div class="prim" data-target="dsys"><span class="d" style="background:#e0a53a"></span>Type · ramp, weight, tracking</div>
+              <div class="prim" data-target="dsys"><span class="d" style="background:#f0685c"></span>Tokens · spacing/radius/color</div>
+            </div>
+            <div class="farrow">→</div>
+            <div class="fcol">
+              <h3>API</h3>
+              <p class="sub">Primitives serialized into one IPC command surface. Agent and the app both speak it.</p>
+              <div class="codeblk"><span class="c">// same commands the UI calls</span><br><span class="k">create_layer</span>({<br>&nbsp;kind:<span class="s">"instance"</span>, of:<span class="s">"Button"</span>,<br>&nbsp;fill:<span class="p">style</span>(<span class="s">"Brand/gradient"</span>),<br>&nbsp;effects:[<span class="p">style</span>(<span class="s">"Card glow"</span>)]<br>})</div>
+            </div>
+            <div class="farrow">→</div>
+            <div class="fcol">
+              <h3>UI</h3>
+              <p class="sub">Every panel &amp; tool is a thin client over the API. Nothing the UI does, Agent can't.</p>
+              <div class="prim" data-target="editor"><i class="ic ic-brush"></i> Inspector → edit fill/effects</div>
+              <div class="prim" data-target="dsys"><i class="ic ic-component"></i> Design system → styles &amp; components</div>
+              <div class="prim" data-target="agent"><i class="ic ic-sparkle"></i> Agent → drive by prompt</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dstier">
+          <div class="dtile"><h4><span class="tg" style="background:var(--warn);color:#fff">Tier 1</span> Tokens</h4><p>Raw values: color, spacing, radius, type scale. The atoms everything references.</p></div>
+          <div class="dtile"><h4><span class="tg" style="background:var(--accent);color:#fff">Tier 2</span> Styles</h4><p><b style="color:var(--ink)">Named</b> Paint / Effect / Type. Edit "Brand gradient" once → every use updates.</p></div>
+          <div class="dtile on-comp"><h4><span class="tg" style="background:var(--comp);color:#fff">Tier 3</span> Components</h4><p>Reusable layer trees you <b style="color:var(--ink)">instance and re-paint</b> with any Style. Figma-style, Photonz-native.</p></div>
+        </div>
+
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>Five primitives, plus a <b>design-system tier</b> on top: Tokens → Styles → <b>Components</b>. This is how creation stays consistent instead of sprawling.</p></div>
+          <div class="c"><div class="lab g2">Reuse, like Figma</div><p>A <b>Style</b> is a named primitive; a <b>Component</b> is a reusable, paintable layer tree. Both are first-class in the API, so Agent composes with them too.</p></div>
+          <div class="c"><div class="lab g2">Try it</div><p>Click a <b>primitive</b> to jump to its surface, or open the <b>Design system</b>.</p></div>
+        </div>
+      </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

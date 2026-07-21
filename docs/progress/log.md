@@ -1411,3 +1411,401 @@ replaced + .photonz sidecar written, window closes, reopening shows the drawn li
 Don't Save → closes, file untouched; Cancel → window stays open. Video editor checked: trim/crop
 auto-persist to the .photonzedits sidecar on every edit, so it has no silent-discard problem —
 no prompt needed there. 745 tests green.
+### 2026-07-20 (cont.) — Creation-vision study: UX foundation phase
+
+Resumed the creation-vision mock study loop (docs/design/mocks/study-tasks.json).
+The study pivoted (user review) from fanning out feature pages to establishing ONE
+coherent product foundation every page conforms to.
+
+DONE — task `ux-foundation-doc` (shared/UX-PATTERNS.md v1.0): resolved all six
+section-10 review open questions into baked decisions D1-D6 and propagated them
+into sections 2/6/7:
+- D1 media pool = left-dock Library panel scope=Media (open via toolbar Library /
+  cmd+opt+L / cmd+K; add via +Import, drag-drop, Capture).
+- D2 ONE Library panel: two left-dock tabs (Layers|Library) + internal segmented
+  scope switch (Media/Components/Styles/Assets); no per-scope docks.
+- D3 mock renders a compact command surface + cmd+K, NOT a faked native macOS menu
+  bar (shipping app keeps the real menu bar; mock doesn't draw it).
+- D4 canonical ordered tool-strip inventory per app (UI/image/video/draw); shared
+  tools (Select/Hand/Zoom/Text/Shape/Measure) keep same glyph+slot everywhere.
+- D5 walkthroughs embed the REAL shell (may reduce, never relocate a surface).
+- D6 adopt cmd+K command palette as the fourth equal command entry.
+
+IN PROGRESS — task `app-shell-spec`: dispatched a subagent to formalize the ONE
+reusable app shell in shared/photonz-ds.css (extending existing .win/.edit/
+.toolbar/.timeline, adding Layers|Library tabs + Library scope switch + command
+surface/cmd+K per D1-D6), build pages/app-shell.html, document composition in
+shared/AGENTS.md.
+
+NEXT (foundation order): icon-library-consolidate -> ux-audit-run -> ux-reconcile.
+Both remaining shared-DS tasks are sequential (single shared CSS file).
+
+### 2026-07-20 (cont.) — Study foundation: app shell + icon library consolidation
+
+DONE — `app-shell-spec`: one reusable shell formalized in shared/photonz-ds.css
+(extends existing .win/.edit/.toolbar/.timeline; added .dnav/.dtab left-dock tabs,
+Library scope switch, .libtile grid, .cmdk ⌘K launcher, command surface via
+ic-more). pages/app-shell.html reference page (D4 tool strip, Layers|Library tabs,
+3-place selection). Composition documented in AGENTS.md.
+
+DONE — `icon-library-consolidate`: (a) fixed shared-DS icon violations (ds.js
+'▾' -> injected ic-chevron-down; .transition '⤫' -> masked ic-x; added ic-library;
+fixed a lang-resize solid-box .ic bug). (b) added 9 recurring glyphs to shared
+(chevron-left, star, trash, group, flip-horizontal/vertical, align-left/center/
+right). (c) 6 parallel disjoint subagents swept 31 pages (~250 glyph->.ic-*
+conversions); 10 keyboard-only pages excluded. (d) durable AGENTS.md carve-out:
+keyboard-shortcut symbols in .kbd/.sc/<code> + prose connectors are NOT icons.
+(e) standardized all backchips onto ic-chevron-left across 17 pages (dropped
+scaleX(-1) flips + literal '‹'). (f) adopted ic-star/ic-trash/ic-group. All 63
+pages 200, css 200, js OK; only legit carve-outs remain (values, <kbd>, comments,
+prose breadcrumbs).
+
+Foundation tasks remaining: ux-audit-run (report-only, all pages) -> ux-reconcile
+(conform pages to shell/nav/selection/library/icon per D1-D6). Discovered
+follow-ups logged: dedupe-dock-tabs, icon-semantic-refine.
+
+CHECKPOINT: paused before audit+reconcile to confirm D1-D6 direction with the user
+(reconcile reshapes all 63 pages around those decisions).
+
+### 2026-07-21 — Study REDIRECT: unified product model + refine loop (user-approved)
+
+User stepped back (was disoriented by the autonomous multi-agent run; oriented them,
+then he set direction). Key: the mock "is pretty but not cohesively designed." He's a
+seasoned app architect and wants a foundation-first REFINE LOOP with clear success
+criteria, not feature sprawl. Approved a unified product model answering "how it all
+fits together".
+
+DONE:
+- shared/PRODUCT-MODEL.md (canonical, approved): ONE document engine; Image/UI/Video are
+  workspaces (lenses) over one layer stack (raster/vector/text/component/adjustment/
+  group); adjustment+filter layers apply to UI frames exactly as photos; Video = doc +
+  time (timeline bottom dock when time exists); maps to real Photonz image+video surfaces
+  + history overlay (⌘⇧H) launcher; Tokens->Styles->Components->Design Systems w/ semantic
+  binding (system.extract(url), Library scope=Styles catalog, agent re-theme); 6 success
+  criteria; 3-zone IA (App Design / Usage clickthroughs / Prototypes & Ideas).
+- ux-audit of all 63 pages clustered into ux-audit-clusters.md (7 patterns A-G + copy tail;
+  clean: app-shell/ds-modes/lang-resize/lang-spacing).
+- Re-planned study-tasks.json around the loop: product-model-doc(done) -> foundation-adjust
+  -> ia-restructure -> conform-pass -> entries-pass -> reaudit. Updated currentGoal/resume.
+- Memory saved: creation-vision-product-model, refine-loop-working-style.
+
+IN PROGRESS (parallel, disjoint files):
+- foundation-adjust (shared DS + app-shell.html): workspace switcher (Image/UI/Video lens),
+  timeline-when-time, adjustment-layer as first-class layer type, +missing glyphs, UX-PATTERNS
+  §1 alignment.
+- ia-restructure (index.html + new pages/app-design.html): 3-zone nav, fold walkthroughs.
+
+NEXT: conform-pass (batched disjoint subagents, clusters A-G) -> entries-pass (one blank-slate
+clickthrough per surface, one template) -> reaudit vs the 6 criteria.
+
+### 2026-07-21 (cont.) — Layout system built; conform pass wave 1
+
+USER REQUIREMENTS (now PRODUCT-MODEL §4b + criteria 7-8): responsive at every width;
+every dock/panel group collapsible; Photoshop-like resizable panes; long lists scroll
+inside their own bounded group; history-first capture->edit loop preserved; new
+capability must reuse one small pattern vocabulary. This RESOLVED the docked-vs-floating
+fork: ONE scalable dock system, lean by default, grows by collapsing/resizing/scrolling.
+
+DONE — `layout-system` (shared DS + app-shell re-base):
+- New vocabulary: `.win.cq` (container-query root), `.edit.lean`, `.cnv`, `.pdock`,
+  `.dgrp`/`.dgrp-h`/`.dgrp-b` (collapsible + own bounded scroller), `.splitter.v/.h`
+  (drag + keyboard resize), `.drail`/`.drailtab`, `.cnv .tbar` (floating tool bar w/
+  `.ovf`+`.tbar-more` overflow, `.swpair`, `.zoomctl`), `.sheet.down` (slide-down
+  overlay), `.filmstrip`/`.filmcard` (history), `.transport`/`.scrub`. New icons:
+  volume, sidebar, pin, copy.
+- JS (progressive enhancement): group collapse, splitter drag/keys, dock open/closed/
+  overlay, rail-tab restore, sheet toggle+Esc, popover, radio-select, zoom sync, scrub.
+- Breakpoints: <=880px dock rails+overlays & toolbar overflows; <=620px rail drops
+  labels. Container-query based (responds to WINDOW width, not viewport).
+- app-shell.html re-based: canvas-dominant lean shell, right dock of 4 groups, splitter,
+  rail, floating tool bar, history overlay specimen (front door), video/transport
+  specimen, live narrow-window specimen, panel-group anatomy. Old left dock removed.
+- UX-PATTERNS v1.1 (§1 9 regions + responsive contract, §3 7-piece taxonomy; D1/D2
+  amended - Library is a right-dock group or overlay; D3 restated - native macOS menu
+  bar is the real command surface, ⌘K secondary). AGENTS App-shell section rewritten.
+- Verified: css/js/app-shell 200, node --check OK, all 63 pages still 200 (no collisions).
+
+IN PROGRESS — `conform-pass` wave 1 (4 disjoint subagents, 24 pages): image core
+(editor/image/redline/img-bg-remove/img-masking/img-grade-wt), video core (video/
+captions/speed/transitions/audio/compositing), UI core (components/ui-nested/
+autolayout/grid/prototype/variants), draw+library (brush-library/brush-editor/draw/
+draw-boolean/dsys/vector-wt). ux-audit-clusters.md got a "TARGET UPDATED" banner so
+stale left-dock guidance isn't followed.
+
+NEXT: conform wave 2 (walkthroughs + lang-* + remainder) -> entries-pass -> reaudit.
+
+### 2026-07-21 (cont.) — Operated walkthroughs, model corrections, shared defect fixes
+
+USER CRITIQUE that reframed the work: walkthroughs were "window after window",
+"standalone ideas that don't fit into the application", "title bars with random goop
+in them, missing panels, missing toolbars, just stuff". And the audit question he
+wants asked first: "does this screen make sense with respect to the screens we will
+have designed, or is it just a sketch of an idea?"
+
+MODEL ADDITIONS (shared/PRODUCT-MODEL.md, now 10 success criteria):
+- §4c THE SCREEN CONTRACT: every window is either a complete app screen (real shell,
+  and TITLE BAR = DOCUMENT IDENTITY ONLY, never a lesson title) or an honest specimen
+  (no traffic lights, no fake title bar). Idea sketches go to Prototypes & Ideas.
+- §4d USAGE WALKTHROUGHS = ONE APP, OPERATED: one persistent shell, state changes per
+  step, click cue anchored to the REAL control, fixed Click/Where/Result caption.
+- §4e SHELL SURFACES inventory: systray menu (the app's real root, with its command
+  list), history overlay, CAPTURE TOAST (thumbnail + green check + "Copied to
+  clipboard!", stacking), editor windows.
+- §4f MODES VS STARTING POINTS: UI and image are NOT different apps and there is no
+  live mode toggle. The fork is at creation ("New" picks the resource type); once in a
+  document tools/Properties are contextual to the SELECTED LAYER. Video differs only
+  because time is a document property. => the .wsw workspace switcher is SUPERSEDED.
+- §1 VECTOR STROKES ARE BRUSHES: a path's stroke renders through the brush engine while
+  staying editable bezier geometry; closed paths take a fill. Rationale (user's): lets
+  the AGENT draw precise beziers with a hand-drawn feel, and restyle by swapping one
+  brush.
+- History corrected: GLOBAL surface (⌘⇧H or the menu-bar icon, works with no window
+  open) and CHROMELESS (no title bar / header), with exact anatomy from a screenshot.
+
+BUILT + VERIFIED:
+- Operated-walkthrough engine in shared DS (.wt/.wt-stage/.wt-step/.wt-cue + directive
+  table). ds-build-wt and video-create-wt rebuilt on it. INDEPENDENTLY VERIFIED: shell
+  DOM node identical across all 11 steps (never re-renders) and cue centre lands on
+  target centre dx=0/dy=0 on every step (measure AFTER ~500ms settle; earlier sampling
+  gives false offsets).
+- Chromeless history pane rebuilt to the shipping anatomy (8 cards, all timestamped,
+  selected card reveals copy/edit/pin/delete, no header).
+- All 4 conform batches done; 39/64 pages in the lean shell.
+
+SHARED DEFECTS FIXED (each found by conform agents, all central so they fix every page):
+- .dgrp.grow starvation (reported 3x independently): .pdock now overflow-y:auto +
+  .dgrp.grow>.dgrp-b min-height:88px. VERIFIED editor.html Library body 8px -> 139px.
+- .track .lane.rlane{display:block} promoted to shared (6 video pages each carried the
+  identical workaround).
+- @container gotcha documented in AGENTS.md (only matches descendants of .win.cq).
+- brush-library sample stroke rendered 0x250 = INVISIBLE; fixed (definite width belongs
+  on the .selwrap grid child). VERIFIED 560x250, 21512 painted px.
+- img-masking luminosity buttons never worked (data-target is a reserved global nav hook
+  that swallows clicks). video-transitions progress scrubber was a no-op.
+
+PROCESS LESSON: HTTP 200 + class-grep passed a visibly broken page. ux-audit-agent.md
+§0a now REQUIRES browser measurement (zero-size elements, unpainted canvases, overflow)
+and §0/§0b/§0c add real-screen-vs-sketch, operated-walkthrough, and DS class-collision
+checks.
+
+RUNNING: brush-stroked vectors (draw, vector-wt); screen-contract passes (concept pages,
+lang-* pages); systray menu + capture toast; 4 more walkthrough conversions.
+PENDING: sweep the superseded .wsw off ~25 pages; convert walk + capture-wt (need the
+toast/systray first); re-audit vs the 10 criteria.
+
+### 2026-07-21 (cont.) — Slideshows eliminated; collision root-cause fixed
+
+MILESTONE: **zero legacy `.wsteps` slideshows remain** (was 12). 12 operated
+walkthroughs, 52/64 pages conformed to the lean shell, 64/64 serving, 0 em dashes,
+0 "Claude", 0 inert span.tool.
+
+FINAL CONVERSIONS (walk, capture-wt, vector-wt): all three now open OUTSIDE any
+window on the shared `.desk`/`.mbar` menu-bar agent, so they teach the real loop:
+menu-bar icon -> Capture Region ⇧⌘4 -> capture toast ("Copied to clipboard!") ->
+Show History ⇧⌘H -> Open -> the editor window appears. capture-wt renders ONE
+settings-pane drawing instanced at three scales (desktop / toast thumbnail /
+editor canvas) from one coordinate space, so the capture is literally the same
+artwork everywhere. Verified: shell node `===` across every step at 1280 AND
+620px, worst cue offset 0px, 0 horizontal overflow.
+
+ROOT CAUSE FIXED - page-local class collisions with the DS. This single cause
+produced TEN separate breakages: `.bar`/`.btn` swallowed a selection ring
+(ui-grid); `.ghost` turned a control into a 300px absolutely-positioned dashed box
+(ui-nested); `.shot` blew up the capture toast; `.meta` overrode an effect row
+(language); `.sheet` `.rail` `.timeline` `.panel` `.ramp` `.val` `.body` `.dsub`
+each broke a different page. Every one presented as a mystery layout bug.
+- Renamed the agent-preview component `.ghost` -> `.aghost` (it was squatting a
+  generic name, which is why `.btn.ghost` needed a rescue hack).
+- Generated the real list (141 bare DS class names) and put a RESERVED CLASS NAMES
+  contract at the top of photonz-ds.css with the actual failure cases.
+- Put the prefix rule in AGENTS.md where authors read it, plus the `data-target`
+  hazard and the `.wt-step` attribute-collision trap.
+
+OTHER SHARED FIXES THIS ROUND: titlebar responsive contract lifted into shared
+(ellipsis instead of 3-line wrap; lens + size drop before the name) and the local
+copy deleted from lang-frame; `.pdock` added to the cue scroll-listener list
+(cue desynced ~8px when the dock scrolled); PRODUCT-MODEL §4e gained the LAUNCHER
+window as a fifth shell surface (home.html is a window with no document, which the
+screen contract had no slot for; ties to the user's landing-page idea).
+
+MODEL now: 10 success criteria, §4b layout requirements, §4c screen contract,
+§4d operated walkthroughs, §4e five shell surfaces, §4f UI-and-image-are-not-modes,
+§1 vector-strokes-are-brushes.
+
+PENDING: ds-consolidated-cleanup (11 accumulated shared-DS items incl. `.grow`
+must-be-last guard, `.chip.on`, `.efx .en` button reset, `.spec` specimen-card
+primitive, artboard primitive, `.canvas.pan`, `.timeline` max-height, `.dgrp-b`
+scroll affordance, reserved-name prefixing of `.ramp`/`.bar`/`.tag`/`.off`);
+sweep the superseded `.wsw` workspace switcher off ~25 pages (§4f); re-audit vs the
+10 criteria; wrap remaining title-bar context in `<span class="meta">`.
+
+### 2026-07-21 (cont.) — VR2 + VR3: one canvas, one panel ergonomics
+
+Two visual-rule tasks off the list, both shared-DS-first with the page-local
+workarounds they replace DELETED in the same pass.
+
+**VR2 · one canvas treatment (rule 5).** `.canvas` is now the single canonical
+canvas: minor grid + a major grid every 5 cells + the radial artboard, every
+size derived from `--zoom` x `--grid-cell`. The zoom slider drives it, scoped
+to the canvases in its OWN `.cnv`/`.edit`/`.wt-step`/`.win`/`.shell` — verified
+on app-shell that slider 1 moved only its own canvas (22 -> 66px at 300%,
+11px at 50%) while the page's three other canvases stayed put. New knobs
+`--artboard-glow` / `--artboard-ink` / `--artboard-bg` replace a hardcoded
+`#141826`, and `.canvas.mini` is the inline specimen variant. All four
+hand-rolled grid canvases are gone (`grep artboard-grid pages/` = 0):
+language, export-share, lang-elevation, ds-modes.
+
+**VR3 · panel ergonomics (rules 4, 6, 7, 9).** Counts are badges beside their
+label instead of numbers stranded at the header's right edge. `.libtools`
+wraps by flex basis, so a dock stacks the search field and the button while a
+wide window keeps them on one row. Any `.seg` in a panel is now an auto-fit
+grid whose column floor `--segmin` is MEASURED from its widest label — flex
+had wrapped a 6-item scope 4 + 2 and stretched the survivors to 115px. And
+every dock with 2+ groups grew a sticky PANELS footer whose checklist is built
+from that dock's own groups: 58 managers across 64 pages, zero page markup.
+
+**Seven pages had each independently invented the same
+`display:flex;width:100%` + `button{flex:1}` seg workaround.** That is the
+whole argument for foundation-first in one line. All seven deleted, plus 34
+inline `style="width:100%"` seg hacks and img-masking's `.seg.wrap`.
+
+PROCESS: built a real browser sweep (`shared/audit-sweep.js`) that loads all 64
+pages into hidden iframes from one devtools call. It caught something a
+screenshot never would: a stray `*/` in photonz-ds.css had silently deleted the
+rule after it, and every page still looked plausible because another rule
+covered for it. The sweep now ASSERTS a shared rule is in effect
+(`getComputedStyle(seg).display === 'grid'`), not merely that the result looks
+reasonable. Final state: 64 pages, 97 panel segs, 0 truncated/uneven chips,
+0 stranded counts, 0 clipped toolbars, 0 zero-size canvases, 0 overflow.
+
+NEEDS A CALL (in study-tasks.json `discovered`): zoom scales the grid but not
+the artwork, so a "260%" readout can sit next to an unchanged 420x260 card —
+the honest fix is scaling `.canvas>.selwrap` and counter-scaling the selection
+chrome by 1/--zoom (a no-op at 100%). Also: Library tiles have no vertical
+budget (pre-existing, for vr4), and Import exists twice in the Library group.
+
+NEXT: vr4-library-tiles (rule 8), then vr5-walkthrough-nav (rule 10), then
+vr6-page-sweep. Backlog after that: ds-consolidated-cleanup, the `.wsw` sweep,
+the 9 radial-only "stage" surfaces that are still per-page canvases, reaudit.
+
+**VR4 · library tiles (rule 8).** `.libgrid` was `repeat(3,1fr)` — a FIXED
+column count, so a 268px dock produced 76px tiles with a 46px thumb and an
+ellipsised name. Now `repeat(auto-fill,minmax(96px,1fr))`: the dock decides how
+many cards fit (2 at rest, 4 widened). `auto-fill` deliberately, not `auto-fit`
+— with two tiles in a wide container `auto-fit` would stretch each to half the
+width, while `auto-fill` keeps them card-sized. Thumbnails are
+`aspect-ratio:16/10` instead of a fixed strip, so they grow with the tile.
+Across 64 pages / 209 visible tiles: smallest tile is 107px (was 76), zero
+ellipsised names.
+
+Tile HEIGHT is a real fork and is left for review
+(`study-tasks.json` → discovered → `library-vertical-budget-fork`): the group's
+own chrome (scope chips 29px + stacked toolbar 72px) eats more than a whole
+tile row, so raising the `.grow` floor alone just makes the dock scroll and
+pushes the Library below the fold. The space has to come from removing
+duplication — the body's Import button duplicates the header `+`, and the scope
+chips restate the header's `[Media]` badge. Both are ~44-page visible changes,
+so they want a yes first.
+
+**VR4 follow-up — the Library actually fits now.** You picked "drop the body
+Import button", so it came out of 39 pages — only where the group HEADER
+already carries a `+` Import menu, so no affordance was lost anywhere. Three
+groups kept theirs (img-grade-wt, lang-panels ×2) because their headers have no
+menu to move it to; logged for vr6. That cut the Library chrome from 102px to
+77px, and with the `.grow` floor at 244/200 a WHOLE card row is fully visible
+with the next row peeking as scroll affordance (whole=2, cut=0 on app-shell,
+editor, image, video, dsys, paint, states, typography).
+
+One latent bug fell out of this: `--segmin` was measured with `scrollWidth`,
+which returns `max(content, clientWidth)` — so once a chip was wider than its
+text it reported its own box, the floor grew to match, and a 4-chip scope that
+fitted one row wrapped to two. It now measures with `width:max-content`, which
+cannot drift with layout.
+
+FINAL SWEEP (all 64 pages): 72 panel segs, 209 tiles, 58 dock managers, and
+zero of — truncated chips, uneven chips, tile slivers, ellipsised tile names,
+stranded counts, clipped toolbars, zero-size canvases, horizontal overflow.
+Smallest tile 107px (was 76).
+
+### 2026-07-21 (cont.) — VR5: walkthrough nav is one box, Reset/Back/Next together
+
+The controls were a detached strip floating under the caption card, with Back
+stranded at the far left and Next at the far right — the whole page width
+between two buttons you alternate between. Fixed in the shared DS with no page
+edits across all 12 walkthrough pages:
+
+- **Consolidated.** `.wbar` was authored as a SIBLING of `.wt-steps`. `ds.js`
+  now wraps both in a generated `.wt-panel`; the border, radius and background
+  moved from `.wt-cap` up to the panel and the bar gets a top divider, so the
+  caption and the controls are literally one box.
+- **Order.** Deleted `.wbar .wt-reset{margin-left:auto}` — that was the split.
+  `ds.js` reorders the bar's children **in the DOM** (dots · label · Reset ·
+  Back · Next) rather than with CSS `order`, which would move them visually
+  while leaving tab order telling a different story. `.wlabel` takes
+  `margin-right:auto`, so the trio sits together at the right edge.
+- **Arrow keys.** Bound per `.wt`. One walkthrough on the page responds without
+  needing focus first; more than one requires focus, because guessing would
+  steal arrows from the wrong widget. Never intercepts arrows aimed at an
+  input/textarea/select/contenteditable, or any modifier combo.
+
+VERIFIED on all 12 pages: DOM order Reset < Back < Next, x-order 900 < 990 <
+1077, trio adjacent and flush to the bar's right edge, bar and caption both
+inside the panel's box, ArrowRight advances and ArrowLeft goes back, 0 overflow.
+
+NEXT: vr6-page-sweep. Context should be reset before starting it.
+
+### 2026-07-21 (cont.) — VR6: seven primitives promoted, 161 local rules deleted
+
+Scouted before reading: instead of opening 64 pages, a duplicate-rule scan
+grouped every page's `<style>` rules by normalised selector+body. That said the
+pages had ALREADY adopted VR1-VR5 (those rules landed centrally and swept
+clean), so the real content of vr6 was the page-local **duplication** left
+behind. Seven things were being written out by hand, byte-identical, in 4-37
+pages each:
+
+| primitive | pages | what it is |
+| --- | --- | --- |
+| `.win.shell .canvas{min-height:0}` | 37 | the canvas has no height floor inside a shell |
+| `.mlabel` | 35 | 9px uppercase caption over a run of rows |
+| `.pglead` | 32 | the sentence under the page title |
+| `.rl` | 8 | an inspector row's label, in ANY row container |
+| `.setrow` | 5 | label left, control right |
+| `.seg.stack` | 5 | a segmented control allowed to wrap |
+| `.actstack` | 4 | stacked full-width actions |
+
+All seven now live in `shared/photonz-ds.css` (`VR6 · PROMOTED PRIMITIVES`
+block). `vr6-strip.py` then deleted 161 local rules from 45 pages; it only cuts
+a rule when the selector AND the whitespace-normalised body match exactly AND
+the rule sits at top level, never inside `@media` (a nested copy is a
+responsive override with a different meaning). Four genuinely divergent bodies
+were left alone and are named in the script's output.
+
+Each promoted name was an **unprefixed bare local class** — the collision class
+documented at the top of the DS. Promoting it reserves the name and removes the
+hazard in one move, so this pass is also a down payment on `fix-class-collisions`.
+
+VERIFIED THREE WAYS, not by looking at it:
+1. **Geometry diff** of all 35,582 elements across all 64 pages, before vs
+   after. Identical within 2px everywhere except the animated `.pulse` cue and
+   lang-motion's animated demo. Adding the DS rules was separately proven a
+   pure no-op before any deletion.
+2. **Computed-style assertions** that each promoted rule is actually IN EFFECT
+   on the pages that no longer declare it — 33 `.pglead`, 112 `.mlabel`, 33
+   `.rl`, 13 `.setrow`, 5 `.actstack`, 5 `.seg.stack`, 49 shell canvases.
+   (Presence in the file proves nothing: a stray `*/` once silently deleted a
+   rule and every page still looked fine.)
+3. **The standing audit sweep**: 64 pages, 72 segs, 58 dock managers, zero
+   issues.
+
+Also, mid-task, the walkthrough nav bar moved to the TOP of `.wt-panel`, above
+the caption (user). The controls are what you drive a walkthrough with, so they
+have to hold one fixed position instead of sliding down the page whenever a
+step's caption runs longer; bar-first also makes them the panel's first tab
+stops. `ds.js` appends bar-then-steps, the divider became `border-bottom`, and
+all 11 walkthrough pages verify bar-first in the DOM, above and flush to the
+caption, order dots · label · Reset · Back · Next.
+
+NEXT: `vr6-tier2-primitives` (logged) — `.rng`, `.rrow` (needs `--rl-w`/`--rv-w`
+rather than a straight lift) and the video timeline, which is a real component
+with real per-page extension. Then the older backlog: ds-consolidated-cleanup,
+supersede-workspace-switcher, reaudit. Reset context before starting.

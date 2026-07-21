@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-color</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ---- Page-local. Deep dive on ONE pattern: color roles + interaction states.
+         Everything composes the shared DS; spacing on 4pt tokens only. ---- */
+  #lang-color .intro{font-size:13px;line-height:1.55;color:var(--dim);margin:0;max-width:760px}
+  #lang-color .intro b{color:var(--ink)}
+
+  /* the two-column pattern block: specimen left, name+rule right */
+  #lang-color .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
+  #lang-color .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
+  #lang-color .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-color .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-color .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
+  #lang-color .rule{font-size:11.5px;line-height:1.5;color:var(--dim);margin:0}
+  #lang-color .rule b{color:var(--ink);font-weight:600}
+  #lang-color .dd{display:flex;flex-direction:column;gap:var(--s1);margin-top:var(--s1)}
+  #lang-color .dd span{font-size:10.5px;line-height:1.4;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-color .dd .do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-color .dd .no::before{content:"Not";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-color .api{font-size:10.5px;line-height:1.45;color:var(--faint);margin-top:auto;padding-top:var(--gap-sm);border-top:1px solid var(--line-soft)}
+  #lang-color .api code{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+  #lang-color .api b{color:var(--dim);font-weight:600}
+
+  /* ---- Anatomy: one swatch card, parts labeled ---- */
+  #lang-color .swcard{width:230px;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--r3);box-shadow:var(--shadow);overflow:hidden}
+  #lang-color .swcard .fill{height:64px;position:relative}
+  #lang-color .swcard .fill .role{position:absolute;left:var(--pad-sm);bottom:var(--gap-sm);font-size:10px;font-weight:660;letter-spacing:.06em;text-transform:uppercase;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  #lang-color .swcard .body{padding:var(--pad-sm)}
+  #lang-color .swcard .tok{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:560}
+  #lang-color .swcard .desc{font-size:10.5px;color:var(--dim);line-height:1.4;margin:var(--s1) 0 var(--gap-sm)}
+  #lang-color .swcard .vals{display:flex;gap:var(--gap-sm)}
+  #lang-color .swcard .vals .v{flex:1;display:flex;align-items:center;gap:var(--s2);font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  #lang-color .swcard .vals .v i{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.18);flex:none}
+  /* callout labels around the anatomy card */
+  #lang-color .anat{display:grid;grid-template-columns:150px 230px;gap:var(--gap);align-items:center;justify-content:center;padding:var(--s2) 0}
+  #lang-color .calls{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-color .call{font-size:10.5px;color:var(--dim);line-height:1.35;border-left:2px solid var(--accent-line);padding-left:var(--gap-sm)}
+  #lang-color .call b{color:var(--ink);font-weight:600;display:block;font-size:11px}
+
+  /* ---- Variants: the full role set as a swatch grid ---- */
+  #lang-color .roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--gap-sm)}
+  #lang-color .role-c{border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:var(--panel)}
+  #lang-color .role-c .sw{height:34px;border-bottom:1px solid var(--line-soft)}
+  #lang-color .role-c .lb{padding:var(--gap-sm) var(--pad-sm)}
+  #lang-color .role-c .lb .n{font-family:var(--mono);font-size:10.5px;color:var(--ink);font-weight:560}
+  #lang-color .role-c .lb .r{font-size:9.5px;color:var(--faint);margin-top:1px}
+  #lang-color .grouplab{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:660;margin:var(--gap-sm) 0 var(--s1)}
+  #lang-color .grouplab:first-child{margin-top:0}
+
+  /* text-role specimen: legibility on panel */
+  #lang-color .textrow{display:flex;gap:var(--gap);flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:var(--pad-sm)}
+  #lang-color .textrow span{font-size:12.5px}
+
+  /* ---- States: one control through every interaction state ---- */
+  #lang-color .staterow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;align-items:center}
+  #lang-color .obtn{border:1px solid var(--line);background:var(--panel);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm);font-size:11.5px;font-weight:560;color:var(--ink);white-space:nowrap}
+  #lang-color .obtn.solid{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  #lang-color .stategrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--gap-sm)}
+  #lang-color .stcell{border:1px solid var(--line);border-radius:var(--r2);background:var(--panel);padding:var(--pad-sm);display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm);text-align:center}
+  #lang-color .stcell .lb{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:660}
+  #lang-color .stcell .tk{font-family:var(--mono);font-size:9px;color:var(--dim)}
+
+  /* ---- Light / dark side-by-side. Scoped theme wrappers redefine the DS
+         tokens so both render true regardless of the viewer's theme. ---- */
+  #lang-color .compare{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm)}
+  #lang-color .themebox{border-radius:var(--r3);overflow:hidden;border:1px solid var(--line)}
+  #lang-color .themebox .cap{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:660;padding:var(--s2) var(--pad-sm);color:var(--dim);background:var(--panel-2);border-bottom:1px solid var(--line)}
+  #lang-color .themebox .in{padding:var(--pad-sm);background:var(--stage)}
+  #lang-color [data-theme="light"]{
+    --stage:#e9ebf0;--panel:#fbfcfe;--panel-2:#f1f3f7;--chrome-solid:#f6f7fa;
+    --ink:#1a1c22;--dim:#5c6371;--faint:#8b92a1;
+    --line:#e2e4ea;--line-soft:#eceef3;--line-strong:#d4d7df;
+    --accent:#4c6fff;--accent-ink:#fff;--accent-soft:#e9edff;--accent-line:#c4cffe;
+    --comp:#9a5cff;--comp-soft:#efe7ff;--comp-line:#d8c4ff;
+    --good:#1a9e6a;--warn:#b7791f;--crit:#d0453b;
+  }
+  #lang-color [data-theme="dark"]{
+    --stage:#08090d;--panel:#14161d;--panel-2:#181b22;--chrome-solid:#1b1e26;
+    --ink:#e7e9ee;--dim:#9aa1af;--faint:#666d7b;
+    --line:#262a33;--line-soft:#1e212a;--line-strong:#333846;
+    --accent:#7f9bff;--accent-ink:#0b0d14;--accent-soft:#1a2033;--accent-line:#2f3a5e;
+    --comp:#b98cff;--comp-soft:#241a38;--comp-line:#3d2f63;
+    --good:#3ecf8e;--warn:#e0a53a;--crit:#f0685c;
+  }
+  /* a compact chrome specimen used inside each theme box */
+  #lang-color .miniapp{border:1px solid var(--line-strong);border-radius:var(--r2);overflow:hidden;background:var(--panel);box-shadow:0 6px 18px -10px rgba(0,0,0,.4)}
+  #lang-color .miniapp .tb{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--pad-sm);background:var(--panel-2);border-bottom:1px solid var(--line)}
+  #lang-color .miniapp .tb .dots{display:flex;gap:5px}
+  #lang-color .miniapp .tb .dots i{width:9px;height:9px;border-radius:50%}
+  #lang-color .miniapp .tb .t{font-size:10px;color:var(--dim);font-weight:560}
+  #lang-color .miniapp .tb .p{margin-left:auto;font-size:9.5px;font-weight:640;color:var(--accent-ink);background:var(--accent);border-radius:var(--r1);padding:2px 7px}
+  #lang-color .miniapp .rows{padding:var(--pad-sm);display:flex;flex-direction:column;gap:var(--s2)}
+  #lang-color .miniapp .mr{display:flex;align-items:center;gap:var(--s2);font-size:10.5px;color:var(--dim)}
+  #lang-color .miniapp .mr .sw{width:12px;height:12px;border-radius:3px;flex:none}
+  #lang-color .miniapp .mr.sel{background:var(--accent-soft);color:var(--ink);border-radius:var(--r1);margin:0 calc(-1 * var(--s1));padding:var(--s1) var(--s1)}
+  #lang-color .miniapp .mr.selc{background:var(--comp-soft);color:var(--ink);border-radius:var(--r1);margin:0 calc(-1 * var(--s1));padding:var(--s1) var(--s1)}
+  #lang-color .miniapp .mr .badge{margin-left:auto;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:999px;color:#fff}
+
+  @media (max-width:720px){
+    #lang-color .blk{grid-template-columns:1fr}
+    #lang-color .meta{border-left:0;border-top:1px solid var(--line)}
+    #lang-color .anat{grid-template-columns:1fr}
+    #lang-color .compare{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-color">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Color &amp; interaction states</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left xs"></i> Design language</a></div>
+    <p class="intro">Color in Photonz is <b>role-based, never decorative</b>. A token names a job (text, surface, line, accent, component, semantic), and the theme resolves it to a real value for light or dark. You style with the role, so the same UI reads correctly in both themes and an <b data-target="agent">agent</b> that sets a color sets a role, not a hex. Interaction states layer on top: every control moves through rest, hover, focus, pressed, disabled, and selected using the same small set of tokens.</p>
+
+    <!-- 2 · ANATOMY -->
+    <div class="blk">
+      <div class="spec">
+        <div class="anat">
+          <div class="calls">
+            <div class="call"><b>Fill + role</b>the resolved color, tagged with the job it does</div>
+            <div class="call"><b>Token name</b>what you reference in the UI or API</div>
+            <div class="call"><b>Light / dark</b>the two values one token resolves to</div>
+          </div>
+          <div class="swcard">
+            <div class="fill" style="background:var(--accent)"><span class="role">Accent · primary</span></div>
+            <div class="body">
+              <div class="tok">--accent</div>
+              <p class="desc">"You can act here." Selection, focus, primary buttons and links.</p>
+              <div class="vals">
+                <span class="v"><i style="background:#4c6fff"></i>#4C6FFF</span>
+                <span class="v"><i style="background:#7f9bff"></i>#7F9BFF</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
+        <p class="rule">A swatch card is <b>token, role, and both theme values</b> in one place. The role is the contract; the two hexes are just what the current theme resolves the role to.</p>
+        <div class="dd"><span class="do">Reference the token; let the theme pick the value.</span><span class="no">Copy a hex out of the card into a component.</span></div>
+        <p class="api"><b>API</b> <code>color("--accent")</code> resolves per theme. Every named color is a role first.</p>
+      </div>
+    </div>
+
+    <!-- 3 · VARIANTS: full role set -->
+    <div class="blk">
+      <div class="spec">
+        <div class="grouplab">Text · on surfaces</div>
+        <div class="textrow">
+          <span style="color:var(--ink)"><b>Ink</b> primary</span>
+          <span style="color:var(--dim)">Dim secondary</span>
+          <span style="color:var(--faint)">Faint tertiary</span>
+        </div>
+
+        <div class="grouplab">Surface &amp; line</div>
+        <div class="roles">
+          <div class="role-c"><div class="sw" style="background:var(--stage)"></div><div class="lb"><div class="n">--stage</div><div class="r">app background</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--panel)"></div><div class="lb"><div class="n">--panel</div><div class="r">card / pane</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--panel-2)"></div><div class="lb"><div class="n">--panel-2</div><div class="r">inset / rail</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--line-strong)"></div><div class="lb"><div class="n">--line-strong</div><div class="r">hard border</div></div></div>
+        </div>
+
+        <div class="grouplab">Accent &amp; component</div>
+        <div class="roles">
+          <div class="role-c"><div class="sw" style="background:var(--accent)"></div><div class="lb"><div class="n">--accent</div><div class="r">primary action</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--accent-soft)"></div><div class="lb"><div class="n">--accent-soft</div><div class="r">selected wash</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--comp)"></div><div class="lb"><div class="n">--comp</div><div class="r">component (purple)</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--comp-soft)"></div><div class="lb"><div class="n">--comp-soft</div><div class="r">component wash</div></div></div>
+        </div>
+
+        <div class="grouplab">Semantic · reserved meanings</div>
+        <div class="roles">
+          <div class="role-c"><div class="sw" style="background:var(--good)"></div><div class="lb"><div class="n">--good</div><div class="r">success</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--warn)"></div><div class="lb"><div class="n">--warn</div><div class="r">caution</div></div></div>
+          <div class="role-c"><div class="sw" style="background:var(--crit)"></div><div class="lb"><div class="n">--crit</div><div class="r">destructive / error</div></div></div>
+        </div>
+
+        <div class="grouplab">Scenario accents · editor context</div>
+        <div class="roles">
+          <div class="role-c"><div class="sw" style="background:var(--comp)"></div><div class="lb"><div class="n">UI &amp; components</div><div class="r">var(--comp)</div></div></div>
+          <div class="role-c"><div class="sw" style="background:#ff7e5f"></div><div class="lb"><div class="n">Image</div><div class="r">#FF7E5F</div></div></div>
+          <div class="role-c"><div class="sw" style="background:#12c2e9"></div><div class="lb"><div class="n">Video</div><div class="r">#12C2E9</div></div></div>
+          <div class="role-c"><div class="sw" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></div><div class="lb"><div class="n">Automation</div><div class="r">gradient</div></div></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">02</div><h3 class="bname">The role set</h3>
+        <p class="rule">Six families. <b>Text, surface, and line</b> build the chrome; <b>accent and component</b> mark what you can act on and what is reusable; <b>semantic</b> is held in reserve. Scenario accents only pip the workspace so you always know if you are in an image, a video, or automation.</p>
+        <div class="dd"><span class="do">Pick the family that matches the job.</span><span class="no">Reach for a scenario accent as a general highlight.</span></div>
+        <p class="api"><b>API</b> <code>theme.roles</code> lists the set; a component references roles, so retheming is one token swap.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="blk">
+      <div class="spec">
+        <div class="grouplab">Primary button · every state</div>
+        <div class="stategrid">
+          <div class="stcell"><span class="obtn solid">Action</span><span class="lb">Rest</span><span class="tk">--accent</span></div>
+          <div class="stcell"><span class="obtn solid" style="filter:brightness(1.06)">Action</span><span class="lb">Hover</span><span class="tk">+6% bright</span></div>
+          <div class="stcell"><span class="obtn solid" style="outline:2px solid var(--accent);outline-offset:2px">Action</span><span class="lb">Focus</span><span class="tk">accent ring</span></div>
+          <div class="stcell"><span class="obtn solid" style="filter:brightness(.9)">Action</span><span class="lb">Pressed</span><span class="tk">-10% bright</span></div>
+          <div class="stcell"><span class="obtn solid" style="opacity:.4">Action</span><span class="lb">Disabled</span><span class="tk">40% opacity</span></div>
+          <div class="stcell"><span class="obtn" style="background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)">Action</span><span class="lb">Selected</span><span class="tk">--accent-soft</span></div>
+        </div>
+
+        <div class="grouplab">Secondary control · same ladder</div>
+        <div class="staterow">
+          <span class="obtn">Rest</span>
+          <span class="obtn" style="border-color:var(--line-strong);background:var(--panel-2)">Hover</span>
+          <span class="obtn" style="outline:2px solid var(--accent);outline-offset:2px">Focus</span>
+          <span class="obtn" style="background:var(--line);filter:brightness(.98)">Pressed</span>
+          <span class="obtn" style="opacity:.4">Disabled</span>
+          <span class="obtn" style="background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)">Selected</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">03</div><h3 class="bname">Interaction states</h3>
+        <p class="rule">One ladder for every control: <b>rest, hover, focus, pressed, disabled, selected</b>. Hover and press only shift brightness of the rest color, focus is always a 2px accent ring, and selected uses the soft wash so it never competes with focus.</p>
+        <div class="dd"><span class="do">Keep the focus ring visible for keyboard users.</span><span class="no">Skip hover feedback on a clickable thing.</span></div>
+        <p class="api"><b>API</b> a disabled command reports <code>why</code> it is unavailable, so the agent gets the reason too.</p>
+      </div>
+    </div>
+
+    <!-- 5 · LIVE EXAMPLES: light / dark side by side -->
+    <div class="blk">
+      <div class="spec">
+        <div class="grouplab">Same panel, both themes · roles resolve, layout does not move</div>
+        <div class="compare">
+          <div class="themebox" data-theme="light">
+            <div class="cap">Light</div>
+            <div class="in">
+              <div class="miniapp">
+                <div class="tb"><div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><span class="t">hero-card</span><span class="p">Export</span></div>
+                <div class="rows">
+                  <div class="mr sel"><span class="sw" style="background:var(--accent)"></span>Card <span class="badge" style="background:var(--good)">ok</span></div>
+                  <div class="mr selc"><span class="sw" style="background:var(--comp)"></span>Button <span class="badge" style="background:var(--comp)"><i class="ic ic-component xs"></i></span></div>
+                  <div class="mr"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Headline</div>
+                  <div class="mr" style="color:var(--faint)"><span class="sw" style="background:var(--crit)"></span>Missing font</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="themebox" data-theme="dark">
+            <div class="cap">Dark</div>
+            <div class="in">
+              <div class="miniapp">
+                <div class="tb"><div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><span class="t">hero-card</span><span class="p">Export</span></div>
+                <div class="rows">
+                  <div class="mr sel"><span class="sw" style="background:var(--accent)"></span>Card <span class="badge" style="background:var(--good)">ok</span></div>
+                  <div class="mr selc"><span class="sw" style="background:var(--comp)"></span>Button <span class="badge" style="background:var(--comp)"><i class="ic ic-component xs"></i></span></div>
+                  <div class="mr"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Headline</div>
+                  <div class="mr" style="color:var(--faint)"><span class="sw" style="background:var(--crit)"></span>Missing font</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">04</div><h3 class="bname">Light / dark in context</h3>
+        <p class="rule">The two panels are the <b>same markup</b>. Ink stays legible, accent stays the action color, purple stays "component", crit stays the warning. Only the resolved values change, and the theme keeps contrast in range on both.</p>
+        <div class="dd"><span class="do">Test a screen in both themes before shipping it.</span><span class="no">Pin one theme's hex and hope the other survives.</span></div>
+        <p class="api"><b>API</b> <code>theme = "dark"</code> re-resolves every role. Auto follows the system appearance.</p>
+      </div>
+    </div>
+
+    <!-- 6 · RULES: DO / DON'T -->
+    <div class="blk">
+      <div class="spec">
+        <div class="staterow">
+          <span class="obtn solid">Primary action</span>
+          <span class="obtn" style="border-color:var(--comp-line);color:var(--comp);background:var(--comp-soft)"><i class="ic ic-component sm"></i> Component</span>
+          <span class="obtn" style="border-color:var(--crit);color:var(--crit)">Delete</span>
+          <span class="obtn" style="opacity:.4">Unavailable</span>
+        </div>
+        <p class="note" style="font-size:10.5px;color:var(--faint);line-height:1.45;margin:var(--gap-sm) 0 0">Accent is not a status. Purple is not a highlight. Red is a real problem, not emphasis. When in doubt, use text and line roles and let content carry the color.</p>
+      </div>
+      <div class="meta">
+        <div class="bnum">05</div><h3 class="bname">Rules</h3>
+        <div class="dd" style="margin-top:0">
+          <span class="do">Let accent mean "actionable", nothing else.</span>
+          <span class="do">Keep contrast legible: ink on panel, never faint on faint.</span>
+          <span class="do">Reserve green / amber / red for good / warn / crit.</span>
+          <span class="no">Hardcode a hex for chrome; use the role token.</span>
+          <span class="no">Treat accent as semantic, or red as emphasis.</span>
+        </div>
+        <p class="api"><b>API</b> a lint flags any raw hex in chrome and any semantic color used for decoration.</p>
+      </div>
+    </div>
+
+    <!-- 7 · IN THE API -->
+    <div class="blk">
+      <div class="spec">
+        <div class="grouplab">Token resolution · one role, two themes</div>
+        <div class="codeblk"><span class="c">// a role, not a hex, resolved by the active theme</span>
+button.fill = <span class="p">"--accent"</span>
+button.text = <span class="p">"--accent-ink"</span>
+
+<span class="c">// the same call in light vs dark</span>
+theme = <span class="s">"light"</span> → color(<span class="p">"--accent"</span>) = <span class="s">"#4C6FFF"</span>
+theme = <span class="s">"dark"</span>  → color(<span class="p">"--accent"</span>) = <span class="s">"#7F9BFF"</span>
+
+<span class="c">// state is a modifier on the resolved role</span>
+button.<span class="k">state</span>(<span class="p">"hover"</span>)    <span class="c">// +6% brightness</span>
+button.<span class="k">state</span>(<span class="p">"disabled"</span>) <span class="c">// 40% opacity + reason</span></div>
+      </div>
+      <div class="meta">
+        <div class="bnum">06</div><h3 class="bname">In the API</h3>
+        <p class="rule">Color is addressable the same way the UI touches it. <b>Set a role, not a value</b>; ask the theme to resolve it; apply a state as a modifier. Everything the color picker does is one call, so the agent themes exactly what you do.</p>
+        <div class="dd"><span class="do">Store the role on the layer; resolve at render.</span><span class="no">Bake a resolved hex into the document model.</span></div>
+        <p class="api"><b>API</b> <code>theme = "dark"</code> · <code>color("--accent")</code> · <code>state("disabled")</code>. Roles live in the theme, not the layer.</p>
+      </div>
+    </div>
+
+    <!-- 8 · RESPONSIVE / COMPACT -->
+    <div class="blk">
+      <div class="spec">
+        <div class="grouplab">Compact · label drops, swatch carries the role</div>
+        <div class="staterow">
+          <span class="swatch" style="background:var(--accent)" title="--accent"></span>
+          <span class="swatch" style="background:var(--comp)" title="--comp"></span>
+          <span class="swatch" style="background:var(--good)" title="--good"></span>
+          <span class="swatch" style="background:var(--warn)" title="--warn"></span>
+          <span class="swatch" style="background:var(--crit)" title="--crit"></span>
+          <span class="obtn" style="margin-left:var(--s2)">Rest</span>
+          <span class="obtn" style="outline:2px solid var(--accent);outline-offset:2px">Focus</span>
+        </div>
+        <p class="note" style="font-size:10.5px;color:var(--faint);line-height:1.45;margin:var(--gap-sm) 0 0">In a narrow window the swatch grid collapses to a single row of chips; the token name moves to a tooltip, and states stay full strength so nothing loses meaning.</p>
+      </div>
+      <div class="meta">
+        <div class="bnum">07</div><h3 class="bname">Responsive</h3>
+        <p class="rule">Roles never change with width, only their presentation. <b>Swatch cards shrink to chips</b>, names move into tooltips, and the state ladder keeps its full contrast so a small window is still readable.</p>
+        <div class="dd"><span class="do">Drop the label before you dim the swatch.</span><span class="no">Weaken a focus ring to save space.</span></div>
+        <p class="api"><b>API</b> presentation is a view concern; <code>color()</code> and <code>state()</code> return the same values at any size.</p>
+      </div>
+    </div>
+
+    <!-- CAPTIONS -->
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Color is a set of <b>roles</b>, not a palette of hexes. Name the job once and the theme does the rest, so light and dark, the UI and the <b data-target="agent">agent</b>, all stay in agreement.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Roles could extend into <b data-target="dsys">Styles</b>: a paint style like "Brand" is just a named bundle of roles and stops, so retheming a whole document becomes one swap and every component instance updates with it.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>How far do we let a document override the theme? A per-document accent is expressive, but the moment a screen ships two accents the "you can act here" signal starts to blur. One override, or none?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

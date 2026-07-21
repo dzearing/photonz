@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-resize</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local: deep dive on the resizable-pane pattern. Everything composes the
+     shared DS; spacing/radii/color on tokens only. The .resizer/.ln/.grip come
+     straight from photonz-ds.css so this page is a live exemplar of itself. */
+  #lang-resize .intro{font-size:13px;line-height:1.55;color:var(--dim);margin:0;max-width:760px}
+  #lang-resize .intro b{color:var(--ink)}
+
+  /* a documentation card: header (num + name + one-liner) over a body */
+  #lang-resize .dcard{border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
+  #lang-resize .dhead{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+  #lang-resize .dhead .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-resize .dhead h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-resize .dhead .one{font-size:11.5px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-resize .dbody{padding:var(--pad)}
+  #lang-resize .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+
+  /* mini docked-pane shell used by specimens */
+  #lang-resize .split{display:flex;border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;background:var(--panel);min-height:150px}
+  #lang-resize .split.col{flex-direction:column;height:210px}
+  #lang-resize .pn{min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--panel);overflow:hidden}
+  #lang-resize .pn.alt{background:var(--panel-2)}
+  #lang-resize .pn .ph{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--gap-sm) var(--pad-sm) var(--s1);display:flex;align-items:center;justify-content:space-between}
+  #lang-resize .pn .pb{flex:1;min-height:0;display:grid;place-items:center;color:var(--faint);font-size:10px;font-family:var(--mono);padding:var(--s2)}
+  #lang-resize .pn .lrow{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s1) var(--pad-sm);font-size:11px;color:var(--dim)}
+  #lang-resize .pn .lrow .ic{color:var(--faint);font-size:10px}
+  #lang-resize .pn .w{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #lang-resize .canvas-fill{background:radial-gradient(220px 140px at 50% 30%,#141826,var(--artboard));color:rgba(255,255,255,.4)}
+
+  /* live px readout that rides the divider while dragging */
+  #lang-resize .resizer{outline:none}
+  #lang-resize .resizer:focus-visible .ln{background:var(--accent)}
+  #lang-resize .resizer.drag .ln{background:var(--accent)}
+  #lang-resize .resizer .size{position:absolute;z-index:5;background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-size:9.5px;font-weight:640;padding:2px 6px;border-radius:var(--r1);white-space:nowrap;opacity:0;transform:translateY(2px);transition:opacity .12s,transform .12s;pointer-events:none;font-variant-numeric:tabular-nums}
+  #lang-resize .resizer.v .size{top:6px;left:50%;transform:translate(-50%,2px)}
+  #lang-resize .resizer.h .size{left:8px;top:50%;transform:translate(0,-50%) translateY(2px)}
+  #lang-resize .resizer.drag .size,#lang-resize .resizer.show .size{opacity:1}
+  #lang-resize .resizer.v.drag .size{transform:translate(-50%,0)}
+  #lang-resize .resizer.h.drag .size{transform:translate(0,-50%)}
+  #lang-resize .resizer .size.snap{background:var(--good)}
+
+  /* anatomy specimen: an oversized resizer with its parts called out */
+  #lang-resize .anat{display:grid;grid-template-columns:1fr 220px;gap:var(--gap);align-items:center}
+  #lang-resize .anat-stage{position:relative;height:180px;border:1px dashed var(--line-strong);border-radius:var(--r3);display:flex;overflow:hidden;background:var(--panel-2)}
+  #lang-resize .anat-stage .side{flex:1;display:grid;place-items:center;color:var(--faint);font-size:10px;font-family:var(--mono)}
+  #lang-resize .hit{position:relative;flex:none;width:var(--s5);display:flex;align-items:center;justify-content:center;cursor:col-resize;background:repeating-linear-gradient(45deg,var(--accent-soft),var(--accent-soft) 3px,transparent 3px,transparent 6px)}
+  #lang-resize .hit .hl{width:2px;height:100%;background:var(--accent)}
+  #lang-resize .hit .gp{position:absolute;color:var(--accent);font-size:12px;line-height:0;letter-spacing:-1px}
+  #lang-resize .legend{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-resize .legend .li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11px;color:var(--dim)}
+  #lang-resize .legend .li b{color:var(--ink);font-weight:600}
+  #lang-resize .legend .sw{flex:none;width:14px;height:14px;border-radius:var(--r1);margin-top:1px}
+  #lang-resize .legend .sw.hit{background:var(--accent-soft);border:1px solid var(--accent-line)}
+  #lang-resize .legend .sw.hl{width:4px;height:16px;border-radius:2px;background:var(--line);margin-left:5px;margin-right:5px}
+  #lang-resize .legend .sw.hlx{width:4px;height:16px;border-radius:2px;background:var(--accent);margin-left:5px;margin-right:5px}
+  #lang-resize .legend .sw.gp{background:transparent;color:var(--faint);display:grid;place-items:center;font-size:12px}
+  /* grip dots use the shared 3-dot icon; rotate 90deg for vertical (col-resize) grips */
+  #lang-resize .grip .ic,#lang-resize .gp .ic{display:block;width:12px;height:12px}
+  #lang-resize .resizer.v .grip .ic,#lang-resize .hit .gp .ic,#lang-resize .legend .sw.gp .ic{transform:rotate(90deg)}
+
+  /* variants + states rows */
+  #lang-resize .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  #lang-resize .cell{border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-resize .cell .cap{font-size:10.5px;color:var(--dim)}
+  #lang-resize .cell .cap b{color:var(--ink);font-weight:600}
+  #lang-resize .stbox{height:96px;border-radius:var(--r2);overflow:hidden;display:flex;background:var(--panel)}
+  #lang-resize .stbox.col{flex-direction:column}
+  #lang-resize .stbox .h{flex:1;display:grid;place-items:center;color:var(--faint);font-size:9px;font-family:var(--mono)}
+
+  /* do / don't + api */
+  #lang-resize .dd{display:flex;flex-direction:column;gap:var(--s2)}
+  #lang-resize .dd span{font-size:11.5px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-resize .dd .do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-resize .dd .no::before{content:"Not";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-resize .dd b{color:var(--ink);font-weight:600}
+  #lang-resize .apilist{display:flex;flex-direction:column;gap:var(--s2);font-size:11.5px;color:var(--dim);line-height:1.5}
+  #lang-resize .apilist code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:5px}
+  #lang-resize .apilist .rl{color:var(--faint);font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-weight:660;display:block;margin-bottom:2px}
+  #lang-resize .keys{display:flex;flex-wrap:wrap;gap:var(--gap-sm);margin-top:var(--s2)}
+  #lang-resize .key{display:inline-flex;align-items:center;gap:var(--gap-sm);font-size:11px;color:var(--dim)}
+  #lang-resize kbd{font-family:var(--mono);font-size:10px;color:var(--ink);background:var(--panel);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--r1);padding:2px 6px;min-width:18px;text-align:center}
+  #lang-resize .hint{font-size:10.5px;color:var(--faint);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-resize .hint b{color:var(--dim);font-weight:600}
+  @media (max-width:720px){
+    #lang-resize .two,#lang-resize .row3{grid-template-columns:1fr}
+    #lang-resize .anat{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-resize">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head">
+      <span class="pip" style="background:var(--accent)"></span>
+      <h2>Resizable panes</h2>
+      <span class="k">· Design language</span>
+      <a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i>Design language</a>
+    </div>
+    <p class="intro">A <b>resizer</b> is the thin draggable divider between two docked panels. Reach for it whenever the split between panels is a matter of taste rather than a fixed layout: let people trade Layers width for canvas, or pull a timeline taller, and <b>remember the choice</b>. It respects a min and max, snaps to sensible widths, resets on double-click, and moves from the keyboard.</p>
+
+    <!-- 2 · ANATOMY -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">01</span><h3>Anatomy</h3><span class="one">Four parts, most of them invisible until you need them</span></div>
+      <div class="dbody">
+        <div class="anat">
+          <div class="anat-stage">
+            <div class="side">panel A</div>
+            <div class="hit"><span class="hl"></span><span class="gp"><i class="ic ic-more"></i></span></div>
+            <div class="side">panel B</div>
+          </div>
+          <div class="legend">
+            <div class="li"><span class="sw hit"></span><span><b>Hit area</b>: a padded band (wider than the line, negative margins) so the target is easy to grab without a fat border.</span></div>
+            <div class="li"><span class="sw hl"></span><span><b>Hairline</b>: the 1px <code style="font-family:var(--mono);font-size:10px">.ln</code> divider at rest, drawn in <code style="font-family:var(--mono);font-size:10px">--line</code>.</span></div>
+            <div class="li"><span class="sw hlx"></span><span><b>Hover accent</b>: the same line turns <code style="font-family:var(--mono);font-size:10px">--accent</code> on hover, focus, or drag so it reads as grabbable.</span></div>
+            <div class="li"><span class="sw gp"><i class="ic ic-more"></i></span><span><b>Grip</b>: a faint centered dot cluster, the only always-on affordance.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · VARIANTS & SIZES -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">02</span><h3>Variants</h3><span class="one">Vertical, horizontal, and nested splits</span></div>
+      <div class="dbody">
+        <div class="row3">
+          <div class="cell">
+            <div class="cap"><b>Vertical</b> · <code style="font-family:var(--mono);font-size:10px;color:var(--dim)">.resizer.v</code> · col-resize</div>
+            <div class="stbox">
+              <div class="h" style="flex:0 0 42%">A</div>
+              <div class="resizer v" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span></div>
+              <div class="h" style="flex:1">B</div>
+            </div>
+          </div>
+          <div class="cell">
+            <div class="cap"><b>Horizontal</b> · <code style="font-family:var(--mono);font-size:10px;color:var(--dim)">.resizer.h</code> · row-resize</div>
+            <div class="stbox col">
+              <div class="h" style="flex:1">A</div>
+              <div class="resizer h" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span></div>
+              <div class="h" style="flex:0 0 38%">B</div>
+            </div>
+          </div>
+          <div class="cell">
+            <div class="cap"><b>Nested</b> · a v split inside one side of an h split</div>
+            <div class="stbox col">
+              <div style="flex:1;display:flex">
+                <div class="h" style="flex:0 0 46%">A</div>
+                <div class="resizer v" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span></div>
+                <div class="h" style="flex:1">B</div>
+              </div>
+              <div class="resizer h" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span></div>
+              <div class="h" style="flex:0 0 30%">C</div>
+            </div>
+          </div>
+        </div>
+        <p class="hint"><b>Width, not weight.</b> A resizer is always 7px of hit area regardless of orientation. The line stays 1px; only the band that catches the pointer changes axis.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">03</span><h3>States</h3><span class="one">Idle · hover · dragging</span></div>
+      <div class="dbody">
+        <div class="row3">
+          <div class="cell">
+            <div class="cap"><b>Idle</b>: hairline only, grip barely there.</div>
+            <div class="stbox">
+              <div class="h" style="flex:1">A</div>
+              <div class="resizer v" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span></div>
+              <div class="h" style="flex:1">B</div>
+            </div>
+          </div>
+          <div class="cell">
+            <div class="cap"><b>Hover / focus</b>: line lifts to accent, cursor becomes resize.</div>
+            <div class="stbox">
+              <div class="h" style="flex:1">A</div>
+              <div class="resizer v show" style="position:relative" aria-hidden="true"><span class="ln" style="background:var(--accent)"></span><span class="grip" style="color:var(--accent)"><i class="ic ic-more"></i></span></div>
+              <div class="h" style="flex:1">B</div>
+            </div>
+          </div>
+          <div class="cell">
+            <div class="cap"><b>Dragging</b>: a live size tooltip rides the divider.</div>
+            <div class="stbox">
+              <div class="h" style="flex:0 0 46%">A</div>
+              <div class="resizer v drag" style="position:relative" aria-hidden="true"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span><span class="size">312</span></div>
+              <div class="h" style="flex:1">B</div>
+            </div>
+          </div>
+        </div>
+        <p class="hint">The tooltip shows the logical width of the pane being sized and turns <b style="color:var(--good)">green when it lands on a snap point</b>. It appears only while dragging, then fades.</p>
+      </div>
+    </div>
+
+    <!-- 5 · LIVE EXAMPLES -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">04</span><h3>Live examples</h3><span class="one">Drag the dividers · double-click to reset</span></div>
+      <div class="dbody">
+        <div class="two">
+          <div>
+            <div class="split" id="ex-v">
+              <div class="pn" data-pane style="flex:0 0 176px" data-min="140" data-max="300" data-default="176" data-snap="176,232">
+                <div class="ph">Layers <span class="w" data-w>176</span></div>
+                <div class="lrow"><i class="ic ic-square"></i> Card</div>
+                <div class="lrow"><i class="ic ic-text"></i> Headline</div>
+                <div class="lrow" style="color:var(--comp)"><i class="ic ic-component"></i> Button</div>
+                <div class="pb">tree</div>
+              </div>
+              <div class="resizer v" data-axis="x" data-control="prev" tabindex="0" role="separator" aria-orientation="vertical" aria-label="Resize Layers panel"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span><span class="size">176</span></div>
+              <div class="pn alt" style="flex:1">
+                <div class="ph">Canvas</div>
+                <div class="pb canvas-fill">one document · one window</div>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:var(--gap-sm)"><b>Two-pane split.</b> Layers holds 140 to 300; canvas takes the rest. Snaps at 176 and 232.</p>
+          </div>
+          <div>
+            <div class="split col" id="ex-h">
+              <div class="pn alt" style="flex:1">
+                <div class="ph">Preview</div>
+                <div class="pb canvas-fill">frame</div>
+              </div>
+              <div class="resizer h" data-axis="y" data-control="next" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize Timeline panel"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span><span class="size">88</span></div>
+              <div class="pn" data-pane style="flex:0 0 88px" data-min="56" data-max="150" data-default="88" data-snap="88,120">
+                <div class="ph">Timeline <span class="w" data-w>88</span></div>
+                <div class="pb">tracks</div>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:var(--gap-sm)"><b>Stacked split.</b> Timeline holds 56 to 150; preview stays flexible. Try the arrow keys once the divider is focused.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 · RULES -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">05</span><h3>Rules</h3><span class="one">Keep panels usable at every size</span></div>
+      <div class="dbody">
+        <div class="dd">
+          <span class="do">Enforce a <b>min width that keeps the header and its first control readable</b>, never a bare edge.</span>
+          <span class="do">Highlight the divider on hover and focus so it clearly reads as draggable.</span>
+          <span class="do">Persist each pane size and offer a one-key <b>reset layout</b> back to defaults.</span>
+          <span class="no">Let a pane shrink until its content clips or its title disappears.</span>
+          <span class="no">Hide the resizer so users hunt a 1px line, or make the hit area so wide it steals clicks from content.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 · IN THE API -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">06</span><h3>In the API</h3><span class="one">Every drag is a value an agent can set</span></div>
+      <div class="dbody">
+        <div class="two">
+          <div class="apilist">
+            <div><span class="rl">Set a size</span><code>pane("layers").size = 232</code> clamps to the pane's min and max, then persists with the document.</div>
+            <div><span class="rl">Reset</span><code>layout.reset()</code> returns every pane to its default, the same as double-clicking each divider.</div>
+            <div><span class="rl">Snap points</span><code>pane.snaps = [176, 232]</code> makes a drag land on the nearest within 8px.</div>
+            <div><span class="rl">Read it back</span><code>pane("timeline").size</code> lets the <b data-target="agent">agent</b> reason about the same layout you see.</div>
+          </div>
+          <div>
+            <p class="hint" style="margin-top:0"><b>Keyboard.</b> Focus a divider and nudge it without the mouse. This is the whole point of "everything the UI does is one API call": the resize you do by hand, an <b data-target="agent">agent</b> does with <code style="font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:5px">pane.size</code>.</p>
+            <div class="keys">
+              <span class="key"><kbd>Tab</kbd> Focus divider</span>
+              <span class="key"><kbd>←</kbd><kbd>→</kbd> ± 8</span>
+              <span class="key"><kbd>⇧</kbd><kbd>←</kbd> ± 24</span>
+              <span class="key"><kbd>↵</kbd> Reset</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 · RESPONSIVE / COMPACT -->
+    <div class="dcard">
+      <div class="dhead"><span class="bnum">07</span><h3>Responsive</h3><span class="one">What happens in a narrow window</span></div>
+      <div class="dbody">
+        <p class="intro" style="max-width:none">When the window gets too small to honor a pane's min, the smaller pane <b>snaps shut and remembers its last width</b>. A thin reopen tab stays on the edge, so nothing is lost. The divider itself never disappears, and the panel it hid reopens at exactly the size you left it.</p>
+      </div>
+    </div>
+
+    <!-- 9 · CAPTIONS -->
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A resizer is a <b>negotiation</b>, not a slider. It hands people control of the split while quietly protecting both panels with a min, a max, and snap points, so the layout can flex without ever breaking.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Sizes are remembered <b>per document</b> today. They could ride on a workspace preset instead, so a "Retouch" layout and an "Edit video" layout each carry their own pane widths and you switch between them with one command.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should a divider double as a collapse toggle? Dragging a pane to its min could latch it closed, but that risks people hiding a panel by accident. Maybe collapse only past a deliberate over-drag, never at the min itself.</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  // Page-local: make the live-example dividers actually resize, snap, remember,
+  // reset on double-click, and move from the keyboard. Scoped to #lang-resize so
+  // it can never touch another page. Sizes are held in-memory (per "document").
+  (function(){
+    var root = document.getElementById('lang-resize');
+    if(!root) return;
+    var remembered = {};
+
+    root.querySelectorAll('.resizer[data-axis]').forEach(function(rz){
+      var axis = rz.getAttribute('data-axis');           // 'x' | 'y'
+      var control = rz.getAttribute('data-control');      // 'prev' | 'next'
+      var pane = control === 'prev' ? rz.previousElementSibling : rz.nextElementSibling;
+      if(!pane) return;
+      var min = +pane.getAttribute('data-min');
+      var max = +pane.getAttribute('data-max');
+      var def = +pane.getAttribute('data-default');
+      var snaps = (pane.getAttribute('data-snap')||'').split(',').map(Number).filter(function(n){return n;});
+      var sizeEl = rz.querySelector('.size');
+      var wEl = pane.querySelector('[data-w]');
+
+      function apply(px, snapped){
+        px = Math.max(min, Math.min(max, Math.round(px)));
+        pane.style.flex = '0 0 ' + px + 'px';
+        if(sizeEl) sizeEl.textContent = px;
+        if(sizeEl) sizeEl.classList.toggle('snap', !!snapped);
+        if(wEl) wEl.textContent = px;
+        remembered[axis+control] = px;
+        return px;
+      }
+      function trySnap(px){
+        for(var i=0;i<snaps.length;i++){ if(Math.abs(px - snaps[i]) <= 8) return {v:snaps[i], hit:true}; }
+        return {v:px, hit:false};
+      }
+      function current(){
+        var r = pane.getBoundingClientRect();
+        return axis === 'x' ? r.width : r.height;
+      }
+
+      // pointer drag
+      rz.addEventListener('pointerdown', function(e){
+        e.preventDefault();
+        rz.setPointerCapture(e.pointerId);
+        rz.classList.add('drag');
+        var start = axis === 'x' ? e.clientX : e.clientY;
+        var base = current();
+        function move(ev){
+          var now = axis === 'x' ? ev.clientX : ev.clientY;
+          var delta = now - start;
+          if(control === 'next') delta = -delta;
+          var s = trySnap(base + delta);
+          apply(s.v, s.hit);
+        }
+        function up(ev){
+          rz.classList.remove('drag');
+          rz.removeEventListener('pointermove', move);
+          rz.removeEventListener('pointerup', up);
+        }
+        rz.addEventListener('pointermove', move);
+        rz.addEventListener('pointerup', up);
+      });
+
+      // double-click resets to default
+      rz.addEventListener('dblclick', function(){ apply(def); });
+
+      // keyboard resize
+      rz.addEventListener('keydown', function(e){
+        var step = e.shiftKey ? 24 : 8;
+        var cur = current();
+        var grow = axis === 'x' ? ['ArrowRight'] : ['ArrowDown'];
+        var shrink = axis === 'x' ? ['ArrowLeft'] : ['ArrowUp'];
+        var dir = 0;
+        if(grow.indexOf(e.key) > -1) dir = control === 'next' ? -1 : 1;
+        else if(shrink.indexOf(e.key) > -1) dir = control === 'next' ? 1 : -1;
+        else if(e.key === 'Enter'){ apply(def); e.preventDefault(); return; }
+        else return;
+        e.preventDefault();
+        rz.classList.add('show');
+        apply(cur + dir*step);
+        clearTimeout(rz._t);
+        rz._t = setTimeout(function(){ rz.classList.remove('show'); }, 900);
+      });
+    });
+  })();
+</script>
+</body>
+</html>

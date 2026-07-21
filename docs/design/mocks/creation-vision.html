@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz — Creation Vision · Direction Study</title>
+<style>
+/* ============ tokens ============ */
+:root{
+  --stage:#e9ebf0; --stage-2:#dfe2e9;
+  --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
+  --panel:#fbfcfe; --panel-2:#f1f3f7;
+  --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
+  --accent:#4c6fff; --accent-ink:#ffffff; --accent-soft:#e9edff; --accent-line:#c4cffe;
+  --comp:#9a5cff; --comp-soft:#efe7ff; --comp-line:#d8c4ff;
+  --good:#1a9e6a; --warn:#b7791f; --crit:#d0453b;
+  --artboard:#0c0e14; --artboard-grid:rgba(255,255,255,.045);
+  --shadow:0 18px 50px -12px rgba(20,24,40,.28), 0 4px 14px -6px rgba(20,24,40,.18);
+  --glass-blur:saturate(180%) blur(20px);
+  --sans:-apple-system,"SF Pro Text","SF Pro Display",system-ui,sans-serif;
+  --serif:"New York",ui-serif,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  /* === SPACING STANDARD (4pt scale) — the mock obeys its own thesis ===
+     Only these values are allowed for padding / gap / margin.
+     s1 4 · s2 8 · s3 12 · s4 16 · s5 24 · s6 32 · s7 40
+     Card/pane padding = s4(16). Compact rows = s3(12). Window content inset = s5(24).
+     Sibling gap = s4(16); tight = s2(8); loose = s5(24).
+     Top-level blocks are full-bleed (no side margins) so every edge lines up.
+     Radii: r1 6 · r2 8 · r3 10 · r4 12 (cards) · r5 14. */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:40px;
+  --pad:16px; --pad-sm:12px; --gap:16px; --gap-sm:8px; --gap-lg:24px; --inset:24px;
+  --r1:6px; --r2:8px; --r3:10px; --r4:12px; --r5:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --stage:#08090d; --stage-2:#0d0f15;
+    --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
+    --panel:#14161d; --panel-2:#181b22;
+    --ink:#e7e9ee; --dim:#9aa1af; --faint:#666d7b;
+    --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
+    --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
+    --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
+    --good:#3ecf8e; --warn:#e0a53a; --crit:#f0685c;
+    --artboard:#0a0c11; --artboard-grid:rgba(255,255,255,.05);
+    --shadow:0 24px 60px -14px rgba(0,0,0,.6), 0 6px 18px -8px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="light"]{
+  --stage:#e9ebf0; --stage-2:#dfe2e9; --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
+  --panel:#fbfcfe; --panel-2:#f1f3f7; --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
+  --accent:#4c6fff; --accent-ink:#fff; --accent-soft:#e9edff; --accent-line:#c4cffe;
+  --comp:#9a5cff; --comp-soft:#efe7ff; --comp-line:#d8c4ff;
+  --good:#1a9e6a; --warn:#b7791f; --crit:#d0453b; --artboard:#0c0e14; --artboard-grid:rgba(255,255,255,.045);
+  --shadow:0 18px 50px -12px rgba(20,24,40,.28), 0 4px 14px -6px rgba(20,24,40,.18);
+}
+:root[data-theme="dark"]{
+  --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
+  --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#9aa1af; --faint:#666d7b;
+  --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
+  --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
+  --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
+  --good:#3ecf8e; --warn:#e0a53a; --crit:#f0685c; --artboard:#0a0c11; --artboard-grid:rgba(255,255,255,.05);
+  --shadow:0 24px 60px -14px rgba(0,0,0,.6), 0 6px 18px -8px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--sans);color:var(--ink);background:var(--stage);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font-family:inherit;color:inherit;cursor:pointer}
+::selection{background:var(--accent-soft)}
+
+.proto{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.pbar{display:flex;align-items:center;gap:14px;padding:11px 18px;background:var(--chrome-solid);border-bottom:1px solid var(--line)}
+.pbar .mark{width:20px;height:20px;border-radius:6px;background:conic-gradient(from 210deg,#7f9bff,#c56cff,#ff7a9c,#ffb057,#7f9bff);box-shadow:0 0 0 1px rgba(0,0,0,.06) inset}
+.pbar h1{font-size:13px;font-weight:640;margin:0;letter-spacing:-.01em}
+.pbar .tag{font-size:11px;color:var(--dim);font-weight:520}
+.pbar .spacer{flex:1}
+.pbar .hint{font-size:11px;color:var(--faint)}
+.pbar .hint b{color:var(--dim);font-weight:600}
+
+.body{display:grid;grid-template-columns:220px 1fr;min-height:0}
+.rail{background:var(--panel);border-right:1px solid var(--line);padding:12px 10px;overflow-y:auto}
+.rail .grp{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;margin:15px 8px 5px;display:flex;align-items:center;gap:7px}
+.rail .grp:first-child{margin-top:2px}
+.rail .grp .dot{width:6px;height:6px;border-radius:50%}
+.nav{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px 9px 7px 20px;border-radius:8px;font-size:12.5px;font-weight:520;color:var(--dim);line-height:1.2}
+.nav:hover{background:var(--panel-2);color:var(--ink)}
+.nav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+.stage{position:relative;overflow:auto;min-height:0;background:radial-gradient(1100px 620px at 30% -10%,var(--stage-2),transparent 60%),radial-gradient(900px 500px at 100% 120%,var(--stage-2),transparent 55%),var(--stage);display:flex;flex-direction:column;align-items:center;padding:var(--inset) var(--inset) var(--s7)}
+.screen{display:none;width:100%;max-width:1060px;flex-direction:column;gap:var(--gap);animation:fade .28s ease}
+.screen.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.on{animation:none}.spin{animation:none}}
+
+.scen-head{display:flex;align-items:center;gap:var(--gap-sm);padding:0}
+.scen-head .pip{width:9px;height:9px;border-radius:50%}
+.scen-head h2{font-size:15px;margin:0;letter-spacing:-.01em}
+.scen-head .k{font-size:11.5px;color:var(--faint);font-weight:520}
+
+.caption{display:flex;gap:var(--gap-lg);flex-wrap:wrap;padding:var(--s1) 0 0}
+.caption .c{flex:1 1 240px;max-width:none}
+.caption .lab{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:660;color:var(--accent);margin-bottom:3px}
+.caption .lab.g2{color:var(--faint)}
+.caption p{margin:0;font-size:12.5px;color:var(--dim);line-height:1.5}
+.caption b{color:var(--ink);font-weight:600}
+.caption code{font-family:var(--mono);font-size:11px}
+
+/* window */
+.win{background:var(--panel);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;width:100%}
+.win.tall{min-height:560px;display:flex;flex-direction:column}
+.titlebar{display:flex;align-items:center;gap:12px;height:42px;padding:0 14px;background:var(--chrome);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-bottom:1px solid var(--line);position:relative;z-index:3}
+.lights{display:flex;gap:8px}
+.lights i{width:12px;height:12px;border-radius:50%;display:block}
+.lights .r{background:#ff5f57}.lights .y{background:#febc2e}.lights .g{background:#28c840}
+.lights i{box-shadow:0 0 0 .5px rgba(0,0,0,.12) inset}
+.wtitle{font-size:12.5px;font-weight:560;color:var(--dim);flex:1;text-align:center}
+.wtitle b{color:var(--ink);font-weight:640}
+.tbtns{display:flex;gap:6px;align-items:center;min-width:150px;justify-content:flex-end}
+
+.toolbar{display:flex;align-items:center;gap:4px;padding:7px 12px;background:var(--panel-2);border-bottom:1px solid var(--line);position:relative;z-index:2}
+.tool{min-width:30px;height:28px;padding:0 6px;border-radius:7px;border:1px solid transparent;background:transparent;display:grid;place-items:center;color:var(--dim);transition:.12s;font-size:13px}
+.tool:hover{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.tool.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.tsep{width:1px;height:18px;background:var(--line);margin:0 5px}
+.tspacer{flex:1}
+.pill{height:28px;border-radius:8px;border:1px solid var(--line);background:var(--panel);padding:0 11px;font-size:11.5px;font-weight:560;color:var(--dim);display:inline-flex;align-items:center;gap:7px}
+.pill.ai{background:linear-gradient(120deg,#6E8BFF,#c56cff);color:#fff;border:0;font-weight:600}
+.pill.solid{background:var(--accent);color:var(--accent-ink);border:0;font-weight:600}
+.pill .kbd{font-family:var(--mono);font-size:9.5px;opacity:.7}
+
+.edit{display:grid;grid-template-columns:190px 1fr 272px;flex:1;min-height:0}
+.pane{background:var(--panel);min-height:0;overflow-y:auto}
+.pane.layers{border-right:1px solid var(--line)}
+.pane.insp{border-left:1px solid var(--line);background:var(--panel-2)}
+.pane-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--pad-sm) var(--pad) var(--s2);display:flex;align-items:center;justify-content:space-between}
+.pane-h .add{color:var(--dim);font-size:14px;line-height:1}
+.ptabs{display:flex;gap:2px;padding:8px 10px 4px}
+.ptab{font-size:11px;font-weight:560;color:var(--faint);padding:4px 9px;border-radius:7px}
+.ptab.on{background:var(--panel-2);color:var(--ink)}
+
+.lrow{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;color:var(--dim);border-left:2px solid transparent}
+.lrow:hover{background:var(--panel-2)}
+.lrow.sel{background:var(--accent-soft);color:var(--ink);border-left-color:var(--accent)}
+.lrow.selc{background:var(--comp-soft);color:var(--ink);border-left-color:var(--comp)}
+.lrow .ic{width:15px;height:15px;color:var(--faint);flex:none;font-size:12px}
+.lrow.selc .ic{color:var(--comp)}
+.lrow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .eye{color:var(--faint);font-size:11px}
+.lrow.child{padding-left:26px}
+.lgroup{font-size:11px;color:var(--faint);padding:6px 12px 3px;font-weight:560}
+.cmark{color:var(--comp);font-size:11px}
+
+.canvas{background:linear-gradient(var(--artboard-grid) 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,var(--artboard-grid) 1px,transparent 1px) 0 0/22px 22px,radial-gradient(700px 420px at 50% 30%,#141826,var(--artboard));position:relative;overflow:hidden;display:grid;place-items:center;min-height:340px}
+.artboard-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);letter-spacing:.04em}
+
+.hero-card{width:400px;border-radius:22px;padding:30px 30px 26px;position:relative;overflow:hidden;background:linear-gradient(135deg,#7c4dff 0%,#b14dff 42%,#ff5d8f 100%);box-shadow:0 0 60px -6px rgba(177,77,255,.55),0 22px 50px -14px rgba(0,0,0,.55)}
+.hero-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 85% -10%,rgba(255,255,255,.35),transparent 45%);mix-blend-mode:soft-light;pointer-events:none}
+.hc-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 9px;border-radius:999px}
+.hc-h{font-family:var(--serif);font-size:36px;line-height:1.02;font-weight:700;color:#fff;margin:16px 0 8px;letter-spacing:-.02em}
+.hc-sub{font-size:14px;line-height:1.45;color:rgba(255,255,255,.9);margin:0 0 22px;max-width:280px}
+.hc-cta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:640;color:#3a1d6e;background:linear-gradient(180deg,#fff,#f0eaff);padding:10px 18px;border-radius:12px;box-shadow:0 8px 20px -6px rgba(255,255,255,.5),0 0 0 1px rgba(255,255,255,.6) inset;position:relative}
+
+.selwrap{position:relative}
+.sel-ring{position:absolute;inset:-9px;border:1.5px solid var(--accent);border-radius:26px;pointer-events:none}
+.handle{position:absolute;width:9px;height:9px;background:var(--panel);border:1.5px solid var(--accent);border-radius:2px}
+.handle.tl{top:-13px;left:-13px}.handle.tr{top:-13px;right:-13px}.handle.bl{bottom:-13px;left:-13px}.handle.br{bottom:-13px;right:-13px}
+.mtag{position:absolute;top:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:640;padding:3px 8px;border-radius:6px;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+/* component instance outline */
+.cinst{position:absolute;inset:-6px;border:1.5px solid var(--comp);border-radius:15px;pointer-events:none}
+.cbadge{position:absolute;top:-24px;left:0;background:var(--comp);color:#fff;font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:5px}
+
+.section{border-bottom:1px solid var(--line-soft);padding:var(--pad-sm) var(--pad)}
+.sec-h{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:660;color:var(--ink);margin-bottom:9px}
+.sec-h .mut{color:var(--faint);font-weight:520;font-size:10.5px}
+.sec-h.comp{color:var(--comp)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.field{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:11.5px;font-variant-numeric:tabular-nums}
+.field .k{color:var(--faint);font-size:10px}
+.field .v{color:var(--ink);margin-left:auto;font-weight:520}
+.row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);margin:7px 0}
+.row .rl{width:70px;color:var(--faint);font-size:10.5px}
+.swatch{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex:none}
+.swatch.grad{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.swatch.paint-btn{cursor:pointer}
+.swatch.paint-btn:hover{outline:2px solid var(--accent-line);outline-offset:1px}
+.bar{flex:1;height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:4px}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:6px;background:var(--panel);border:1px solid var(--line);color:var(--dim)}
+.chip.style{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.chip.style .sw{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.chip.comp{background:var(--comp-soft);border-color:var(--comp-line);color:var(--comp);font-weight:600}
+
+.efx{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11.5px}
+.efx .drag{color:var(--faint);cursor:grab}
+.efx .en{width:26px;height:15px;border-radius:999px;background:var(--accent);position:relative;flex:none}
+.efx .en::after{content:"";position:absolute;top:1.5px;right:1.5px;width:12px;height:12px;border-radius:50%;background:#fff}
+.efx .en.off{background:var(--line-strong)}
+.efx .en.off::after{left:1.5px;right:auto}
+.efx .nm{font-weight:560;color:var(--ink)}
+.efx .meta{color:var(--faint);margin-left:auto;font-family:var(--mono);font-size:10px}
+.efx.click{cursor:pointer}.efx.click:hover{border-color:var(--accent-line)}
+
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--dim);font-size:11px;font-weight:560;padding:5px 11px;border-radius:7px}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.gramp{height:34px;border-radius:9px;margin:12px 0 8px;position:relative;background:linear-gradient(90deg,#7c4dff,#b14dff 45%,#ff5d8f);border:1px solid var(--line-strong)}
+.gstop{position:absolute;top:-6px;width:14px;height:46px;transform:translateX(-50%)}
+.gstop b{display:block;width:14px;height:14px;border-radius:4px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);background:inherit}
+.gstop .line{width:2px;height:30px;background:#fff;margin:0 auto;opacity:.7}
+.dial{width:56px;height:56px;border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);position:relative;flex:none}
+.dial::before{content:"";position:absolute;left:50%;top:50%;width:2px;height:22px;background:var(--accent);transform-origin:top center;transform:translate(-50%,0) rotate(135deg)}
+.dial::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%)}
+
+/* home */
+.home{padding:var(--inset);display:flex;flex-direction:column;gap:var(--gap-lg);flex:1;overflow:auto}
+.aibar{display:flex;align-items:center;gap:var(--pad-sm);background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r5);padding:var(--pad)}
+.aibar .glow{width:30px;height:30px;border-radius:9px;background:linear-gradient(120deg,#6E8BFF,#c56cff);display:grid;place-items:center;color:#fff;flex:none}
+.aibar .ph{color:var(--faint);font-size:14px;flex:1}
+.aibar .go{background:var(--accent);color:var(--accent-ink);border:0;border-radius:9px;padding:8px 15px;font-weight:640;font-size:12.5px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips .x{font-size:11.5px;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+.chips .x:hover{border-color:var(--accent-line);color:var(--ink)}
+.h-lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:9px;min-height:112px}
+.tile:hover{border-color:var(--accent-line)}
+.tile .ti{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+.tile .tt{font-size:12.5px;font-weight:620;color:var(--ink)}
+.tile .td{font-size:11px;color:var(--faint);line-height:1.4}
+.recents{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.rec{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--panel)}
+.rec .pv{height:84px}
+.rec .cap{padding:7px 9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between}
+
+/* foundations */
+.thesis{background:linear-gradient(120deg,var(--accent-soft),transparent);border:1px solid var(--accent-line);border-radius:var(--r4);padding:var(--pad);margin:0;font-size:13px;line-height:1.5}
+.thesis b{color:var(--accent)}
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;padding:var(--inset)}
+.fcol{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad)}
+.fcol h3{margin:0 0 3px;font-size:14px;letter-spacing:-.01em}
+.fcol .sub{font-size:11px;color:var(--dim);margin:0 0 12px;line-height:1.4}
+.farrow{display:grid;place-items:center;color:var(--faint);width:46px;font-size:18px}
+.prim{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin:6px 0;font-size:11.5px;font-weight:540;cursor:pointer}
+.prim:hover{border-color:var(--accent-line)}
+.prim .d{width:8px;height:8px;border-radius:2px;flex:none}
+.codeblk{background:var(--artboard);border-radius:10px;padding:12px 13px;font-family:var(--mono);font-size:10.5px;line-height:1.6;color:#c9d3ef;overflow-x:auto;border:1px solid #20263a}
+.codeblk .k{color:#7f9bff}.codeblk .s{color:#7fd7a6}.codeblk .c{color:#5c6680}.codeblk .p{color:#e0a5ff}
+/* design-system tier band */
+.dstier{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--gap);margin:0}
+.dtile{border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad);background:var(--panel)}
+.dtile.on-comp{border-color:var(--comp-line)}
+.dtile h4{margin:0 0 4px;font-size:12.5px;display:flex;align-items:center;gap:7px}
+.dtile p{margin:0;font-size:11px;color:var(--dim);line-height:1.45}
+.dtile .tg{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:2px 6px;border-radius:5px}
+
+/* design system surface */
+.dsys{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;flex:1}
+.dcol{padding:var(--pad);border-right:1px solid var(--line)}
+.dcol:last-child{border-right:0}
+.dcol h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:660;margin:0 0 12px;display:flex;align-items:center;justify-content:space-between}
+.dsub{font-size:10px;color:var(--faint);font-weight:600;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.06em}
+.dsub:first-child{margin-top:0}
+.tokrow{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--dim);padding:5px 0}
+.tokrow .sw{width:20px;height:20px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.12)}
+.tokrow .nm{color:var(--ink);font-weight:520}
+.tokrow .hex{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.ramp{display:flex;flex-direction:column;gap:8px}
+.rampitem{display:flex;align-items:baseline;gap:10px}
+.rampitem .lbl{width:56px;font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
+.rampitem .txt{color:var(--ink);font-family:var(--serif)}
+.spacetags{display:flex;gap:6px;flex-wrap:wrap}
+.styrow{display:flex;align-items:center;gap:var(--gap-sm);background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm);margin-bottom:var(--gap-sm);font-size:11.5px}
+.styrow .sw{width:22px;height:22px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.12)}
+.styrow .nm{color:var(--ink);font-weight:560}
+.styrow .use{margin-left:auto;font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+.styrow:hover{border-color:var(--accent-line)}
+.comps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.comp{border:1px solid var(--comp-line);border-radius:11px;overflow:hidden;background:var(--panel);cursor:pointer}
+.comp:hover{box-shadow:0 6px 18px -8px rgba(154,92,255,.4)}
+.comp .pv{height:66px;display:grid;place-items:center;background:repeating-conic-gradient(var(--panel-2) 0% 25%,transparent 0% 50%) 0 0/14px 14px}
+.comp .meta{padding:var(--gap-sm) var(--pad-sm);border-top:1px solid var(--comp-line);display:flex;align-items:center;gap:6px}
+.comp .meta .cn{font-size:11px;font-weight:620;color:var(--ink)}
+.comp .meta .ci{margin-left:auto;font-size:9.5px;color:var(--comp);font-weight:600}
+.comp .diamond{color:var(--comp);font-size:10px}
+/* mini component previews */
+.mini-btn{background:linear-gradient(180deg,#fff,#f0eaff);color:#3a1d6e;font-size:10px;font-weight:700;padding:6px 12px;border-radius:8px}
+.mini-badge{background:var(--comp);color:#fff;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 7px;border-radius:999px}
+.mini-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+.mini-tile{width:50px;height:34px;border-radius:7px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+
+/* image editor */
+.photo{width:360px;height:270px;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 20px 44px -14px rgba(0,0,0,.6)}
+.photo .sky{position:absolute;inset:0;background:linear-gradient(180deg,#ffb36b 0%,#ff7e5f 40%,#7b4397 100%)}
+.photo .sun{position:absolute;top:34%;left:50%;transform:translateX(-50%);width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fff6d6,#ffd27a);box-shadow:0 0 50px 12px rgba(255,210,122,.6)}
+.photo .hill{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(180deg,#3a2352,#1a1030)}
+.photo .masksel{position:absolute;left:0;bottom:0;right:0;height:38%;border:1.5px dashed #4c6fff;background:rgba(76,111,255,.14)}
+.histogram{height:44px;display:flex;align-items:flex-end;gap:2px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.histogram i{flex:1;background:var(--dim);border-radius:1px;opacity:.55}
+.curve{height:96px;background:var(--panel);border:1px solid var(--line);border-radius:8px;position:relative;overflow:hidden}
+.curve svg{position:absolute;inset:0}
+.masklist{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);padding:6px 0}
+.masklist .mm{width:24px;height:18px;border-radius:4px;background:linear-gradient(135deg,#4c6fff,#7c4dff)}
+
+/* video editor */
+.vpreview{background:radial-gradient(600px 300px at 50% 40%,#171a26,#0a0c11);display:grid;place-items:center;min-height:250px;position:relative}
+.vframe{width:420px;height:236px;border-radius:8px;position:relative;overflow:hidden;box-shadow:0 18px 40px -14px rgba(0,0,0,.6);background:linear-gradient(135deg,#12c2e9,#7c4dff 55%,#ff5d8f)}
+.vframe .cap{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:13px;font-weight:600;padding:5px 12px;border-radius:7px;white-space:nowrap}
+.vframe .title{position:absolute;left:24px;top:22px;font-family:var(--serif);color:#fff;font-size:26px;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.vctrls{display:flex;align-items:center;justify-content:center;gap:16px;padding:9px;background:var(--panel-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--dim);font-size:14px}
+.vctrls .t{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.timeline{background:var(--panel);padding:10px 12px 14px;position:relative;min-height:172px}
+.ruler{height:16px;border-bottom:1px solid var(--line);display:flex;gap:0;margin-bottom:8px;position:relative}
+.ruler span{flex:1;font-size:9px;color:var(--faint);font-family:var(--mono);border-left:1px solid var(--line);padding-left:3px}
+.track{display:flex;align-items:center;gap:8px;margin:6px 0}
+.track .tl{width:58px;font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;flex:none;display:flex;align-items:center;gap:5px}
+.track .lane{flex:1;height:34px;position:relative;display:flex;gap:4px}
+.clip{height:34px;border-radius:6px;position:relative;overflow:hidden;display:flex;align-items:center;padding:0 8px;font-size:10px;color:#fff;font-weight:600;flex:none}
+.clip.v1{background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+.clip.v2{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.clip.txt{background:#2a2f45;border:1px solid #3d456a}
+.clip.aud{background:linear-gradient(180deg,#26463a,#1c3a30);color:#8fe;display:flex;align-items:center}
+.clip .kf{position:absolute;top:50%;width:7px;height:7px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(0,0,0,.2)}
+.clip.sel{outline:2px solid var(--accent);outline-offset:1px}
+.transition{width:16px;height:34px;background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px);border-radius:3px;flex:none;align-self:center;position:relative}
+.transition::after{content:"⤫";position:absolute;inset:0;display:grid;place-items:center;color:#1a1c22;font-size:10px}
+.playhead{position:absolute;top:26px;bottom:10px;width:2px;background:var(--crit);left:38%}
+.playhead::before{content:"";position:absolute;top:-6px;left:-4px;border:5px solid transparent;border-top-color:var(--crit)}
+.wave{display:flex;align-items:center;gap:2px;height:100%;padding:0 6px}
+.wave i{width:2px;background:#8fe;opacity:.7;border-radius:1px}
+
+/* walkthrough */
+.wsteps{position:relative}
+.wstep{display:none}.wstep.on{display:block;animation:fade .25s ease}
+.wobj{position:relative;display:inline-block}
+.uibtn{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:660;color:#fff;background:#3550c8;padding:11px 20px;border-radius:12px;box-shadow:0 8px 20px -8px rgba(53,80,200,.6)}
+.uibtn.grad{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.uibtn.round{border-radius:22px}
+.marq{position:absolute;inset:-11px;border:1.5px dashed var(--accent);border-radius:16px;pointer-events:none}
+.cring{position:absolute;inset:-7px;border:1.5px solid var(--comp);border-radius:17px;pointer-events:none}
+.sublbl{position:absolute;left:0;bottom:-22px;display:flex;gap:6px}
+.sublbl span{font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 6px;border-radius:5px}
+.libchip{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:7px;background:var(--comp-soft);border:1px solid var(--comp-line);color:var(--comp);font-size:11px;font-weight:600;padding:7px 11px;border-radius:9px}
+.libchip .mini-btn{transform:scale(.8)}
+.cmdhint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);font-size:11px;font-weight:600;padding:6px 12px;border-radius:8px;font-family:var(--mono)}
+.toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;background:var(--good);color:#fff;font-size:11.5px;font-weight:640;padding:7px 13px;border-radius:9px;box-shadow:0 8px 20px -8px rgba(0,0,0,.4)}
+.miniinsp{position:absolute;right:14px;top:14px;width:186px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px;box-shadow:var(--shadow);font-size:11px}
+.miniinsp .h{font-size:10px;font-weight:660;color:var(--comp);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.miniinsp .r{display:flex;align-items:center;gap:6px;margin:5px 0;color:var(--dim)}
+.miniinsp .r .l{width:52px;color:var(--faint);font-size:10px}
+.wcap{display:flex;gap:var(--pad-sm);align-items:flex-start;background:var(--panel-2);border-top:1px solid var(--line);padding:var(--pad)}
+.wcap .num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700;display:grid;place-items:center;flex:none;margin-top:1px}
+.wcap.comp .num{background:var(--comp)}
+.wcap.img .num{background:#ff7e5f}
+.wcap.vid .num{background:#12c2e9}
+.wcap .tx{font-size:12.5px;line-height:1.5;color:var(--dim)}
+.wcap .tx b{color:var(--ink);font-weight:640}
+.wcap .tx code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+.wbar{display:flex;align-items:center;gap:16px;padding:4px 6px}
+.wbar button{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 15px;font-size:12.5px;font-weight:560;color:var(--ink)}
+.wbar button:hover{border-color:var(--accent-line)}
+.wbar button:disabled{opacity:.4;cursor:default}
+.wbar button.next{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.wdots{display:flex;gap:7px;flex:1;align-items:center}
+.wdots i{width:8px;height:8px;border-radius:50%;background:var(--line-strong);cursor:pointer}
+.wdots i.on{background:var(--accent);transform:scale(1.25)}
+.wlabel{font-size:12px;color:var(--dim);font-weight:560;font-variant-numeric:tabular-nums}
+.wlabel b{color:var(--ink)}
+.vmini{background:var(--panel);border-top:1px solid var(--line);padding:8px 12px}
+.vmini .track{margin:3px 0}
+.foot{font-size:11px;color:var(--faint);text-align:center;padding:6px 0 2px}
+
+/* claude */
+.subtabs{display:inline-flex;gap:6px;padding:2px 4px}
+.subtab{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:560;color:var(--dim)}
+.subtab.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.alt{display:none}.alt.on{display:block}
+.cpwrap{position:relative}
+.cpdim{position:absolute;inset:0;background:rgba(6,8,14,.42);backdrop-filter:blur(2px);z-index:4}
+.cpal{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:min(560px,86%);z-index:5;background:var(--chrome-solid);border:1px solid var(--line-strong);border-radius:14px;box-shadow:0 30px 70px -20px rgba(0,0,0,.6);overflow:hidden}
+.cpin{display:flex;align-items:center;gap:11px;padding:15px 17px;border-bottom:1px solid var(--line)}
+.cpin .sp{width:22px;height:22px;border-radius:7px;background:linear-gradient(120deg,#6E8BFF,#c56cff);flex:none}
+.cpin input{border:0;background:transparent;flex:1;font-size:15px;color:var(--ink);outline:none;font-family:inherit}
+.cpin .car{width:2px;height:20px;background:var(--accent);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.cplist{padding:8px}
+.cpx{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:12px;color:var(--dim)}
+.cpx .tick{color:var(--good)}
+.cpx code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:5px}
+.cpx.run{background:var(--panel-2);color:var(--ink)}
+.dock{display:grid;grid-template-columns:1fr 300px;min-height:400px}
+.chat{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column}
+.chat-h{padding:12px 14px;border-bottom:1px solid var(--line);font-size:11px;font-weight:660;color:var(--ink);display:flex;align-items:center;gap:8px}
+.chat-b{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1;overflow:auto}
+.msg{font-size:12px;line-height:1.5}
+.msg.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);padding:8px 12px;border-radius:12px 12px 3px 12px;max-width:80%}
+.msg.a{color:var(--dim)}
+.msg.a .did{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-top:7px}
+.msg.a .did .step{display:flex;gap:8px;align-items:center;font-size:11px;margin:3px 0}
+.msg.a .did .step .t{color:var(--good)}
+.chat-in{padding:11px 13px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.chat-in .box{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--faint)}
+.ghost{position:absolute;width:300px;background:rgba(20,24,40,.7);backdrop-filter:blur(10px);border:1.5px dashed var(--accent);border-radius:12px;padding:14px;color:#fff}
+.ghost .lab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a9b8ff;font-weight:660;display:flex;gap:7px;align-items:center}
+.ghost .txt{font-size:13px;margin-top:7px;line-height:1.45}
+.ghost .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* redline */
+.shot{width:420px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#fff;box-shadow:0 20px 40px -12px rgba(0,0,0,.5);position:relative}
+.shot .bar{height:34px;background:#f3f4f7;display:flex;align-items:center;padding:0 12px;gap:6px}
+.shot .bar i{width:9px;height:9px;border-radius:50%}
+.shot .body{padding:22px;display:flex;flex-direction:column;gap:14px;background:#fff}
+.mockrow{height:16px;border-radius:5px;background:#e6e8ee}
+.mockrow.w1{width:60%}.mockrow.w2{width:85%}.mockrow.btn{width:120px;height:34px;background:#4c6fff}
+.measure{position:absolute}
+.mline{border-top:1.5px dashed #ff4d6d}
+.mcap{background:#ff4d6d;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap;position:absolute}
+</style>
+</head>
+<body>
+<div class="proto">
+  <div class="pbar">
+    <span class="mark"></span>
+    <h1>Photonz</h1>
+    <span class="tag">Creation Vision · direction study</span>
+    <span class="spacer"></span>
+    <span class="hint"><b>Non-functional mockups.</b> Rail is grouped by scenario · click highlighted controls to move between surfaces.</span>
+  </div>
+  <div class="body">
+    <nav class="rail" id="rail">
+      <div class="grp">Concept</div>
+      <button class="nav on" data-target="foundations">Foundations</button>
+      <button class="nav" data-target="home">Home &amp; New</button>
+
+      <div class="grp"><span class="dot" style="background:var(--good)"></span>Guided walkthrough</div>
+      <button class="nav" data-target="walk">Create &amp; reuse a component</button>
+
+      <div class="grp"><span class="dot" style="background:var(--comp)"></span>UI &amp; content design</div>
+      <button class="nav" data-target="dsys">Design system</button>
+      <button class="nav" data-target="editor">UI editor</button>
+
+      <div class="grp"><span class="dot" style="background:#ff7e5f"></span>Image editing</div>
+      <button class="nav" data-target="image">Image editor</button>
+      <button class="nav" data-target="redline">Measure &amp; redline</button>
+
+      <div class="grp"><span class="dot" style="background:#12c2e9"></span>Video editing</div>
+      <button class="nav" data-target="video">Video editor</button>
+
+      <div class="grp">Across everything</div>
+      <button class="nav" data-target="claude">Claude automation</button>
+      <button class="nav" data-target="paint">Paint · fill primitive</button>
+      <button class="nav" data-target="effects">Effects · the stack</button>
+    </nav>
+
+    <main class="stage" id="stage">
+
+      <!-- ===== FOUNDATIONS ===== -->
+      <section class="screen on" id="foundations">
+        <div class="thesis">
+          Design order (not build order): <b>Primitives → API → UI</b>. A scriptable command model can't be vague, so defining it <i>forces</i> a shared vocabulary. That serialized model <b>is</b> the design system — the thing that keeps every scenario (UI, image, video) predictable and lets <b>Claude drive all of it</b>.
+        </div>
+        <div class="win">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Primitives → API → UI</b></div><div class="tbtns"></div></div>
+          <div class="flow">
+            <div class="fcol">
+              <h3>Primitives</h3>
+              <p class="sub">Five shared building blocks. Everything is expressed in these.</p>
+              <div class="prim" data-target="paint"><span class="d" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Paint · solid/gradient/image/noise</div>
+              <div class="prim" data-target="effects"><span class="d" style="background:#3ecf8e"></span>Effect stack · glow/shadow/blur</div>
+              <div class="prim" data-target="editor"><span class="d" style="background:#7f9bff"></span>Layer · raster/vector/text/group</div>
+              <div class="prim" data-target="dsys"><span class="d" style="background:#e0a53a"></span>Type · ramp, weight, tracking</div>
+              <div class="prim" data-target="dsys"><span class="d" style="background:#f0685c"></span>Tokens · spacing/radius/color</div>
+            </div>
+            <div class="farrow">→</div>
+            <div class="fcol">
+              <h3>API</h3>
+              <p class="sub">Primitives serialized into one IPC command surface. Claude and the app both speak it.</p>
+              <div class="codeblk"><span class="c">// same commands the UI calls</span><br><span class="k">create_layer</span>({<br>&nbsp;kind:<span class="s">"instance"</span>, of:<span class="s">"Button"</span>,<br>&nbsp;fill:<span class="p">style</span>(<span class="s">"Brand/gradient"</span>),<br>&nbsp;effects:[<span class="p">style</span>(<span class="s">"Card glow"</span>)]<br>})</div>
+            </div>
+            <div class="farrow">→</div>
+            <div class="fcol">
+              <h3>UI</h3>
+              <p class="sub">Every panel &amp; tool is a thin client over the API. Nothing the UI does, Claude can't.</p>
+              <div class="prim" data-target="editor">🎨 Inspector → edit fill/effects</div>
+              <div class="prim" data-target="dsys">🧩 Design system → styles &amp; components</div>
+              <div class="prim" data-target="claude">✦ Claude → drive by prompt</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dstier">
+          <div class="dtile"><h4><span class="tg" style="background:var(--warn);color:#fff">Tier 1</span> Tokens</h4><p>Raw values: color, spacing, radius, type scale. The atoms everything references.</p></div>
+          <div class="dtile"><h4><span class="tg" style="background:var(--accent);color:#fff">Tier 2</span> Styles</h4><p><b style="color:var(--ink)">Named</b> Paint / Effect / Type. Edit "Brand gradient" once → every use updates.</p></div>
+          <div class="dtile on-comp"><h4><span class="tg" style="background:var(--comp);color:#fff">Tier 3</span> Components</h4><p>Reusable layer trees you <b style="color:var(--ink)">instance and re-paint</b> with any Style. Figma-style, Photonz-native.</p></div>
+        </div>
+
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>Five primitives, plus a <b>design-system tier</b> on top: Tokens → Styles → <b>Components</b>. This is how creation stays consistent instead of sprawling.</p></div>
+          <div class="c"><div class="lab g2">Reuse, like Figma</div><p>A <b>Style</b> is a named primitive; a <b>Component</b> is a reusable, paintable layer tree. Both are first-class in the API, so Claude composes with them too.</p></div>
+          <div class="c"><div class="lab g2">Try it</div><p>Click a <b>primitive</b> to jump to its surface, or open the <b>Design system</b>.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== HOME ===== -->
+      <section class="screen" id="home">
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Photonz</b> — New</div><div class="tbtns"><span class="pill">Open…</span><span class="pill solid">New canvas</span></div></div>
+          <div class="home">
+            <div class="aibar" data-target="claude"><span class="glow">✦</span><span class="ph">Describe what you want to create — “a pricing card with our brand gradient”…</span><button class="go">Create</button></div>
+            <div class="chips"><span class="x" data-target="claude">3-up feature grid</span><span class="x" data-target="claude">Device mockup of this shot</span><span class="x" data-target="claude">15s launch teaser</span><span class="x" data-target="claude">Annotated release note</span></div>
+            <div>
+              <div class="h-lab" style="margin-bottom:10px">Start a project — pick a scenario</div>
+              <div class="tiles">
+                <div class="tile" data-target="editor"><span class="ti" style="background:var(--comp-soft);color:var(--comp)">◈</span><span class="tt">Design UI</span><span class="td">Components, tokens, auto-layout</span></div>
+                <div class="tile" data-target="image"><span class="ti" style="background:#ffe8dd;color:#ff7e5f">▧</span><span class="tt">Edit an image</span><span class="td">Adjust, mask, retouch, effects</span></div>
+                <div class="tile" data-target="video"><span class="ti" style="background:#dff5fb;color:#12a0c9">►</span><span class="tt">Edit video</span><span class="td">Timeline, transitions, captions</span></div>
+                <div class="tile" data-target="redline"><span class="ti" style="background:var(--accent-soft);color:var(--accent)">⌗</span><span class="tt">Capture &amp; redline</span><span class="td">⌘⇧4 · measure + annotate</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="h-lab" style="margin-bottom:10px">Recent</div>
+              <div class="recents">
+                <div class="rec" data-target="editor"><div class="pv" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></div><div class="cap"><span>hero-card</span><span>2h</span></div></div>
+                <div class="rec" data-target="image"><div class="pv" style="background:linear-gradient(180deg,#ffb36b,#7b4397)"></div><div class="cap"><span>sunset-edit</span><span>y'day</span></div></div>
+                <div class="rec" data-target="video"><div class="pv" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></div><div class="cap"><span>launch-teaser</span><span>2d</span></div></div>
+                <div class="rec" data-target="redline"><div class="pv" style="background:#eef0f4"></div><div class="cap"><span>settings-redline</span><span>3d</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>One front door for every scenario. Start tiles map to the three workspaces — <b>Design UI · Image · Video</b> — plus the fast redline path, all sharing the same primitives.</p></div>
+          <div class="c"><div class="lab g2">Direction</div><p>Prompt bar up top makes automation the headline. Alternative: demote it once you're a returning user so recents lead.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== WALKTHROUGH ===== -->
+      <section class="screen" id="walk">
+        <div class="scen-head"><span class="pip" style="background:var(--good)"></span><h2>Walkthrough</h2><span class="k">· create a component once, then reuse it across UI, image &amp; video</span></div>
+        <div class="wsteps">
+
+          <div class="wstep on" data-step="1">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:var(--comp)">◈ UI editor — hero-card</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px"><div class="wobj"><span class="uibtn">Get Photonz →</span><span class="marq"></span><span class="sublbl"><span>▭ Background</span><span>T Label</span></span></div></div>
+              <div class="wcap"><span class="num">1</span><div class="tx"><b>Select the parts.</b> Marquee-select the button's layers — a <b>Background</b> shape and a <b>Label</b>. Two ordinary layers so far, nothing reusable yet.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="2">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:var(--comp)">◈ UI editor — hero-card</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px">
+                <div class="wobj"><span class="uibtn">Get Photonz →</span><span class="cring"></span><span class="cbadge" style="left:-7px">◈ Button · main</span></div>
+                <div class="libchip"><span class="mini-btn">Get Photonz →</span> ＋ added to Library</div>
+                <div class="cmdhint">⌘⌥K · Create component</div>
+              </div>
+              <div class="wcap comp"><span class="num">2</span><div class="tx"><b>Make it a component.</b> Press <code>⌘⌥K</code> (or right-click → Create component). The selection becomes the main component <b>“Button”</b> and joins your <b>Library</b> — reusable everywhere, editable in one place.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="3">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:var(--comp)">◈ UI editor — pricing</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px;gap:60px;display:flex;place-items:center;justify-content:center">
+                <div class="wobj"><span class="uibtn">Get Photonz →</span><span class="cring"></span><span class="cbadge" style="left:-7px">◈ main</span></div>
+                <div class="wobj"><span class="uibtn">Get Photonz →</span><span class="cinst" style="border-style:dashed"></span><span class="cbadge" style="left:-6px">◈ instance</span></div>
+              </div>
+              <div class="wcap comp"><span class="num">3</span><div class="tx"><b>Use it.</b> Drag an <b>instance</b> from the Library onto any canvas — even a different document. It's a live <b>link</b> to the main, not a copy.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="4">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:var(--comp)">◈ UI editor — pricing</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px">
+                <div class="wobj"><span class="uibtn grad">Get Photonz →</span><span class="cinst" style="border-style:dashed"></span><span class="cbadge" style="left:-6px">◈ instance</span></div>
+                <div class="miniinsp">
+                  <div class="h">◈ Button · instance</div>
+                  <div class="r"><span class="l">Variant</span><span class="chip comp" style="margin:0">Primary ▾</span></div>
+                  <div class="r"><span class="l">Fill</span><span class="chip style" style="margin:0"><span class="sw"></span>Brand/grad</span></div>
+                  <div class="r" style="color:var(--faint);font-size:10px">link to main · intact</div>
+                </div>
+              </div>
+              <div class="wcap comp"><span class="num">4</span><div class="tx"><b>Override safely.</b> Re-<b>paint</b> the instance with a named <b>Style</b> (Brand/gradient) and switch its <b>Variant</b> to Primary. Overrides are per-instance — the link to the main stays intact.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="5">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:var(--comp)">◈ Main component — Button</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px;flex-direction:column;gap:34px;display:flex;place-items:center;justify-content:center">
+                <div class="toast">✓ Main edited → 42 instances updated</div>
+                <div class="wobj"><span class="uibtn round">Get Photonz →</span><span class="cring"></span><span class="cbadge" style="left:-7px">◈ main · radius 12 → 22</span></div>
+                <div style="display:flex;gap:44px">
+                  <div class="wobj"><span class="uibtn round grad" style="font-size:12px;padding:9px 15px">Get Photonz →</span><span class="cinst" style="border-style:dashed"></span></div>
+                  <div class="wobj"><span class="uibtn round" style="font-size:12px;padding:9px 15px">Buy now</span><span class="cinst" style="border-style:dashed"></span></div>
+                </div>
+              </div>
+              <div class="wcap comp"><span class="num">5</span><div class="tx"><b>Edit once, update everywhere.</b> Change the main's corner radius and <b>every instance updates instantly</b>, across every document — even ones you re-painted (they keep their overrides). That's the whole point.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="6">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:#ff7e5f">▧ Image editor — sunset-edit</div><div class="tbtns"></div></div>
+              <div class="canvas" style="min-height:300px;background:radial-gradient(700px 420px at 50% 30%,#141826,#0a0c11)">
+                <div class="photo">
+                  <div class="sky"></div><div class="sun"></div><div class="hill"></div>
+                  <div class="wobj" style="position:absolute;left:18px;top:18px"><span class="mini-badge" style="font-size:10px;padding:5px 10px">◆ Featured</span><span class="cinst" style="border-style:dashed;inset:-5px"></span><span class="cbadge" style="left:-5px;top:-22px">◈ Badge · Glass</span></div>
+                </div>
+              </div>
+              <div class="wcap img"><span class="num">6</span><div class="tx"><b>Reuse in image editing.</b> A component is just a layer tree, so drop the same <b>◈ Badge</b> straight onto a photo as an overlay — re-painted with the <b>Glass</b> style. Watermarks, callouts, annotation chips: all reusable components.</div></div>
+            </div>
+          </div>
+
+          <div class="wstep" data-step="7">
+            <div class="win"><div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle" style="color:#12c2e9">► Video editor — launch-teaser</div><div class="tbtns"></div></div>
+              <div class="vpreview" style="min-height:230px">
+                <div class="vframe" style="width:380px;height:214px">
+                  <div class="wobj" style="position:absolute;left:22px;bottom:20px">
+                    <div style="background:rgba(10,12,20,.62);backdrop-filter:blur(8px);border-radius:10px;padding:9px 14px;border-left:3px solid #ff5d8f">
+                      <div style="font-family:var(--serif);color:#fff;font-size:17px;font-weight:700;line-height:1">Ship it faster.</div>
+                      <div style="color:rgba(255,255,255,.8);font-size:10px;margin-top:2px">one fast canvas</div>
+                    </div>
+                    <span class="cinst" style="border-style:dashed;inset:-5px;border-radius:11px"></span><span class="cbadge" style="left:-5px;top:-22px">◈ Lower third</span>
+                  </div>
+                </div>
+              </div>
+              <div class="vmini">
+                <div class="track"><span class="tl" style="color:var(--comp)">◈ Title</span><div class="lane"><div class="clip txt" style="width:44%;margin-left:8%;background:var(--comp-soft);border:1px solid var(--comp-line);color:var(--comp)">◈ Lower third<span class="kf" style="left:12%;background:var(--comp)"></span><span class="kf" style="left:86%;background:var(--comp)"></span></div></div></div>
+                <div class="track"><span class="tl">▧ Video</span><div class="lane"><div class="clip v1" style="width:96%">clip-01</div></div></div>
+              </div>
+              <div class="wcap vid"><span class="num">7</span><div class="tx"><b>Reuse in video editing.</b> Place the same component on the <b>Title track</b> as an animated <b>lower-third</b> — <b>keyframe</b> any property (position, opacity, or a Style). One component, three scenarios, one design system.</div></div>
+            </div>
+          </div>
+
+        </div>
+        <div class="wbar">
+          <button class="wprev" disabled>← Back</button>
+          <div class="wdots"><i class="on" data-step="1"></i><i data-step="2"></i><i data-step="3"></i><i data-step="4"></i><i data-step="5"></i><i data-step="6"></i><i data-step="7"></i></div>
+          <span class="wlabel">Step <b>1</b> / 7 — Select the parts</span>
+          <button class="wnext next">Next →</button>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Create → reuse</div><p>The full arc: two layers → a <b>main component</b> → linked <b>instances</b> → per-instance <b>overrides</b> → <b>edit-once-update-everywhere</b>.</p></div>
+          <div class="c"><div class="lab g2">Across scenarios</div><p>Because a component is just a layer tree, the <b>same</b> ◈ Button/Badge/Lower-third drops onto a UI canvas, a <b>photo</b>, or a <b>video timeline</b> — re-painted with Styles, keyframed in video.</p></div>
+          <div class="c"><div class="lab g2">Automatable</div><p>Every step here is one API call (<code>create_component</code>, <code>instance</code>, <code>set_override</code>) — so Claude can build and reuse components too.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== DESIGN SYSTEM ===== -->
+      <section class="screen" id="dsys">
+        <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>UI &amp; content design</h2><span class="k">· Design system — tokens, styles &amp; reusable components</span></div>
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Brand</b> — Design system</div><div class="tbtns"><span class="pill" data-target="editor">Use in editor ›</span></div></div>
+          <div class="dsys">
+            <!-- tokens -->
+            <div class="dcol">
+              <h3>Tokens <span class="mut" style="font-weight:520;color:var(--faint)">raw values</span></h3>
+              <div class="dsub">Color</div>
+              <div class="tokrow"><span class="sw" style="background:#7c4dff"></span><span class="nm">brand/500</span><span class="hex">#7C4DFF</span></div>
+              <div class="tokrow"><span class="sw" style="background:#b14dff"></span><span class="nm">brand/400</span><span class="hex">#B14DFF</span></div>
+              <div class="tokrow"><span class="sw" style="background:#ff5d8f"></span><span class="nm">accent/pink</span><span class="hex">#FF5D8F</span></div>
+              <div class="tokrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">ink/900</span><span class="hex">#0C0E14</span></div>
+              <div class="tokrow"><span class="sw" style="background:#f1f3f7"></span><span class="nm">surface/50</span><span class="hex">#F1F3F7</span></div>
+              <div class="dsub">Type scale</div>
+              <div class="ramp">
+                <div class="rampitem"><span class="lbl">Display</span><span class="txt" style="font-size:22px;font-weight:700">Aa 44</span></div>
+                <div class="rampitem"><span class="lbl">Title</span><span class="txt" style="font-size:16px;font-weight:600">Aa 24</span></div>
+                <div class="rampitem"><span class="lbl">Body</span><span class="txt" style="font-size:13px;font-family:var(--sans)">Aa 15</span></div>
+                <div class="rampitem"><span class="lbl">Caption</span><span class="txt" style="font-size:11px;font-family:var(--sans);color:var(--dim)">Aa 12</span></div>
+              </div>
+              <div class="dsub">Spacing · radius</div>
+              <div class="spacetags"><span class="chip">4</span><span class="chip">8</span><span class="chip">12</span><span class="chip">16</span><span class="chip">24</span><span class="chip">r12</span><span class="chip">r22</span></div>
+            </div>
+            <!-- styles -->
+            <div class="dcol">
+              <h3>Styles <span class="mut" style="font-weight:520;color:var(--faint)">named + reusable</span></h3>
+              <div class="dsub">Paint styles</div>
+              <div class="styrow" data-target="paint"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="nm">Brand / gradient</span><span class="use">18 uses</span></div>
+              <div class="styrow" data-target="paint"><span class="sw" style="background:linear-gradient(135deg,#ffb36b,#7b4397)"></span><span class="nm">Sunset</span><span class="use">4</span></div>
+              <div class="styrow" data-target="paint"><span class="sw" style="background:rgba(255,255,255,.25);backdrop-filter:blur(2px);border:1px solid #ccd"></span><span class="nm">Glass</span><span class="use">9</span></div>
+              <div class="dsub">Effect styles</div>
+              <div class="styrow" data-target="effects"><span class="sw" style="background:#141826;box-shadow:0 0 10px 1px rgba(177,77,255,.8) inset"></span><span class="nm">Card glow</span><span class="use">12</span></div>
+              <div class="styrow" data-target="effects"><span class="sw" style="background:#fff;box-shadow:0 3px 6px rgba(0,0,0,.35)"></span><span class="nm">Soft shadow</span><span class="use">30</span></div>
+              <div class="dsub">Text styles</div>
+              <div class="styrow"><span class="sw" style="display:grid;place-items:center;font-family:var(--serif);font-weight:700;background:var(--panel);color:var(--ink)">D</span><span class="nm">Display / 44</span><span class="use">6</span></div>
+              <div class="styrow"><span class="sw" style="display:grid;place-items:center;font-weight:600;background:var(--panel);color:var(--ink);font-size:10px">Ey</span><span class="nm">Eyebrow / caps</span><span class="use">8</span></div>
+            </div>
+            <!-- components -->
+            <div class="dcol">
+              <h3 style="color:var(--comp)">Components <span class="mut" style="font-weight:520">◈ instance &amp; paint</span></h3>
+              <div class="comps">
+                <div class="comp" data-target="editor"><div class="pv"><span class="mini-btn">Get Photonz →</span></div><div class="meta"><span class="diamond">◈</span><span class="cn">Button</span><span class="ci">42×</span></div></div>
+                <div class="comp" data-target="editor"><div class="pv"><span class="mini-badge">◆ New</span></div><div class="meta"><span class="diamond">◈</span><span class="cn">Badge</span><span class="ci">17×</span></div></div>
+                <div class="comp" data-target="editor"><div class="pv"><span class="mini-tile"></span></div><div class="meta"><span class="diamond">◈</span><span class="cn">Feature tile</span><span class="ci">9×</span></div></div>
+                <div class="comp" data-target="editor"><div class="pv"><span class="mini-avatar"></span></div><div class="meta"><span class="diamond">◈</span><span class="cn">Avatar</span><span class="ci">23×</span></div></div>
+              </div>
+              <div style="font-size:11px;color:var(--dim);line-height:1.55;margin-top:14px;background:var(--comp-soft);border:1px solid var(--comp-line);border-radius:10px;padding:11px 12px">
+                <b style="color:var(--comp)">Reusable &amp; paintable.</b> Drop a component, then swap its variant or <b style="color:var(--ink)">re-paint</b> it with any Paint/Effect <b style="color:var(--ink)">Style</b>. Edit the main component → every instance updates.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Your ask, built in</div><p>A real design system: <b>Tokens</b> (raw) → <b>Styles</b> (named Paint/Effect/Type) → <b>Components</b> (reusable layer trees). Change a style once, everything using it updates.</p></div>
+          <div class="c"><div class="lab g2">Paintable components</div><p>Instances keep a link to the main component but can be <b>re-painted</b> with any Style or swapped to a variant. Click a component → see an instance selected in the editor.</p></div>
+          <div class="c"><div class="lab g2">API mirror</div><p><code>fill: style("Brand/gradient")</code> and <code>instance of:"Button"</code> are first-class commands — Claude reuses your system too.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== UI EDITOR ===== -->
+      <section class="screen" id="editor">
+        <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>UI &amp; content design</h2><span class="k">· editor — canvas, components, inspector</span></div>
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>hero-card</b> — 1200 × 630</div><div class="tbtns"><span class="pill">100%</span><span class="pill ai" data-target="claude">✦ Ask Claude <span class="kbd">⌘K</span></span><span class="pill solid">Export</span></div></div>
+          <div class="toolbar">
+            <button class="tool on" title="Select">◄</button><button class="tool" title="Frame">▭</button><button class="tool" title="Shape">▢</button><button class="tool" title="Pen">✎</button><button class="tool" title="Text">T</button><button class="tool" title="Component" data-target="dsys" style="color:var(--comp)">◈</button>
+            <span class="tsep"></span><button class="tool" title="Measure" data-target="redline">⌗</button>
+            <span class="tspacer"></span><span class="chip style"><span class="sw"></span>Brand ▾</span>
+          </div>
+          <div class="edit">
+            <div class="pane layers">
+              <div class="pane-h">Layers <span class="add">+</span></div>
+              <div class="lgroup">▾ ▣ Hero card</div>
+              <div class="lrow child"><span class="ic">▭</span><span class="nm">Card · Brand/grad</span><span class="eye">◉</span></div>
+              <div class="lrow child"><span class="ic">T</span><span class="nm">Headline</span><span class="eye">◉</span></div>
+              <div class="lrow child"><span class="ic">T</span><span class="nm">Subhead</span><span class="eye">◉</span></div>
+              <div class="lrow child selc"><span class="ic">◈</span><span class="nm">Button</span><span class="cmark">◈</span></div>
+              <div class="lrow child"><span class="ic">◈</span><span class="nm">Badge</span><span class="cmark">◈</span></div>
+              <div class="lrow"><span class="ic">▦</span><span class="nm">Background</span><span class="eye">◉</span></div>
+            </div>
+            <div class="canvas">
+              <div class="artboard-label">1200 × 630 · Brand tokens</div>
+              <div class="selwrap">
+                <div class="hero-card">
+                  <span class="hc-badge">◆ New</span>
+                  <div class="hc-h">Ship it faster.</div>
+                  <p class="hc-sub">Capture, design, and automate — all in one fast canvas.</p>
+                  <span class="hc-cta">Get Photonz →<span class="cinst"></span><span class="cbadge">◈ Button · Primary</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="pane insp">
+              <div class="pane-h" style="color:var(--comp)">◈ Button · instance</div>
+              <div class="section">
+                <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)">◈</span></div>
+                <div class="row"><span class="rl">Main</span><span class="chip comp" style="margin-left:0">Button ▸</span><span style="margin-left:auto;font-size:10px;color:var(--faint)">detach</span></div>
+                <div class="row"><span class="rl">Variant</span><span class="chip" style="margin-left:0">Primary ▾</span><span class="chip" style="margin-left:6px">Size L ▾</span></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Fill <span class="mut">Paint style ▾</span></div>
+                <div class="row"><span class="chip style" data-target="paint" style="cursor:pointer"><span class="sw"></span>Brand / gradient</span><span style="margin-left:auto;font-size:10px;color:var(--faint)">re-paint ▾</span></div>
+                <div style="font-size:10.5px;color:var(--faint);line-height:1.4">Painted with a named Style — change it in the Design system and every instance follows.</div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Effects <span class="mut">2</span></div>
+                <div class="efx click" data-target="effects"><span class="drag">⋮⋮</span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                <div class="efx click" data-target="effects"><span class="drag">⋮⋮</span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Transform</div>
+                <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div><div class="field"><span class="k">⌜⌟</span><span class="v">12</span></div><div class="field"><span class="k">↻</span><span class="v">0°</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Reusable in action</div><p>The CTA is a <b style="color:var(--comp)">◈ Button instance</b> — linked to a main component, set to the <b>Primary</b> variant, and <b>painted</b> with the <b>Brand/gradient</b> Style. Edit the style or main → all 42 instances update.</p></div>
+          <div class="c"><div class="lab g2">Clickthrough</div><p>Fill chip → Paint editor · Effect rows → Effects stack · ◈ tool → Design system · ✦ Ask Claude → automation.</p></div>
+          <div class="c"><div class="lab g2">Direction</div><p>Inspector shows <b>Component</b> first when an instance is selected — the reuse relationship leads, raw transform trails.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== IMAGE EDITOR ===== -->
+      <section class="screen" id="image">
+        <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Image editing</h2><span class="k">· adjustments, masking, retouch — Photoshop-class, non-destructive</span></div>
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>sunset-edit</b> — 4032 × 3024</div><div class="tbtns"><span class="pill">Fit</span><span class="pill ai" data-target="claude">✦</span><span class="pill solid">Export</span></div></div>
+          <div class="toolbar">
+            <button class="tool" title="Move">◄</button><button class="tool on" title="Select / mask">⬚</button><button class="tool" title="Lasso">◠</button><button class="tool" title="Heal">✚</button><button class="tool" title="Clone">◐</button><button class="tool" title="Brush">🖌</button><button class="tool" title="Dodge/Burn">◑</button>
+            <span class="tsep"></span><button class="tool" title="Crop">⌗</button><button class="tool" title="Text">T</button>
+            <span class="tspacer"></span><span class="chip">32-bit float · Display P3</span>
+          </div>
+          <div class="edit">
+            <div class="pane layers">
+              <div class="pane-h">Layers <span class="add">+</span></div>
+              <div class="lrow"><span class="ic" style="color:#e0a53a">◐</span><span class="nm">Curves</span><span class="eye">◉</span></div>
+              <div class="lrow sel"><span class="ic" style="color:#4c6fff">⬚</span><span class="nm">Foreground · mask</span><span class="eye">◉</span></div>
+              <div class="lrow"><span class="ic">✚</span><span class="nm">Retouch</span><span class="eye">◉</span></div>
+              <div class="lrow"><span class="ic">▧</span><span class="nm">IMG_4021</span><span class="eye">◉</span></div>
+              <div class="section" style="border-top:1px solid var(--line);border-bottom:0;margin-top:6px">
+                <div class="sec-h">Masks on layer</div>
+                <div class="masklist"><span class="mm"></span>Luminosity · shadows</div>
+                <div class="masklist"><span class="mm" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>Subject · AI select</div>
+              </div>
+            </div>
+            <div class="canvas" style="background:radial-gradient(700px 420px at 50% 30%,#141826,#0a0c11)">
+              <div class="photo">
+                <div class="sky"></div><div class="sun"></div><div class="hill"></div>
+                <div class="masksel"></div>
+              </div>
+            </div>
+            <div class="pane insp">
+              <div class="pane-h">Adjust · non-destructive</div>
+              <div class="section">
+                <div class="sec-h">Histogram</div>
+                <div class="histogram"><i style="height:20%"></i><i style="height:35%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:95%"></i><i style="height:70%"></i><i style="height:48%"></i><i style="height:60%"></i><i style="height:38%"></i><i style="height:25%"></i><i style="height:42%"></i><i style="height:30%"></i><i style="height:18%"></i><i style="height:10%"></i></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Tone</div>
+                <div class="row"><span class="rl">Exposure</span><span class="bar"><i style="width:58%"></i></span><span class="chip">+0.3</span></div>
+                <div class="row"><span class="rl">Contrast</span><span class="bar"><i style="width:64%"></i></span><span class="chip">+14</span></div>
+                <div class="row"><span class="rl">Highlights</span><span class="bar"><i style="width:38%"></i></span><span class="chip">-22</span></div>
+                <div class="row"><span class="rl">Shadows</span><span class="bar"><i style="width:70%"></i></span><span class="chip">+40</span></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Curves</div>
+                <div class="curve"><svg viewBox="0 0 100 96" preserveAspectRatio="none"><path d="M2 92 C30 74 44 30 98 6" fill="none" stroke="var(--accent)" stroke-width="1.6"/><line x1="0" y1="96" x2="100" y2="0" stroke="var(--line)" stroke-width=".5"/></svg></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Color <span class="mut">HSL</span></div>
+                <div class="row"><span class="rl">Saturation</span><span class="bar"><i style="width:52%"></i></span><span class="chip">+8</span></div>
+                <div class="row"><span class="rl">Temp</span><span class="bar"><i style="width:60%;background:linear-gradient(90deg,#4c9fff,#ff9a44)"></i></span><span class="chip">warm</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>Photoshop-class pixel editing on the <b>same</b> layer/effect model: adjustment layers, AI + luminosity <b>masks</b>, heal/clone/dodge — all non-destructive, all scriptable.</p></div>
+          <div class="c"><div class="lab g2">Shared primitives</div><p>A mask is an alpha <b>Paint</b>; a filter is an <b>Effect</b>; an adjustment is a special Layer. Nothing here is a separate engine.</p></div>
+          <div class="c"><div class="lab g2">Automation</div><p>“Recover the shadows and mask the sky” becomes a handful of the same API calls.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== VIDEO EDITOR ===== -->
+      <section class="screen" id="video">
+        <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Video editing</h2><span class="k">· timeline, tracks, transitions, captions, keyframes — deferred to a later chapter</span></div>
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>launch-teaser</b> — 1920×1080 · 15s</div><div class="tbtns"><span class="pill">1080p</span><span class="pill ai" data-target="claude">✦</span><span class="pill solid">Export MP4</span></div></div>
+          <div class="vpreview">
+            <div class="vframe"><div class="title">Ship it faster.</div><div class="cap">Capture, design, automate — one canvas</div></div>
+          </div>
+          <div class="vctrls"><span>⏮</span><span>◀</span><span style="color:var(--ink);font-size:16px">⏸</span><span>▶</span><span>⏭</span><span class="t">00:04:12 / 00:15:00</span></div>
+          <div class="timeline">
+            <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
+            <div class="track"><span class="tl">◈ Title</span><div class="lane"><div class="clip txt" style="width:34%;margin-left:6%">Title · keyframed<span class="kf" style="left:14%"></span><span class="kf" style="left:80%"></span></div></div></div>
+            <div class="track"><span class="tl">▧ Video</span><div class="lane"><div class="clip v1" style="width:40%">clip-01</div><div class="transition"></div><div class="clip v2" style="width:46%">clip-02</div></div></div>
+            <div class="track"><span class="tl">T Caption</span><div class="lane"><div class="clip txt" style="width:30%;margin-left:8%">“Capture…”</div><div class="clip txt" style="width:34%;margin-left:4%">“…automate”</div></div></div>
+            <div class="track"><span class="tl">♪ Audio</span><div class="lane"><div class="clip aud" style="width:92%"><div class="wave"><i style="height:30%"></i><i style="height:60%"></i><i style="height:45%"></i><i style="height:80%"></i><i style="height:55%"></i><i style="height:70%"></i><i style="height:40%"></i><i style="height:85%"></i><i style="height:50%"></i><i style="height:65%"></i><i style="height:35%"></i><i style="height:75%"></i><i style="height:45%"></i><i style="height:60%"></i></div></div></div></div>
+            <div class="playhead"></div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>Premiere-style tracks: <b>video</b>, <b>title/overlay</b> (keyframed ◇), <b>captions</b>, <b>audio</b>, with a <b>transition</b> (⤫) between clips. Titles &amp; captions reuse the type system + Paint/Effects.</p></div>
+          <div class="c"><div class="lab g2">Scope call</div><p>Basic video already shipped (trim/crop/export). This ambitious timeline is <b>its own later chapter</b> — walled off so it never gates image + UI creation.</p></div>
+          <div class="c"><div class="lab g2">Continuity</div><p>A caption is text-on-Paint animated over time; keyframes animate any primitive property — same model, new axis.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== CLAUDE ===== -->
+      <section class="screen" id="claude">
+        <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Claude automation</h2><span class="k">· works across every scenario — same commands the UI calls</span></div>
+        <div class="subtabs">
+          <button class="subtab on" data-alt="alt-pal">A · Command palette</button>
+          <button class="subtab" data-alt="alt-dock">B · Docked assistant</button>
+          <button class="subtab" data-alt="alt-inline">C · Inline ghost</button>
+        </div>
+        <div class="alt on" id="alt-pal">
+          <div class="win tall cpwrap">
+            <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>hero-card</b> — ⌘K</div><div class="tbtns"><span class="pill">100%</span></div></div>
+            <div class="edit">
+              <div class="pane layers"><div class="pane-h">Layers <span class="add">+</span></div>
+                <div class="lrow"><span class="ic">▣</span><span class="nm">Feature grid</span></div>
+                <div class="lrow child selc"><span class="ic">◈</span><span class="nm">Card 1 ✦</span></div>
+                <div class="lrow child selc"><span class="ic">◈</span><span class="nm">Card 2 ✦</span></div>
+                <div class="lrow child selc"><span class="ic">◈</span><span class="nm">Card 3 ✦</span></div>
+              </div>
+              <div class="canvas"><div class="artboard-label">Claude is editing…</div>
+                <div style="display:flex;gap:14px">
+                  <div style="width:96px;height:130px;border-radius:14px;background:linear-gradient(160deg,#7c4dff,#b14dff);box-shadow:0 0 30px -4px rgba(177,77,255,.5)"></div>
+                  <div style="width:96px;height:130px;border-radius:14px;background:linear-gradient(160deg,#12c2e9,#7c4dff);box-shadow:0 0 30px -4px rgba(124,77,255,.5)"></div>
+                  <div style="width:96px;height:130px;border-radius:14px;background:linear-gradient(160deg,#ff5d8f,#ff9a44);box-shadow:0 0 30px -4px rgba(255,93,143,.5)"></div>
+                </div>
+              </div>
+              <div class="pane insp"><div class="pane-h">Session</div>
+                <div class="section">
+                  <div class="sec-h">Model <span class="mut">pluggable</span></div>
+                  <div class="row"><span class="rl">Engine</span><span class="chip" style="margin-left:0;background:var(--good);color:#fff;border-color:transparent">● Local · Qwen</span></div>
+                  <div class="row" style="margin-top:0;font-size:10px;color:var(--faint)">On-device (MLX) · private · offline</div>
+                  <div class="row"><span class="rl">Frontier</span><span class="chip" style="margin-left:0">via MCP ▾</span></div>
+                </div>
+                <div class="section" style="font-size:11.5px;color:var(--dim);line-height:1.55">Whatever the engine, every command is the <b style="color:var(--ink)">same API</b> the panels call — reusing your <b style="color:var(--ink)">components &amp; styles</b>, fully undoable and inspectable.</div></div>
+            </div>
+            <div class="cpdim"></div>
+            <div class="cpal">
+              <div class="cpin"><span class="sp"></span><input value="Add a 3-column feature grid using our Card component + brand gradient" readonly><span class="car"></span></div>
+              <div class="cplist">
+                <div class="cpx run"><span class="tick">✔</span><code>create_frame</code> "Feature grid" · 3 cols · gap 24</div>
+                <div class="cpx"><span class="tick">✔</span><code>instance</code> ×3 of <code>Card</code> · variant Elevated</div>
+                <div class="cpx"><span class="tick">✔</span><code>set_fill</code> <code>style("Brand/gradient")</code></div>
+                <div class="cpx"><span class="tick">✔</span><code>set_text</code> from tokens · Title / 24</div>
+              </div>
+            </div>
+          </div>
+          <div class="caption"><div class="c"><div class="lab">Direction A — palette</div><p>Keyboard-first ⌘K. The command log is an <b>audit trail</b> you can undo step-by-step. Note it reuses your <b>Card</b> component and <b>Brand</b> style.</p></div></div>
+        </div>
+        <div class="alt" id="alt-dock">
+          <div class="win tall">
+            <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>hero-card</b> — Assistant</div><div class="tbtns"><span class="pill">100%</span></div></div>
+            <div class="dock">
+              <div class="canvas"><div class="artboard-label">1200 × 630</div><div class="hero-card" style="width:320px;transform:scale(.92)"><span class="hc-badge">◆ New</span><div class="hc-h" style="font-size:30px">Ship it faster.</div><p class="hc-sub">Capture, design, and automate.</p><span class="hc-cta">Get Photonz →</span></div></div>
+              <div class="chat">
+                <div class="chat-h">✦ Claude · Assistant</div>
+                <div class="chat-b">
+                  <div class="msg u">make the headline bigger and add our card glow</div>
+                  <div class="msg a">Done — here's what I changed:
+                    <div class="did"><div class="step"><span class="t">✔</span> Headline · Display 36 → <b style="color:var(--ink)">44</b></div><div class="step"><span class="t">✔</span> Card · + <b style="color:var(--ink)">Card glow</b> style</div></div>
+                    <div style="margin-top:8px;font-size:11px">Click a change to select it · <b style="color:var(--accent)">Undo</b></div>
+                  </div>
+                </div>
+                <div class="chat-in"><span class="box">Ask for a change…</span><span class="pill ai">✦</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="caption"><div class="c"><div class="lab">Direction B — docked</div><p>Conversational, best for <b>iterating</b>. Each change is a clickable, selectable, undoable diff — and it speaks your system ("our card glow").</p></div></div>
+        </div>
+        <div class="alt" id="alt-inline">
+          <div class="win tall">
+            <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>hero-card</b></div><div class="tbtns"><span class="pill">100%</span></div></div>
+            <div class="canvas" style="min-height:440px;position:relative"><div class="artboard-label">1200 × 630</div>
+              <div style="width:300px;height:180px;border-radius:16px;border:1.5px dashed rgba(127,155,255,.5);background:rgba(127,155,255,.06)"></div>
+              <div class="ghost" style="top:150px;left:calc(50% - 20px)"><div class="lab"><span class="spin"></span> Claude · drawing in place</div><div class="txt">“a testimonial card with an avatar, 5 stars, and a quote”</div></div>
+            </div>
+          </div>
+          <div class="caption"><div class="c"><div class="lab">Direction C — inline ghost</div><p>Draw a region, prompt <b>where the content goes</b>; Claude fills it in place. Most spatial &amp; direct; pairs with A/B for refinement.</p></div></div>
+        </div>
+        <div class="caption" style="border-top:1px solid var(--line-soft);padding-top:12px">
+          <div class="c"><div class="lab g2">The point</div><p>Whichever wins — or ship all three — they call the <b>exact same commands</b> the UI does, and reuse the <b>same components &amp; styles</b>. Automation is the API made visible, not a bolt-on.</p></div>
+          <div class="c"><div class="lab g2">Model-agnostic</div><p>The API is the contract, so the model is <b>pluggable</b>: a local <b>Qwen</b> (MLX/LM Studio) as the private, offline default; a <b>frontier model via MCP</b> when you want more. The schema keeps even a small local model safe — only valid, undoable commands.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== REDLINE ===== -->
+      <section class="screen" id="redline">
+        <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Image editing</h2><span class="k">· measure &amp; redline — the fast daily path, kept sacred</span></div>
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>settings-redline</b> — 2560 × 1440</div><div class="tbtns"><span class="pill">Copy ⌘C</span><span class="pill solid">Done</span></div></div>
+          <div class="toolbar">
+            <button class="tool" title="Select">◄</button><button class="tool on" title="Measure">⌗</button><button class="tool" title="Arrow">↗</button><button class="tool" title="Box">▭</button><button class="tool" title="Text">T</button><button class="tool" title="Blur">▨</button>
+            <span class="tspacer"></span><span class="chip">Units: Logical (px) ▾</span>
+          </div>
+          <div class="canvas" style="min-height:420px">
+            <div class="shot">
+              <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+              <div class="body"><div class="mockrow w1"></div><div class="mockrow w2"></div><div class="mockrow w2"></div><div class="mockrow btn"></div></div>
+              <div class="measure" style="top:78px;left:22px;width:264px"><div class="mline" style="width:100%"></div><span class="mcap" style="top:-18px;left:50%;transform:translateX(-50%)">264 px</span></div>
+              <div class="measure" style="top:112px;left:22px;width:120px"><div class="mline" style="width:100%;border-color:#4c6fff"></div><span class="mcap" style="top:6px;left:50%;transform:translateX(-50%);background:#4c6fff">gap 20 px</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Keep it sacred</div><p>Your daily workflow. Capture → measure/annotate → clipboard, one keystroke away. Creation is <b>additive</b> and must never slow this down.</p></div>
+          <div class="c"><div class="lab g2">Shared foundation</div><p>Same canvas &amp; primitives: a measure label is text-on-Paint, a redaction is a blur Effect.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== PAINT ===== -->
+      <section class="screen" id="paint">
+        <div class="scen-head"><span class="pip" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><h2>Paint</h2><span class="k">· the fill primitive — used by every scenario</span></div>
+        <div class="win">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Paint</b> — edit &amp; save as Style</div><div class="tbtns"><span class="pill" data-target="dsys">Save as Style</span><span class="pill" data-target="editor">‹ editor</span></div></div>
+          <div style="display:grid;grid-template-columns:1fr 300px">
+            <div class="canvas" style="min-height:380px"><div style="width:230px;height:230px;border-radius:20px;background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f);box-shadow:0 0 50px -6px rgba(177,77,255,.5)"></div></div>
+            <div class="pane insp">
+              <div class="section">
+                <div class="sec-h" style="margin-bottom:11px">Paint type</div>
+                <div class="seg"><button>Solid</button><button class="on">Linear</button><button>Radial</button><button>Angular</button><button>Image</button><button>Noise</button></div>
+                <div class="gramp"><div class="gstop" style="left:4%;background:#7c4dff"><b></b><div class="line"></div></div><div class="gstop" style="left:45%;background:#b14dff"><b></b><div class="line"></div></div><div class="gstop" style="left:96%;background:#ff5d8f"><b></b><div class="line"></div></div></div>
+                <div class="row"><span class="rl">Angle</span><div class="dial"></div><span class="chip" style="margin-left:auto">135°</span></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Selected stop</div>
+                <div class="row"><span class="swatch" style="background:#b14dff"></span><span class="field" style="flex:1"><span class="k">HEX</span><span class="v">B14DFF</span></span></div>
+                <div class="row"><span class="rl">Position</span><span class="bar"><i style="width:45%"></i></span><span class="chip">45%</span></div>
+              </div>
+              <div class="section"><div class="sec-h">Saved as</div><div class="row"><span class="chip style"><span class="sw"></span>Brand / gradient</span><span class="use" style="margin-left:auto;font-size:10px;color:var(--faint)">18 uses</span></div></div>
+              <div class="section" style="font-size:11px;color:var(--dim);line-height:1.55">This same <b style="color:var(--ink)">Paint</b> fills shapes, strokes, <b style="color:var(--ink)">text</b>, and glow/shadow color. Save it as a <b style="color:var(--ink)">Style</b> and reuse it everywhere.</div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Primitive · Paint</div><p><b>solid · linear · radial · angular · image · noise.</b> One editor, every surface. Save any Paint as a named <b>Style</b> → it joins the design system.</p></div>
+          <div class="c"><div class="lab g2">API mirror</div><p><code>fill: linear("#7C4DFF","#B14DFF","#FF5D8F", angle:135)</code> — or <code>fill: style("Brand/gradient")</code>.</p></div>
+        </div>
+      </section>
+
+      <!-- ===== EFFECTS ===== -->
+      <section class="screen" id="effects">
+        <div class="scen-head"><span class="pip" style="background:#3ecf8e"></span><h2>Effects</h2><span class="k">· the non-destructive stack — used by every scenario</span></div>
+        <div class="win">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Effects</b> — reorderable, non-destructive</div><div class="tbtns"><span class="pill" data-target="dsys">Save as Style</span><span class="pill" data-target="editor">‹ editor</span></div></div>
+          <div style="display:grid;grid-template-columns:1fr 300px">
+            <div class="canvas" style="min-height:400px"><div style="width:230px;height:150px;border-radius:18px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 0 55px -2px rgba(177,77,255,.65),0 26px 44px -12px rgba(0,0,0,.55)"></div></div>
+            <div class="pane insp">
+              <div class="section">
+                <div class="sec-h">Effect stack <span class="mut">drag to reorder</span></div>
+                <div class="efx"><span class="drag">⋮⋮</span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">40·spread6</span></div>
+                <div class="efx"><span class="drag">⋮⋮</span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,26,44</span></div>
+                <div class="efx"><span class="drag">⋮⋮</span><span class="en off"></span><span class="nm">Inner shadow</span><span class="meta">off</span></div>
+                <div class="efx"><span class="drag">⋮⋮</span><span class="en off"></span><span class="nm">Background blur</span><span class="meta">off</span></div>
+                <div class="efx"><span class="drag">⋮⋮</span><span class="en off"></span><span class="nm">Stroke</span><span class="meta">off</span></div>
+                <div class="chip" style="display:inline-block;margin-top:4px">+ Add effect</div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Outer glow</div>
+                <div class="row"><span class="rl">Color</span><span class="swatch" style="background:#b14dff"></span><span class="chip" style="margin-left:auto">Paint ▾</span></div>
+                <div class="row"><span class="rl">Blur</span><span class="bar"><i style="width:62%"></i></span><span class="chip">40</span></div>
+                <div class="row"><span class="rl">Spread</span><span class="bar"><i style="width:18%"></i></span><span class="chip">6</span></div>
+              </div>
+              <div class="section" style="font-size:11px;color:var(--dim);line-height:1.55">The same stack applies to <b style="color:var(--ink)">any</b> layer — shape, photo, or text. Glow is an outer shadow whose color is a <b style="color:var(--ink)">Paint</b>. Save the stack as a <b style="color:var(--ink)">Style</b> (e.g. "Card glow").</div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">Primitive · Effects</div><p>Ordered, non-destructive, uniform across layer types. Generalizes today's <b>LayerStyle</b>; save a stack as a reusable <b>Effect Style</b>.</p></div>
+        </div>
+      </section>
+
+      <div class="foot">Photonz · creation-vision direction study — mockups, not a build. Adapts to your system light/dark theme.</div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  var navs=[].slice.call(document.querySelectorAll('.nav'));
+  var screens=[].slice.call(document.querySelectorAll('.screen'));
+  function show(id){
+    if(!document.getElementById(id))return;
+    screens.forEach(function(s){s.classList.toggle('on',s.id===id);});
+    navs.forEach(function(n){n.classList.toggle('on',n.dataset.target===id);});
+    stage.scrollTop=0;
+  }
+  navs.forEach(function(n){n.addEventListener('click',function(){show(n.dataset.target);});});
+  document.querySelectorAll('[data-target]').forEach(function(el){
+    if(el.classList.contains('nav'))return;
+    el.style.cursor='pointer';
+    el.addEventListener('click',function(e){e.stopPropagation();show(el.dataset.target);});
+  });
+  // walkthrough stepper
+  var wsteps=[].slice.call(document.querySelectorAll('.wstep'));
+  var wdots=[].slice.call(document.querySelectorAll('.wdots i'));
+  var wprev=document.querySelector('.wprev'), wnext=document.querySelector('.wnext'), wlabel=document.querySelector('.wlabel');
+  var wtitles=['Select the parts','Make it a component','Use it — place an instance','Override safely','Edit once, update everywhere','Reuse in image editing','Reuse in video editing'];
+  var wi=0;
+  function wshow(i){
+    wi=Math.max(0,Math.min(wsteps.length-1,i));
+    wsteps.forEach(function(s,n){s.classList.toggle('on',n===wi);});
+    wdots.forEach(function(d,n){d.classList.toggle('on',n===wi);});
+    if(wlabel)wlabel.innerHTML='Step <b>'+(wi+1)+'</b> / '+wsteps.length+' — '+wtitles[wi];
+    if(wprev)wprev.disabled=wi===0;
+    if(wnext)wnext.disabled=wi===wsteps.length-1;
+  }
+  if(wprev)wprev.addEventListener('click',function(){wshow(wi-1);});
+  if(wnext)wnext.addEventListener('click',function(){wshow(wi+1);});
+  wdots.forEach(function(d,n){d.addEventListener('click',function(){wshow(n);});});
+
+  var subtabs=[].slice.call(document.querySelectorAll('.subtab'));
+  subtabs.forEach(function(t){t.addEventListener('click',function(){
+    subtabs.forEach(function(x){x.classList.toggle('on',x===t);});
+    document.querySelectorAll('.alt').forEach(function(a){a.classList.toggle('on',a.id===t.dataset.alt);});
+  });});
+})();
+</script>
+</body>
+</html>

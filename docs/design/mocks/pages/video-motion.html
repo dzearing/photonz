@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-motion</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-motion · motion graphics in the ONE shell (PRODUCT-MODEL §4c, Kind 1).
+   The document has time, so the Video workspace shows the transport bar and the
+   timeline dock: the reveal timeline IS the timeline dock, one lane per animated
+   layer. The preset and stagger controls are a normal Properties section, not
+   bespoke chrome. The three technique cards below the window are Kind-2
+   specimens: they depict a part, so they wear no traffic lights and no title bar.
+
+   Every page-local class is prefixed .mg- so it can never inherit a shared-DS
+   rule of the same name. 4pt scale and shared tokens only. */
+
+#video-motion{--mg-accent:#12c2e9;--gutter:132px}
+#video-motion .win.shell{height:780px;min-height:0}
+#video-motion .win.shell .canvas{min-height:0;
+  background:radial-gradient(720px 420px at 50% 30%,#161b2c,var(--artboard))}/* ---------- the title sequence on the canvas (16:9) ---------- */
+.mg-stage{position:relative;width:560px;aspect-ratio:16/9;border-radius:var(--r4);overflow:hidden;background:
+  radial-gradient(150% 120% at 78% 8%,color-mix(in srgb,#12c2e9 26%,transparent),transparent 55%),
+  radial-gradient(130% 120% at 4% 96%,color-mix(in srgb,#9a5cff 30%,transparent),transparent 52%),
+  linear-gradient(135deg,#141a2e,#0a0c14);border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 20px 44px -16px rgba(0,0,0,.6)}
+
+/* every animated element rides the one transition engine; per-element delay is
+   set in JS so the stagger is a real offset, not a hand-tuned keyframe list */
+.mg-el{transition-property:opacity,transform;transition-duration:.52s;
+  transition-timing-function:cubic-bezier(.2,.72,.2,1);will-change:opacity,transform}
+.mg-stage[data-preset="pop"] .mg-el{transition-duration:.6s;transition-timing-function:cubic-bezier(.34,1.56,.64,1)}
+.mg-stage[data-preset="fade"] .mg-el{transition-duration:.6s;transition-timing-function:cubic-bezier(.25,.6,.2,1)}
+
+/* rest (settled) state = final composition */
+.mg-kicker{position:absolute;top:8%;left:0;right:0;height:34%;pointer-events:none}
+.mg-kicker svg{width:100%;height:100%;overflow:visible}
+.mg-kicker text{font-family:var(--sans);font-size:12px;font-weight:680;letter-spacing:.32em;fill:#8fe6ff;text-transform:uppercase}
+.mg-head{position:absolute;left:8%;top:34%;font-family:var(--serif);font-weight:700;font-size:clamp(26px,7.4vw,44px);
+  line-height:.98;color:#fff;letter-spacing:-.02em;text-shadow:0 3px 18px rgba(0,0,0,.5);transform-origin:left center}
+.mg-words{position:absolute;left:8%;right:8%;bottom:16%;display:flex;flex-wrap:wrap;gap:0 12px}
+.mg-word{font-family:var(--sans);font-size:clamp(13px,3vw,18px);font-weight:600;color:#dfe7ff}
+.mg-word b{color:#8fe6ff;font-weight:700}
+.mg-badge{position:absolute;left:8%;bottom:7%;display:inline-flex;align-items:center;gap:6px;font-size:10px;
+  font-weight:640;color:#fff;background:linear-gradient(120deg,rgba(154,92,255,.94),rgba(197,108,255,.86));
+  padding:4px 9px;border-radius:var(--r2);box-shadow:0 8px 20px -8px rgba(0,0,0,.5);transform-origin:left bottom}
+
+/* pre (reset / pre-roll) state, per preset */
+.mg-stage.pre .mg-el{opacity:0}
+.mg-stage.pre[data-preset="stagger"] .mg-word,
+.mg-stage.pre[data-preset="stagger"] .mg-badge{transform:translateY(20px)}
+.mg-stage.pre[data-preset="stagger"] .mg-head{transform:translateY(26px) scale(.94)}
+.mg-stage.pre[data-preset="stagger"] .mg-kicker{transform:translateX(-16px)}
+.mg-stage.pre[data-preset="fade"] .mg-word,
+.mg-stage.pre[data-preset="fade"] .mg-badge{transform:translateY(7px)}
+.mg-stage.pre[data-preset="fade"] .mg-head{transform:translateY(9px)}
+.mg-stage.pre[data-preset="fade"] .mg-kicker{transform:translateX(-8px)}
+.mg-stage.pre[data-preset="pop"] .mg-word,
+.mg-stage.pre[data-preset="pop"] .mg-badge{transform:scale(.6)}
+.mg-stage.pre[data-preset="pop"] .mg-head{transform:scale(.5)}
+.mg-stage.pre[data-preset="pop"] .mg-kicker{transform:scale(.8)}
+
+/* subtle grade so the frame reads as designed footage, not a box */
+.mg-stage::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(120% 90% at 84% -6%,rgba(255,255,255,.14),transparent 46%);
+  mix-blend-mode:soft-light;pointer-events:none}
+.mg-grade{position:absolute;top:8px;right:10px;font-family:var(--mono);font-size:9px;
+  color:rgba(255,255,255,.5);letter-spacing:.04em;z-index:2}
+
+/* ---------- the timeline dock: one lane per animated layer ---------- */
+#mgTlDock{flex:0 0 auto;max-height:222px;overflow:auto;padding:0;display:flex;flex-direction:column;min-height:0}
+.mg-tlbar{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3);
+  border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+.mg-tlbar .mg-lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+  font-weight:660;white-space:nowrap}
+.mg-read{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);
+  background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.mg-read b{color:var(--mg-accent)}
+.mg-tlz{padding:var(--s3);position:relative}
+.mg-grid{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:var(--s2);row-gap:var(--s1);position:relative}
+.mg-rl{font-size:10.5px;color:var(--dim);font-weight:560;display:flex;align-items:center;gap:5px;
+  overflow:hidden;white-space:nowrap;min-width:0}
+.mg-rl .ic{color:var(--faint);flex:none}
+.mg-rl.comp{color:var(--comp)}.mg-rl.comp .ic{color:var(--comp)}
+.mg-ruler{position:relative;height:16px;border-bottom:1px solid var(--edge-lo)}
+.mg-ruler .mg-tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);font-size:9px;
+  color:var(--faint);font-family:var(--mono);padding-left:3px;pointer-events:none}
+.mg-ruler .mg-tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+.mg-lane{position:relative;height:22px}
+.mg-lane .mg-gl{position:absolute;top:0;bottom:0;width:1px;background:var(--edge-lo);pointer-events:none}
+.mg-bar{position:absolute;top:3px;height:16px;border-radius:var(--r1);display:flex;align-items:center;
+  padding:0 7px;font-size:9px;font-family:var(--mono);color:#fff;font-weight:600;overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);white-space:nowrap}
+.mg-bar.k{background:linear-gradient(135deg,#12c2e9,#6aa8ff)}
+.mg-bar.h{background:linear-gradient(135deg,#7c4dff,#c56cff)}
+.mg-bar.w{background:linear-gradient(135deg,#1b7a8c,#12c2e9)}
+.mg-bar.c{background:linear-gradient(135deg,#9a5cff,#c56cff)}
+.mg-bar .mg-kd{position:absolute;top:50%;width:6px;height:6px;background:#fff;
+  transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(0,0,0,.25)}
+.mg-bar .mg-kd.s{left:0}.mg-bar .mg-kd.e{left:100%}
+/* playhead spanning the lane column */
+.mg-strip{position:absolute;left:calc(var(--gutter) + var(--s2));right:0;top:0;bottom:0;pointer-events:none;z-index:5}
+.mg-ph{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px)}
+.mg-ph .mg-phh{position:absolute;top:-1px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit)}
+
+/* ---------- Properties helpers ---------- */
+.mg-block{margin:var(--gap-sm) 0}
+.mg-block .mg-pl{font-size:10.5px;color:var(--faint);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
+  /* .mg-block .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+.mg-stepper{display:flex;align-items:center;gap:6px;background:var(--glass-thin);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);
+  border-radius:999px;padding:3px 4px}
+.mg-stepper .val{flex:1;min-width:0;text-align:center;color:var(--ink)}
+
+/* ---------- KIND 2 · specimen cards (no traffic lights, no title bar) ---------- */
+#video-motion .mg-spec{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+#video-motion .mg-spec-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+#video-motion .mg-spec-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+#video-motion .mg-spec-h .mg-kind{font-family:var(--mono);font-size:9px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--faint)}
+#video-motion .mg-spec-h .mg-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+
+.mg-cards{display:grid;grid-template-columns:repeat(3,1fr)}
+.mg-card{padding:var(--pad);border-right:1px solid var(--edge-lo);min-width:0;display:flex;
+  flex-direction:column;gap:var(--gap-sm)}
+.mg-card:last-child{border-right:0}
+.mg-card h4{margin:0;font-size:11.5px;font-weight:640;color:var(--ink);display:flex;align-items:center;gap:6px}
+.mg-card h4 .ic{color:var(--mg-accent)}
+.mg-card p{margin:0;font-size:10.5px;color:var(--dim);line-height:1.45}
+.mg-demo{background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);height:88px;
+  position:relative;overflow:hidden;box-shadow:inset 0 1px 0 var(--edge-hi)}
+.mg-demo.path svg{width:100%;height:100%}
+.mg-demo.path text{font-family:var(--sans);font-size:11px;font-weight:680;letter-spacing:.18em;
+  fill:var(--mg-accent);text-transform:uppercase}
+.mg-demo.path .mg-guide{fill:none;stroke:var(--line-strong);stroke-width:1;stroke-dasharray:3 3}
+.mg-demo.stag{display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 var(--pad-sm)}
+.mg-srow{display:flex;align-items:center;gap:var(--gap-sm)}
+.mg-srow .mg-w{font-size:12px;font-weight:640;color:var(--ink)}
+.mg-srow:nth-child(1) .mg-w{opacity:1}
+.mg-srow:nth-child(2) .mg-w{opacity:.66}
+.mg-srow:nth-child(3) .mg-w{opacity:.34}
+.mg-srow .mg-off{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--faint)}
+.mg-srow .mg-ramp{width:44px;height:5px;border-radius:3px;
+  background:linear-gradient(90deg,var(--mg-accent),color-mix(in srgb,var(--mg-accent) 12%,transparent))}
+.mg-srow:nth-child(2) .mg-ramp{width:32px}
+.mg-srow:nth-child(3) .mg-ramp{width:20px}
+.mg-demo.kin{display:flex;align-items:center;justify-content:space-around;padding:0 var(--gap-sm)}
+.mg-kframe{font-family:var(--serif);font-weight:700;color:var(--ink);text-align:center;line-height:1}
+.mg-kframe .mg-t{display:block}
+.mg-kframe .mg-m{font-family:var(--mono);font-size:8px;font-weight:500;color:var(--faint);margin-top:5px;letter-spacing:.02em}
+.mg-kframe.a .mg-t{font-size:15px;opacity:.4}
+.mg-kframe.b .mg-t{font-size:22px;opacity:.72}
+.mg-kframe.c .mg-t{font-size:30px;opacity:1;color:var(--mg-accent)}
+
+/* API strip, also a specimen */
+.mg-api{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);flex-wrap:wrap}
+.mg-api .mg-tag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.mg-code{font-family:var(--mono);font-size:11.5px;color:var(--ink);background:var(--artboard);
+  border:1px solid #20263a;border-radius:var(--r2);padding:6px 10px;overflow-x:auto;white-space:nowrap;max-width:100%}
+.mg-code .k{color:#7f9bff}.mg-code .p{color:#e0a5ff}.mg-code .s{color:#7fd7a6}.mg-code .n{color:#f0a76b}
+.mg-spacer{flex:1}
+
+/* narrow: the WINDOW container query, not the viewport */
+@container shell (max-width:880px){
+  #video-motion{--gutter:96px}
+  #video-motion .mg-stage{width:400px}
+}
+@container shell (max-width:620px){
+  #video-motion{--gutter:72px}
+  #video-motion .mg-stage{width:276px}
+  #video-motion .mg-tlbar .mg-read{display:none}
+}
+@media (max-width:720px){
+  .mg-cards{grid-template-columns:1fr}
+  .mg-card{border-right:0;border-bottom:1px solid var(--edge-lo)}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-motion">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Motion graphics</h2><span class="k">· kinetic type and reveals</span></div>
+
+  <p class="pglead">Motion is not a separate mode. This is the same window, in the <b>Video workspace</b>, on a document
+    that has time: the transport bar and the timeline dock appear, and each animated layer gets a lane. Press
+    <b>Play</b> and watch the real reveal run. The preset and the stagger offset are ordinary <b>Properties</b>, so an
+    agent sets them with the same call you do.</p>
+
+  <!-- ================= KIND 1 · the complete app screen ================= -->
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR · document identity only -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>title-sequence</b> · 1920 × 1080 · 0:01</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#mgCmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#mgHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip comp"><i class="ic xs ic-component"></i> <span id="mgChip">Stagger up · 60 ms</span></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="mgCmdMenu" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
+          <div class="mlabel">Animate</div>
+          <div class="menuitem"><i class="ic ic-keyframe"></i> Animate in <span class="sc">⇧A</span></div>
+          <div class="menuitem"><i class="ic ic-pen"></i> Put text on a path</div>
+          <div class="menuitem"><i class="ic ic-sparkle"></i> Stagger children</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">View</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+    <div class="edit lean" id="mgShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1920 × 1080 · 24 fps · Rec. 709</div>
+          <div class="mg-stage pre" id="mgStage" data-preset="stagger">
+            <span class="mg-grade">01 · title</span>
+            <!-- text on a curved path -->
+            <div class="mg-kicker mg-el" id="mgKick">
+              <svg viewBox="0 0 560 110" preserveAspectRatio="xMidYMid meet">
+                <path id="mgPath" d="M28 78 C 150 18 400 18 532 70" fill="none"></path>
+                <text><textPath href="#mgPath" startOffset="6%" id="mgKickText">Motion graphics · kinetic type</textPath></text>
+              </svg>
+            </div>
+            <!-- kinetic headline that scales in -->
+            <div class="mg-head mg-el" id="mgHead">Ship it faster.</div>
+            <!-- staggered word reveals -->
+            <div class="mg-words">
+              <span class="mg-word mg-el">Capture.</span>
+              <span class="mg-word mg-el">Design.</span>
+              <span class="mg-word mg-el"><b>Automate.</b></span>
+            </div>
+            <!-- reusable lower-third component instance -->
+            <span class="mg-badge mg-el"><i class="ic ic-component xs"></i> Photonz · lower-third</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#mgShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#mgHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 video inventory -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#mgToolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#12c2e9,#9a5cff)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="mgToolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+        <div class="sheet down hist" id="mgHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-b">
+            <div class="histbar">
+              <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+              <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+            </div>
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#9a5cff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:01</span></span>
+                <span class="cap"><span class="nm">title-sequence</span><span class="ago">open now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:24</span></span>
+                <span class="cap"><span class="nm">product-b-roll</span><span class="ago">22 minutes ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">brand-plate</span><span class="ago">2 hours ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                <span class="cap"><span class="nm">lower-third-v2</span><span class="ago">yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+      <div class="pdock" id="mgDock">
+
+        <!-- SELECTION, place 2 of 3: one row per animated layer -->
+        <div class="dgrp" id="mgLayers" style="--gh:142px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#mgLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Title · 00:00 to 00:01</div>
+            <div class="lrow child sel"><i class="ic ic-pen"></i><span class="nm">Kicker · on path</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Capture.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Design.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Automate.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Lower-third</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: the reveal is a normal set of properties -->
+        <div class="dgrp" id="mgProps" style="--gh:250px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Animate in</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Reveal <span class="mut" id="mgPresetMut">Stagger up</span></div>
+              <div class="mg-block">
+                <div class="mg-pl">Preset</div>
+                <div class="seg" id="mgPreset" role="group" aria-label="Reveal preset">
+                  <button class="on" data-preset="stagger">Stagger up</button>
+                  <button data-preset="fade">Fade up</button>
+                  <button data-preset="pop">Pop in</button>
+                </div>
+              </div>
+              <div class="mg-block">
+                <div class="mg-pl">Stagger offset</div>
+                <div class="mg-stepper">
+                  <button class="btn ghost icon sm" id="mgDown" title="Less offset"><i class="ic ic-minus sm"></i></button>
+                  <span class="val" id="mgStagVal">60 ms</span>
+                  <button class="btn ghost icon sm" id="mgUp" title="More offset"><i class="ic ic-plus sm"></i></button>
+                </div>
+              </div>
+              <div class="grid2">
+                <div class="field"><span class="k">Each</span><span class="v">520 ms</span></div>
+                <div class="field"><span class="k">Total</span><span class="v" id="mgDur">1.12s</span></div>
+              </div>
+              <p class="note">One number drives the whole cascade. Each layer inherits the same reveal, offset by a fixed step.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">Easing <span class="mut">shared curve</span></div>
+              <div class="irow"><span class="rl">Curve</span><span class="select"><span class="lead">Ease out · soft</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Path</span><span class="chip" style="margin:0"><i class="ic xs ic-pen"></i> Kicker follows a vector</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+        <div class="dgrp grow collapsed" id="mgLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="mgScope">Components</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#mgLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="mgScopeSeg">
+                <button data-scope="media" data-scope-name="Media">Media</button>
+                <button class="on" data-scope="components" data-scope-name="Components">Comp</button>
+                <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                <button data-scope="assets" data-scope-name="Assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile comp sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower-third</span><span class="mt">1 instance</span></span></div>
+              <div class="libtile comp" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#6aa8ff)"></span><span class="cap"><span class="nm">Title sequence</span><span class="mt">4 layers</span></span></div>
+              <div class="libtile comp" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">End card</span><span class="mt">2 variants</span></span></div>
+            </div>
+            <p class="note" style="padding:0 var(--pad-sm) var(--pad-sm);margin:0">A title sequence is a component. Drop it on any timeline and the stagger, the path and the easing come with it.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#mgLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#mgProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#mgLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="mgLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:212px;z-index:11">
+        <div class="menuitem"><i class="ic ic-keyframe"></i> Animate in <span class="sc">⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="mgLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT BAR · the document has time -->
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" id="mgReset" title="Back to the pre-roll" disabled><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" id="mgPlay" title="Play the reveal" aria-pressed="false"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" id="mgEnd" title="Jump to the settled frame"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur" id="mgClock">0.00s</span>
+      <span class="scrub" id="mgScrub" role="slider" aria-label="Playhead" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+        <span class="fill" style="width:0%"></span>
+        <span class="mark" style="left:0%"></span>
+        <span class="mark" style="left:100%"></span>
+        <span class="knob" style="left:0%"></span>
+      </span>
+      <span class="tc" id="mgClockTotal">1.12s</span>
+      <span class="grp">
+        <button class="btn ghost sm" id="mgLoop" title="Loop the reveal" aria-pressed="false"><i class="ic ic-undo"></i><span class="lb">Loop</span></button>
+        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export</span></button>
+      </span>
+    </div>
+
+    <!-- TIMELINE DOCK · one lane per animated layer, on the same time axis -->
+    <div class="timeline" id="mgTlDock">
+      <div class="mg-tlbar">
+        <span class="mg-lbl">Timeline</span>
+        <span class="mg-lbl" style="color:var(--comp);letter-spacing:.02em;text-transform:none;font-weight:560"><i class="ic ic-keyframe xs"></i> one offset per layer</span>
+        <span class="tspacer"></span>
+        <span class="mg-read"><i class="ic ic-play xs"></i> <b id="mgClock2">0.00s</b> / <span id="mgClockTotal2">1.12s</span></span>
+      </div>
+      <div class="mg-tlz">
+        <div class="mg-grid" id="mgTlGrid"><!-- rows + playhead injected by JS --></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ KIND 2 · SPECIMENS. These depict techniques, not the app,
+                    so they wear no traffic lights and no title bar. ============ -->
+  <div class="mg-spec">
+    <div class="mg-spec-h"><span class="mg-kind">Specimen</span><h3>Techniques</h3><span class="mg-sub">Three ways the one keyframe engine is used</span></div>
+    <div class="mg-cards">
+      <div class="mg-card">
+        <h4><i class="ic ic-pen sm"></i> Text on a path</h4>
+        <div class="mg-demo path">
+          <svg viewBox="0 0 240 88" preserveAspectRatio="xMidYMid meet">
+            <path id="mgc1" class="mg-guide" d="M14 66 C 70 12 170 12 226 60"></path>
+            <text><textPath href="#mgc1" startOffset="8%">Follow the curve</textPath></text>
+          </svg>
+        </div>
+        <p>A headline flows along any vector path. The path is editable, so the type reflows as you reshape the curve.</p>
+      </div>
+      <div class="mg-card">
+        <h4><i class="ic ic-keyframe sm"></i> Staggered reveals</h4>
+        <div class="mg-demo stag">
+          <div class="mg-srow"><span class="mg-w">Capture</span><span class="mg-ramp"></span><span class="mg-off">0 ms</span></div>
+          <div class="mg-srow"><span class="mg-w">Design</span><span class="mg-ramp"></span><span class="mg-off">+60 ms</span></div>
+          <div class="mg-srow"><span class="mg-w">Automate</span><span class="mg-ramp"></span><span class="mg-off">+120 ms</span></div>
+        </div>
+        <p>Each word inherits the same reveal, offset by a fixed step. One number, set once, drives the whole cascade.</p>
+      </div>
+      <div class="mg-card">
+        <h4><i class="ic ic-sparkle sm"></i> Kinetic type</h4>
+        <div class="mg-demo kin">
+          <span class="mg-kframe a"><span class="mg-t">Go</span><span class="mg-m">0.0s · 40%</span></span>
+          <span class="mg-kframe b"><span class="mg-t">Go</span><span class="mg-m">0.3s · 72%</span></span>
+          <span class="mg-kframe c"><span class="mg-t">Go</span><span class="mg-m">0.5s · 100%</span></span>
+        </div>
+        <p>Scale, position and opacity animate together for emphasis. Every frame is a real key you can still move.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mg-spec">
+    <div class="mg-spec-h"><span class="mg-kind">Specimen</span><h3>In the API</h3><span class="mg-sub">Every property animates on the one keyframe engine</span></div>
+    <div class="mg-api">
+      <span class="mg-tag">Reveal</span>
+      <code class="mg-code" id="mgApi"><span class="k">type</span>.<span class="p">animateIn</span>({preset:<span class="s">"stagger-up"</span>, stagger:<span class="n">60</span>})</code>
+      <span class="mg-spacer"></span>
+      <span class="val">the same call the Properties group makes</span>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A title sequence is a <b>reusable component</b>, not a one-off render. Drop it on any timeline, re-theme it with a <span class="chip" data-target="dsys">Style</span>, and the same <b>stagger, path and easing</b> come with it. Change the main once and every animated instance follows.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Text on a path, staggered reveals and kinetic emphasis are all just <b>properties on one keyframe engine</b> · the very engine the <span class="chip" data-target="video">video timeline</span> uses. Nothing here is a special motion mode; it is the same keys, plotted on the same time axis, in the same dock.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should presets like <b>stagger-up</b> expose the offset as a single number, or a full per-word curve? The single number is fast and legible; the curve is precise but asks more of a first-time editor. The same call an <span class="chip" data-target="agent">agent</span> makes should stay this simple.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   Motion-graphics live preview (scoped, guarded). A real title
+   sequence: each layer reveals on the ONE CSS transition engine,
+   with a per-layer stagger delay. The timeline dock plots those
+   same offsets, and the transport playhead runs on the same
+   clock. Nothing runs unless its nodes exist, so a missing node
+   is a no-op. Shell behavior is shared DS and is not repeated.
+   ============================================================ */
+(function(){
+  "use strict";
+  var stage = document.getElementById("mgStage");
+  var grid  = document.getElementById("mgTlGrid");
+  if(!stage || !grid) return;
+
+  var ANIM = 520;            // ms · per-layer reveal duration (matches CSS)
+  var stagger = 60;          // ms · offset between layers (the star control)
+  var STAG_MIN = 20, STAG_MAX = 140, STAG_STEP = 20;
+  var preset = "stagger";
+  var PRESET_NAME = { stagger:"Stagger up", fade:"Fade up", pop:"Pop in" };
+  var PRESET_API  = { stagger:"stagger-up", fade:"fade-up", pop:"pop-in" };
+
+  // ordered reveal targets · order index drives the stagger offset
+  var targets = [
+    {id:"path",  el:document.getElementById("mgKick"), label:'Kicker · on path', cls:"k", icon:"ic-pen"},
+    {id:"head",  el:document.getElementById("mgHead"), label:'Headline', cls:"h", icon:"ic-text"},
+    {id:"w0",    el:stage.querySelectorAll(".mg-word")[0], label:'"Capture."', cls:"w", icon:"ic-text"},
+    {id:"w1",    el:stage.querySelectorAll(".mg-word")[1], label:'"Design."', cls:"w", icon:"ic-text"},
+    {id:"w2",    el:stage.querySelectorAll(".mg-word")[2], label:'"Automate."', cls:"w", icon:"ic-text"},
+    {id:"badge", el:document.querySelector(".mg-badge"), label:'Lower-third', cls:"c", icon:"ic-component", comp:true}
+  ].filter(function(t){ return t.el; });
+
+  var playBtn  = document.getElementById("mgPlay");
+  var resetBtn = document.getElementById("mgReset");
+  var endBtn   = document.getElementById("mgEnd");
+  var loopBtn  = document.getElementById("mgLoop");
+  var upBtn    = document.getElementById("mgUp");
+  var downBtn  = document.getElementById("mgDown");
+  var stagVal  = document.getElementById("mgStagVal");
+  var durVal   = document.getElementById("mgDur");
+  var apiCode  = document.getElementById("mgApi");
+  var kickText = document.getElementById("mgKickText");
+  var scrub    = document.getElementById("mgScrub");
+  var chip     = document.getElementById("mgChip");
+  var presetMut= document.getElementById("mgPresetMut");
+
+  var clocks = ["mgClock","mgClock2"].map(function(id){ return document.getElementById(id); });
+  var totals = ["mgClockTotal","mgClockTotal2"].map(function(id){ return document.getElementById(id); });
+
+  var clamp = function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  function delayOf(i){ return i * stagger; }
+  function total(){ return delayOf(targets.length-1) + ANIM; }
+  function pct(ms){ return (ms/total())*100; }
+
+  var playing=false, raf=null, startTs=0, clockMs=0, looping=false;
+
+  /* ---------------- timeline dock ---------------- */
+  function ticks(){
+    var t = total()/1000, out=[0], step = t>1.4?0.5:(t>0.8?0.3:0.2), v=step;
+    while(v < t-0.02){ out.push(+v.toFixed(2)); v+=step; }
+    out.push(+t.toFixed(2));
+    return out;
+  }
+  var playhead;
+  function renderTimeline(){
+    grid.innerHTML="";
+    var tks = ticks(), tot = total()/1000;
+    var rlab=document.createElement("div"); rlab.className="mg-rl";
+    rlab.innerHTML='<i class="ic ic-history sm"></i> Time';
+    var rl=document.createElement("div"); rl.className="mg-ruler";
+    tks.forEach(function(t,i){
+      var tk=document.createElement("span");
+      var end = i===tks.length-1;
+      tk.className="mg-tk"+(end?" end":"");
+      tk.style.left=(t/tot*100)+"%";
+      tk.textContent=t.toFixed(t<1?2:1)+"s";
+      if(end) tk.style.left="auto";
+      rl.appendChild(tk);
+    });
+    grid.appendChild(rlab); grid.appendChild(rl);
+    targets.forEach(function(t,i){
+      var lab=document.createElement("div"); lab.className="mg-rl"+(t.comp?" comp":"");
+      lab.innerHTML='<i class="ic '+t.icon+' sm"></i> '+t.label;
+      var lane=document.createElement("div"); lane.className="mg-lane";
+      tks.forEach(function(tk){ var g=document.createElement("i"); g.className="mg-gl"; g.style.left=(tk/tot*100)+"%"; lane.appendChild(g); });
+      var bar=document.createElement("div"); bar.className="mg-bar "+t.cls;
+      bar.style.left=pct(delayOf(i))+"%"; bar.style.width=pct(ANIM)+"%";
+      bar.innerHTML='<span class="mg-kd s"></span><span class="mg-kd e"></span>'+(delayOf(i)===0?"0":"+"+delayOf(i))+" ms";
+      lane.appendChild(bar);
+      grid.appendChild(lab); grid.appendChild(lane);
+    });
+    var strip=document.createElement("div"); strip.className="mg-strip";
+    playhead=document.createElement("div"); playhead.className="mg-ph";
+    playhead.innerHTML='<span class="mg-phh"></span>';
+    strip.appendChild(playhead); grid.appendChild(strip);
+    setPlayhead(clockMs);
+  }
+  function setPlayhead(ms){
+    var p = clamp(pct(ms),0,100);
+    if(playhead) playhead.style.left=p+"%";
+    if(scrub){
+      var f=scrub.querySelector(".fill"), k=scrub.querySelector(".knob");
+      if(f) f.style.width=p+"%";
+      if(k) k.style.left=p+"%";
+      scrub.setAttribute("aria-valuenow", Math.round(p));
+    }
+  }
+
+  /* ---------------- readouts ---------------- */
+  function fmt(ms){ return (ms/1000).toFixed(2)+"s"; }
+  function setClock(ms){ clocks.forEach(function(c){ if(c) c.textContent=fmt(ms); }); }
+  function syncReadouts(){
+    if(stagVal) stagVal.textContent = stagger+" ms";
+    var totS = fmt(total());
+    if(durVal) durVal.textContent=totS;
+    totals.forEach(function(t){ if(t) t.textContent=totS; });
+    if(downBtn) downBtn.disabled = stagger<=STAG_MIN;
+    if(upBtn) upBtn.disabled = stagger>=STAG_MAX;
+    if(presetMut) presetMut.textContent=PRESET_NAME[preset];
+    if(chip) chip.textContent=PRESET_NAME[preset]+" · "+stagger+" ms";
+    if(apiCode) apiCode.innerHTML='<span class="k">type</span>.<span class="p">animateIn</span>({preset:<span class="s">"'+PRESET_API[preset]+'"</span>, stagger:<span class="n">'+stagger+'</span>})';
+  }
+
+  /* ---------------- playback ---------------- */
+  function applyDelays(){
+    targets.forEach(function(t,i){ t.el.style.transitionDelay = delayOf(i)+"ms"; });
+  }
+  function toPre(){
+    targets.forEach(function(t){ t.el.style.transition="none"; t.el.style.transitionDelay="0ms"; });
+    stage.classList.add("pre");
+    void stage.offsetWidth;                       // force reflow before re-enabling
+    targets.forEach(function(t){ t.el.style.transition=""; });
+    if(kickText) kickText.setAttribute("startOffset","2%");
+  }
+  function toRest(){
+    targets.forEach(function(t){ t.el.style.transition="none"; t.el.style.transitionDelay="0ms"; });
+    stage.classList.remove("pre");
+    void stage.offsetWidth;
+    targets.forEach(function(t){ t.el.style.transition=""; });
+    if(kickText) kickText.setAttribute("startOffset","9%");
+  }
+  function stopRaf(){ if(raf){ cancelAnimationFrame(raf); raf=null; } }
+  function setPlay(on){
+    if(!playBtn) return;
+    var ic=playBtn.querySelector(".ic");
+    if(ic){ ic.classList.toggle("ic-pause",on); ic.classList.toggle("ic-play",!on); }
+    playBtn.setAttribute("aria-pressed", on?"true":"false");
+    playBtn.title = on ? "Pause" : "Play the reveal";
+  }
+  function reset(){
+    stopRaf(); playing=false; clockMs=0;
+    setPlay(false); toPre();
+    setPlayhead(0); setClock(0);
+    if(resetBtn) resetBtn.disabled=true;
+  }
+  function toEnd(){
+    stopRaf(); playing=false; setPlay(false);
+    clockMs=total(); toRest();
+    setPlayhead(clockMs); setClock(clockMs);
+    if(resetBtn) resetBtn.disabled=false;
+  }
+  function play(){
+    if(playing){ playing=false; stopRaf(); setPlay(false); return; }
+    if(clockMs>=total() || !stage.classList.contains("pre")) toPre();
+    applyDelays();
+    if(resetBtn) resetBtn.disabled=false;
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        stage.classList.remove("pre");
+        playing=true; setPlay(true);
+        startTs=0;
+        raf=requestAnimationFrame(tick);
+      });
+    });
+  }
+  function tick(ts){
+    if(!playing) return;
+    if(!startTs) startTs=ts - clockMs;      // resume-aware
+    clockMs = ts - startTs;
+    var tot = total();
+    if(kickText){
+      var u = clamp(clockMs/ANIM, 0, 1);
+      kickText.setAttribute("startOffset", (2 + u*7).toFixed(2)+"%");
+    }
+    if(clockMs>=tot){
+      clockMs=tot; setPlayhead(tot); setClock(tot);
+      playing=false; setPlay(false); stopRaf();
+      if(looping) setTimeout(function(){ reset(); play(); }, 420);
+      return;
+    }
+    setPlayhead(clockMs); setClock(clockMs);
+    raf=requestAnimationFrame(tick);
+  }
+
+  if(playBtn) playBtn.addEventListener("click", play);
+  if(resetBtn) resetBtn.addEventListener("click", reset);
+  if(endBtn) endBtn.addEventListener("click", toEnd);
+  if(loopBtn) loopBtn.addEventListener("click", function(){
+    looping=!looping;
+    loopBtn.setAttribute("aria-pressed", looping?"true":"false");
+    loopBtn.classList.toggle("secondary", looping);
+    loopBtn.classList.toggle("ghost", !looping);
+  });
+
+  /* scrub the reveal by hand: pause, then land on the settled or pre state */
+  if(scrub){
+    var set=function(e){
+      var r=scrub.getBoundingClientRect();
+      var p=clamp((e.clientX-r.left)/r.width,0,1);
+      stopRaf(); playing=false; setPlay(false);
+      clockMs=p*total();
+      if(p<=0.02) toPre(); else if(p>=0.98) toRest();
+      setPlayhead(clockMs); setClock(clockMs);
+      if(resetBtn) resetBtn.disabled = clockMs<=0;
+    };
+    scrub.addEventListener("pointerdown", function(e){ scrub.dataset.on="1"; set(e); });
+    scrub.addEventListener("pointermove", function(e){ if(scrub.dataset.on) set(e); });
+    ["pointerup","pointercancel"].forEach(function(t){ scrub.addEventListener(t, function(){ delete scrub.dataset.on; }); });
+    scrub.addEventListener("keydown", function(e){
+      if(e.key!=="ArrowLeft" && e.key!=="ArrowRight") return;
+      e.preventDefault();
+      var d = e.key==="ArrowLeft" ? -0.1 : 0.1;
+      clockMs = clamp(clockMs + d*total(), 0, total());
+      stopRaf(); playing=false; setPlay(false);
+      if(clockMs<=0) toPre(); else if(clockMs>=total()) toRest();
+      setPlayhead(clockMs); setClock(clockMs);
+    });
+  }
+
+  /* stagger stepper */
+  function setStagger(v){
+    stagger=clamp(v,STAG_MIN,STAG_MAX);
+    syncReadouts(); renderTimeline();
+    if(!playing && !stage.classList.contains("pre")) applyDelays();
+  }
+  if(upBtn) upBtn.addEventListener("click", function(){ setStagger(stagger+STAG_STEP); });
+  if(downBtn) downBtn.addEventListener("click", function(){ setStagger(stagger-STAG_STEP); });
+
+  /* preset seg, in Properties */
+  var presetSeg=document.getElementById("mgPreset");
+  if(presetSeg) presetSeg.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    [].forEach.call(presetSeg.children,function(x){ x.classList.toggle("on",x===b); });
+    preset=b.getAttribute("data-preset");
+    stage.setAttribute("data-preset",preset);
+    syncReadouts();
+    reset();     // re-arm the pre-roll for the new preset so Play shows it
+  });
+
+  /* Library scope switch */
+  (function(){
+    var seg=document.getElementById("mgScopeSeg"), label=document.getElementById("mgScope");
+    if(!seg) return;
+    var btns=[].slice.call(seg.querySelectorAll("button"));
+    btns.forEach(function(b){
+      b.addEventListener("click", function(){
+        btns.forEach(function(x){ x.classList.toggle("on",x===b); });
+        if(label) label.textContent=b.getAttribute("data-scope-name")||b.textContent.trim();
+      });
+    });
+  })();
+
+  /* keyboard: space plays/pauses, R resets */
+  document.addEventListener("keydown", function(e){
+    if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+    var k=e.key.toLowerCase();
+    if(k===" "){ e.preventDefault(); play(); }
+    else if(k==="r"){ reset(); }
+  });
+
+  /* ---------------- boot ---------------- */
+  syncReadouts();
+  renderTimeline();
+  reset();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-selection</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local reference scaffolding ONLY. Selection itself is the real DS:
+     `.selwrap` › `.sel-ring` + `.handle` + `.mtag` on the canvas, `.lrow.sel`
+     / `.lrow.selc` in Layers, and the Properties `.dgrp`. Local names are
+     prefixed `lx-` so they cannot collide with DS names (meta, rule, note,
+     spec, api were all colliding before).
+
+     Two page-local EXTENSIONS of the DS are marked below: edge handles and a
+     rotate handle. Both are candidates to move into the shared DS.
+     ============================================================ */
+  #lang-selection .lx-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:840px}
+  #lang-selection .lx-lead b{color:var(--ink);font-weight:600}
+  #lang-selection .lx-lead code{font-family:var(--mono);font-size:11px;color:var(--accent)}
+
+  #lang-selection .lx-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-selection .lx-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #lang-selection .lx-blk-h .lx-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-selection .lx-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-selection .lx-blk-h .lx-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-selection .lx-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
+  #lang-selection .lx-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #lang-selection .lx-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border-bottom:1px solid var(--line-soft)}
+  #lang-selection .lx-spec-h .lx-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
+    text-transform:none;font-weight:520;color:var(--faint)}
+  #lang-selection .lx-spec-h .lx-tag.acc{color:var(--accent)}
+  #lang-selection .lx-spec-b{padding:var(--pad-sm)}
+  #lang-selection .lx-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-selection .lx-cap b{color:var(--ink);font-weight:600}
+  #lang-selection .lx-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* a canvas plinth: selection only exists on a canvas, so a specimen of it
+     shows a slice of canvas. It is NOT a window. */
+  #lang-selection .lx-plinth{height:190px;border-radius:var(--r3);overflow:hidden;border:1px solid var(--edge-lo)}
+  #lang-selection .lx-plinth.tall{height:260px}
+  #lang-selection .lx-plinth.short{height:160px}
+  #lang-selection .lx-plinth .canvas{min-height:0;flex:1 1 auto}
+  #lang-selection .lx-plinth .artboard-label{font-size:9.5px}
+  #lang-selection .lx-obj{border-radius:14px;background:linear-gradient(135deg,#7c4dff,#b14dff 50%,#ff5d8f);
+    box-shadow:0 0 44px -6px rgba(177,77,255,.5)}
+  #lang-selection .lx-obj.alt{background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+
+  /* DS EXTENSION 1 · edge handles. The shared DS ships four corner handles;
+     a real transform frame has eight. Same .handle paint, four more slots. */
+  #lang-selection .handle.tc{top:-13px;left:50%;transform:translateX(-50%)}
+  #lang-selection .handle.bc{bottom:-13px;left:50%;transform:translateX(-50%)}
+  #lang-selection .handle.ml{left:-13px;top:50%;transform:translateY(-50%)}
+  #lang-selection .handle.mr{right:-13px;top:50%;transform:translateY(-50%)}
+  /* DS EXTENSION 2 · rotate handle, on a short stem above the frame. */
+  #lang-selection .lx-rotstem{position:absolute;left:50%;top:-25px;width:1.5px;height:16px;background:var(--accent);
+    transform:translateX(-50%);pointer-events:none}
+  #lang-selection .lx-rot{position:absolute;left:50%;top:-36px;width:11px;height:11px;border-radius:50%;
+    background:var(--panel);border:1.5px solid var(--accent);transform:translateX(-50%)}
+
+  /* multi-select frames */
+  #lang-selection .lx-group{position:absolute;border:1.5px solid var(--accent);border-radius:var(--r2);pointer-events:none}
+  #lang-selection .lx-thin{position:absolute;border:1px solid var(--accent);border-radius:10px;pointer-events:none;opacity:.7}
+  #lang-selection .lx-count{position:absolute;top:-24px;right:0;background:var(--accent);color:var(--accent-ink);
+    font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px}
+
+  /* snapping guide + gap measure */
+  #lang-selection .lx-guide{position:absolute;background:rgba(76,111,255,.6);z-index:4}
+  #lang-selection .lx-guide.v{width:1px;top:8px;bottom:8px}
+  #lang-selection .lx-guide.h{height:1px;left:8px;right:8px}
+  #lang-selection .lx-gaptag{position:absolute;background:var(--accent);color:var(--accent-ink);font-size:9px;
+    font-weight:640;padding:1px 5px;border-radius:5px;font-family:var(--mono);white-space:nowrap;z-index:5}
+  #lang-selection .lx-gapline{position:absolute;width:1px;background:var(--accent);z-index:4}
+
+  /* hover + lock */
+  #lang-selection .lx-hoverring{position:absolute;inset:-7px;border:1.5px solid var(--accent-line);border-radius:18px;pointer-events:none}
+  #lang-selection .lx-lockring{position:absolute;inset:-7px;border:1.5px dashed var(--faint);border-radius:18px;pointer-events:none}
+  #lang-selection .lx-lockbadge{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--faint);
+    color:#fff;font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;white-space:nowrap}
+
+  /* numbered callouts */
+  #lang-selection .lx-pin{flex:none;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #lang-selection .lx-pin.abs{position:absolute;z-index:8;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  #lang-selection .lx-anat{display:grid;grid-template-columns:1fr 320px;gap:var(--gap-lg);align-items:start}
+  #lang-selection .lx-leg{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-selection .lx-leg .lx-li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #lang-selection .lx-leg .lx-li b{color:var(--ink);font-weight:600}
+  #lang-selection .lx-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  #lang-selection .lx-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #lang-selection .lx-grid.three{grid-template-columns:repeat(3,1fr)}
+
+  /* do / don't */
+  #lang-selection .lx-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #lang-selection .lx-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-selection .lx-dd .lx-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-selection .lx-dd .lx-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* api */
+  #lang-selection .lx-api{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-selection .lx-api .lx-r{display:grid;grid-template-columns:250px 1fr;gap:var(--gap);align-items:baseline;
+    font-size:11px;color:var(--dim);line-height:1.5}
+  #lang-selection .lx-api code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
+    padding:1px 6px;border-radius:5px}
+  #lang-selection .lx-api .lx-r b{color:var(--ink);font-weight:600}
+
+  #lang-selection .lx-note{font-size:11px;color:var(--dim);line-height:1.5;margin:0;padding:var(--pad-sm) var(--pad);
+    border:1px dashed var(--line-strong);border-radius:var(--r3);background:var(--panel-2)}
+  #lang-selection .lx-note b{color:var(--ink);font-weight:600}
+  #lang-selection .lx-note code{font-family:var(--mono);font-size:10px}
+
+  /* Kind-1 app screens: definite height so the dock is bounded. */
+  #lang-selection .lx-app{height:560px;min-height:0}
+  #lang-selection .lx-app .canvas{min-height:0}
+  #lang-selection .lx-narrow{max-width:420px}
+  #lang-selection .lx-narrow .win{height:418px;min-height:0}
+  #lang-selection .lx-narrow .canvas{min-height:0}
+
+  @media (max-width:820px){
+    #lang-selection .lx-anat,#lang-selection .lx-grid,#lang-selection .lx-grid.three,#lang-selection .lx-dd{grid-template-columns:1fr}
+    #lang-selection .lx-api .lx-r{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-selection">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Selection &amp; canvas</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
+    <p class="lx-lead"><b>Selection is how you tell the app what you mean</b>, and it is shown in exactly <b>three places at once</b>: the ring
+      and handles on the canvas, the highlighted row in <b>Layers</b>, and the contents of the <b>Properties</b> group. Click in any of the
+      three and the other two follow, which is what makes one object read as one selection instead of three coincidences. Drag empty canvas
+      for a marquee, hold Shift to add. Every selection is also a value an <b data-target="agent">agent</b> can name, so
+      <code>select("Headline")</code> from a command lands you in exactly the same state as a click.</p>
+
+    <!-- 2 · THE THREE PLACES · one complete app screen -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">01</span><h3>One selection, three places</h3><span class="lx-sub">App screen · canvas · Layers · Properties</span></div>
+      <div class="lx-blk-b">
+        <div class="win tall cq lx-app">
+          <div class="titlebar">
+            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+            <div class="wtitle"><b>hero-card</b> · 1200 × 630</div>
+            <div class="wsw" role="tablist" aria-label="Workspace">
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+              <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+            </div>
+            <div class="tbtns">
+              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+              <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="tool" title="Commands" data-menu="#lxCmd"><i class="ic sm ic-more"></i></button>
+            <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" data-sheet="#lxHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <span class="tspacer"></span>
+            <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+            <div style="position:relative">
+              <div class="popover menu pop" id="lxCmd" style="position:absolute;right:0;top:26px;width:214px;z-index:14">
+                <div class="menuitem"><i class="ic ic-cursor"></i> Select all <span class="sc">⌘A</span></div>
+                <div class="menuitem"><i class="ic ic-x"></i> Deselect <span class="sc">⌘⇧A</span></div>
+                <div class="menu-sep"></div>
+                <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                <div class="menuitem"><i class="ic ic-lock"></i> Lock selection <span class="sc">⌘L</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit lean" id="lxShell" data-dock="open">
+            <div class="cnv">
+              <div class="canvas">
+                <div class="artboard-label">1200 × 630 · Brand tokens</div>
+                <div class="selwrap">
+                  <div class="hero-card">
+                    <span class="hc-badge"><i class="ic xs ic-component"></i> New</span>
+                    <div class="hc-h">Ship it faster.</div>
+                    <p class="hc-sub">Capture, design, and automate. All in one fast canvas.</p>
+                    <span class="hc-cta">Get started <i class="ic ic-chevron-right"></i><span class="cinst"></span></span>
+                  </div>
+                  <!-- PLACE 1 OF 3 · the canvas -->
+                  <div class="sel-ring"></div>
+                  <span class="lx-rotstem"></span><span class="lx-rot" title="Rotate"></span>
+                  <span class="handle tl"></span><span class="handle tc"></span><span class="handle tr"></span>
+                  <span class="handle ml"></span><span class="handle mr"></span>
+                  <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
+                  <span class="mtag">Hero card · 400 × 268</span>
+                </div>
+              </div>
+
+              <div class="cnv-act">
+                <button class="tool on" data-dock-toggle="#lxShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                <button class="tool" data-sheet="#lxHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+              </div>
+
+              <div class="tbar">
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                  <button class="tool" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                  <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                  <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep ovf"></span>
+                  <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                </span>
+                <button class="tool tbar-more" title="More tools" data-menu="#lxOvf"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-live" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="lxOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                </div>
+              </div>
+
+              <div class="sheet down" id="lxHist" aria-hidden="true" aria-label="Capture history">
+                <div class="sheet-h">
+                  <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                  <span class="sp"></span>
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="sp"></span>
+                  <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                </div>
+                <div class="sheet-b">
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                    <div class="filmcard sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                      <span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter v" data-min="230" data-max="420"></div>
+
+            <div class="pdock">
+              <div class="dgrp" id="lxLayers" style="--gh:158px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">7</span></div>
+                <div class="dgrp-b">
+                  <!-- PLACE 2 OF 3 · the matching row in Layers -->
+                  <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Grain overlay</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+
+              <div class="splitter h" data-min="90" data-max="300"></div>
+
+              <!-- PLACE 3 OF 3 · Properties, contextual to what is selected -->
+              <div class="dgrp grow" id="lxProps">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h">Selection <span class="mut">Hero card</span></div>
+                    <div class="irow"><span class="rl">Layer</span><span class="select"><span class="lead"><i class="ic xs ic-frame"></i> Hero card</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Transform <span class="mut">400 × 268</span></div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">400</span></div><div class="field"><span class="k">H</span><span class="v">268</span></div><div class="field"><span class="k">X</span><span class="v">120</span></div><div class="field"><span class="k">Y</span><span class="v">96</span></div></div>
+                    <div class="grid2" style="margin-top:var(--s1)"><div class="field"><span class="k">R</span><span class="v">16</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Align <span class="mut">to artboard</span></div>
+                    <div class="irow split"><span class="rl">Horizontal</span>
+                      <span class="seg" data-radio="button"><button title="Left"><i class="ic xs ic-align-left"></i></button><button class="on" title="Center"><i class="ic xs ic-align-center"></i></button><button title="Right"><i class="ic xs ic-align-right"></i></button></span>
+                    </div>
+                  </div>
+                  <div class="section closed"><div class="sec-h">Fill <span class="mut">Brand · gradient</span></div>
+                    <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="drail">
+              <button class="drailtab" data-group="#lxLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              <button class="drailtab" data-group="#lxProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            </div>
+          </div>
+        </div>
+        <p class="lx-note"><b>Read it left to right.</b> The frame on the canvas, the highlighted <b>Hero card</b> row in Layers, and the
+          <b>Properties</b> group titled <code>Frame</code> are the same fact stated three ways. Nothing selected shows the document's
+          properties; one layer shows that layer; a multi-select shows only what the selection shares. That is the habit the app teaches:
+          <b>look right to see what the current selection can do</b>.</p>
+      </div>
+    </div>
+
+    <!-- 3 · ANATOMY -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">02</span><h3>Anatomy · the transform frame</h3><span class="lx-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.selwrap</code></span></div>
+      <div class="lx-blk-b">
+        <div class="lx-anat">
+          <div class="lx-spec">
+            <div class="lx-spec-h">A selected object<span class="lx-tag acc">not a window</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth tall">
+                <div class="canvas">
+                  <div class="artboard-label">1200 × 630 · Brand tokens</div>
+                  <div class="selwrap" style="width:190px">
+                    <div class="lx-obj" style="width:190px;height:118px"></div>
+                    <div class="sel-ring"></div>
+                    <span class="lx-rotstem"></span><span class="lx-rot" title="Rotate"></span>
+                    <span class="handle tl"></span><span class="handle tc"></span><span class="handle tr"></span>
+                    <span class="handle ml"></span><span class="handle mr"></span>
+                    <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
+                    <span class="mtag" style="top:auto;bottom:-30px">190 × 118</span>
+                    <span class="lx-pin abs" style="top:36px;left:-40px">1</span>
+                    <span class="lx-pin abs" style="top:-14px;right:-38px">2</span>
+                    <span class="lx-pin abs" style="top:50%;right:-40px;transform:translateY(-50%)">3</span>
+                    <span class="lx-pin abs" style="top:-38px;left:calc(50% + 14px)">4</span>
+                    <span class="lx-pin abs" style="bottom:-32px;right:-40px">5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lx-leg">
+            <div class="lx-li"><span class="lx-pin">1</span><span><b>Selection ring</b> · a hairline accent outline, offset from the object so it never hides the object's own edge. <code>.sel-ring</code></span></div>
+            <div class="lx-li"><span class="lx-pin">2</span><span><b>Corner handle</b> · resizes both axes. Shift keeps the aspect ratio, Option resizes about the centre. <code>.handle.tl</code> and friends</span></div>
+            <div class="lx-li"><span class="lx-pin">3</span><span><b>Edge handle</b> · resizes one axis. Eight handles in total, four corners and four edges.</span></div>
+            <div class="lx-li"><span class="lx-pin">4</span><span><b>Rotate handle</b> · sits on a short stem above the frame. Drag to spin, Shift for 15° steps.</span></div>
+            <div class="lx-li"><span class="lx-pin">5</span><span><b>Measure tag</b> · live width by height in logical points while you drag, hidden at rest so the artboard stays clean. <code>.mtag</code></span></div>
+            <div class="lx-li"><span class="lx-pin">·</span><span><b>Hit areas</b> · handles are drawn small and hit large, so a precise-looking frame is still easy to grab, and larger still on a small window.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · VARIANTS -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">03</span><h3>Variants</h3><span class="lx-sub">Specimens · single · multi · marquee · instance</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-grid">
+          <div class="lx-spec">
+            <div class="lx-spec-h">Single<span class="lx-tag">the full frame</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth short">
+                <div class="canvas">
+                  <div class="selwrap" style="width:130px">
+                    <div class="lx-obj" style="width:130px;height:78px"></div>
+                    <div class="sel-ring"></div>
+                    <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                    <span class="mtag">130 × 78</span>
+                  </div>
+                </div>
+              </div>
+              <p class="lx-cap">One object: ring, handles, and its size. Properties shows that layer.</p>
+            </div>
+          </div>
+
+          <div class="lx-spec">
+            <div class="lx-spec-h">Multi-select<span class="lx-tag">one group frame</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth short">
+                <div class="canvas">
+                  <div style="position:relative;width:160px;height:100px">
+                    <div class="lx-obj" style="position:absolute;left:0;top:8px;width:82px;height:54px;border-radius:10px"></div>
+                    <div class="lx-thin" style="left:-3px;top:5px;width:88px;height:60px"></div>
+                    <div class="lx-obj alt" style="position:absolute;right:0;bottom:0;width:68px;height:48px;border-radius:10px"></div>
+                    <div class="lx-thin" style="right:-3px;bottom:-3px;width:74px;height:54px"></div>
+                    <div class="lx-group" style="left:-9px;top:-4px;right:-9px;bottom:-9px"></div>
+                    <span class="handle tl" style="left:-13px;top:-8px"></span><span class="handle tr" style="right:-13px;top:-8px"></span>
+                    <span class="handle bl" style="left:-13px;bottom:-13px"></span><span class="handle br" style="right:-13px;bottom:-13px"></span>
+                    <span class="lx-count">2 selected</span>
+                  </div>
+                </div>
+              </div>
+              <p class="lx-cap">A thin outline per object, one group frame with the handles, and a count. Properties shows what they share.</p>
+            </div>
+          </div>
+
+          <div class="lx-spec">
+            <div class="lx-spec-h">Marquee<span class="lx-tag">drag on empty canvas</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth short">
+                <div class="canvas">
+                  <div style="position:relative;width:160px;height:100px">
+                    <div class="lx-obj" style="position:absolute;left:6px;top:10px;width:74px;height:48px;border-radius:10px;opacity:.9"></div>
+                    <div class="lx-obj alt" style="position:absolute;right:4px;bottom:6px;width:64px;height:42px;border-radius:10px;opacity:.9"></div>
+                    <div class="marq" style="inset:auto;left:-6px;top:-2px;width:136px;height:88px"></div>
+                    <span class="mtag" style="top:-26px">136 × 88</span>
+                  </div>
+                </div>
+              </div>
+              <p class="lx-cap">The dashed rubber band, with its own live size. Release and whatever it touched becomes the selection.</p>
+            </div>
+          </div>
+
+          <div class="lx-spec">
+            <div class="lx-spec-h">Component instance<span class="lx-tag">purple, never blue</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth short">
+                <div class="canvas">
+                  <div style="position:relative">
+                    <div class="uibtn grad" style="font-size:12px;padding:9px 16px">Get started <i class="ic xs ic-chevron-right"></i></div>
+                    <div class="cinst"></div>
+                    <div class="cbadge" data-target="dsys"><i class="ic xs ic-component"></i> Button · Primary</div>
+                  </div>
+                </div>
+              </div>
+              <p class="lx-cap">Anything linked to a main component rings in the component purple and names what it is an instance of.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 · STATES -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">04</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover · locked</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-grid three">
+          <div class="lx-spec">
+            <div class="lx-spec-h">Selected<span class="lx-tag acc">ring + handles</span></div>
+            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+              <div class="selwrap" style="width:118px">
+                <div class="lx-obj" style="width:118px;height:70px"></div>
+                <div class="sel-ring"></div>
+                <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              </div>
+            </div></div><p class="lx-cap">Committed. Handles are live, arrow keys nudge, Properties follows.</p></div>
+          </div>
+          <div class="lx-spec">
+            <div class="lx-spec-h">Hover<span class="lx-tag">preview, no handles</span></div>
+            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+              <div style="position:relative;width:118px;height:70px">
+                <div class="lx-obj" style="width:118px;height:70px"></div>
+                <div class="lx-hoverring"></div>
+              </div>
+            </div></div><p class="lx-cap">A lighter ring showing what a click would grab. No handles, because nothing is committed yet.</p></div>
+          </div>
+          <div class="lx-spec">
+            <div class="lx-spec-h">Locked<span class="lx-tag">inspect, do not move</span></div>
+            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+              <div style="position:relative;width:118px;height:70px">
+                <div class="lx-obj" style="width:118px;height:70px;filter:saturate(.6) brightness(.85)"></div>
+                <div class="lx-lockring"></div>
+                <span class="lx-lockbadge"><i class="ic xs ic-lock"></i> Locked</span>
+              </div>
+            </div></div><p class="lx-cap">Muted dashed outline, a lock tag, no handles. It still answers selection for inspection, just not for transform.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 · SNAPPING -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">05</span><h3>While you drag</h3><span class="lx-sub">Specimen · guides, gaps, and the measure tag</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-anat">
+          <div class="lx-spec">
+            <div class="lx-spec-h">Snapping to a 16pt gap<span class="lx-tag acc">transient, drag only</span></div>
+            <div class="lx-spec-b">
+              <div class="cnv lx-plinth">
+                <div class="canvas">
+                  <div class="artboard-label">gap snapping · edges align</div>
+                  <div style="position:relative;width:230px;height:130px">
+                    <div class="selwrap" style="position:absolute;left:14px;top:14px;width:196px">
+                      <div style="height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5))"></div>
+                      <div class="sel-ring" style="inset:-6px;border-radius:12px"></div>
+                      <span class="handle tl" style="left:-11px;top:-11px"></span><span class="handle tr" style="right:-11px;top:-11px"></span>
+                      <span class="handle bl" style="left:-11px;bottom:-11px"></span><span class="handle br" style="right:-11px;bottom:-11px"></span>
+                      <span class="mtag" style="top:-28px">196 × 26</span>
+                    </div>
+                    <div style="position:absolute;left:14px;top:78px">
+                      <div class="uibtn grad" style="font-size:10px;padding:7px 12px">Get started</div>
+                      <div class="cinst"></div>
+                    </div>
+                    <div class="lx-guide v" style="left:14px;top:0;bottom:0"></div>
+                    <div class="lx-gapline" style="left:26px;top:46px;height:32px"></div>
+                    <span class="lx-gaptag" style="left:34px;top:54px">16</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lx-leg">
+            <div class="lx-li"><span class="lx-pin">1</span><span><b>Smart guide</b> · a thin accent line when an edge or a centre lines up with something else. It appears on the drag and disappears on the drop.</span></div>
+            <div class="lx-li"><span class="lx-pin">2</span><span><b>Gap tag</b> · the number the snap chose, in logical points, right where the gap is. <b>Never snap silently.</b></span></div>
+            <div class="lx-li"><span class="lx-pin">3</span><span><b>Measure tag</b> · live size while resizing. Same tag, same place, whichever tool is doing the resizing.</span></div>
+            <div class="lx-li"><span class="lx-pin">·</span><span><b>Logical units</b> · everything on screen is measured in points, not device pixels, so a Retina capture and a UI frame report the same numbers. The Measure tool in the tool strip reads the same values.</span></div>
+            <div class="lx-li"><span class="lx-pin">·</span><span><b>Nothing persists</b> · guides, gap tags and measure tags all vanish on release. The artboard goes back to being just the document.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 · RULES -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">06</span><h3>Rules</h3><span class="lx-sub">Do / Don't</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-dd">
+          <span class="lx-do">Mirror the selection across canvas, Layers, and Properties, every time.</span>
+          <span class="lx-no">Highlight a row in Layers without ringing the object on the canvas.</span>
+          <span class="lx-do">Keep handles outside the object so they never cover its own content.</span>
+          <span class="lx-no">Draw grab handles on a locked object.</span>
+          <span class="lx-do">Show the measure tag while resizing and hide it at rest.</span>
+          <span class="lx-no">Leave guides or gap tags on screen after the drag ends.</span>
+          <span class="lx-do">Ring a component instance in purple and everything else in accent.</span>
+          <span class="lx-no">Snap silently. Always show the guide and the number it chose.</span>
+          <span class="lx-do">Give the group frame the only handles in a multi-select.</span>
+          <span class="lx-no">Invent a second selection colour or a second frame style per page.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 · IN THE API -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">07</span><h3>In the API</h3><span class="lx-sub">A selection is a value</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-api">
+          <div class="lx-r"><code>select("Hero card")</code><span>Selects by name. All three places update, exactly as if you had clicked.</span></div>
+          <div class="lx-r"><code>select(["A","B"])</code><span>A multi-select, which draws one group frame and a count.</span></div>
+          <div class="lx-r"><code>selection.bounds</code><span>What the measure tag reads, in logical points.</span></div>
+          <div class="lx-r"><code>node.transform(w, h, rotate)</code><span>What a handle drag runs. One command per drag, so one undo step.</span></div>
+          <div class="lx-r"><code>node.locked = true</code><span>Drops the handles. A locked node still answers <code>select()</code> for inspection.</span></div>
+          <div class="lx-r"><code>align(ids, "center")</code><span>What the align control in Properties runs, and what an agent runs for you.</span></div>
+        </div>
+        <p class="lx-cap">Because a selection is a named value, an <b data-target="agent">agent</b> can say what it is about to touch before it
+          touches it, and you can watch the ring land on the right object. Measuring the same selection is the
+          <b class="backchip" data-target="redline">Measure</b> tool.</p>
+      </div>
+    </div>
+
+    <!-- 9 · RESPONSIVE -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">08</span><h3>Responsive</h3><span class="lx-sub">App screen · the same selection at 420px</span></div>
+      <div class="lx-blk-b">
+        <div class="lx-narrow">
+          <div class="win cq" style="display:flex;flex-direction:column">
+            <div class="titlebar" style="height:32px">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle" style="font-size:11.5px"><b>hero-card</b></div>
+              <div class="tbtns" style="min-width:0"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+            </div>
+            <div class="toolbar">
+              <button class="tool" title="Commands" data-menu="#lxCmdN"><i class="ic sm ic-more"></i></button>
+              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> <span class="kbd">⌘K</span></span>
+              <span class="tspacer"></span>
+              <button class="btn ghost icon sm" title="Capture history (⌘⇧H)"><i class="ic ic-history"></i></button>
+              <div style="position:relative">
+                <div class="popover menu pop" id="lxCmdN" style="position:absolute;left:0;top:22px;width:190px;z-index:13">
+                  <div class="menuitem"><i class="ic ic-cursor"></i> Select all <span class="sc">⌘A</span></div>
+                  <div class="menuitem"><i class="ic ic-x"></i> Deselect <span class="sc">⌘⇧A</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="edit lean" id="lxShellN" data-dock="overlay" style="flex:1">
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="selwrap" style="width:150px">
+                    <div class="lx-obj" style="width:150px;height:88px"></div>
+                    <div class="sel-ring"></div>
+                    <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                    <span class="mtag">150 × 88</span>
+                  </div>
+                </div>
+                <div class="cnv-act">
+                  <button class="tool on" data-dock-toggle="#lxShellN" title="Show or hide the panel dock" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <button class="tool ovf" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                    <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#lxOvfN"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom-narrow" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="lxOvfN" style="position:absolute;right:0;bottom:44px;width:166px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-frame"></i> Frame <span class="sc">F</span></div>
+                    <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter v"></div>
+              <div class="pdock">
+                <div class="dgrp" id="lxLayersN" style="--gh:110px">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp grow" id="lxPropsN">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+                  <div class="dgrp-b">
+                    <div class="section"><div class="sec-h">Transform <span class="mut">400 × 268</span></div>
+                      <div class="grid2"><div class="field"><span class="k">W</span><span class="v">400</span></div><div class="field"><span class="k">H</span><span class="v">268</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab" data-group="#lxLayersN" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-group="#lxPropsN" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lx-note">The frame does not change when the window does. What changes is around it: the dock becomes a rail plus an overlay,
+          so the canvas keeps the room the selection needs, and the tool bar folds its overflow into <b>more</b>. Handle hit areas grow while
+          the handles stay the same size on screen, and the measure tag stays with the object rather than docking somewhere else. Press the
+          panel toggle to slide Properties in over the canvas and confirm the row and the ring still agree.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>One selection model everywhere, shown in three places at once. Whether you grabbed a shape, a text layer, or a <b data-target="dsys">component instance</b>, the ring, the row and the panel behave the same, so the canvas is <b>predictable</b> the moment you click.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Selection could carry <b>semantic hints</b>: pick a row of cards and Properties offers "distribute evenly" or "make a component" at the top, the same commands the <b data-target="agent">agent</b> would run, surfaced where you are already looking.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>How aggressive should snapping be? Strong snaps feel crisp but fight a precise nudge. Do we hold a modifier to suspend snapping, or learn a per-document threshold from how often you override it?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

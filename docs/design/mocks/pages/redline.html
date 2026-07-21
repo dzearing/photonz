@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · redline</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* ===== redline page: the real measure / redline tool, inside the one shell =====
+   Only the caliper geometry, the captured screenshot art and the overlay chips are
+   page-local. The shell (dock, groups, splitters, rail, tool bar, overlay) is DS. */
+#redline .win.shell{height:720px;min-height:0}
+#redline .win.shell .canvas{min-height:0;padding:0}/* coordinate root: shot + dimension overlay share this origin */
+#redline .rl-frame{position:relative;width:440px;height:392px}
+
+/* the SCREENSHOT being measured: a believable macOS Settings window.
+   It stays light (it is a captured image); the editor chrome around it adapts. */
+#redline .shot{position:absolute;inset:0;width:440px;height:392px;border-radius:12px;overflow:hidden;
+  background:#ffffff;color:#1d1d1f;border:1px solid rgba(0,0,0,.14);
+  box-shadow:0 22px 46px -14px rgba(0,0,0,.55);font-family:var(--sans)}
+#redline .shot .sbar{position:absolute;top:0;left:0;right:0;height:36px;display:flex;align-items:center;
+  gap:8px;padding:0 12px;background:#f5f5f7;border-bottom:1px solid #e6e6ea}
+#redline .shot .sbar .dot{width:11px;height:11px;border-radius:50%}
+#redline .shot .sbar .t{position:absolute;left:0;right:0;text-align:center;font-size:12px;font-weight:600;color:#3a3a3c}
+#redline .shot .stitle{position:absolute;left:24px;top:50px;font-size:16px;font-weight:700;letter-spacing:-.01em;color:#1d1d1f}
+#redline .shot .sdiv{position:absolute;left:24px;top:84px;width:392px;height:1px;background:#ececed}
+
+#redline .set-row{position:absolute;height:40px;display:flex;align-items:center;justify-content:space-between}
+#redline .set-row .lb{font-size:13px;color:#1d1d1f;font-weight:500}
+/* right-side controls in the screenshot */
+#redline .mseg{display:inline-flex;background:#ececed;border-radius:8px;padding:2px}
+#redline .mseg span{font-size:11.5px;font-weight:600;color:#5a5a5e;padding:4px 11px;border-radius:6px}
+#redline .mseg span.on{background:#fff;color:#1d1d1f;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+#redline .mval{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#6a6a6e}
+#redline .mval .sw{width:16px;height:16px;border-radius:5px;background:#0a84ff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+#redline .mtog{width:38px;height:23px;border-radius:999px;background:#34c759;position:relative}
+#redline .mtog::after{content:"";position:absolute;top:2px;right:2px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+#redline .sinput{position:absolute;border:1px solid #d6d6da;border-radius:7px;background:#fff;
+  display:flex;align-items:center;padding:0 10px;font-size:12.5px;color:#1d1d1f}
+#redline .sinput .car{width:1.5px;height:14px;background:#0a84ff;margin-left:1px}
+#redline .sbtn{position:absolute;display:flex;align-items:center;justify-content:center;
+  border-radius:9px;background:linear-gradient(180deg,#3a94ff,#0a84ff);color:#fff;font-size:13px;font-weight:600;
+  box-shadow:0 4px 12px -4px rgba(10,132,255,.6),inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* hover-to-measure highlight + size chip */
+#redline .hit{cursor:default}
+#redline .rl-hover{position:absolute;display:none;border:1.5px solid #e5484d;
+  background:color-mix(in srgb,#e5484d 12%,transparent);border-radius:4px;pointer-events:none;z-index:6}
+
+/* ===== dimension calipers (U / sideways-U brackets; overlay not clipped) =====
+   Two perpendicular arms at the span endpoints reach OUT to a common base line
+   that runs parallel to the span. The open side of the U faces the element; the
+   numeric label is a glass chip centered on the base line. */
+#redline .dims{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:5}
+#redline .cal{position:absolute;box-sizing:border-box;border:0 solid currentColor}
+/* which three sides are drawn = which way the U opens (missing side = open side) */
+#redline .cal.up{border-width:0 1.5px 1.5px 1.5px}      /* open top, base at bottom */
+#redline .cal.down{border-width:1.5px 1.5px 0 1.5px}    /* open bottom, base at top */
+#redline .cal.left{border-width:1.5px 1.5px 1.5px 0}    /* open left, base at right */
+#redline .cal.right{border-width:1.5px 0 1.5px 1.5px}   /* open right, base at left */
+/* label = solid redline chip (black text) centered on the base line */
+#redline .cal .cap{position:absolute;font-family:var(--mono);font-size:10px;font-weight:700;line-height:1;
+  color:#111;background:#fff;
+  border:1.5px solid currentColor;padding:2px 7px;border-radius:6px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.28)}
+#redline .cal.up .cap{left:50%;bottom:0;transform:translate(-50%,50%)}
+#redline .cal.down .cap{left:50%;top:0;transform:translate(-50%,-50%)}
+#redline .cal.left .cap{top:50%;right:0;transform:translate(50%,-50%)}
+#redline .cal.right .cap{top:50%;left:0;transform:translate(-50%,-50%)}
+/* two measurement roles */
+#redline .cal{border-color:currentColor}
+#redline .cal.size{color:#e5484d}   /* size = red */
+#redline .cal.gap{color:var(--accent)} /* spacing = blue */
+/* SELECTION, place 1 of 3: the selected measurement on the canvas */
+#redline .cal.selm .cap{box-shadow:0 0 0 3px var(--accent-soft),0 1px 3px rgba(0,0,0,.28);
+  outline:1.5px solid var(--accent);outline-offset:1px}
+
+/* alignment guide */
+#redline .align-guide{position:absolute;border-left:1.5px dashed var(--comp);z-index:4;pointer-events:none}
+#redline .align-tag{position:absolute;left:0;top:-2px;transform:translate(-50%,-100%);
+  background:var(--comp);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+#redline .align-tag .ic{width:10px;height:10px}
+
+/* live measurement (measure mode: click two points -> rotated caliper) */
+#redline .mdot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);
+  transform:translate(-50%,-50%);box-shadow:0 0 0 2px rgba(255,255,255,.7);z-index:7}
+#redline .cal.live{z-index:7;transform-origin:0 0}
+#redline .rl-frame.measuring{cursor:crosshair}
+
+/* legend + hint · canvas overlays, stacked top-left clear of the tool bar */
+#redline .rl-over{position:absolute;top:var(--s3);left:var(--s3);z-index:8;
+  display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-sm);max-width:60%}
+#redline .rl-legend{display:flex;flex-direction:column;gap:7px;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);border-radius:10px;padding:9px 11px;box-shadow:var(--lg-shadow)}
+#redline .rl-legend .lg{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;color:var(--dim)}
+#redline .rl-legend .sw{width:16px;height:0;border-top:2px solid;flex:none}
+#redline .rl-legend .sw.dash{border-top-style:dashed}
+#redline .rl-hint{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:560;color:var(--dim);
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);border-radius:999px;padding:5px 12px;box-shadow:var(--lg-shadow)}
+#redline .rl-hint .ic{width:12px;height:12px;color:var(--accent);flex:none}
+
+/* measurement rows carry a role swatch */
+#redline .lrow .mrole{width:14px;height:0;border-top:2px solid;flex:none}
+#redline .lrow .mnum{font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="redline">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Image editing</h2><span class="k">· measure &amp; redline · the fast daily path, kept sacred</span></div>
+
+  <p class="pglead">Measuring is not a separate app. It is the <b>Measure tool</b> in the Image workspace: pick it in the
+    floating tool bar, hover an element for its size, click two points for a distance. The selected measurement opens in
+    <b>Properties</b>, exactly like any other selection.</p>
+
+  <div class="win tall cq shell">
+
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>settings-capture</b> · 2560 × 1440</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn secondary sm"><i class="ic ic-copy"></i> Copy <span class="kbd">⌘C</span></button>
+        <button class="btn primary sm"><i class="ic ic-check"></i> Done</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="pill" title="Measurements on this capture"><i class="ic sm ic-ruler"></i> 7 measurements</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy capture <span class="sc">⌘C</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Measure</div>
+          <div class="menuitem"><i class="ic ic-ruler"></i> Measure tool <span class="sc">M</span></div>
+          <div class="menuitem"><i class="ic ic-eye"></i> Show all measurements</div>
+          <div class="menuitem"><i class="ic ic-trash"></i> Clear measurements</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="rl-over">
+            <div class="rl-legend">
+              <div class="lg"><span class="sw" style="border-color:#e5484d"></span> Size</div>
+              <div class="lg"><span class="sw" style="border-color:var(--accent)"></span> Spacing / gap</div>
+              <div class="lg"><span class="sw dash" style="border-color:var(--comp)"></span> Alignment</div>
+            </div>
+            <div class="rl-hint" id="rlHint"><i class="ic ic-ruler"></i> Measure mode: click two points for a live distance</div>
+          </div>
+
+          <div class="rl-frame measuring" id="rlFrame">
+            <!-- ===== the screenshot (real elements at real positions) ===== -->
+            <div class="shot" id="rlShot">
+              <div class="sbar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="t">Settings</span></div>
+              <div class="stitle">General</div>
+              <div class="sdiv"></div>
+
+              <div class="set-row hit" style="left:24px;top:96px;width:392px">
+                <span class="lb">Appearance</span>
+                <span class="mseg"><span>Light</span><span class="on">Dark</span></span>
+              </div>
+              <div class="set-row hit" style="left:24px;top:152px;width:392px">
+                <span class="lb">Accent color</span>
+                <span class="mval"><span class="sw"></span>Blue <i class="ic ic-chevron-down xs" style="color:#9a9a9e"></i></span>
+              </div>
+              <div class="set-row hit" style="left:24px;top:208px;width:392px">
+                <span class="lb">Highlight edits</span>
+                <span class="mtog"></span>
+              </div>
+
+              <span class="lb" style="position:absolute;left:24px;top:273px;font-size:13px;color:#1d1d1f">Display name</span>
+              <div class="sinput hit" style="left:232px;top:264px;width:184px;height:32px">Studio<span class="car"></span></div>
+
+              <div class="sbtn hit" style="left:288px;top:328px;width:128px;height:40px">Save Changes</div>
+            </div>
+
+            <!-- ===== dimension overlay =====
+                 Calipers are anchored to the real element rects in JS (see buildDims),
+                 so every arm sits exactly on the edge it measures. -->
+            <div class="dims" id="rlDims">
+              <!-- alignment guide: labels + input share the left edge at x=24 -->
+              <div class="align-guide" style="left:24px;top:52px;height:244px">
+                <span class="align-tag"><i class="ic ic-check"></i>aligned</span>
+              </div>
+            </div>
+
+            <!-- hover highlight box (populated by JS) -->
+            <div class="rl-hover" id="rlHover"></div>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 Image inventory, Measure active -->
+        <div class="tbar">
+          <span class="tstrip" id="rlTools">
+            <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <button class="tool ovf" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+            <span class="tsep"></span>
+            <button class="tool ovf" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+            <button class="tool" title="Arrow / annotate (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool" title="Box (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" title="Redact / blur (K)"><i class="ic sm ic-eye-off"></i></button>
+            <span class="tsep"></span>
+            <button class="tool on" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:#e5484d"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:186px;z-index:12">
+            <div class="menuitem"><i class="ic ic-lasso"></i> Lasso <span class="sc">L</span></div>
+            <div class="menuitem"><i class="ic ic-crop"></i> Crop <span class="sc">C</span></div>
+            <div class="menuitem"><i class="ic ic-eye-off"></i> Redact / blur <span class="sc">K</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) · the front door for captures -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(150deg,#f5f5f7,#c9cdd6)"></span>
+                <span class="cap"><span class="nm">settings-capture</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(150deg,#dfe6f5,#8ea4cd)"></span>
+                <span class="cap"><span class="nm">sidebar-states</span><span class="ago">9 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(150deg,#ffe9a8,#f0a45c)"></span>
+                <span class="cap"><span class="nm">onboarding-2</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Capture, measure, copy. Pick any capture to open it here and keep the loop one keystroke long.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="228" data-max="420"></div>
+
+      <div class="pdock" id="dock" style="--dock-w:276px">
+
+        <div class="dgrp" id="gMeasures" style="--gh:164px">
+          <div class="dgrp-h"><span class="ttl">Measurements</span><span class="cnt">7</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#measMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- SELECTION, place 2 of 3: the matching row in the list -->
+            <div class="lrow sel"><span class="mrole" style="border-color:#e5484d"></span><span class="nm">Save Changes · width</span><span class="mnum">128 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole" style="border-color:#e5484d"></span><span class="nm">Save Changes · height</span><span class="mnum">40 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole" style="border-color:#e5484d"></span><span class="nm">Display name · height</span><span class="mnum">32 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole" style="border-color:var(--accent)"></span><span class="nm">Row gap · Appearance</span><span class="mnum">16 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole" style="border-color:var(--accent)"></span><span class="nm">Label inset</span><span class="mnum">24 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole" style="border-color:var(--accent)"></span><span class="nm">Field to button gap</span><span class="mnum">32 px</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><span class="mrole dash" style="border-color:var(--comp);border-top-style:dashed"></span><span class="nm">Left edge alignment</span><span class="mnum">4 items</span><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="96" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties. Tool options sit at the top of
+             this group, so there is no permanent options bar. -->
+        <div class="dgrp" id="gProps" style="--gh:240px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Measurement</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h">Tool options <span class="mut">Measure</span></div>
+              <div class="irow"><span class="rl">Units</span><span class="select"><span class="lead">Logical (px)</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Snap</span><span class="select"><span class="lead">Edges and centers</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Show</span>
+                <div class="seg" data-radio="button"><button class="on">All</button><button>Size</button><button>Spacing</button></div>
+              </div>
+              <p class="note">Options belong to the active tool. Switch to Arrow or Box in the tool bar and this row becomes stroke, color and arrowhead.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Save Changes · width <span class="mut">size</span></div>
+              <div class="grid2">
+                <div class="field"><span class="k">From</span><span class="v">288</span></div>
+                <div class="field"><span class="k">To</span><span class="v">416</span></div>
+                <div class="field"><span class="k">Distance</span><span class="v">128</span></div>
+                <div class="field"><span class="k">Units</span><span class="v">px</span></div>
+              </div>
+              <div class="irow"><span class="rl">Role</span>
+                <div class="seg" data-radio="button"><button class="on">Size</button><button>Spacing</button><button>Align</button></div>
+              </div>
+              <div class="irow"><span class="rl">Label</span><span class="select"><span class="lead">Outside, centered</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow split"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" style="background:#e5484d"></span> Redline red</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span><button class="linkbtn">Reset</button></div>
+              <p class="note">A measurement is a real object on the document. Select it here or on the capture, re-role it, restyle it, or delete it. The numbers stay bound to the element edges.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Export <span class="mut">redline sheet</span></div>
+              <div class="optrow" style="display:flex;gap:var(--s2);flex-wrap:wrap">
+                <button class="btn secondary sm"><i class="ic ic-copy"></i> Copy image</button>
+                <button class="btn ghost sm"><i class="ic ic-export"></i> Export PNG</button>
+                <button class="btn ghost sm" data-target="agent"><i class="ic ic-sparkle"></i> Describe specs</button>
+              </div>
+              <p class="note">Every control here is one API call, so the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span> can measure a capture and hand back the spec list without you touching the canvas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes (D1/D2). Captures land in Media. -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Media</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button class="on" data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search captures" aria-label="Search captures"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(150deg,#f5f5f7,#c9cdd6)"></span><span class="cap"><span class="nm">settings</span><span class="mt">2560 × 1440</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(150deg,#dfe6f5,#8ea4cd)"></span><span class="cap"><span class="nm">sidebar</span><span class="mt">1440 × 900</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(150deg,#ffe9a8,#f0a45c)"></span><span class="cap"><span class="nm">onboarding</span><span class="mt">1280 × 800</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(150deg,#d7f5e5,#5cbf95)"></span><span class="cap"><span class="nm">empty-state</span><span class="mt">1280 × 800</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(150deg,#f0d7f5,#a45cbf)"></span><span class="cap"><span class="nm">pricing</span><span class="mt">1600 × 1000</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Callout</span><span class="mt">3 variants</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#gMeasures" title="Measurements"><i class="ic sm ic-ruler"></i><span class="lb">Measure</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <div class="popover menu pop" id="measMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+        <div class="menuitem"><i class="ic ic-eye"></i> Show all</div>
+        <div class="menuitem"><i class="ic ic-eye-off"></i> Hide all</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy as spec list</div>
+        <div class="menuitem"><i class="ic ic-trash"></i> Clear measurements</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:230px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy measurement</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset style</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Keep it sacred</div><p>Your daily workflow. Capture, measure and annotate, then to the clipboard, one keystroke away. Creation is <b>additive</b> and must never slow this down.</p></div>
+    <div class="c"><div class="lab g2">Shared foundation</div><p>Same canvas and primitives: a measure label is text on <b>Paint</b>, a redaction is a blur <b>Effect</b>. Every number here maps to a real distance on the shot.</p></div>
+    <div class="c"><div class="lab g2">One selection, three places</div><p>The highlighted caliper on the capture, the selected row in <b>Measurements</b>, and the <b>Properties</b> group are the same object. Measuring reuses the app's selection model instead of inventing one.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function(){
+  var frame=document.getElementById('rlFrame');
+  if(!frame) return;
+  var dims=document.getElementById('rlDims');
+  var hover=document.getElementById('rlHover');
+  var hint=document.getElementById('rlHint');
+  if(!dims||!hover) return;
+
+  // build a caliper bracket <div class="cal ..."><span class="cap">label</span></div>
+  function makeCal(cls,left,top,w,h,label){
+    var c=document.createElement('div');
+    c.className='cal '+cls;
+    c.style.left=left+'px';c.style.top=top+'px';c.style.width=w+'px';c.style.height=h+'px';
+    var cap=document.createElement('span');cap.className='cap';cap.textContent=label;
+    c.appendChild(cap);dims.appendChild(c);return c;
+  }
+
+  var tool='measure';
+  function frameRect(){return frame.getBoundingClientRect();}
+
+  // ---- static dimension calipers, anchored to the real element rects ----
+  // Every arm lands exactly on the edge it measures (no eyeballed constants),
+  // and the extension arms reach from the element out to the dimension line.
+  function rel(el){
+    var f=frameRect(),r=el.getBoundingClientRect();
+    return {x:r.left-f.left,y:r.top-f.top,w:r.width,h:r.height,r:r.right-f.left,b:r.bottom-f.top};
+  }
+  var shotEl=document.getElementById('rlShot');
+  // gap between two coordinates (vertical span at column X, or horizontal span at row Y).
+  function gapV(yA,yB,x,side){var ARM=12;if(side==='left')makeCal('gap left',x,yA,ARM,yB-yA,Math.round(yB-yA));else makeCal('gap right',x-ARM,yA,ARM,yB-yA,Math.round(yB-yA));}
+  function gapH(xA,xB,y,side){var ARM=12;if(side==='up')makeCal('gap up',xA,y,xB-xA,ARM,Math.round(xB-xA));else makeCal('gap down',xA,y-ARM,xB-xA,ARM,Math.round(xB-xA));}
+  function buildDims(){
+    // clear any prior static calipers (keeps hover/live/align-guide)
+    dims.querySelectorAll('.cal:not(.hoverc):not(.live)').forEach(function(n){n.parentNode&&n.parentNode.removeChild(n);});
+    var btn=frame.querySelector('.sbtn'),input=frame.querySelector('.sinput');
+    var rows=frame.querySelectorAll('.set-row'),dn=frame.querySelector('#rlShot > span.lb');
+    if(!shotEl) return;
+    var S=rel(shotEl),M=26; // clearance past the card edge so the dimension line + label sit OUTSIDE
+    // SIZE calipers: extension arms run from the element edge out past the card to the
+    // dimension line, with the numeric label sitting off the card (redline convention).
+    if(btn){var b=rel(btn);
+      // the selected measurement (mirrors the selected row in the Measurements group)
+      makeCal('size up selm',   b.x,     b.b,        b.w,         (S.b+M)-b.b, Math.round(b.w)); // width -> below the card
+      makeCal('size left', b.r,     b.y,        (S.r+M)-b.r, b.h,         Math.round(b.h)); // height -> right of the card
+    }
+    if(input){var i=rel(input);
+      makeCal('size right',S.x-M,   i.y,        i.x-(S.x-M), i.h,         Math.round(i.h)); // height -> left of the card
+    }
+    // GAP calipers measure internal spacing; the number sits in the gap it measures.
+    if(dn){var d=rel(dn);gapH(0,d.x,d.b+8,'up');}
+    if(rows.length>=2){var r1=rel(rows[0]),r2=rel(rows[1]);gapV(r1.b,r2.y,r1.x+170,'left');}
+    if(input&&btn){var mi=rel(input),mb=rel(btn);gapV(mi.b,mb.y,mi.r-70,'left');}
+  }
+  buildDims();
+  window.addEventListener('resize',buildDims);
+
+  // ---- tool switching, from the floating tool bar ----
+  var tools=document.querySelectorAll('#redline .tbar .tstrip .tool');
+  tools.forEach(function(t){
+    t.addEventListener('click',function(){
+      tools.forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on');
+      var title=(t.getAttribute('title')||'').toLowerCase();
+      tool=title.indexOf('measure')>-1?'measure':(title.indexOf('select')>-1?'select':'other');
+      frame.classList.toggle('measuring',tool==='measure');
+      if(hint) hint.style.display=tool==='measure'?'':'none';
+      clearLive();
+      start=null;
+    });
+  });
+
+  // ---- hover to measure: outline box + width + height calipers (size role) ----
+  function clearHover(){
+    hover.style.display='none';
+    dims.querySelectorAll('.cal.hoverc').forEach(function(n){n.parentNode&&n.parentNode.removeChild(n);});
+  }
+  var hits=frame.querySelectorAll('.hit');
+  hits.forEach(function(el){
+    el.addEventListener('mouseenter',function(){
+      clearHover();
+      var f=frameRect(),r=el.getBoundingClientRect();
+      var x=Math.round(r.left-f.left),y=Math.round(r.top-f.top),w=Math.round(r.width),h=Math.round(r.height);
+      hover.style.display='block';
+      hover.style.left=x+'px';hover.style.top=y+'px';
+      hover.style.width=w+'px';hover.style.height=h+'px';
+      // width caliper below (U opens up toward element), height caliper right (opens left)
+      makeCal('size up hoverc',x,y+h+8,w,12,w);
+      makeCal('size left hoverc',x+w+8,y,12,h,h);
+    });
+    el.addEventListener('mouseleave',clearHover);
+  });
+
+  // ---- measure mode: click two points -> live caliper along the drawn axis ----
+  var start=null;
+  function clearLive(){
+    dims.querySelectorAll('.mdot,.cal.live').forEach(function(n){n.parentNode&&n.parentNode.removeChild(n);});
+  }
+  function addDot(p){
+    var d=document.createElement('div');d.className='mdot';
+    d.style.left=p.x+'px';d.style.top=p.y+'px';dims.appendChild(d);
+  }
+  function drawLive(a,b){
+    dims.querySelectorAll('.mdot').forEach(function(n){n.parentNode&&n.parentNode.removeChild(n);});
+    var dx=b.x-a.x,dy=b.y-a.y;
+    var len=Math.round(Math.sqrt(dx*dx+dy*dy));
+    var ang=Math.atan2(dy,dx);
+    // horizontal U (open top) laid along the A->B axis via rotation; base parallel to the span
+    var c=makeCal('gap up live',a.x,a.y,len,14,len+' px');
+    c.style.transform='rotate('+ang+'rad)';
+    var cap=c.querySelector('.cap');
+    if(cap) cap.style.transform='translate(-50%,50%) rotate('+(-ang)+'rad)';
+  }
+  frame.addEventListener('click',function(e){
+    if(tool!=='measure') return;
+    var f=frameRect();
+    var p={x:e.clientX-f.left,y:e.clientY-f.top};
+    if(!start){clearLive();start=p;addDot(p);}
+    else{drawLive(start,p);start=null;}
+  });
+
+  // ---- Library scope switch + tile selection (shared behavior) ----
+  var seg=document.getElementById('scopeSeg');
+  if(seg){
+    var btns=[].slice.call(seg.querySelectorAll('button'));
+    var label=document.querySelector('#gLibrary .dgrp-h .cnt');
+    var names={media:'Media',components:'Components',styles:'Styles',assets:'Assets'};
+    btns.forEach(function(b){
+      b.addEventListener('click',function(){
+        btns.forEach(function(x){x.classList.toggle('on',x===b);});
+        if(label) label.textContent=names[b.getAttribute('data-scope')]||'';
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll('.libgrid')).forEach(function(grid){
+    var tiles=[].slice.call(grid.querySelectorAll('.libtile'));
+    tiles.forEach(function(tile){
+      tile.addEventListener('click',function(){
+        tiles.forEach(function(x){x.classList.toggle('sel',x===tile);});
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

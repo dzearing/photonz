@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · component-configure-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* component-configure-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE
+     app screen, rendered once, driven by the steps below. Page-local CSS is
+     the window height and the settings-row artwork on the canvas. The Layers
+     group, the Properties group, and the Library group are the real dock
+     groups, not bespoke panels. */
+  #component-configure-wt .win.shell{height:648px;min-height:0}  /* the subject on the canvas: a Setting row, designed, not lorem */
+  #component-configure-wt .selwrap{display:flex;flex-direction:column;gap:var(--s7);width:296px}
+  #component-configure-wt .wobj{position:relative}
+  #component-configure-wt .setcard{width:100%;background:var(--panel);border:1px solid var(--line-strong);
+    border-radius:var(--r4);box-shadow:var(--shadow);overflow:hidden;text-align:left}
+  #component-configure-wt .setcard.raw{box-shadow:none;border-style:dashed;border-color:var(--accent-line)}
+  #component-configure-wt .sc-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);font-size:10.5px;font-weight:660;color:var(--ink)}
+  #component-configure-wt .sc-h .ic{color:var(--comp)}
+  #component-configure-wt .setrow{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad)}
+  #component-configure-wt .setrow+.setrow{border-top:1px solid var(--line-soft)}
+  #component-configure-wt .rlab{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.2}
+  #component-configure-wt .rsub{font-size:10px;color:var(--faint);margin-top:2px}
+  #component-configure-wt .rspring{flex:1}
+
+  /* a switch is the one control the shared system has no capsule button for,
+     so it is defined here on the same tokens, with all four states. */
+  #component-configure-wt button.tgl{width:38px;height:22px;border-radius:999px;background:var(--line-strong);position:relative;
+    flex:none;border:0;padding:0;cursor:pointer;transition:var(--ctl-tr)}
+  #component-configure-wt button.tgl::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+  #component-configure-wt button.tgl.on{background:var(--accent)}
+  #component-configure-wt button.tgl.on::after{left:18px}
+  #component-configure-wt button.tgl:hover{filter:brightness(1.06)}
+  #component-configure-wt button.tgl:active{transform:scale(.96)}
+  #component-configure-wt button.tgl:focus-visible{outline:none;box-shadow:var(--ring)}
+  #component-configure-wt button.tgl[disabled]{opacity:.4;pointer-events:none}
+
+  @container shell (max-width:880px){
+    #component-configure-wt .selwrap{width:246px;gap:var(--s6)}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="component-configure-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Build and configure a component</h2><span class="k">· usage clickthrough · UI workspace</span></div>
+
+  <p class="pglead">A component is a <b>reusable layer tree with configurable properties</b>. Nothing here is a special editor:
+    you promote layers you already drew from the <b>Layers</b> group, expose props in the <b>Properties</b> group, and pull the
+    result back out of the <b>Library</b> group. Eleven real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtComp">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>settings-row</b> · 1200 × 630</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip style"><span class="sw" style="background:var(--accent)"></span>brand-system v1.0 <i class="ic xs ic-chevron-down"></i></span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+              <div class="mlabel">Layer</div>
+              <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Component</div>
+              <div class="menuitem"><i class="ic ic-sliders"></i> Add property…</div>
+              <div class="menuitem"><i class="ic ic-swatch"></i> Bind fill to a style</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="artboard-label">1200 × 630 · settings-row</div>
+
+              <div class="selwrap">
+                <!-- the main -->
+                <div class="wobj" id="cvMain">
+                  <div class="setcard raw" id="cvCard">
+                    <div class="sc-h wt-off" id="cvCardHead"><i class="ic sm ic-component"></i> Setting</div>
+                    <div class="setrow">
+                      <div><div class="rlab">Auto-enhance</div><div class="rsub">Exposure and color</div></div>
+                      <span class="rspring"></span>
+                      <button class="tgl on" aria-label="Auto-enhance"></button>
+                    </div>
+                    <div class="setrow">
+                      <div><div class="rlab" style="font-weight:520;color:var(--dim);font-size:11px">Strength</div></div>
+                      <span class="rspring"></span>
+                      <span class="seg"><button>Low</button><button class="on">Med</button><button>High</button></span>
+                    </div>
+                  </div>
+                  <!-- SELECTION, place 1 of 3: on the canvas -->
+                  <span class="wt-off" id="selMain">
+                    <span class="sel-ring" style="inset:-8px;border-radius:18px"></span>
+                    <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                    <span class="mtag">Setting row · 296 × 118</span>
+                  </span>
+                  <span class="wt-off" id="ringMain">
+                    <span class="cring" style="inset:-8px;border-radius:18px"></span>
+                    <span class="cbadge" style="left:-8px"><i class="ic xs ic-component"></i> Setting · main</span>
+                  </span>
+                </div>
+
+                <!-- the instance you drag back out of the Library -->
+                <div class="wobj wt-off" id="cvInst">
+                  <div class="setcard">
+                    <div class="sc-h"><i class="ic sm ic-component"></i> Setting</div>
+                    <div class="setrow">
+                      <div><div class="rlab" id="cvInstLabel">Sharpen</div><div class="rsub">Edge detail</div></div>
+                      <span class="rspring"></span>
+                      <button class="tgl on" id="cvInstToggle" aria-label="Sharpen"></button>
+                      <span class="seg wt-off" id="cvInstSeg"><button>Low</button><button>Med</button><button class="on">High</button></span>
+                    </div>
+                  </div>
+                  <span class="cinst" style="inset:-8px;border-radius:18px"></span>
+                  <span class="cbadge" style="left:-8px"><i class="ic xs ic-component"></i> instance of Setting</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 UI inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tFrame" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                <button class="tool" id="tComp" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:var(--accent)"></span>
+                <span class="bg" style="background:#ffffff"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                    <span class="cap"><span class="nm">settings-window</span><span class="ago">6 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">22 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">pricing-page</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span>
+                    <span class="cap"><span class="nm">toast-states</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span>
+                    <span class="cap"><span class="nm">nav-bar</span><span class="ago">3 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#1b7a8c,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">4 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:132px">
+              <div class="dgrp-h" id="gLayersH">
+                <span class="ttl">Layers</span><span class="cnt" id="layerCount">5</span>
+                <button class="btn ghost icon sm" id="btnMakeComp" title="Make component (⌘⌥K)"><i class="ic ic-component"></i></button>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow wt-off" id="lrInst"><i class="ic ic-component"></i><span class="nm">Setting · Sharpen</span><i class="ic sm ic-eye eye"></i></div>
+                <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+                <div class="lrow" id="lrGroup"><i class="ic ic-frame"></i><span class="nm">Setting row</span><i class="ic sm ic-component cmark wt-off" id="lrGroupMark"></i><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child" id="lrLabel"><i class="ic ic-text"></i><span class="nm">Label</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child" id="lrToggle"><i class="ic ic-square"></i><span class="nm">Toggle</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child" id="lrStrength"><i class="ic ic-sliders"></i><span class="nm">Strength</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- SELECTION, place 3 of 3: Properties, contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:212px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer to edit it</div>
+
+                <div id="propsSel" class="wt-off">
+                  <div class="section wt-off" id="pComp">
+                    <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> main</span></div>
+                    <div class="irow"><span class="rl">Name</span><span class="select comp"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Setting</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                    <div class="irow"><span class="rl">Instances</span><span class="select"><span class="lead" id="pInstCount">main only</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                    <div class="irow split wt-off" id="prpEnabled"><span class="rl">enabled</span><span class="select"><span class="lead">true</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span><span class="chip">boolean</span></div>
+                    <div class="irow split wt-off" id="prpControl"><span class="rl">control</span><span class="select comp"><span class="lead">toggle · segmented · stepper</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span><span class="chip comp">variant</span></div>
+                    <div class="irow"><span class="rl">Properties</span><button class="btn secondary sm" id="btnAddProp"><i class="ic ic-plus"></i> Add property</button></div>
+                    <p class="note" id="pCompNote">A property turns a fixed layer into a knob. Every instance can set it without unlinking from the main.</p>
+                  </div>
+
+                  <div class="section wt-off" id="pFill">
+                    <div class="sec-h">Fill <span class="mut" id="pFillKind">Raw color</span></div>
+                    <div class="irow"><span class="rl">Paint</span><span class="select"><span class="lead"><span class="sw" id="pFillSw" style="background:#3550c8"></span> <span id="pFillVal">#3550C8</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <p class="note" id="pFillNote">This track is painted with a literal color. Bind it to a named Style and the system can re-paint it later.</p>
+                  </div>
+
+                  <div class="section wt-off" id="pInstance">
+                    <div class="sec-h comp">Instance props <span class="mut" style="color:var(--comp)">3 overrides</span></div>
+                    <div class="irow"><span class="rl">enabled</span><span class="select"><span class="lead">true</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">label</span><span class="select"><span class="lead" id="pInstLabel">Sharpen</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">control</span>
+                      <span class="seg ctlseg" role="group" aria-label="control">
+                        <button class="on" id="segToggle">Toggle</button>
+                        <button id="segSegmented">Segmented</button>
+                        <button id="segStepper">Stepper</button>
+                      </span>
+                    </div>
+                    <p class="note">Overrides touch only these props. The link back to the main stays intact, so a main edit still flows through.</p>
+                  </div>
+
+                  <div class="section" id="pTransform">
+                    <div class="sec-h">Transform</div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v" id="pW">296</span></div><div class="field"><span class="k">H</span><span class="v" id="pH">118</span></div><div class="field"><span class="k">R</span><span class="v">12</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2). The component you make
+                 lands here, and the styles you bind to come from here. -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Components</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button class="on" data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+
+                <div data-scope-body="media" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media imported</div>
+                </div>
+
+                <div data-scope-body="components">
+                  <div class="empty" id="libCompEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-component"></i></span>No components yet</div>
+                  <div class="libgrid wt-off" id="libCompGrid">
+                    <div class="libtile comp" id="libSetting" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Setting</span><span class="mt" id="libSettingMt">main</span></span></div>
+                  </div>
+                </div>
+
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="libAccent" tabindex="0"><span class="th" style="background:var(--accent)"></span><span class="cap"><span class="nm">Accent / 500</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:var(--panel-2)"></span><span class="cap"><span class="nm">Surface / Panel</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#2b3350,#0f1320)"></span><span class="cap"><span class="nm">Text / Primary</span><span class="mt">paint</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">Styles resolve through tokens, so re-painting the system re-paints every component bound to them.</p>
+                </div>
+
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+            <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+          </div>
+          <div class="popover menu pop" id="propMenu" style="position:absolute;right:284px;top:206px;width:262px;z-index:11">
+            <div class="mlabel">Expose a layer as a property</div>
+            <div class="menuitem" id="miBool"><i class="ic ic-check"></i> Toggle · on / off <span class="sc">boolean</span></div>
+            <div class="menuitem" id="miText"><i class="ic ic-text"></i> Label · wording <span class="sc">text</span></div>
+            <div class="menuitem" id="miVariant"><i class="ic ic-component"></i> Control · toggle / segmented / stepper <span class="sc">variant</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-plus"></i> Custom property…</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:216px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the layers you drew"
+          data-cue="#lrGroup" data-cue-label="Click Setting row" data-cue-place="left"
+          data-select="#lrGroup" data-show="#propsSel,#selMain" data-hide="#propsEmpty"
+          data-set="#propKind=Group">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Setting row</b> group</p>
+          <p class="wt-where">Layers, in the right dock</p>
+          <p class="wt-res">the group you drew by hand is selected in three places at once: the ring and handles on the canvas, the row in Layers, and Properties. Right now it is three ordinary layers, nothing reusable.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Promote it to a component"
+          data-cue="#btnMakeComp" data-cue-label="Click Make component" data-cue-place="left"
+          data-select="#lrGroup" data-select-class="selc"
+          data-open="#gLibrary" data-scope="components"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#pComp,#libCompGrid"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Component">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Make component</b></p>
+          <p class="wt-where">the <b>Layers</b> group header</p>
+          <p class="wt-res">the layer tree becomes the main component <b>Setting</b>. The canvas shows the component ring and badge, Layers marks the row, Properties gains a <b>Component</b> section, and the component lands in <b>Library</b> at scope Components.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the property picker"
+          data-cue="#btnAddProp" data-cue-label="Click Add property" data-cue-place="left"
+          data-select="#lrGroup" data-select-class="selc"
+          data-open="#gLibrary" data-scope="components" data-pop="#propMenu"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#pComp,#libCompGrid"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Component">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Add property</b></p>
+          <p class="wt-where">Properties, in the <b>Component</b> section</p>
+          <p class="wt-res">a picker opens listing the layers inside this component and the kind of knob each one would make. It stays open while you pick more than one.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Expose the toggle as a boolean"
+          data-cue="#miBool" data-cue-label="Click Toggle · on / off" data-cue-place="left"
+          data-select="#lrGroup" data-select-class="selc"
+          data-open="#gLibrary" data-scope="components" data-pop="#propMenu"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#pComp,#libCompGrid,#prpEnabled"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Component|#pCompNote=One call each: component.addProp(&quot;enabled&quot;, &quot;boolean&quot;).">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Toggle · on / off</b></p>
+          <p class="wt-where">the property picker</p>
+          <p class="wt-res">a boolean prop named <b>enabled</b> joins the Component section. The toggle layer is no longer fixed: every instance can set it and stay linked.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Expose the control as a variant"
+          data-cue="#miVariant" data-cue-label="Click Control · toggle / segmented / stepper" data-cue-place="left"
+          data-select="#lrGroup" data-select-class="selc"
+          data-open="#gLibrary" data-scope="components" data-pop="#propMenu"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#pComp,#libCompGrid,#prpEnabled,#prpControl"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Component|#libSettingMt=2 props">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Control · toggle / segmented / stepper</b></p>
+          <p class="wt-where">the same picker, still open</p>
+          <p class="wt-res">a <b>variant</b> prop named <b>control</b> appears, listing the three shapes this row can take. A variant swaps what is already in the tree, so an instance can never drift into something the main does not contain.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select a layer inside the component"
+          data-cue="#lrToggle" data-cue-label="Click the Toggle layer" data-cue-place="left"
+          data-select="#lrToggle"
+          data-open="#gLibrary" data-scope="components"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#pFill"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Shape|#pW=38|#pH=22">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Toggle</b> child row</p>
+          <p class="wt-where">Layers, nested under Setting row</p>
+          <p class="wt-res">selection moves inside the component, and Properties follows it: this layer's <b>Fill</b> is a literal color, which is exactly what a design system cannot re-paint.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Switch the Library to Styles"
+          data-cue="#scopeStyles" data-cue-label="Click Styles" data-cue-place="left"
+          data-select="#lrToggle"
+          data-open="#gLibrary" data-scope="styles"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#pFill"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Shape">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Styles</b></p>
+          <p class="wt-where">the Library scope switch</p>
+          <p class="wt-res">the same Library panel, a different scope. These are the named paints the active system publishes, the ones a component should bind to instead of hex.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Bind the fill to a Style"
+          data-cue="#libAccent" data-cue-label="Click Accent / 500" data-cue-place="left"
+          data-select="#libAccent"
+          data-open="#gLibrary" data-scope="styles"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#pFill"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Shape|#pFillKind=Style|#pFillVal=Accent / 500|#pFillNote=Stored by name, not by value. Swap the active system and this track re-resolves, along with every instance of the component.">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do"><b>Accent / 500</b></p>
+          <p class="wt-where">Library, scope Styles</p>
+          <p class="wt-res">the toggle track stops carrying a hex value and starts carrying a name. Properties now reads <b>Accent / 500</b>, so changing that style once re-paints this component everywhere it appears.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Go back to Components"
+          data-cue="#scopeComp" data-cue-label="Click Comp" data-cue-place="left"
+          data-select="#lrToggle"
+          data-open="#gLibrary" data-scope="components"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#pFill"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Shape|#pFillKind=Style|#pFillVal=Accent / 500">
+        <div class="wt-cap comp">
+          <span class="wt-n">9</span>
+          <p class="wt-do"><b>Comp</b></p>
+          <p class="wt-where">the Library scope switch</p>
+          <p class="wt-res">back to the components scope, where <b>Setting</b> is now listed with its two props. This is the same panel you have used for media and styles, which is the whole point of one Library with scopes.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop an instance"
+          data-cue="#libSetting" data-cue-label="Drag Setting onto the canvas" data-cue-place="left"
+          data-select="#lrInst"
+          data-open="#gLibrary" data-scope="components"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#cvInst,#lrInst,#pInstance"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp,#pFill"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Instance|#layerCount=6|#pInstCount=1 instance|#libSettingMt=1 instance|#pW=296|#pH=76">
+        <div class="wt-cap comp">
+          <span class="wt-n">10</span>
+          <p class="wt-do" data-verb="Drag"><b>Setting</b> onto the canvas</p>
+          <p class="wt-where">Library, scope Components</p>
+          <p class="wt-res">a linked instance lands under the main and takes the selection. Properties swaps to <b>Instance props</b>: the two knobs you exposed, plus the label, and nothing else.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Configure the instance"
+          data-cue="#segSegmented" data-cue-label="Click Segmented" data-cue-place="left"
+          data-select="#lrInst"
+          data-open="#gLibrary" data-scope="components" data-activate="#segSegmented"
+          data-show="#propsSel,#ringMain,#cvCardHead,#lrGroupMark,#libCompGrid,#cvInst,#lrInst,#pInstance,#cvInstSeg"
+          data-hide="#propsEmpty,#selMain,#libCompEmpty,#pComp,#pFill,#cvInstToggle"
+          data-css="#cvCard=border-style:solid;border-color:var(--comp-line);box-shadow:var(--shadow)"
+          data-set="#propKind=Instance|#layerCount=6|#pInstCount=1 instance">
+        <div class="wt-cap comp">
+          <span class="wt-n">11</span>
+          <p class="wt-do"><b>Segmented</b> on the <b>control</b> row</p>
+          <p class="wt-where">Properties, in <b>Instance props</b></p>
+          <p class="wt-res">the instance re-renders as a segmented row while the main stays a toggle. The link is intact, so editing the main still flows through, and the override is only the one prop you set.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to three plain layers"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A <b data-target="components" style="color:var(--comp);cursor:pointer">component</b> is a reusable layer tree with configurable properties. Nothing in this flow is a component editor: it is the ordinary Layers group, the ordinary Properties group, and the ordinary Library group, which is why the same moves work on a photo or a video track.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Because styling is <b>bound to Styles</b> rather than baked in, applying a different system re-paints every instance at once. The same <b>Setting</b> renders as a toggle, a segmented control, or a stepper from one variant prop.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Every step is one API call (<code>component.fromSelection</code>, <code>component.addProp</code>, <code>layer.bindStyle</code>, <code>instance.props.control</code>), so an <b data-target="agent" style="color:var(--comp);cursor:pointer">agent</b> can author components too. Should a variant prop be allowed to add or remove layers in the tree, or only swap what is already there?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch and the instance control segment
+     live when a person clicks them directly (the walkthrough drives the same
+     state declaratively). Everything else is shared DS behavior. */
+  (function () {
+    var seg = document.querySelector('#component-configure-wt .scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = document.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    var ctl = document.querySelector('#component-configure-wt .ctlseg');
+    if (ctl) {
+      var cbtns = [].slice.call(ctl.querySelectorAll('button'));
+      var tgl = document.getElementById('cvInstToggle');
+      var sg = document.getElementById('cvInstSeg');
+      cbtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          cbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          var wantsSeg = b.id === 'segSegmented';
+          if (tgl) tgl.classList.toggle('wt-off', wantsSeg);
+          if (sg) sg.classList.toggle('wt-off', !wantsSeg);
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>

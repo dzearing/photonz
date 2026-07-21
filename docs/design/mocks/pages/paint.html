@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · paint</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* paint · one REAL app screen (PRODUCT-MODEL §4c Kind 1) where the Paint
+     editor lives in the Properties group of the one right dock, plus honest
+     SPECIMENS (Kind 2) for the paint types and the gradient-stop anatomy.
+     Page-local CSS is only: a definite window height (so the dock is bounded
+     and each group scroller does the work), the specimen card, and the paint
+     type chips. Everything else is shared DS. 4pt tokens only. */
+  #paint .win.shell{height:680px;min-height:0}  /* ---- SPECIMEN card (Kind 2): a part of the app, never app chrome ----
+     Same page-local pattern as pages/app-shell.html: no traffic lights,
+     no fake title bar, just a labeled bordered block. */
+  .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .spec.wide{grid-column:1/-1}
+  .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
+    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
+  .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+  .spec-b{padding:0 var(--pad) var(--pad)}
+
+  /* paint-type specimen tiles */
+  .ptypes{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap)}
+  .ptype{display:flex;flex-direction:column;gap:var(--s2);align-items:center}
+  .ptype .sq{width:100%;aspect-ratio:1;border-radius:var(--r4);border:1px solid var(--edge-lo);
+    box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .ptype .tn{font-size:10.5px;font-weight:600;color:var(--ink)}
+  .ptype .tc{font-family:var(--mono);font-size:9px;color:var(--faint);text-align:center;line-height:1.4}
+  .p-solid{background:#7c4dff}
+  .p-linear{background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f)}
+  .p-radial{background:radial-gradient(circle at 34% 30%,#ffd08a,#ff5d8f 55%,#7c4dff)}
+  .p-angular{background:conic-gradient(from 200deg,#7c4dff,#12c2e9,#3ecf8e,#ffb36b,#ff5d8f,#7c4dff)}
+  .p-image{background:linear-gradient(160deg,#12c2e9,#7c4dff 60%,#ff5d8f),
+    repeating-conic-gradient(rgba(255,255,255,.14) 0% 25%,transparent 0% 50%) 0 0/16px 16px}
+  .p-noise{background:#3a2a5e;
+    background-image:radial-gradient(rgba(255,255,255,.5) .6px,transparent .7px),
+      radial-gradient(rgba(255,255,255,.28) .6px,transparent .7px);
+    background-size:5px 5px,7px 7px;background-position:0 0,3px 4px}
+
+  /* gradient-stop anatomy callouts */
+  .anat{position:relative;padding-bottom:var(--s6)}
+  .anat .gramp{margin-top:var(--s5)}
+  .anum{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9.5px;font-weight:700;display:grid;place-items:center;z-index:4}
+  .aleg{display:flex;flex-wrap:wrap;gap:var(--gap-sm) var(--gap);padding-top:var(--gap-sm)}
+  .aleg .li{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim)}
+  .aleg .li b{color:var(--ink);font-weight:600}
+  .aleg .n{width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9.5px;font-weight:700;display:grid;place-items:center;flex:none}
+
+  /* "one Paint, every surface" specimen */
+  .surf{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+  .surf .cellx{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:center;text-align:center}
+  .surf .stage2{height:74px;width:100%;border-radius:var(--r3);border:1px solid var(--edge-lo);
+    display:grid;place-items:center;background:radial-gradient(240px 120px at 50% 30%,#141826,var(--artboard))}
+  .surf .cn{font-size:11px;font-weight:600;color:var(--ink)}
+  .surf .cd{font-size:10.5px;color:var(--faint);line-height:1.4}
+  .sfill{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f)}
+  .sstroke{width:52px;height:52px;border-radius:14px;background:transparent;border:4px solid transparent;
+    background-image:linear-gradient(#0f1220,#0f1220),linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f);
+    background-origin:border-box;background-clip:padding-box,border-box}
+  .stext{font-family:var(--serif);font-size:34px;font-weight:700;letter-spacing:-.02em;
+    background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sglow{width:52px;height:52px;border-radius:14px;background:#141826;
+    box-shadow:0 0 26px 2px rgba(177,77,255,.85),0 0 8px rgba(255,93,143,.8)}
+
+  @media (max-width:820px){.specs{grid-template-columns:1fr}.ptypes{grid-template-columns:repeat(3,1fr)}.surf{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="paint">
+  <div class="scen-head"><span class="pip" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><h2>Paint</h2><span class="k">· the fill primitive · one editor, every surface</span></div>
+
+  <p class="pglead"><b>Paint</b> is what fills a thing. Solid, linear, radial, angular, image or noise, it is one value
+    with one editor, and it works the same on a shape fill, a stroke, a text layer and the color of a glow. It is not a
+    separate mode or a separate screen: below is the real editor with a shape selected, and the Paint editor sitting
+    where every other property sits, in the <b>Properties</b> group of the one right dock.</p>
+
+  <!-- ============================================================
+       KIND 1 · AN APP SCREEN. Complete shell: title bar with document
+       identity only, command surface + ⌘K + History, canvas with a real
+       selection, floating tool bar, one right dock, rail.
+       ============================================================ -->
+  <div class="win tall cq shell">
+
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>untitled-1</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar
+         is the real command surface; the mock never draws a fake one. -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-eyedropper"></i> Pick color <span class="sc">I</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · Brand tokens</div>
+          <div class="selwrap">
+            <!-- the layer being painted -->
+            <div id="pvShape" style="width:230px;height:230px;border-radius:26px;background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f);box-shadow:0 0 50px -6px rgba(177,77,255,.5)"></div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring" style="border-radius:34px"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag">Panel · 230 × 230</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 UI inventory · overflow folds into more -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" data-target="dsys" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" id="pvSwatch" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) · the front door, slides over the canvas -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Brand panel</span><span class="ago">just now</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Settings window</span><span class="ago">18 min ago</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer here. Sample any pixel with the eyedropper and it becomes a Paint.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+      <div class="pdock" id="dock">
+
+        <div class="dgrp" id="gLayers" style="--gh:128px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">5</span>
+            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow sel"><i class="ic ic-square"></i><span class="nm">Panel</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-pen"></i><span class="nm">Wordmark</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties. The Paint editor lives HERE,
+             not in a floating widget and not on its own screen. -->
+        <div class="dgrp" id="gProps" style="--gh:180px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Shape</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h">Fill <span class="mut" id="pKind">Linear paint</span></div>
+              <div class="seg" id="ptSeg" style="margin-bottom:var(--s2)">
+                <button data-paint="solid">Solid</button>
+                <button class="on" data-paint="linear">Linear</button>
+                <button data-paint="radial">Radial</button>
+                <button data-paint="angular">Angular</button>
+                <button data-paint="image">Image</button>
+                <button data-paint="noise">Noise</button>
+              </div>
+
+              <div id="pGrad">
+                <div class="gramp" id="pRamp">
+                  <div class="gstop" style="left:4%;background:#7c4dff"><b></b><div class="line"></div></div>
+                  <div class="gstop" style="left:45%;background:#b14dff"><b></b><div class="line"></div></div>
+                  <div class="gstop" style="left:96%;background:#ff5d8f"><b></b><div class="line"></div></div>
+                </div>
+                <div class="irow"><span class="rl">Angle</span>
+                  <span style="display:flex;align-items:center;gap:var(--gap)"><span class="dial"></span><span class="val" id="pAngle">135°</span></span>
+                </div>
+              </div>
+
+              <div id="pFlat" class="wt-off">
+                <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" id="pFlatSw" style="background:#7c4dff"></span> <span id="pFlatHex">7C4DFF</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
+              </div>
+            </div>
+
+            <div class="section" id="pStopSec">
+              <div class="sec-h">Selected stop <span class="mut">2 of 3</span></div>
+              <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" style="background:#b14dff"></span> B14DFF</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Position</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:45%"></i></span><span class="val">45%</span></span></div>
+              <div class="irow"><span class="rl">Stops</span>
+                <span style="display:flex;gap:var(--s2)">
+                  <button class="btn secondary icon sm" title="Add stop"><i class="ic ic-plus"></i></button>
+                  <button class="btn secondary icon sm" title="Remove stop"><i class="ic ic-minus"></i></button>
+                  <button class="btn secondary icon sm" title="Pick a color from the canvas"><i class="ic ic-eyedropper"></i></button>
+                </span>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Style <span class="mut">named and reused</span></div>
+              <div class="irow"><span class="rl">Saved as</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+              <p class="note">Used by 18 layers. Retune it once here and every one of them follows, because they point at the name, not at the hex.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Transform</div>
+              <div class="grid2"><div class="field"><span class="k">W</span><span class="v">230</span></div><div class="field"><span class="k">H</span><span class="v">230</span></div><div class="field"><span class="k">R</span><span class="v">26</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp collapsed" id="gEffects" style="--gh:104px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">1</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">Paint</span></div>
+            <p class="note" style="padding:0 2px">A glow is an outer shadow whose color is a <b style="color:var(--ink)">Paint</b>. Same editor, different slot.</p>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes (D1/D2), at scope Styles -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeLbl">Styles</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button class="on" data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search styles" aria-label="Search styles"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile sel" tabindex="0"><span class="th p-linear"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">18 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th p-radial"></span><span class="cap"><span class="nm">Sunrise</span><span class="mt">6 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th p-solid"></span><span class="cap"><span class="nm">Ink / 900</span><span class="mt">41 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th p-angular"></span><span class="cap"><span class="nm">Spectrum</span><span class="mt">2 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th p-noise"></span><span class="cap"><span class="nm">Grain</span><span class="mt">9 uses</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th p-image"></span><span class="cap"><span class="nm">Mesh / cool</span><span class="mt">3 uses</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL · what the dock collapses to -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+        <div class="mlabel">Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+      </div>
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy paint</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset fill</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:236px;width:188px;z-index:11">
+        <div class="menuitem"><i class="ic ic-sparkle"></i> Outer glow</div>
+        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Border</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">One selection, three places</div><p>The ring on the canvas, the highlighted <b>Panel</b> row in Layers, and the <b>Properties</b> group are the same selection. Paint is not a mode you enter, it is the Fill section of whatever you already selected.</p></div>
+    <div class="c"><div class="lab g2">Try it</div><p>Click a paint type in the <b>Fill</b> segmented control and the canvas repaints live. Linear, radial and angular keep the gradient ramp; solid and noise swap it for a single color row.</p></div>
+    <div class="c"><div class="lab g2">API mirror</div><p><code>fill: linear("#7C4DFF","#B14DFF","#FF5D8F", angle:135)</code> · or once it is named, <code>fill: style("Brand/gradient")</code>.</p></div>
+  </div>
+
+  <!-- ============================================================
+       KIND 2 · SPECIMENS. These depict PARTS, so they wear no traffic
+       lights and no title bar. A labeled bordered card, nothing more.
+       ============================================================ -->
+  <div class="specs">
+
+    <div class="spec wide">
+      <div class="spec-h"><i class="ic sm ic-swatch"></i> Paint types <span class="sub">(six kinds, one editor, one value)</span></div>
+      <div class="spec-b">
+        <div class="ptypes">
+          <div class="ptype"><span class="sq p-solid"></span><span class="tn">Solid</span><span class="tc">solid("#7C4DFF")</span></div>
+          <div class="ptype"><span class="sq p-linear"></span><span class="tn">Linear</span><span class="tc">linear(stops, 135)</span></div>
+          <div class="ptype"><span class="sq p-radial"></span><span class="tn">Radial</span><span class="tc">radial(stops, 34% 30%)</span></div>
+          <div class="ptype"><span class="sq p-angular"></span><span class="tn">Angular</span><span class="tc">angular(stops, 200)</span></div>
+          <div class="ptype"><span class="sq p-image"></span><span class="tn">Image</span><span class="tc">image(ref, fit:"cover")</span></div>
+          <div class="ptype"><span class="sq p-noise"></span><span class="tn">Noise</span><span class="tc">noise(scale:5, mix:.4)</span></div>
+        </div>
+        <p class="note">Every one of these is the same field on a layer, so switching type never loses the rest of the layer. A Paint can also carry an opacity and a blend mode, which is why "image" is a fill and not a separate layer type.</p>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-h"><i class="ic sm ic-sliders"></i> Gradient stop editor <span class="sub">(anatomy)</span></div>
+      <div class="spec-b">
+        <div class="anat">
+          <span class="anum" style="left:2px;top:2px">1</span>
+          <span class="anum" style="left:44%;top:2px">2</span>
+          <span class="anum" style="right:2px;top:2px">3</span>
+          <div class="gramp">
+            <div class="gstop" style="left:4%;background:#7c4dff"><b></b><div class="line"></div></div>
+            <div class="gstop" style="left:45%;background:#b14dff"><b></b><div class="line"></div></div>
+            <div class="gstop" style="left:96%;background:#ff5d8f"><b></b><div class="line"></div></div>
+          </div>
+        </div>
+        <div class="aleg">
+          <span class="li"><span class="n">1</span><b>Stop</b> · a color at a position</span>
+          <span class="li"><span class="n">2</span><b>Selected stop</b> · edits below the ramp</span>
+          <span class="li"><span class="n">3</span><b>Track</b> · click to add, drag to move</span>
+        </div>
+        <p class="note">Double-click the track to add a stop, drag one off to remove it, and hold Option while dragging to duplicate. The same ramp edits a linear, radial or angular paint, only the geometry control below it changes.</p>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-h"><i class="ic sm ic-layers"></i> One Paint, every surface <span class="sub">(the same value in four slots)</span></div>
+      <div class="spec-b">
+        <div class="surf">
+          <div class="cellx"><span class="stage2"><span class="sfill"></span></span><span class="cn">Fill</span><span class="cd">shape or frame</span></div>
+          <div class="cellx"><span class="stage2"><span class="sstroke"></span></span><span class="cn">Stroke</span><span class="cd">any width</span></div>
+          <div class="cellx"><span class="stage2"><span class="stext">Aa</span></span><span class="cn">Text</span><span class="cd">type layer</span></div>
+          <div class="cellx"><span class="stage2"><span class="sglow"></span></span><span class="cn">Glow</span><span class="cd">effect color</span></div>
+        </div>
+        <p class="note">Four slots, one value. That is what makes Paint a primitive rather than a feature of shapes: name it once as a <b style="color:var(--ink)">Style</b> and it can be the brand gradient on a button, on a headline, and in the glow underneath both.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Paint is the fill primitive: <b>solid · linear · radial · angular · image · noise</b>, one editor, every surface. Save any Paint as a named <b>Style</b> and it joins the design system.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Let a Paint reference <b>tokens</b> for its stops, so a gradient built from <code>brand/500</code> and <code>accent/400</code> re-resolves when a different design system is applied, instead of staying frozen hex.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Noise and image fills are procedural, so they can be expensive at large sizes. Should a Paint declare a render budget and fall back to a cached bitmap, or should that stay an automatic renderer decision the user never sees?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Fill type switch repaints the canvas layer live, swaps the
+     gradient ramp for a flat color row, and keeps the tool bar's foreground
+     swatch in sync. Library scope + tile selection match the editor page.
+     Collapse, resize, rail, overlay, overflow and tool selection are all
+     shared DS behavior. */
+  (function () {
+    'use strict';
+
+    var shape = document.getElementById('pvShape');
+    var swatch = document.getElementById('pvSwatch');
+    var grad = document.getElementById('pGrad');
+    var flat = document.getElementById('pFlat');
+    var kind = document.getElementById('pKind');
+    var stopSec = document.getElementById('pStopSec');
+    var ramp = document.getElementById('pRamp');
+    var angle = document.getElementById('pAngle');
+    var seg = document.getElementById('ptSeg');
+
+    var paints = {
+      solid:   { css: '#7c4dff', label: 'Solid paint', glow: 'rgba(124,77,255,.5)', stops: false },
+      linear:  { css: 'linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f)', label: 'Linear paint', glow: 'rgba(177,77,255,.5)', stops: true, ramp: 'linear-gradient(90deg,#7c4dff,#b14dff 45%,#ff5d8f)', angle: '135°' },
+      radial:  { css: 'radial-gradient(circle at 34% 30%,#ffd08a,#ff5d8f 55%,#7c4dff)', label: 'Radial paint', glow: 'rgba(255,93,143,.5)', stops: true, ramp: 'linear-gradient(90deg,#ffd08a,#ff5d8f 55%,#7c4dff)', angle: '34% 30%' },
+      angular: { css: 'conic-gradient(from 200deg,#7c4dff,#12c2e9,#3ecf8e,#ffb36b,#ff5d8f,#7c4dff)', label: 'Angular paint', glow: 'rgba(62,207,142,.45)', stops: true, ramp: 'linear-gradient(90deg,#7c4dff,#12c2e9,#3ecf8e,#ffb36b,#ff5d8f)', angle: '200°' },
+      image:   { css: 'linear-gradient(160deg,#12c2e9,#7c4dff 60%,#ff5d8f)', label: 'Image paint', glow: 'rgba(18,194,233,.45)', stops: false },
+      noise:   { css: '#3a2a5e', label: 'Noise paint', glow: 'rgba(58,42,94,.6)', stops: false }
+    };
+
+    function apply(name) {
+      var p = paints[name];
+      if (!p || !shape) return;
+      shape.style.background = p.css;
+      shape.style.boxShadow = '0 0 50px -6px ' + p.glow;
+      if (name === 'noise') {
+        shape.style.backgroundImage =
+          'radial-gradient(rgba(255,255,255,.5) .6px,transparent .7px),radial-gradient(rgba(255,255,255,.28) .6px,transparent .7px)';
+        shape.style.backgroundSize = '5px 5px,7px 7px';
+        shape.style.backgroundPosition = '0 0,3px 4px';
+      } else {
+        shape.style.backgroundSize = '';
+        shape.style.backgroundPosition = '';
+      }
+      if (swatch) swatch.style.background = p.css;
+      if (kind) kind.textContent = p.label;
+      if (grad) grad.classList.toggle('wt-off', !p.stops);
+      if (flat) flat.classList.toggle('wt-off', !!p.stops);
+      if (stopSec) stopSec.classList.toggle('wt-off', !p.stops);
+      if (p.stops && ramp) ramp.style.background = p.ramp;
+      if (p.stops && angle) angle.textContent = p.angle;
+    }
+
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-paint]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          apply(b.getAttribute('data-paint'));
+        });
+      });
+    }
+
+    var scope = document.getElementById('scopeSeg');
+    if (scope) {
+      var sb = [].slice.call(scope.querySelectorAll('[data-scope]'));
+      var label = document.getElementById('scopeLbl');
+      var names = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+      sb.forEach(function (b) {
+        b.addEventListener('click', function () {
+          sb.forEach(function (x) { x.classList.toggle('on', x === b); });
+          if (label) label.textContent = names[b.getAttribute('data-scope')] || '';
+        });
+      });
+    }
+
+    [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+      var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+      tiles.forEach(function (tile) {
+        tile.addEventListener('click', function () {
+          tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

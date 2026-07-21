@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-speed</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-speed · retiming a clip inside the shared shell. Speed is a property of
+   the selected clip, so the stop controls live in the Properties group, the clip
+   lives on the timeline dock, and the speed curve is plotted there on the clip's
+   own time axis. Only the curve plot and the retimed clip strip are page local.
+   4pt scale and shared tokens throughout. */
+
+#video-speed .win.shell{height:920px;min-height:0}
+#video-speed .cnv>.canvas{min-height:0;background:radial-gradient(620px 300px at 50% 38%,#171a26,#0a0c11)}/* ---------- canvas preview ---------- */
+.sframe{width:440px;height:220px;border-radius:var(--r2);position:relative;overflow:hidden;box-shadow:0 18px 40px -14px rgba(0,0,0,.6);background:linear-gradient(135deg,#0e2740,#123a52 45%,#1c2f5c)}
+.sframe .fgrid{position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px;opacity:.7}
+.subject{position:absolute;top:50%;left:0;width:26px;height:26px;transform:translate(-50%,-50%)}
+.subject .core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff,#8fd8ff 40%,#12c2e9 72%,#0a6ea0);box-shadow:0 0 18px 3px rgba(18,194,233,.7)}
+.subject .trail{position:absolute;top:50%;right:50%;height:6px;transform:translateY(-50%);border-radius:3px;background:linear-gradient(90deg,transparent,rgba(18,194,233,.75));transform-origin:right center}
+.sframe .path{position:absolute;left:8%;right:8%;top:50%;height:2px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,.18) 6px,transparent 6px,transparent 12px)}
+.sbadge{position:absolute;left:16px;bottom:14px;padding:var(--s2) var(--pad-sm);border-radius:var(--r2);background:linear-gradient(120deg,rgba(18,194,233,.9),rgba(28,47,92,.82));box-shadow:0 8px 22px -8px rgba(0,0,0,.5);color:#fff;font-variant-numeric:tabular-nums}
+.sbadge .big{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
+.sbadge .lab{font-size:10px;opacity:.9;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.sframe-tag{position:absolute;right:14px;top:12px;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.72);background:rgba(0,0,0,.4);padding:3px 8px;border-radius:var(--r1)}
+.freezechip{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:660;color:#1a1c22;background:linear-gradient(180deg,#ffd98a,#febc2e);padding:5px 10px;border-radius:var(--r2);box-shadow:0 6px 16px -6px rgba(0,0,0,.5);opacity:0;transition:opacity .12s ease}
+.freezechip.on{opacity:1}
+.state-note{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:10px;letter-spacing:.05em;color:rgba(255,255,255,.7);font-weight:560}
+
+/* ---------- the timeline dock: source vs retimed, plus the speed curve ---------- */
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:400px;overflow:auto;padding:0;display:flex;flex-direction:column}
+.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tlbar .now b{color:#12c2e9}
+.tlz{padding:var(--s2) var(--s3) var(--s2);position:relative}
+.tlgrid .track{margin:var(--s1) 0}
+.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
+.tlgrid .track .lane{display:block}
+.tlgrid .track .lane.srclane{height:18px}
+/* ghost source bar: the original clip length, fixed */
+.srcbar{height:16px;border-radius:var(--r1);background:repeating-linear-gradient(45deg,transparent,transparent 6px,color-mix(in srgb,var(--line) 60%,transparent) 6px,color-mix(in srgb,var(--line) 60%,transparent) 12px);border:1px dashed var(--line-strong)}
+/* retimed output clip: sampled cells colored by speed band, width tracks output length */
+.outclip{position:relative;height:34px;display:flex;border-radius:var(--r2);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px -8px rgba(0,0,0,.5);transition:width .12s ease;cursor:pointer}
+.outclip .cell{height:100%;flex:1 0 0}
+.cell.slow{background:linear-gradient(135deg,#12c2e9,#1f7fd6)}
+.cell.norm{background:linear-gradient(135deg,#7c4dff,#9a5cff)}
+.cell.fast{background:linear-gradient(135deg,#c56cff,#ff5d8f)}
+.cell.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 4px,#c98f18 4px,#c98f18 8px)}
+.outclip.sel{outline:2px solid var(--accent);outline-offset:1px}
+.clip-play{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--crit);z-index:4;pointer-events:none}
+.clip-play::before{content:"";position:absolute;top:-2px;left:-4px;border:5px solid transparent;border-top-color:var(--crit)}
+.seglegend{display:flex;flex-wrap:wrap;gap:var(--gap-sm);margin-top:var(--gap-sm);font-size:10px;color:var(--faint)}
+.seglegend .lg{display:inline-flex;align-items:center;gap:5px}
+.seglegend .sw{width:12px;height:10px;border-radius:3px;display:inline-block}
+.sw.slow{background:#12c2e9}.sw.norm{background:#9a5cff}.sw.fast{background:#ff5d8f}
+.sw.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px)}
+
+/* ---------- speed curve editor (inside the timeline dock) ---------- */
+.schdr{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3) 0;flex-wrap:wrap;border-top:1px solid var(--edge-lo)}
+.schdr h4{margin:var(--s2) 0 0;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.scbody{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:8px;padding:var(--s2) var(--s3) var(--s3);align-items:stretch}
+.scaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 14px}
+.scplot{grid-column:2;position:relative;height:124px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none;cursor:crosshair}
+.scplot svg{position:absolute;inset:0;width:100%;height:100%}
+.scpt{position:absolute;width:12px;height:12px;background:#12c2e9;transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid var(--panel);border-radius:2px;cursor:grab;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.scpt:hover{background:color-mix(in srgb,#12c2e9 80%,white)}
+.scpt.sel{background:var(--warn);width:14px;height:14px;box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 26%,transparent)}
+.scpt.frz{background:#febc2e}
+.scpt:active{cursor:grabbing}
+.scplot .schead{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--crit);border:1.5px solid var(--panel);transform:translate(-50%,-50%);z-index:4;pointer-events:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--crit) 22%,transparent)}
+
+/* ---------- Properties helpers ---------- */
+.seg.stack{flex-wrap:wrap;width:100%}.btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
+
+/* ---------- API line ---------- */
+.apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.apibar code{font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r1);padding:3px 8px}
+.apibar code b{color:#12c2e9;font-weight:600}
+.xlink{cursor:pointer}
+.xlink:hover{border-color:var(--accent-line);color:var(--ink)}
+
+/* ---------- narrow: the window container query, not the viewport ---------- */
+@container shell (max-width:880px){
+  #tlDock{--gutter:52px;max-height:360px}
+  .sframe{width:320px;height:160px}
+  .sbadge .big{font-size:20px}
+  .scplot{height:104px}
+}
+@container shell (max-width:620px){
+  #tlDock{--gutter:52px}
+  .sframe{width:232px;height:116px}
+  .sbadge{left:8px;bottom:8px;padding:var(--s1) var(--s2)}
+  .sbadge .big{font-size:15px}
+  .tlbar .now{display:none}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-speed">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Speed and time remap</h2><span class="k">· slow-mo, freeze, ramp</span></div>
+
+  <p class="pglead">Retiming is a <b>property of the selected clip</b>, so nothing new appears in the chrome. The clip sits on
+    the timeline dock, its speed curve is plotted on the clip's own time axis right below it, and the controls for the
+    selected stop live where every other selection's controls live: the <b>Properties</b> group.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>hero-shot</b> · 1920 x 1080 · source 0:03 <span id="scDirty" style="color:var(--faint)">· live</span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg on" data-ws="video" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Render</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip" id="speedChip">1.00x at playhead</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:228px;z-index:12">
+          <div class="mlabel">Clip</div>
+          <div class="menuitem" id="mAdd"><i class="ic ic-keyframe"></i> Add speed stop <span class="sc">A</span></div>
+          <div class="menuitem" id="mDel"><i class="ic ic-minus"></i> Delete speed stop</div>
+          <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset ramp</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <!-- SELECTION, place 1 of 3: on the canvas -->
+          <div class="selwrap" style="position:relative">
+            <div class="sframe">
+              <div class="fgrid"></div>
+              <div class="path"></div>
+              <div class="subject" id="subject"><div class="trail" id="trail"></div><div class="core"></div></div>
+              <div class="state-note" id="stateNote">1x playback</div>
+              <div class="sframe-tag" id="srcFrame">src 000 / 090</div>
+              <div class="sbadge"><div class="big" id="spBig">1.00x</div><div class="lab">playback speed</div></div>
+              <div class="freezechip" id="freezeChip"><i class="ic ic-pause xs"></i> Freeze frame</div>
+            </div>
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="selTag">hero-shot · retimed</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 video inventory -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="blade" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool ovf" data-tool="text" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" data-tool="shape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" data-tool="measure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="hand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" data-tool="zoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:#12c2e9"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+            <div class="menuitem"><i class="ic ic-text"></i> Title / Text <span class="sc">T</span></div>
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#0e2740,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:03</span></span>
+                <span class="cap"><span class="nm">Hero shot</span><span class="ago">open now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">A recording opens as the same document with time, so the transport bar and timeline dock appear.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="212" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock">
+
+        <!-- SELECTION, place 2 of 3 -->
+        <div class="dgrp" id="gLayers" style="--gh:72px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">2</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>
+            <div class="lrow child sel"><i class="ic ic-image"></i><span class="nm">hero-shot</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>
+            <div class="lrow child"><i class="ic ic-audio"></i><span class="nm">ambience.wav</span><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="80" data-max="260"></div>
+
+        <!-- SELECTION, place 3 of 3: everything the selected stop can do -->
+        <div class="dgrp grow" id="gProps">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Clip</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Clip <span class="mut">hero-shot</span></div>
+              <div class="grid2">
+                <div class="field"><span class="k">Source</span><span class="v">0:03.00</span></div>
+                <div class="field"><span class="k">Output</span><span class="v" id="outLenVal">0:04.50</span></div>
+                <div class="field"><span class="k">Stops</span><span class="v" id="stopCount">7</span></div>
+                <div class="field"><span class="k">Frames</span><span class="v">90</span></div>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Speed stop <span class="mut" id="stopMeta">4 of 7</span></div>
+              <div class="irow"><span class="rl">Speed</span><span class="bar"><i id="speedBar" style="width:33%"></i></span></div>
+              <div class="seg stack" id="presetSeg" style="margin-top:var(--s2)">
+                <button data-v="0.25">Slow-mo</button>
+                <button class="on" data-v="1">Normal</button>
+                <button data-v="2">Fast</button>
+                <button data-v="0">Freeze</button>
+              </div>
+              <div class="btnrow">
+                <button class="btn secondary sm" id="addStop" title="Add a stop at the playhead (A)"><i class="ic ic-keyframe"></i> Add stop</button>
+                <button class="btn ghost sm" id="delStop"><i class="ic ic-minus"></i> Delete stop</button>
+              </div>
+              <div class="btnrow">
+                <button class="btn ghost sm" id="tAdd" aria-pressed="false" title="Click the curve to place a new stop"><i class="ic ic-plus"></i> Click to add</button>
+                <button class="btn ghost sm" id="scReset"><i class="ic ic-undo"></i> Reset ramp</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Between stops <span class="mut">interpolation</span></div>
+              <div class="seg stack" id="interpSeg">
+                <button class="on" data-mode="ramp">Ramp</button>
+                <button data-mode="hold">Hold</button>
+              </div>
+              <p class="note"><b>Ramp</b> eases between stops for a smooth speed ramp. <b>Hold</b> keeps each section flat. A stop at zero holds a single frame, so two zeros side by side make a freeze.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp collapsed" id="gEffects" style="--gh:150px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">1</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Optical flow</span><span class="meta">later</span></div>
+            <p class="note">Frame blending sells slow motion, but real optical flow is heavy. It is off until the timeline chapter is funded.</p>
+          </div>
+        </div>
+
+        <!-- LIBRARY · media pool is this group with scope = Media (D1) -->
+        <div class="dgrp" id="gLibrary" style="--gh:76px">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libScope">Media</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button class="on" data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
+            </div>
+            <div class="libgrid" id="mediaGrid">
+              <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#0e2740,#12c2e9)"></span><span class="cap"><span class="nm">hero-shot.mov</span><span class="mt">0:03</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:08</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">ambience.wav</span><span class="mt">0:20</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:198px;z-index:11">
+        <div class="menuitem"><i class="ic ic-keyframe"></i> Retime this clip</div>
+        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:160px;width:198px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy retime curve</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to 1x</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:180px;width:198px;z-index:11">
+        <div class="menuitem"><i class="ic ic-image"></i> Motion blur</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT BAR -->
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" id="toStart" title="Skip back"><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" id="playBtn" title="Play or pause" aria-pressed="false"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" id="toEnd" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur" id="tcCur">0:00</span>
+      <span class="scrub" id="tScrub" role="slider" aria-label="Scrub" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" tabindex="0">
+        <span class="fill" style="width:0%"></span>
+        <span class="mark" style="left:52%"></span>
+        <span class="mark" style="left:66%"></span>
+        <span class="knob" style="left:0%"></span>
+      </span>
+      <span class="tc" id="tcEnd">0:04</span>
+      <span class="grp">
+        <button class="btn ghost sm" id="addStop2" title="Add a speed stop at the playhead (A)"><i class="ic ic-keyframe"></i><span class="lb">Add stop</span></button>
+        <button class="btn ghost sm" id="scReset2" title="Reset the ramp"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
+        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Render</span></button>
+      </span>
+    </div>
+
+    <!-- TIMELINE DOCK -->
+    <div class="timeline" id="tlDock">
+      <div class="tlbar">
+        <span class="lbl">Retime</span>
+        <span class="tspacer"></span>
+        <span class="now">Playhead <b id="scReadV">1.00x</b> @ <span id="scReadT">0.00s</span></span>
+      </div>
+
+      <div class="tlz">
+        <div class="tlgrid">
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> Source</span>
+            <div class="lane srclane"><div class="srcbar" title="Original clip length, fixed"></div></div>
+          </div>
+          <div class="track"><span class="tl"><i class="ic xs ic-history"></i> Retimed</span>
+            <div class="lane"><div class="outclip sel" id="outClip"></div><div class="clip-play" id="clipPlay"></div></div>
+          </div>
+        </div>
+        <div class="seglegend">
+          <span class="lg"><span class="sw slow"></span>Slow-mo</span>
+          <span class="lg"><span class="sw norm"></span>Normal</span>
+          <span class="lg"><span class="sw fast"></span>Fast</span>
+          <span class="lg"><span class="sw frz"></span>Freeze, held</span>
+        </div>
+      </div>
+
+      <div class="schdr"><h4>Speed curve</h4></div>
+      <div class="scbody">
+        <div class="scaxis" id="scAxis"><span>3x</span><span>1x</span><span>0</span></div>
+        <div class="scplot" id="scPlot"><svg id="scSvg" preserveAspectRatio="none" viewBox="0 0 1000 100"></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="apibar">
+    <span class="lab">In the API</span>
+    <code>clip.<b>retime</b>({at:1.2, speed:0.25})</code>
+    <code>clip.<b>freeze</b>({at:2.0, ms:500})</code>
+    <span class="chip xlink" data-target="agent">Any of this is one call an agent can make</span>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Retiming is <b>one speed curve over the clip's timeline</b>, not a pile of separate slow-mo, freeze and fast-forward tools. Drag a stop to any speed, ease between stops for a ramp, drop a stop to zero for a held frame. One mental model covers every case.</p></div>
+    <div class="c"><div class="lab g2">Where the controls live</div><p>Speed is a property of the selected clip, so the stop presets, the interpolation switch, and add or delete sit in the <b>Properties</b> group next to every other property. The curve stays on the timeline, where time lives.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The curve rides the <b>same keyframe engine</b> as opacity, position and transitions on the <span class="chip xlink" data-target="video">video timeline</span>. A component or caption can be retimed the same way, and audio can follow the speed so pitch stays sane.</p></div>
+    <div class="c"><div class="lab g2">An open question</div><p>Frame blending sells slow-mo, but real optical-flow interpolation is heavy. Do we ship nearest-frame slow-mo in v1 and leave smooth <b>optical flow</b> for the funded timeline chapter, or hold speed back until it looks premium?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   video-speed · a real speed-curve editor. Scoped and guarded so
+   a missing node is a no-op. The curve is speed(t) over the clip's
+   normalized timeline t in [0,1]; it drives the canvas preview's
+   pacing, the readouts, and a timeline clip that stretches.
+   Shell behavior is shared DS and is not repeated here.
+   ============================================================ */
+(function(){
+  "use strict";
+  var MAXV = 3;                 // top of the speed axis (3x)
+  var SRC_SEC = 3.0;            // source length in seconds (fixed)
+  var SRC_FRAMES = 90;
+  var MINV = 0.12;              // floor used only for the length integral
+
+  function defaultStops(){
+    return [
+      {t:0.00, v:1.00},
+      {t:0.18, v:0.25},
+      {t:0.40, v:0.25},
+      {t:0.52, v:0.00},
+      {t:0.66, v:0.00},
+      {t:0.82, v:2.00},
+      {t:1.00, v:1.00}
+    ];
+  }
+  var stops = defaultStops();
+  var interp = "ramp";
+  var sel = 3;
+  var addMode = false;
+  var playT = 0;
+  var dirty = false;
+
+  var clamp = function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var fmt = function(s){ var m=Math.floor(s/60), r=s-m*60; return m+":"+r.toFixed(2).padStart(5,"0"); };
+  var tcode = function(s){ s=Math.max(0,s); var m=Math.floor(s/60), r=Math.floor(s%60); return m+":"+(r<10?"0":"")+r; };
+
+  function speedAt(t){
+    var k=stops;
+    if(t<=k[0].t) return k[0].v;
+    if(t>=k[k.length-1].t) return k[k.length-1].v;
+    for(var i=0;i<k.length-1;i++){
+      if(t>=k[i].t && t<=k[i+1].t){
+        if(interp==="hold") return k[i].v;
+        var u=(t-k[i].t)/((k[i+1].t-k[i].t)||1);
+        return k[i].v+(k[i+1].v-k[i].v)*u;
+      }
+    }
+    return k[k.length-1].v;
+  }
+  function outputLen(){
+    var N=120, acc=0;
+    for(var i=0;i<N;i++){ acc += 1/Math.max(speedAt((i+0.5)/N), MINV); }
+    return SRC_SEC * (acc/N);
+  }
+  function sourceProgress(t){
+    var N=200, tot=0, upto=0;
+    for(var i=0;i<N;i++){
+      var tt=(i+0.5)/N, s=speedAt(tt);
+      tot+=s; if(tt<=t) upto+=s;
+    }
+    return tot>0 ? upto/tot : t;
+  }
+
+  var svg=document.getElementById("scSvg");
+  var plot=document.getElementById("scPlot");
+  function xOf(t){ return t*1000; }
+  function yOf(v){ return 100-(v/MAXV)*100; }
+  function bandOf(v){ return v<=0.05?"frz": v<0.85?"slow": v<=1.15?"norm":"fast"; }
+
+  function renderCurve(){
+    if(!svg||!plot) return;
+    var s="";
+    [0,1,2,3].forEach(function(v){
+      var y=yOf(v), strong=(v===1);
+      s+='<line x1="0" y1="'+y+'" x2="1000" y2="'+y+'" stroke="'+(strong?'rgba(18,194,233,.5)':'rgba(128,128,128,.16)')+'" stroke-width="1" stroke-dasharray="'+(strong?'4 4':'')+'" vector-effect="non-scaling-stroke"/>';
+    });
+    var k=stops, d="M "+xOf(k[0].t)+" "+yOf(k[0].v);
+    if(k[0].t>0) d="M 0 "+yOf(k[0].v)+" L "+xOf(k[0].t)+" "+yOf(k[0].v);
+    for(var i=0;i<k.length-1;i++){
+      var x2=xOf(k[i+1].t), y1=yOf(k[i].v), y2=yOf(k[i+1].v);
+      if(interp==="hold"){ d+=" L "+x2+" "+y1+" L "+x2+" "+y2; }
+      else { d+=" L "+x2+" "+y2; }
+    }
+    if(k[k.length-1].t<1) d+=" L 1000 "+yOf(k[k.length-1].v);
+    s+='<path d="'+d+' L 1000 100 L 0 100 Z" fill="#12c2e9" opacity=".08"/>';
+    s+='<path d="'+d+'" fill="none" stroke="#12c2e9" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+    svg.innerHTML=s;
+    [].forEach.call(plot.querySelectorAll(".scpt,.schead"),function(n){ n.remove(); });
+    k.forEach(function(p,i){
+      var d2=document.createElement("div");
+      d2.className="scpt"+(i===sel?" sel":"")+(p.v<=0.05?" frz":"");
+      d2.style.left=(p.t*100)+"%"; d2.style.top=yOf(p.v)+"%";
+      d2.setAttribute("data-i",i);
+      d2.title="Stop "+(i+1)+" · "+p.v.toFixed(2)+"x";
+      plot.appendChild(d2);
+    });
+    var head=document.createElement("div"); head.className="schead";
+    head.style.left=(playT*100)+"%"; head.style.top=yOf(speedAt(playT))+"%";
+    plot.appendChild(head);
+  }
+
+  var outClip=document.getElementById("outClip");
+  var clipPlay=document.getElementById("clipPlay");
+  var MAX_OUT = SRC_SEC*3.4;
+  function renderClip(){
+    if(!outClip) return;
+    var N=48, cells="";
+    for(var i=0;i<N;i++){
+      cells+='<span class="cell '+bandOf(speedAt((i+0.5)/N))+'"></span>';
+    }
+    outClip.innerHTML=cells;
+    var L=outputLen();
+    outClip.style.width=clamp(L/MAX_OUT,0.16,1)*100+"%";
+    if(clipPlay){ clipPlay.style.left=(playT*outClip.getBoundingClientRect().width)+"px"; }
+    var ov=document.getElementById("outLenVal"); if(ov) ov.textContent=fmt(L);
+    var sc=document.getElementById("stopCount"); if(sc) sc.textContent=stops.length;
+  }
+
+  var subject=document.getElementById("subject");
+  var trail=document.getElementById("trail");
+  var tScrub=document.getElementById("tScrub");
+  function updateReadouts(){
+    var spd=speedAt(playT);
+    var L=outputLen();
+    var rv=document.getElementById("scReadV"), rt=document.getElementById("scReadT");
+    if(rv) rv.textContent=spd.toFixed(2)+"x";
+    if(rt) rt.textContent=(playT*L).toFixed(2)+"s";
+    var chip=document.getElementById("speedChip");
+    if(chip) chip.textContent=spd.toFixed(2)+"x at playhead";
+    var big=document.getElementById("spBig"); if(big) big.textContent=spd.toFixed(2)+"x";
+    var note=document.getElementById("stateNote");
+    if(note) note.textContent = spd<=0.05?"frozen frame": spd<0.85?"slow motion": spd<=1.15?"normal speed":"fast forward";
+    var frz=document.getElementById("freezeChip"); if(frz) frz.classList.toggle("on", spd<=0.05);
+    // transport
+    if(tScrub){
+      var p=playT*100;
+      var f=tScrub.querySelector(".fill"), kb=tScrub.querySelector(".knob");
+      if(f) f.style.width=p+"%";
+      if(kb) kb.style.left=p+"%";
+      tScrub.setAttribute("aria-valuenow", playT.toFixed(3));
+    }
+    var tc=document.getElementById("tcCur"); if(tc) tc.textContent=tcode(playT*L);
+    var te=document.getElementById("tcEnd"); if(te) te.textContent=tcode(L);
+    // selected stop readout
+    var sm=document.getElementById("stopMeta");
+    if(sm) sm.textContent=(sel+1)+" of "+stops.length;
+    var sb=document.getElementById("speedBar");
+    if(sb && stops[sel]) sb.style.width=clamp(stops[sel].v/MAXV*100,0,100)+"%";
+    // preview subject
+    var sp=sourceProgress(playT);
+    if(subject) subject.style.left=(8+sp*84)+"%";
+    if(trail){ var len=clamp(spd*16,0,60); trail.style.width=len+"px"; trail.style.opacity=clamp(spd*0.55,0,0.9); }
+    var sf=document.getElementById("srcFrame");
+    if(sf) sf.textContent="src "+String(Math.round(sp*SRC_FRAMES)).padStart(3,"0")+" / "+SRC_FRAMES;
+    if(clipPlay && outClip) clipPlay.style.left=(playT*outClip.getBoundingClientRect().width)+"px";
+  }
+  function syncAll(){ renderCurve(); renderClip(); updateReadouts(); }
+
+  function snapV(v){
+    var nice=[0,0.25,0.5,1,1.5,2,2.5,3], best=v, bd=0.09;
+    nice.forEach(function(n){ if(Math.abs(v-n)<bd){ best=n; bd=Math.abs(v-n); } });
+    return best;
+  }
+  plot && plot.addEventListener("pointerdown", function(e){
+    var pt=e.target.closest(".scpt");
+    var rect=plot.getBoundingClientRect();
+    if(!pt){
+      if(addMode){ addStopAt(e,rect); return; }
+      startScrub(e,rect); return;
+    }
+    var i=+pt.getAttribute("data-i"); sel=i; syncPresetSeg();
+    var p=stops[i];
+    var move=function(ev){
+      var t=clamp((ev.clientX-rect.left)/rect.width,0,1);
+      var v=clamp((1-(ev.clientY-rect.top)/rect.height)*MAXV,0,MAXV);
+      if(i>0 && i<stops.length-1){
+        p.t=clamp(t, stops[i-1].t+0.02, stops[i+1].t-0.02);
+      }
+      p.v=snapV(v);
+      markDirty(); renderCurve(); renderClip(); updateReadouts();
+    };
+    var up=function(){ document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
+    e.preventDefault();
+    updateReadouts();
+  });
+
+  function addStopAt(e,rect){
+    var t=clamp((e.clientX-rect.left)/rect.width,0.02,0.98);
+    var v=clamp((1-(e.clientY-rect.top)/rect.height)*MAXV,0,MAXV);
+    stops.push({t:t,v:snapV(v)}); stops.sort(function(a,b){ return a.t-b.t; });
+    sel=stops.findIndex(function(p){ return p.t===t; });
+    markDirty(); syncPresetSeg(); syncAll();
+  }
+  function addStopAtPlayhead(){
+    var v=speedAt(playT);
+    var existing=stops.find(function(p){ return Math.abs(p.t-playT)<0.02; });
+    if(existing){ existing.v=v; sel=stops.indexOf(existing); }
+    else {
+      stops.push({t:clamp(playT,0.02,0.98),v:v});
+      stops.sort(function(a,b){ return a.t-b.t; });
+      sel=stops.findIndex(function(p){ return Math.abs(p.t-playT)<0.03; });
+    }
+    markDirty(); syncPresetSeg(); syncAll();
+  }
+
+  function startScrub(e,rect){
+    var set=function(cx){ playT=clamp((cx-rect.left)/rect.width,0,1); updateReadouts(); renderCurve(); };
+    set(e.clientX);
+    var move=function(ev){ set(ev.clientX); };
+    var up=function(){ document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
+    e.preventDefault();
+  }
+  outClip && outClip.addEventListener("pointerdown", function(e){
+    var w=outClip.getBoundingClientRect();
+    startScrub(e,{left:w.left,width:w.width});
+  });
+  if(tScrub){
+    var tset=function(e){ var r=tScrub.getBoundingClientRect(); playT=clamp((e.clientX-r.left)/r.width,0,1); updateReadouts(); renderCurve(); };
+    tScrub.addEventListener("pointerdown", function(e){ tScrub.dataset.on="1"; tset(e); });
+    tScrub.addEventListener("pointermove", function(e){ if(tScrub.dataset.on) tset(e); });
+    ["pointerup","pointercancel"].forEach(function(t){ tScrub.addEventListener(t, function(){ delete tScrub.dataset.on; }); });
+    tScrub.addEventListener("keydown", function(e){
+      if(e.key==="ArrowLeft"){ e.preventDefault(); playT=clamp(playT-0.03,0,1); updateReadouts(); renderCurve(); }
+      if(e.key==="ArrowRight"){ e.preventDefault(); playT=clamp(playT+0.03,0,1); updateReadouts(); renderCurve(); }
+    });
+  }
+
+  var presetSeg=document.getElementById("presetSeg");
+  function syncPresetSeg(){
+    if(!presetSeg) return;
+    var v=stops[sel]?stops[sel].v:1;
+    [].forEach.call(presetSeg.children,function(b){ b.classList.toggle("on", +b.getAttribute("data-v")===v); });
+  }
+  presetSeg && presetSeg.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    var v=+b.getAttribute("data-v");
+    if(!stops[sel]) sel=0;
+    stops[sel].v=v;
+    if(v===0){
+      var i=sel, next=stops[i+1];
+      if(!next || next.v>0.05){
+        var nt=Math.min((next?next.t:1)-0.02, stops[i].t+0.14);
+        if(nt>stops[i].t+0.03){ stops.splice(i+1,0,{t:nt,v:0}); }
+      }
+    }
+    markDirty(); syncPresetSeg(); syncAll();
+  });
+
+  var interpSeg=document.getElementById("interpSeg");
+  interpSeg && interpSeg.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    [].forEach.call(interpSeg.children,function(x){ x.classList.toggle("on",x===b); });
+    interp=b.getAttribute("data-mode");
+    markDirty(); syncAll();
+  });
+
+  function delStop(){
+    if(stops.length<=2) return;
+    var i=clamp(sel,1,stops.length-2);
+    stops.splice(i,1); sel=clamp(i,1,stops.length-2);
+    markDirty(); syncPresetSeg(); syncAll();
+  }
+  ["addStop","addStop2","mAdd"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", addStopAtPlayhead);
+  });
+  ["delStop","mDel"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", delStop);
+  });
+
+  var tAdd=document.getElementById("tAdd");
+  function setAddMode(on){
+    addMode=on;
+    if(tAdd){
+      tAdd.setAttribute("aria-pressed", String(on));
+      tAdd.classList.toggle("secondary", on);
+      tAdd.classList.toggle("ghost", !on);
+    }
+    if(plot) plot.style.cursor = on ? "copy" : "crosshair";
+  }
+  if(tAdd) tAdd.addEventListener("click", function(){ setAddMode(!addMode); });
+
+  function resetAll(){
+    stops=defaultStops(); interp="ramp"; sel=3; playT=0; setAddMode(false);
+    if(interpSeg){ [].forEach.call(interpSeg.children,function(x){ x.classList.toggle("on",x.getAttribute("data-mode")==="ramp"); }); }
+    var d=document.getElementById("scDirty"); if(d){ d.textContent="· live"; d.style.color="var(--faint)"; }
+    dirty=false; syncPresetSeg(); syncAll();
+  }
+  ["scReset","scReset2","mReset"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", resetAll);
+  });
+
+  /* transport playback */
+  var playing=false, raf=null, last=0;
+  var playBtn=document.getElementById("playBtn");
+  function setPlayIcon(){
+    var i=playBtn&&playBtn.querySelector(".ic");
+    if(i){ i.classList.toggle("ic-pause",playing); i.classList.toggle("ic-play",!playing); }
+    if(playBtn){ playBtn.setAttribute("aria-pressed", playing?"true":"false"); playBtn.title=playing?"Pause":"Play"; }
+  }
+  function tick(ts){
+    if(!playing) return;
+    if(!last) last=ts;
+    var L=outputLen();
+    playT += (ts-last)/1000/Math.max(L,0.1); last=ts;
+    if(playT>=1) playT=0;
+    updateReadouts(); renderCurve();
+    raf=requestAnimationFrame(tick);
+  }
+  function togglePlay(){
+    playing=!playing; last=0; setPlayIcon();
+    if(playing) raf=requestAnimationFrame(tick); else if(raf) cancelAnimationFrame(raf);
+  }
+  if(playBtn) playBtn.addEventListener("click", togglePlay);
+  var toStart=document.getElementById("toStart"), toEnd=document.getElementById("toEnd");
+  if(toStart) toStart.addEventListener("click", function(){ playT=0; updateReadouts(); renderCurve(); });
+  if(toEnd) toEnd.addEventListener("click", function(){ playT=1; updateReadouts(); renderCurve(); });
+
+  /* Library scope switch + tile selection */
+  (function(){
+    var seg=document.getElementById("scopeSeg");
+    var label=document.getElementById("libScope");
+    var names={media:"Media",components:"Components",styles:"Styles",assets:"Assets"};
+    if(seg){
+      var btns=[].slice.call(seg.querySelectorAll("button"));
+      btns.forEach(function(b){
+        b.addEventListener("click", function(){
+          btns.forEach(function(x){ x.classList.toggle("on",x===b); });
+          if(label) label.textContent=names[b.getAttribute("data-scope")]||"";
+        });
+      });
+    }
+    var mg=document.getElementById("mediaGrid");
+    if(mg){
+      var tiles=[].slice.call(mg.querySelectorAll(".libtile"));
+      tiles.forEach(function(t){
+        t.addEventListener("click", function(){ tiles.forEach(function(x){ x.classList.toggle("sel",x===t); }); });
+      });
+    }
+  })();
+
+  document.addEventListener("keydown", function(e){
+    if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+    var k=e.key.toLowerCase();
+    if(k==="a"){ addStopAtPlayhead(); }
+    else if(k===" "){ e.preventDefault(); togglePlay(); }
+  });
+
+  function markDirty(){
+    if(dirty) return;
+    dirty=true;
+    var d=document.getElementById("scDirty");
+    if(d){ d.textContent="· edited"; d.style.color="var(--warn)"; }
+  }
+
+  /* boot */
+  setAddMode(false); syncPresetSeg(); syncAll();
+  window.addEventListener("resize", function(){ renderClip(); updateReadouts(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-sections</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local reference scaffolding ONLY. Every disclosure on this page is
+     the real DS: `.dgrp` › `.dgrp-h` + `.dgrp-b` for the group level, and
+     `.section` › `.sec-h` for the level inside a group. Local names are
+     prefixed `ls-` so they cannot collide with DS names (meta, rule, spec,
+     compact, api, note, card were all colliding before).
+     ============================================================ */
+  #lang-sections .ls-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:840px}
+  #lang-sections .ls-lead b{color:var(--ink);font-weight:600}
+  #lang-sections .ls-lead code{font-family:var(--mono);font-size:11px;color:var(--accent)}
+
+  #lang-sections .ls-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-sections .ls-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #lang-sections .ls-blk-h .ls-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-sections .ls-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-sections .ls-blk-h .ls-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-sections .ls-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
+  #lang-sections .ls-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #lang-sections .ls-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border-bottom:1px solid var(--line-soft)}
+  #lang-sections .ls-spec-h .ls-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
+    text-transform:none;font-weight:520;color:var(--faint)}
+  #lang-sections .ls-spec-h .ls-tag.acc{color:var(--accent)}
+  #lang-sections .ls-spec-b{padding:var(--pad-sm)}
+  #lang-sections .ls-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-sections .ls-cap b{color:var(--ink);font-weight:600}
+  #lang-sections .ls-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* a plinth the colour of the dock, so a lone group reads as docked */
+  #lang-sections .ls-plinth{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;
+    background:color-mix(in srgb, var(--panel-2) 45%, transparent)}
+
+  /* numbered callouts */
+  #lang-sections .ls-pin{flex:none;width:15px;height:15px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #lang-sections .ls-pin.abs{position:absolute;z-index:8;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  #lang-sections .ls-anat{display:grid;grid-template-columns:300px 1fr;gap:var(--gap-lg);align-items:start}
+  #lang-sections .ls-leg{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-sections .ls-leg .ls-li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #lang-sections .ls-leg .ls-li b{color:var(--ink);font-weight:600}
+  #lang-sections .ls-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  #lang-sections .ls-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+
+  /* state ladder: real headers plus forced hover/focus paint that reuses the
+     exact DS declarations, so the ladder cannot drift from the real thing. */
+  #lang-sections .ls-states{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-sections .ls-strow{display:grid;grid-template-columns:180px 1fr;gap:var(--gap);align-items:center}
+  #lang-sections .ls-lbl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:660}
+  #lang-sections .ls-hover .sec-h{color:var(--accent)}
+  #lang-sections .ls-focus .sec-h{box-shadow:var(--ring);border-radius:var(--r-sm)}
+  #lang-sections .ls-off{opacity:.42}
+
+  /* nested disclosure indent, exactly one level deep */
+  #lang-sections .ls-nest{padding-left:var(--pad-sm);margin-left:var(--s1);border-left:1px solid var(--line)}
+
+  /* do / don't */
+  #lang-sections .ls-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #lang-sections .ls-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-sections .ls-dd .ls-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-sections .ls-dd .ls-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* api */
+  #lang-sections .ls-api{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-sections .ls-api .ls-r{display:grid;grid-template-columns:250px 1fr;gap:var(--gap);align-items:baseline;
+    font-size:11px;color:var(--dim);line-height:1.5}
+  #lang-sections .ls-api code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
+    padding:1px 6px;border-radius:5px}
+  #lang-sections .ls-api .ls-r b{color:var(--ink);font-weight:600}
+
+  #lang-sections .ls-note{font-size:11px;color:var(--dim);line-height:1.5;margin:0;padding:var(--pad-sm) var(--pad);
+    border:1px dashed var(--line-strong);border-radius:var(--r3);background:var(--panel-2)}
+  #lang-sections .ls-note b{color:var(--ink);font-weight:600}
+  #lang-sections .ls-note code{font-family:var(--mono);font-size:10px}
+
+  /* two-level diagram */
+  #lang-sections .ls-lvl{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #lang-sections .ls-lvlc{border:1px solid var(--edge-lo);border-radius:var(--r3);padding:var(--pad-sm);background:var(--panel-2)}
+  #lang-sections .ls-lvlc h4{margin:0 0 var(--s1);font-size:11.5px;font-weight:640;color:var(--ink);display:flex;align-items:center;gap:6px}
+  #lang-sections .ls-lvlc p{margin:0;font-size:11px;line-height:1.5;color:var(--dim)}
+  #lang-sections .ls-lvlc code{font-family:var(--mono);font-size:10px;color:var(--accent)}
+
+  /* Kind-1 app screen: definite height so the dock is bounded. */
+  #lang-sections .ls-app{height:560px;min-height:0}
+  #lang-sections .ls-app .canvas{min-height:0}
+  #lang-sections .ls-narrow{max-width:300px}
+
+  @media (max-width:820px){
+    #lang-sections .ls-grid,#lang-sections .ls-dd,#lang-sections .ls-lvl{grid-template-columns:1fr}
+    #lang-sections .ls-anat{grid-template-columns:1fr}
+    #lang-sections .ls-api .ls-r,#lang-sections .ls-strow{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-sections">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Collapsible sections</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
+    <p class="ls-lead">Nothing in the dock is a flat wall of settings. There are exactly <b>two levels of disclosure</b>: the
+      <b>panel group</b> (<code>.dgrp</code>) collapses a whole panel in the dock, and a <b>section</b> (<code>.section</code>) collapses one
+      task inside that panel's body. Both are a header with a chevron, an optional value summary, and a body. You group by task, you collapse
+      what the current tool never touches, and you read the important value straight off a closed header. Both levels are addressable, so
+      <code>section("Effects").collapsed = true</code> does from an <b data-target="agent">agent</b> exactly what a click does.</p>
+
+    <!-- 2 · THE TWO LEVELS -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">01</span><h3>Two levels, one behaviour</h3><span class="ls-sub">Group collapse · section collapse</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-lvl">
+          <div class="ls-lvlc">
+            <h4><i class="ic sm ic-layers"></i> Level 1 · the panel group</h4>
+            <p>A <code>.dgrp</code> in the dock. Collapsing it hides an entire panel and hands its height back to the groups around it.
+              Reach for it when the whole panel is irrelevant right now: no effects on this layer, no library browsing today.
+              Its body carries its own bound and its own scroller, so it is also the thing that keeps a long list from crowding its siblings.</p>
+          </div>
+          <div class="ls-lvlc">
+            <h4><i class="ic sm ic-sliders"></i> Level 2 · the section</h4>
+            <p>A <code>.section</code> inside a group's body. Collapsing it hides one task's controls while the panel stays open. Reach for it
+              when the panel is relevant but this part of it is not: Transform when you are picking a colour, Spacing when you are choosing a
+              typeface. This is the level that carries a <b>value summary</b>.</p>
+          </div>
+        </div>
+
+        <div class="ls-spec">
+          <div class="ls-spec-h">Both levels in one column<span class="ls-tag acc">not a window</span></div>
+          <div class="ls-spec-b">
+            <div class="ls-plinth" style="max-width:300px">
+              <div class="dgrp" style="--gh:250px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                    <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Fill <span class="mut">Brand · gradient</span></div>
+                    <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section closed"><div class="sec-h">Transform <span class="mut">168 × 44</span></div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="dgrp collapsed">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span></div>
+                <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+                  <div class="efx"><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                </div>
+              </div>
+            </div>
+            <p class="ls-cap">Click <b>Properties</b> to collapse the whole panel. Click <b>Transform</b> to collapse one task inside it.
+              Same chevron, same hit target, two different scopes. <b>Effects</b> is collapsed at the group level and still tells you it
+              holds a glow and a shadow.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · ANATOMY -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">02</span><h3>Anatomy · the section</h3><span class="ls-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.section &gt; .sec-h</code></span></div>
+      <div class="ls-blk-b">
+        <div class="ls-anat">
+          <div class="ls-spec">
+            <div class="ls-spec-h">One section<span class="ls-tag acc">inside a group body</span></div>
+            <div class="ls-spec-b">
+              <div class="ls-plinth" style="position:relative">
+                <span class="ls-pin abs" style="top:36px;left:4px">2</span>
+                <span class="ls-pin abs" style="top:36px;left:44px">1</span>
+                <span class="ls-pin abs" style="top:36px;right:6px">3</span>
+                <span class="ls-pin abs" style="top:72px;left:4px">4</span>
+                <div class="dgrp" style="--gh:150px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+                  <div class="dgrp-b">
+                    <div class="section"><div class="sec-h">Fill <span class="mut">Brand · gradient</span></div>
+                      <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                      <div class="irow"><span class="rl">Opacity</span><span class="select"><span class="lead">100%</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ls-leg">
+            <div class="ls-li"><span class="ls-pin">1</span><span><b>Header</b> · the task name, one or two words, in the language a person thinks in. The <b>whole header</b> is the hit target. <code>.sec-h</code></span></div>
+            <div class="ls-li"><span class="ls-pin">2</span><span><b>Chevron</b> · the disclosure affordance, injected so every section gets one and they all rotate the same way. <code>.chev</code></span></div>
+            <div class="ls-li"><span class="ls-pin">3</span><span><b>Value summary</b> · the current answer, so a closed header still tells you what the section resolves to. Derived from the rows, not hand-set. <code>.mut</code></span></div>
+            <div class="ls-li"><span class="ls-pin">4</span><span><b>Body</b> · labeled rows with real controls, hidden when collapsed. <code>.irow</code> · <code>.select</code> · <code>.field</code> · <code>.grid2</code></span></div>
+            <div class="ls-li"><span class="ls-pin">·</span><span><b>Keyboard</b> · Tab reaches the header, Space or Enter toggles it, and the focus ring is the same one every control uses.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 · VARIANTS -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">03</span><h3>Variants</h3><span class="ls-sub">Specimens · open · collapsed · component · nested</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-grid">
+          <div class="ls-spec">
+            <div class="ls-spec-h">Open<span class="ls-tag acc">the resting state</span></div>
+            <div class="ls-spec-b"><div class="ls-plinth">
+              <div class="section"><div class="sec-h">Layout <span class="mut">2</span></div>
+                <div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">H</span><span class="select"><span class="lead">630</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+            </div><p class="ls-cap">Open by default when the active tool uses it. The summary counts what is inside.</p></div>
+          </div>
+
+          <div class="ls-spec">
+            <div class="ls-spec-h">Collapsed<span class="ls-tag">summary carries the answer</span></div>
+            <div class="ls-spec-b"><div class="ls-plinth">
+              <div class="section closed"><div class="sec-h">Layout <span class="mut">400 × 630</span></div>
+                <div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">H</span><span class="select"><span class="lead">630</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+            </div><p class="ls-cap">On collapse the count is swapped for the real value, so nothing is lost by closing it.</p></div>
+          </div>
+
+          <div class="ls-spec">
+            <div class="ls-spec-h">Component-tinted<span class="ls-tag">purple, everywhere</span></div>
+            <div class="ls-spec-b"><div class="ls-plinth">
+              <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+              </div>
+            </div><p class="ls-cap">Anything to do with reuse carries the component purple, in every panel and on every page.</p></div>
+          </div>
+
+          <div class="ls-spec">
+            <div class="ls-spec-h">Nested<span class="ls-tag">exactly one level</span></div>
+            <div class="ls-spec-b"><div class="ls-plinth">
+              <div class="section"><div class="sec-h">Border <span class="mut">1px · solid</span></div>
+                <div class="irow"><span class="rl">Width</span><span class="select"><span class="lead">1</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="ls-nest">
+                  <div class="section" style="border:0;padding:0"><div class="sec-h">Stroke <span class="mut">Solid</span></div>
+                    <div class="irow"><span class="rl">Style</span><span class="select"><span class="lead">Solid</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div><p class="ls-cap">One level of nesting is the limit. A third level means the panel wants to be a second group instead.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 · STATES -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">04</span><h3>States</h3><span class="ls-sub">Specimen · rest · hover · focus · collapsed · disabled</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-states">
+          <div class="ls-strow">
+            <span class="ls-lbl">Rest</span>
+            <div class="ls-plinth"><div class="section"><div class="sec-h">Effects <span class="mut">2</span></div><div class="irow"><span class="rl">Glow</span><span class="select"><span class="lead">Card glow</span></span></div></div></div>
+          </div>
+          <div class="ls-strow">
+            <span class="ls-lbl">Hover · header tints accent</span>
+            <div class="ls-plinth ls-hover"><div class="section"><div class="sec-h">Effects <span class="mut">2</span></div><div class="irow"><span class="rl">Glow</span><span class="select"><span class="lead">Card glow</span></span></div></div></div>
+          </div>
+          <div class="ls-strow">
+            <span class="ls-lbl">Focus · keyboard ring</span>
+            <div class="ls-plinth ls-focus"><div class="section"><div class="sec-h">Effects <span class="mut">2</span></div><div class="irow"><span class="rl">Glow</span><span class="select"><span class="lead">Card glow</span></span></div></div></div>
+          </div>
+          <div class="ls-strow">
+            <span class="ls-lbl">Collapsed · chevron rotates</span>
+            <div class="ls-plinth"><div class="section closed"><div class="sec-h">Effects <span class="mut">Glow + Shadow</span></div><div class="irow"><span class="rl">Glow</span><span class="select"><span class="lead">Card glow</span></span></div></div></div>
+          </div>
+          <div class="ls-strow">
+            <span class="ls-lbl">Disabled · nothing to reveal</span>
+            <div class="ls-plinth ls-off"><div class="section"><div class="sec-h">Effects <span class="mut">none</span></div></div></div>
+          </div>
+        </div>
+        <p class="ls-cap">A header reads its own state. Hover tints it accent so it feels clickable, focus shows the same ring every control
+          uses, collapsed rotates the chevron and leans on the summary, and disabled dims when there is genuinely nothing behind it.</p>
+      </div>
+    </div>
+
+    <!-- 6 · LIVE EXAMPLE · a complete app screen -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">05</span><h3>Live example</h3><span class="ls-sub">App screen · sections doing the work in the dock</span></div>
+      <div class="ls-blk-b">
+        <div class="win tall cq ls-app">
+          <div class="titlebar">
+            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+            <div class="wtitle"><b>hero-card</b> · 1200 × 630</div>
+            <div class="wsw" role="tablist" aria-label="Workspace">
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+              <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+              <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+            </div>
+            <div class="tbtns">
+              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+              <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="tool" title="Commands" data-menu="#lsCmd"><i class="ic sm ic-more"></i></button>
+            <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" data-sheet="#lsHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <span class="tspacer"></span>
+            <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+            <div style="position:relative">
+              <div class="popover menu pop" id="lsCmd" style="position:absolute;right:0;top:26px;width:216px;z-index:12">
+                <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all sections</div>
+                <div class="menuitem"><i class="ic ic-chevron-right"></i> Expand all sections</div>
+                <div class="menu-sep"></div>
+                <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit lean" id="lsShell" data-dock="open">
+            <div class="cnv">
+              <div class="canvas">
+                <div class="artboard-label">1200 × 630 · Brand tokens</div>
+                <div class="selwrap">
+                  <div class="hero-card">
+                    <span class="hc-badge"><i class="ic xs ic-component"></i> New</span>
+                    <div class="hc-h">Ship it faster.</div>
+                    <p class="hc-sub">Capture, design, and automate. All in one fast canvas.</p>
+                    <span class="hc-cta">Get started <i class="ic ic-chevron-right"></i>
+                      <span class="cinst"></span>
+                      <span class="cbadge" data-target="dsys"><i class="ic xs ic-component"></i> Button · Primary</span>
+                    </span>
+                  </div>
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag">Button · 168 × 44</span>
+                </div>
+              </div>
+
+              <div class="cnv-act">
+                <button class="tool on" data-dock-toggle="#lsShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                <button class="tool" data-sheet="#lsHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+              </div>
+
+              <div class="tbar">
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                  <button class="tool" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                  <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                  <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep ovf"></span>
+                  <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                </span>
+                <button class="tool tbar-more" title="More tools" data-menu="#lsOvf"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-live" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="lsOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                </div>
+              </div>
+
+              <div class="sheet down" id="lsHist" aria-hidden="true" aria-label="Capture history">
+                <div class="sheet-h">
+                  <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                  <span class="sp"></span>
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="sp"></span>
+                  <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                </div>
+                <div class="sheet-b">
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                    <div class="filmcard sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                      <span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter v" data-min="230" data-max="420"></div>
+
+            <div class="pdock">
+              <div class="dgrp" id="lsLayers" style="--gh:120px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+                <div class="dgrp-b">
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Hero card</div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+
+              <div class="splitter h" data-min="90" data-max="300"></div>
+
+              <div class="dgrp grow" id="lsProps">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span>
+                  <button class="btn ghost icon sm" title="Panel menu" data-menu="#lsPropMenu"><i class="ic ic-more"></i></button>
+                </div>
+                <div class="dgrp-b">
+                  <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                    <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+                    <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Size</span><span class="select"><span class="lead">Large</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section"><div class="sec-h">Type <span class="mut">New York · 17</span></div>
+                    <div class="irow"><span class="rl">Family</span><span class="select"><span class="lead">New York</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow split"><span class="rl">Size</span><span class="select"><span class="lead">17</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                      <span class="seg" data-radio="button"><button class="on" title="Bold"><i class="ic xs ic-bold"></i></button><button title="Italic"><i class="ic xs ic-italic"></i></button></span>
+                    </div>
+                  </div>
+                  <div class="section"><div class="sec-h">Fill <span class="mut">Brand · gradient</span></div>
+                    <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <p class="note">Painted with a named Style. Change it in the design system and every instance follows.</p>
+                  </div>
+                  <div class="section closed"><div class="sec-h">Alignment <span class="mut">Left · middle</span></div>
+                    <div class="irow split"><span class="rl">Horizontal</span>
+                      <span class="seg" data-radio="button"><button class="on" title="Left"><i class="ic xs ic-align-left"></i></button><button title="Center"><i class="ic xs ic-align-center"></i></button><button title="Right"><i class="ic xs ic-align-right"></i></button></span>
+                    </div>
+                  </div>
+                  <div class="section closed"><div class="sec-h">Spacing <span class="mut">1.4 · 0</span></div>
+                    <div class="grid2"><div class="field"><span class="k">Line</span><span class="v">1.4</span></div><div class="field"><span class="k">Track</span><span class="v">0</span></div></div>
+                  </div>
+                  <div class="section closed"><div class="sec-h">Transform <span class="mut">168 × 44</span></div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div><div class="field"><span class="k">R</span><span class="v">12</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dgrp collapsed" id="lsEffects">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span>
+                  <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
+                </div>
+                <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                </div>
+              </div>
+
+              <div class="popover menu pop" id="lsPropMenu" style="position:absolute;right:var(--s4);top:200px;width:196px;z-index:11">
+                <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all sections</div>
+                <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+                <div class="menuitem"><i class="ic ic-undo"></i> Reset to main</div>
+              </div>
+            </div>
+
+            <div class="drail">
+              <button class="drailtab" data-group="#lsLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              <button class="drailtab" data-group="#lsProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              <button class="drailtab" data-group="#lsEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+            </div>
+          </div>
+        </div>
+        <p class="ls-cap">Six sections in Properties and only three are open, because a component instance is selected and those are the three
+          you touch. <b>Alignment</b>, <b>Spacing</b> and <b>Transform</b> are closed but still answer their question from the header, and
+          <b>Effects</b> is collapsed a whole level up. Click any header, in either level, and it toggles.</p>
+      </div>
+    </div>
+
+    <!-- 7 · RULES -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">06</span><h3>Rules</h3><span class="ls-sub">Do / Don't</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-dd">
+          <span class="ls-do">Group by task: Layout, Fill, Type, Effects. The names a person thinks in.</span>
+          <span class="ls-no">Group by data type: "Numbers", "Colours". Nobody browses that way.</span>
+          <span class="ls-do">Put the one value that matters into the summary.</span>
+          <span class="ls-no">Leave a section unnamed, or collapse it with no summary at all.</span>
+          <span class="ls-do">Open what the active tool uses and collapse the rest, remembered per selection type.</span>
+          <span class="ls-no">A flat wall of ungrouped rows with no headers.</span>
+          <span class="ls-do">Make the whole header the hit target, chevron included.</span>
+          <span class="ls-no">Nest a third level. Two levels is the whole model.</span>
+          <span class="ls-do">Use the group level when a whole panel is irrelevant, the section level when one task is.</span>
+          <span class="ls-no">Hide the focus ring, or make the section a different toggle from the group.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 · IN THE API -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">07</span><h3>In the API</h3><span class="ls-sub">Both levels are addressable</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-api">
+          <div class="ls-r"><code>group("Effects").collapsed = true</code><span>Level 1. Collapse a whole panel group in the dock.</span></div>
+          <div class="ls-r"><code>section("Transform").collapsed = true</code><span>Level 2. Collapse one task inside the open panel.</span></div>
+          <div class="ls-r"><code>section("Layout").summary</code><span>Read-only, derived from the rows. Returns <code>"400 × 630"</code>.</span></div>
+          <div class="ls-r"><code>inspector.for(selection)</code><span>Which sections a selection gets, and which of them lead.</span></div>
+          <div class="ls-r"><code>panel.collapseAll()</code><span>What the panel menu's "Collapse all sections" runs.</span></div>
+        </div>
+        <p class="ls-cap">Collapse state and the chosen inspector are both addressable, so an <b data-target="agent">agent</b> opens the exact
+          section it needs before it edits, and you can watch it happen. See the pattern in place in
+          <b class="backchip" data-target="lang-panels">Panels &amp; the dock</b> or in
+          <b class="backchip" data-target="editor">the editor</b>.</p>
+      </div>
+    </div>
+
+    <!-- 9 · RESPONSIVE -->
+    <div class="ls-blk">
+      <div class="ls-blk-h"><span class="ls-n">08</span><h3>Responsive</h3><span class="ls-sub">Narrow windows lean on the summary</span></div>
+      <div class="ls-blk-b">
+        <div class="ls-grid">
+          <div class="ls-spec">
+            <div class="ls-spec-h">Compact Properties<span class="ls-tag">one section open</span></div>
+            <div class="ls-spec-b">
+              <div class="ls-plinth ls-narrow">
+                <div class="dgrp" style="--gh:210px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
+                  <div class="dgrp-b">
+                    <div class="section"><div class="sec-h">Fill <span class="mut">Brand</span></div>
+                      <div class="irow"><span class="rl">Style</span><span class="select"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    </div>
+                    <div class="section closed"><div class="sec-h">Layout <span class="mut">400 × 630</span></div><div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span></span></div></div>
+                    <div class="section closed"><div class="sec-h">Type <span class="mut">New York · 17</span></div><div class="irow"><span class="rl">Family</span><span class="select"><span class="lead">New York</span></span></div></div>
+                    <div class="section closed"><div class="sec-h">Effects <span class="mut">Glow + Shadow</span></div><div class="irow"><span class="rl">Glow</span><span class="select"><span class="lead">Card glow</span></span></div></div>
+                    <div class="section closed"><div class="sec-h">Transform <span class="mut">168 × 44</span></div><div class="irow"><span class="rl">W</span><span class="select"><span class="lead">168</span></span></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ls-spec">
+            <div class="ls-spec-h">What changes<span class="ls-tag">and what does not</span></div>
+            <div class="ls-spec-b">
+              <p class="ls-note" style="border:0;padding:0;background:transparent">Below <b>880px</b> the dock itself becomes a rail plus an
+                overlay, so the panel you summon has the full height to work with. Inside it, every section but the active one <b>starts
+                collapsed</b> and the value summary does the job the open body used to. Nothing is hidden: the answer is still on the header,
+                one tap from the controls. The two-level model does not change with width, and the summaries are what make that possible.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Grouping plus a <b>value summary on the header</b> lets a panel scale from a plain shape to a component instance without ever becoming a wall. You read the state collapsed and open only what you are about to change.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Let the collapsed set be remembered <b>per selection type</b>, not globally. Selecting a text layer restores your text layout; selecting a component restores your component layout, so each kind of object feels tuned to itself.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should a summary ever be editable in place, nudging opacity straight from a closed <b>Fill</b> header? It saves a click, but it blurs the line between "read the value" and "open to change it".</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

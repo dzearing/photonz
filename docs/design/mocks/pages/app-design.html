@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · app-design</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding ONLY, all prefixed `ad-` so nothing can collide with a
+     DS class (step / comp / tg / ic / entry / surf all previously did).
+     EVERY block on this page is a KIND 2 SPECIMEN (PRODUCT-MODEL §4c): this is
+     the concept map of the product, not a screen of it. Nothing here wears
+     traffic lights or a title bar. Real app screens live on App shell, Editor,
+     Image, Video, and the design-language pages, all one click away. */
+  #app-design .ad-lede{font-size:13px;line-height:1.55;color:var(--dim);max-width:80ch;margin:0}
+  #app-design .ad-lede b{color:var(--ink);font-weight:600}
+
+  /* the labeled bordered specimen card */
+  #app-design .ad-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #app-design .ad-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #app-design .ad-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #app-design .ad-blk-h .ad-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  #app-design .ad-blk-h .ad-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+
+  #app-design .ad-surf3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--gap);padding:var(--inset)}
+  #app-design .ad-surf{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad);cursor:pointer}
+  #app-design .ad-surf:hover{border-color:var(--accent-line)}
+  #app-design .ad-surf .ad-sh{display:flex;align-items:center;gap:var(--gap-sm);margin:0 0 var(--s1)}
+  #app-design .ad-surf .ad-sh b{font-size:13px}
+  #app-design .ad-surf .ad-sh .ic{width:16px;height:16px;color:var(--accent)}
+  #app-design .ad-surf p{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45}
+  #app-design .ad-surf .ad-sk{display:inline-block;margin-top:var(--gap-sm);font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #app-design .ad-tier4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);padding:var(--inset)}
+  @media(max-width:720px){#app-design .ad-tier4{grid-template-columns:1fr 1fr}#app-design .ad-surf3{grid-template-columns:1fr}}
+  #app-design .ad-tier{position:relative;border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad);background:var(--panel)}
+  #app-design .ad-tier.ad-comp{border-color:var(--comp-line)}
+  #app-design .ad-tier h4{margin:0 0 var(--s1);font-size:12.5px;display:flex;align-items:center;gap:var(--gap-sm)}
+  #app-design .ad-tier p{margin:0;font-size:11px;color:var(--dim);line-height:1.45}
+  #app-design .ad-tier .ad-tg{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff}
+  #app-design .ad-entryrow{display:flex;flex-wrap:wrap;gap:var(--gap);padding:var(--inset)}
+  #app-design .ad-entry{flex:1 1 220px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad)}
+  #app-design .ad-entry h4{margin:0 0 var(--s1);font-size:12.5px;display:flex;align-items:center;gap:var(--gap-sm)}
+  #app-design .ad-entry h4 .ic{width:15px;height:15px;color:var(--accent)}
+  #app-design .ad-entry p{margin:0;font-size:11px;color:var(--dim);line-height:1.45}
+  #app-design .ad-entry h4 .kbd{margin-left:auto}
+  #app-design .ad-jump{display:flex;flex-wrap:wrap;gap:var(--gap-sm);padding-top:var(--s1)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="app-design">
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>App design</h2><span class="k">· the app, end to end</span></div>
+
+  <p class="ad-lede">This is the canonical map of Photonz. There is <b>one document engine</b>. Image editing, UI design, and video are not separate apps, they are <b>workspaces (lenses)</b> over the same document. Read this to understand how the whole thing fits together, then open any App Design page for the detail.</p>
+
+  <!-- KIND 2 · SPECIMEN. The product model as a diagram. No traffic lights, no
+       title bar: this depicts the idea, not a screen. The thesis that used to sit
+       in a fake title bar is the block's own name, below. -->
+  <div class="ad-blk">
+    <div class="ad-blk-h"><span class="ad-kind">Specimen</span><h3>One document · layers are everything · surfaces are lenses</h3><span class="ad-sub">The product model, in one diagram</span></div>
+    <div class="flow">
+      <div class="fcol">
+        <h3>One document</h3>
+        <p class="sub">A single engine, a single layer stack. No pixels in the model, only references.</p>
+        <div class="prim" data-target="app-shell"><span class="d" style="background:#7f9bff"></span>Layer stack · one panel</div>
+        <div class="prim" data-target="editor"><span class="d" style="background:#3ecf8e"></span>Inspector · contextual to selection</div>
+        <div class="prim" data-target="documents"><span class="d" style="background:#e0a53a"></span>History · every change undoable</div>
+      </div>
+      <div class="farrow"><i class="ic ic-chevron-right"></i></div>
+      <div class="fcol">
+        <h3>Layers are everything</h3>
+        <p class="sub">Raster, vector, text, component instance, adjustment, group. All one layer type family.</p>
+        <div class="prim" data-target="editor"><i class="ic ic-image"></i> Raster · pixels</div>
+        <div class="prim" data-target="components"><i class="ic ic-component"></i> Component instance · linked</div>
+        <div class="prim" data-target="effects"><i class="ic ic-sparkle"></i> Adjustment · non-destructive</div>
+      </div>
+      <div class="farrow"><i class="ic ic-chevron-right"></i></div>
+      <div class="fcol">
+        <h3>Surfaces are lenses</h3>
+        <p class="sub">A workspace re-arranges the chrome around the same document. The engine never changes.</p>
+        <div class="prim" data-target="editor"><i class="ic ic-frame"></i> UI · frames &amp; components</div>
+        <div class="prim" data-target="image"><i class="ic ic-brush"></i> Image · raster &amp; adjust</div>
+        <div class="prim" data-target="video"><i class="ic ic-play"></i> Video · adds a timeline</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KIND 2 · SPECIMEN. An inventory of surfaces, not a screen of any of them. -->
+  <div class="ad-blk">
+    <div class="ad-blk-h"><span class="ad-kind">Specimen</span><h3>Shell surfaces that ship today</h3><span class="ad-sub">Open any one to see the real screen</span></div>
+    <div class="ad-surf3">
+      <div class="ad-surf" data-target="image">
+        <div class="ad-sh"><i class="ic ic-image"></i><b>Image workspace</b></div>
+        <p>Raster and adjustment layers foregrounded. Select, crop, brush, heal, clone, pen, measure. A photo or a screenshot, edited non-destructively.</p>
+        <span class="ad-sk">workspace.set("image")</span>
+      </div>
+      <div class="ad-surf" data-target="video">
+        <div class="ad-sh"><i class="ic ic-play"></i><b>Video workspace</b></div>
+        <p>The same document plus a time dimension. Layers gain in and out points and keyframes, and the timeline docks at the bottom.</p>
+        <span class="ad-sk">workspace.set("video")</span>
+      </div>
+      <div class="ad-surf" data-target="home">
+        <div class="ad-sh"><i class="ic ic-history"></i><b>History overlay</b></div>
+        <p>The chromeless global pane the menu-bar agent owns. Screenshots and recordings, plus the new-document entry. Every flow starts here.</p>
+        <span class="ad-sk">panel.open("history")</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KIND 2 · SPECIMEN. The reuse ladder. -->
+  <div class="ad-blk">
+    <div class="ad-blk-h"><span class="ad-kind">Specimen</span><h3>The reuse tier</h3><span class="ad-sub">Tokens <i class="ic xs ic-chevron-right"></i> Styles <i class="ic xs ic-chevron-right"></i> Components <i class="ic xs ic-chevron-right"></i> Systems</span></div>
+    <div class="ad-tier4">
+      <div class="ad-tier" data-target="dsys"><h4><span class="ad-tg" style="background:var(--warn)">Tokens</span></h4><p>Named primitives: color, type, spacing, radius. The atoms everything references.</p></div>
+      <div class="ad-tier" data-target="typography"><h4><span class="ad-tg" style="background:var(--accent)">Styles</span></h4><p>Named bundles of tokens: a text style, a fill, an effect. Edit once, every use updates.</p></div>
+      <div class="ad-tier ad-comp" data-target="components"><h4><span class="ad-tg" style="background:var(--comp)">Components</span></h4><p>Reusable layer trees you instance and re-paint with Styles. Instances are linked to the main.</p></div>
+      <div class="ad-tier" data-target="dsys"><h4><span class="ad-tg" style="background:var(--good)">Systems</span></h4><p>A named set of Tokens, Styles and Components. Swap the active system and every component re-resolves.</p></div>
+    </div>
+  </div>
+
+  <!-- KIND 2 · SPECIMEN. Entry points, from the menu-bar agent. -->
+  <div class="ad-blk">
+    <div class="ad-blk-h"><span class="ad-kind">Specimen</span><h3>Where a document begins</h3><span class="ad-sub">The fork happens at New, never mid-edit</span></div>
+    <div class="ad-entryrow">
+      <div class="ad-entry"><h4><i class="ic ic-history"></i> Capture history <span class="kbd">⌘⇧H</span></h4><p>The overlay opens over anything. Pick a recent screenshot or recording and it becomes a document.</p></div>
+      <div class="ad-entry"><h4><i class="ic ic-plus"></i> New document</h4><p>Start empty at any size. The starting template sets the canvas and which panel groups lead.</p></div>
+      <div class="ad-entry"><h4><i class="ic ic-sparkle"></i> From a prompt</h4><p>Describe the outcome and the agent runs the same commands you would, from the same command schema.</p></div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Everything the UI does is <b>one command</b>. Tool strip, context menu, the compact command surface and the <b>⌘K</b> palette all reach the same call, so an <b>agent</b> drives the identical actions. That is why a filter can drop on a UI frame and a component can drop on a video track.</p></div>
+    <div class="c"><div class="lab g2">Start reading here</div><p>The <b data-target="app-shell">App shell</b> shows the whole window in one screen. <b data-target="foundations">Foundations</b> is the primitives to API to UI thesis. <b data-target="language">Design language</b> is how the chrome behaves. <b data-target="dsys">Design system</b> is how content is styled.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>How much of the workspace switch should be automatic (inferred from the layers present) versus an explicit choice the person makes up front?</p></div>
+  </div>
+
+  <div class="ad-jump">
+    <button class="btn primary" data-target="app-shell"><i class="ic ic-maximize"></i> App shell</button>
+    <button class="btn secondary" data-target="foundations"><i class="ic ic-layers"></i> Foundations</button>
+    <button class="btn secondary" data-target="language"><i class="ic ic-sliders"></i> Design language</button>
+    <button class="btn secondary" data-target="dsys"><i class="ic ic-component"></i> Design system</button>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

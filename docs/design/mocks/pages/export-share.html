@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · export-share</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* export-share page · one document, three ways out: a file, a link, a spec.
+
+   SCREEN CONTRACT (PRODUCT-MODEL §4c).
+   PART A is a KIND 2 SPECIMEN: Export is a document-scoped DIALOG (§3 "Modal +
+   toast"), not a window, so it wears no traffic lights and no title bar. It is a
+   labeled bordered card, which is what a macOS sheet actually looks like.
+   PART B is a KIND 1 APP SCREEN: developer hand-off is the real editor with the
+   Measure tool active and a Specs panel group in the one dock, so it is the
+   complete shell (title bar with document identity only, command surface,
+   canvas + floating tool bar, dock, rail).
+   Local names that shadowed a DS class (.body .foot .tag .comp) are `ex-`
+   prefixed; .body in particular is a 220px grid in the DS and was silently
+   fighting the hand-off layout. Page styles compose DS tokens, 4pt scale only.
+   Every block is a no-op unless its elements exist, so a missing node never
+   throws. */
+#export-share{--rail:320px}
+
+/* ---------- KIND 2 specimen card ---------- */
+#export-share .ex-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+#export-share .ex-blk-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+#export-share .ex-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+#export-share .ex-blk-h .ex-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+#export-share .ex-blk-h .ex-sp{flex:1}
+
+/* ---------- KIND 1 app screen: definite height so the dock is bounded ---------- */
+#export-share .win.shell{height:600px;min-height:0}#export-share .canvas>.hoscreen{width:min(320px,calc(100% - var(--s7)))}
+
+/* ---------- shared small bits ---------- */
+.eyebrow{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.segwrap{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;margin:var(--s2) 0}
+.segwrap .lb{width:52px;font-size:10.5px;color:var(--faint);flex:none}
+.copied{color:var(--good)!important}
+
+/* ---------- EXPORT window ---------- */
+.exgrid{display:grid;grid-template-columns:1fr var(--rail);min-height:360px}
+/* the preview IS the canvas (VISUAL RULE 5): shared .canvas.mini, retuned glow */
+.expreview{--artboard-glow:560px 380px;padding:var(--inset);border-right:1px solid var(--edge-lo);border-radius:0}
+.expreview .ex-tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.42);font-family:var(--mono)}
+.exposter{width:300px;border-radius:var(--r4);overflow:hidden;box-shadow:0 18px 46px -16px rgba(0,0,0,.55);position:relative}
+.exposter .art{height:186px;padding:var(--pad);display:flex;flex-direction:column;justify-content:flex-end;color:#fff;position:relative;background:linear-gradient(135deg,#7c4dff 0%,#b14dff 46%,#ff5d8f 100%)}
+.exposter .art::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 84% -12%,rgba(255,255,255,.34),transparent 46%);mix-blend-mode:soft-light}
+.exposter .kick{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.86}
+.exposter .h{font-family:var(--serif);font-size:30px;line-height:1.02;font-weight:700;margin-top:6px;letter-spacing:-.02em}
+.exposter .ex-foot{background:var(--panel);padding:var(--s2) var(--pad-sm);display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--faint)}
+.exposter .ex-foot .fn{font-family:var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* export scan sweep while "rendering" */
+.expreview .scan{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;pointer-events:none}
+.expreview.rendering .scan{opacity:1;animation:exscan 1.05s ease-in-out}
+@keyframes exscan{0%{top:6%}100%{top:94%}}
+
+.expanel{padding:var(--pad);display:flex;flex-direction:column;gap:var(--pad-sm);overflow-y:auto}
+.exsum{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r3);box-shadow:inset 0 1px 0 var(--edge-hi);padding:var(--pad-sm)}
+.exsum .r{display:flex;align-items:center;gap:var(--s2);padding:5px 0;font-size:11.5px}
+.exsum .r+.r{border-top:1px solid var(--edge-lo)}
+.exsum .r .k{color:var(--faint);font-size:10.5px;width:64px;flex:none}
+.exsum .r .v{margin-left:auto;text-align:right}
+.exsum .r .note2{color:var(--faint);font-size:9.5px;font-family:var(--mono)}
+.exbar{height:8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);overflow:hidden;position:relative}
+.exbar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--comp) 60%,var(--accent)));transition:width .12s linear}
+.progline{display:flex;align-items:center;justify-content:space-between;font-size:10.5px}
+.exactions{display:flex;align-items:center;gap:var(--gap-sm)}
+
+/* ---------- SHARE row ---------- */
+.sharebar{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;padding:var(--pad-sm) var(--pad);border-top:1px solid var(--edge-lo)}
+.urlbox{display:flex;align-items:center;gap:var(--s2);flex:1;min-width:200px;background:var(--panel);border:1px solid var(--edge-lo);border-radius:999px;padding:6px 6px 6px var(--pad-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.urlbox .u{flex:1;min-width:0;font-family:var(--mono);font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.urlbox .lock{color:var(--faint);flex:none}
+
+/* ---------- HAND-OFF · the document being inspected, on the real canvas ---------- */
+.hoscreen{border-radius:var(--r4);background:var(--panel);border:1px solid var(--edge-lo);box-shadow:0 20px 46px -16px rgba(0,0,0,.5);overflow:hidden}
+.hoscreen .top{height:120px;background:linear-gradient(135deg,#12c2e9,#7c4dff);display:flex;align-items:flex-end;padding:var(--pad)}
+.hoscreen .ex-body{padding:var(--pad);display:flex;flex-direction:column;gap:var(--pad-sm)}
+/* selection uses the CANONICAL DS parts (.sel-ring / .handle / .mtag), tightened
+   for these small inline elements. Nothing is re-implemented locally. */
+.hoel{position:relative;cursor:pointer;transition:transform .1s ease}
+.hoel:hover{transform:translateY(-1px)}
+.hoel .sel-ring{inset:-6px;border-radius:calc(var(--r3) + 4px);display:none}
+.hoel .handle{display:none}
+.hoel .handle.tl{top:-10px;left:-10px}.hoel .handle.tr{top:-10px;right:-10px}
+.hoel .handle.bl{bottom:-10px;left:-10px}.hoel .handle.br{bottom:-10px;right:-10px}
+.hoel .mtag{top:-24px;font-size:9.5px;padding:2px 7px;display:none}
+.hoel.sel .sel-ring,.hoel.sel .mtag{display:block}
+.hoel.sel .handle{display:block}
+.ex-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 10px 3px}
+/* the sample elements */
+.el-h{font-family:var(--serif);font-size:22px;font-weight:700;color:#fff;line-height:1}
+.el-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:4px 12px;border-radius:999px;align-self:flex-start}
+.el-title{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--ink);line-height:1.1}
+.el-text{font-size:11px;color:var(--dim);line-height:1.5}
+.el-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;align-self:flex-start;height:40px;padding:0 24px;border-radius:999px;font-size:13px;font-weight:600;color:var(--accent-ink);border:0;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -6px color-mix(in srgb,var(--accent) 60%,transparent)}
+
+/* inspector for specs · the Specs dock group body */
+.spec-empty{padding:var(--s6) var(--pad);text-align:center;color:var(--faint);font-size:11.5px;line-height:1.5}
+.spec-empty .g{display:block;margin-bottom:var(--s2);opacity:.5}
+.specrow{display:flex;align-items:center;gap:var(--s2);font-size:11.5px;padding:5px 0}
+.specrow .k{color:var(--faint);font-size:10.5px;width:64px;flex:none}
+.specrow .v{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+.specrow .sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--edge-lo);flex:none}
+.tokrow2{display:flex;align-items:center;gap:var(--s2);font-size:11px;padding:5px 0}
+.tokrow2 .tk{font-family:var(--mono);font-size:10px;color:var(--comp);background:var(--comp-soft);border:1px solid var(--comp-line);padding:1px 7px;border-radius:5px}
+.tokrow2 .mv{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.codecopy{position:relative}
+.codecopy .cp{position:absolute;top:var(--s2);right:var(--s2)}
+
+/* ---------- API strip ---------- */
+.apistrip{display:flex;align-items:center;gap:var(--pad);flex-wrap:wrap;background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r3);box-shadow:inset 0 1px 0 var(--edge-hi);padding:var(--pad-sm) var(--pad)}
+.apistrip .lab{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;flex:none}
+.apistrip code{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 8px;border-radius:6px;white-space:nowrap}
+.apistrip .ex-comp{color:var(--comp);background:var(--comp-soft);border-color:var(--comp-line)}
+
+@media (max-width:720px){
+  .exgrid{grid-template-columns:1fr}
+  .expreview{border-right:0;border-bottom:1px solid var(--edge-lo)}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="export-share">
+  <div class="scen-head"><span class="pip" style="background:var(--good)"></span><h2>Export and share</h2><span class="k">· formats, links, hand-off</span></div>
+
+  <!-- ============================================================
+       PART A · EXPORT: pick a format + scale, watch the output, ship a file
+       ============================================================ -->
+  <!-- KIND 2 · SPECIMEN. Export is a document dialog, not a window. -->
+  <div class="ex-blk">
+    <div class="ex-blk-h">
+      <span class="ex-kind">Specimen</span>
+      <h3>Export · document dialog</h3>
+      <span class="val">opens over the editor window · ⌘⇧E</span>
+      <span class="ex-sp"></span>
+      <button class="btn ghost sm" id="resetBtn"><i class="ic sm ic-undo"></i>Reset</button>
+    </div>
+
+    <div class="exgrid">
+      <div class="canvas mini expreview" id="exPreview">
+        <div class="ex-tag">preview · what ships</div>
+        <div class="scan"></div>
+        <div class="exposter">
+          <div class="art"><div class="kick">Photonz · 2026</div><div class="h">Ship it faster.</div></div>
+          <div class="ex-foot"><i class="ic sm ic-image"></i><span class="fn" id="fnPreview">launch-poster@2x.png</span></div>
+        </div>
+      </div>
+
+      <div class="expanel">
+        <div class="eyebrow">Format</div>
+        <div class="seg" id="fmtSeg" role="tablist">
+          <button class="on" data-fmt="png">PNG</button>
+          <button data-fmt="jpg">JPG</button>
+          <button data-fmt="pdf">PDF</button>
+          <button data-fmt="svg">SVG</button>
+          <button data-fmt="mp4">MP4</button>
+        </div>
+
+        <div class="segwrap">
+          <span class="lb">Scale</span>
+          <div class="seg" id="scaleSeg">
+            <button data-scale="1">1×</button>
+            <button class="on" data-scale="2">2×</button>
+            <button data-scale="3">3×</button>
+          </div>
+        </div>
+
+        <div class="segwrap">
+          <span class="lb">Quality</span>
+          <div class="select" id="qualSel" tabindex="0" style="flex:1">
+            <span class="lead" id="qualLead">Maximum · lossless</span>
+            <i class="ic xs ic-chevron-down car"></i>
+          </div>
+        </div>
+
+        <div class="exsum" id="exSum">
+          <div class="r"><span class="k">File</span><span class="v val" id="sFile">launch-poster@2x.png</span></div>
+          <div class="r"><span class="k">Kind</span><span class="v val" id="sKind">Lossless image</span></div>
+          <div class="r"><span class="k">Size</span><span class="v val" id="sDim">2400 × 1500 px</span></div>
+          <div class="r"><span class="k">Est.</span><span class="v val" id="sEst">~2.5 MB</span></div>
+        </div>
+
+        <div class="exbar"><i id="progFill"></i></div>
+        <div class="progline"><span class="val" id="progLabel">Ready to export</span><span class="val" id="progPct"></span></div>
+
+        <div class="exactions">
+          <button class="btn primary" id="exportBtn" style="flex:1"><i class="ic ic-export"></i>Export</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARE row lives with the same document -->
+    <div class="sharebar">
+      <span class="eyebrow" style="flex:none">Share link</span>
+      <div class="urlbox"><i class="ic sm ic-lock lock" id="urlLock"></i><span class="u" id="shareUrl">https://ph.otonz.app/s/9fx2-launch-poster</span></div>
+      <div class="seg" id="accessSeg">
+        <button class="on" data-access="view"><i class="ic xs ic-eye"></i>View</button>
+        <button data-access="comment">Comment</button>
+        <button data-access="edit"><i class="ic xs ic-pen"></i>Edit</button>
+      </div>
+      <button class="btn secondary" id="copyLinkBtn"><i class="ic ic-clone"></i>Copy link</button>
+    </div>
+  </div>
+
+  <div class="apistrip">
+    <span class="lab">In the API</span>
+    <code id="apiExport">doc.export({ format: "png", scale: 2 })</code>
+    <code class="ex-comp" id="apiShare">doc.share({ access: "view" })</code>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">One document, many outputs</div><p>The same file leaves as a <b>PNG</b>, <b>JPG</b>, <b>PDF</b>, <b>SVG</b>, or an <b>MP4</b> when it moves. Pick a format and a scale and the summary shows the exact filename, pixel size, and a size estimate before anything is written to disk.</p></div>
+    <div class="c"><div class="lab g2">A link, not an attachment</div><p>Share hands back a real URL with a permission on it: <b>View</b>, <b>Comment</b>, or <b>Edit</b>. Copy it once and the same live document opens for anyone you send it to, no export step in between.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should scale and quality live on the format, so PNG@2x and JPG-High are remembered per format, or stay one global setting the whole document exports at?</p></div>
+  </div>
+
+  <!-- ============================================================
+       PART B · HAND-OFF: select an element, read its specs, copy them
+       ============================================================ -->
+  <!-- =====================================================================
+       KIND 1 · APP SCREEN. Hand-off is not a separate app: it is this editor
+       with the Measure tool active and a Specs group in the one dock. The
+       title bar carries document identity only.
+       ===================================================================== -->
+  <div class="win tall cq shell">
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>pricing-screen</b><span class="meta">· 1200 × 750</span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#hoCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#hoHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="hoCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+          <div class="ex-mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-clone"></i> Copy CSS <span class="sc">⌘⌥C</span></div>
+          <div class="menuitem"><i class="ic ic-ruler"></i> Measure tool <span class="sc">M</span></div>
+          <div class="menu-sep"></div>
+          <div class="ex-mlabel">Document</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘⇧E</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Share link…</div>
+          <div class="menu-sep"></div>
+          <div class="ex-mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="hoShell" data-dock="open">
+      <div class="cnv">
+        <div class="canvas" id="hoCanvas">
+          <div class="artboard-label">Pricing / plan.card · click an element to inspect it</div>
+        <div class="hoscreen">
+          <div class="top">
+            <div class="hoel" data-el="heading" tabindex="0">
+              <div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">220 × 26</span>
+              <div class="el-h">Bright ideas.</div>
+            </div>
+          </div>
+          <div class="ex-body">
+            <div class="hoel" data-el="badge" tabindex="0">
+              <div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">92 × 26</span>
+              <span class="el-badge"><i class="ic xs ic-sparkle"></i>New</span>
+            </div>
+            <div class="hoel" data-el="card" tabindex="0">
+              <div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">256 × 92</span>
+              <div class="el-title">Design once.</div>
+              <div class="el-text">Ship the same layers to a poster, a page, or a video timeline without redrawing a thing.</div>
+            </div>
+            <div class="hoel" data-el="cta" tabindex="0">
+              <div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">148 × 40</span>
+              <button class="el-cta">Get started <i class="ic sm ic-chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#hoShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#hoHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · Measure is the active tool for hand-off -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool on" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool ovf" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#hoOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:var(--accent)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="ho-zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="hoOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Component <span class="sc">C</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="hoHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Pricing screen</span><span class="ago">just now</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Launch poster</span><span class="ago">18 min ago</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Open a capture and measure it the same way. Hand-off is a lens, not a mode.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="240" data-max="440"></div>
+
+      <!-- THE RIGHT DOCK · Specs is a panel group like any other -->
+      <div class="pdock">
+        <div class="dgrp grow" id="hoSpecs">
+          <div class="dgrp-h"><span class="ttl" id="specTitle">Specs</span><span class="cnt val" id="specSub">nothing selected</span>
+            <button class="btn ghost icon sm" title="Copy all specs"><i class="ic ic-clone"></i></button>
+          </div>
+          <div class="dgrp-b" id="specBody">
+            <div class="spec-empty"><span class="g"><i class="ic lg ic-cursor"></i></span>Select an element on the canvas to read its measurements, colors, and tokens. Everything here is ready to copy straight into code.</div>
+          </div>
+        </div>
+        <div class="dgrp collapsed" id="hoLayers" style="--gh:150px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+          <div class="dgrp-b">
+            <div class="lrow"><i class="ic ic-frame"></i><span class="nm">Plan card</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Bright ideas.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Design once.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Get started</span><i class="ic sm ic-component cmark"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL · what the dock collapses to -->
+      <div class="drail">
+        <button class="drailtab" data-group="#hoSpecs" title="Specs"><i class="ic sm ic-ruler"></i><span class="lb">Specs</span></button>
+        <button class="drailtab" data-group="#hoLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Specs are a view, not a file</div><p>Selecting an element reads its live <b>measurements</b>, <b>colors</b>, and the <b>tokens</b> behind them. Because styling is stored as settings, the panel shows <code>--accent</code> and <code>space/s5</code>, not a flattened hex guess.</p></div>
+    <div class="c"><div class="lab g2">Copy in the shape you need</div><p>Each group copies on its own: measurements as numbers, colors as hex or token, and the whole element as a CSS block. A developer takes exactly the piece they want without a hand-off document going stale.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Hand-off tokens are Photonz names today. Should the panel map them to a target system on the way out, so <code>--accent</code> can copy as a Tailwind or iOS token instead?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   Export-share interactions. Two guarded modules: EXPORT+SHARE and
+   HAND-OFF. Nothing runs unless its elements exist.
+   ============================================================ */
+(function(){
+  "use strict";
+
+  /* ---------------- PART A · EXPORT + SHARE ---------------- */
+  (function(){
+    var fmtSeg   = document.getElementById("fmtSeg");
+    var scaleSeg = document.getElementById("scaleSeg");
+    var qualSel  = document.getElementById("qualSel");
+    var qualLead = document.getElementById("qualLead");
+    var exportBtn= document.getElementById("exportBtn");
+    var resetBtn = document.getElementById("resetBtn");
+    var progFill = document.getElementById("progFill");
+    var progLabel= document.getElementById("progLabel");
+    var progPct  = document.getElementById("progPct");
+    var preview  = document.getElementById("exPreview");
+    if(!fmtSeg || !scaleSeg || !exportBtn) return;
+
+    var sFile=document.getElementById("sFile"), sKind=document.getElementById("sKind"),
+        sDim=document.getElementById("sDim"), sEst=document.getElementById("sEst"),
+        fnPreview=document.getElementById("fnPreview");
+    var apiExport=document.getElementById("apiExport");
+
+    // per-format facts. baseW/baseH at 1x = 1200×750. kb1x = rough bytes at 1x.
+    var FMT = {
+      png:{ext:"png", kind:"Lossless image", kb1x:640, raster:true,  qual:"Maximum · lossless", qualLock:true },
+      jpg:{ext:"jpg", kind:"Photo, compressed", kb1x:190, raster:true, qual:"High · 82%", qualLock:false },
+      pdf:{ext:"pdf", kind:"Vector document", kb1x:96, raster:false, qual:"Vector · scalable", qualLock:true },
+      svg:{ext:"svg", kind:"Vector, editable", kb1x:28, raster:false, qual:"Vector · scalable", qualLock:true },
+      mp4:{ext:"mp4", kind:"Video · H.264, 8s", kb1x:2600, raster:true, video:true, qual:"High · 12 Mbps", qualLock:false }
+    };
+    var BASE_W=1200, BASE_H=750, NAME="launch-poster";
+    var fmt="png", scale=2;
+
+    function fmtSize(kb){
+      if(kb>=1024){ var mb=kb/1024; return "~"+(mb>=10?mb.toFixed(0):mb.toFixed(1))+" MB"; }
+      return "~"+Math.round(kb)+" KB";
+    }
+    function suffix(){ return scale>1 ? "@"+scale+"x" : ""; }
+    function filename(){ return NAME+suffix()+"."+FMT[fmt].ext; }
+
+    function render(){
+      var f=FMT[fmt];
+      var vector=!f.raster;
+      var w=BASE_W*scale, h=BASE_H*scale;
+      // vector formats are resolution independent, so scale multiplies little
+      var est = vector ? f.kb1x : (f.video ? f.kb1x*scale : f.kb1x*scale*scale);
+
+      sFile.textContent = filename();
+      fnPreview.textContent = filename();
+      sKind.textContent = f.kind;
+      if(vector){
+        sDim.textContent = BASE_W+" × "+BASE_H+" · scalable";
+      } else {
+        sDim.textContent = w+" × "+h+" px";
+      }
+      sEst.textContent = fmtSize(est);
+
+      // quality control reflects the format; lossless/vector locks it (disabled state)
+      qualLead.textContent = f.qual;
+      qualSel.classList.toggle("disabled", !!f.qualLock);
+      qualSel.setAttribute("aria-disabled", f.qualLock ? "true":"false");
+
+      // scale is meaningless for pure vector export, so disable + pin at 1x
+      var vectorScaleLock = vector;
+      scaleSeg.querySelectorAll("button").forEach(function(b){
+        b.disabled = vectorScaleLock;
+      });
+      scaleSeg.classList.toggle("disabled", vectorScaleLock);
+
+      // API line
+      apiExport.textContent = 'doc.export({ format: "'+fmt+'", scale: '+scale+' })';
+      resetProgress();
+    }
+
+    function resetProgress(){
+      if(progFill) progFill.style.width="0%";
+      progLabel.textContent="Ready to export";
+      progPct.textContent="";
+      exportBtn.disabled=false;
+      exportBtn.innerHTML='<i class="ic ic-export"></i>Export';
+      exportBtn.classList.remove("copied");
+      if(preview) preview.classList.remove("rendering");
+    }
+
+    fmtSeg.addEventListener("click", function(e){
+      var b=e.target.closest("[data-fmt]"); if(!b) return;
+      fmtSeg.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      fmt=b.getAttribute("data-fmt");
+      render();
+    });
+    scaleSeg.addEventListener("click", function(e){
+      var b=e.target.closest("[data-scale]"); if(!b || b.disabled) return;
+      scaleSeg.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      scale=+b.getAttribute("data-scale");
+      render();
+    });
+
+    // EXPORT: progress bar then done state
+    var timer=null;
+    exportBtn.addEventListener("click", function(){
+      if(exportBtn.disabled) return;
+      if(timer){ clearInterval(timer); timer=null; }
+      exportBtn.disabled=true;
+      if(preview) preview.classList.add("rendering");
+      var p=0;
+      progLabel.textContent="Rendering "+FMT[fmt].ext.toUpperCase()+"…";
+      timer=setInterval(function(){
+        p+=Math.max(4, Math.round((100-p)*0.14));
+        if(p>=100){
+          p=100; clearInterval(timer); timer=null;
+          progFill.style.width="100%";
+          progPct.textContent="100%";
+          progLabel.textContent="Saved to ~/Photonz/exports";
+          exportBtn.disabled=false;
+          exportBtn.classList.add("copied");
+          exportBtn.innerHTML='<i class="ic ic-check"></i>Exported '+filename();
+          if(preview) preview.classList.remove("rendering");
+          setTimeout(function(){ if(!timer){ resetProgress(); } }, 2200);
+          return;
+        }
+        progFill.style.width=p+"%";
+        progPct.textContent=p+"%";
+      }, 120);
+    });
+
+    if(resetBtn) resetBtn.addEventListener("click", function(){
+      fmt="png"; scale=2;
+      fmtSeg.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-fmt")==="png"); });
+      scaleSeg.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-scale")==="2"); });
+      if(timer){ clearInterval(timer); timer=null; }
+      render();
+    });
+
+    /* -------- SHARE -------- */
+    var accessSeg=document.getElementById("accessSeg");
+    var copyLinkBtn=document.getElementById("copyLinkBtn");
+    var shareUrl=document.getElementById("shareUrl");
+    var urlLock=document.getElementById("urlLock");
+    var apiShare=document.getElementById("apiShare");
+    var access="view";
+    var ACCESS={
+      view:   {lock:"ic-eye",  label:"anyone with the link can view"},
+      comment:{lock:"ic-pen",  label:"anyone with the link can comment"},
+      edit:   {lock:"ic-pen",  label:"anyone with the link can edit"}
+    };
+    function renderShare(){
+      if(apiShare) apiShare.textContent='doc.share({ access: "'+access+'" })';
+    }
+    if(accessSeg) accessSeg.addEventListener("click", function(e){
+      var b=e.target.closest("[data-access]"); if(!b) return;
+      accessSeg.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      access=b.getAttribute("data-access");
+      renderShare();
+    });
+    if(copyLinkBtn) copyLinkBtn.addEventListener("click", function(){
+      var url = shareUrl ? shareUrl.textContent : "";
+      if(navigator.clipboard && navigator.clipboard.writeText){ try{ navigator.clipboard.writeText(url); }catch(e){} }
+      copyLinkBtn.classList.add("copied");
+      copyLinkBtn.innerHTML='<i class="ic ic-check"></i>Link copied';
+      clearTimeout(copyLinkBtn._t);
+      copyLinkBtn._t=setTimeout(function(){
+        copyLinkBtn.classList.remove("copied");
+        copyLinkBtn.innerHTML='<i class="ic ic-clone"></i>Copy link';
+      }, 1800);
+    });
+
+    render();
+    renderShare();
+  })();
+
+  /* ---------------- PART B · HAND-OFF SPECS ---------------- */
+  (function(){
+    var canvas=document.getElementById("hoCanvas");
+    var body=document.getElementById("specBody");
+    var sub=document.getElementById("specSub");
+    if(!canvas || !body) return;
+
+    var SPECS={
+      cta:{
+        name:"Primary button",
+        size:"148 × 40 px", pos:"x 40  ·  y 232",
+        pad:"0 24 px", radius:"Full (999)", gap:"8 px",
+        fill:{hex:"#4C6FFF", css:"var(--accent)"}, text:{hex:"#FFFFFF", css:"var(--accent-ink)"},
+        tokens:[["color/accent","#4C6FFF"],["radius/full","999"],["space/s5","24"],["size/ctl-h-lg","40"]],
+        code:".cta {\n  height: 40px;\n  padding: 0 24px;\n  border-radius: 999px;\n  background: var(--accent);\n  color: var(--accent-ink);\n}"
+      },
+      card:{
+        name:"Card",
+        size:"256 × 92 px", pos:"x 16  ·  y 176",
+        pad:"0 px", radius:"12 px", gap:"6 px",
+        fill:{hex:"#FBFCFE", css:"var(--panel)"}, text:{hex:"#1A1C22", css:"var(--ink)"},
+        tokens:[["color/panel","#FBFCFE"],["radius/r4","12"],["space/s2","8"],["type/serif","New York"]],
+        code:".card {\n  border-radius: 12px;\n  background: var(--panel);\n  color: var(--ink);\n  display: grid;\n  gap: 6px;\n}"
+      },
+      badge:{
+        name:"Badge",
+        size:"92 × 26 px", pos:"x 16  ·  y 132",
+        pad:"4 12 px", radius:"Full (999)", gap:"5 px",
+        fill:{hex:"#E9EDFF", css:"var(--accent-soft)"}, text:{hex:"#4C6FFF", css:"var(--accent)"},
+        tokens:[["color/accent-soft","#E9EDFF"],["color/accent","#4C6FFF"],["radius/full","999"],["space/s1","4"]],
+        code:".badge {\n  padding: 4px 12px;\n  border-radius: 999px;\n  background: var(--accent-soft);\n  color: var(--accent);\n}"
+      },
+      heading:{
+        name:"Heading",
+        size:"220 × 26 px", pos:"x 16  ·  y 82",
+        pad:"0 px", radius:"0 px", gap:"0 px",
+        fill:{hex:"transparent", css:"none"}, text:{hex:"#FFFFFF", css:"var(--on-hero)"},
+        tokens:[["type/serif","New York"],["type/size-h","22"],["type/weight","700"],["color/on-hero","#FFFFFF"]],
+        code:".heading {\n  font-family: var(--serif);\n  font-size: 22px;\n  font-weight: 700;\n  color: #fff;\n}"
+      }
+    };
+
+    var sel=null;
+
+    function swBlock(c){
+      if(c.css==="none") return '<span class="sw" style="background:repeating-conic-gradient(#0000 0 25%,#8884 0 50%) 0/8px 8px"></span>';
+      return '<span class="sw" style="background:'+c.hex+'"></span>';
+    }
+
+    function renderSpecs(){
+      if(!sel){
+        sub.textContent="nothing selected";
+        body.innerHTML='<div class="spec-empty"><span class="g"><i class="ic lg ic-cursor"></i></span>Select an element on the screen to read its measurements, colors, and tokens. Everything here is ready to copy straight into code.</div>';
+        return;
+      }
+      var s=SPECS[sel];
+      sub.textContent=s.name+" selected";
+      var tokRows=s.tokens.map(function(t){
+        return '<div class="tokrow2"><span class="tk">'+t[0]+'</span><span class="mv">'+t[1]+'</span></div>';
+      }).join("");
+      body.innerHTML=
+        '<div class="section"><div class="sec-h"><i class="ic sm ic-ruler"></i>Measurements'+
+          '<button class="btn ghost sm" data-copy="measure" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          '<div class="specrow"><span class="k">Size</span><span class="v">'+s.size+'</span></div>'+
+          '<div class="specrow"><span class="k">Position</span><span class="v">'+s.pos+'</span></div>'+
+          '<div class="specrow"><span class="k">Padding</span><span class="v">'+s.pad+'</span></div>'+
+          '<div class="specrow"><span class="k">Radius</span><span class="v">'+s.radius+'</span></div>'+
+          '<div class="specrow"><span class="k">Gap</span><span class="v">'+s.gap+'</span></div>'+
+        '</div>'+
+        '<div class="section"><div class="sec-h"><i class="ic sm ic-swatch"></i>Colors'+
+          '<button class="btn ghost sm" data-copy="color" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          '<div class="specrow">'+swBlock(s.fill)+'<span class="k">Fill</span><span class="v">'+s.fill.hex+'</span></div>'+
+          '<div class="specrow">'+swBlock(s.text)+'<span class="k">Text</span><span class="v">'+s.text.hex+'</span></div>'+
+        '</div>'+
+        '<div class="section"><div class="sec-h"><i class="ic sm ic-component"></i>Tokens'+
+          '<button class="btn ghost sm" data-copy="token" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          tokRows+
+        '</div>'+
+        '<div class="section"><div class="sec-h"><i class="ic sm ic-pen"></i>CSS <span class="val" style="margin-left:auto">ready to paste</span></div>'+
+          '<div class="codecopy"><button class="btn secondary sm cp" data-copy="css"><i class="ic sm ic-clone"></i>Copy</button>'+
+          '<div class="codeblk">'+escapeHtml(s.code)+'</div></div>'+
+        '</div>';
+    }
+
+    function escapeHtml(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+    function copyText(t){
+      if(navigator.clipboard && navigator.clipboard.writeText){ try{ navigator.clipboard.writeText(t); }catch(e){} }
+    }
+    function payload(kind){
+      var s=SPECS[sel]; if(!s) return "";
+      if(kind==="measure") return s.name+": "+s.size+", pad "+s.pad+", radius "+s.radius;
+      if(kind==="color")   return "fill "+s.fill.hex+" ("+s.fill.css+"), text "+s.text.hex;
+      if(kind==="token")   return s.tokens.map(function(t){return t[0]+": "+t[1];}).join("\n");
+      return s.code;
+    }
+
+    function select(id){
+      sel=id;
+      canvas.querySelectorAll(".hoel").forEach(function(w){ w.classList.toggle("sel", w.getAttribute("data-el")===id); });
+      renderSpecs();
+    }
+
+    canvas.addEventListener("click", function(e){
+      var w=e.target.closest(".hoel"); if(!w) return;
+      select(w.getAttribute("data-el"));
+    });
+    canvas.querySelectorAll(".hoel").forEach(function(w){
+      w.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(w.getAttribute("data-el")); } });
+    });
+
+    // copy buttons (delegated, panel is re-rendered)
+    body.addEventListener("click", function(e){
+      var b=e.target.closest("[data-copy]"); if(!b) return;
+      copyText(payload(b.getAttribute("data-copy")));
+      var orig=b.innerHTML;
+      b.classList.add("copied");
+      b.innerHTML='<i class="ic sm ic-check"></i>Copied';
+      clearTimeout(b._t);
+      b._t=setTimeout(function(){ b.classList.remove("copied"); b.innerHTML=orig; }, 1500);
+    });
+
+    renderSpecs();
+  })();
+})();
+</script>
+</body>
+</html>

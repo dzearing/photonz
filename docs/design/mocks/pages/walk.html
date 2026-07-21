@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · walk</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* walk · THE master usage walkthrough, and an OPERATED one (PRODUCT-MODEL
+     §4d): ONE screen, rendered once, then driven by the steps below. It starts
+     outside every window at the resident menu-bar agent (§4e), because that is
+     where the app really starts, and it ends on the payoff: the mark you drew
+     once becomes a Component you reuse.
+     Page-local CSS is the desk height, the captured artwork, and the marks that
+     land on it. Every local class is namespaced `wa-` so nothing collides with a
+     DS name (.cshot, .ctoast, .bar, .btn, .meta, .sheet, .cap are all shared). */
+
+  #walk .desk{height:724px}
+  #walk .deskhint{position:absolute;left:50%;top:76%;transform:translate(-50%,-50%);
+    text-align:center;color:rgba(255,255,255,.5);font-size:12.5px;line-height:1.6;max-width:350px}
+  #walk .deskhint .g{display:block;font-size:22px;opacity:.6;margin-bottom:var(--s2)}
+  #walk .deskhint b{color:rgba(255,255,255,.82);font-weight:600}
+  #walk .win.shell{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;min-height:0}
+  #walk .win.shell .edit.lean{flex:1 1 auto;min-height:0}  /* ---- THE CAPTURED ARTWORK ---------------------------------------------
+     One 400 x 250 (16:10) drawing of a pricing page, instanced three times at
+     three scales: on the desktop (what you grab), in the capture toast (the
+     thumbnail), and on the editor canvas (the document). Scaling one coordinate
+     space keeps all three honestly identical. */
+  #walk .wa-hold{position:relative;flex:none;
+    width:calc(400px * var(--k,1));height:calc(250px * var(--k,1))}
+  #walk .wa-frame{position:absolute;left:0;top:0;width:400px;height:250px;
+    transform:scale(var(--k,1));transform-origin:0 0}
+  #walk .wa-art{position:absolute;inset:0;border-radius:12px;overflow:hidden;background:#fff;
+    color:#1d1d1f;font-family:var(--sans);border:1px solid rgba(0,0,0,.14);
+    box-shadow:0 22px 46px -14px rgba(0,0,0,.5)}
+  #walk .wa-bar{position:absolute;top:0;left:0;right:0;height:28px;background:#f5f5f7;
+    border-bottom:1px solid #e9e9ec;display:flex;align-items:center;padding:0 10px;gap:6px}
+  #walk .wa-dot{width:9px;height:9px;border-radius:50%;display:block;flex:none}
+  #walk .wa-url{margin-left:8px;height:16px;flex:1;border-radius:8px;background:#e6e6ea;
+    display:flex;align-items:center;padding:0 8px;font-size:9px;color:#6b6b70;font-family:var(--mono)}
+  #walk .wa-h{position:absolute;left:22px;top:40px;font-size:17px;font-weight:700;
+    letter-spacing:-.015em;color:#1d1d1f}
+  #walk .wa-sub{position:absolute;left:22px;top:63px;font-size:11px;color:#6b6b70}
+  #walk .wa-card{position:absolute;top:92px;width:168px;height:130px;border-radius:12px;
+    background:#fff;border:1px solid #e2e2e7;box-shadow:0 6px 16px -10px rgba(0,0,0,.35)}
+  #walk .wa-card.pro{border-color:#0a84ff;box-shadow:0 10px 22px -12px rgba(10,132,255,.55)}
+  #walk .wa-nm{position:absolute;left:14px;top:12px;font-size:11px;font-weight:640;color:#6b6b70;
+    text-transform:uppercase;letter-spacing:.06em}
+  #walk .wa-price{position:absolute;left:14px;top:30px;font-size:24px;font-weight:700;
+    letter-spacing:-.02em;color:#1d1d1f}
+  #walk .wa-price i{font-style:normal;font-size:10px;font-weight:560;color:#8a8a8f}
+  #walk .wa-ln{position:absolute;left:14px;height:5px;border-radius:3px;background:#ececef}
+  #walk .wa-cta{position:absolute;left:14px;bottom:12px;width:140px;height:26px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:640;
+    background:#f0f0f3;color:#3a3a3c}
+  #walk .wa-cta.on{background:linear-gradient(180deg,#3a94ff,#0a84ff);color:#fff;
+    box-shadow:0 4px 12px -4px rgba(10,132,255,.6),inset 0 1px 0 rgba(255,255,255,.4)}
+
+  /* the region you drag with Capture Region */
+  #walk .wa-region{position:absolute;inset:-6px;border:1.5px dashed var(--accent);border-radius:15px;
+    background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  #walk .wa-region .wa-size{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);
+    background:var(--accent);color:var(--accent-ink);font-family:var(--mono);font-size:9px;
+    font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+
+  /* annotate · a text callout and its arrow, each a real layer */
+  #walk .wa-note{position:absolute;background:var(--accent);color:var(--accent-ink);font-size:10.5px;
+    font-weight:640;padding:4px 9px;border-radius:8px;white-space:nowrap;
+    box-shadow:0 6px 16px -6px rgba(0,0,0,.4)}
+  #walk .wa-arrow{position:absolute;overflow:visible;pointer-events:none}
+
+  /* redline · calipers. Red calls out size, blue calls out spacing, and the
+     labels sit clear of the thing they measure. */
+  #walk .wa-cal{position:absolute;box-sizing:border-box;border:0 solid currentColor}
+  #walk .wa-cal.down{border-width:1.5px 1.5px 0 1.5px}
+  #walk .wa-cal.up{border-width:0 1.5px 1.5px 1.5px}
+  #walk .wa-cal .wa-t{position:absolute;left:50%;font-family:var(--mono);font-size:9px;font-weight:700;
+    line-height:1;color:#111;background:#fff;border:1.5px solid currentColor;padding:2px 6px;
+    border-radius:5px;white-space:nowrap}
+  #walk .wa-cal.down .wa-t{top:0;transform:translate(-50%,-50%)}
+  #walk .wa-cal.up .wa-t{bottom:0;transform:translate(-50%,50%)}
+  #walk .wa-cal.size{color:#e5484d}
+  #walk .wa-cal.gap{color:#4c8dff}
+
+  /* reuse · the component instance dropped back onto the canvas */
+  #walk .wa-inst{position:absolute;background:var(--comp);color:#fff;font-size:10.5px;font-weight:640;
+    padding:4px 9px;border-radius:8px;white-space:nowrap;box-shadow:0 6px 16px -6px rgba(0,0,0,.4)}
+
+  /* the shot scales with the window so a narrow editor never clips it */
+  @container shell (max-width:880px){ #walk .canvas .wa-hold{--k:.88} }
+  @container shell (max-width:620px){ #walk .canvas .wa-hold{--k:.72} }
+  @container desk (max-width:640px){ #walk .deskhint{display:none} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="walk">
+  <div class="scen-head"><span class="pip" style="background:var(--good)"></span><h2>The walkthrough</h2><span class="k">· usage clickthrough · capture, annotate, redline, then reuse</span></div>
+
+  <p class="pglead">The whole arc in one sitting, on <b>one screen that never re-renders</b>. It starts where the app
+    really starts, at the <b>menu-bar agent</b> with nothing open: capture a region, watch it land in <b>history</b>, open it
+    in the editor, <b>annotate</b> it, <b>redline</b> it, then turn the mark you just drew into a <b>Component</b> in your
+    Library and drop it back on the page. Fifteen real clicks, every one of them on a control you can point at.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE screen, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtWalk">
+
+    <div class="wt-stage">
+      <div class="desk" id="walkDesk">
+
+        <!-- SHELL SURFACE 1 · THE MENU-BAR AGENT -->
+        <div class="mbar">
+          <span class="sp"></span>
+          <span class="mbitem">
+            <button class="mbicon" id="mbAgent" aria-haspopup="menu" aria-expanded="false"
+                    data-menu="#mbMenu" title="Photonz"><i class="ic sm ic-aperture"></i></button>
+            <div class="popover menu mbmenu pop" id="mbMenu" role="menu" aria-label="Photonz">
+              <button type="button" class="menuitem" role="menuitem" id="miCapture">Capture Region <span class="sc">⇧⌘4</span></button>
+              <button type="button" class="menuitem" role="menuitem">Capture Full Screen <span class="sc">⇧⌘3</span></button>
+              <button type="button" class="menuitem disabled" role="menuitem" aria-disabled="true">Stop Recording <span class="sc">⇧⌘5</span></button>
+              <div class="menu-sep"></div>
+              <button type="button" class="menuitem" role="menuitem" id="miHistory" data-sheet="#histSheet">Show History <span class="sc">⇧⌘H</span></button>
+              <div class="menu-sep"></div>
+              <button type="button" class="menuitem" role="menuitem">New Window</button>
+              <button type="button" class="menuitem" role="menuitem">New from Clipboard</button>
+              <button type="button" class="menuitem" role="menuitem">Open…</button>
+              <div class="menu-sep"></div>
+              <button type="button" class="menuitem" role="menuitem">Check for Updates…</button>
+              <button type="button" class="menuitem" role="menuitem">Welcome &amp; Permissions…</button>
+              <button type="button" class="menuitem" role="menuitem">Preferences…</button>
+              <button type="button" class="menuitem" role="menuitem">About Photonz</button>
+              <div class="menu-sep"></div>
+              <button type="button" class="menuitem" role="menuitem">Quit Photonz <span class="sc">⌘Q</span></button>
+            </div>
+          </span>
+          <button class="mbicon" title="Sound"><i class="ic sm ic-volume"></i></button>
+          <span class="clock">Mon 9:41</span>
+        </div>
+
+        <div class="deskbody">
+
+          <!-- WHAT IS ON SCREEN · the pricing page you are about to grab -->
+          <div style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%)">
+            <div class="wa-hold" style="--k:.9">
+              <div class="wa-frame">
+                <div class="wa-art">
+                  <div class="wa-bar"><i class="wa-dot" style="background:#ff5f57"></i><i class="wa-dot" style="background:#febc2e"></i><i class="wa-dot" style="background:#28c840"></i><span class="wa-url">example.com/pricing</span></div>
+                  <div class="wa-h">Pricing</div>
+                  <div class="wa-sub">Simple plans for every team</div>
+                  <div class="wa-card" style="left:22px">
+                    <span class="wa-nm">Starter</span><span class="wa-price">$9<i> / mo</i></span>
+                    <span class="wa-ln" style="top:66px;width:118px"></span><span class="wa-ln" style="top:78px;width:96px"></span><span class="wa-ln" style="top:90px;width:110px"></span>
+                    <span class="wa-cta">Choose Starter</span>
+                  </div>
+                  <div class="wa-card pro" style="left:210px">
+                    <span class="wa-nm">Pro</span><span class="wa-price">$29<i> / mo</i></span>
+                    <span class="wa-ln" style="top:66px;width:126px"></span><span class="wa-ln" style="top:78px;width:104px"></span><span class="wa-ln" style="top:90px;width:118px"></span>
+                    <span class="wa-cta on">Choose Pro</span>
+                  </div>
+                </div>
+                <div class="wa-region wt-off" id="capRegion"><span class="wa-size">2560 × 1440</span></div>
+              </div>
+            </div>
+          </div>
+
+          <p class="deskhint" id="deskHint"><span class="g"><i class="ic lg ic-aperture"></i></span>
+            <b>No document open.</b> Photonz sits in the menu bar, so a capture and the whole history are one keystroke
+            away from anywhere.</p>
+
+          <!-- SHELL SURFACE 4 · THE EDITOR WINDOW · what a capture opens into -->
+          <div class="win tall cq shell wt-off" id="editorWin">
+
+            <!-- TITLE BAR · document identity only. The lesson title lives in
+                 .scen-head above, never here. -->
+            <div class="titlebar">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle"><b>pricing-page</b><span class="meta"> · 2560 × 1440</span></div>
+              <div class="wsw" role="tablist" aria-label="Workspace">
+                <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+                <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+                <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+              </div>
+              <div class="tbtns">
+                <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+                <button class="btn primary sm" id="btnExport"><i class="ic ic-export"></i> Export</button>
+              </div>
+            </div>
+
+            <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+            <div class="toolbar">
+              <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+              <span class="tsep"></span>
+              <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history · the same global overlay"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+              <span class="tspacer"></span>
+              <span class="chip wt-off" id="unitChip"><i class="ic xs ic-ruler"></i> Logical (px)</span>
+              <span class="chip"><i class="ic xs ic-layers"></i> <span id="markCount">1 layer</span></span>
+              <div style="position:relative">
+                <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
+                  <div class="mlabel">Mark up</div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text callout <span class="sc">T</span></div>
+                  <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  <div class="menu-sep"></div>
+                  <div class="mlabel">Reuse</div>
+                  <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+                  <div class="menuitem" data-target="dsys"><i class="ic ic-library"></i> Save as a Style</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+            <div class="edit lean" id="shell" data-dock="open">
+
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="artboard-label">2560 × 1440 · screenshot</div>
+                  <div class="selwrap">
+                    <div class="wa-hold">
+                      <div class="wa-frame">
+                        <div class="wa-art">
+                          <div class="wa-bar"><i class="wa-dot" style="background:#ff5f57"></i><i class="wa-dot" style="background:#febc2e"></i><i class="wa-dot" style="background:#28c840"></i><span class="wa-url">example.com/pricing</span></div>
+                          <div class="wa-h">Pricing</div>
+                          <div class="wa-sub">Simple plans for every team</div>
+                          <div class="wa-card" style="left:22px">
+                            <span class="wa-nm">Starter</span><span class="wa-price">$9<i> / mo</i></span>
+                            <span class="wa-ln" style="top:66px;width:118px"></span><span class="wa-ln" style="top:78px;width:96px"></span><span class="wa-ln" style="top:90px;width:110px"></span>
+                            <span class="wa-cta">Choose Starter</span>
+                          </div>
+                          <div class="wa-card pro" style="left:210px">
+                            <span class="wa-nm">Pro</span><span class="wa-price">$29<i> / mo</i></span>
+                            <span class="wa-ln" style="top:66px;width:126px"></span><span class="wa-ln" style="top:78px;width:104px"></span><span class="wa-ln" style="top:90px;width:118px"></span>
+                            <span class="wa-cta on">Choose Pro</span>
+                          </div>
+                        </div>
+
+                        <!-- THE MARKS · authored here, revealed by the steps -->
+                        <div class="wa-note wt-off" id="waNote" style="left:214px;top:-30px">Pro is the default</div>
+                        <svg class="wa-arrow wt-off" id="waArrow" style="left:250px;top:-8px;width:64px;height:112px" viewBox="0 0 64 112" aria-hidden="true">
+                          <path d="M10 8 C 30 34, 44 66, 46 96" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                          <path d="M46 96 l -11 -5 l 9 -9 z" fill="var(--accent)"/>
+                        </svg>
+                        <div class="wa-cal gap down wt-off" id="waGap" style="left:190px;top:150px;width:20px;height:22px"><span class="wa-t">20</span></div>
+                        <div class="wa-cal size up wt-off" id="waSize" style="left:210px;top:228px;width:168px;height:30px"><span class="wa-t">168</span></div>
+                        <div class="wa-inst wt-off" id="waInst" style="left:30px;top:-30px">Pro is the default
+                          <span class="cinst"></span><span class="cbadge"><i class="ic xs ic-component"></i> instance</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="toast wt-off" id="toastComp"><i class="ic sm ic-check"></i> Callout added to Library · 1 instance</div>
+                </div>
+
+                <div class="cnv-act">
+                  <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                  <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+                </div>
+
+                <!-- FLOATING TOOL BAR · the D4 image inventory -->
+                <div class="tbar">
+                  <span class="tstrip" id="strip" data-radio=".tool">
+                    <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tCrop" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                    <button class="tool" id="tBox" title="Box (R)"><i class="ic sm ic-square"></i></button>
+                    <button class="tool" id="tText" title="Text callout (T)"><i class="ic sm ic-text"></i></button>
+                    <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tMeasure" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                    <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="swpair" title="Foreground and background color">
+                    <span class="fg" style="background:#4c8dff"></span><span class="bg" style="background:#ffffff"></span>
+                  </span>
+                  <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                    <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="splitter v" data-min="210" data-max="400"></div>
+
+              <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling -->
+              <div class="pdock" id="dock">
+
+                <div class="dgrp" id="gLayers" style="--gh:132px">
+                  <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span>
+                    <button class="btn ghost icon sm" id="btnLayerMenu" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+                    <div class="lrow wt-off" id="lrInst"><i class="ic ic-component"></i><span class="nm">Callout · instance</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow wt-off" id="lrMeasure"><i class="ic ic-ruler"></i><span class="nm">Measurements · 2</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow wt-off" id="lrCalloutComp"><i class="ic ic-component"></i><span class="nm">Callout · main</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow wt-off" id="lrCallout"><i class="ic ic-text"></i><span class="nm">Callout · Pro is the default</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow" id="lrShot"><i class="ic ic-image"></i><span class="nm">pricing-page</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+
+                <div class="splitter h" data-min="90" data-max="320"></div>
+
+                <!-- SELECTION, place 3 of 3: Properties, contextual to selection.
+                     This group is where the old floating mini-inspector went. -->
+                <div class="dgrp" id="gProps" style="--gh:212px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+                  <div class="dgrp-b">
+                    <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer or pick a tool</div>
+
+                    <div id="propsMark" class="wt-off">
+                      <div class="section">
+                        <div class="sec-h">Callout <span class="mut">text mark</span></div>
+                        <div class="irow"><span class="rl">Paint</span><span class="select"><span class="lead"><span class="sw" style="background:#4c8dff"></span> Callout / blue</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                        <div class="irow"><span class="rl">Size</span><span class="val">13 / 600</span></div>
+                        <div class="irow"><span class="rl">Radius</span><span class="val">8</span></div>
+                        <p class="note">Every mark is a real layer with editable Paint, so nothing is baked into the pixels and you can move it later.</p>
+                      </div>
+                    </div>
+
+                    <div id="propsMeasure" class="wt-off">
+                      <div class="section">
+                        <div class="sec-h">Measure <span class="mut">2 measurements</span></div>
+                        <div class="irow"><span class="rl">Units</span><span class="select"><span class="lead">Logical (px)</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                        <div class="irow"><span class="rl">Snap</span><span class="val">element edges</span></div>
+                        <div class="irow"><span class="rl">Size</span><span class="val" style="color:#e5484d">168 × 130</span></div>
+                        <div class="irow"><span class="rl">Spacing</span><span class="val" style="color:#4c8dff">20</span></div>
+                        <p class="note">Red calls out size, blue calls out spacing, and the labels sit clear of the thing they measure.</p>
+                      </div>
+                    </div>
+
+                    <div id="propsComp" class="wt-off">
+                      <div class="section">
+                        <div class="sec-h">Component <span class="mut" id="pCompKind">main</span></div>
+                        <div class="irow"><span class="rl">Variant</span><span class="select" id="selVariant"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                        <div class="irow"><span class="rl">Fill</span><span class="select" id="selStyle" data-target="dsys"><span class="lead"><span class="sw" id="swFill" style="background:#4c8dff"></span> <span id="pFillName">Callout / blue</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                        <div class="irow"><span class="rl">Link</span><span class="val" id="pLink">to main · intact</span></div>
+                        <p class="note">An override is per instance. Re-paint one and the link to the main survives, so a later edit to the main still lands.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- LIBRARY · one surface, four scopes, and it is where the old
+                     floating "added to Library" chip went. .grow is LAST. -->
+                <div class="dgrp grow collapsed" id="gLibrary">
+                  <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Components</span>
+                    <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                      <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                        <button data-scope="media" data-scope-name="Media">Media</button>
+                        <button class="on" data-scope="components" data-scope-name="Components">Comp</button>
+                        <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                        <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                      </div>
+                    </div>
+                    <div class="libtools">
+                      <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search components" aria-label="Search components"></span>
+                    </div>
+                    <div data-scope-body="media" class="wt-off">
+                      <div class="libgrid">
+                        <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span><span class="cap"><span class="nm">pricing-page</span><span class="mt">2560 × 1440</span></span></div>
+                        <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">settings-capture</span><span class="mt">2560 × 1440</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="components">
+                      <div class="libgrid">
+                        <div class="libtile comp wt-off" id="libCallout" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#4c8dff,#7c4dff)"></span><span class="cap"><span class="nm">Callout</span><span class="mt">1 variant</span></span></div>
+                        <div class="libtile comp" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span></div>
+                        <div class="libtile comp" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">2 variants</span></span></div>
+                      </div>
+                      <p class="note" style="margin:0 var(--pad-sm) var(--pad)">One Library, four scopes. Drag a component tile onto any canvas and you get a linked instance, not a copy.</p>
+                    </div>
+                    <div data-scope-body="styles" class="wt-off">
+                      <div class="libgrid">
+                        <div class="libtile" tabindex="0"><span class="th" style="background:#4c8dff"></span><span class="cap"><span class="nm">Callout / blue</span><span class="mt">paint</span></span></div>
+                        <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">paint</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="assets" class="wt-off">
+                      <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets yet</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- THE RAIL · what the dock collapses to -->
+              <div class="drail">
+                <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+                <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+              </div>
+
+              <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+                <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                <div class="menuitem" id="miMakeComp"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+                <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+              </div>
+              <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
+                <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+                <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHELL SURFACE 3 · THE CAPTURE TOAST · transient, no dismissal -->
+          <div class="ctoast-stack">
+            <div class="ctoast wt-off" id="capToast">
+              <span class="cshot" style="display:grid;place-items:center;background:#0d1017">
+                <span class="wa-hold" style="--k:.47">
+                  <span class="wa-frame">
+                    <span class="wa-art">
+                      <span class="wa-bar"><i class="wa-dot" style="background:#ff5f57"></i><i class="wa-dot" style="background:#febc2e"></i><i class="wa-dot" style="background:#28c840"></i><span class="wa-url">example.com/pricing</span></span>
+                      <span class="wa-h">Pricing</span>
+                      <span class="wa-sub">Simple plans for every team</span>
+                      <span class="wa-card" style="left:22px"><span class="wa-nm">Starter</span><span class="wa-price">$9</span><span class="wa-cta">Choose Starter</span></span>
+                      <span class="wa-card pro" style="left:210px"><span class="wa-nm">Pro</span><span class="wa-price">$29</span><span class="wa-cta on">Choose Pro</span></span>
+                    </span>
+                  </span>
+                </span>
+              </span>
+              <span class="cfm"><span class="ok"><i class="ic ic-check"></i></span> Copied to clipboard!</span>
+            </div>
+          </div>
+
+          <!-- SHELL SURFACE 2 · THE GLOBAL HISTORY OVERLAY · chromeless, and it
+               belongs to the menu-bar agent, not to any window (§4b req 5). -->
+          <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-b">
+              <div class="histbar">
+                <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+              </div>
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard" id="fcNew" tabindex="0" role="button">
+                  <span class="th" style="background:#0d1017;display:grid;place-items:center;overflow:hidden">
+                    <span class="wa-hold" style="--k:.28">
+                      <span class="wa-frame">
+                        <span class="wa-art">
+                          <span class="wa-bar"><i class="wa-dot" style="background:#ff5f57"></i><i class="wa-dot" style="background:#febc2e"></i><i class="wa-dot" style="background:#28c840"></i></span>
+                          <span class="wa-h">Pricing</span>
+                          <span class="wa-card" style="left:22px"><span class="wa-price">$9</span><span class="wa-cta">Choose Starter</span></span>
+                          <span class="wa-card pro" style="left:210px"><span class="wa-price">$29</span><span class="wa-cta on">Choose Pro</span></span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                  <span class="cap"><span class="nm">pricing-page</span><span class="ago">just now</span></span>
+                  <span class="acts">
+                    <button class="btn primary sm" id="btnOpen"><i class="ic ic-pen"></i> Open</button>
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                  <span class="cap"><span class="nm">settings-capture</span><span class="ago">18 minutes ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                  <span class="cap"><span class="nm">screen-recording</span><span class="ago">2 hours ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">hero-card</span><span class="ago">3 hours ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                  <span class="cap"><span class="nm">onboarding-run</span><span class="ago">yesterday</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span>
+                  <span class="cap"><span class="nm">toast-states</span><span class="ago">2 days ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span>
+                  <span class="cap"><span class="nm">nav-bar</span><span class="ago">3 days ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">checkout-review</span><span class="ago">last week</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The screen above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Open the Photonz menu"
+          data-cue="#mbAgent" data-cue-label="Click the Photonz status icon" data-cue-place="bottom"
+          data-pop="#mbMenu">
+        <div class="wt-cap img">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Photonz</b> status icon</p>
+          <p class="wt-where">the macOS menu bar. Photonz is a resident agent, so this works with nothing open</p>
+          <p class="wt-res">the app's real root menu drops: capture, history, then the ways to make a document. There is no app to launch and no window yet.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Start a region capture"
+          data-cue="#miCapture" data-cue-label="Click Capture Region" data-cue-place="left"
+          data-pop="#mbMenu" data-show="#capRegion" data-hide="#deskHint">
+        <div class="wt-cap img">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Capture Region</b>, or press <code>⇧⌘4</code> from anywhere</p>
+          <p class="wt-where">the Photonz menu, first group</p>
+          <p class="wt-res">the screen goes to a crosshair and a selection appears over the pricing page, with its live pixel size on the edge.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drag the region"
+          data-cue="#capRegion" data-cue-label="Drag the region over the page" data-cue-place="top"
+          data-hide="#mbMenu,#deskHint" data-show="#capToast">
+        <div class="wt-cap img">
+          <span class="wt-n">3</span>
+          <p class="wt-do" data-verb="Drag">the selection across the pricing page and let go</p>
+          <p class="wt-where">the screen itself, wherever the thing you want lives</p>
+          <p class="wt-res">a <b>capture toast</b> slides into the corner with the real thumbnail, a green check, and <b>Copied to clipboard!</b> It is already pasteable, and the card leaves on its own.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Show the history"
+          data-cue="#miHistory" data-cue-label="Click Show History" data-cue-place="left"
+          data-show="#mbMenu" data-pop="#mbMenu" data-hide="#capToast"
+          data-sheet-open="#histSheet" data-select="#fcNew">
+        <div class="wt-cap img">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Show History</b>, or press <code>⌘⇧H</code> from anywhere</p>
+          <p class="wt-where">the Photonz menu, second group. Both doors reach one surface</p>
+          <p class="wt-res">the chromeless history pane drops over the screen with the new capture first and already selected, so its action row shows: open, copy, pin, delete.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open it in the editor"
+          data-cue="#btnOpen" data-cue-label="Click Open" data-cue-place="bottom"
+          data-hide="#mbMenu" data-sheet-open="#histSheet" data-select="#fcNew"
+          data-show="#editorWin">
+        <div class="wt-cap img">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Open</b></p>
+          <p class="wt-where">the selected card's action row, in the filmstrip</p>
+          <p class="wt-res">an editor window opens onto that capture. The title bar reads <b>pricing-page · 2560 × 1440</b> and the shot is the locked bottom layer. The history is still up, so you could open another.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Put the history away"
+          data-cue="#mbAgent" data-cue-label="Click the icon again" data-cue-place="bottom"
+          data-hide="#mbMenu" data-sheet-shut="#histSheet">
+        <div class="wt-cap img">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Photonz</b> icon again, or press <code>⎋</code>, or click anywhere else</p>
+          <p class="wt-where">the menu bar. The pane is chromeless, so there is no close button to hunt for</p>
+          <p class="wt-res">the overlay retracts and the editor is clear: canvas, floating tool bar, one right dock of panel groups. Everything from here is the ordinary shell.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up the Text callout"
+          data-cue="#tText" data-cue-label="Click the Text callout tool" data-cue-place="top"
+          data-tool="#tText" data-show="#propsMark" data-hide="#mbMenu,#propsEmpty"
+          data-set="#propKind=Text">
+        <div class="wt-cap img">
+          <span class="wt-n">7</span>
+          <p class="wt-do">the <b>Text callout</b> tool</p>
+          <p class="wt-where">the floating tool bar, under the canvas</p>
+          <p class="wt-res">Text becomes the active tool and Properties switches to its Paint: the blue callout style, 13/600 type, an 8pt radius. Tools and Properties are contextual, never a mode you hunt for.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop the callout"
+          data-cue="#waNote" data-cue-label="Drag a callout onto the Pro card" data-cue-place="top"
+          data-tool="#tText" data-show="#waNote,#waArrow,#lrCallout,#propsMark"
+          data-hide="#mbMenu,#propsEmpty" data-select="#lrCallout"
+          data-set="#layerCount=2|#markCount=2 layers|#propKind=Text">
+        <div class="wt-cap img">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag">a callout above the <b>Pro</b> card and point it at the button</p>
+          <p class="wt-where">the canvas, straight onto the capture</p>
+          <p class="wt-res">the callout and its arrow land as a layer, listed above the locked screenshot, selected on the canvas, in Layers, and in Properties at once. That three-place selection is the same everywhere in the app.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up Measure"
+          data-cue="#tMeasure" data-cue-label="Click the Measure tool" data-cue-place="top"
+          data-tool="#tMeasure" data-show="#propsMeasure,#unitChip"
+          data-hide="#mbMenu,#propsEmpty,#propsMark" data-set="#propKind=Measure">
+        <div class="wt-cap img">
+          <span class="wt-n">9</span>
+          <p class="wt-do">the <b>Measure</b> tool</p>
+          <p class="wt-where">the floating tool bar, after the mark-up cluster</p>
+          <p class="wt-res">the caliper is live, the toolbar gains a <b>Logical (px)</b> unit readout, and Properties shows what it will snap to. Same tool, same slot, whether you measure a photo or a button.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Redline the layout"
+          data-cue="#waGap" data-cue-label="Drag between the two cards" data-cue-place="right"
+          data-tool="#tMeasure" data-show="#waGap,#waSize,#lrMeasure,#propsMeasure,#unitChip"
+          data-hide="#mbMenu,#propsEmpty,#propsMark" data-select="#lrMeasure"
+          data-set="#layerCount=3|#markCount=3 layers|#propKind=Measure">
+        <div class="wt-cap img">
+          <span class="wt-n">10</span>
+          <p class="wt-do" data-verb="Drag">from the <b>Starter</b> card's edge to the <b>Pro</b> card's edge</p>
+          <p class="wt-where">the canvas, between the two cards</p>
+          <p class="wt-res">the caliper snaps to both edges and reads <b>20</b>, and a second one calls the Pro card <b>168</b> wide. Red is size, blue is spacing, and the measurements are a layer like anything else.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select the callout"
+          data-cue="#lrCallout" data-cue-label="Click the Callout layer" data-cue-place="left"
+          data-hide="#mbMenu,#propsEmpty,#propsMeasure" data-show="#propsMark"
+          data-select="#lrCallout" data-set="#propKind=Text">
+        <div class="wt-cap img">
+          <span class="wt-n">11</span>
+          <p class="wt-do">the <b>Callout</b> row</p>
+          <p class="wt-where">the Layers group, at the top of the right dock</p>
+          <p class="wt-res">selection moves back to the callout: the ring returns on the canvas and Properties shows its Paint again. Selecting in Layers and selecting on the canvas are the same act.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Make it a component"
+          data-cue="#miMakeComp" data-cue-label="Click Make component" data-cue-place="left"
+          data-pop="#layerMenu" data-hide="#mbMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout"
+          data-show="#lrCalloutComp,#libCallout,#propsComp,#toastComp"
+          data-select="#lrCalloutComp" data-set="#propKind=Component|#pCompKind=main">
+        <div class="wt-cap img">
+          <span class="wt-n">12</span>
+          <p class="wt-do"><b>Make component</b>, or press <code>⌘⌥K</code></p>
+          <p class="wt-where">the Layers panel menu, behind the header's more button</p>
+          <p class="wt-res">the callout becomes a <b>main component</b> and joins your Library. Properties now shows its variant and fill. Nothing moved on the canvas: a component is just a layer tree with a name.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Find it in the Library"
+          data-cue="#gLibraryH" data-cue-label="Click the Library header" data-cue-place="left"
+          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp"
+          data-show="#lrCalloutComp,#libCallout,#propsComp" data-open="#gLibrary" data-scope="components"
+          data-select="#lrCalloutComp" data-set="#propKind=Component|#pCompKind=main">
+        <div class="wt-cap img">
+          <span class="wt-n">13</span>
+          <p class="wt-do">the <b>Library</b> group header</p>
+          <p class="wt-where">the right dock, bottom group</p>
+          <p class="wt-res">Library expands at scope <b>Components</b> and the new <b>Callout</b> tile is sitting there beside Badge and Lower third. One Library with four scopes, not a new panel per feature.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop an instance"
+          data-cue="#libCallout" data-cue-label="Drag Callout onto the Starter card" data-cue-place="left"
+          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp"
+          data-show="#lrCalloutComp,#libCallout,#propsComp,#waInst,#lrInst" data-open="#gLibrary" data-scope="components"
+          data-select="#lrInst" data-set="#layerCount=4|#markCount=4 layers|#propKind=Component|#pCompKind=instance">
+        <div class="wt-cap img">
+          <span class="wt-n">14</span>
+          <p class="wt-do" data-verb="Drag">the <b>Callout</b> tile onto the <b>Starter</b> card</p>
+          <p class="wt-where">the Library group, scope Components, out to the canvas</p>
+          <p class="wt-res">a linked <b>instance</b> lands, marked with the purple component ring. It is a live link to the main, not a copy, so editing the main later updates it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Re-paint the instance"
+          data-cue="#selStyle" data-cue-label="Click the Fill style" data-cue-place="left"
+          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp"
+          data-show="#lrCalloutComp,#libCallout,#propsComp,#waInst,#lrInst" data-open="#gLibrary" data-scope="components"
+          data-select="#lrInst"
+          data-css="#waInst=background:linear-gradient(135deg,#7c4dff,#ff5d8f)|#swFill=background:linear-gradient(135deg,#7c4dff,#ff5d8f)"
+          data-set="#propKind=Component|#pCompKind=instance|#pFillName=Brand / grad|#pLink=to main · intact">
+        <div class="wt-cap img">
+          <span class="wt-n">15</span>
+          <p class="wt-do">the <b>Fill</b> style, then pick <b>Brand / gradient</b></p>
+          <p class="wt-where">Properties, in the Component section. This is where the old floating mini inspector went</p>
+          <p class="wt-res">the instance re-paints and the readout still says <b>link to main · intact</b>. Overrides are per instance, so you can restyle one without cutting it loose. That is the whole reuse tier: Tokens, Styles, Components.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the blank slate"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The whole arc</div><p>Capture from the menu bar, land in history, open in the editor, mark it up, measure it, then promote the mark to a <b>Component</b> and drop it back. One document, one layer stack, one dock. Nothing here is a second app.</p></div>
+    <div class="c"><div class="lab g2">Across scenarios</div><p>Because a component is just a layer tree, the same <b>Callout</b> drops onto a UI frame, a photo, or a video track, re-painted with <b>Styles</b> and keyframed where there is time. Learn it once and it applies everywhere.</p></div>
+    <div class="c"><div class="lab g2">Automatable</div><p>Every step is one API call (<code>capture.region</code>, <code>history.open</code>, <code>layer.addText</code>, <code>measure.between</code>, <code>component.make</code>, <code>instance.place</code>), so an <b data-target="agent" style="color:var(--accent);cursor:pointer">agent</b> can run the same flow. Where is the line between guiding a person and doing it for them?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch live when a person clicks it
+     directly (the walkthrough drives the same state declaratively). */
+  (function () {
+    var seg = document.querySelector('#walk .scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ds-switch</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ds-switch: a design system is portable data, so applying a different one
+     re-themes the whole document live.
+
+     SCREEN CONTRACT (PRODUCT-MODEL §4c). Block 1 is a KIND 1 APP SCREEN: it is
+     the complete shell (title bar with document identity only, command surface,
+     canvas with its floating tool bar, one right dock of panel groups, and the
+     rail it collapses to). Applying a system is a real thing you do to the open
+     document, so the picker is a DOCK GROUP, not invented chrome.
+     Blocks 2 and 3 are KIND 2 SPECIMENS: a token-mapping table and a team/API
+     reference. They depict parts, so they wear no traffic lights and no title
+     bar. All local names are `dss-` prefixed. 4pt spacing only. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #ds-switch .win.shell{height:600px;min-height:0}  #ds-switch .canvas>.selwrap{width:min(360px,calc(100% - var(--s7)))}
+
+  /* KIND 2 specimen card */
+  #ds-switch .dss-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #ds-switch .dss-blk-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #ds-switch .dss-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #ds-switch .dss-blk-h .dss-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  #ds-switch .dss-blk-h .dss-sub{margin-left:auto}
+
+  /* ---- the system picker, as a dock group body ---- */
+  .dss-pick{padding:var(--gap-sm) var(--pad-sm) var(--pad-sm);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .dss-pick .lead{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660;margin:0 0 var(--s1)}
+
+  .dss-sys{display:flex;align-items:center;gap:var(--pad-sm);text-align:left;width:100%;
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r-md);border:1px solid var(--edge-lo);
+    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer;color:var(--ink);transition:var(--ctl-tr)}
+  .dss-sys:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo));background:var(--glass)}
+  .dss-sys:active{transform:translateY(.5px) scale(.99)}
+  .dss-sys:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
+  .dss-sys.on{border-color:var(--accent-line);box-shadow:inset 0 1px 0 var(--edge-hi),0 0 0 1px var(--accent-line)}
+  .dss-sw{width:30px;height:30px;border-radius:9px;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 0 0 1px var(--edge-lo);display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff}
+  .dss-meta{flex:1;min-width:0}
+  .dss-meta .nm{font-size:12.5px;font-weight:640;color:var(--ink);line-height:1.2}
+  .dss-meta .tok{display:block;font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dss-act{flex:none;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 6px;border-radius:999px;visibility:hidden}
+  .dss-sys.on .dss-act{visibility:visible}
+  .dss-hint{font-size:10.5px;color:var(--faint);line-height:1.45;margin-top:var(--s1);padding-top:var(--pad-sm);border-top:1px solid var(--edge-lo)}
+
+  #ds-switch .dss-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;padding:6px 10px 3px}
+
+  /* ---- the "now showing" readout, in the Properties group ---- */
+  .dss-now{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;font-weight:600;color:var(--ink)}
+  .dss-now .d{width:9px;height:9px;border-radius:50%;flex:none}
+
+  /* the designed sample on the canvas. every value reads a --s* var the picker swaps. */
+  .dss-card{
+    --sa:#7C4DFF;--sa-ink:#fff;--sf:var(--serif);--sr:16px;
+    --scard:linear-gradient(150deg,#241a38,#141018);--sink:#F4F0FF;--ssub:rgba(244,240,255,.74);--sline:rgba(255,255,255,.14);
+    width:100%;padding:var(--s5);border-radius:var(--sr);background:var(--scard);color:var(--sink);
+    border:1px solid var(--sline);box-shadow:0 26px 64px -18px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.09);
+    transition:border-radius .45s ease,background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease}
+  .dss-cbadge{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--sa);background:color-mix(in srgb,var(--sa) 20%,transparent);border:1px solid color-mix(in srgb,var(--sa) 42%,transparent);
+    padding:3px 9px;border-radius:999px;transition:color .45s,background-color .45s,border-color .45s}
+  .dss-ctitle{font-family:var(--sf);font-size:29px;line-height:1.05;font-weight:700;letter-spacing:-.02em;color:var(--sink);margin:var(--pad-sm) 0 var(--gap-sm)}
+  .dss-ctext{font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ssub);margin:0 0 var(--pad)}
+  .dss-crow{display:flex;align-items:center;gap:var(--pad-sm)}
+  .dss-cta{font-family:var(--sf);font-size:13px;font-weight:640;color:var(--sa-ink);background:var(--sa);border:0;
+    border-radius:var(--sr);padding:var(--gap-sm) var(--pad);box-shadow:0 8px 20px -8px color-mix(in srgb,var(--sa) 70%,transparent);
+    transition:background-color .45s,border-radius .45s,color .45s,box-shadow .45s;cursor:pointer}
+  .dss-cta:active{transform:translateY(.5px) scale(.98)}
+  .dss-cpill{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--sa);
+    border:1px solid color-mix(in srgb,var(--sa) 45%,transparent);padding:3px 8px;border-radius:999px;
+    transition:color .45s,border-color .45s}
+
+  /* ---- what maps: semantic tokens keep their names, values change ---- */
+  .dss-maps{display:grid;grid-template-columns:1fr 344px}
+  @media (max-width:860px){.dss-maps,.dss-team{grid-template-columns:1fr}
+    .dss-mapl,.dss-teaml{border-right:0;border-bottom:1px solid var(--edge-lo)}}
+  .dss-mapl{padding:var(--pad);border-right:1px solid var(--edge-lo)}
+  .dss-mapr{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .maptbl{display:flex;flex-direction:column;gap:2px}
+  .maprow{display:grid;grid-template-columns:132px 1fr 1fr;gap:var(--pad-sm);align-items:center;
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r-sm);background:var(--glass-thin);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .maprow.head{background:transparent;border:0;box-shadow:none;padding-bottom:0}
+  .maprow.head span{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660}
+  .maprow.head .hb{color:var(--comp)}
+  .maprow.head .ha{color:#E8552D}
+  .semname{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .semname b{font-size:11.5px;font-weight:620;color:var(--ink);line-height:1.15}
+  .semname .t{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  .mapval{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--dim);min-width:0}
+  .mapval .sw{width:14px;height:14px;border-radius:5px;flex:none;box-shadow:0 0 0 1px var(--edge-lo) inset}
+  .mapval .rq{width:16px;height:16px;flex:none;border:1.5px solid currentColor;opacity:.7}
+  .mapval .fx{font-size:15px;line-height:1;color:var(--ink)}
+  .mapnote{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--pad) 0 0;padding-top:var(--pad-sm);border-top:1px solid var(--edge-lo)}
+  .mapnote b{color:var(--ink)}
+
+  /* before / after of one component under two systems */
+  .baftr{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm)}
+  .baf{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .baf .bh{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:660;color:var(--faint);padding:var(--gap-sm) var(--pad-sm) 0}
+  .baf .bstage{display:grid;place-items:center;padding:var(--pad);min-height:104px;
+    background:radial-gradient(200px 120px at 50% 30%,#171a26,var(--artboard))}
+  .cbtn{border:0;cursor:default}
+  .cbtn.b2{font-family:var(--serif);background:#7C4DFF;color:#fff;font-size:12.5px;font-weight:640;padding:9px 16px;border-radius:14px;box-shadow:0 8px 20px -8px rgba(124,77,255,.6)}
+  .cbtn.ac{font-family:var(--sans);background:#E8552D;color:#fff;font-size:12.5px;font-weight:640;padding:9px 16px;border-radius:8px;box-shadow:0 8px 20px -8px rgba(232,85,45,.6)}
+  .bafcap{font-size:10.5px;color:var(--faint);text-align:center;line-height:1.4}
+  .bafcap code{font-family:var(--mono);font-size:10px;color:var(--comp)}
+
+  /* ---- team + agent ---- */
+  .dss-team{display:grid;grid-template-columns:320px 1fr}
+  .dss-teaml{padding:var(--pad);border-right:1px solid var(--edge-lo);display:flex;flex-direction:column;gap:var(--pad-sm)}
+  .dss-teamr{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);min-width:0}
+  .shared{display:flex;align-items:center;gap:var(--pad-sm);background:var(--glass-thin);border:1px solid var(--edge-lo);
+    border-radius:var(--r-md);padding:var(--pad-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .shared .sw{width:34px;height:34px;border-radius:9px;flex:none;background:#E8552D;display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .shared .nm{font-size:13px;font-weight:660;color:var(--ink);display:flex;align-items:center;gap:7px}
+  .shared .ver{font-family:var(--mono);font-size:9.5px;color:#E8552D;background:color-mix(in srgb,#E8552D 14%,transparent);border:1px solid color-mix(in srgb,#E8552D 38%,transparent);padding:1px 6px;border-radius:999px;font-weight:600}
+  .shared .meta{font-size:10px;color:var(--faint);margin-top:2px}
+  .dss-grp{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660;margin:var(--s1) 0 0}
+  .dss-links{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="ds-switch">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Switching design systems</h2><span class="k">· a system is portable data, so applying a different one re-themes the whole document live</span></div>
+
+    <p class="thesis" style="margin:0">Pick a different system and the open document re-paints against it live. This is the real editor window: the picker is a <b>panel group in the one dock</b>, and the sample on the canvas is the document itself.</p>
+
+    <!-- =====================================================================
+         KIND 1 · APP SCREEN. The complete shell: title bar (document identity
+         only) › command surface › canvas + floating tool bar › splitter › one
+         right dock of panel groups › the rail it collapses to.
+         ===================================================================== -->
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>northern-light</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#dssCmd"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#dssHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand v2.3 <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="dssCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+            <div class="dss-mlabel">System</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Apply a system <span class="sc">⌘⌥Y</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
+            <div class="menuitem" data-target="dsys"><i class="ic ic-library"></i> Manage systems</div>
+            <div class="menu-sep"></div>
+            <div class="dss-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="dssShell" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">Hero / marketing.card · 1200 × 630</div>
+            <div class="selwrap">
+              <div class="dss-card" id="dss-sample">
+                <span class="dss-cbadge"><i class="ic ic-sparkle xs"></i> New release</span>
+                <h3 class="dss-ctitle">Northern Light</h3>
+                <p class="dss-ctext">One document, re-themed in place. The accent, the display typeface, and the corner radius all come from the active design system.</p>
+                <div class="dss-crow">
+                  <button class="dss-cta">Get started</button>
+                  <span class="dss-cpill" id="dss-pill">v2.3</span>
+                </div>
+              </div>
+              <div class="sel-ring"></div>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Hero card · 328 × 240</span>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#dssShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#dssHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · the D4 UI inventory -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#dssOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:#7C4DFF"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="dss-zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="dssOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <!-- OVERLAY · capture history, the front door -->
+          <div class="sheet down" id="dssHist" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(150deg,#241a38,#141018)"></span>
+                  <span class="cap"><span class="nm">Northern Light</span><span class="ago">just now</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(150deg,#2a1712,#1c0f0b)"></span>
+                  <span class="cap"><span class="nm">Acme landing</span><span class="ago">22 min ago</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(150deg,#20242c,#14171d)"></span>
+                  <span class="cap"><span class="nm">Grayscale audit</span><span class="ago">Yesterday</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Open a capture and the active system paints it. Same document, same tokens.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="230" data-max="420"></div>
+
+        <!-- THE RIGHT DOCK · the picker is a panel group, not invented chrome -->
+        <div class="pdock">
+
+          <div class="dgrp" id="dssSystems" style="--gh:230px">
+            <div class="dgrp-h"><span class="ttl">Design systems</span><span class="cnt">5</span>
+              <button class="btn ghost icon sm" title="Import a system file"><i class="ic ic-import"></i></button>
+              <button class="btn ghost icon sm" title="Manage systems" data-target="dsys"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="dss-pick">
+                <button class="dss-sys on" data-sys="brand2" aria-pressed="true">
+            <span class="dss-sw" style="background:#7C4DFF">A</span>
+            <span class="dss-meta"><span class="nm">Brand v2.3</span><span class="tok">New York · r16 · #7C4DFF</span></span>
+            <span class="dss-act">Active</span>
+          </button>
+          <button class="dss-sys" data-sys="brand1" aria-pressed="false">
+            <span class="dss-sw" style="background:#2F6FED">A</span>
+            <span class="dss-meta"><span class="nm">Brand v1 (legacy)</span><span class="tok">SF Pro · r6 · #2F6FED</span></span>
+            <span class="dss-act">Active</span>
+          </button>
+          <button class="dss-sys" data-sys="acme" aria-pressed="false">
+            <span class="dss-sw" style="background:#E8552D">A</span>
+            <span class="dss-meta"><span class="nm">Acme Team</span><span class="tok">SF Pro · r8 · #E8552D</span></span>
+            <span class="dss-act">Active</span>
+          </button>
+          <button class="dss-sys" data-sys="gray" aria-pressed="false">
+            <span class="dss-sw" style="background:#5A6270">A</span>
+            <span class="dss-meta"><span class="nm">Grayscale</span><span class="tok">SF Pro · r8 · #5A6270</span></span>
+            <span class="dss-act">Active</span>
+          </button>
+          <button class="dss-sys" data-sys="hc" aria-pressed="false">
+            <span class="dss-sw" style="background:#0A0C12">A</span>
+            <span class="dss-meta"><span class="nm">High-contrast</span><span class="tok">SF Pro · r2 · #0A0C12</span></span>
+            <span class="dss-act">Active</span>
+          </button>
+                <p class="dss-hint">Same document, same layers. Only the system changes: accent, typeface, and corner radius all resolve from whichever one is active.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="300"></div>
+
+          <div class="dgrp" id="dssProps" style="--gh:180px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h">Active system</div>
+                <div class="dss-now"><span class="d" id="dss-dot" style="background:#7C4DFF"></span><b id="dss-now">Brand v2.3</b></div>
+                <p class="note">Every layer here binds a semantic slot, so nothing on the canvas is edited by hand when the system changes.</p>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Bound tokens</div>
+                <div class="irow"><span class="rl">Fill</span><span class="select"><span class="lead"><span class="sw" style="background:#7C4DFF"></span> color/accent</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Face</span><span class="select"><span class="lead">font/display</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Radius</span><span class="select"><span class="lead">radius/card</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrp grow" id="dssLayers">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+            <div class="dgrp-b">
+              <div class="lrow selc"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Northern Light</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Body copy</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Get started</span><i class="ic sm ic-component cmark"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL · what the dock collapses to -->
+        <div class="drail">
+          <button class="drailtab" data-group="#dssSystems" title="Design systems"><i class="ic sm ic-swatch"></i><span class="lb">Systems</span></button>
+          <button class="drailtab" data-group="#dssProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#dssLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A design system is just <b>data</b>. Pick a different one and the whole document re-paints against it live: <b>accent</b>, <b>typeface</b>, and <b>radius</b> all change at once, with a smooth transition, no re-layout.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Keep several systems side by side and flip between them to compare a real screen under each, the way you would preview a theme. The active one is marked, so it reads like choosing an <b>appearance</b>.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>When a layer carries a local override that disagrees with the applied system, does the system win or the override? Should re-theme <b>respect pinned values</b> per layer?</p></div>
+    </div>
+
+    <!-- ===== KIND 2 · SPECIMEN. A token-mapping table, so no app chrome. ===== -->
+    <div class="dss-blk">
+      <div class="dss-blk-h"><span class="dss-kind">Specimen</span><h3>What actually maps · semantic names stay, their values change</h3><span class="dss-sub"><button class="btn ghost sm" data-target="dsys">See the tokens <i class="ic ic-chevron-right"></i></button></span></div>
+      <div class="dss-maps">
+        <div class="dss-mapl">
+          <div class="maptbl">
+            <div class="maprow head"><span>Semantic token</span><span class="hb">Brand v2.3</span><span class="ha">Acme Team</span></div>
+            <div class="maprow">
+              <span class="semname"><b>accent</b><span class="t">color/accent</span></span>
+              <span class="mapval"><span class="sw" style="background:#7C4DFF"></span>#7C4DFF</span>
+              <span class="mapval"><span class="sw" style="background:#E8552D"></span>#E8552D</span>
+            </div>
+            <div class="maprow">
+              <span class="semname"><b>Display</b><span class="t">font/display</span></span>
+              <span class="mapval"><span class="fx" style="font-family:var(--serif)">Ag</span>New York</span>
+              <span class="mapval"><span class="fx" style="font-family:var(--sans)">Ag</span>SF Pro</span>
+            </div>
+            <div class="maprow">
+              <span class="semname"><b>radius/card</b><span class="t">radius/card</span></span>
+              <span class="mapval"><span class="rq" style="border-radius:7px"></span>16 px</span>
+              <span class="mapval"><span class="rq" style="border-radius:3px"></span>8 px</span>
+            </div>
+            <div class="maprow">
+              <span class="semname"><b>surface</b><span class="t">color/surface</span></span>
+              <span class="mapval"><span class="sw" style="background:linear-gradient(150deg,#241a38,#141018)"></span>Ink violet</span>
+              <span class="mapval"><span class="sw" style="background:linear-gradient(150deg,#2a1712,#1c0f0b)"></span>Ink umber</span>
+            </div>
+          </div>
+          <p class="mapnote">Every component references the <b>semantic name</b>, never the raw value. So a button that paints with <b>accent</b> and sets its face to <b>Display</b> just follows along when the values behind those names swap. Styles, typefaces, and tokens all remap together.</p>
+        </div>
+        <div class="dss-mapr">
+          <div class="dss-grp" style="margin-top:0">One component · two systems</div>
+          <div class="baftr">
+            <div class="baf">
+              <div class="bh">Brand v2.3</div>
+              <div class="bstage"><button class="cbtn b2">Get started</button></div>
+            </div>
+            <div class="baf">
+              <div class="bh">Acme Team</div>
+              <div class="bstage"><button class="cbtn ac">Get started</button></div>
+            </div>
+          </div>
+          <p class="bafcap">Same <code><i class="ic xs ic-component"></i> Button</code> instance. Accent, face, and radius all resolve from the active system, so no instance is edited by hand.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== KIND 2 · SPECIMEN. A team/API reference, so no app chrome. ===== -->
+    <div class="dss-blk">
+      <div class="dss-blk-h"><span class="dss-kind">Specimen</span><h3>Team &amp; agent · import a shared system, or apply one by name</h3><span class="dss-sub"><button class="btn ghost sm" data-target="agent">Agent applies this <i class="ic ic-chevron-right"></i></button></span></div>
+      <div class="dss-team">
+        <div class="dss-teaml">
+          <div class="dss-grp" style="margin-top:0">Shared by your team</div>
+          <div class="shared">
+            <span class="sw">A</span>
+            <div>
+              <div class="nm">Acme Team <span class="ver">v1.4.0</span></div>
+              <div class="meta">Tokens · typefaces · styles · components · portable</div>
+            </div>
+          </div>
+          <div class="dss-links">
+            <button class="btn primary" id="dss-apply-team">Apply team system</button>
+            <button class="btn secondary">Import file…</button>
+          </div>
+          <p class="dss-hint" style="border-top:0;padding-top:0;margin-top:0">Applying it re-themes the live artboard above to <b style="color:var(--ink)">Acme Team</b>. Everything the picker does is one call, so the agent can do it too.</p>
+          <div class="dss-grp">Jump to</div>
+          <div class="dss-links">
+            <span class="chip" data-target="dsys">The system, in full <i class="ic xs ic-chevron-right"></i></span>
+            <span class="chip" data-target="agent">How the agent runs it <i class="ic xs ic-chevron-right"></i></span>
+          </div>
+        </div>
+        <div class="dss-teamr">
+          <div class="exmeta" style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--faint);font-family:var(--mono)"><span style="color:var(--dim);font-weight:600">re-theme by name</span><span>one call · same as the UI</span></div>
+          <div class="codeblk" data-target="agent"><span class="c">// list what is installed</span>
+<span class="k">const</span> systems = system.<span class="p">list</span>()   <span class="c">// ["Brand v2.3","Brand v1","Acme Team",…]</span>
+
+<span class="c">// apply a different system to the open document, by name</span>
+system.<span class="p">apply</span>(<span class="s">"Acme Team"</span>)
+
+<span class="c">// bring in a shared one, then apply it</span>
+<span class="k">const</span> ds = system.<span class="p">import</span>(file)
+system.<span class="p">apply</span>(ds.name)</div>
+          <p class="mapnote" style="margin:0;padding:0;border:0">The semantic names in the command stay stable. <b>system.apply</b> swaps the values behind <b>accent</b> and <b>Display</b>, so the document re-themes with no per-layer edits, exactly like clicking a card above.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Because a system is portable data, a whole team can share one file and every document that adopts it stays on brand. Applying <b>Acme Team</b> is a single choice.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Treat systems like appearances you can flip between, or ship as versioned packages. A newer version reads as a real changelog against the one you are on.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>If two systems name the same token but mean different things, how do we warn before applying, and can a document map one system's names onto another on import?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* ds-switch: swapping the active system swaps CSS custom properties on the
+     live sample so it re-themes in front of you. Scoped + guarded: nothing here
+     runs if the expected elements are missing, and it never throws. */
+  (function () {
+    var root = document.getElementById('ds-switch');
+    if (!root) return;
+
+    var systems = {
+      brand2: { label: 'Brand v2.3', pill: 'v2.3', dot: '#7C4DFF',
+        vars: { '--sa': '#7C4DFF', '--sa-ink': '#ffffff', '--sf': 'var(--serif)', '--sr': '16px',
+          '--scard': 'linear-gradient(150deg,#241a38,#141018)', '--sink': '#F4F0FF', '--ssub': 'rgba(244,240,255,.74)', '--sline': 'rgba(255,255,255,.14)' } },
+      brand1: { label: 'Brand v1 (legacy)', pill: 'v1.0', dot: '#2F6FED',
+        vars: { '--sa': '#2F6FED', '--sa-ink': '#ffffff', '--sf': 'var(--sans)', '--sr': '6px',
+          '--scard': 'linear-gradient(150deg,#fbfcfe,#eef1f6)', '--sink': '#12151C', '--ssub': '#5C6371', '--sline': '#dfe2ea' } },
+      acme: { label: 'Acme Team', pill: 'v1.4', dot: '#E8552D',
+        vars: { '--sa': '#E8552D', '--sa-ink': '#ffffff', '--sf': 'var(--sans)', '--sr': '8px',
+          '--scard': 'linear-gradient(150deg,#2a1712,#1c0f0b)', '--sink': '#FFEDE6', '--ssub': 'rgba(255,237,230,.74)', '--sline': 'rgba(255,255,255,.12)' } },
+      gray: { label: 'Grayscale', pill: 'v3.1', dot: '#5A6270',
+        vars: { '--sa': '#5A6270', '--sa-ink': '#ffffff', '--sf': 'var(--sans)', '--sr': '8px',
+          '--scard': 'linear-gradient(150deg,#20242c,#14171d)', '--sink': '#EEF0F3', '--ssub': 'rgba(238,240,243,.7)', '--sline': 'rgba(255,255,255,.12)' } },
+      hc: { label: 'High-contrast', pill: 'v1.0', dot: '#0A0C12',
+        vars: { '--sa': '#0A0C12', '--sa-ink': '#ffffff', '--sf': 'var(--sans)', '--sr': '2px',
+          '--scard': '#ffffff', '--sink': '#000000', '--ssub': '#26282E', '--sline': '#000000' } }
+    };
+
+    var sample = root.querySelector('#dss-sample');
+    var cards = [].slice.call(root.querySelectorAll('.dss-sys'));
+    var nowEl = root.querySelector('#dss-now');
+    var dotEl = root.querySelector('#dss-dot');
+    var pillEl = root.querySelector('#dss-pill');
+
+    function apply(id) {
+      var s = systems[id];
+      if (!s) return;
+      if (sample) {
+        for (var k in s.vars) {
+          if (Object.prototype.hasOwnProperty.call(s.vars, k)) sample.style.setProperty(k, s.vars[k]);
+        }
+      }
+      if (nowEl) nowEl.textContent = s.label;
+      if (dotEl) dotEl.style.background = s.dot;
+      if (pillEl) pillEl.textContent = s.pill;
+      cards.forEach(function (c) {
+        var on = c.getAttribute('data-sys') === id;
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+
+    cards.forEach(function (c) {
+      c.addEventListener('click', function () { apply(c.getAttribute('data-sys')); });
+    });
+
+    var teamBtn = root.querySelector('#dss-apply-team');
+    if (teamBtn) teamBtn.addEventListener('click', function () { apply('acme'); });
+
+    apply('brand2');
+  })();
+</script>
+</body>
+</html>

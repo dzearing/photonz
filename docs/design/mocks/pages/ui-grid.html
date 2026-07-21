@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-grid</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ui-grid · a LIVE layout-grid + constraints demo sitting in the ONE shell. A
+     real frame you resize (drag the right edge or Narrow/Wide) with a column /
+     row / mesh overlay drawn over real content, and per-element pin/stretch
+     constraints that truly reposition and stretch as the frame changes. Only
+     what the shared DS does not cover lives here. 4pt spacing only. */
+
+  /* definite window height so the dock is bounded and each group scrolls */
+  #ui-grid .win.shell{height:840px;min-height:0}
+  .gc-canvas{padding:var(--s7) var(--s6)}
+  .gc-status{position:absolute;left:var(--pad);right:var(--pad);bottom:calc(var(--s6) + var(--s7));
+    font-size:11px;line-height:1.45;color:rgba(255,255,255,.6);text-align:center;
+    font-family:var(--sans);pointer-events:none}
+  .gc-status b{color:#bfe0ff;font-weight:640}
+
+  /* the resizable frame (artboard). No clipping, so canvas selection reads. */
+  .gc-frame{position:relative;height:308px;border-radius:var(--r4);
+    background:linear-gradient(150deg,#141a2c,#0d1119 60%);
+    border:1.5px solid rgba(120,150,255,.5);
+    box-shadow:0 0 0 1px rgba(120,150,255,.18),0 22px 50px -20px rgba(0,0,0,.7);
+    transition:width .16s ease}
+  .gc-ftag{position:absolute;top:-24px;left:-1px;display:inline-flex;align-items:center;gap:6px;
+    font-size:10px;font-weight:640;color:#fff;background:#4c6fff;padding:3px 8px;border-radius:6px;
+    white-space:nowrap;z-index:6}
+  .gc-dim{position:absolute;top:-24px;right:-1px;font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
+    font-family:var(--mono);white-space:nowrap;z-index:6}
+
+  /* grid overlay layers (columns / rows / mesh) */
+  .gc-grid{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden;border-radius:var(--r4)}
+  .gc-col{position:absolute;background:rgba(255,90,120,.14);border-left:1px solid rgba(255,90,120,.42);
+    border-right:1px solid rgba(255,90,120,.42)}
+  .gc-margin{position:absolute;border-left:1px dashed rgba(255,90,120,.55);border-right:1px dashed rgba(255,90,120,.55)}
+
+  /* content elements */
+  .gc-el{position:absolute;z-index:3;border-radius:var(--r3);display:flex;align-items:center;gap:8px;
+    padding:0 12px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 18px -10px rgba(0,0,0,.6);
+    transition:box-shadow .12s ease}
+  .gc-el.gbar{background:linear-gradient(180deg,rgba(70,86,140,.94),rgba(46,58,100,.94));
+    backdrop-filter:blur(6px);justify-content:space-between}
+  .gc-el.gbtn{background:linear-gradient(180deg,#5c7bff,#3d55e0);justify-content:center}
+  .gc-el.gavatar{background:linear-gradient(135deg,#12c2e9,#7c4dff);border-radius:50%;padding:0;justify-content:center}
+  .gc-el.ghero{flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:0 16px;
+    background:linear-gradient(135deg,#7c4dff,#b14dff 55%,#ff5d8f)}
+  .gc-el .gc-lb{white-space:nowrap;letter-spacing:-.01em}
+  .gc-el.ghero .gc-h{font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .gc-el.ghero .gc-sub{font-size:10.5px;font-weight:520;color:rgba(255,255,255,.86)}
+  .gc-el:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 0 0 1px rgba(255,255,255,.4),0 10px 22px -10px rgba(0,0,0,.65)}
+  .gc-el:focus-visible{outline:none;box-shadow:var(--ring)}
+
+  /* selection: the shared ring + handles + measure tag, sized to the element */
+  .gc-el .sel-ring{inset:-5px;border-radius:calc(var(--r3) + 5px)}
+  .gc-el.gavatar .sel-ring{border-radius:50%}
+  .gc-el .handle.tl{top:-9px;left:-9px}.gc-el .handle.tr{top:-9px;right:-9px}
+  .gc-el .handle.bl{bottom:-9px;left:-9px}.gc-el .handle.br{bottom:-9px;right:-9px}
+  .gc-el .mtag{top:-26px;z-index:5}
+  .gc-el.ghero .mtag,.gc-el.gavatar .mtag{top:-26px}
+
+  /* right-edge drag handle on the frame */
+  .gc-handle{position:absolute;top:0;bottom:0;right:-5px;width:12px;cursor:ew-resize;z-index:7;
+    display:flex;align-items:center;justify-content:center;border:0;background:transparent;padding:0}
+  .gc-handle::after{content:"";width:4px;height:40px;border-radius:3px;
+    background:rgba(120,150,255,.75);box-shadow:0 0 0 1px rgba(0,0,0,.25);transition:background .12s ease,height .12s ease}
+  .gc-handle:hover::after,.gc-handle.drag::after{background:#7f9bff;height:56px}
+  .gc-handle:focus-visible{outline:none}
+  .gc-handle:focus-visible::after{background:#7f9bff;box-shadow:var(--ring)}
+
+  /* Layers rows carry each element's constraint as meta */
+  .lmeta{font-family:var(--mono);font-size:9.5px;color:var(--faint);flex:none;
+    max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lrow.sel .lmeta{color:var(--accent)}
+
+  /* Properties: full-width segmented controls read cleanly in a 292px dock */
+  .ctl{margin:var(--pad-sm) 0}
+  .ctl:first-child{margin-top:0}
+  .ctl .cl{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-bottom:var(--s2)}
+  .ctl .cl .cv{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+  /* .ctl .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  .stepper{display:flex;align-items:center;gap:var(--gap-sm)}
+
+  .selname{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:640;
+    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);border-radius:999px;padding:3px 9px}
+  .gc-legend{display:flex;flex-wrap:wrap;gap:var(--pad-sm);font-size:10px;color:var(--dim);margin-top:var(--s2);line-height:1.5}
+  .gc-legend .lg{display:inline-flex;align-items:center;gap:5px}
+  .gc-legend .d{width:9px;height:9px;border-radius:3px;flex:none}
+  .modehint{font-size:10.5px;color:var(--dim);line-height:1.5;margin-top:var(--s2)}
+  .modehint b{color:var(--ink);font-weight:600}
+
+  .apiblk .codeblk{margin:0}
+  .apiblk p{margin:var(--pad-sm) 0 0;font-size:11.5px;color:var(--dim);line-height:1.55}
+  .apiblk p b{color:var(--ink);font-weight:600}
+
+  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
+  @container shell (max-width:880px){
+    .toolbar .chip{display:none}
+    /* The artboard keeps its real document width (it is what you are resizing),
+       so when the window is narrower than the frame the CANVAS pans, exactly as
+       a real canvas does. Nothing is ever clipped by the window edge. */
+    /* min-width:0 is what actually lets a flex child shrink below its content,
+       so the canvas gets a real scroller instead of pushing past the window. */
+    #ui-grid .cnv{min-width:0}
+    #ui-grid .gc-canvas{overflow:auto;min-width:0;justify-items:start;align-content:center;
+      padding:var(--s7) var(--s5)}
+    #ui-grid .gc-frame{flex:none}
+  }
+
+  /* KIND 2 · a specimen card (PRODUCT-MODEL §4c). It depicts a PART of the
+     model, not the app, so it wears no traffic lights and no title bar:
+     a plain labeled bordered block. */
+  #ui-grid .gc-spec{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #ui-grid .gc-spec-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #ui-grid .gc-spec-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #ui-grid .gc-spec-h .gc-kind{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint)}
+  #ui-grid .gc-spec-h .gc-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="ui-grid">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Layout grids</h2><span class="k">· constraints that respond</span></div>
+
+  <!-- ============ THE ONE SHELL · UI workspace, live grid + constraints ============ -->
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>aurora-app</b> · 560 × 308</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm" id="reset"><i class="ic ic-undo"></i> Reset</button>
+        <button class="btn sm" data-target="editor">Open in editor <i class="ic xs ic-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip"><i class="ic xs ic-grid"></i> <span id="chipGrid">12 columns</span></span>
+      <span class="chip" id="chipSel">Top bar</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
+          <div class="menuitem"><i class="ic ic-grid"></i> Toggle layout grid <span class="sc">⌃G</span></div>
+          <div class="menuitem"><i class="ic ic-maximize"></i> Stretch to frame</div>
+          <div class="menuitem"><i class="ic ic-pin"></i> Pin to edge</div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shellGc" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas gc-canvas" id="canvas">
+          <div class="artboard-label" id="artlabel">Frame · 560 × 308 · 12 cols · gutter 16 · margin 24</div>
+          <div class="gc-frame" id="frame" style="width:560px">
+            <div class="gc-ftag"><i class="ic xs ic-frame"></i> Frame</div>
+            <div class="gc-dim" id="fdim">560 w</div>
+            <div class="gc-grid" id="grid"></div>
+            <!-- content elements injected by script -->
+            <button class="gc-handle" id="handle" title="Drag to resize the frame" aria-label="Resize frame"></button>
+          </div>
+          <div class="gc-status" id="status"></div>
+        </div>
+
+        <!-- canvas action cluster -->
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shellGc" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="components"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#5c7bff,#12c2e9)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#5c7bff,#12c2e9)"></span>
+                <span class="cap"><span class="nm">App frame</span><span class="ago">3 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Breakpoint sweep</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"><span class="dur"><i class="ic xs ic-play"></i> 0:11</span></span>
+                <span class="cap"><span class="nm">Resize pass</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Open a capture as a layer, then pin it to the frame so it holds its place at every size.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLITTER -->
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock" style="--dock-w:292px">
+
+        <!-- LAYERS · every element in the frame, selection place 2 of 3 -->
+        <div class="dgrp" id="gLayers" style="--gh:132px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCount">5</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> App frame</div>
+            <div id="layerList"></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <!-- PROPERTIES · the selected element's constraints, selection place 3 of 3 -->
+        <div class="dgrp" id="gProps" style="--gh:174px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Top bar</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Constraints <span class="mut" id="selmut">top bar</span></div>
+
+              <div class="ctl">
+                <div class="cl">Editing <span class="selname" id="selname">Top bar</span></div>
+              </div>
+
+              <div class="ctl">
+                <div class="cl">Horizontal <span class="cv">x</span></div>
+                <div class="seg" data-seg="cx">
+                  <button data-val="left">Left</button>
+                  <button data-val="center">Center</button>
+                  <button data-val="right">Right</button>
+                  <button data-val="stretch" title="Stretch left and right"><i class="ic xs ic-maximize"></i></button>
+                </div>
+              </div>
+
+              <div class="ctl">
+                <div class="cl">Vertical <span class="cv">y</span></div>
+                <div class="seg" data-seg="cy">
+                  <button data-val="top">Top</button>
+                  <button data-val="center">Center</button>
+                  <button data-val="bottom">Bottom</button>
+                  <button data-val="stretch" title="Stretch top and bottom"><i class="ic xs ic-maximize"></i></button>
+                </div>
+              </div>
+
+              <div class="modehint">
+                A <b>pin</b> keeps a fixed distance to that edge. <b>Stretch</b> pins both edges so the element grows with the frame. Click any element on the canvas, or a row in Layers, to edit its constraints.
+              </div>
+              <div class="gc-legend">
+                <span class="lg"><span class="d" style="background:rgba(255,90,120,.7)"></span> grid columns</span>
+                <span class="lg"><span class="d" style="background:var(--accent)"></span> selected</span>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Frame <span class="mut">resize</span></div>
+              <div class="ctl">
+                <div class="cl">Width <span class="cv" id="fwv">560</span></div>
+                <div class="seg" data-seg="fw">
+                  <button data-val="narrow">Narrow</button>
+                  <button data-val="wide"><i class="ic xs ic-maximize"></i> Wide</button>
+                </div>
+              </div>
+              <div class="modehint">Or drag the handle on the frame's right edge. The <b>top bar</b> and <b>status bar</b> stretch, <b>Share</b> hugs the right, the <b>hero</b> stays centered.</div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">In the API <span class="mut">one call</span></div>
+              <div class="apiblk"><div class="codeblk" id="apicode"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAYOUT GRID · new capability is a new group, never new chrome -->
+        <div class="dgrp" id="gGrid" style="--gh:158px">
+          <div class="dgrp-h"><span class="ttl">Layout grid</span><span class="cnt" id="gridCnt">Columns</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h comp">Overlay <span class="mut" style="color:var(--comp)"><i class="ic xs ic-grid"></i> live</span></div>
+
+              <div class="ctl">
+                <button class="btn block" id="toggle"><i class="ic sm ic-eye" id="toggleic"></i> <span id="togglelb">Hide grid</span></button>
+              </div>
+
+              <div class="ctl">
+                <div class="cl">Type</div>
+                <div class="seg" data-seg="gtype">
+                  <button data-val="columns"><i class="ic xs ic-flow-horizontal"></i> Columns</button>
+                  <button data-val="rows"><i class="ic xs ic-flow-vertical"></i> Rows</button>
+                  <button data-val="grid"><i class="ic xs ic-grid"></i> Grid</button>
+                </div>
+              </div>
+
+              <div class="ctl">
+                <div class="cl"><span id="countlb">Columns</span> <span class="cv" id="countv">12</span></div>
+                <div class="stepper">
+                  <button class="btn icon sm" id="cntdn" aria-label="Fewer"><i class="ic sm ic-minus"></i></button>
+                  <span class="bar" style="flex:1"><i id="cntbar" style="width:100%"></i></span>
+                  <button class="btn icon sm" id="cntup" aria-label="More"><i class="ic sm ic-plus"></i></button>
+                </div>
+              </div>
+
+              <div class="ctl">
+                <div class="cl">Gutter <span class="cv" id="gutv">16</span></div>
+                <div class="stepper">
+                  <button class="btn icon sm" id="gutdn" aria-label="Decrease gutter"><i class="ic sm ic-minus"></i></button>
+                  <span class="bar" style="flex:1"><i id="gutbar" style="width:66%"></i></span>
+                  <button class="btn icon sm" id="gutup" aria-label="Increase gutter"><i class="ic sm ic-plus"></i></button>
+                </div>
+              </div>
+
+              <div class="ctl">
+                <div class="cl">Margin <span class="cv" id="marv">24</span></div>
+                <div class="stepper">
+                  <button class="btn icon sm" id="mardn" aria-label="Decrease margin"><i class="ic sm ic-minus"></i></button>
+                  <span class="bar" style="flex:1"><i id="marbar" style="width:60%"></i></span>
+                  <button class="btn icon sm" id="marup" aria-label="Increase margin"><i class="ic sm ic-plus"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY (D1/D2): one surface, four scopes -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
+            <button class="btn ghost icon sm" title="Add to Library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" type="text" placeholder="Search components" autocomplete="off" spellcheck="false" aria-label="Search components"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#5c7bff,#3d55e0)"></span><span class="cap"><span class="nm">Top bar</span><span class="mt">2 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero</span><span class="mt">3 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Avatar</span><span class="mt">1 variant</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Status bar</span><span class="mt">2 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff7e5f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">Tab bar</span><span class="mt">1 variant</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gGrid" title="Layout grid"><i class="ic sm ic-grid"></i><span class="lb">Grid</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-maximize"></i> Stretch to frame</div>
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KIND 2 · SPECIMEN. Depicts a part of the model, not the app,
+           so it wears no traffic lights and no title bar. ===== -->
+  <div class="gc-spec">
+    <div class="gc-spec-h"><span class="gc-kind">Specimen</span><h3>Grids and constraints in the API</h3><span class="gc-sub">A grid is a property, a constraint is a property</span></div>
+    <div class="apiblk" style="padding:var(--pad)">
+      <div class="codeblk"><span class="c">// the layout grid and every constraint are just fields on the model</span><br><span class="k">frame</span>.grid = { cols: <span class="p">12</span>, gutter: <span class="p">16</span>, margin: <span class="p">24</span> }<br><span class="k">bar</span>.constraints = { x: <span class="s">"stretch"</span>, y: <span class="s">"top"</span> }&nbsp;&nbsp;<span class="c">// full-width top bar</span><br><span class="k">share</span>.constraints = { x: <span class="s">"right"</span>, y: <span class="s">"top"</span> }&nbsp;&nbsp;&nbsp;<span class="c">// hugs the right edge</span></div>
+      <p style="margin:var(--pad-sm) 0 0;font-size:12px;color:var(--dim);line-height:1.55">The same command runs whether you drag the frame, script it, or ask the <b style="color:var(--ink)">agent</b>. You set the rule once and the frame keeps the layout correct at every size, on <b data-target="editor" style="color:var(--accent);cursor:pointer">UI</b>, a photo, or a <b data-target="video" style="color:var(--accent);cursor:pointer">video</b> title card.</p>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A <b>layout grid</b> gives a frame shared structure (columns, rows, or a mesh with a gutter and margin), and <b>constraints</b> tell each element how to respond when the frame resizes. Pin to an edge, center, or <b style="color:var(--accent)">stretch</b> across both. The design stays aligned instead of drifting.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Constraints and <b data-target="ui-autolayout" style="color:var(--comp);cursor:pointer">auto-layout</b> are two halves of the same story: auto-layout packs children along an axis, constraints pin them to a frame. Snap constraints to grid columns so a pinned edge lands on a real gridline, not a raw pixel.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the grid bind to spacing <b data-target="dsys" style="color:var(--comp);cursor:pointer">tokens</b> so the whole file restacks when the scale changes, and should breakpoints be first-class, so a frame can carry a different grid and constraint set per size?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ui-grid · scoped, guarded live demo. Real layout math is driven from state;
+   every control mutates state then re-renders. Constraints are applied as real
+   absolute positioning (left/right/top/bottom + transform) so pinned and
+   stretched elements truly respond when the frame width changes. Selection
+   shows in three places: canvas ring, Layers row, Properties. */
+(function () {
+  var frame = document.getElementById('frame');
+  var gridEl = document.getElementById('grid');
+  var handle = document.getElementById('handle');
+  if (!frame || !gridEl) return;
+
+  var NARROW = 360, WIDE = 560, MINW = 300, MAXW = 640;
+
+  var initial = {
+    grid: true, gtype: 'columns', cols: 12, gutter: 16, margin: 24,
+    frameW: WIDE, sel: 0,
+    els: [
+      { label: 'Top bar', kind: 'gbar', glyph: 'ic-square', x: 'stretch', y: 'top', w: 0, h: 44 },
+      { label: 'Share', kind: 'gbtn', glyph: 'ic-component', x: 'right', y: 'top', w: 88, h: 32 },
+      { label: 'Avatar', kind: 'gavatar', glyph: 'ic-circle', x: 'left', y: 'center', w: 52, h: 52 },
+      { label: 'Hero', kind: 'ghero', glyph: 'ic-text', x: 'center', y: 'center', w: 176, h: 84 },
+      { label: 'Status', kind: 'gbar', glyph: 'ic-square', x: 'stretch', y: 'bottom', w: 0, h: 34 }
+    ]
+  };
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  var state = clone(initial);
+
+  function byId(id) { return document.getElementById(id); }
+  var el = {
+    artlabel: byId('artlabel'), status: byId('status'), fdim: byId('fdim'),
+    countv: byId('countv'), countlb: byId('countlb'), cntbar: byId('cntbar'),
+    gutv: byId('gutv'), gutbar: byId('gutbar'), marv: byId('marv'), marbar: byId('marbar'),
+    fwv: byId('fwv'), selname: byId('selname'), selmut: byId('selmut'), apicode: byId('apicode'),
+    toggleic: byId('toggleic'), togglelb: byId('togglelb'), layerList: byId('layerList'),
+    layerCount: byId('layerCount'), propKind: byId('propKind'), gridCnt: byId('gridCnt'),
+    chipGrid: byId('chipGrid'), chipSel: byId('chipSel')
+  };
+
+  var COLS_MIN = 2, COLS_MAX = 12, ROWS_MIN = 2, ROWS_MAX = 10;
+  var GUT_MAX = 32, MAR_MAX = 40, STEP = 4;
+
+  /* ---------- readable constraint label ---------- */
+  function badge(e) {
+    if (e.x === 'center' && e.y === 'center') return 'center';
+    if (e.x === 'stretch' && e.y === 'stretch') return 'stretch';
+    var corner = { top: 1, bottom: 1 }[e.y] && { left: 1, right: 1 }[e.x];
+    if (corner) return 'pin ' + e.y + '-' + e.x;
+    var hx = { left: 'pin L', right: 'pin R', center: 'center X', stretch: 'stretch L+R' }[e.x];
+    var vy = { top: 'pin top', bottom: 'pin bottom', center: 'center Y', stretch: 'stretch T+B' }[e.y];
+    return hx + ' · ' + vy;
+  }
+
+  /* ---------- apply one element's constraints as real positioning ---------- */
+  function place(node, e) {
+    var m = state.margin;
+    node.style.left = node.style.right = node.style.top = node.style.bottom = 'auto';
+    node.style.width = node.style.height = 'auto';
+    var tx = '0', ty = '0';
+    if (e.x === 'left') { node.style.left = m + 'px'; node.style.width = e.w + 'px'; }
+    else if (e.x === 'right') { node.style.right = m + 'px'; node.style.width = e.w + 'px'; }
+    else if (e.x === 'center') { node.style.left = '50%'; node.style.width = e.w + 'px'; tx = '-50%'; }
+    else { node.style.left = m + 'px'; node.style.right = m + 'px'; }
+    if (e.y === 'top') { node.style.top = m + 'px'; node.style.height = e.h + 'px'; }
+    else if (e.y === 'bottom') { node.style.bottom = m + 'px'; node.style.height = e.h + 'px'; }
+    else if (e.y === 'center') { node.style.top = '50%'; node.style.height = e.h + 'px'; ty = '-50%'; }
+    else { node.style.top = m + 'px'; node.style.bottom = m + 'px'; }
+    node.style.transform = (tx === '0' && ty === '0') ? 'none' : ('translate(' + tx + ',' + ty + ')');
+  }
+
+  function selectionMarkup(e) {
+    return '<span class="sel-ring"></span>' +
+      '<span class="handle tl"></span><span class="handle tr"></span>' +
+      '<span class="handle bl"></span><span class="handle br"></span>' +
+      '<span class="mtag">' + e.label + ' · ' + badge(e) + '</span>';
+  }
+
+  function innerHTML(e, sel) {
+    var body;
+    if (e.kind === 'ghero') body = '<span class="gc-h">Aligned</span><span class="gc-sub">centered in the frame</span>';
+    else if (e.kind === 'gavatar') body = '<i class="ic sm ic-component"></i>';
+    else if (e.kind === 'gbtn') body = '<span class="gc-lb">' + e.label + '</span>';
+    else body = '<span class="gc-lb">' + e.label + '</span><i class="ic xs ic-more" style="opacity:.5"></i>';
+    return body + (sel ? selectionMarkup(e) : '');
+  }
+
+  /* ---------- build the live content elements ---------- */
+  function buildEls() {
+    [].slice.call(frame.querySelectorAll('.gc-el')).forEach(function (n) { n.parentNode.removeChild(n); });
+    state.els.forEach(function (e, i) {
+      var node = document.createElement('div');
+      node.className = 'gc-el ' + e.kind;
+      node.setAttribute('data-i', String(i));
+      node.setAttribute('tabindex', '0');
+      node.innerHTML = innerHTML(e, i === state.sel);
+      place(node, e);
+      node.addEventListener('click', function (ev) { ev.stopPropagation(); state.sel = i; render(); });
+      node.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); state.sel = i; render(); }
+      });
+      frame.insertBefore(node, handle);
+    });
+  }
+
+  /* ---------- Layers rows mirror the same elements ---------- */
+  function buildLayers() {
+    if (!el.layerList) return;
+    el.layerList.innerHTML = '';
+    state.els.forEach(function (e, i) {
+      var row = document.createElement('div');
+      row.className = 'lrow child' + (i === state.sel ? ' sel' : '');
+      row.setAttribute('data-i', String(i));
+      row.innerHTML = '<i class="ic ' + e.glyph + '"></i><span class="nm">' + e.label + '</span>' +
+        '<span class="lmeta">' + badge(e) + '</span><i class="ic sm ic-eye eye"></i>';
+      row.addEventListener('click', function () { state.sel = i; render(); });
+      el.layerList.appendChild(row);
+    });
+    if (el.layerCount) el.layerCount.textContent = String(state.els.length + 1);
+  }
+
+  /* ---------- draw the grid overlay ---------- */
+  function drawGrid() {
+    gridEl.innerHTML = '';
+    gridEl.style.display = state.grid ? 'block' : 'none';
+    if (!state.grid) return;
+    var W = state.frameW, H = 308, m = state.margin, g = state.gutter;
+    if (state.gtype === 'grid') {
+      var n0 = state.cols;
+      var innerW0 = W - 2 * m;
+      var cw = Math.max(6, (innerW0 - (n0 - 1) * g) / n0);
+      var pitch = cw + g;
+      var mesh = document.createElement('div');
+      mesh.className = 'gc-col';
+      mesh.style.background = 'transparent';
+      mesh.style.border = '0';
+      mesh.style.left = m + 'px'; mesh.style.top = m + 'px';
+      mesh.style.right = m + 'px'; mesh.style.bottom = m + 'px';
+      mesh.style.width = 'auto'; mesh.style.height = 'auto';
+      mesh.style.backgroundImage =
+        'linear-gradient(rgba(255,90,120,.28) 1px,transparent 1px),' +
+        'linear-gradient(90deg,rgba(255,90,120,.28) 1px,transparent 1px)';
+      mesh.style.backgroundSize = pitch + 'px ' + pitch + 'px';
+      gridEl.appendChild(mesh);
+      return;
+    }
+    var along = state.gtype === 'columns';
+    var n = state.cols;
+    var span = (along ? W : H) - 2 * m;
+    var size = Math.max(4, (span - (n - 1) * g) / n);
+    for (var i = 0; i < n; i++) {
+      var pos = m + i * (size + g);
+      if (pos > (along ? W : H) - m + 1) break;
+      var band = document.createElement('div');
+      band.className = 'gc-col';
+      if (along) {
+        band.style.left = pos + 'px'; band.style.top = m + 'px'; band.style.bottom = m + 'px';
+        band.style.width = size + 'px'; band.style.height = 'auto';
+      } else {
+        band.style.top = pos + 'px'; band.style.left = m + 'px'; band.style.right = m + 'px';
+        band.style.height = size + 'px'; band.style.width = 'auto';
+        band.style.borderLeft = '0'; band.style.borderRight = '0';
+        band.style.borderTop = '1px solid rgba(255,90,120,.42)';
+        band.style.borderBottom = '1px solid rgba(255,90,120,.42)';
+      }
+      gridEl.appendChild(band);
+    }
+    var guide = document.createElement('div');
+    guide.className = 'gc-margin';
+    guide.style.left = m + 'px'; guide.style.right = m + 'px';
+    guide.style.top = m + 'px'; guide.style.bottom = m + 'px';
+    gridEl.appendChild(guide);
+  }
+
+  function setSeg(name, val) {
+    var seg = document.querySelector('.seg[data-seg="' + name + '"]');
+    if (!seg) return;
+    [].slice.call(seg.querySelectorAll('button')).forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-val') === val);
+    });
+  }
+
+  /* ---------- master render ---------- */
+  function render() {
+    if (state.sel >= state.els.length) state.sel = state.els.length - 1;
+    if (state.sel < 0) state.sel = 0;
+    var cur = state.els[state.sel];
+
+    frame.style.width = state.frameW + 'px';
+    drawGrid();
+    buildEls();
+    buildLayers();
+
+    setSeg('gtype', state.gtype);
+    setSeg('cx', cur ? cur.x : 'left');
+    setSeg('cy', cur ? cur.y : 'top');
+    setSeg('fw', state.frameW === WIDE ? 'wide' : (state.frameW === NARROW ? 'narrow' : ''));
+
+    if (el.toggleic) el.toggleic.className = 'ic sm ' + (state.grid ? 'ic-eye' : 'ic-eye-off');
+    if (el.togglelb) el.togglelb.textContent = state.grid ? 'Hide grid' : 'Show grid';
+    var toggleBtn = byId('toggle');
+    if (toggleBtn) toggleBtn.classList.toggle('primary', state.grid);
+
+    var typeName = state.gtype === 'rows' ? 'Rows' : (state.gtype === 'grid' ? 'Grid' : 'Columns');
+    if (el.countlb) el.countlb.textContent = state.gtype === 'grid' ? 'Cells' : typeName;
+    if (el.gridCnt) el.gridCnt.textContent = state.grid ? typeName : 'Hidden';
+    if (el.countv) el.countv.textContent = state.cols;
+    if (el.cntbar) el.cntbar.style.width = (state.cols / COLS_MAX * 100) + '%';
+    if (el.gutv) el.gutv.textContent = state.gutter;
+    if (el.gutbar) el.gutbar.style.width = (state.gutter / GUT_MAX * 100) + '%';
+    if (el.marv) el.marv.textContent = state.margin;
+    if (el.marbar) el.marbar.style.width = (state.margin / MAR_MAX * 100) + '%';
+    if (el.fwv) el.fwv.textContent = state.frameW;
+    if (el.fdim) el.fdim.textContent = state.frameW + ' w';
+    if (el.selname) el.selname.textContent = cur ? cur.label : '';
+    if (el.selmut) el.selmut.textContent = cur ? cur.label.toLowerCase() : '';
+    if (el.propKind) el.propKind.textContent = cur ? cur.label : '';
+    if (el.chipSel) el.chipSel.textContent = cur ? cur.label : '';
+    if (el.chipGrid) el.chipGrid.textContent = state.cols + ' ' + state.gtype;
+    if (el.artlabel) el.artlabel.textContent =
+      'Frame · ' + state.frameW + ' × 308 · ' + state.cols + ' ' + state.gtype + ' · gutter ' + state.gutter + ' · margin ' + state.margin;
+
+    updateStatus(cur);
+    updateApi(cur);
+  }
+
+  function updateStatus(cur) {
+    if (!el.status) return;
+    var b = cur ? badge(cur) : '';
+    el.status.innerHTML = state.grid
+      ? 'Grid on · <b>' + state.cols + ' ' + state.gtype + '</b>. Selected <b>' + (cur ? cur.label : '') + '</b> is set to <b>' + b + '</b>. Drag the frame edge and watch it respond.'
+      : 'Grid hidden. Selected <b>' + (cur ? cur.label : '') + '</b> is set to <b>' + b + '</b>. Resize the frame to see the constraint take effect.';
+  }
+
+  function updateApi(cur) {
+    if (!el.apicode) return;
+    var x = cur ? cur.x : 'left', y = cur ? cur.y : 'top';
+    el.apicode.innerHTML =
+      '<span class="k">frame</span>.grid = { cols: <span class="p">' + state.cols + '</span>, gutter: <span class="p">' + state.gutter + '</span>, margin: <span class="p">' + state.margin + '</span> }<br>' +
+      '<span class="k">frame</span>.grid.type = <span class="s">"' + state.gtype + '"</span>&nbsp;&nbsp;<span class="c">// columns · rows · grid</span><br>' +
+      '<span class="k">node</span>.constraints = { x: <span class="s">"' + x + '"</span>, y: <span class="s">"' + y + '"</span> }';
+  }
+
+  /* ---------- wire controls ---------- */
+  [].slice.call(document.querySelectorAll('.seg[data-seg]')).forEach(function (seg) {
+    var name = seg.getAttribute('data-seg');
+    [].slice.call(seg.querySelectorAll('button')).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var val = b.getAttribute('data-val');
+        if (name === 'gtype') {
+          state.gtype = val;
+          if (val === 'rows' && state.cols > ROWS_MAX) state.cols = ROWS_MAX;
+        }
+        else if (name === 'cx') { if (state.els[state.sel]) state.els[state.sel].x = val; }
+        else if (name === 'cy') { if (state.els[state.sel]) state.els[state.sel].y = val; }
+        else if (name === 'fw') { state.frameW = (val === 'wide') ? WIDE : NARROW; }
+        render();
+      });
+    });
+  });
+
+  function wire(id, fn) { var n = byId(id); if (n) n.addEventListener('click', fn); }
+  wire('toggle', function () { state.grid = !state.grid; render(); });
+  function countMax() { return state.gtype === 'rows' ? ROWS_MAX : COLS_MAX; }
+  function countMin() { return state.gtype === 'rows' ? ROWS_MIN : COLS_MIN; }
+  wire('cntdn', function () { state.cols = Math.max(countMin(), state.cols - 1); render(); });
+  wire('cntup', function () { state.cols = Math.min(countMax(), state.cols + 1); render(); });
+  wire('gutdn', function () { state.gutter = Math.max(0, state.gutter - STEP); render(); });
+  wire('gutup', function () { state.gutter = Math.min(GUT_MAX, state.gutter + STEP); render(); });
+  wire('mardn', function () { state.margin = Math.max(0, state.margin - STEP); render(); });
+  wire('marup', function () { state.margin = Math.min(MAR_MAX, state.margin + STEP); render(); });
+  wire('reset', function () { state = clone(initial); render(); });
+
+  /* ---------- drag-to-resize the frame ---------- */
+  if (handle) {
+    var startX = 0, startW = 0, dragging = false;
+    var onMove = function (ev) {
+      if (!dragging) return;
+      var w = Math.round(startW + (ev.clientX - startX));
+      state.frameW = Math.max(MINW, Math.min(MAXW, w));
+      render();
+    };
+    var onUp = function () {
+      dragging = false; handle.classList.remove('drag');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+    handle.addEventListener('pointerdown', function (ev) {
+      ev.preventDefault();
+      dragging = true; startX = ev.clientX; startW = state.frameW;
+      handle.classList.add('drag');
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+    handle.addEventListener('keydown', function (ev) {
+      var step = ev.shiftKey ? 32 : 8;
+      if (ev.key === 'ArrowLeft') { ev.preventDefault(); state.frameW = Math.max(MINW, state.frameW - step); render(); }
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); state.frameW = Math.min(MAXW, state.frameW + step); render(); }
+    });
+  }
+
+  /* Library scope switch (Media · Components · Styles · Assets) */
+  var seg = byId('scopeSeg');
+  var scopeCnt = byId('scopeCnt');
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  if (seg) {
+    var sbtns = [].slice.call(seg.querySelectorAll('button'));
+    sbtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        if (scopeCnt) scopeCnt.textContent = NAMES[b.getAttribute('data-scope')] || 'Components';
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+    var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+    tiles.forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+      });
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

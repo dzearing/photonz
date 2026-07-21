@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-nested</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Nested components · a component built FROM components built from components.
+     IconButton -> Toolbar -> AppBar, sitting in the ONE shell: the nesting tree
+     IS the Layers group, the mains live in the Library group, and every override
+     is edited in the Properties group. Only what the shared DS does not cover
+     lives here; 4pt spacing only, comp(purple) = component language. */
+
+  /* definite window height so the dock is bounded and each group scrolls */
+  #ui-nested .win.shell{height:720px;min-height:0}  /* KIND 2 · a specimen card. It depicts a PART of the model, so it wears no
+     traffic lights and no title bar: a plain labeled bordered block. */
+  #ui-nested .nc-spec{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #ui-nested .nc-spec-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #ui-nested .nc-spec-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #ui-nested .nc-spec-h .nc-kind{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint)}
+  #ui-nested .nc-spec-h .nc-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+
+  /* the canvas stacks two specimens, so it scrolls instead of centering */
+  .nestcv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s6);
+    overflow-y:auto;padding:var(--s7) var(--s5)}
+
+  .nc-specimen{width:min(460px,100%)}
+  .nc-spectag{font-size:10px;font-weight:640;letter-spacing:.04em;color:#d9c4ff;display:flex;align-items:center;gap:6px;
+    margin-bottom:var(--gap-sm)}
+  .nc-spectag .k{color:rgba(255,255,255,.5);font-weight:520}
+
+  /* the composed AppBar instance (root) */
+  .appbar{--tint:var(--accent);--ib-r:9px;display:flex;align-items:center;gap:var(--pad-sm);
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--pad-sm) var(--pad);
+    box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow);position:relative;cursor:pointer}
+  .appbar .brand{width:28px;height:28px;border-radius:var(--r-sm);flex:none;display:grid;place-items:center;color:#fff;
+    background:linear-gradient(135deg,var(--comp),#ff5d8f)}
+
+  .toolbar-mini{display:flex;align-items:center;gap:var(--pad-sm);flex:1;min-width:0;padding:var(--s1) var(--gap-sm);
+    border-radius:var(--r-sm);position:relative;cursor:pointer}
+  .toolbar-mini.compact{gap:var(--gap-sm)}
+  .tb-title{font-size:13px;font-weight:640;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;letter-spacing:-.01em}
+  .tb-btns{display:flex;align-items:center;gap:var(--gap-sm);flex:none}
+  .toolbar-mini.compact .tb-btns{gap:var(--s1)}
+
+  .ib{width:30px;height:30px;border-radius:var(--ib-r);display:grid;place-items:center;flex:none;cursor:pointer;
+    border:1px solid var(--edge-lo);color:#fff;transition:var(--ctl-tr);box-shadow:var(--ctl-gloss);position:relative;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--tint) 84%,white 16%),var(--tint))}
+  .toolbar-mini.compact .ib{width:26px;height:26px}
+  .ib:hover{filter:brightness(1.07)}
+  .ib:active{transform:translateY(.5px) scale(.95)}
+  .ib:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
+  .ib[disabled]{opacity:.42;pointer-events:none}
+  .ib.hollow{background:transparent;border-color:var(--edge-lo);color:var(--tint);box-shadow:none}
+  .ib.hollow:hover{background:var(--glass-thin);filter:none}
+
+  /* tint themes set on the appbar root (main-driven, so both specimens follow) */
+  .tint-accent{--tint:var(--accent)}
+  .tint-comp{--tint:var(--comp)}
+  .tint-plain{--tint:var(--faint)}
+
+  /* canvas selection: the shared component ring + badge, revealed on the
+     selected level only. The wrapper never affects layout. */
+  .selmark{position:absolute;inset:0;pointer-events:none;display:none}
+  .selq>.selmark{display:block}
+  /* the level badge sits right-aligned so it never covers the specimen label */
+  .appbar>.selmark>.cbadge,.toolbar-mini>.selmark>.cbadge{left:auto;right:0;top:-26px}
+  .ib .cring{inset:-4px;border-radius:12px}
+  .ib .cbadge{top:-23px;left:50%;transform:translateX(-50%);font-size:9px;padding:2px 6px}
+  .toolbar-mini .cring{inset:-3px;border-radius:12px}
+
+  .linknote{font-size:10.5px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-top:var(--gap-sm)}
+  .linknote b{color:#d9c4ff;font-weight:600}
+  .pv-tint{color:rgba(255,255,255,.4);font-size:10px;font-family:var(--mono);letter-spacing:.04em;text-align:center}
+  .pv-tint b{color:rgba(255,255,255,.72);font-weight:600}
+
+  /* Layers: a third level, and the amber dot that marks a local override */
+  .lrow.l3{padding-left:40px}
+  .opip{width:7px;height:7px;border-radius:50%;background:var(--warn);flex:none;opacity:0;transition:opacity .12s}
+  .opip.on{opacity:1}
+  .lrow .ovlb{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);flex:none;
+    opacity:0;transition:opacity .12s}
+  .lrow .ovlb.on{opacity:1}
+
+  /* Properties: a wide control block when a seg needs the full dock width */
+  .nc-block{margin:var(--gap-sm) 0}
+  .nc-block .nc-pl{font-size:10.5px;color:var(--faint);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
+  /* .nc-block .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  .nc-path{font-family:var(--mono);font-size:10px;color:var(--comp);background:var(--comp-soft);
+    border:1px solid var(--comp-line);padding:1px 6px;border-radius:5px}
+  .ovbadge{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent);
+    border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);padding:2px 6px;border-radius:5px;margin-left:auto}
+  .nc-panel{display:none}
+  .nc-panel.on{display:block}
+
+  /* the API strip window below the shell */
+  .nc-apibody{padding:var(--pad)}
+  .nc-apibody .lead{font-size:12px;color:var(--dim);line-height:1.5;margin:0 0 var(--pad-sm)}
+  .nc-apibody .lead b{color:var(--ink)}
+  .codeblk .cm{color:#e0a5ff}
+
+  @media (prefers-reduced-motion:reduce){.opip,.lrow .ovlb{transition:none}}
+
+  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
+  @container shell (max-width:880px){ .toolbar .chip{display:none} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="ui-nested">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Nested components</h2><span class="k">· components inside components</span></div>
+
+  <p class="pglead">An <b>AppBar</b> contains a <b>Toolbar</b>, which contains an <b>IconButton</b>. Three levels, one
+    document, one window. The nesting tree <i>is</i> the Layers group, the mains live in the Library group, and every
+    override is edited in Properties. Select any level on the canvas or in Layers to see what it can override.</p>
+
+  <!-- ============ THE ONE SHELL · UI workspace, a nested instance tree ============ -->
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>aurora-appbar</b> · 1440 × 900</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm" id="resetAll" title="Clear every override, relink every instance"><i class="ic ic-undo"></i> Reset overrides</button>
+        <button class="btn sm" id="revealLib" title="Reveal the Library group in the dock"><i class="ic ic-library"></i> Open library</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip comp"><i class="ic xs ic-component"></i> 3 levels deep</span>
+      <span class="chip" id="chipOv">No overrides</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+          <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Push override to main</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset overrides <span class="sc">⌘⌥R</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shellNest" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas nestcv" id="canvas">
+          <div class="artboard-label">Artboard · nested instances · 3 levels</div>
+
+          <!-- 1) the composed AppBar instance (appbar + toolbar overrides + IconButton main) -->
+          <div class="nc-specimen">
+            <div class="nc-spectag"><i class="ic xs ic-component"></i> AppBar <span class="k">· composed instance</span></div>
+            <div class="appbar tint-accent" id="appbar" data-sel="appbar" tabindex="0" role="button" aria-label="AppBar instance">
+              <div class="brand"><i class="ic sm ic-component"></i></div>
+              <div class="toolbar-mini" id="toolbar" data-sel="toolbar" tabindex="0" role="button" aria-label="Toolbar instance">
+                <span class="tb-title" id="tbTitle">Library</span>
+                <div class="tb-btns">
+                  <button class="ib" data-ib="search" data-sel="ib-search" title="Search"><i class="ic sm ic-search"></i>
+                    <span class="selmark"><span class="cring"></span><span class="cbadge"><i class="ic xs ic-component"></i> IconButton</span></span>
+                  </button>
+                  <button class="ib" data-ib="action" data-sel="ib-action" id="ibAction" title="Share"><i class="ic sm ic-export"></i>
+                    <span class="selmark"><span class="cring"></span><span class="cbadge"><i class="ic xs ic-component"></i> IconButton</span></span>
+                  </button>
+                  <button class="ib" data-ib="more" data-sel="ib-more" title="More"><i class="ic sm ic-more"></i>
+                    <span class="selmark"><span class="cring"></span><span class="cbadge"><i class="ic xs ic-component"></i> IconButton</span></span>
+                  </button>
+                </div>
+                <span class="selmark"><span class="cring"></span><span class="cbadge"><i class="ic xs ic-component"></i> instance of Toolbar</span></span>
+              </div>
+              <span class="selmark"><span class="cring"></span><span class="cbadge"><i class="ic xs ic-component"></i> instance of AppBar</span></span>
+            </div>
+          </div>
+
+          <!-- 2) the Toolbar main, standalone. Overrides at the AppBar level do NOT
+                  leak into the shared main; it still follows the IconButton main. -->
+          <div class="nc-specimen">
+            <div class="nc-spectag"><i class="ic xs ic-component"></i> Toolbar <span class="k">· main (source, still linked)</span></div>
+            <div class="appbar tint-accent" id="appbarMain" style="background:var(--glass-thin);cursor:default">
+              <div class="toolbar-mini" style="padding-left:var(--gap-sm);cursor:default">
+                <span class="tb-title">Library</span>
+                <div class="tb-btns">
+                  <button class="ib" title="Search"><i class="ic sm ic-search"></i></button>
+                  <button class="ib" title="Share"><i class="ic sm ic-export"></i></button>
+                  <button class="ib" title="More"><i class="ic sm ic-more"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="linknote">Editing the <b>IconButton main</b> reshapes every button in <b>both</b> rows.
+              Overriding <b>toolbar.title</b> on the AppBar changes only the row above.</div>
+          </div>
+
+          <div class="pv-tint" id="mainState">IconButton main · radius <b>9</b> · tint <b>accent</b> · 3 linked instances</div>
+        </div>
+
+        <!-- canvas action cluster -->
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shellNest" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="components"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">App bar</span><span class="ago">9 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#4c6fff)"></span>
+                <span class="cap"><span class="nm">Toolbar audit</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:07</span></span>
+                <span class="cap"><span class="nm">Override pass</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Open a capture as a layer, then wrap the pieces you reuse into a component.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLITTER -->
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock" style="--dock-w:300px">
+
+        <!-- LAYERS · the nesting tree IS the layer tree, selection place 2 of 3 -->
+        <div class="dgrp" id="gLayers" style="--gh:170px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> App shell</div>
+
+            <div class="lrow child selc sel" data-sel="appbar" tabindex="0" role="button">
+              <i class="ic sm ic-chevron-down"></i><i class="ic ic-component"></i>
+              <span class="nm">AppBar</span><span class="opip" id="pip-appbar"></span>
+              <span class="ovlb" id="ovlb-appbar">ovr</span><i class="ic sm ic-eye eye"></i>
+            </div>
+
+            <div class="lrow l3" data-sel="toolbar" tabindex="0" role="button">
+              <i class="ic sm ic-chevron-down"></i><i class="ic ic-component"></i>
+              <span class="nm">Toolbar</span><span class="opip" id="pip-toolbar"></span>
+              <span class="ovlb" id="ovlb-toolbar">ovr</span><i class="ic sm ic-eye eye"></i>
+            </div>
+
+            <div class="lrow l3" style="padding-left:54px" data-sel="ib-search" tabindex="0" role="button">
+              <i class="ic ic-component"></i><span class="nm">IconButton · search</span><i class="ic sm ic-eye eye"></i>
+            </div>
+            <div class="lrow l3" style="padding-left:54px" data-sel="ib-action" tabindex="0" role="button">
+              <i class="ic ic-component"></i><span class="nm">IconButton · share</span><span class="opip" id="pip-action"></span><i class="ic sm ic-eye eye"></i>
+            </div>
+            <div class="lrow l3" style="padding-left:54px" data-sel="ib-more" tabindex="0" role="button">
+              <i class="ic ic-component"></i><span class="nm">IconButton · more</span><i class="ic sm ic-eye eye"></i>
+            </div>
+
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- PROPERTIES · one panel per selected level, selection place 3 of 3 -->
+        <div class="dgrp" id="gProps" style="--gh:222px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="whoName">AppBar</span></div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h comp"><span id="whoTitle">AppBar</span> <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+              <p class="note" id="whoSub" style="margin-top:0">The root instance. It composes a Toolbar and can override the values that ride inside it.</p>
+            </div>
+
+            <!-- AppBar panel -->
+            <div class="nc-panel on" data-panel="appbar">
+              <div class="section">
+                <div class="sec-h">Instance overrides <span class="mut"><span class="nc-path">toolbar.title</span></span></div>
+                <div class="nc-block">
+                  <div class="nc-pl">Title <span class="ovbadge" id="ovb-title" style="display:none">override</span></div>
+                  <div class="seg" id="seg-title" role="group" aria-label="Toolbar title">
+                    <button class="on" data-ov="off">From main</button>
+                    <button data-ov="on">Override “Files”</button>
+                  </div>
+                </div>
+                <p class="note">The Toolbar main ships the title <b>Library</b>. This AppBar instance can override just the text without touching the main.</p>
+                <div class="row" style="margin-top:var(--pad-sm)">
+                  <button class="btn ghost sm" id="reset-appbar"><i class="ic sm ic-undo"></i> Reset this level</button>
+                </div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Push a change up</div>
+                <button class="btn sm block disabled" id="push-appbar" disabled title="Enabled once an instance override exists"><i class="ic sm ic-import"></i> Push override to main</button>
+              </div>
+            </div>
+
+            <!-- Toolbar panel -->
+            <div class="nc-panel" data-panel="toolbar">
+              <div class="section">
+                <div class="sec-h">Instance overrides <span class="mut"><span class="nc-path">action</span></span></div>
+                <div class="nc-block">
+                  <div class="nc-pl">Action slot <span class="ovbadge" id="ovb-swap" style="display:none">swap</span></div>
+                  <div class="seg" id="seg-swap" role="group" aria-label="Action variant">
+                    <button class="on" data-ov="off">Solid</button>
+                    <button data-ov="on">Ghost</button>
+                  </div>
+                </div>
+                <p class="note">Swap the <b>action</b> slot from <b>IconButton / Solid</b> to <b>IconButton / Ghost</b>. Still an IconButton, still linked to the same main.</p>
+                <div class="nc-block">
+                  <div class="nc-pl">Density <span class="ovbadge" id="ovb-density" style="display:none">override</span></div>
+                  <div class="seg" id="seg-density" role="group" aria-label="Density">
+                    <button class="on" data-density="comfy">Comfortable</button>
+                    <button data-density="compact">Compact</button>
+                  </div>
+                </div>
+                <p class="note">A layout override on the Toolbar instance. Deeper IconButton mains are untouched.</p>
+                <div class="row" style="margin-top:var(--pad-sm)">
+                  <button class="btn ghost sm" id="reset-toolbar"><i class="ic sm ic-undo"></i> Reset this level</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- IconButton instance panel (search / share / more) -->
+            <div class="nc-panel" data-panel="instance">
+              <div class="section">
+                <div class="sec-h">Instance <span class="mut"><span class="nc-path" id="inst-path">IconButton</span></span></div>
+                <div class="row"><span class="rl">Main</span><span class="select comp"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> IconButton</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                <div class="row"><span class="rl">Variant</span><span class="val" id="inst-variant">Solid (from main)</span></div>
+                <p class="note" id="inst-desc">A linked instance. Its shape and tint come from the <b>IconButton main</b>. This slot carries no local override, so it mirrors the main exactly.</p>
+                <button class="btn sm block" id="goto-main" style="margin-top:var(--gap-sm)"><i class="ic sm ic-component"></i> Edit the IconButton main</button>
+              </div>
+            </div>
+
+            <!-- IconButton MAIN panel -->
+            <div class="nc-panel" data-panel="main-ib">
+              <div class="section">
+                <div class="sec-h comp">Main component <span class="mut" style="color:var(--comp)">edits propagate</span></div>
+                <p class="note" style="margin-top:0">Change the main and <b>every linked instance follows</b>, so both toolbar rows update at once. Instances that overrode a value keep their override.</p>
+                <div class="row"><span class="rl">Radius</span>
+                  <div class="seg" id="seg-radius" role="group" aria-label="Corner radius">
+                    <button data-r="6">6</button>
+                    <button class="on" data-r="9">9</button>
+                    <button data-r="15">15</button>
+                    <button data-r="999">Full</button>
+                  </div>
+                </div>
+                <div class="nc-block">
+                  <div class="nc-pl">Tint</div>
+                  <div class="seg" id="seg-tint" role="group" aria-label="Tint">
+                    <button class="on" data-tint="accent">Accent</button>
+                    <button data-tint="comp">Purple</button>
+                    <button data-tint="plain">Neutral</button>
+                  </div>
+                </div>
+                <div class="row" style="margin-top:var(--pad-sm)">
+                  <button class="btn ghost sm" id="reset-main"><i class="ic sm ic-undo"></i> Reset main</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toolbar MAIN panel -->
+            <div class="nc-panel" data-panel="main-toolbar">
+              <div class="section">
+                <div class="sec-h comp">Main component <span class="mut" style="color:var(--comp)">shared source</span></div>
+                <p class="note" style="margin-top:0">Its title is <b>Library</b> and its action is <b>Solid</b>. The AppBar instance overrides those locally, so the main stays clean and every other place that uses Toolbar is unaffected.</p>
+                <button class="btn sm block" id="goto-main2" style="margin-top:var(--gap-sm)"><i class="ic sm ic-component"></i> Edit the IconButton main</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">In the API <span class="mut">one call each</span></div>
+              <div class="codeblk" id="apicode" style="font-size:10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY (D1/D2) · the mains live here, scope = Components -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
+            <button class="btn ghost icon sm" title="Add to Library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" type="text" placeholder="Search components" autocomplete="off" spellcheck="false" aria-label="Search components"></span>
+            </div>
+            <div class="libgrid" id="mainsGrid">
+              <div class="libtile comp" tabindex="0" data-sel="main-ib">
+                <span class="th" style="background:linear-gradient(135deg,#4c6fff,#7c4dff)"></span>
+                <span class="cap"><span class="nm">IconButton</span><span class="mt" id="use-ib">3 uses</span></span>
+              </div>
+              <div class="libtile comp" tabindex="0" data-sel="main-toolbar">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#4c6fff)"></span>
+                <span class="cap"><span class="nm">Toolbar</span><span class="mt">2 uses</span></span>
+              </div>
+              <div class="libtile comp" tabindex="0">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">AppBar</span><span class="mt">1 use</span></span>
+              </div>
+              <div class="libtile comp" tabindex="0">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>
+                <span class="cap"><span class="nm">Field</span><span class="mt">5 states</span></span>
+              </div>
+              <div class="libtile comp" tabindex="0">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff7e5f)"></span>
+                <span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span>
+              </div>
+              <div class="libtile comp" tabindex="0">
+                <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                <span class="cap"><span class="nm">Tab bar</span><span class="mt">1 variant</span></span>
+              </div>
+            </div>
+            <p class="note" style="padding:0 var(--pad-sm) var(--pad-sm);margin:0">Pick a main to edit it. Every instance in Layers that still points at it follows the change.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:212px;z-index:11">
+        <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset overrides on this level</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KIND 2 · SPECIMEN. The API surface behind the window above.
+             It depicts a part of the model, not the app, so it wears no
+             traffic lights and no title bar (PRODUCT-MODEL §4c). ===== -->
+  <div class="nc-spec">
+    <div class="nc-spec-h"><span class="nc-kind">Specimen</span><h3>In the API</h3><span class="nc-sub">Everything above is one call each · address any level by its path</span></div>
+    <div class="nc-apibody">
+      <p class="lead">A nested component is a layer tree of instances. You reach into any depth by <b>path</b>. Overrides are stored on the instance you address; the mains they point at never change, so one edit to a main still fans out everywhere it is used.</p>
+      <div class="codeblk">
+<span class="c">// override a value that lives inside a nested instance</span>
+<span class="k">appBar</span>.<span class="p">override</span>(<span class="s">"toolbar.title"</span>, <span class="s">"Files"</span>)
+
+<span class="c">// swap a slot's variant, still linked to the same main</span>
+<span class="k">appBar</span>.<span class="p">swap</span>(<span class="s">"toolbar.action"</span>, <span class="s">"IconButton/Ghost"</span>)
+
+<span class="c">// edit the deepest main once · all 3 linked instances follow</span>
+<span class="k">IconButton</span>.<span class="p">set</span>({ radius: <span class="p">12</span>, tint: <span class="s">"comp"</span> })
+
+<span class="c">// clear a level's overrides · re-link it to the main</span>
+<span class="k">appBar</span>.<span class="p">resetOverrides</span>(<span class="s">"toolbar.title"</span>)
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Composition goes all the way down. An <b>IconButton</b> is used inside a <b>Toolbar</b>, which is used inside an <b>AppBar</b>. Each level can <b style="color:var(--warn)">override</b> a value that rides inside it, yet the deeper <b style="color:var(--comp)">mains stay linked</b>, so one edit to a main updates every instance that did not opt out.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Overrides are addressed by path, the same way a command is · <code>appBar.override("toolbar.title","Files")</code>. Because every override is one call, an <b data-target="agent" style="color:var(--comp);cursor:pointer">agent</b> can retheme a whole nested tree, and a <b data-target="dsys" style="color:var(--comp);cursor:pointer">token or style</b> change can flow through every level at once.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>When you edit a linked instance in place, should we <b>auto-detach</b> just that property into an override, or ask first? And should an override be pushable back up to become the new main default, the way <code>push to main</code> hints at here?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Nested components · scoped, guarded live demo inside the shared shell.
+   Selecting a level (canvas, Layers row, or a Library main) shows its overrides
+   in the Properties group; toggling an override updates the composed preview
+   WITHOUT breaking the instance's link to its main. IconButton "main" edits fan
+   out to every linked instance in both rows. Nothing throws. */
+(function () {
+  var root = document.getElementById('ui-nested');
+  if (!root) return;
+  function $(id) { return document.getElementById(id); }
+
+  // ---- state ----
+  var S = {
+    titleOverride: false,   // AppBar overrides toolbar.title -> "Files"
+    swapGhost: false,       // Toolbar swaps action -> IconButton/Ghost
+    compact: false,         // Toolbar density override
+    radius: 9,              // IconButton main radius
+    tint: 'accent'          // IconButton main tint
+  };
+
+  var rows = [].slice.call(root.querySelectorAll('.lrow[data-sel]'));
+  var tiles = [].slice.call(root.querySelectorAll('.libtile[data-sel]'));
+  var panels = [].slice.call(root.querySelectorAll('.nc-panel'));
+  var canvasNodes = [].slice.call(root.querySelectorAll('#canvas [data-sel]'));
+  var selKey = 'appbar';
+
+  var META = {
+    appbar:      { panel:'appbar',   name:'AppBar',   sub:'The root instance. It composes a Toolbar and can override the values that ride inside it.' },
+    toolbar:     { panel:'toolbar',  name:'Toolbar',  sub:'A linked instance inside the AppBar. It can swap a nested IconButton variant and set its own density.' },
+    'ib-search': { panel:'instance', name:'IconButton · search', sub:'A linked instance of IconButton. No local override, so it mirrors the main.' },
+    'ib-action': { panel:'instance', name:'IconButton · share',  sub:'The action slot. The Toolbar may swap this to the Ghost variant.' },
+    'ib-more':   { panel:'instance', name:'IconButton · more',   sub:'A linked instance of IconButton. No local override, so it mirrors the main.' },
+    'main-ib':      { panel:'main-ib',      name:'IconButton', sub:'The deepest main. Edits here fan out to every linked instance.' },
+    'main-toolbar': { panel:'main-toolbar', name:'Toolbar',    sub:'The shared Toolbar main. Instance overrides never write back to it.' }
+  };
+
+  /* ---------- selection: canvas ring + Layers row + Properties ---------- */
+  function select(key) {
+    if (!META[key]) return;
+    selKey = key;
+    var m = META[key];
+
+    rows.forEach(function (r) {
+      var on = r.getAttribute('data-sel') === key;
+      r.classList.toggle('selc', on);
+      r.classList.toggle('sel', on);
+    });
+    tiles.forEach(function (t) { t.classList.toggle('sel', t.getAttribute('data-sel') === key); });
+    canvasNodes.forEach(function (n) { n.classList.toggle('selq', n.getAttribute('data-sel') === key); });
+    panels.forEach(function (p) { p.classList.toggle('on', p.getAttribute('data-panel') === m.panel); });
+
+    var wn = $('whoName'), wt = $('whoTitle'), ws = $('whoSub');
+    if (wn) wn.textContent = m.name;
+    if (wt) wt.textContent = m.name;
+    if (ws) ws.textContent = m.sub;
+    if (m.panel === 'instance') fillInstance(key);
+  }
+
+  function fillInstance(key) {
+    var path = $('inst-path'), desc = $('inst-desc'), varv = $('inst-variant');
+    var isAction = key === 'ib-action';
+    if (path) path.textContent = isAction ? 'toolbar.action' : 'IconButton';
+    if (desc) desc.innerHTML = isAction
+      ? 'The <b>action</b> slot. The Toolbar instance can <b>swap</b> its variant while keeping the link to the IconButton main.'
+      : 'A linked instance. Its shape and tint come from the <b>IconButton main</b>. This slot carries no local override, so it mirrors the main exactly.';
+    if (varv) varv.textContent = (isAction && S.swapGhost) ? 'Ghost (swapped on this instance)' : 'Solid (from main)';
+  }
+
+  rows.concat(tiles).forEach(function (n) {
+    n.addEventListener('click', function () { select(n.getAttribute('data-sel')); });
+    n.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(n.getAttribute('data-sel')); }
+    });
+  });
+  canvasNodes.forEach(function (n) {
+    n.addEventListener('click', function (e) {
+      e.stopPropagation();
+      select(n.getAttribute('data-sel'));
+    });
+    n.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        select(n.getAttribute('data-sel'));
+      }
+    });
+  });
+
+  /* ---------- render the composed preview from state ---------- */
+  function render() {
+    var tbTitle = $('tbTitle'), ibAction = $('ibAction'), toolbar = $('toolbar');
+    var appbar = $('appbar'), appbarMain = $('appbarMain');
+    if (tbTitle) tbTitle.textContent = S.titleOverride ? 'Files' : 'Library';
+    if (ibAction) ibAction.classList.toggle('hollow', S.swapGhost);
+    if (toolbar) toolbar.classList.toggle('compact', S.compact);
+
+    // main-driven props ride on BOTH specimen roots, so they stay linked
+    [appbar, appbarMain].forEach(function (el) {
+      if (!el) return;
+      el.style.setProperty('--ib-r', S.radius === 999 ? '999px' : S.radius + 'px');
+      el.classList.remove('tint-accent', 'tint-comp', 'tint-plain');
+      el.classList.add('tint-' + S.tint);
+    });
+
+    // override markers in Layers
+    setPip('pip-appbar', S.titleOverride);
+    setPip('pip-toolbar', S.swapGhost || S.compact);
+    setPip('pip-action', S.swapGhost);
+    setOv('ovlb-appbar', S.titleOverride);
+    setOv('ovlb-toolbar', S.swapGhost || S.compact);
+
+    // override badges in Properties
+    showBadge('ovb-title', S.titleOverride);
+    showBadge('ovb-swap', S.swapGhost);
+    showBadge('ovb-density', S.compact);
+
+    // push-to-main enables once an override exists
+    var push = $('push-appbar');
+    if (push) {
+      var any = S.titleOverride;
+      push.disabled = !any;
+      push.classList.toggle('disabled', !any);
+      push.title = any ? 'Promote this override to the Toolbar main default' : 'Enabled once an instance override exists';
+    }
+
+    var count = (S.titleOverride ? 1 : 0) + (S.swapGhost ? 1 : 0) + (S.compact ? 1 : 0);
+    var chip = $('chipOv');
+    if (chip) chip.textContent = count === 0 ? 'No overrides' : (count === 1 ? '1 override' : count + ' overrides');
+
+    var ms = $('mainState');
+    if (ms) ms.innerHTML = 'IconButton main · radius <b>' + (S.radius === 999 ? 'full' : S.radius) + '</b> · tint <b>' + S.tint + '</b> · 3 linked instances';
+
+    if (selKey === 'ib-action' || selKey === 'ib-search' || selKey === 'ib-more') fillInstance(selKey);
+    renderApi();
+  }
+  function setPip(id, on) { var n = $(id); if (n) n.classList.toggle('on', !!on); }
+  function setOv(id, on) { var n = $(id); if (n) n.classList.toggle('on', !!on); }
+  function showBadge(id, on) { var n = $(id); if (n) n.style.display = on ? '' : 'none'; }
+
+  /* ---------- live API readout ---------- */
+  function renderApi() {
+    var el = $('apicode');
+    if (!el) return;
+    var lines = [];
+    if (S.titleOverride) lines.push('<span class="k">appBar</span>.<span class="cm">override</span>(<span class="s">"toolbar.title"</span>, <span class="s">"Files"</span>)');
+    if (S.swapGhost) lines.push('<span class="k">appBar</span>.<span class="cm">swap</span>(<span class="s">"toolbar.action"</span>, <span class="s">"IconButton/Ghost"</span>)');
+    if (S.compact) lines.push('<span class="k">appBar</span>.<span class="cm">override</span>(<span class="s">"toolbar.density"</span>, <span class="s">"compact"</span>)');
+    if (S.radius !== 9 || S.tint !== 'accent') {
+      lines.push('<span class="k">IconButton</span>.<span class="cm">set</span>({ radius: ' + (S.radius === 999 ? '"full"' : S.radius) + ', tint: <span class="s">"' + S.tint + '"</span> })');
+    }
+    if (!lines.length) lines.push('<span class="cm">// no overrides · every instance mirrors its main</span>');
+    el.innerHTML = lines.join('<br>');
+  }
+
+  /* ---------- wire the segmented controls ---------- */
+  function wireSeg(id, attr, apply) {
+    var seg = $(id);
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('button'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        apply(b.getAttribute(attr));
+        render();
+      });
+    });
+  }
+  wireSeg('seg-title', 'data-ov', function (v) { S.titleOverride = (v === 'on'); });
+  wireSeg('seg-swap', 'data-ov', function (v) { S.swapGhost = (v === 'on'); });
+  wireSeg('seg-density', 'data-density', function (v) { S.compact = (v === 'compact'); });
+  wireSeg('seg-radius', 'data-r', function (v) { S.radius = parseInt(v, 10); });
+  wireSeg('seg-tint', 'data-tint', function (v) { S.tint = v; });
+
+  function segSet(id, attr, val) {
+    var seg = $(id);
+    if (!seg) return;
+    [].slice.call(seg.querySelectorAll('button')).forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute(attr) === String(val));
+    });
+  }
+
+  /* ---------- resets ---------- */
+  function resetAppbar() { S.titleOverride = false; segSet('seg-title', 'data-ov', 'off'); render(); }
+  function resetToolbar() {
+    S.swapGhost = false; S.compact = false;
+    segSet('seg-swap', 'data-ov', 'off');
+    segSet('seg-density', 'data-density', 'comfy');
+    render();
+  }
+  function resetMain() {
+    S.radius = 9; S.tint = 'accent';
+    segSet('seg-radius', 'data-r', 9);
+    segSet('seg-tint', 'data-tint', 'accent');
+    render();
+  }
+  function wire(id, fn) { var n = $(id); if (n) n.addEventListener('click', fn); }
+  wire('reset-appbar', resetAppbar);
+  wire('reset-toolbar', resetToolbar);
+  wire('reset-main', resetMain);
+  wire('resetAll', function () { resetAppbar(); resetToolbar(); resetMain(); select('appbar'); });
+  wire('goto-main', function () { select('main-ib'); });
+  wire('goto-main2', function () { select('main-ib'); });
+
+  /* ---------- "Open library" reveals the Library group, it never navigates ---------- */
+  wire('revealLib', function () {
+    var shell = $('shellNest');
+    var grp = $('gLibrary');
+    if (shell) {
+      var narrow = shell.closest('.win') && shell.closest('.win').clientWidth <= 880;
+      shell.setAttribute('data-dock', narrow ? 'overlay' : 'open');
+    }
+    if (grp) {
+      grp.classList.remove('collapsed');
+      var h = grp.querySelector('.dgrp-h');
+      if (h) h.setAttribute('aria-expanded', 'true');
+      if (grp.scrollIntoView) grp.scrollIntoView({ block: 'nearest' });
+    }
+  });
+
+  /* ---------- Library scope switch ---------- */
+  var seg = $('scopeSeg');
+  var scopeCnt = $('scopeCnt');
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  if (seg) {
+    var sbtns = [].slice.call(seg.querySelectorAll('button'));
+    sbtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        if (scopeCnt) scopeCnt.textContent = NAMES[b.getAttribute('data-scope')] || 'Components';
+      });
+    });
+  }
+
+  select('appbar');
+  render();
+})();
+</script>
+</body>
+</html>

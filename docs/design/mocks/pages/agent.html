@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · agent</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* SCREEN CONTRACT (PRODUCT-MODEL §4c). This page compares three directions for
+     the SAME feature, so all three windows are KIND 1 APP SCREENS and all three
+     are the SAME complete shell: title bar (document identity only) › command
+     surface › canvas + floating tool bar › splitter › one right dock of panel
+     groups › the rail. Only the agent surface differs, which is exactly the
+     comparison the page exists to make. Nothing about the direction is named in
+     a title bar; the direction lives in the subtab and the caption.
+     Local names are all `ag-` prefixed so nothing can collide with a DS class. */
+
+  /* definite window heights so each dock is bounded and each group scrolls */
+  #agent .win.shell{height:600px;min-height:0}  #agent .ag-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;padding:6px 10px 3px}
+
+  /* the conversation, hosted inside a dock group instead of a bespoke sidebar */
+  #agent .dgrp-b>.chat{border-left:0;background:transparent;min-height:0}
+  #agent .dgrp-b>.chat .chat-h{padding:var(--gap-sm) var(--pad-sm);border-bottom:1px solid var(--line-soft)}
+  #agent .dgrp-b>.chat .chat-b{padding:var(--pad-sm)}
+  #agent .dgrp-b>.chat .chat-in{padding:var(--gap-sm) var(--pad-sm)}
+
+  /* the three sample tiles the agent just generated, on the canvas */
+  #agent .ag-gen{display:flex;gap:var(--gap);flex-wrap:wrap;justify-content:center}
+  #agent .ag-tile{width:96px;height:130px;border-radius:14px}
+  #agent .ag-drawzone{width:min(300px,calc(100% - var(--s7)));height:180px;border-radius:16px;
+    border:1.5px dashed rgba(127,155,255,.5);background:rgba(127,155,255,.06)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="agent">
+  <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Agent automation</h2><span class="k">· three directions for the same feature · one shell, one command set</span></div>
+
+  <p class="thesis" style="margin:0">Same window, same dock, same tool bar in all three. The only thing that changes is <b>where you talk to the agent</b>: a ⌘K palette over the canvas, an Agent panel group in the dock, or an inline ghost on the canvas itself.</p>
+
+  <div class="subtabs">
+    <button class="subtab on" data-alt="alt-pal">A · Command palette</button>
+    <button class="subtab" data-alt="alt-dock">B · Agent panel group</button>
+    <button class="subtab" data-alt="alt-inline">C · Inline ghost</button>
+  </div>
+
+  <!-- =====================================================================
+       DIRECTION A · the ⌘K palette, an OVERLAY over the canvas of the real shell
+       ===================================================================== -->
+  <div class="alt on" id="alt-pal">
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>hero-card</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#agCmdA"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk on" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#agHistA" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="agCmdA" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+            <div class="ag-mlabel">Agent</div>
+            <div class="menuitem"><i class="ic ic-sparkle"></i> Ask the agent <span class="sc">⌘K</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Command log</div>
+            <div class="menu-sep"></div>
+            <div class="ag-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="agShellA" data-dock="open">
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">1200 × 630 · agent is editing</div>
+            <div class="ag-gen">
+              <div class="ag-tile" style="background:linear-gradient(160deg,#7c4dff,#b14dff);box-shadow:0 0 30px -4px rgba(177,77,255,.5)"></div>
+              <div class="ag-tile" style="background:linear-gradient(160deg,#12c2e9,#7c4dff);box-shadow:0 0 30px -4px rgba(124,77,255,.5)"></div>
+              <div class="ag-tile" style="background:linear-gradient(160deg,#ff5d8f,#ff9a44);box-shadow:0 0 30px -4px rgba(255,93,143,.5)"></div>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#agShellA" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#agHistA" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#agOvfA"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="ag-zoom-a" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="agOvfA" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            </div>
+          </div>
+
+          <!-- THE DIRECTION · the ⌘K palette floats over the canvas -->
+          <div class="cpdim"></div>
+          <div class="cpal">
+            <div class="cpin"><span class="sp"></span><input name="agent-prompt-a" value="Add a 3-column feature grid using our Card component + brand gradient" readonly aria-label="Ask the agent"><span class="car"></span></div>
+            <div class="cplist">
+              <div class="cpx run"><span class="tick"><i class="ic ic-check xs"></i></span><code>create_frame</code> "Feature grid" · 3 cols · gap 24</div>
+              <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>instance</code> ×3 of <code>Card</code> · variant Elevated</div>
+              <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>set_fill</code> <code>style("Brand/gradient")</code></div>
+              <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>set_text</code> from tokens · Title / 24</div>
+            </div>
+          </div>
+
+          <div class="sheet down" id="agHistA" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span><span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+                <div class="filmcard" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Settings window</span><span class="ago">12 min ago</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+              </div>
+              <p class="note" style="margin:0">Pick a capture to open it as a layer, then run the same command against it.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="230" data-max="420"></div>
+
+        <div class="pdock">
+          <div class="dgrp" id="agLayersA" style="--gh:150px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+            <div class="dgrp-b">
+              <div class="lrow"><i class="ic ic-frame"></i><span class="nm">Feature grid</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Card 1</span><i class="ic sm ic-component cmark"></i></div>
+              <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Card 2</span><i class="ic sm ic-component cmark"></i></div>
+              <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Card 3</span><i class="ic sm ic-component cmark"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="300"></div>
+
+          <div class="dgrp grow" id="agSessionA">
+            <div class="dgrp-h"><span class="ttl">Agent</span><span class="cnt">4 commands</span>
+              <button class="btn ghost icon sm" title="Undo the last command"><i class="ic ic-undo"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h">Engine <span class="mut">pluggable</span></div>
+                <div class="irow"><span class="rl">Model</span><span class="chip" style="margin-left:auto;background:var(--good);color:#fff;border-color:transparent"><i class="ic ic-circle xs"></i> Local · Qwen</span></div>
+                <p class="note">On-device (MLX) · private · offline. A <b>frontier model via MCP</b> when you want more.</p>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Command log</div>
+                <div class="cplist" style="padding:0">
+                  <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>create_frame</code></div>
+                  <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>instance</code> ×3</div>
+                  <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>set_fill</code></div>
+                  <div class="cpx"><span class="tick"><i class="ic ic-check xs"></i></span><code>set_text</code></div>
+                </div>
+                <p class="note">Every row is one undoable step, and the same call the panels make.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drail">
+          <button class="drailtab" data-group="#agLayersA" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#agSessionA" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">Direction A · palette</div><p>Keyboard-first <b>⌘K</b>, floating over the canvas as an overlay so it costs zero permanent width. The command log is an <b>audit trail</b> you can undo step by step, and it reuses your <b>Card</b> component and <b>Brand</b> style.</p></div>
+      <div class="c"><div class="lab g2">What it costs</div><p>Nothing. The palette is already the fourth way to reach any command (D6), so this direction adds a use for a surface the shell has anyway.</p></div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       DIRECTION B · the agent as a PANEL GROUP in the one dock
+       ===================================================================== -->
+  <div class="alt" id="alt-dock">
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>hero-card</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#agCmdB"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#agHistB" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="agCmdB" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+            <div class="ag-mlabel">Agent</div>
+            <div class="menuitem"><i class="ic ic-sparkle"></i> Ask the agent <span class="sc">⌘⌥A</span></div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Undo last change <span class="sc">⌘Z</span></div>
+            <div class="menu-sep"></div>
+            <div class="ag-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="agShellB" data-dock="open">
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">1200 × 630 · two changes applied</div>
+            <div class="hero-card" style="width:min(320px,calc(100% - var(--s6)))">
+              <span class="hc-badge"><i class="ic ic-sparkle xs"></i> New</span>
+              <div class="hc-h" style="font-size:30px">Ship it faster.</div>
+              <p class="hc-sub">Capture, design, and automate.</p>
+              <span class="hc-cta">Get Photonz <i class="ic ic-chevron-right"></i></span>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#agShellB" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#agHistB" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#agOvfB"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="ag-zoom-b" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="agOvfB" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            </div>
+          </div>
+
+          <div class="sheet down" id="agHistB" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span><span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+                <div class="filmcard" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span><span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+              </div>
+              <p class="note" style="margin:0">Pick a capture to open it as a layer, then keep the conversation going.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="250" data-max="440"></div>
+
+        <div class="pdock" style="--dock-w:312px">
+          <div class="dgrp" id="agLayersB" style="--gh:120px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+            <div class="dgrp-b">
+              <div class="lrow"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child selc"><i class="ic ic-text"></i><span class="nm">Ship it faster.</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Get Photonz</span><i class="ic sm ic-component cmark"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="260"></div>
+
+          <!-- THE DIRECTION · the conversation is a panel group like any other -->
+          <div class="dgrp grow" id="agChatB">
+            <div class="dgrp-h"><span class="ttl">Agent</span><span class="cnt">2 changes</span>
+              <button class="btn ghost icon sm" title="Undo the last change"><i class="ic ic-undo"></i></button>
+            </div>
+            <div class="dgrp-b" style="padding:0">
+              <div class="chat">
+                <div class="chat-h"><i class="ic ic-sparkle sm"></i> Local · Qwen <span class="tspacer"></span><span class="val">on-device</span></div>
+                <div class="chat-b">
+                  <div class="msg u">make the headline bigger and add our card glow</div>
+                  <div class="msg a">Done. Here is what changed:
+                    <div class="did">
+                      <div class="step"><span class="t"><i class="ic ic-check xs"></i></span> Headline · Display 36 <i class="ic xs ic-chevron-right"></i> <b style="color:var(--ink)">44</b></div>
+                      <div class="step"><span class="t"><i class="ic ic-check xs"></i></span> Card · added <b style="color:var(--ink)">Card glow</b> style</div>
+                    </div>
+                    <p class="note" style="margin:var(--gap-sm) 0 0">Click a change to select that layer. Both landed as one undoable step.</p>
+                  </div>
+                </div>
+                <div class="chat-in">
+                  <span class="box">Ask for a change…</span>
+                  <button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drail">
+          <button class="drailtab" data-group="#agLayersB" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#agChatB" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">Direction B · a panel group</div><p>Conversational, best for <b>iterating</b>. Each change is a clickable, selectable, undoable diff, and it speaks your system ("our card glow").</p></div>
+      <div class="c"><div class="lab g2">What it costs</div><p>One more group in the same dock, so it collapses, resizes and rails like Layers does. It never becomes a second window and never invents new chrome.</p></div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       DIRECTION C · the inline ghost, drawn in place on the canvas
+       ===================================================================== -->
+  <div class="alt" id="alt-inline">
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>hero-card</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#agCmdC"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#agHistC" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="agCmdC" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+            <div class="ag-mlabel">Agent</div>
+            <div class="menuitem"><i class="ic ic-sparkle"></i> Draw a region, then ask <span class="sc">A</span></div>
+            <div class="menuitem"><i class="ic ic-x"></i> Cancel this region <span class="sc">Esc</span></div>
+            <div class="menu-sep"></div>
+            <div class="ag-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="agShellC" data-dock="open">
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">1200 × 630 · agent region</div>
+            <div class="ag-drawzone"></div>
+            <!-- THE DIRECTION · the ghost sits on the canvas, where the content goes -->
+            <div class="aghost" style="top:56%;left:50%;transform:translateX(-50%);max-width:calc(100% - var(--s6))">
+              <div class="lab"><span class="spin"></span> Agent · drawing in place</div>
+              <div class="txt">“a testimonial card with an avatar, 5 stars, and a quote”</div>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#agShellC" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#agHistC" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool on" title="Agent region (A)"><i class="ic sm ic-sparkle"></i></button>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool ovf" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#agOvfC"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="ag-zoom-c" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="agOvfC" style="position:absolute;right:0;bottom:44px;width:190px;z-index:12">
+              <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Component <span class="sc">C</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            </div>
+          </div>
+
+          <div class="sheet down" id="agHistC" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span><span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+                <div class="filmcard" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Settings window</span><span class="ago">12 min ago</span></span><span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span></div>
+              </div>
+              <p class="note" style="margin:0">Draw a region over any capture and ask for content in place.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="230" data-max="420"></div>
+
+        <div class="pdock">
+          <div class="dgrp" id="agPropsC" style="--gh:170px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Region</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h">Agent region</div>
+                <div class="grid2"><div class="field"><span class="k">W</span><span class="v">300</span></div><div class="field"><span class="k">H</span><span class="v">180</span></div><div class="field"><span class="k">X</span><span class="v">448</span></div><div class="field"><span class="k">Y</span><span class="v">226</span></div></div>
+                <p class="note">The region is a real frame, so what lands inside it is a normal layer tree you can keep editing.</p>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Constraints</div>
+                <div class="irow"><span class="rl">Reuse</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Card</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrp grow" id="agLayersC">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span></div>
+            <div class="dgrp-b">
+              <div class="lrow selc"><i class="ic ic-sparkle"></i><span class="nm">Agent region</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-text"></i><span class="nm">Ship it faster.</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drail">
+          <button class="drailtab" data-group="#agPropsC" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#agLayersC" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">Direction C · inline ghost</div><p>Draw a region, prompt <b>where the content goes</b>, and the agent fills it in place. Most spatial and most direct; pairs naturally with A or B for refinement.</p></div>
+      <div class="c"><div class="lab g2">What it costs</div><p>One more entry in the tool strip, which is where every tool already lives. The region itself is just a frame layer, so nothing new enters the model.</p></div>
+    </div>
+  </div>
+
+  <div class="caption" style="border-top:1px solid var(--line-soft);padding-top:var(--pad-sm)">
+    <div class="c"><div class="lab g2">The point</div><p>Whichever wins, or all three, they call the <b>exact same commands</b> the UI does and reuse the <b>same components and styles</b>. Automation is the API made visible, not a bolt-on, which is why none of the three needed a single piece of new chrome.</p></div>
+    <div class="c"><div class="lab g2">Model-agnostic</div><p>The API is the contract, so the model is <b>pluggable</b>: a local <b>Qwen</b> (MLX / LM Studio) as the private, offline default; a <b>frontier model via MCP</b> when you want more. The schema keeps even a small local model safe, because only valid, undoable commands exist.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>A and B both need a place to review what the agent proposed before it lands. Is that one shared <b>Agent</b> group that every direction feeds, or does each entry point get its own review affordance?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

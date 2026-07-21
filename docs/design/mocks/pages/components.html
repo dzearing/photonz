@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · components</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* components · the real "choose a component, drag it onto the canvas" flow,
+     sitting in the ONE shell. The Library is a right-dock panel group with its
+     scope set to Components (D1/D2), plus the same grid as a slide-down overlay
+     when you want room to browse. Only what the shared DS does not cover lives
+     here. 4pt spacing only; comp(purple) = component language. */
+
+  /* the window gets a DEFINITE height so the dock is bounded and each group's
+     own scroller does the work instead of the window stretching. */
+  #components .win.shell{height:660px;min-height:0}
+  /* ---- Library group: category sections inside the Components scope ---- */
+  .libsec-h{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:660;
+    padding:var(--pad-sm) var(--pad-sm) var(--s1);display:flex;align-items:center;gap:var(--gap-sm)}
+  .libsec-h .n{margin-left:auto;font-weight:520;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .libsec.hide{display:none}
+  .libsec .libgrid{padding-top:0;padding-bottom:var(--gap-sm)}
+  /* secondary category filter INSIDE the Components scope (not a second scope switch) */
+  .catrow{display:flex;flex-wrap:wrap;gap:var(--s1);padding:0 var(--pad-sm) var(--gap-sm)}
+  .catrow .chip{font-size:10.5px;padding:3px 9px}
+  /* the tile thumb centers a real mini specimen instead of a flat color */
+  .libtile .th{display:grid;place-items:center;height:52px;
+    background:repeating-conic-gradient(color-mix(in srgb,var(--panel-2) 70%,transparent) 0% 25%,transparent 0% 50%) 0 0/12px 12px}
+  .libtile .th>*{transform:scale(.86)}
+  .libtile.hide{display:none}
+  .libempty{color:var(--faint);font-size:11.5px;text-align:center;padding:var(--s5) var(--pad);line-height:1.5;display:none}
+  .libempty.on{display:block}
+
+  /* ---- Properties group: the selected component ---- */
+  .pvbox{width:100%;height:76px;border-radius:var(--r3);border:1px solid var(--comp-line);display:grid;place-items:center;
+    overflow:hidden;background:repeating-conic-gradient(color-mix(in srgb,var(--panel-2) 70%,transparent) 0% 25%,transparent 0% 50%) 0 0/12px 12px}
+  .phint{font-size:10.5px;color:var(--dim);line-height:1.45}
+  .phint b{color:var(--comp)}
+
+  /* ---- canvas / drop target ---- */
+  .canvas.drop{display:block;position:relative}
+  .dropframe{position:absolute;inset:var(--s6);border:1.5px dashed rgba(255,255,255,.18);border-radius:var(--r5);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--gap-sm);
+    color:rgba(255,255,255,.5);font-size:12px;text-align:center;transition:border-color .15s,background .15s}
+  .dropframe .big{font-size:22px;opacity:.6}
+  .dropframe b{color:rgba(255,255,255,.82);font-weight:640}
+  /* armed: a component is picked up, the whole canvas becomes a valid target */
+  .canvas.drop.armed .dropframe{border-color:var(--comp);background:rgba(154,92,255,.09);color:#d9c4ff}
+  .canvas.drop.armed{box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--comp) 55%, transparent)}
+  .canvas.drop.hot .dropframe{border-color:var(--comp);background:rgba(154,92,255,.16)}
+  .droptag{position:absolute;top:var(--pad-sm);left:var(--pad-sm);display:none;align-items:center;gap:6px;
+    font-size:10px;font-weight:640;color:#fff;background:var(--comp);padding:3px 9px;border-radius:6px;z-index:7}
+  .canvas.drop.armed .droptag{display:inline-flex}
+
+  /* insertion indicator that tracks the cursor while carrying */
+  .dropmark{position:absolute;z-index:6;pointer-events:none;transform:translate(-50%,-50%);display:none;
+    align-items:center;flex-direction:column;gap:5px;color:#fff}
+  .canvas.drop.armed .dropmark{display:flex}
+  .dropmark .ring{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--comp);
+    background:rgba(154,92,255,.22);display:grid;place-items:center;font-size:15px;color:#fff}
+  .dropmark .cap{font-size:9.5px;font-weight:600;background:var(--comp);padding:2px 7px;border-radius:5px;white-space:nowrap}
+
+  /* a landed instance (linked): ring + "instance of X" badge */
+  .dropinst{position:absolute;transform:translate(-50%,-50%);z-index:5;animation:pop .22s ease}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.86)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .dropinst .pvi{display:grid;place-items:center;padding:2px}
+  .dropinst .cring{inset:-8px;border-radius:14px}
+  .dropinst .cbadge{top:-24px}
+
+  /* the drag ghost that follows the pointer (appended to body) */
+  .dghost{position:fixed;z-index:60;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%) rotate(-4deg);
+    display:flex;align-items:center;gap:var(--gap-sm);padding:8px 12px 8px 10px;
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    border:1px solid var(--comp-line);border-radius:var(--r-md);
+    box-shadow:0 18px 40px -12px rgba(154,92,255,.5),inset 0 1px 0 var(--edge-hi)}
+  .dghost .gh{width:44px;height:32px;border-radius:var(--r2);display:grid;place-items:center;overflow:hidden;flex:none;
+    background:repeating-conic-gradient(color-mix(in srgb,var(--panel-2) 70%,transparent) 0% 25%,transparent 0% 50%) 0 0/10px 10px}
+  .dghost .gh>*{transform:scale(.62)}
+  .dghost .gl{font-size:10.5px;font-weight:640;color:var(--comp);white-space:nowrap}
+  .dghost .gl small{display:block;color:var(--faint);font-weight:520;font-size:9px}
+  body.carrying{cursor:grabbing}
+  body.carrying .libtile{cursor:grabbing}
+
+  /* the same Library content as a slide-down overlay (browse mode) */
+  #libSheet .libgrid{grid-template-columns:repeat(6,1fr);padding:0}
+  @container shell (max-width:880px){#libSheet .libgrid{grid-template-columns:repeat(3,1fr)}}
+
+  /* ---- how-to legend (static, always readable) ---- */
+  .howto{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);padding:var(--pad)}
+  .hstep{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--pad);box-shadow:inset 0 1px 0 var(--edge-hi);
+    display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .hstep .hn{width:22px;height:22px;border-radius:50%;background:var(--comp);color:#fff;font-size:11px;font-weight:700;
+    display:grid;place-items:center;flex:none}
+  .hstep .ht{font-size:12.5px;font-weight:640;color:var(--ink)}
+  .hstep .hd{font-size:11.5px;color:var(--dim);line-height:1.5}
+  .hstep .hd b{color:var(--ink);font-weight:600}
+  .hviz{height:60px;border-radius:var(--r2);border:1px solid var(--edge-lo);position:relative;overflow:hidden;
+    background:radial-gradient(320px 160px at 50% 30%,#141826,var(--artboard))}
+  .hviz .cx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+  .hviz .curs{position:absolute;font-size:13px;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+
+  /* ---- ways to place a component ---- */
+  .ways{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);padding:var(--pad)}
+  .way{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--pad);box-shadow:inset 0 1px 0 var(--edge-hi);
+    display:flex;flex-direction:column;gap:var(--gap-sm);cursor:pointer}
+  .way:hover{border-color:var(--comp-line)}
+  .way .wi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+    background:var(--comp-soft);color:var(--comp);flex:none}
+  .way .wt{font-size:12px;font-weight:640;color:var(--ink)}
+  .way .wd{font-size:11px;color:var(--dim);line-height:1.45}
+  .way .wk{margin-top:auto;font-size:10px;color:var(--faint);font-family:var(--mono)}
+
+  @media (max-width:820px){.howto,.ways{grid-template-columns:1fr 1fr}}
+  @media (prefers-reduced-motion:reduce){.dropinst{animation:none}}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="components">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Component library &amp; drag-to-canvas</h2><span class="k">· how you choose a component and place it</span></div>
+
+  <!-- ============ THE ONE SHELL · Library is a right-dock panel group ============ -->
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>aurora-marketing</b> · 1440 × 1024</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" aria-selected="false"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm" id="reset" title="Clear placed instances"><i class="ic ic-undo"></i> Reset</button>
+        <button class="btn sm" data-target="dsys">Design system <i class="ic xs ic-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + the history entry (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip comp"><i class="ic xs ic-component"></i> Aurora components</span>
+      <span class="chip" id="chipCount">0 placed</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+          <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">⌘I</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Show Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Add to Library <span class="sc">⌘⇧A</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shellComp" data-dock="open">
+
+      <div class="cnv">
+        <!-- CANVAS / DROP TARGET -->
+        <div class="canvas drop" id="canvas">
+          <div class="artboard-label" id="artlabel">Artboard · 1200 × 630 · <span id="count">0</span> instances</div>
+          <div class="droptag" id="droptag"><i class="ic sm ic-component"></i> Drop <span id="dropname">Button</span> anywhere</div>
+          <div class="dropframe" id="frame">
+            <span class="big"><i class="ic lg ic-component"></i></span>
+            <div><b>Pick a component</b> in the Library group, then click here to drop it.</div>
+            <div style="font-size:10.5px;opacity:.8">Double-click a tile to insert one at the center.</div>
+          </div>
+          <div class="dropmark" id="mark"><span class="ring"><i class="ic lg ic-plus"></i></span><span class="cap" id="markcap">Button</span></div>
+        </div>
+
+        <!-- canvas action cluster: the panel toggle lives with the canvas -->
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shellComp" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
+        <div class="tbar">
+          <span class="tstrip" id="toolStrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" id="toolComp" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY 1 · the same Library content with room to browse -->
+        <div class="sheet down" id="libSheet" aria-hidden="true" aria-label="Browse the Library">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-library"></i> Library</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button">
+              <button>Media</button><button class="on">Components</button><button>Styles</button><button>Assets</button>
+            </div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Import</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div id="libSheetBody"></div>
+            <p class="note" style="margin:0">Same group, more room. Pick a tile here and it is picked up on the canvas, exactly as it is in the dock.</p>
+          </div>
+        </div>
+
+        <!-- OVERLAY 2 · the capture history front door -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">4 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Nav bar states</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:08</span></span>
+                <span class="cap"><span class="nm">Hover pass</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Right-click any capture and choose <b>Add to Library</b> to turn it into reusable content.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPLITTER: drag to resize the dock -->
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock" style="--dock-w:288px">
+
+        <!-- Layers: every placed instance shows up here -->
+        <div class="dgrp" id="gLayers" style="--gh:132px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Artboard</div>
+            <div id="layerList"></div>
+            <div class="lrow child"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-grid"></i><span class="nm">Layout grid</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <!-- Properties: driven by the selected tile or the selected instance -->
+        <div class="dgrp" id="gProps" style="--gh:216px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Artboard</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h" id="propTitle">Artboard</div>
+              <div class="pvbox" id="prevbox"><span class="mini-tile"></span></div>
+              <p class="phint" id="prevhint" style="margin:var(--gap-sm) 0 0">Nothing selected. Pick a tile in the Library to see its properties, or drop one on the canvas.</p>
+            </div>
+            <div class="section" id="propMeta">
+              <div class="sec-h">Component <span class="mut">linked</span></div>
+              <div class="irow"><span class="rl">Name</span><span class="select"><span class="lead" id="propName">Primary button</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Instances</span><span class="val" id="propUses">42 in this document</span></div>
+              <div class="irow"><span class="rl">Style</span><span class="select comp"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <button class="btn secondary sm block" id="insertCenter" style="margin-top:var(--gap-sm)"><i class="ic ic-plus"></i> Insert at center</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY (D1/D2): one surface, four scopes, scope = Components -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
+            <button class="btn ghost icon sm" data-sheet="#libSheet" title="Browse in a bigger overlay"><i class="ic ic-maximize"></i></button>
+            <button class="btn ghost icon sm" title="Add to Library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch" id="searchwrap"><i class="ic sm ic-search"></i>
+                <input id="search" name="library-search" type="text" placeholder="Search components" autocomplete="off" spellcheck="false" aria-label="Search components"></span>
+            </div>
+
+            <!-- secondary category filter, inside the Components scope -->
+            <div class="catrow" id="cats" role="group" aria-label="Filter by category">
+              <button class="chip comp" data-cat="all">All</button>
+              <button class="chip" data-cat="Buttons">Buttons</button>
+              <button class="chip" data-cat="Cards">Cards</button>
+              <button class="chip" data-cat="Avatars">Avatars</button>
+              <button class="chip" data-cat="Badges">Badges</button>
+              <button class="chip" data-cat="Inputs">Inputs</button>
+            </div>
+
+            <div id="libBody">
+              <div class="libempty" id="empty">No components match.<br>Try a different word or category.</div>
+
+              <div class="libsec" data-cat="Buttons">
+                <div class="libsec-h">Buttons <span class="n">2</span></div>
+                <div class="libgrid">
+                  <div class="libtile comp" tabindex="0" data-name="Primary button" data-cat="Buttons">
+                    <span class="th"><span class="mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span></span>
+                    <span class="cap"><span class="nm">Primary button</span><span class="mt">42 uses</span></span>
+                  </div>
+                  <div class="libtile comp" tabindex="0" data-name="Ghost button" data-cat="Buttons">
+                    <span class="th"><span class="mini-btn" style="background:transparent;color:var(--comp);box-shadow:inset 0 0 0 1px var(--comp-line)">Learn more</span></span>
+                    <span class="cap"><span class="nm">Ghost button</span><span class="mt">11 uses</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="libsec" data-cat="Cards">
+                <div class="libsec-h">Cards <span class="n">2</span></div>
+                <div class="libgrid">
+                  <div class="libtile comp" tabindex="0" data-name="Feature tile" data-cat="Cards">
+                    <span class="th"><span class="mini-tile"></span></span>
+                    <span class="cap"><span class="nm">Feature tile</span><span class="mt">9 uses</span></span>
+                  </div>
+                  <div class="libtile comp" tabindex="0" data-name="Profile card" data-cat="Cards">
+                    <span class="th"><span style="display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--comp-line);border-radius:8px;padding:5px 7px"><span class="mini-avatar" style="width:18px;height:18px"></span><span style="display:flex;flex-direction:column;gap:3px"><i style="display:block;width:34px;height:5px;border-radius:3px;background:var(--line-strong)"></i><i style="display:block;width:22px;height:4px;border-radius:3px;background:var(--line-strong);opacity:.7"></i></span></span></span>
+                    <span class="cap"><span class="nm">Profile card</span><span class="mt">14 uses</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="libsec" data-cat="Avatars">
+                <div class="libsec-h">Avatars <span class="n">2</span></div>
+                <div class="libgrid">
+                  <div class="libtile comp" tabindex="0" data-name="Avatar" data-cat="Avatars">
+                    <span class="th"><span class="mini-avatar"></span></span>
+                    <span class="cap"><span class="nm">Avatar</span><span class="mt">23 uses</span></span>
+                  </div>
+                  <div class="libtile comp" tabindex="0" data-name="Avatar stack" data-cat="Avatars">
+                    <span class="th"><span style="display:flex"><span class="mini-avatar" style="width:22px;height:22px"></span><span class="mini-avatar" style="width:22px;height:22px;margin-left:-8px;background:linear-gradient(135deg,#ff9d4d,#ff5d8f)"></span><span class="mini-avatar" style="width:22px;height:22px;margin-left:-8px;background:linear-gradient(135deg,#3ecf8e,#4c6fff)"></span></span></span>
+                    <span class="cap"><span class="nm">Avatar stack</span><span class="mt">6 uses</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="libsec" data-cat="Badges">
+                <div class="libsec-h">Badges <span class="n">2</span></div>
+                <div class="libgrid">
+                  <div class="libtile comp" tabindex="0" data-name="Badge" data-cat="Badges">
+                    <span class="th"><span class="mini-badge"><i class="ic ic-sparkle xs"></i> New</span></span>
+                    <span class="cap"><span class="nm">Badge</span><span class="mt">17 uses</span></span>
+                  </div>
+                  <div class="libtile comp" tabindex="0" data-name="Status dot" data-cat="Badges">
+                    <span class="th"><span style="display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:var(--good)"><span style="width:8px;height:8px;border-radius:50%;background:var(--good)"></span>Online</span></span>
+                    <span class="cap"><span class="nm">Status dot</span><span class="mt">8 uses</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="libsec" data-cat="Inputs">
+                <div class="libsec-h">Inputs <span class="n">2</span></div>
+                <div class="libgrid">
+                  <div class="libtile comp" tabindex="0" data-name="Text field" data-cat="Inputs">
+                    <span class="th"><span style="display:flex;align-items:center;width:66px;height:20px;border-radius:6px;background:var(--panel);border:1px solid var(--line-strong);padding:0 6px;font-size:9px;color:var(--faint)">Email</span></span>
+                    <span class="cap"><span class="nm">Text field</span><span class="mt">21 uses</span></span>
+                  </div>
+                  <div class="libtile comp" tabindex="0" data-name="Toggle" data-cat="Inputs">
+                    <span class="th"><span style="display:inline-block;width:28px;height:16px;border-radius:999px;background:var(--comp);position:relative"><span style="position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#fff"></span></span></span>
+                    <span class="cap"><span class="nm">Toggle</span><span class="mt">13 uses</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL: what the dock collapses to -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== the gesture, step by step (always readable, even without interacting) ===== -->
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>The gesture</b> · choose → drag → drop</div><div class="tbtns"></div></div>
+    <div class="howto">
+      <div class="hstep">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">1</span><span class="ht">Choose it</span></div>
+        <div class="hviz"><span class="cx mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="curs" style="left:60%;top:58%"><i class="ic sm ic-cursor"></i></span></div>
+        <div class="hd"><b>Search or browse</b> the Library group, then click a tile to pick it up. The tile shows a live thumbnail, its name, and how many <b>instances</b> already exist.</div>
+      </div>
+      <div class="hstep">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">2</span><span class="ht">Drag it over</span></div>
+        <div class="hviz">
+          <span class="cx" style="width:60%;height:32px;border:1.5px dashed var(--comp);border-radius:10px;background:rgba(154,92,255,.14)"></span>
+          <span style="position:absolute;left:44%;top:36%;background:var(--comp);color:#fff;font-size:9px;font-weight:640;padding:3px 8px;border-radius:8px;transform:rotate(-4deg)"><i class="ic xs ic-component"></i> Button</span>
+          <span class="curs" style="left:58%;top:62%"><i class="ic sm ic-cursor"></i></span>
+        </div>
+        <div class="hd"><b>A ghost follows the cursor</b> and valid targets light up. An <b>insertion mark</b> shows exactly where it will land inside the frame.</div>
+      </div>
+      <div class="hstep">
+        <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">3</span><span class="ht">Drop it in</span></div>
+        <div class="hviz"><span class="cx" style="position:relative"><span class="mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="cring" style="inset:-6px;border-radius:12px"></span></span></div>
+        <div class="hd">Release and it lands as a <b style="color:var(--comp)">linked instance</b> · a purple ring, an <b>instance of Button</b> badge, a row in Layers, and its properties on the right.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== four ways to place a component ===== -->
+  <div class="win">
+    <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Ways to place a component</b> · drag is just one</div><div class="tbtns"></div></div>
+    <div class="ways">
+      <div class="way">
+        <span class="wi"><i class="ic ic-component"></i></span>
+        <div class="wt">Drag from Library</div>
+        <div class="wd">Pick a tile in the dock and drop it on the canvas or into a frame. Best when you want to place it precisely.</div>
+        <div class="wk">this page</div>
+      </div>
+      <div class="way" data-target="editor">
+        <span class="wi"><i class="ic ic-search"></i></span>
+        <div class="wt">Insert from the palette</div>
+        <div class="wd">Double-click a tile, or run insert from ⌘K, to drop one at the center of the selection.</div>
+        <div class="wk">2× click · ⌘K</div>
+      </div>
+      <div class="way" data-target="composites">
+        <span class="wi"><i class="ic ic-layers"></i></span>
+        <div class="wt">Duplicate an instance</div>
+        <div class="wd">Copy one that is already placed. The copy stays linked to the same main component.</div>
+        <div class="wk">⌘D</div>
+      </div>
+      <div class="way" data-target="agent">
+        <span class="wi"><i class="ic ic-sparkle"></i></span>
+        <div class="wt">Ask the agent</div>
+        <div class="wd">Describe it in words · <i>add three Cards from the Library</i> · and the agent inserts and lays them out for you.</div>
+        <div class="wk">agent</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>The <b>Library</b> is one surface with four scopes, and it lives as a panel group in the one right dock. Set the scope to <b>Components</b>, <b>search</b> to narrow, <b>click</b> to pick up, then drop onto the canvas. Whatever lands is a <b style="color:var(--comp)">linked instance</b>, never a loose copy, so a single edit to the main updates them all.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Because it is a normal group, it collapses, resizes, and scrolls like every other panel, and the same content opens as a slide-down <b>overlay</b> when you want room to browse. The components themselves are defined in the <b data-target="dsys" style="color:var(--comp);cursor:pointer">design system</b>, so the Library is a live view of that data.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the category filter inside Components be saved per document, and when you drag an instance in, should it default to the last variant you used or always the main?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* components page · scoped, guarded interactions.
+   choose (search + category filter), pick up (ghost follows cursor), drop (a
+   linked instance lands with a ring + badge, a Layers row, and Properties).
+   Nothing throws if a selector is missing. */
+(function () {
+  var canvas = document.getElementById('canvas');
+  var lib = document.getElementById('libBody');
+  if (!canvas || !lib) return;
+
+  var byId = function (id) { return document.getElementById(id); };
+
+  // the overlay shows the SAME grid, cloned once so both stay in sync by markup
+  var sheetBody = byId('libSheetBody');
+  if (sheetBody) {
+    [].slice.call(lib.querySelectorAll('.libsec')).forEach(function (sec) {
+      sheetBody.appendChild(sec.cloneNode(true));
+    });
+  }
+
+  var tiles = [].slice.call(document.querySelectorAll('.libtile'));
+  var sections = [].slice.call(document.querySelectorAll('.libsec'));
+  var search = byId('search');
+  var cats = [].slice.call(document.querySelectorAll('#cats .chip'));
+  var emptyEl = byId('empty');
+  var frame = byId('frame');
+  var mark = byId('mark');
+  var markcap = byId('markcap');
+  var dropname = byId('dropname');
+  var countEl = byId('count');
+  var chipCount = byId('chipCount');
+  var layerList = byId('layerList');
+  var layerCount = byId('layerCount');
+  var resetBtn = byId('reset');
+  var prevbox = byId('prevbox');
+  var prevhint = byId('prevhint');
+  var propTitle = byId('propTitle');
+  var propKind = byId('propKind');
+  var propName = byId('propName');
+  var propUses = byId('propUses');
+  var propMeta = byId('propMeta');
+  var insertBtn = byId('insertCenter');
+  var toolComp = byId('toolComp');
+  var toolStrip = byId('toolStrip');
+
+  var activeCat = 'all';
+  var carrying = null;   // { name, node } while a component is picked up
+  var ghost = null;
+  var placed = 0;
+  var current = null;    // the tile whose properties are showing
+
+  if (propMeta) propMeta.style.display = 'none';
+
+  /* ---------- choose: filter ---------- */
+  function applyFilter() {
+    var q = (search && search.value ? search.value : '').trim().toLowerCase();
+    var anyVisible = false;
+    sections.forEach(function (sec) {
+      var cat = sec.getAttribute('data-cat');
+      var catOk = activeCat === 'all' || activeCat === cat;
+      var shownInSec = 0;
+      [].slice.call(sec.querySelectorAll('.libtile')).forEach(function (t) {
+        var nm = (t.getAttribute('data-name') || '').toLowerCase();
+        var hit = catOk && (!q || nm.indexOf(q) !== -1);
+        t.classList.toggle('hide', !hit);
+        if (hit) { shownInSec++; anyVisible = true; }
+      });
+      sec.classList.toggle('hide', shownInSec === 0);
+    });
+    if (emptyEl) emptyEl.classList.toggle('on', !anyVisible);
+  }
+
+  if (search) {
+    search.addEventListener('input', applyFilter);
+    search.addEventListener('keydown', function (e) { if (e.key === 'Escape') { search.value = ''; applyFilter(); } });
+  }
+  cats.forEach(function (c) {
+    c.addEventListener('click', function () {
+      activeCat = c.getAttribute('data-cat') || 'all';
+      cats.forEach(function (x) { x.classList.toggle('comp', x === c); });
+      applyFilter();
+    });
+  });
+
+  /* ---------- selection drives the Properties group ---------- */
+  function showProps(tile) {
+    current = tile;
+    var th = tile.querySelector('.th');
+    var nm = tile.getAttribute('data-name') || 'Component';
+    var uses = tile.querySelector('.mt');
+    if (prevbox && th) prevbox.innerHTML = th.innerHTML;
+    if (propTitle) propTitle.textContent = nm;
+    if (propKind) propKind.textContent = 'Component';
+    if (propName) propName.textContent = nm;
+    if (propUses) propUses.textContent = (uses ? uses.textContent : '') + ' in this document';
+    if (propMeta) propMeta.style.display = '';
+    if (prevhint) prevhint.innerHTML = '<b>Click to pick up</b>, then click the canvas to drop. Double-click a tile to insert at the center.';
+    // the same selection in every copy of the grid
+    tiles.forEach(function (t) {
+      t.classList.toggle('sel', t.getAttribute('data-name') === nm);
+    });
+  }
+
+  function clearProps() {
+    current = null;
+    tiles.forEach(function (t) { t.classList.remove('sel'); });
+    if (propTitle) propTitle.textContent = 'Artboard';
+    if (propKind) propKind.textContent = 'Artboard';
+    if (propMeta) propMeta.style.display = 'none';
+    if (prevbox) prevbox.innerHTML = '<span class="mini-tile"></span>';
+    if (prevhint) prevhint.textContent = 'Nothing selected. Pick a tile in the Library to see its properties, or drop one on the canvas.';
+  }
+
+  /* ---------- pick up / carry / drop ---------- */
+  function makeGhost(tile) {
+    var th = tile.querySelector('.th');
+    var nm = tile.getAttribute('data-name') || 'Component';
+    var g = document.createElement('div');
+    g.className = 'dghost';
+    g.innerHTML = '<span class="gh">' + (th ? th.innerHTML : '') + '</span>' +
+      '<span class="gl"><i class="ic xs ic-component"></i> ' + nm + '<small>drop it on the canvas</small></span>';
+    document.body.appendChild(g);
+    return g;
+  }
+
+  function setTool(on) {
+    if (!toolStrip || !toolComp) return;
+    [].slice.call(toolStrip.querySelectorAll('.tool')).forEach(function (t) { t.classList.remove('on'); });
+    if (on) toolComp.classList.add('on');
+    else {
+      var first = toolStrip.querySelector('.tool');
+      if (first) first.classList.add('on');
+    }
+  }
+
+  function pickUp(tile) {
+    endCarry();
+    var nm = tile.getAttribute('data-name') || 'Component';
+    carrying = { name: nm, node: tile };
+    showProps(tile);
+    ghost = makeGhost(tile);
+    document.body.classList.add('carrying');
+    canvas.classList.add('armed');
+    setTool(true);
+    if (dropname) dropname.textContent = nm;
+    if (markcap) markcap.textContent = nm;
+    if (prevhint) prevhint.innerHTML = 'Carrying <b>' + nm + '</b>. Click the canvas to drop, Esc to cancel.';
+  }
+
+  function endCarry() {
+    carrying = null;
+    if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    ghost = null;
+    document.body.classList.remove('carrying');
+    canvas.classList.remove('armed', 'hot');
+    setTool(false);
+  }
+
+  function addLayerRow(nm) {
+    if (!layerList) return;
+    var row = document.createElement('div');
+    row.className = 'lrow child selc';
+    row.innerHTML = '<i class="ic ic-component"></i><span class="nm">' + nm + '</span>' +
+      '<i class="ic sm ic-component cmark"></i>';
+    [].slice.call(layerList.querySelectorAll('.lrow')).forEach(function (r) { r.classList.remove('selc'); });
+    layerList.insertBefore(row, layerList.firstChild);
+    if (layerCount) layerCount.textContent = String(2 + layerList.children.length);
+  }
+
+  function placeInstance(tile, xPct, yPct) {
+    var th = tile.querySelector('.th');
+    var nm = tile.getAttribute('data-name') || 'Component';
+    var el = document.createElement('div');
+    el.className = 'dropinst';
+    el.style.left = xPct + '%';
+    el.style.top = yPct + '%';
+    el.innerHTML = '<div class="pvi">' + (th ? th.innerHTML : '') + '</div>' +
+      '<span class="cring"></span>' +
+      '<span class="cbadge"><i class="ic xs ic-component"></i> instance of ' + nm + '</span>';
+    canvas.appendChild(el);
+    placed++;
+    if (countEl) countEl.textContent = String(placed);
+    if (chipCount) chipCount.textContent = placed + (placed === 1 ? ' placed' : ' placed');
+    if (frame) frame.style.display = 'none';
+    addLayerRow(nm);
+    showProps(tile);
+    // bump the use count on every copy of this tile so reuse reads as live
+    tiles.forEach(function (t) {
+      if (t.getAttribute('data-name') !== nm) return;
+      var mt = t.querySelector('.mt');
+      if (!mt) return;
+      var n = parseInt(mt.textContent, 10);
+      if (!isNaN(n)) mt.textContent = (n + 1) + ' uses';
+    });
+    if (propUses) {
+      var cur = tile.querySelector('.mt');
+      propUses.textContent = (cur ? cur.textContent : '') + ' in this document';
+    }
+  }
+
+  // move: ghost + insertion mark track the pointer
+  document.addEventListener('mousemove', function (e) {
+    if (!carrying) return;
+    if (ghost) { ghost.style.left = e.clientX + 'px'; ghost.style.top = e.clientY + 'px'; }
+    var r = canvas.getBoundingClientRect();
+    var inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    canvas.classList.toggle('hot', inside);
+    if (inside && mark) {
+      mark.style.left = (e.clientX - r.left) + 'px';
+      mark.style.top = (e.clientY - r.top) + 'px';
+    }
+  });
+
+  // drop on canvas
+  canvas.addEventListener('click', function (e) {
+    if (!carrying) return;
+    var r = canvas.getBoundingClientRect();
+    var xPct = ((e.clientX - r.left) / r.width) * 100;
+    var yPct = ((e.clientY - r.top) / r.height) * 100;
+    xPct = Math.max(10, Math.min(90, xPct));
+    yPct = Math.max(14, Math.min(84, yPct));
+    var name = carrying.name;
+    placeInstance(carrying.node, xPct, yPct);
+    if (prevhint) prevhint.innerHTML = 'Dropped <b>' + name + '</b>. Pick another, or press Reset.';
+    endCarry();
+  });
+
+  // tiles: click to pick up, double-click to insert at center
+  tiles.forEach(function (tile) {
+    tile.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (carrying && carrying.name === (tile.getAttribute('data-name') || '')) { endCarry(); showProps(tile); return; }
+      pickUp(tile);
+    });
+    tile.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickUp(tile); }
+    });
+    tile.addEventListener('dblclick', function (e) {
+      e.stopPropagation();
+      placeInstance(tile, 50, 50);
+      endCarry();
+      if (prevhint) prevhint.innerHTML = 'Inserted <b>' + (tile.getAttribute('data-name') || 'Component') + '</b> at the center.';
+    });
+  });
+
+  if (insertBtn) insertBtn.addEventListener('click', function () {
+    if (!current) return;
+    placeInstance(current, 50, 50);
+    endCarry();
+  });
+
+  // Esc cancels a carry
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && carrying) endCarry(); });
+
+  // Reset clears placed instances
+  if (resetBtn) resetBtn.addEventListener('click', function () {
+    [].slice.call(canvas.querySelectorAll('.dropinst')).forEach(function (n) { n.parentNode.removeChild(n); });
+    placed = 0;
+    if (countEl) countEl.textContent = '0';
+    if (chipCount) chipCount.textContent = '0 placed';
+    if (layerList) layerList.innerHTML = '';
+    if (layerCount) layerCount.textContent = '2';
+    if (frame) frame.style.display = '';
+    endCarry();
+    clearProps();
+  });
+
+  // Library scope switch (Media · Components · Styles · Assets)
+  var seg = byId('scopeSeg');
+  var scopeCnt = byId('scopeCnt');
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  if (seg) {
+    var sbtns = [].slice.call(seg.querySelectorAll('button'));
+    sbtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        var scope = b.getAttribute('data-scope');
+        if (scopeCnt) scopeCnt.textContent = NAMES[scope] || 'Components';
+        if (search) search.placeholder = 'Search ' + (NAMES[scope] || 'components').toLowerCase();
+      });
+    });
+  }
+
+  applyFilter();
+})();
+</script>
+</body>
+</html>

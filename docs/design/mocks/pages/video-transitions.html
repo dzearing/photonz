@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-transitions</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-transitions · a transition is a relationship between two clips at a cut,
+   so it lives on the timeline dock and its parameters live in Properties. The
+   transition library is the shared .libgrid / .libtile grammar inside a panel
+   group, not a bespoke widget. Only the A to B animator and the transition
+   region on the cut are page local. 4pt scale and shared tokens throughout. */
+
+#video-transitions .win.shell{height:900px;min-height:0}
+#video-transitions .cnv>.canvas{min-height:0;background:radial-gradient(680px 340px at 50% 36%,#171a26,#05060a)}/* ---------- the A to B animator, on the canvas ---------- */
+.tstage{position:relative;width:560px;height:315px;border-radius:var(--r4);overflow:hidden;background:#05060a;border:1px solid var(--edge-lo);box-shadow:0 18px 40px -14px rgba(0,0,0,.6),inset 0 1px 0 var(--edge-hi)}
+.tlayer{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:var(--s5);color:#fff;will-change:opacity,transform,filter}
+.tlayer.a{background:radial-gradient(120% 90% at 20% 10%,rgba(255,255,255,.28),transparent 45%),linear-gradient(135deg,#12c2e9,#5b53ff 60%,#7c4dff);z-index:1}
+.tlayer.b{background:radial-gradient(120% 90% at 80% 0%,rgba(255,255,255,.3),transparent 45%),linear-gradient(135deg,#7c4dff,#c56cff 45%,#ff5d8f);z-index:2}
+.tlayer .tlab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;opacity:.9;text-transform:uppercase;font-weight:700;background:rgba(0,0,0,.32);padding:3px 8px;border-radius:var(--r1);align-self:flex-start;margin-bottom:var(--s2)}
+.tlayer h3{font-family:var(--serif);font-size:32px;line-height:1.04;font-weight:700;margin:0;letter-spacing:-.02em;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.tlayer p{margin:6px 0 0;font-size:12.5px;opacity:.9;max-width:280px;line-height:1.4}
+.tdip{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;background:#000}
+.tprog{position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--crit);z-index:4;pointer-events:none;opacity:0;box-shadow:0 0 0 3px color-mix(in srgb,var(--crit) 22%,transparent)}
+/* SELECTION, place 1 of 3: the selected transition names itself on the canvas */
+.tbadge{position:absolute;top:var(--s3);right:var(--s3);z-index:5;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:640;color:#fff;background:rgba(0,0,0,.42);border:1px solid var(--accent);padding:4px 9px;border-radius:999px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.tbadge b{font-weight:700}
+
+/* ---------- the timeline dock: two clips and the transition on the cut ---------- */
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
+.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tlbar .now b{color:var(--warn)}
+.tlz{padding:var(--s3) var(--s3) var(--s3);position:relative}
+.tlgrid .track{margin:var(--s1) 0}
+.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
+.tlgrid .track .lane.rlane{height:20px;display:block}
+.tlgrid .rlane>.ruler{margin-bottom:0;height:19px}
+.tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);flex:none}
+.tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+.tlgrid .track .lane.clane{height:40px}
+.tlgrid .lane>.clip{position:absolute;top:0;height:40px}
+.tlgrid .lane>.clip .tc{font-family:var(--mono);font-size:9px;opacity:.85;margin-left:auto}
+/* the transition region straddling the cut */
+.tregion{position:absolute;top:0;bottom:0;z-index:3;transform:translateX(-50%);display:grid;place-items:center;border-radius:var(--r1);cursor:grab;background:repeating-linear-gradient(45deg,var(--warn),var(--warn) 3px,color-mix(in srgb,var(--warn) 62%,#000) 3px,color-mix(in srgb,var(--warn) 62%,#000) 6px);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--warn) 70%,transparent),0 2px 10px -4px rgba(0,0,0,.5)}
+.tregion:active{cursor:grabbing}
+/* SELECTION, place 2 of 3 is the Layers row; the region also shows the selection */
+.tregion.sel{outline:2px solid var(--accent);outline-offset:2px}
+.tregion .ico{color:#1a1c22;display:grid;place-items:center}
+.tregion .ico .ic{width:15px;height:15px}
+.tregion.none{background:repeating-linear-gradient(45deg,var(--line-strong),var(--line-strong) 3px,transparent 3px,transparent 6px);box-shadow:0 0 0 1.5px var(--line-strong)}
+.tregion.none .ico{color:var(--faint)}
+.thandle{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:4;display:grid;place-items:center}
+.thandle.l{left:-4px}.thandle.r{right:-4px}
+.thandle::after{content:"";width:2px;height:20px;border-radius:2px;background:#1a1c22;opacity:.55}
+.tregion.none .thandle::after{background:var(--faint)}
+.tdurtag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--warn);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ---------- transition tiles: the shared library grammar, in a panel group ---------- */
+.libtile.tt .th{height:30px;position:relative;display:block}
+.libtile.tt.sel{border-color:var(--warn);box-shadow:inset 0 1px 0 var(--edge-hi),0 0 0 1px var(--warn)}
+.libtile.tt[disabled]{opacity:.42;pointer-events:none}
+.th-diss{background:linear-gradient(90deg,#12c2e9,#5b53ff 45%,#ff5d8f)}
+.th-dip{background:linear-gradient(90deg,#12c2e9 0%,#000 50%,#ff5d8f 100%)}
+.th-slide{background:linear-gradient(90deg,#12c2e9 0%,#12c2e9 46%,#ff5d8f 54%,#ff5d8f 100%)}
+.th-slide::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:34%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.55));transform:skewX(-16deg)}
+.th-push{background:repeating-linear-gradient(90deg,#7c4dff,#7c4dff 5px,#12c2e9 5px,#12c2e9 10px)}
+.th-morph{background:radial-gradient(70% 120% at 30% 50%,#12c2e9,transparent 60%),radial-gradient(70% 120% at 70% 50%,#ff5d8f,transparent 60%),#5b53ff}
+.th-cut{background:linear-gradient(90deg,#12c2e9 0 50%,#ff5d8f 50% 100%)}
+.th-cut::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:#05060a;transform:translateX(-1px)}
+
+/* ---------- Properties helpers ---------- */
+.rng{-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);outline:none;cursor:pointer;width:100%;min-width:0}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--panel);border:1.5px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab;transition:box-shadow .12s ease,transform .09s ease}
+.rng::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--panel);border:1.5px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab}
+.rng:hover::-webkit-slider-thumb{box-shadow:0 1px 3px rgba(0,0,0,.3),0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+.rng:active::-webkit-slider-thumb{cursor:grabbing;transform:scale(.94)}
+.rng:focus-visible{box-shadow:var(--ring)}
+.rng:disabled{opacity:.42;cursor:not-allowed}
+.rng:disabled::-webkit-slider-thumb{cursor:not-allowed}/* ---------- API line ---------- */
+.apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.apibar code{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap}
+.apibar code .fn{color:var(--comp)}
+.apibar code .k{color:var(--accent)}
+.apibar code .s{color:var(--good)}
+.apibar code .n{color:var(--warn)}
+
+/* ---------- narrow: the window container query, not the viewport ---------- */
+@container shell (max-width:880px){
+  #tlDock{--gutter:52px}
+  .tstage{width:400px;height:225px}
+  .tlayer h3{font-size:24px}
+  .tlayer{padding:var(--s4)}
+}
+@container shell (max-width:620px){
+  #tlDock{--gutter:52px}
+  .tstage{width:272px;height:153px}
+  .tlayer h3{font-size:17px}
+  .tlayer p{display:none}
+  .tlbar .now{display:none}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="video-transitions">
+    <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Transitions</h2><span class="k">· between the cuts</span></div>
+
+    <p class="pglead">A transition is not a filter on a clip. It is a <b>relationship between two clips at a cut</b>, so it
+      lives on the timeline where the cut is, its parameters open in <b>Properties</b> like any other selection, and the
+      six behaviors are browsed as tiles in a panel group, the same grammar as every other library in the app.</p>
+
+    <div class="win tall cq shell">
+
+      <!-- TITLE BAR -->
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>launch-teaser</b> · 1920 × 1080 · 0:12</div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" data-ws="image" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg on" data-ws="video" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm" data-target="video"><i class="ic ic-chevron-left"></i> Timeline</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip" id="cutChip"><i class="ic xs ic-transition"></i> Cross dissolve · 400 ms</span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
+            <div class="mlabel">Cut</div>
+            <div class="menuitem" id="mApply"><i class="ic ic-transition"></i> Apply default transition</div>
+            <div class="menuitem" id="mRemove"><i class="ic ic-blade"></i> Remove transition, hard cut</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR ROW -->
+      <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas">
+            <div class="tstage" id="stage">
+              <div class="tlayer a" id="layA">
+                <span class="tlab">Clip A · intro</span>
+                <h3>Before the cut.</h3>
+                <p>The outgoing shot, held on screen until the transition begins.</p>
+              </div>
+              <div class="tlayer b" id="layB">
+                <span class="tlab">Clip B · reveal</span>
+                <h3>After the cut.</h3>
+                <p>The incoming shot, brought in by the transition you pick.</p>
+              </div>
+              <div class="tdip" id="dip"></div>
+              <div class="tprog" id="prog"></div>
+              <div class="tbadge"><i class="ic ic-transition sm"></i> <b id="badgeName">Cross dissolve</b> · <span id="badgeMs">400 ms</span></div>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · D4 video inventory -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" data-tool="blade" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+              <button class="tool ovf" data-tool="text" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+              <button class="tool ovf" data-tool="shape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" data-tool="measure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" data-tool="hand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" data-tool="zoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#12c2e9,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+              <div class="menuitem"><i class="ic ic-text"></i> Title / Text <span class="sc">T</span></div>
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <!-- HISTORY OVERLAY -->
+          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                  <span class="cap"><span class="nm">Launch teaser</span><span class="ago">open now</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
+                  <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Open a recording and the transport bar and timeline dock appear, with every cut ready to take a transition.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="212" data-max="420"></div>
+
+        <!-- THE RIGHT DOCK -->
+        <div class="pdock" id="dock">
+
+          <!-- SELECTION, place 2 of 3 -->
+          <div class="dgrp" id="gLayers" style="--gh:72px">
+            <div class="dgrp-h">
+              <span class="ttl">Layers</span><span class="cnt">4</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>
+              <div class="lrow child"><i class="ic ic-image"></i><span class="nm">clip-01</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child sel" id="rowTrans"><i class="ic ic-transition"></i><span class="nm" id="rowTransNm">Cross dissolve</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-image"></i><span class="nm">clip-02</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>
+              <div class="lrow child"><i class="ic ic-audio"></i><span class="nm">music.wav</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="80" data-max="260"></div>
+
+          <!-- SELECTION, place 3 of 3: the transition's own parameters -->
+          <div class="dgrp" id="gProps" style="--gh:184px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Transition</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h">Transition <span class="mut" id="propType">Cross dissolve</span></div>
+                <div class="grid2">
+                  <div class="field"><span class="k">From</span><span class="v">clip-01</span></div>
+                  <div class="field"><span class="k">To</span><span class="v">clip-02</span></div>
+                </div>
+                <div class="irow"><span class="rl">Length</span>
+                  <input class="rng" id="dur" type="range" min="100" max="2000" step="50" value="400" aria-label="Transition duration">
+                </div>
+                <div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="durVal">400 ms</span></span></div>
+              </div>
+              <div class="section" id="dipSec">
+                <div class="sec-h">Dip color <span class="mut">dip to color only</span></div>
+                <div class="seg stack" id="dipSeg"><button class="on" data-c="#000">Black</button><button data-c="#fff">White</button></div>
+              </div>
+              <div class="section">
+                <div class="sec-h">Progress <span class="mut">scrub by hand</span></div>
+                <div class="irow"><span class="rl">At</span>
+                  <input class="rng" id="scrub" type="range" min="0" max="100" value="0" aria-label="Transition progress">
+                </div>
+                <div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="scrubVal">0%</span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- The transition library: shared .libgrid / .libtile grammar in a group -->
+          <div class="dgrp grow" id="gEffects">
+            <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Transitions</span>
+              <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="transition-search" placeholder="Search transitions" aria-label="Search transitions"></span>
+              </div>
+              <div class="libgrid" id="lib" style="grid-template-columns:1fr 1fr">
+                <div class="libtile tt sel" tabindex="0" role="button" data-t="dissolve"><span class="th th-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">opacity fade</span></span></div>
+                <div class="libtile tt" tabindex="0" role="button" data-t="dip"><span class="th th-dip"></span><span class="cap"><span class="nm">Dip to color</span><span class="mt">fade through</span></span></div>
+                <div class="libtile tt" tabindex="0" role="button" data-t="slide"><span class="th th-slide"></span><span class="cap"><span class="nm">Slide</span><span class="mt">B slides over</span></span></div>
+                <div class="libtile tt" tabindex="0" role="button" data-t="push"><span class="th th-push"></span><span class="cap"><span class="nm">Push</span><span class="mt">A pushed out</span></span></div>
+                <div class="libtile tt" tabindex="0" role="button" data-t="morph"><span class="th th-morph"></span><span class="cap"><span class="nm">Morph</span><span class="mt">scale and blend</span></span></div>
+                <div class="libtile tt" tabindex="0" role="button" data-t="cut"><span class="th th-cut"></span><span class="cap"><span class="nm">Cut</span><span class="mt">hard, no ramp</span></span></div>
+              </div>
+              <p class="note" style="padding:0 var(--pad-sm) var(--s2)">Drag a tile onto a cut, or pick one to apply it to the selected cut. Every transition rides the same keyframe and easing engine as the rest of the timeline.</p>
+            </div>
+          </div>
+
+          <!-- LIBRARY · media pool is this group with scope = Media (D1) -->
+          <div class="dgrp collapsed" id="gLibrary" style="--gh:140px">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libScope">Media</span>
+              <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" id="scopeSeg">
+                  <button class="on" data-scope="media">Media</button>
+                  <button data-scope="components">Comp</button>
+                  <button data-scope="styles">Styles</button>
+                  <button data-scope="assets">Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
+              </div>
+              <div class="libgrid" id="mediaGrid">
+                <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#5b53ff)"></span><span class="cap"><span class="nm">clip-01.mov</span><span class="mt">0:06</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">clip-02.mov</span><span class="mt">0:06</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:14</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL -->
+        <div class="drail">
+          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+          <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+
+        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+          <div class="menuitem"><i class="ic ic-transition"></i> Add transition at playhead</div>
+          <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+        </div>
+        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:160px;width:200px;z-index:11">
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy transition</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset to default length</div>
+        </div>
+        <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:120px;width:200px;z-index:11">
+          <div class="menuitem"><i class="ic ic-transition"></i> Apply to every cut</div>
+          <div class="menuitem"><i class="ic ic-star"></i> Set as the default transition</div>
+        </div>
+        <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+          <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+        </div>
+      </div>
+
+      <!-- TRANSPORT BAR -->
+      <div class="transport">
+        <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+        <span class="grp">
+          <button class="btn ghost icon sm" id="reset" title="Back to clip A"><i class="ic ic-skip-back"></i></button>
+          <button class="btn primary icon" id="play" title="Play the transition" aria-pressed="false"><i class="ic ic-play"></i></button>
+          <button class="btn ghost icon sm" id="toEnd" title="Forward to clip B"><i class="ic ic-skip-forward"></i></button>
+        </span>
+        <span class="tc cur" id="tcCur">0 ms</span>
+        <span class="scrub" id="tScrub" role="slider" aria-label="Transition progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+          <span class="fill" style="width:0%"></span>
+          <span class="mark" style="left:0%"></span>
+          <span class="mark" style="left:100%"></span>
+          <span class="knob" style="left:0%"></span>
+        </span>
+        <span class="tc" id="tcEnd">400 ms</span>
+        <span class="grp">
+          <button class="btn ghost sm" id="applyBtn" title="Apply the selected transition to this cut"><i class="ic ic-transition"></i><span class="lb">Apply</span></button>
+          <button class="btn ghost sm" id="removeBtn" title="Remove the transition, leave a hard cut"><i class="ic ic-blade"></i><span class="lb">Hard cut</span></button>
+          <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export</span></button>
+        </span>
+      </div>
+
+      <!-- TIMELINE DOCK -->
+      <div class="timeline" id="tlDock">
+        <div class="tlbar">
+          <span class="lbl">Timeline</span>
+          <span class="tspacer"></span>
+          <span class="now">Cut at 6.0s · <b id="lenNow">400 ms</b></span>
+        </div>
+        <div class="tlz">
+          <div class="tlgrid">
+            <div class="track"><span class="tl">Time</span>
+              <div class="lane rlane"><div class="ruler" id="ruler"></div></div>
+            </div>
+            <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+              <div class="lane clane" id="track">
+                <div class="clip v1" style="left:0;width:52%"><span class="lbl">clip-01</span><span class="tc">0:00</span></div>
+                <div class="clip v2" style="left:52%;width:48%"><span class="lbl">clip-02</span><span class="tc">0:06</span></div>
+                <div class="tregion sel" id="region" style="left:52%">
+                  <span class="tdurtag" id="durTag">400 ms</span>
+                  <span class="thandle l" data-h="l"></span>
+                  <span class="ico" id="regionIco"><i class="ic ic-transition"></i></span>
+                  <span class="thandle r" data-h="r"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="apibar">
+      <span class="lab">In the API</span>
+      <code id="api"><span class="k">clip</span>.<span class="fn">transitionTo</span>(<span class="k">next</span>, {type:<span class="s" id="apiType">"dissolve"</span>, ms:<span class="n" id="apiMs">400</span>})</code>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A transition is not a filter on a clip, it is a <b>relationship between two clips at a cut</b>. Pick it from the panel group, watch it run on the real frames, and drag its length right on the timeline. Show the behavior, do not just name it.</p></div>
+      <div class="c"><div class="lab g2">One grammar everywhere</div><p>The six behaviors are <b>library tiles</b>, exactly like media, components and styles. The selected transition reads the same in three places: named on the canvas, highlighted in <b>Layers</b>, and open in <b>Properties</b>.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Every transition rides the <b>same keyframe and easing engine</b> as the rest of the timeline, so its length and curve are animatable and an <b>agent</b> can set them with one call. Duration and type are just parameters, no special-case UI.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>How many transitions earn a place in v1? Cross dissolve, dip, and cut cover most real edits. Slide, push, and morph are flashy but easy to overuse. Ship the honest few, or the full shelf?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   video-transitions · the A to B animator. Scoped and guarded:
+   every node is fetched by id and nothing runs if it is missing.
+   Shell behavior is shared DS and is not repeated here.
+   ============================================================ */
+(function(){
+  "use strict";
+  var layA=document.getElementById("layA"), layB=document.getElementById("layB");
+  var dip=document.getElementById("dip"), prog=document.getElementById("prog");
+  if(!layA||!layB) return;
+
+  var TYPES={
+    dissolve:{name:"Cross dissolve",api:"dissolve"},
+    dip:{name:"Dip to color",api:"dip"},
+    slide:{name:"Slide",api:"slide"},
+    push:{name:"Push",api:"push"},
+    morph:{name:"Morph",api:"morph"},
+    cut:{name:"Cut",api:"cut"}
+  };
+  var type="dissolve";
+  var ms=400;
+  var dipColor="#000";
+  var p=0;                 // progress 0..1 (0 = all A, 1 = all B)
+  var playing=false, raf=null, t0=0;
+
+  var clamp=function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var ease=function(u){ return u*u*(3-2*u); };
+
+  /* ---------- apply the transition at progress p ---------- */
+  function clear(){
+    [layA,layB].forEach(function(l){ l.style.opacity=""; l.style.transform=""; l.style.filter=""; });
+    dip.style.opacity=0;
+  }
+  function render(){
+    clear();
+    var e=ease(p);
+    if(type==="dissolve"){
+      layB.style.opacity=e;
+    } else if(type==="slide"){
+      layB.style.opacity=1;
+      layB.style.transform="translateX("+((1-e)*100)+"%)";
+    } else if(type==="push"){
+      layA.style.transform="translateX("+(-e*100)+"%)";
+      layB.style.transform="translateX("+((1-e)*100)+"%)";
+    } else if(type==="morph"){
+      layA.style.opacity=1-e; layA.style.transform="scale("+(1-0.06*e)+")";
+      layB.style.opacity=e;   layB.style.transform="scale("+(1.06-0.06*e)+")";
+      var blur=Math.sin(p*Math.PI)*4;
+      layA.style.filter="blur("+blur+"px)"; layB.style.filter="blur("+blur+"px)";
+    } else if(type==="cut"){
+      layB.style.opacity=(p>=0.5)?1:0;
+    } else if(type==="dip"){
+      dip.style.background=dipColor;
+      if(p<0.5){ dip.style.opacity=p*2; layB.style.opacity=0; }
+      else{ dip.style.opacity=(1-p)*2; layB.style.opacity=1; }
+    }
+    prog.style.left=(p*100)+"%";
+    prog.style.opacity=(p>0&&p<1&&playing)?1:0;
+    syncProgress();
+  }
+
+  /* ---------- progress readouts (Properties slider + transport scrubber) ---------- */
+  var scrub=document.getElementById("scrub"), scrubVal=document.getElementById("scrubVal");
+  var tScrub=document.getElementById("tScrub"), tcCur=document.getElementById("tcCur");
+  function syncProgress(){
+    if(scrub && document.activeElement!==scrub) scrub.value=Math.round(p*100);
+    if(scrubVal) scrubVal.textContent=Math.round(p*100)+"%";
+    if(tScrub){
+      var f=tScrub.querySelector(".fill"), k=tScrub.querySelector(".knob");
+      if(f) f.style.width=(p*100)+"%";
+      if(k) k.style.left=(p*100)+"%";
+      tScrub.setAttribute("aria-valuenow", Math.round(p*100));
+    }
+    if(tcCur) tcCur.textContent = (type==="cut") ? (p>=0.5?"after":"before") : (Math.round(p*ms)+" ms");
+  }
+
+  /* ---------- transport ---------- */
+  var play=document.getElementById("play");
+  function setPlayIcon(on){
+    var i=play&&play.querySelector(".ic");
+    if(i){ i.classList.toggle("ic-pause",on); i.classList.toggle("ic-play",!on); }
+    if(play){ play.setAttribute("aria-pressed", on?"true":"false"); play.title=on?"Pause":"Play the transition"; }
+  }
+  function frame(ts){
+    if(!playing) return;
+    if(!t0) t0=ts;
+    p=clamp((ts-t0)/Math.max(ms,1),0,1);
+    render();
+    if(p<1){ raf=requestAnimationFrame(frame); }
+    else { stop(); }
+  }
+  function playFrom0(){
+    if(p>=1) p=0;
+    playing=true; t0=0; setPlayIcon(true);
+    raf=requestAnimationFrame(frame);
+  }
+  function stop(){ playing=false; if(raf) cancelAnimationFrame(raf); raf=null; setPlayIcon(false); render(); }
+  if(play) play.addEventListener("click", function(){ if(playing) stop(); else playFrom0(); });
+  var resetBtn=document.getElementById("reset");
+  if(resetBtn) resetBtn.addEventListener("click", function(){ stop(); p=0; render(); });
+  var toEnd=document.getElementById("toEnd");
+  if(toEnd) toEnd.addEventListener("click", function(){ stop(); p=1; render(); });
+
+  if(scrub) scrub.addEventListener("input", function(){
+    var v=(+scrub.value)/100;   // read before stop(), which re-syncs the slider
+    stop(); p=v; render();
+  });
+  if(tScrub){
+    var tset=function(e){
+      var r=tScrub.getBoundingClientRect();
+      stop(); p=clamp((e.clientX-r.left)/r.width,0,1); render();
+    };
+    tScrub.addEventListener("pointerdown", function(e){ tScrub.dataset.on="1"; tset(e); });
+    tScrub.addEventListener("pointermove", function(e){ if(tScrub.dataset.on) tset(e); });
+    ["pointerup","pointercancel"].forEach(function(t){ tScrub.addEventListener(t, function(){ delete tScrub.dataset.on; }); });
+    tScrub.addEventListener("keydown", function(e){
+      if(e.key==="ArrowLeft"){ e.preventDefault(); stop(); p=clamp(p-0.05,0,1); render(); }
+      if(e.key==="ArrowRight"){ e.preventDefault(); stop(); p=clamp(p+0.05,0,1); render(); }
+    });
+  }
+
+  /* ---------- duration ---------- */
+  var dur=document.getElementById("dur"), durVal=document.getElementById("durVal");
+  if(dur) dur.addEventListener("input", function(){
+    ms=+dur.value;
+    syncMeta(); syncRegionWidth(); syncProgress();
+  });
+
+  /* ---------- dip color ---------- */
+  var dipSeg=document.getElementById("dipSeg");
+  if(dipSeg) dipSeg.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b || b.disabled) return;
+    [].forEach.call(dipSeg.children,function(x){ x.classList.toggle("on",x===b); });
+    dipColor=b.getAttribute("data-c"); render();
+  });
+
+  /* ---------- the transition library (shared tile grammar) ---------- */
+  var lib=document.getElementById("lib");
+  var region=document.getElementById("region"), regionIco=document.getElementById("regionIco");
+  if(lib) lib.addEventListener("click", function(e){
+    var tile=e.target.closest(".libtile"); if(!tile) return;
+    [].forEach.call(lib.querySelectorAll(".libtile"),function(x){ x.classList.toggle("sel",x===tile); });
+    type=tile.getAttribute("data-t");
+    applyType();
+  });
+  if(lib) lib.addEventListener("keydown", function(e){
+    if(e.key!=="Enter" && e.key!==" ") return;
+    var tile=e.target.closest(".libtile"); if(!tile) return;
+    e.preventDefault(); tile.click();
+  });
+
+  function applyType(){
+    stop(); p=0;
+    var isDip=(type==="dip");
+    if(dipSeg){
+      [].forEach.call(dipSeg.children,function(b){ b.disabled=!isDip; });
+      dipSeg.style.opacity=isDip?1:.42;
+    }
+    var isCut=(type==="cut");
+    if(dur) dur.disabled=isCut;
+    if(region) region.classList.toggle("none",isCut);
+    if(regionIco) regionIco.innerHTML=isCut?'<i class="ic ic-blade"></i>':'<i class="ic ic-transition"></i>';
+    syncMeta(); syncRegionWidth(); render();
+  }
+
+  /* ---------- selection readouts: canvas badge, Layers row, Properties ---------- */
+  var badgeName=document.getElementById("badgeName"), badgeMs=document.getElementById("badgeMs");
+  var apiType=document.getElementById("apiType"), apiMs=document.getElementById("apiMs");
+  function syncMeta(){
+    var meta=TYPES[type];
+    if(badgeName) badgeName.textContent=meta.name;
+    if(apiType) apiType.textContent='"'+meta.api+'"';
+    var lenTxt=(type==="cut")?"instant":(ms+" ms");
+    if(badgeMs) badgeMs.textContent=lenTxt;
+    if(apiMs) apiMs.textContent=(type==="cut")?"0":ms;
+    if(durVal) durVal.textContent=(type==="cut")?"no ramp":(ms+" ms");
+    var rn=document.getElementById("rowTransNm"); if(rn) rn.textContent=meta.name;
+    var pt=document.getElementById("propType"); if(pt) pt.textContent=meta.name;
+    var ln=document.getElementById("lenNow"); if(ln) ln.textContent=lenTxt;
+    var ce=document.getElementById("tcEnd"); if(ce) ce.textContent=lenTxt;
+    var chip=document.getElementById("cutChip");
+    if(chip) chip.innerHTML='<i class="ic xs ic-transition"></i> '+meta.name+' · '+lenTxt;
+  }
+
+  /* ---------- the transition region on the cut ---------- */
+  function msToPct(m){ return clamp(m/2000*36,4,36); }
+  function pctToMs(w){ return Math.round(clamp(w/36*2000,100,2000)/50)*50; }
+  function syncRegionWidth(){
+    if(!region) return;
+    region.style.width=((type==="cut")?4:msToPct(ms))+"%";
+    var tag=document.getElementById("durTag");
+    if(tag) tag.textContent=(type==="cut")?"cut":(ms+" ms");
+  }
+  var track=document.getElementById("track");
+  if(region) region.addEventListener("pointerdown", function(e){
+    var h=e.target.closest(".thandle"); if(!h) return;
+    if(type==="cut") return;
+    e.preventDefault(); e.stopPropagation();
+    var rect=track.getBoundingClientRect();
+    var move=function(ev){
+      var seam=rect.left+rect.width*0.52;
+      var halfPct=Math.abs(ev.clientX-seam)/rect.width*100;
+      ms=pctToMs(clamp(halfPct*2,4,36));
+      if(dur) dur.value=ms;
+      syncMeta(); syncRegionWidth(); syncProgress();
+    };
+    var up=function(){ document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
+  });
+
+  /* apply / hard cut from the transport bar and the command surface */
+  function applySelected(){ applyType(); playFrom0(); }
+  function hardCut(){
+    type="cut";
+    if(lib){ [].forEach.call(lib.querySelectorAll(".libtile"),function(x){ x.classList.toggle("sel", x.getAttribute("data-t")==="cut"); }); }
+    applyType();
+  }
+  ["applyBtn","mApply"].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener("click", applySelected); });
+  ["removeBtn","mRemove"].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener("click", hardCut); });
+
+  /* ---------- ruler ticks, aligned with the clip lane ---------- */
+  (function(){
+    var r=document.getElementById("ruler"); if(!r) return;
+    [0,25,50,75].forEach(function(pc){
+      var tk=document.createElement("span"); tk.className="tk"; tk.style.left=pc+"%";
+      tk.textContent=(pc/100*12).toFixed(0)+"s"; r.appendChild(tk);
+    });
+    var end=document.createElement("span"); end.className="tk end"; end.textContent="12s"; r.appendChild(end);
+  })();
+
+  /* ---------- Library scope switch + tile selection ---------- */
+  (function(){
+    var seg=document.getElementById("scopeSeg");
+    var label=document.getElementById("libScope");
+    var names={media:"Media",components:"Components",styles:"Styles",assets:"Assets"};
+    if(seg){
+      var btns=[].slice.call(seg.querySelectorAll("button"));
+      btns.forEach(function(b){
+        b.addEventListener("click", function(){
+          btns.forEach(function(x){ x.classList.toggle("on",x===b); });
+          if(label) label.textContent=names[b.getAttribute("data-scope")]||"";
+        });
+      });
+    }
+    var mg=document.getElementById("mediaGrid");
+    if(mg){
+      var tiles=[].slice.call(mg.querySelectorAll(".libtile"));
+      tiles.forEach(function(t){
+        t.addEventListener("click", function(){ tiles.forEach(function(x){ x.classList.toggle("sel",x===t); }); });
+      });
+    }
+  })();
+
+  document.addEventListener("keydown", function(e){
+    if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+    if(e.key===" "){ e.preventDefault(); if(playing) stop(); else playFrom0(); }
+  });
+
+  /* ---------- boot ---------- */
+  applyType();
+})();
+</script>
+</body>
+</html>

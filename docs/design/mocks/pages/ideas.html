@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ideas</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Idea board · cards grouped by scenario. KIND 2 SPECIMEN (PRODUCT-MODEL §4c):
+     a backlog is not a screen of the product, so this block wears NO traffic
+     lights and NO title bar. Every local name is prefixed `ib-` so nothing can
+     collide with a DS class (the old .ic-* names sat inside the icon namespace,
+     and .eff/.star/.card were all collision risks). 4pt spacing only. */
+  .ib-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden;display:flex;flex-direction:column}
+  .ib-blk-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  .ib-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  .ib-blk-h .ib-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  .ib-key{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;padding:var(--gap-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft)}
+  .ib-board{padding:var(--inset);display:flex;flex-direction:column;gap:var(--gap-lg);flex:1;overflow:auto}
+  .ib-group{display:flex;flex-direction:column;gap:var(--pad-sm)}
+  .ib-group-h{display:flex;align-items:center;gap:var(--gap-sm);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:660}
+  .ib-group-h .pip{width:9px;height:9px;border-radius:50%;flex:none}
+  .ib-group-h .n{color:var(--faint);font-weight:560;font-variant-numeric:tabular-nums;margin-left:auto;letter-spacing:0;text-transform:none}
+  .ib-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  @media(max-width:820px){.ib-cards{grid-template-columns:repeat(2,1fr)}}
+  .ib-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r4);padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);min-height:150px}
+  .ib-card:hover{border-color:var(--accent-line)}
+  .ib-card.ib-pick{border-color:var(--accent-line);background:linear-gradient(150deg,var(--accent-soft),transparent 62%)}
+  .ib-top{display:flex;align-items:flex-start;gap:var(--gap-sm)}
+  .ib-top h4{margin:0;font-size:13px;font-weight:640;letter-spacing:-.01em;color:var(--ink);flex:1;line-height:1.25}
+  .ib-tags{display:flex;align-items:center;gap:var(--s1);flex:none}
+  .ib-eff{font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:5px;line-height:1}
+  .ib-eff.s{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+  .ib-eff.m{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+  .ib-eff.l{background:var(--comp-soft);color:var(--comp)}
+  .ib-star{font-size:10px;color:var(--warn)}
+  .ib-pitch{font-size:12px;color:var(--dim);line-height:1.45;margin:0}
+  .ib-fit{margin-top:auto;font-size:10.5px;color:var(--faint);line-height:1.4;padding-top:var(--gap-sm);border-top:1px solid var(--line-soft)}
+  .ib-fit b{color:var(--dim);font-weight:600}
+  .ib-fit code{font-family:var(--mono);font-size:10px;color:var(--accent)}
+  .ib-legend{display:flex;align-items:center;gap:var(--gap-lg);flex-wrap:wrap;font-size:11px;color:var(--faint)}
+  .ib-legend .it{display:inline-flex;align-items:center;gap:var(--s1)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="ideas">
+    <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Idea board</h2><span class="k">· beyond the ask, still on-thesis</span></div>
+
+    <!-- KIND 2 · SPECIMEN. A backlog of concepts, not a screen of the app. It
+         wears no traffic lights and no title bar; the name and the key that used
+         to sit in fake window chrome are the specimen's own header rows. -->
+    <div class="ib-blk">
+      <div class="ib-blk-h"><span class="ib-kind">Specimen</span><h3>Creation backlog</h3><span class="tspacer"></span><span class="val">12 concepts · 5 scenarios</span></div>
+      <div class="ib-key">
+        <span class="ib-legend">
+          <span class="it"><span class="ib-eff s">S</span> small</span>
+          <span class="it"><span class="ib-eff m">M</span> medium</span>
+          <span class="it"><span class="ib-eff l">L</span> large</span>
+          <span class="tsep"></span>
+          <span class="it"><span class="ib-star"><i class="ic ic-star xs"></i></span> helps redlining</span>
+        </span>
+      </div>
+
+      <div class="ib-board">
+
+        <!-- UI DESIGN -->
+        <div class="ib-group">
+          <div class="ib-group-h"><span class="pip" style="background:var(--comp)"></span>UI design<span class="n">3 ideas</span></div>
+          <div class="ib-cards">
+            <div class="ib-card" data-target="dsys">
+              <div class="ib-top"><h4>Brand kit import</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Paste a Figma file or a live site URL and pull its color, type, spacing and radius into your library as real Styles you can paint with.</p>
+              <div class="ib-fit"><b>Why it fits:</b> an importer just emits <code>create_style</code> calls, so it populates the Tokens and Styles tiers through the same API the UI uses.</div>
+            </div>
+            <div class="ib-card ib-pick" data-target="redline">
+              <div class="ib-top"><h4>Smart guides and auto-layout</h4><div class="ib-tags"><span class="ib-star"><i class="ic ic-star xs"></i></span><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Stacks and grids that reflow when content changes, with live gap and edge readouts as you nudge, so spacing is never a guess.</p>
+              <div class="ib-fit"><b>Why it fits:</b> layout is a Layer property in the model, so the same measured gaps power redlining and the assistant can set them too.</div>
+            </div>
+            <div class="ib-card" data-target="dsys">
+              <div class="ib-top"><h4>Data-bound components</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Point a component at a table or JSON and it repeats once per row, re-painting each instance from the data. Feed a list, get a list.</p>
+              <div class="ib-fit"><b>Why it fits:</b> a Component is an instanceable layer tree, so binding is one <code>instance</code> command per row over the API.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE -->
+        <div class="ib-group">
+          <div class="ib-group-h"><span class="pip" style="background:#ff7e5f"></span>Image<span class="n">3 ideas</span></div>
+          <div class="ib-cards">
+            <div class="ib-card" data-target="image">
+              <div class="ib-top"><h4>Generative fill and erase</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Select, then remove a distraction, extend a background, or heal a blemish. Magic eraser, background remove and outpaint as one family of moves.</p>
+              <div class="ib-fit"><b>Why it fits:</b> each is a non-destructive adjustment Layer driven by the model-agnostic command surface, local by default.</div>
+            </div>
+            <div class="ib-card ib-pick" data-target="foundations">
+              <div class="ib-top"><h4>Contrast and a11y checker</h4><div class="ib-tags"><span class="ib-star"><i class="ic ic-star xs"></i></span><span class="ib-eff s">S</span></div></div>
+              <p class="ib-pitch">Live WCAG contrast on any text-on-fill pair, with a one-tap fix that shifts the Paint to the nearest passing shade.</p>
+              <div class="ib-fit"><b>Why it fits:</b> contrast is computed straight from the Type and Paint primitives, so the number is exact and the fix is a Paint edit.</div>
+            </div>
+            <div class="ib-card" data-target="image">
+              <div class="ib-top"><h4>AI alt-text and naming</h4><div class="ib-tags"><span class="ib-eff s">S</span></div></div>
+              <p class="ib-pitch">Auto-name messy layers and write alt text from what each layer actually contains, so files stay tidy and exports stay accessible.</p>
+              <div class="ib-fit"><b>Why it fits:</b> the local model reads the layer tree and writes back through <code>rename</code> and metadata commands. Nothing leaves the machine.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIDEO -->
+        <div class="ib-group">
+          <div class="ib-group-h"><span class="pip" style="background:#12c2e9"></span>Video<span class="n">2 ideas</span></div>
+          <div class="ib-cards">
+            <div class="ib-card ib-pick" data-target="video">
+              <div class="ib-top"><h4>Screen record to component</h4><div class="ib-tags"><span class="ib-star"><i class="ic ic-star xs"></i></span><span class="ib-eff l">L</span></div></div>
+              <p class="ib-pitch">Record a UI region and drop it on the timeline as a keyframed lower-third or callout that you can re-paint and re-time later.</p>
+              <div class="ib-fit"><b>Why it fits:</b> a Component is just a layer tree, so the same one lands on a canvas, a photo, or a video track unchanged.</div>
+            </div>
+            <div class="ib-card" data-target="video">
+              <div class="ib-top"><h4>Motion presets and easing</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Named entrances, emphasis and easing curves you save once and reuse across every clip. Edit the curve, every use updates.</p>
+              <div class="ib-fit"><b>Why it fits:</b> motion is the Styles tier extended to keyframes, so an easing curve is a reusable, API-addressable Style.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CROSS-CUTTING -->
+        <div class="ib-group">
+          <div class="ib-group-h"><span class="pip" style="background:var(--accent)"></span>Cross-cutting<span class="n">2 ideas</span></div>
+          <div class="ib-cards">
+            <div class="ib-card" data-target="states">
+              <div class="ib-top"><h4>Version history and branches</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Scrub a visual timeline of the document, name a moment, or branch to explore a variant without forking a copy of the file.</p>
+              <div class="ib-fit"><b>Why it fits:</b> the model is value-typed and Codable and every edit runs through History, so snapshots and branches are cheap by construction.</div>
+            </div>
+            <div class="ib-card ib-pick" data-target="redline">
+              <div class="ib-top"><h4>Export presets</h4><div class="ib-tags"><span class="ib-star"><i class="ic ic-star xs"></i></span><span class="ib-eff s">S</span></div></div>
+              <p class="ib-pitch">Save a recipe once (2x PNG, sRGB, padded, copied to clipboard) and re-run it on any selection with a single keystroke.</p>
+              <div class="ib-fit"><b>Why it fits:</b> export is one command, so a preset is just saved arguments. Great for redliners shipping the same crop all day.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTOMATION -->
+        <div class="ib-group">
+          <div class="ib-group-h"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span>Automation<span class="n">2 ideas</span></div>
+          <div class="ib-cards">
+            <div class="ib-card" data-target="agent">
+              <div class="ib-top"><h4>Plugin and extension API</h4><div class="ib-tags"><span class="ib-eff l">L</span></div></div>
+              <p class="ib-pitch">Third-party tools and panels built on the same commands the app calls, so a plugin is a first-class citizen, not a bolt-on.</p>
+              <div class="ib-fit"><b>Why it fits:</b> every UI action is one API call already, so plugins and the MCP server drive the exact same validated command surface.</div>
+            </div>
+            <div class="ib-card" data-target="agent">
+              <div class="ib-top"><h4>Action recorder</h4><div class="ib-tags"><span class="ib-eff m">M</span></div></div>
+              <p class="ib-pitch">Record a sequence of edits once and replay it as a named action across a folder of shots. Photoshop Actions, but readable and safe.</p>
+              <div class="ib-fit"><b>Why it fits:</b> commands are serializable and undoable, so a recording is a saved script that any model or batch job can re-run.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The through-line</div><p>Not one of these is a new engine. Each is a thin surface over the same five primitives and the command API, which is exactly what keeps creation consistent instead of sprawling.</p></div>
+      <div class="c"><div class="lab g2">How we would prioritize</div><p>Ship the small wins that ride existing primitives first (export presets, contrast, alt-text), then the medium reuse plays (brand kit, data-bound, actions). Large bets like the plugin API wait until the primitives freeze.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Interactive prototypes and live multiplayer are the two we deliberately left off. Both are real power-user wants, but do they earn their weight before image creation and the API are proven end to end?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

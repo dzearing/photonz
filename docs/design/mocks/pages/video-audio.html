@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-audio</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-audio · a real mixer inside the shared shell. Audio tracks ride the same
+   time axis as everything else, so they are lanes on the timeline dock; the
+   selected track's channel strip (mute, solo, fader, fades, ducking) opens in
+   the Properties group like any other selection, and the source files live in
+   Library, scope Media. Only the waveform lane art is page local. 4pt scale. */
+
+#video-audio .win.shell{height:960px;min-height:0}
+#video-audio .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 34%,#171a26,#0a0c11)}/* ---------- canvas: the picture, with live meters over it ---------- */
+#video-audio .vframe{width:420px;height:236px;background:linear-gradient(135deg,#12c2e9,#7c4dff 55%,#ff5d8f)}
+.vumeters{position:absolute;left:12px;bottom:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.vurow{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--r2);background:rgba(6,8,14,.55);border:1px solid transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+/* SELECTION, place 1 of 3: the selected track is ringed on the canvas */
+.vurow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.vurow .nm{font-size:9.5px;font-weight:640;color:#fff;width:64px;flex:none;letter-spacing:.02em}
+.vurow .mtagv{font-size:9px;font-family:var(--mono);color:rgba(255,255,255,.8);width:34px;flex:none;text-align:right}
+.meter{position:relative;flex:1;height:8px;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#1a9e6a 0%,#3ecf8e 45%,#e0a53a 78%,#f0685c 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.meter .mmask{position:absolute;top:0;right:0;bottom:0;background:rgba(6,8,14,.82);border-left:1px solid rgba(0,0,0,.3)}
+.meter .mpeak{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;transform:translateX(-1px)}
+
+/* ---------- the timeline dock: audio lanes on the shared time axis ---------- */
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
+.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tlz{padding:var(--s2) var(--s3) var(--s3);position:relative}
+.tlgrid{position:relative}
+.tlgrid .track{margin:var(--s1) 0}
+.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap;align-self:flex-start;padding-top:var(--s2)}
+.tlgrid .track .lane.rlane{height:20px;display:block}
+.tlgrid .rlane>.ruler{margin-bottom:0;height:19px;cursor:ew-resize}
+.tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);flex:none}
+.tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+.tlgrid .track .lane.alane{height:84px;display:block;border-radius:var(--r-md);overflow:hidden;background:var(--panel-2);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer}
+.tlgrid .lane.alane.dim{opacity:.45}
+.tlgrid .lane.alane.sel{border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi),0 0 0 1px var(--accent)}
+.alane svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.anode{position:absolute;width:11px;height:11px;border-radius:50%;background:#12c2e9;border:1.5px solid var(--panel);transform:translate(-50%,-50%);cursor:ns-resize;z-index:4;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.anode:hover{background:color-mix(in srgb,#12c2e9 78%,white)}
+.anode.act{background:var(--warn);width:13px;height:13px}
+.fade{position:absolute;top:8px;width:12px;height:12px;background:#fff;border:1.5px solid #12c2e9;transform:translate(-50%,-50%) rotate(45deg);border-radius:2px;cursor:ew-resize;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.fade:hover{background:#eaf7ff}
+.fade.act{border-color:var(--warn);background:#fff6e6}
+.ducklbl{position:absolute;z-index:4;transform:translate(-50%,-50%);font-size:9px;font-family:var(--mono);color:#ffe0a3;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:var(--r1);white-space:nowrap;pointer-events:none;display:flex;align-items:center;gap:4px}
+.ducklbl .ic{width:10px;height:10px;color:#ffce7a}
+.cliptag{position:absolute;left:8px;top:6px;z-index:3;font-size:9px;font-weight:640;color:#fff;background:rgba(0,0,0,.4);padding:2px 7px;border-radius:var(--r1);pointer-events:none;letter-spacing:.02em}
+.playstrip{position:absolute;left:calc(var(--gutter) + 8px);right:0;top:0;bottom:0;pointer-events:none;z-index:6}
+.tlgrid .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px);left:0}
+.tlgrid .playhead::before{content:none}
+.tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit);pointer-events:auto;cursor:ew-resize}
+
+/* ---------- Properties: the channel strip for the selected track ---------- */
+.fader{position:relative;flex:1;height:20px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 2px rgba(0,0,0,.12);cursor:ew-resize;min-width:0;transition:var(--ctl-tr)}
+.fader:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo))}
+.fader:focus-visible{outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.12), var(--ring)}
+.fader.active{border-color:var(--accent-line)}
+.fader .ffill{position:absolute;left:2px;top:2px;bottom:2px;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 55%,transparent),var(--accent));pointer-events:none}
+.fader .fthumb{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.2);box-shadow:0 1px 4px rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none}
+.fader.dim0{opacity:.45}
+.btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}/* ---------- api strip ---------- */
+.apiwrap{padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.apiwrap h4{margin:0 0 var(--gap-sm);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.apiwrap .codeblk{margin:0}
+.apiwrap .cm{color:#7fd7a6}.apiwrap .fn{color:#e0a5ff}.apiwrap .st{color:#f5c77a}
+
+/* ---------- narrow: the window container query, not the viewport ---------- */
+@container shell (max-width:880px){
+  #tlDock{--gutter:52px}
+  #video-audio .vframe{width:300px;height:169px}
+  .vurow .nm{width:52px}
+  .tlgrid .track .lane.alane{height:72px}
+}
+@container shell (max-width:620px){
+  #tlDock{--gutter:52px}
+  #video-audio .vframe{width:216px;height:122px}
+  .vurow .nm{display:none}
+  .tlbar .now{display:none}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-audio">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Audio editing</h2><span class="k">· levels, fades, ducking</span></div>
+
+  <p class="pglead">Audio rides the <b>same time axis</b> as the picture, so a mixer is not a separate app. The tracks are
+    lanes on the <b>timeline dock</b>, the selected track's channel strip opens in <b>Properties</b>, and the source files
+    live in <b>Library, scope Media</b> next to every other asset.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>launch-teaser</b> · stereo 48 kHz · 0:14 <span id="aDirty" style="color:var(--faint)">· saved</span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg on" data-ws="video" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip" id="trackChip"><i class="ic xs ic-audio"></i> Music selected</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+          <div class="mlabel">Audio</div>
+          <div class="menuitem" id="mDuck"><i class="ic ic-audio"></i> Duck music under voiceover</div>
+          <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset the mix</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export WAV</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="vframe">
+            <div class="title">Ship it faster.</div>
+            <div class="vumeters" id="vuMeters">
+              <div class="vurow sel" data-vu="music"><span class="nm">Music</span><div class="meter" data-meter="music"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="music">-inf</span></div>
+              <div class="vurow" data-vu="vo"><span class="nm">Voiceover</span><div class="meter" data-meter="vo"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="vo">-inf</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 video inventory -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="blade" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool ovf" data-tool="text" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" data-tool="shape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" data-tool="measure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="hand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" data-tool="zoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:#12c2e9"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+            <div class="menuitem"><i class="ic ic-text"></i> Title / Text <span class="sc">T</span></div>
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="dur"><i class="ic xs ic-play"></i> 0:14</span></span>
+                <span class="cap"><span class="nm">Launch teaser</span><span class="ago">open now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
+                <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Every recording brings its audio with it, so opening one from history lands both picture and sound on the timeline.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="212" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock">
+
+        <!-- SELECTION, place 2 of 3 -->
+        <div class="dgrp" id="gLayers" style="--gh:84px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">3</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b" id="layerList"><!-- injected --></div>
+        </div>
+
+        <div class="splitter h" data-min="80" data-max="260"></div>
+
+        <!-- SELECTION, place 3 of 3: the channel strip for the selected track -->
+        <div class="dgrp grow" id="gProps">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Audio track</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b" id="propBody"><!-- injected per selection --></div>
+        </div>
+
+        <div class="dgrp collapsed" id="gEffects" style="--gh:150px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">EQ</span><span class="meta">low cut 80</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Compressor</span><span class="meta">off</span></div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · the source files have a home, scope = Media (D1) -->
+        <div class="dgrp" id="gLibrary" style="--gh:104px">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libScope">Media</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button class="on" data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
+            </div>
+            <div class="libgrid" id="mediaGrid">
+              <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#0e4a6b,#12c2e9)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:14</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#4a2b6b,#c56cff)"></span><span class="cap"><span class="nm">voiceover.wav</span><span class="mt">0:07</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#ff5d8f)"></span><span class="cap"><span class="nm">teaser.mov</span><span class="mt">0:14</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">room-tone.wav</span><span class="mt">0:30</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-audio"></i> New audio track</div>
+        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy channel settings</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset this track</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:180px;width:200px;z-index:11">
+        <div class="menuitem"><i class="ic ic-sliders"></i> EQ</div>
+        <div class="menuitem"><i class="ic ic-audio"></i> Compressor</div>
+        <div class="menuitem"><i class="ic ic-sparkle"></i> Noise reduction</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT BAR -->
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" id="aSkipB" title="Skip back"><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" id="aPlay" title="Play or pause" aria-pressed="false"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" id="aSkipF" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur" id="tcCur">0:00</span>
+      <span class="scrub" id="tScrub" data-duration="14" role="slider" aria-label="Scrub" aria-valuemin="0" aria-valuemax="14" aria-valuenow="0" tabindex="0">
+        <span class="fill" style="width:0%"></span>
+        <span class="mark" style="left:28.6%"></span>
+        <span class="mark" style="left:75%"></span>
+        <span class="knob" style="left:0%"></span>
+      </span>
+      <span class="tc">0:14</span>
+      <span class="grp">
+        <button class="btn ghost sm" id="aDuck" aria-pressed="true" title="Duck the music under the voiceover"><i class="ic ic-audio"></i><span class="lb">Duck</span></button>
+        <button class="btn ghost sm" id="aReset" title="Reset the mix"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
+        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export WAV</span></button>
+      </span>
+    </div>
+
+    <!-- TIMELINE DOCK · audio lanes on the shared time axis -->
+    <div class="timeline" id="tlDock">
+      <div class="tlbar">
+        <span class="lbl">Audio</span>
+        <span class="tspacer"></span>
+        <span class="now" id="aTime">0.00s / 14.00s</span>
+      </div>
+      <div class="tlz">
+        <div class="tlgrid" id="tlGrid"><!-- ruler + lanes + playhead injected --></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="apiwrap">
+    <h4>In the API</h4>
+    <div class="codeblk"><span class="cm">// every mixer action is one call an agent can make</span>
+<span class="fn">track</span>(<span class="st">"music"</span>).<span class="fn">duckUnder</span>(<span class="st">"vo"</span>, {amount:<span class="st">-8</span>, ms:<span class="st">300</span>})
+<span class="fn">track</span>(<span class="st">"music"</span>).<span class="fn">fade</span>({inS:<span class="st">1.5</span>, outS:<span class="st">1.5</span>, curve:<span class="st">"ease"</span>})
+<span class="fn">track</span>(<span class="st">"vo"</span>).<span class="fn">gain</span>(<span class="st">0</span>).<span class="fn">solo</span>()</div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Audio rides the <b>same time axis</b> as the video timeline, so a mixer is not a separate app. Levels, fades and ducking are just automation over time, drawn where you can see and grab them. The music envelope you watch dip is the exact curve the render reads.</p></div>
+    <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a lane and the meter on the canvas, the row in <b>Layers</b>, and the channel strip in <b>Properties</b> all follow. The source files sit in <b>Library, scope Media</b>, so audio is not a special case with its own bin.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Ducking is a <b>relationship</b>, not a baked edit. Point the music at the voiceover and it follows, so re-timing the voiceover re-computes the dip. The same idea drives sidechains, auto-fades on cuts, and loudness targets for export.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should ducking default on the moment a voiceover lands on a track, or stay an explicit choice? Smart defaults feel magic until they surprise, and audio surprises are the worst kind.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   Audio editing page interactions (scoped, guarded). Shell
+   behavior is shared DS and is not repeated here.
+   ============================================================ */
+(function(){
+  "use strict";
+  var DURATION = 14;
+  var TICKS = [0,2,4,6,8,10,12,14];
+  var VO = [4, 10.5];              // voiceover clip extent (seconds)
+  var DUCK_DB = -8, DUCK_RAMP = 0.3;
+
+  var clamp=function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var lerp=function(a,b,u){ return a+(b-a)*u; };
+  var dbToGain=function(db){ return Math.pow(10,db/20); };
+  var tcode=function(s){ s=Math.max(0,s); var m=Math.floor(s/60), r=Math.floor(s%60); return m+":"+(r<10?"0":"")+r; };
+
+  function defaults(){
+    return {
+      duck:true,
+      curve:"ease",
+      playT:0,
+      playing:false,
+      sel:"music",
+      tracks:[
+        {id:"music",name:"Music",file:"music.wav",kind:"mus",clip:[0,14],gainDb:0,mute:false,solo:false,
+         fadeIn:1.5,fadeOut:1.5,seed:1.7,
+         auto:[{t:0,v:0.82},{t:7,v:0.82},{t:14,v:0.82}]},
+        {id:"vo",name:"Voiceover",file:"voiceover.wav",kind:"vo",clip:[VO[0],VO[1]],gainDb:0,mute:false,solo:false,
+         fadeIn:0.4,fadeOut:0.5,seed:5.3,
+         auto:[{t:VO[0],v:0.9},{t:VO[1],v:0.9}]}
+      ]
+    };
+  }
+  var S = defaults();
+  function trackOf(id){ return S.tracks.find(function(x){ return x.id===id; }); }
+
+  /* ---- deterministic waveform samples ---- */
+  var SAMP={};
+  function samplesFor(tr){
+    if(SAMP[tr.id]) return SAMP[tr.id];
+    var n=160, s=[], seed=tr.seed;
+    for(var i=0;i<n;i++){
+      var u=i/(n-1), v;
+      if(tr.kind==="mus"){
+        v=0.34+0.42*Math.abs(Math.sin(u*33+seed))*Math.abs(Math.sin(u*6.2+1.1))+0.2*Math.abs(Math.sin(u*90+seed));
+      } else {
+        var word=Math.sin(u*11+seed)*0.5+0.5;
+        var gate=word>0.42?1:0.05;
+        v=gate*(0.28+0.72*Math.abs(Math.sin(u*72+seed*2)));
+      }
+      s.push(clamp(v,0,1));
+    }
+    SAMP[tr.id]=s; return s;
+  }
+  function ampAt(tr,t){
+    var a=tr.clip[0], b=tr.clip[1];
+    if(t<a||t>b) return 0;
+    var s=samplesFor(tr), u=(t-a)/((b-a)||1), x=u*(s.length-1);
+    var i=Math.floor(x), f=x-i;
+    var lo=s[i], hi=s[Math.min(s.length-1,i+1)];
+    return lo+(hi-lo)*f;
+  }
+  function curveFn(u){
+    u=clamp(u,0,1);
+    if(S.curve==="linear") return u;
+    if(S.curve==="scurve") return u*u*u*(u*(u*6-15)+10);
+    return u*u*(3-2*u);
+  }
+  function autoAt(tr,t){
+    var k=tr.auto; if(!k.length) return 1;
+    if(t<=k[0].t) return k[0].v;
+    if(t>=k[k.length-1].t) return k[k.length-1].v;
+    for(var i=0;i<k.length-1;i++){
+      if(t>=k[i].t&&t<=k[i+1].t){
+        return lerp(k[i].v,k[i+1].v,(t-k[i].t)/((k[i+1].t-k[i].t)||1));
+      }
+    }
+    return k[k.length-1].v;
+  }
+  function fadeAt(tr,t){
+    var a=tr.clip[0], b=tr.clip[1];
+    if(t<a||t>b) return 0;
+    var g=1;
+    if(tr.fadeIn>0 && t<a+tr.fadeIn) g*=curveFn((t-a)/tr.fadeIn);
+    if(tr.fadeOut>0 && t>b-tr.fadeOut) g*=curveFn((b-t)/tr.fadeOut);
+    return g;
+  }
+  function duckAt(t){
+    if(!S.duck) return 1;
+    var a=VO[0], b=VO[1], r=DUCK_RAMP, tgt=dbToGain(DUCK_DB);
+    if(t<=a-r || t>=b+r) return 1;
+    if(t<a) return lerp(1,tgt,(t-(a-r))/r);
+    if(t>b) return lerp(tgt,1,(t-b)/r);
+    return tgt;
+  }
+  function levelAt(tr,t){
+    var m=autoAt(tr,t)*fadeAt(tr,t);
+    if(tr.id==="music") m*=duckAt(t);
+    return m;
+  }
+  function audible(tr){
+    var soloOn=S.tracks.some(function(x){ return x.solo; });
+    if(tr.mute) return false;
+    if(soloOn && !tr.solo) return false;
+    return true;
+  }
+
+  var xOf=function(t){ return t/DURATION*1000; };
+  var yOfLevel=function(v){ return 90-clamp(v,0,1)*78; };
+  var pctX=function(t){ return t/DURATION*100; };
+
+  /* ---------------- TIMELINE: ruler + audio lanes ---------------- */
+  var grid=document.getElementById("tlGrid");
+  var playhead;
+
+  function buildTimeline(){
+    if(!grid) return;
+    var h='<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="aRuler"></div></div></div>';
+    S.tracks.forEach(function(tr){
+      h+='<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> '+tr.name+'</span>'+
+         '<div class="lane alane" data-lane="'+tr.id+'">'+
+           '<svg viewBox="0 0 1000 100" preserveAspectRatio="none"></svg>'+
+           '<span class="cliptag">'+tr.file+'</span>'+
+         '</div></div>';
+    });
+    h+='<div class="playstrip"><div class="playhead" id="aHead"><span class="head"></span></div></div>';
+    grid.innerHTML=h;
+    var ru=document.getElementById("aRuler");
+    TICKS.forEach(function(t,i){
+      var tk=document.createElement("span");
+      tk.className="tk"+(i===TICKS.length-1?" end":"");
+      if(i===TICKS.length-1){ tk.style.right="0"; } else { tk.style.left=pctX(t)+"%"; }
+      tk.textContent=t+"s";
+      ru.appendChild(tk);
+    });
+    playhead=document.getElementById("aHead");
+    renderAllLanes();
+    positionPlayhead();
+  }
+
+  function renderLane(lane,tr){
+    var svg=lane.querySelector("svg");
+    var a=tr.clip[0], b=tr.clip[1];
+    var col=tr.kind==="mus"?"#12c2e9":"#c56cff";
+    var s="";
+    TICKS.forEach(function(t){ s+='<line x1="'+xOf(t)+'" y1="0" x2="'+xOf(t)+'" y2="100" stroke="rgba(128,128,128,.16)" stroke-width="1" vector-effect="non-scaling-stroke"/>'; });
+    s+='<rect x="'+xOf(a)+'" y="4" width="'+(xOf(b)-xOf(a))+'" height="92" rx="4" fill="rgba(255,255,255,.03)" stroke="'+col+'" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    if(tr.id==="music" && S.duck){
+      s+='<rect x="'+xOf(VO[0])+'" y="4" width="'+(xOf(VO[1])-xOf(VO[0]))+'" height="92" fill="rgba(224,165,58,.10)"/>';
+    }
+    var samp=samplesFor(tr), n=samp.length, top="", bot="", i;
+    for(i=0;i<n;i++){
+      var u=i/(n-1), t=a+(b-a)*u;
+      var h=samp[i]*levelAt(tr,t)*42;
+      top+=(i?" L ":"M ")+xOf(t).toFixed(1)+" "+(50-h).toFixed(1);
+    }
+    for(i=n-1;i>=0;i--){
+      var u2=i/(n-1), t2=a+(b-a)*u2;
+      bot+=" L "+xOf(t2).toFixed(1)+" "+(50+samp[i]*levelAt(tr,t2)*42).toFixed(1);
+    }
+    s+='<path d="'+top+bot+' Z" fill="'+col+'" fill-opacity=".55"/>';
+    var line="";
+    for(var t3=a; t3<=b+0.001; t3+=(b-a)/120){
+      line+=(line?" L ":"M ")+xOf(t3).toFixed(1)+" "+yOfLevel(autoAt(tr,t3)*fadeAt(tr,t3)).toFixed(1);
+    }
+    s+='<path d="'+line+'" fill="none" stroke="'+col+'" stroke-width="1.5" stroke-opacity="'+(tr.id==="music"&&S.duck?".4":".95")+'" vector-effect="non-scaling-stroke"/>';
+    if(tr.id==="music" && S.duck){
+      var dl="";
+      for(var t4=0; t4<=DURATION+0.001; t4+=DURATION/200){
+        dl+=(dl?" L ":"M ")+xOf(t4).toFixed(1)+" "+yOfLevel(levelAt(tr,t4)).toFixed(1);
+      }
+      s+='<path d="'+dl+'" fill="none" stroke="#e0a53a" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+    }
+    svg.innerHTML=s;
+
+    [].forEach.call(lane.querySelectorAll(".anode,.fade,.ducklbl"),function(el){ el.remove(); });
+    tr.auto.forEach(function(k,idx){
+      var nd=document.createElement("div"); nd.className="anode";
+      nd.style.left=pctX(k.t)+"%";
+      nd.style.top=yOfLevel(k.v)+"%";
+      nd.style.background=col;
+      nd.setAttribute("data-node",idx);
+      lane.appendChild(nd);
+    });
+    var fi=document.createElement("div"); fi.className="fade";
+    fi.style.left=pctX(a+tr.fadeIn)+"%"; fi.style.borderColor=col;
+    fi.setAttribute("data-fade","in"); fi.title="Fade in "+tr.fadeIn.toFixed(1)+"s";
+    lane.appendChild(fi);
+    var fo=document.createElement("div"); fo.className="fade";
+    fo.style.left=pctX(b-tr.fadeOut)+"%"; fo.style.borderColor=col;
+    fo.setAttribute("data-fade","out"); fo.title="Fade out "+tr.fadeOut.toFixed(1)+"s";
+    lane.appendChild(fo);
+    if(tr.id==="music" && S.duck){
+      var lbl=document.createElement("div"); lbl.className="ducklbl";
+      lbl.style.left=pctX((VO[0]+VO[1])/2)+"%";
+      lbl.style.top=(yOfLevel(dbToGain(DUCK_DB)*0.82)-14)+"%";
+      lbl.innerHTML='<i class="ic ic-audio"></i>duck '+DUCK_DB+' dB';
+      lane.appendChild(lbl);
+    }
+  }
+  function renderAllLanes(){
+    if(!grid) return;
+    S.tracks.forEach(function(tr){
+      var lane=grid.querySelector('[data-lane="'+tr.id+'"]');
+      if(!lane) return;
+      lane.classList.toggle("dim",!audible(tr));
+      lane.classList.toggle("sel",S.sel===tr.id);
+      renderLane(lane,tr);
+    });
+  }
+
+  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
+  var layerList=document.getElementById("layerList");
+  function renderLayers(){
+    if(!layerList) return;
+    var h='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>'+
+          '<div class="lrow child"><i class="ic ic-image"></i><span class="nm">teaser.mov</span><i class="ic sm ic-eye eye"></i></div>'+
+          '<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>';
+    S.tracks.forEach(function(tr){
+      h+='<div class="lrow child'+(S.sel===tr.id?" sel":"")+'" data-track="'+tr.id+'" role="button" tabindex="0">'+
+           '<i class="ic ic-audio"></i><span class="nm">'+tr.name+'</span>'+
+           '<i class="ic sm '+(audible(tr)?"ic-eye":"ic-eye-off")+' eye"></i></div>';
+    });
+    layerList.innerHTML=h;
+  }
+  layerList && layerList.addEventListener("click", function(e){
+    var row=e.target.closest("[data-track]"); if(!row) return;
+    select(row.getAttribute("data-track"));
+  });
+
+  function select(id){
+    S.sel=id;
+    renderAllLanes(); renderLayers(); renderProps(); syncCanvasSel();
+    var chip=document.getElementById("trackChip");
+    var tr=trackOf(id);
+    if(chip && tr) chip.innerHTML='<i class="ic xs ic-audio"></i> '+tr.name+' selected';
+  }
+  function syncCanvasSel(){
+    [].forEach.call(document.querySelectorAll(".vurow"), function(r){
+      r.classList.toggle("sel", r.getAttribute("data-vu")===S.sel);
+    });
+  }
+
+  /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
+  var propBody=document.getElementById("propBody");
+  function renderProps(){
+    if(!propBody) return;
+    var tr=trackOf(S.sel); if(!tr) return;
+    var kind=document.getElementById("propKind");
+    if(kind) kind.textContent=tr.name;
+    var h="";
+    h+='<div class="section"><div class="sec-h">Channel <span class="mut">'+tr.file+'</span></div>'+
+       '<div class="btnrow">'+
+         '<button class="btn sm '+(tr.mute?"danger":"ghost")+'" data-mute="'+tr.id+'" aria-pressed="'+tr.mute+'"><i class="ic ic-volume"></i> Mute</button>'+
+         '<button class="btn sm '+(tr.solo?"primary":"ghost")+'" data-solo="'+tr.id+'" aria-pressed="'+tr.solo+'"><i class="ic ic-star"></i> Solo</button>'+
+       '</div>'+
+       '<div class="irow" style="margin-top:var(--s3)"><span class="rl">Volume</span>'+
+         '<div class="fader'+(tr.mute?" dim0":"")+'" data-fader="'+tr.id+'" tabindex="0" role="slider" '+
+              'aria-label="'+tr.name+' volume" aria-valuemin="-24" aria-valuemax="6" aria-valuenow="'+tr.gainDb.toFixed(1)+'">'+
+           '<i class="ffill"></i><i class="fthumb"></i></div></div>'+
+       '<div class="irow"><span class="rl">Gain</span><span class="field" style="justify-content:flex-end"><span class="v" data-gain="'+tr.id+'">'+(tr.gainDb>0?"+":"")+tr.gainDb.toFixed(1)+' dB</span></span></div>'+
+       '</div>';
+    h+='<div class="section"><div class="sec-h">Fades <span class="mut">drag the diamonds on the lane</span></div>'+
+       '<div class="grid2">'+
+         '<div class="field"><span class="k">In</span><span class="v" id="fInVal">'+tr.fadeIn.toFixed(1)+'s</span></div>'+
+         '<div class="field"><span class="k">Out</span><span class="v" id="fOutVal">'+tr.fadeOut.toFixed(1)+'s</span></div>'+
+       '</div>'+
+       '<div class="seg stack" id="aCurve" style="margin-top:var(--s2)">'+
+         '<button data-c="linear"'+(S.curve==="linear"?' class="on"':'')+'>Linear</button>'+
+         '<button data-c="ease"'+(S.curve==="ease"?' class="on"':'')+'>Ease</button>'+
+         '<button data-c="scurve"'+(S.curve==="scurve"?' class="on"':'')+'>S-curve</button>'+
+       '</div></div>';
+    if(tr.id==="music"){
+      h+='<div class="section"><div class="sec-h">Ducking <span class="mut">under the voiceover</span></div>'+
+         '<div class="btnrow"><button class="btn sm '+(S.duck?"primary":"ghost")+'" id="duckToggle" aria-pressed="'+S.duck+'"><i class="ic ic-audio"></i> '+(S.duck?"On":"Off")+'</button></div>'+
+         '<div class="grid2" style="margin-top:var(--s2)">'+
+           '<div class="field"><span class="k">Amount</span><span class="v">'+DUCK_DB+' dB</span></div>'+
+           '<div class="field"><span class="k">Ramp</span><span class="v">'+(DUCK_RAMP*1000)+' ms</span></div>'+
+         '</div>'+
+         '<p class="note">Ducking is a relationship, not a baked edit. Move the voiceover and the dip follows it.</p></div>';
+    } else {
+      h+='<div class="section"><div class="sec-h">Clip</div>'+
+         '<div class="grid2">'+
+           '<div class="field"><span class="k">In</span><span class="v">'+tr.clip[0].toFixed(1)+'s</span></div>'+
+           '<div class="field"><span class="k">Out</span><span class="v">'+tr.clip[1].toFixed(1)+'s</span></div>'+
+         '</div>'+
+         '<p class="note">The music track ducks under this one, so its timing drives the dip.</p></div>';
+    }
+    propBody.innerHTML=h;
+    positionFader(tr);
+  }
+  function positionFader(tr){
+    var f=document.querySelector('[data-fader="'+tr.id+'"]'); if(!f) return;
+    var u=(tr.gainDb+24)/30;
+    f.querySelector(".ffill").style.width="calc("+(u*100)+"% - 2px)";
+    f.querySelector(".fthumb").style.left="calc(2px + "+(u*100)+"% * 0.92)";
+    f.setAttribute("aria-valuenow",tr.gainDb.toFixed(1));
+    var g=document.querySelector('[data-gain="'+tr.id+'"]');
+    if(g) g.textContent=(tr.gainDb>0?"+":"")+tr.gainDb.toFixed(1)+" dB";
+  }
+
+  /* ---------------- METERS on the canvas ---------------- */
+  var mDisp={music:0,vo:0};
+  function targetLevel(tr){
+    if(!audible(tr)) return 0;
+    var raw=ampAt(tr,S.playT)*levelAt(tr,S.playT)*clamp(dbToGain(tr.gainDb),0,1.4);
+    return clamp(raw*1.25,0,1);
+  }
+  function dbTag(v){
+    if(v<=0.001) return "-inf";
+    var db=20*Math.log10(v);
+    return (db>0?"+":"")+db.toFixed(0);
+  }
+  function drawMeters(instant){
+    S.tracks.forEach(function(tr){
+      var tgt=targetLevel(tr);
+      mDisp[tr.id]= instant ? tgt : mDisp[tr.id]+(tgt-mDisp[tr.id])*0.4;
+      var m=document.querySelector('[data-meter="'+tr.id+'"]');
+      if(m){
+        var L=mDisp[tr.id]*100;
+        m.querySelector(".mmask").style.width=(100-L)+"%";
+        m.querySelector(".mpeak").style.left=L+"%";
+      }
+      var tg=document.querySelector('[data-mtag="'+tr.id+'"]');
+      if(tg) tg.textContent=dbTag(mDisp[tr.id]);
+    });
+  }
+
+  /* ---------------- playhead + transport ---------------- */
+  var tScrub=document.getElementById("tScrub");
+  function positionPlayhead(){ if(playhead) playhead.style.left=pctX(S.playT)+"%"; }
+  function updateTime(){
+    var el=document.getElementById("aTime");
+    if(el) el.textContent=S.playT.toFixed(2)+"s / "+DURATION.toFixed(2)+"s";
+    var tc=document.getElementById("tcCur");
+    if(tc) tc.textContent=tcode(S.playT);
+    if(tScrub){
+      var p=S.playT/DURATION*100;
+      var f=tScrub.querySelector(".fill"), k=tScrub.querySelector(".knob");
+      if(f) f.style.width=p+"%";
+      if(k) k.style.left=p+"%";
+      tScrub.setAttribute("aria-valuenow",S.playT.toFixed(2));
+    }
+  }
+  function onSeek(){ positionPlayhead(); updateTime(); drawMeters(true); }
+
+  function timeFromX(cx,rect){ return clamp((cx-rect.left)/rect.width*DURATION,0,DURATION); }
+  function startScrub(e,rect){
+    var set=function(cx){ S.playT=+timeFromX(cx,rect).toFixed(2); onSeek(); };
+    set(e.clientX);
+    var mv=function(ev){ set(ev.clientX); };
+    var up=function(){ document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
+    e.preventDefault();
+  }
+  if(tScrub){
+    var tset=function(e){ S.playT=+timeFromX(e.clientX, tScrub.getBoundingClientRect()).toFixed(2); onSeek(); };
+    tScrub.addEventListener("pointerdown", function(e){ tScrub.dataset.on="1"; tset(e); });
+    tScrub.addEventListener("pointermove", function(e){ if(tScrub.dataset.on) tset(e); });
+    ["pointerup","pointercancel"].forEach(function(t){ tScrub.addEventListener(t, function(){ delete tScrub.dataset.on; }); });
+    tScrub.addEventListener("keydown", function(e){
+      if(e.key==="ArrowLeft"){ e.preventDefault(); S.playT=clamp(S.playT-0.5,0,DURATION); onSeek(); }
+      if(e.key==="ArrowRight"){ e.preventDefault(); S.playT=clamp(S.playT+0.5,0,DURATION); onSeek(); }
+    });
+  }
+
+  /* ---------------- lane interactions ---------------- */
+  grid && grid.addEventListener("pointerdown",function(e){
+    if(e.target.closest("#aRuler")){ startScrub(e,e.target.closest("#aRuler").getBoundingClientRect()); return; }
+    if(e.target.classList && e.target.classList.contains("head")){
+      var strip=grid.querySelector(".playstrip");
+      if(strip) startScrub(e,strip.getBoundingClientRect());
+      return;
+    }
+    var nd=e.target.closest(".anode");
+    if(nd){
+      var lane=nd.closest(".alane"), tr=trackOf(lane.getAttribute("data-lane"));
+      if(!tr) return;
+      select(tr.id);
+      var idx=+nd.getAttribute("data-node");
+      var rect=lane.getBoundingClientRect();
+      nd.classList.add("act"); markDirty();
+      var mv=function(ev){
+        var yPct=clamp((ev.clientY-rect.top)/rect.height*100,0,100);
+        tr.auto[idx].v=+clamp((90-yPct)/78,0,1).toFixed(3);
+        renderLane(lane,tr); drawMeters(true);
+      };
+      var up=function(){ renderLane(lane,tr); document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up); };
+      document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
+      e.preventDefault(); return;
+    }
+    var fh=e.target.closest(".fade");
+    if(fh){
+      var lane2=fh.closest(".alane"), tr2=trackOf(lane2.getAttribute("data-lane"));
+      if(!tr2) return;
+      select(tr2.id);
+      var side=fh.getAttribute("data-fade");
+      var rect2=lane2.getBoundingClientRect();
+      var a=tr2.clip[0], b=tr2.clip[1], maxF=(b-a)/2-0.1;
+      fh.classList.add("act"); markDirty();
+      var mv2=function(ev){
+        var t=timeFromX(ev.clientX,rect2);
+        if(side==="in") tr2.fadeIn=clamp(t-a,0,maxF);
+        else tr2.fadeOut=clamp(b-t,0,maxF);
+        renderLane(lane2,tr2); drawMeters(true);
+        var fi=document.getElementById("fInVal"), fo=document.getElementById("fOutVal");
+        if(fi) fi.textContent=tr2.fadeIn.toFixed(1)+"s";
+        if(fo) fo.textContent=tr2.fadeOut.toFixed(1)+"s";
+      };
+      var up2=function(){ document.removeEventListener("pointermove",mv2); document.removeEventListener("pointerup",up2); };
+      document.addEventListener("pointermove",mv2); document.addEventListener("pointerup",up2);
+      e.preventDefault(); return;
+    }
+    var laneHit=e.target.closest(".alane");
+    if(laneHit) select(laneHit.getAttribute("data-lane"));
+  });
+
+  /* ---------------- Properties interactions ---------------- */
+  propBody && propBody.addEventListener("pointerdown",function(e){
+    var f=e.target.closest(".fader"); if(!f) return;
+    var tr=trackOf(f.getAttribute("data-fader")); if(!tr||tr.mute) return;
+    var rect=f.getBoundingClientRect();
+    f.classList.add("active"); markDirty();
+    var set=function(cx){ tr.gainDb=+(clamp((cx-rect.left)/rect.width,0,1)*30-24).toFixed(1); positionFader(tr); drawMeters(true); };
+    set(e.clientX);
+    var mv=function(ev){ set(ev.clientX); };
+    var up=function(){ f.classList.remove("active"); document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
+    e.preventDefault();
+  });
+  propBody && propBody.addEventListener("keydown",function(e){
+    var f=e.target.closest && e.target.closest(".fader"); if(!f) return;
+    var tr=trackOf(f.getAttribute("data-fader")); if(!tr) return;
+    var step=e.shiftKey?3:1, moved=false;
+    if(e.key==="ArrowRight"||e.key==="ArrowUp"){ tr.gainDb=clamp(+(tr.gainDb+step).toFixed(1),-24,6); moved=true; }
+    else if(e.key==="ArrowLeft"||e.key==="ArrowDown"){ tr.gainDb=clamp(+(tr.gainDb-step).toFixed(1),-24,6); moved=true; }
+    if(moved){ positionFader(tr); drawMeters(true); markDirty(); e.preventDefault(); }
+  });
+  propBody && propBody.addEventListener("click",function(e){
+    var mb=e.target.closest("[data-mute]");
+    var sb=e.target.closest("[data-solo]");
+    var cb=e.target.closest("#aCurve button");
+    var dk=e.target.closest("#duckToggle");
+    if(mb){ var t1=trackOf(mb.getAttribute("data-mute")); if(t1){ t1.mute=!t1.mute; refresh(); markDirty(); } }
+    else if(sb){ var t2=trackOf(sb.getAttribute("data-solo")); if(t2){ t2.solo=!t2.solo; refresh(); markDirty(); } }
+    else if(cb){ S.curve=cb.getAttribute("data-c"); refresh(); markDirty(); }
+    else if(dk){ setDuck(!S.duck); markDirty(); }
+  });
+
+  function setDuck(on){
+    S.duck=on;
+    var b=document.getElementById("aDuck");
+    if(b){
+      b.setAttribute("aria-pressed",String(on));
+      b.classList.toggle("primary",on);
+      b.classList.toggle("ghost",!on);
+    }
+    refresh();
+  }
+  ["aDuck","mDuck"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", function(){ setDuck(!S.duck); markDirty(); });
+  });
+
+  /* ---------------- transport ---------------- */
+  var playBtn=document.getElementById("aPlay"), raf=null, last=0;
+  function reflectPlay(){
+    var pi=playBtn && playBtn.querySelector(".ic");
+    if(pi){ pi.classList.toggle("ic-pause",S.playing); pi.classList.toggle("ic-play",!S.playing); }
+    if(playBtn){ playBtn.setAttribute("aria-pressed", S.playing?"true":"false"); playBtn.title=S.playing?"Pause":"Play"; }
+  }
+  function tick(ts){
+    if(!S.playing) return;
+    if(!last) last=ts;
+    S.playT+=(ts-last)/1000; last=ts;
+    if(S.playT>=DURATION) S.playT=0;
+    positionPlayhead(); updateTime(); drawMeters(false);
+    raf=requestAnimationFrame(tick);
+  }
+  if(playBtn) playBtn.addEventListener("click",function(){
+    S.playing=!S.playing; reflectPlay(); last=0;
+    if(S.playing) raf=requestAnimationFrame(tick); else if(raf) cancelAnimationFrame(raf);
+  });
+  var sb=document.getElementById("aSkipB"); if(sb) sb.addEventListener("click",function(){ S.playT=0; onSeek(); });
+  var sf=document.getElementById("aSkipF"); if(sf) sf.addEventListener("click",function(){ S.playT=DURATION; onSeek(); });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+    if(e.target && e.target.classList && e.target.classList.contains("fader")) return;
+    if(e.key===" "){ if(playBtn){ e.preventDefault(); playBtn.click(); } }
+  });
+
+  /* ---------------- Library scope switch + tile selection ---------------- */
+  (function(){
+    var seg=document.getElementById("scopeSeg");
+    var label=document.getElementById("libScope");
+    var names={media:"Media",components:"Components",styles:"Styles",assets:"Assets"};
+    if(seg){
+      var btns=[].slice.call(seg.querySelectorAll("button"));
+      btns.forEach(function(b){
+        b.addEventListener("click", function(){
+          btns.forEach(function(x){ x.classList.toggle("on",x===b); });
+          if(label) label.textContent=names[b.getAttribute("data-scope")]||"";
+        });
+      });
+    }
+    var mg=document.getElementById("mediaGrid");
+    if(mg){
+      var tiles=[].slice.call(mg.querySelectorAll(".libtile"));
+      tiles.forEach(function(t){
+        t.addEventListener("click", function(){ tiles.forEach(function(x){ x.classList.toggle("sel",x===t); }); });
+      });
+    }
+  })();
+
+  /* ---------------- dirty + reset ---------------- */
+  var dirty=false;
+  function markDirty(){
+    if(dirty) return;
+    dirty=true;
+    var d=document.getElementById("aDirty");
+    if(d){ d.textContent="· edited"; d.style.color="var(--warn)"; }
+  }
+  function refresh(){ renderAllLanes(); renderLayers(); renderProps(); syncCanvasSel(); drawMeters(true); }
+  function resetAll(){
+    if(S.playing && raf) cancelAnimationFrame(raf);
+    S=defaults();
+    setDuck(true); reflectPlay();
+    buildTimeline(); refresh(); onSeek();
+    dirty=false;
+    var d=document.getElementById("aDirty");
+    if(d){ d.textContent="· saved"; d.style.color="var(--faint)"; }
+  }
+  ["aReset","mReset"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", resetAll);
+  });
+
+  /* ---------------- boot ---------------- */
+  reflectPlay();
+  buildTimeline();
+  renderLayers();
+  renderProps();
+  syncCanvasSel();
+  onSeek();
+})();
+</script>
+</body>
+</html>

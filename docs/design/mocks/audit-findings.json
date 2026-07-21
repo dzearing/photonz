@@ -1,0 +1,330 @@
+{
+  "generated": "2026-07-20",
+  "summary": "The mock is a strong, cohesive direction study: the shared design system, the liquid-glass material pass, and a canonical control layer keep the pages reading as one native macOS product, and the best pages (states, dsys, composites, walk, typography) are genuinely convincing. Copy discipline is excellent, no em dashes and no 'Claude' in any UI copy. The biggest gaps are LEGIBILITY OF INTERACTION on the priority scenarios: the video keyframe panel is decorative and maps to nothing, and several asserted actions (drag a component from a library, add a keyframe, drop a transition, create a video, save a document, brush/erase/pen an image) are claimed in captions but never shown. A second cluster is control consistency: the canonical CSS makes every chip and pill look clickable so read-only value tags are indistinguishable from live toggles, glyph vocabulary collides across pages, and several pages reinvent shared controls (back-chip, segmented control) in a different shape.",
+  "findings": [
+    {
+      "id": "f-001",
+      "page": "video",
+      "area": "legibility",
+      "severity": "high",
+      "problem": "The Keyframes panel diamonds are purely decorative. The keyframe markers sit at hardcoded left percentages (Position 12/88, Opacity 12/32, Scale 12/88, Style 50) inside plain bars that have no time ruler, no value axis, and no correspondence to the clip's own keyframe diamonds on the timeline (12/50/88). They map to nothing, so the panel reads as ornament rather than an editable keyframe track.",
+      "fix": "Align each property lane to the same time ruler as the timeline above, draw a value curve between keyframes, and put at least one keyframe on a diamond that lines up with a clip keyframe. Show a selected keyframe with its numeric time and value so the panel demonstrably edits something.",
+      "suggestedTask": "Make video keyframe panel map to the timeline"
+    },
+    {
+      "id": "f-002",
+      "page": "video",
+      "area": "legibility",
+      "severity": "high",
+      "problem": "The walkthrough and video caption assert you can 'keyframe any property', but the HOW is never shown: there is no per-property add-keyframe affordance (the stopwatch/diamond toggle every timeline editor has), the Keyframe toolbar tool has no demonstrated action, and there is no step of clicking a property to create a keyframe.",
+      "fix": "Add a keyframe toggle next to each property row (Position/Opacity/Scale) and show one row mid-interaction: toggle on, playhead moves, a diamond drops. Tie the Keyframe tool to that gesture.",
+      "suggestedTask": "Show how a keyframe gets added"
+    },
+    {
+      "id": "f-003",
+      "page": "video",
+      "area": "workflow",
+      "severity": "high",
+      "problem": "There is no shown path to CREATE a video. The Home 'Edit video' tile jumps straight into a fully populated launch-teaser timeline (5 tracks, transitions, captions, audio). How a user imports media or starts an empty timeline is never demonstrated, unlike composites which shows UI starting from nothing.",
+      "fix": "Add an empty/new-video state (import media, drop a first clip onto an empty track) as a first walkthrough step on the video page or a composites-style stepper, so the video story has an on-ramp.",
+      "suggestedTask": "Add a create-a-video on-ramp"
+    },
+    {
+      "id": "f-004",
+      "page": "video",
+      "area": "legibility",
+      "severity": "high",
+      "problem": "The Keyframes panel header says the Title clip is selected, but that clip on the timeline has no selected state (the selection outline is not applied to it). The panel claims a selection the canvas does not reflect, so the cause-and-effect link between selecting a clip and seeing its keyframes is broken.",
+      "fix": "Apply the selection outline (clip.sel) to the Title/Lower-third clip so the inspector's 'Title selected' claim is visually anchored to the selected clip.",
+      "suggestedTask": "Reflect selected clip on the timeline"
+    },
+    {
+      "id": "f-005",
+      "page": "video",
+      "area": "controls",
+      "severity": "high",
+      "problem": "The Select tool glyph in the video toolbar is the Command-key symbol, whereas every other editor (editor, image, redline, states) uses a left-pointing arrow for Select. The video Select icon is both inconsistent and semantically wrong.",
+      "fix": "Use the same left-arrow Select glyph as the other editors so the primary tool is recognizable across scenarios.",
+      "suggestedTask": "Unify the Select tool icon"
+    },
+    {
+      "id": "f-006",
+      "page": "video",
+      "area": "legibility",
+      "severity": "med",
+      "problem": "The caption says 'Drop a transition on any cut', but the transition workflow is not shown: there is no drag affordance from the transition palette to a cut, and the relationship between the Transition toolbar tool, the transition palette tiles, and the yellow hatch transition already on the timeline is left unexplained.",
+      "fix": "Show a transition tile being dragged onto the clip-01/clip-02 cut (drag ghost + drop target), and make the selected palette tile visibly correspond to the on-timeline transition.",
+      "suggestedTask": "Demonstrate dropping a transition on a cut"
+    },
+    {
+      "id": "f-007",
+      "page": "image",
+      "area": "controls",
+      "severity": "high",
+      "problem": "The image editor is the only page with TWO stacked toolbars. The second row mixes a label chip ('Select / mask'), an off-size AI pill (height forced to 24px versus the standard 28px), tools, static value chips ('Refine edge', 'Feather 2.0px'), and action pills. It is visually heavier and structurally inconsistent with the single toolbar used on editor/redline/typography, and the groupings read as crowded rather than a native contextual bar.",
+      "fix": "Collapse to one toolbar plus a proper contextual options bar with clear left-to-right grouping, and normalize the Subject pill to the standard 28px control height so nothing is a one-off size.",
+      "suggestedTask": "Consolidate the image editor toolbars"
+    },
+    {
+      "id": "f-008",
+      "page": "image",
+      "area": "layout",
+      "severity": "high",
+      "problem": "Color emoji are used as toolbar/UI icons among otherwise monochrome glyph tools: a paintbrush emoji (Local adjust brush) on the image page, and palette and puzzle-piece emoji in the foundations primitive rows. Multicolor emoji break the native SF-symbol look and read as web, not a macOS pro app.",
+      "fix": "Replace emoji with monochrome glyphs or SF-symbol-style marks that inherit currentColor, matching the rest of the tool set.",
+      "suggestedTask": "Replace emoji icons with monochrome glyphs"
+    },
+    {
+      "id": "f-009",
+      "page": "image",
+      "area": "workflow",
+      "severity": "high",
+      "problem": "The vision calls for brushes, eraser, and a vector pen, but image editing under-shows them. The mask note says 'brush it' yet no brush painting a mask is demonstrated; there is no eraser tool; heal/clone/patch/dodge/history-brush appear as tools but no retouch interaction is shown; the vector Pen exists only on the editor page with no editing surface anywhere.",
+      "fix": "Demonstrate at least one tool in action (brush painting a mask, or heal removing a spot), add an eraser, and surface the vector Pen with a visible path plus nodes so the pixel and vector tools are legible.",
+      "suggestedTask": "Demonstrate brush/eraser/pen tools"
+    },
+    {
+      "id": "f-010",
+      "page": "composites",
+      "area": "legibility",
+      "severity": "high",
+      "problem": "Composites step 3 ('Pull an Avatar, Text, Button from the Library into the frame') and walk step 3 ('Drag an instance from the Library') both assert dragging a component in, but no Library panel is ever shown and there is no drag ghost or source. The components simply appear already placed, so the core 'drag a component in' gesture is claimed but never demonstrated.",
+      "fix": "Show a Library/asset panel with component thumbnails and a drag-in ghost (cursor plus ghosted instance landing in the frame) for at least one step, so pick-and-drag is visible, not just narrated.",
+      "suggestedTask": "Show dragging a component from the Library"
+    },
+    {
+      "id": "f-011",
+      "page": "composites",
+      "area": "workflow",
+      "severity": "high",
+      "problem": "There is no visible component Library or asset browser anywhere to drag components FROM. Components are referenced by name and via an 'added to Library' toast, and dsys shows a static grid, but the panel a user would actually browse and drag from is missing across the create/reuse flows.",
+      "fix": "Introduce a persistent Library panel (or a Library flyout) in the editor/composites shell showing components and Styles as draggable thumbnails, so 'how components are chosen and dragged in' has a home.",
+      "suggestedTask": "Add a component Library panel"
+    },
+    {
+      "id": "f-012",
+      "page": "shared",
+      "area": "controls",
+      "severity": "high",
+      "problem": "The canonical control CSS makes EVERY chip cursor:pointer with a hover/press/focus response and a pill radius. But chips are used across pages for read-only value readouts ('700', '+18', '5200K', 'shadows', '32-bit float', '3 variants', '8 states'). These static values are visually indistinguishable from interactive toggles or dropdowns, so much of the UI looks clickable when it is not, undercutting the 'if it looks interactive it does something' bar.",
+      "fix": "Add a read-only chip variant (chip.value or chip.static) with no pointer cursor, no hover, and default text color, and reserve interactive chips for real toggles and dropdowns. Apply it to metric/value readouts across the pages.",
+      "suggestedTask": "Add a read-only chip variant"
+    },
+    {
+      "id": "f-013",
+      "page": "shared",
+      "area": "controls",
+      "severity": "med",
+      "problem": "Same issue as chips for pills: the canonical CSS gives every pill cursor:pointer plus hover/press, but pills are also used as pure status displays ('100%', '1080p', 'Fit', 'RAW', the video zoom readout). Status pills look like buttons.",
+      "fix": "Provide a non-interactive status pill variant (no pointer, no hover) and use it for zoom level, resolution, format badges, and other display-only pills.",
+      "suggestedTask": "Distinguish status pills from action pills"
+    },
+    {
+      "id": "f-014",
+      "page": "shared",
+      "area": "controls",
+      "severity": "med",
+      "problem": "The design-language back-chip, the one shared navigation control on the sub-pages, is inconsistent across almost every lang-* page: element type, radius, glyph, label, and placement all vary. lang-panels uses a button.back at r2 radius with label 'left-arrow Design language'; lang-keyboard says 'left-arrow All patterns'; lang-resize and lang-elevation say 'chevron Language' at r2; lang-overlays uses an anchor.backchip at r1 right-aligned; the rest use a 999px pill span 'chevron Design language'. Hover targets also differ (some to accent, some to ink).",
+      "fix": "Adopt one shared back-chip across all sub-pages: pill radius, the chevron glyph, the exact label 'Design language', the same placement in the scen-head, and one hover behavior.",
+      "suggestedTask": "Unify the design-language back-chip"
+    },
+    {
+      "id": "f-015",
+      "page": "lang-color",
+      "area": "legibility",
+      "severity": "med",
+      "problem": "The 'In the API' code block collapses into one run-on line. The snippet is written with real newlines but no line breaks, and the shared codeblk style has no white-space:pre, so the newlines render as spaces and the comment markers run straight into the following code, making the sample unreadable. lang-keyboard does the same block correctly using explicit line breaks.",
+      "fix": "Add a line break per line (match lang-keyboard) or set white-space:pre / pre-wrap on the code block so the snippet reads as code.",
+      "suggestedTask": "Fix run-on API code block on lang-color"
+    },
+    {
+      "id": "f-016",
+      "page": "redline",
+      "area": "controls",
+      "severity": "med",
+      "problem": "Controls that imply a menu do nothing: the redline 'Units: Logical (px)' chip with a caret and the image 'Feather 2.0px' / 'Refine edge' chips read as dropdowns but are inert. They look interactive and lead nowhere.",
+      "fix": "Either wire them to a small popover/menu specimen (the DS already has popover/menu classes) or restyle them as read-only value tags so the caret does not promise a menu.",
+      "suggestedTask": "Fix dead dropdown-looking chips"
+    },
+    {
+      "id": "f-017",
+      "page": "composites",
+      "area": "controls",
+      "severity": "med",
+      "problem": "The auto-layout panel invents a rectangular segmented control (alseg, 8px radius, custom bold options) that diverges from the DS segmented control (seg, pill radius, its own canonical hover/press/focus states). Two different segmented-control shapes appear in the same product.",
+      "fix": "Use the DS seg component for the direction/resize toggles so segmented controls are one shape and share the canonical states.",
+      "suggestedTask": "Use the DS segmented control in auto-layout"
+    },
+    {
+      "id": "f-018",
+      "page": "image",
+      "area": "controls",
+      "severity": "med",
+      "problem": "The Curves and HSL panels place 12x12px color squares inside a segmented control. These are tiny, unlabeled tap targets, the 'tiny mystery pills' the DS comments elsewhere warn against, and they differ in size and shape from the text options in the same control.",
+      "fix": "Give channel/color selectors a consistent control size (match the seg option height) with a visible active state and an accessible hit area.",
+      "suggestedTask": "Resize channel/color selector controls"
+    },
+    {
+      "id": "f-019",
+      "page": "shared",
+      "area": "controls",
+      "severity": "med",
+      "problem": "Icon glyphs collide across pages: the hash/measure glyph means Measure on editor/redline but Crop on image; a half-circle glyph means Clone (image toolbar 1) and Luminosity (image toolbar 2); the outline-diamond means Patch on image but Keyframe on video. The same mark carries different meanings, weakening the shared visual language.",
+      "fix": "Establish one glyph per concept in a small icon key and apply it consistently (distinct marks for Measure, Crop, Clone, Luminosity, Patch, Keyframe).",
+      "suggestedTask": "Deduplicate tool glyph meanings"
+    },
+    {
+      "id": "f-020",
+      "page": "shell",
+      "area": "workflow",
+      "severity": "med",
+      "problem": "There is no Save, document-management, or dirty-state anywhere. Editors offer Export or Done, Home offers New/Open, and dsys has a system Save, but a document's own save/autosave/unsaved indicator is never shown, so 'how saving works' is unanswered.",
+      "fix": "Add a lightweight save affordance (autosave indicator in the titlebar, or an edited dot on the title) so document persistence is legible.",
+      "suggestedTask": "Show document save/dirty state"
+    },
+    {
+      "id": "f-021",
+      "page": "dsys",
+      "area": "workflow",
+      "severity": "med",
+      "problem": "The design-system tokens and Styles are read-only display rows. Editing a token or a Style value is never shown (only typeface names are editable), so 'how you modify the design system' is only half answered; the mock asserts 'edit Brand gradient once, every use updates' but the edit surface is not demonstrated.",
+      "fix": "Show one token or Style being edited (a color field open, a value changing) with the 'N uses update' feedback, so modifying the system is as legible as exporting it.",
+      "suggestedTask": "Demonstrate editing a token or Style"
+    },
+    {
+      "id": "f-022",
+      "page": "video",
+      "area": "layout",
+      "severity": "med",
+      "problem": "The video page is dense: a 5-track timeline plus a three-column panel strip (Keyframes / Transitions / Captions) with fixed equal columns and no responsive or compact behavior. In a small window the panels and tracks will crowd, and AGENTS asks each pattern to state how it adapts when compact.",
+      "fix": "Give the panel strip and timeline a compact/reflow behavior (stack or collapse panels, allow horizontal scroll on the timeline) and note the compact rule.",
+      "suggestedTask": "Add compact behavior to the video layout"
+    },
+    {
+      "id": "f-023",
+      "page": "shared",
+      "area": "copy",
+      "severity": "med",
+      "problem": "The walkthrough label rendered by ds.js (line 71) uses an em dash: 'Step N / M (em dash) title'. It renders on every walkthrough page (walk, composites), violating the no-em-dash rule, and it overrides each page's own static label which correctly uses a middot ('Step 1 / 7 Select the parts').",
+      "fix": "Change the em-dash separator in ds.js to a middot so it obeys the copy rule and matches the static labels.",
+      "suggestedTask": "Remove em dash from walkthrough label"
+    },
+    {
+      "id": "f-024",
+      "page": "video",
+      "area": "legibility",
+      "severity": "med",
+      "problem": "The audio ducking envelope (an SVG polyline plus a 'duck -8 dB' tag) is decorative: there is no shown way to create or edit ducking and no handles on the envelope, so it asserts a feature without demonstrating the interaction.",
+      "fix": "Either add draggable envelope points (with one visible handle) or drop the ducking claim to keep the audio track honest to what is shown.",
+      "suggestedTask": "Make audio ducking interactive or drop it"
+    },
+    {
+      "id": "f-025",
+      "page": "composites",
+      "area": "legibility",
+      "severity": "med",
+      "problem": "Step 5 binds the List to a 'Rows / people' data source, but the binding is conveyed only by a floating text label (the word 'bind') at a fixed position. No connector is drawn between the Rows source panel and the List, so the data-binding mechanism is unclear.",
+      "fix": "Draw a real connector (line or arrow) from the Rows source to the List container, or show a bind control on the container, so the row-to-card mapping is visible.",
+      "suggestedTask": "Draw the data-binding connection"
+    },
+    {
+      "id": "f-026",
+      "page": "agent",
+      "area": "legibility",
+      "severity": "med",
+      "problem": "The docked assistant says 'Click a change to select it / Undo', but the diff steps do not look clickable and 'Undo' is rendered as accent-colored text rather than a control, so the promised click-to-select-and-undo interaction is not legible.",
+      "fix": "Style the diff steps as selectable rows (hover plus selected state) and render Undo as a real button, so the audit-trail interaction is visible.",
+      "suggestedTask": "Make assistant diff steps look clickable"
+    },
+    {
+      "id": "f-027",
+      "page": "video",
+      "area": "layout",
+      "severity": "med",
+      "problem": "The playhead is positioned at 38 percent, but the transport readout says 00:04:12 / 00:15:00 (about 28 percent of 15s) against a 0-15s ruler. The playhead does not line up with the stated time, a small but noticeable inconsistency in a timeline product.",
+      "fix": "Position the playhead to match the readout (about 28 percent for 4.12s of 15s) so time, ruler, and playhead agree.",
+      "suggestedTask": "Align playhead to the stated time"
+    },
+    {
+      "id": "f-028",
+      "page": "lang-selection",
+      "area": "layout",
+      "severity": "low",
+      "problem": "Unlike the sibling deep-dives (frame, toolbars, panels, overlays, keyboard, elevation each have a titled 'In the API' block), lang-selection folds the API text into its 'Rules & behavior' block, and lang-spacing has neither a States nor a dedicated 'In the API' section. This diverges from the standardized Anatomy/Variants/States/Rules/In-the-API structure the AGENTS spec asks the sub-pages to follow.",
+      "fix": "Split a titled 'In the API' block onto lang-selection and lang-spacing (and consciously decide whether spacing needs a States block, even if just to say N/A) for structural parity across the design-language pages.",
+      "suggestedTask": "Add missing In-the-API sections to lang pages"
+    },
+    {
+      "id": "f-029",
+      "page": "typography",
+      "area": "controls",
+      "severity": "low",
+      "problem": "Text alignment is exposed twice: as toolbar tools (left/center/right/justify) and again as an inspector segmented control (L C R J). Two controls for the same property on one screen is redundant, and they use different glyph sets.",
+      "fix": "Keep alignment in one place (toolbar or inspector), or make clear they mirror each other and unify the glyphs if both remain.",
+      "suggestedTask": "Deduplicate alignment controls"
+    },
+    {
+      "id": "f-030",
+      "page": "shared",
+      "area": "copy",
+      "severity": "low",
+      "problem": "Developer comments reference Claude even though UI copy correctly says Agent: ds.js line 42 ('Subtabs (e.g. Claude A/B/C)') and photonz-ds.css line 369 ('/* claude */'). The guidance is to never say Claude in the product; comments are a small leak that could migrate into copy.",
+      "fix": "Rename the comments to 'Agent A/B/C' and '/* agent */' to keep the whole surface consistent with the naming rule.",
+      "suggestedTask": "Scrub Claude from code comments"
+    },
+    {
+      "id": "f-031",
+      "page": "lang-motion",
+      "area": "controls",
+      "severity": "low",
+      "problem": "On a page whose siblings preach the 4pt spacing rule, the demo control paddings break it: the button, row, toast, and tab specimens use off-scale paddings (9px 16px, 6px, 6px 12px, 5px 11px).",
+      "fix": "Move these demo control paddings onto the 4pt tokens (8/12/16) so the motion page is itself an exemplar of the spacing standard.",
+      "suggestedTask": "Fix off-grid paddings on lang-motion"
+    },
+    {
+      "id": "f-032",
+      "page": "lang-resize",
+      "area": "copy",
+      "severity": "low",
+      "problem": "The copy asserts an off-grid value: 'A resizer is always 7px of hit area regardless of orientation.' The system elsewhere explicitly forbids 7px one-offs (lang-spacing calls out never a 7px one-off). The oversized anatomy diagram uses a 24px token, so only the prose is off-scale.",
+      "fix": "Round the stated hit area to a token (8px) or express it as a named token rather than a raw off-scale number.",
+      "suggestedTask": "Reconcile the 7px resizer copy with the grid"
+    },
+    {
+      "id": "f-033",
+      "page": "shell",
+      "area": "copy",
+      "severity": "low",
+      "problem": "Several scenario subtitles run long, for example video's 'timeline, tracks, transitions, keyframes, captions / a later chapter, sketched honestly'. The subtitle slot reads best terse; full sentences there feel verbose next to the tight one-liners on other pages.",
+      "fix": "Trim scenario subtitles to a short phrase and move the longer framing into the caption notes where it belongs.",
+      "suggestedTask": "Tighten scenario subtitles"
+    },
+    {
+      "id": "f-034",
+      "page": "paint",
+      "area": "legibility",
+      "severity": "low",
+      "problem": "The Paint type segmented control offers Solid/Linear/Radial/Angular/Image/Noise, but selecting Image or Noise would show identical gradient-stop UI; the type-specific controls (image picker, noise parameters) are not shown, so two of the six paint types are asserted without a distinct surface.",
+      "fix": "Sketch the Image and Noise variants (even a compact panel each) so all six paint types read as real, or note that they are out of scope.",
+      "suggestedTask": "Show Image and Noise paint variants"
+    },
+    {
+      "id": "f-035",
+      "page": "shared",
+      "area": "controls",
+      "severity": "low",
+      "problem": "Two near-identical diamond glyphs carry different meanings: a filled diamond is used for badge content ('New', 'Featured') while a diamond-with-dot is the component marker. At small sizes they are easy to confuse.",
+      "fix": "Reserve the diamond family for components and pick a clearly different mark for generic badge content so the component semantics stay unambiguous.",
+      "suggestedTask": "Disambiguate diamond glyphs"
+    },
+    {
+      "id": "f-036",
+      "page": "home",
+      "area": "layout",
+      "severity": "low",
+      "problem": "Home tiles and recents use a fixed four-column grid with no responsive collapse. In a narrower window the four columns squeeze rather than reflow, unlike the ideas page which provides a breakpoint.",
+      "fix": "Use an auto-fit minmax grid so tiles and recents reflow gracefully in a small window.",
+      "suggestedTask": "Make Home tiles responsive"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · home</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="home">
+        <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Front door</h2><span class="k">· the launcher window · start a document or reopen one</span></div>
+
+        <!-- KIND 1 · a real app window, but NOT the editor shell: it holds no
+             document, so it has no canvas, no floating tool bar and no dock.
+             It is the New / Open window reached from the menu-bar agent. The
+             title bar carries the window's identity and nothing else; the two
+             document actions sit right, where document actions always sit. -->
+        <div class="win tall">
+          <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Photonz</b><span class="meta">· New</span></div><div class="tbtns"><button class="btn secondary sm"><i class="ic ic-folder"></i> Open…</button><button class="btn primary sm"><i class="ic ic-plus"></i> New canvas</button></div></div>
+          <div class="home">
+            <div class="aibar" data-target="agent"><span class="glow"><i class="ic ic-sparkle"></i></span><span class="ph">Describe what you want to create · “a pricing card with our brand gradient”…</span><button class="btn primary">Create</button></div>
+            <div class="chips"><span class="x" data-target="agent">3-up feature grid</span><span class="x" data-target="agent">Device mockup of this shot</span><span class="x" data-target="agent">15s launch teaser</span><span class="x" data-target="agent">Annotated release note</span></div>
+            <div>
+              <div class="h-lab" style="margin-bottom:10px">Start a project · pick a scenario</div>
+              <div class="tiles">
+                <div class="tile" data-target="editor"><span class="ti" style="background:var(--comp-soft);color:var(--comp)"><i class="ic ic-component"></i></span><span class="tt">Design UI</span><span class="td">Components, tokens, auto-layout</span></div>
+                <div class="tile" data-target="image"><span class="ti" style="background:#ffe8dd;color:#ff7e5f"><i class="ic ic-image"></i></span><span class="tt">Edit an image</span><span class="td">Adjust, mask, retouch, effects</span></div>
+                <div class="tile" data-target="video"><span class="ti" style="background:#dff5fb;color:#12a0c9"><i class="ic ic-play"></i></span><span class="tt">Edit video</span><span class="td">Timeline, transitions, captions</span></div>
+                <div class="tile" data-target="redline"><span class="ti" style="background:var(--accent-soft);color:var(--accent)"><i class="ic ic-ruler"></i></span><span class="tt">Capture &amp; redline</span><span class="td">⌘⇧4 · measure + annotate</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="h-lab" style="margin-bottom:10px">Recent</div>
+              <div class="recents">
+                <div class="rec" data-target="editor"><div class="pv" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></div><div class="cap"><span>hero-card</span><span>2h</span></div></div>
+                <div class="rec" data-target="image"><div class="pv" style="background:linear-gradient(180deg,#ffb36b,#7b4397)"></div><div class="cap"><span>sunset-edit</span><span>y'day</span></div></div>
+                <div class="rec" data-target="video"><div class="pv" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></div><div class="cap"><span>launch-teaser</span><span>2d</span></div></div>
+                <div class="rec" data-target="redline"><div class="pv" style="background:#eef0f4"></div><div class="cap"><span>settings-redline</span><span>3d</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <div class="c"><div class="lab">The idea</div><p>One front door for every scenario. Start tiles map to the three workspaces · <b>Design UI · Image · Video</b> · plus the fast redline path, all sharing the same primitives.</p></div>
+          <div class="c"><div class="lab g2">Direction</div><p>Prompt bar up top makes automation the headline. Alternative: demote it once you're a returning user so recents lead.</p></div>
+          <div class="c"><div class="lab g2">Open question</div><p>This window has <b>no canvas, no tool bar and no dock</b> because it holds no document. Every other window in the study is the editor shell. Is a launcher window the right shape, or should New and Recent live entirely in the menu-bar agent and the <b>history overlay</b>, so there is exactly one kind of window?</p></div>
+        </div>
+      </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

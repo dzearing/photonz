@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-toolbars</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local reference scaffolding ONLY. Every bar on this page is the
+     real DS: the command row is `.toolbar`, the tool surface is
+     `.cnv > .tbar` with `.tstrip`/`.swpair`/`.zoomctl`/`.ovf`/`.tbar-more`.
+     Local names are prefixed `lt-` so they cannot collide with DS names
+     (bar, btn, card, sw, val, tool, sheet, rail, dock, tbar).
+     ============================================================ */
+  #lang-toolbars .lt-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:840px}
+  #lang-toolbars .lt-lead b{color:var(--ink);font-weight:600}
+
+  #lang-toolbars .lt-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-toolbars .lt-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #lang-toolbars .lt-blk-h .lt-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-toolbars .lt-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  #lang-toolbars .lt-blk-h .lt-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+  #lang-toolbars .lt-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
+  #lang-toolbars .lt-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #lang-toolbars .lt-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border-bottom:1px solid var(--line-soft)}
+  #lang-toolbars .lt-spec-h .lt-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
+    text-transform:none;font-weight:520;color:var(--faint)}
+  #lang-toolbars .lt-spec-h .lt-tag.acc{color:var(--accent)}
+  #lang-toolbars .lt-spec-b{padding:var(--pad-sm)}
+  #lang-toolbars .lt-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
+  #lang-toolbars .lt-cap b{color:var(--ink);font-weight:600}
+  #lang-toolbars .lt-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* a canvas plinth: the tool bar only exists floating over a canvas, so a
+     specimen of it shows a slice of canvas. It is NOT a window. */
+  #lang-toolbars .lt-plinth{height:150px;border-radius:var(--r3);overflow:hidden;border:1px solid var(--edge-lo)}
+  #lang-toolbars .lt-plinth.short{height:118px}
+  #lang-toolbars .lt-plinth .canvas{min-height:0;flex:1 1 auto}
+  #lang-toolbars .lt-plinth .artboard-label{font-size:9.5px}
+
+  /* numbered callouts */
+  #lang-toolbars .lt-pin{flex:none;width:15px;height:15px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #lang-toolbars .lt-pin.abs{position:absolute;z-index:8;box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+  #lang-toolbars .lt-leg{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm) var(--gap)}
+  #lang-toolbars .lt-leg .lt-li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #lang-toolbars .lt-leg .lt-li b{color:var(--ink);font-weight:600}
+  #lang-toolbars .lt-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  #lang-toolbars .lt-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+
+  /* D4 inventory table */
+  #lang-toolbars .lt-inv{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-toolbars .lt-invrow{display:grid;grid-template-columns:96px 1fr;gap:var(--gap);align-items:center;
+    padding:var(--gap-sm) 0;border-bottom:1px solid var(--line-soft)}
+  #lang-toolbars .lt-invrow:last-child{border-bottom:0}
+  #lang-toolbars .lt-invrow .lt-ws{font-size:11.5px;font-weight:640;color:var(--ink);display:flex;align-items:center;gap:6px}
+  #lang-toolbars .lt-invrow .lt-ws .ic{color:var(--faint)}
+  #lang-toolbars .lt-seq{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1)}
+  #lang-toolbars .lt-slot{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);
+    border:1px solid var(--edge-lo);border-radius:999px;padding:2px var(--gap-sm);background:var(--glass-thin);
+    white-space:nowrap}
+  #lang-toolbars .lt-slot.shared{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+  #lang-toolbars .lt-slot .ic{flex:none}
+  #lang-toolbars .lt-arrow{color:var(--faint);flex:none}
+
+  /* state ladder: real .tool buttons, plus forced hover/focus paint that
+     reuses the exact DS declarations so the ladder cannot drift. */
+  #lang-toolbars .lt-states{display:flex;gap:var(--gap);flex-wrap:wrap}
+  #lang-toolbars .lt-st{display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm);
+    font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:660}
+  #lang-toolbars .lt-well{background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:var(--gap-sm)}
+  #lang-toolbars .lt-hover{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);color:var(--ink)}
+  #lang-toolbars .lt-focus{box-shadow:var(--ctl-gloss), var(--ring)}
+
+  /* do / don't */
+  #lang-toolbars .lt-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #lang-toolbars .lt-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-toolbars .lt-dd .lt-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #lang-toolbars .lt-dd .lt-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* api */
+  #lang-toolbars .lt-api{display:flex;flex-direction:column;gap:var(--s1)}
+  #lang-toolbars .lt-api .lt-r{display:grid;grid-template-columns:220px 1fr;gap:var(--gap);align-items:baseline;
+    font-size:11px;color:var(--dim);line-height:1.5}
+  #lang-toolbars .lt-api code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
+    padding:1px 6px;border-radius:5px}
+  #lang-toolbars .lt-api .lt-r b{color:var(--ink);font-weight:600}
+
+  #lang-toolbars .lt-note{font-size:11px;color:var(--dim);line-height:1.5;margin:0;padding:var(--pad-sm) var(--pad);
+    border:1px dashed var(--line-strong);border-radius:var(--r3);background:var(--panel-2)}
+  #lang-toolbars .lt-note b{color:var(--ink);font-weight:600}
+  #lang-toolbars .lt-note code{font-family:var(--mono);font-size:10px}
+
+  /* Kind-1 app screens: definite height so the dock is bounded. */
+  #lang-toolbars .lt-app{height:520px;min-height:0}
+  #lang-toolbars .lt-app .canvas{min-height:0}
+  #lang-toolbars .lt-narrow{max-width:420px}
+  #lang-toolbars .lt-narrow .win{height:400px;min-height:0}
+  #lang-toolbars .lt-narrow .canvas{min-height:0}
+
+  @media (max-width:760px){
+    #lang-toolbars .lt-grid,#lang-toolbars .lt-dd,#lang-toolbars .lt-leg{grid-template-columns:1fr}
+    #lang-toolbars .lt-api .lt-r,#lang-toolbars .lt-invrow{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-toolbars">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Tool bar &amp; command surface</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
+    <p class="lt-lead">The shipping app is canvas-first, so it has <b>no options bar</b> and no wall of chrome across the top.
+      Tools live in a <b>floating bottom tool bar</b> that hovers over the canvas: the tool strip, the foreground and background
+      colour pair, and zoom. Commands live in the <b>native macOS menu bar</b>, and the mock stands in for it with a compact
+      command surface plus the ⌘K palette. Two bars, both small, both fixed in place, so muscle memory holds while scope grows.
+      Every button is a named command, so an <b data-target="agent">agent</b> presses the exact same one you do.</p>
+
+    <!-- 2 · ANATOMY A · the floating tool bar -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">01</span><h3>Anatomy · the floating tool bar</h3><span class="lt-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.cnv &gt; .tbar</code></span></div>
+      <div class="lt-blk-b">
+        <div class="lt-spec">
+          <div class="lt-spec-h">Tool bar over a slice of canvas<span class="lt-tag acc">not a window</span></div>
+          <div class="lt-spec-b">
+            <div class="cnv lt-plinth">
+              <div class="canvas"><div class="artboard-label">2560 × 1440 · Screen capture</div></div>
+              <div class="tbar">
+                <span class="lt-pin abs" style="top:-9px;left:26px">1</span>
+                <span class="lt-pin abs" style="top:-9px;left:96px">2</span>
+                <span class="lt-pin abs" style="top:-9px;right:118px">3</span>
+                <span class="lt-pin abs" style="top:-9px;right:76px">4</span>
+                <span class="lt-pin abs" style="top:-9px;right:14px">5</span>
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <button class="tool" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                  <button class="tool" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                  <button class="tool ovf" title="Eraser (E)"><i class="ic sm ic-eraser"></i></button>
+                  <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep ovf"></span>
+                  <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                </span>
+                <button class="tool tbar-more" title="More tools" data-menu="#ltOvfA"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-anatomy" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="ltOvfA" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+                  <div class="menuitem"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+                  <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                  <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lt-leg">
+          <div class="lt-li"><span class="lt-pin">1</span><span><b>Tool strip</b> · one active tool at a time, single-key shortcuts, fixed order per workspace. <code>.tstrip</code></span></div>
+          <div class="lt-li"><span class="lt-pin">2</span><span><b>Separator</b> · groups the clusters (select · create · measure · view) without drawing a box. <code>.tsep</code></span></div>
+          <div class="lt-li"><span class="lt-pin">3</span><span><b>Overflow</b> · tools marked <code>.ovf</code> hide when the window narrows and reappear in the <b>more</b> menu, never re-slotted. <code>.tbar-more</code></span></div>
+          <div class="lt-li"><span class="lt-pin">4</span><span><b>Colour pair</b> · foreground over background with a swap affordance. Photoshop muscle memory, X to swap. <code>.swpair</code></span></div>
+          <div class="lt-li"><span class="lt-pin">5</span><span><b>Zoom</b> · slider plus a live percentage. Zoom belongs next to the canvas, not in the title bar. <code>.zoomctl</code></span></div>
+          <div class="lt-li"><span class="lt-pin">·</span><span><b>The bar itself</b> · a rounded glass capsule centred at the bottom of the canvas. It floats, so it costs the document no permanent height.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 · ANATOMY B · the command surface -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">02</span><h3>Anatomy · the command surface</h3><span class="lt-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.toolbar</code></span></div>
+      <div class="lt-blk-b">
+        <div class="lt-spec">
+          <div class="lt-spec-h">Command row<span class="lt-tag acc">stands in for the native menu bar</span></div>
+          <div class="lt-spec-b">
+            <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden">
+              <div class="toolbar">
+                <button class="tool" title="Commands" data-menu="#ltCmd"><i class="ic sm ic-more"></i></button>
+                <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+                <span class="tsep"></span>
+                <button class="btn ghost sm"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+                <span class="tspacer"></span>
+                <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+                <div style="position:relative">
+                  <div class="popover menu pop" id="ltCmd" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+                    <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
+                    <div class="menu-sep"></div>
+                    <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                    <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+                    <div class="menu-sep"></div>
+                    <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+                    <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="lt-cap">Left to right: the <b>command surface</b> (a menu button that opens a grouped popover), the <b>⌘K palette</b>,
+              the <b>History</b> entry that opens the slide-down overlay, a spacer, and the active design system. That is the whole row.
+              It never grows a tool.</p>
+          </div>
+        </div>
+        <p class="lt-note"><b>Why there is no fake menu bar.</b> In the shipping app the real command surface is the native macOS menu bar
+          (File, Edit, Select, Layer, Type, Effect, View, Window, Help), and it is the plainest proof that everything the UI does is one API
+          call. The mock lives inside an iframe, so drawing a full horizontal menu bar would read as fake chrome. Instead the mock shows the
+          compact command surface plus <code>⌘K</code> and says out loud that the menu bar is the real one. There are four equal ways to reach
+          any command: the tool strip, a right-click, the command surface, and ⌘K. An agent uses the same calls.</p>
+      </div>
+    </div>
+
+    <!-- 4 · VARIANTS · D4 per-workspace inventories -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">03</span><h3>Variants · the canonical tool inventories</h3><span class="lt-sub">Decision D4 · shared tools keep glyph and slot</span></div>
+      <div class="lt-blk-b">
+        <p class="lt-cap" style="margin:0">The strip order is fixed: <b>Select → create and edit cluster → measure and crop → Hand → Zoom</b>.
+          Shared tools keep the <b>same glyph and the same relative slot in every workspace</b>, so switching lenses never makes you hunt.
+          A workspace that lacks a shared tool omits it; it never re-slots the ones it has. Tools marked <code>.ovf</code> fold into
+          <b>more</b> when the window narrows.</p>
+
+        <div class="lt-inv">
+          <div class="lt-invrow">
+            <span class="lt-ws"><i class="ic sm ic-star"></i> Shared</span>
+            <span class="lt-seq">
+              <span class="lt-slot shared"><i class="ic xs ic-cursor"></i> Select</span>
+              <span class="lt-slot shared"><i class="ic xs ic-text"></i> Text</span>
+              <span class="lt-slot shared"><i class="ic xs ic-square"></i> Shape</span>
+              <span class="lt-slot shared"><i class="ic xs ic-ruler"></i> Measure</span>
+              <span class="lt-slot shared"><i class="ic xs ic-hand"></i> Hand</span>
+              <span class="lt-slot shared"><i class="ic xs ic-zoom"></i> Zoom</span>
+            </span>
+          </div>
+          <div class="lt-invrow">
+            <span class="lt-ws"><i class="ic sm ic-frame"></i> UI</span>
+            <span class="lt-seq">
+              <span class="lt-slot shared"><i class="ic xs ic-cursor"></i> Select</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot"><i class="ic xs ic-frame"></i> Frame</span>
+              <span class="lt-slot"><i class="ic xs ic-component"></i> Component</span>
+              <span class="lt-slot shared"><i class="ic xs ic-square"></i> Shape</span>
+              <span class="lt-slot"><i class="ic xs ic-pen"></i> Pen</span>
+              <span class="lt-slot shared"><i class="ic xs ic-text"></i> Text</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-ruler"></i> Measure</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-hand"></i> Hand</span>
+              <span class="lt-slot shared"><i class="ic xs ic-zoom"></i> Zoom</span>
+            </span>
+          </div>
+          <div class="lt-invrow">
+            <span class="lt-ws"><i class="ic sm ic-image"></i> Image</span>
+            <span class="lt-seq">
+              <span class="lt-slot shared"><i class="ic xs ic-cursor"></i> Select</span>
+              <span class="lt-slot"><i class="ic xs ic-lasso"></i> Lasso</span>
+              <span class="lt-slot"><i class="ic xs ic-wand"></i> Subject</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot"><i class="ic xs ic-crop"></i> Crop</span>
+              <span class="lt-slot"><i class="ic xs ic-brush"></i> Brush</span>
+              <span class="lt-slot"><i class="ic xs ic-eraser"></i> Eraser</span>
+              <span class="lt-slot"><i class="ic xs ic-heal"></i> Heal</span>
+              <span class="lt-slot"><i class="ic xs ic-clone"></i> Clone</span>
+              <span class="lt-slot"><i class="ic xs ic-pen"></i> Pen</span>
+              <span class="lt-slot shared"><i class="ic xs ic-text"></i> Text</span>
+              <span class="lt-slot shared"><i class="ic xs ic-square"></i> Shape</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-ruler"></i> Measure</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-hand"></i> Hand</span>
+              <span class="lt-slot shared"><i class="ic xs ic-zoom"></i> Zoom</span>
+            </span>
+          </div>
+          <div class="lt-invrow">
+            <span class="lt-ws"><i class="ic sm ic-play"></i> Video</span>
+            <span class="lt-seq">
+              <span class="lt-slot shared"><i class="ic xs ic-cursor"></i> Select</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot"><i class="ic xs ic-blade"></i> Blade</span>
+              <span class="lt-slot shared"><i class="ic xs ic-text"></i> Title</span>
+              <span class="lt-slot shared"><i class="ic xs ic-square"></i> Shape</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-ruler"></i> Measure</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-hand"></i> Hand</span>
+              <span class="lt-slot shared"><i class="ic xs ic-zoom"></i> Zoom</span>
+            </span>
+          </div>
+          <div class="lt-invrow">
+            <span class="lt-ws"><i class="ic sm ic-brush"></i> Draw</span>
+            <span class="lt-seq">
+              <span class="lt-slot shared"><i class="ic xs ic-cursor"></i> Select</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot"><i class="ic xs ic-pen"></i> Pen</span>
+              <span class="lt-slot"><i class="ic xs ic-brush"></i> Brush</span>
+              <span class="lt-slot"><i class="ic xs ic-eraser"></i> Eraser</span>
+              <span class="lt-slot shared"><i class="ic xs ic-square"></i> Shape</span>
+              <span class="lt-slot shared"><i class="ic xs ic-text"></i> Text</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-ruler"></i> Measure</span><i class="ic xs ic-chevron-right lt-arrow"></i>
+              <span class="lt-slot shared"><i class="ic xs ic-hand"></i> Hand</span>
+              <span class="lt-slot shared"><i class="ic xs ic-zoom"></i> Zoom</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="lt-grid">
+          <div class="lt-spec">
+            <div class="lt-spec-h">UI workspace strip<span class="lt-tag">frames &amp; components</span></div>
+            <div class="lt-spec-b">
+              <div class="cnv lt-plinth short">
+                <div class="canvas"><div class="artboard-label">1200 × 630 · Brand tokens</div></div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                    <button class="tool" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                    <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                    <button class="tool" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                    <button class="tool" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                    <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lt-spec">
+            <div class="lt-spec-h">Video workspace strip<span class="lt-tag">the same six shared tools</span></div>
+            <div class="lt-spec-b">
+              <div class="cnv lt-plinth short">
+                <div class="canvas"><div class="artboard-label">1920 × 1080 · 0:18</div></div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+                    <button class="tool" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                    <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                    <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lt-cap">Select is always first and Hand and Zoom are always last, in both strips. Only the middle changes, because only
+          the middle is what this lens is for.</p>
+      </div>
+    </div>
+
+    <!-- 5 · STATES -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">04</span><h3>Tool states</h3><span class="lt-sub">Specimen · rest · hover · focus · active · disabled</span></div>
+      <div class="lt-blk-b">
+        <div class="lt-states">
+          <div class="lt-st"><span class="lt-well"><button class="tool" title="Text"><i class="ic sm ic-text"></i></button></span>Rest</div>
+          <div class="lt-st"><span class="lt-well"><button class="tool lt-hover" title="Text"><i class="ic sm ic-text"></i></button></span>Hover</div>
+          <div class="lt-st"><span class="lt-well"><button class="tool lt-focus" title="Text"><i class="ic sm ic-text"></i></button></span>Focus</div>
+          <div class="lt-st"><span class="lt-well"><button class="tool on" title="Text"><i class="ic sm ic-text"></i></button></span>Active</div>
+          <div class="lt-st"><span class="lt-well"><button class="tool" title="Make component needs at least one layer" disabled><i class="ic sm ic-component"></i></button></span>Disabled</div>
+          <div class="lt-st"><span class="lt-well"><button class="tool" title="Component insert" style="color:var(--comp)"><i class="ic sm ic-component"></i></button></span>Component</div>
+        </div>
+        <p class="lt-cap">Every tool is a real button, so hover, press, keyboard focus and disabled all come from the one control system.
+          Only one tool in a strip is <b>active</b> at once, and active fills with the accent. A disabled tool dims, keeps its tooltip, and
+          <b>reports why it is off</b>, which is the same reason an agent reads back when a command is unavailable. Anything to do with
+          components carries <b style="color:var(--comp)">purple</b>, everywhere in the app.</p>
+      </div>
+    </div>
+
+    <!-- 6 · LIVE EXAMPLE · a complete app screen, lens-driven -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">05</span><h3>Live example</h3><span class="lt-sub">App screen · switch the lens and watch the strip swap</span></div>
+      <div class="lt-blk-b">
+        <div class="win tall cq lt-app">
+          <div class="titlebar">
+            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+            <div class="wtitle"><b>settings-capture</b> · 2560 × 1440</div>
+            <div class="wsw" id="ltWsw" role="tablist" aria-label="Workspace">
+              <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+              <button class="wsw-seg" data-ws="ui" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
+              <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
+            </div>
+            <div class="tbtns">
+              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+              <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="tool" title="Commands" data-menu="#ltCmd2"><i class="ic sm ic-more"></i></button>
+            <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+            <span class="tsep"></span>
+            <button class="btn ghost sm" data-sheet="#ltHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <span class="tspacer"></span>
+            <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+            <div style="position:relative">
+              <div class="popover menu pop" id="ltCmd2" style="position:absolute;right:0;top:26px;width:206px;z-index:12">
+                <div class="menuitem"><i class="ic ic-cursor"></i> Select tool <span class="sc">V</span></div>
+                <div class="menuitem"><i class="ic ic-crop"></i> Crop tool <span class="sc">C</span></div>
+                <div class="menuitem"><i class="ic ic-ruler"></i> Measure tool <span class="sc">M</span></div>
+                <div class="menu-sep"></div>
+                <div class="menuitem"><i class="ic ic-zoom"></i> Zoom to fit <span class="sc">⌘0</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit lean" id="ltShell" data-dock="open">
+            <div class="cnv">
+              <div class="canvas">
+                <div class="artboard-label">2560 × 1440 · Screen capture</div>
+                <div class="selwrap">
+                  <div class="hero-card">
+                    <span class="hc-badge"><i class="ic xs ic-crop"></i> Crop</span>
+                    <div class="hc-h">General</div>
+                    <p class="hc-sub">The active tool changes the cursor and the options at the top of Properties. It never changes where the tool lives.</p>
+                    <span class="hc-cta">Open settings <i class="ic ic-chevron-right"></i></span>
+                  </div>
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag">Crop · 1600 × 900</span>
+                </div>
+              </div>
+
+              <div class="cnv-act">
+                <button class="tool on" data-dock-toggle="#ltShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                <button class="tool" data-sheet="#ltHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+              </div>
+
+              <div class="tbar">
+                <span class="tstrip" id="ltStrip" data-radio=".tool"></span>
+                <button class="tool tbar-more" title="More tools" data-menu="#ltOvf2"><i class="ic sm ic-more"></i></button>
+                <span class="tsep"></span>
+                <span class="swpair" title="Foreground and background color">
+                  <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="bg" style="background:#ffffff"></span>
+                </span>
+                <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+                <span class="tsep"></span>
+                <span class="zoomctl">
+                  <input class="zslider" type="range" name="zoom-live" min="25" max="400" value="100" aria-label="Zoom">
+                  <span class="val zval">100%</span>
+                </span>
+                <div class="popover menu pop" id="ltOvf2" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12"></div>
+              </div>
+
+              <div class="sheet down" id="ltHist" aria-hidden="true" aria-label="Capture history">
+                <div class="sheet-h">
+                  <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+                  <span class="sp"></span>
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="sp"></span>
+                  <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+                </div>
+                <div class="sheet-b">
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                    <div class="filmcard sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                      <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                    <div class="filmcard" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                      <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
+                      <span class="acts"><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter v" data-min="220" data-max="400"></div>
+
+            <div class="pdock">
+              <div class="dgrp" id="ltProps" style="--gh:196px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="ltToolCnt">Crop</span></div>
+                <div class="dgrp-b">
+                  <!-- TOOL OPTIONS: the active tool's options lead the Properties
+                       group. This is where an options bar would have gone. -->
+                  <div class="section"><div class="sec-h">Tool options <span class="mut" id="ltToolName">Crop</span></div>
+                    <div class="irow"><span class="rl">Ratio</span><span class="select"><span class="lead">16 : 9</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Straighten</span><span class="select"><span class="lead">0°</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow split"><span class="rl">Flip</span>
+                      <button class="btn secondary sm"><i class="ic ic-flip-horizontal"></i> Horizontal</button>
+                      <button class="btn secondary sm"><i class="ic ic-flip-vertical"></i> Vertical</button>
+                    </div>
+                  </div>
+                  <div class="section"><div class="sec-h">Document <span class="mut">2560 × 1440</span></div>
+                    <div class="grid2"><div class="field"><span class="k">W</span><span class="v">2560</span></div><div class="field"><span class="k">H</span><span class="v">1440</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter h" data-min="90" data-max="300"></div>
+              <div class="dgrp grow" id="ltLayers">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow adj"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow sel"><i class="ic ic-image"></i><span class="nm">Window shot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Highlight</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="drail">
+              <button class="drailtab" data-group="#ltProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              <button class="drailtab" data-group="#ltLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            </div>
+          </div>
+        </div>
+        <p class="lt-cap">Click <b>Image</b>, <b>UI</b>, or <b>Video</b> in the title bar. The strip swaps to that workspace's D4 inventory,
+          Select stays first, Hand and Zoom stay last, and the document, the layers and the dock never move. That is what "a workspace is a
+          lens, not an app" means in practice.</p>
+      </div>
+    </div>
+
+    <!-- 7 · OVERFLOW / RESPONSIVE, live -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">06</span><h3>Responsive · overflow</h3><span class="lt-sub">App screen · the same markup at 420px</span></div>
+      <div class="lt-blk-b">
+        <div class="lt-narrow">
+          <div class="win cq" style="display:flex;flex-direction:column">
+            <div class="titlebar" style="height:32px">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle" style="font-size:11.5px"><b>settings-capture</b></div>
+              <div class="tbtns" style="min-width:0"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+            </div>
+            <div class="toolbar">
+              <button class="tool" title="Commands"><i class="ic sm ic-more"></i></button>
+              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> <span class="kbd">⌘K</span></span>
+              <span class="tspacer"></span>
+              <button class="btn ghost icon sm" title="Capture history"><i class="ic ic-history"></i></button>
+            </div>
+            <div class="edit lean" id="ltShellN" data-dock="open" style="flex:1">
+              <div class="cnv">
+                <div class="canvas"><div class="vframe" style="width:180px;height:104px"></div></div>
+                <div class="cnv-act">
+                  <button class="tool" data-dock-toggle="#ltShellN" title="Show or hide the panel dock"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <button class="tool ovf" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+                    <button class="tool ovf" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                    <button class="tool ovf" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                    <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                    <button class="tool ovf" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#ltOvfN"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="swpair" title="Foreground and background color">
+                    <span class="fg" style="background:#ff5d8f"></span><span class="bg" style="background:#ffffff"></span>
+                  </span>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom-ovf" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="ltOvfN" style="position:absolute;right:0;bottom:44px;width:172px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-lasso"></i> Lasso <span class="sc">L</span></div>
+                    <div class="menuitem"><i class="ic ic-crop"></i> Crop <span class="sc">C</span></div>
+                    <div class="menuitem"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+                    <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                    <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter v"></div>
+              <div class="pdock">
+                <div class="dgrp grow" id="ltLayersN">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-image"></i><span class="nm">Window shot</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-text"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow"><i class="ic ic-square"></i><span class="nm">Highlight</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab" data-group="#ltLayersN" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lt-cap">Below <b>880px</b> the <code>.ovf</code> tools disappear from the strip and the <b>more</b> button appears with the
+          same list, in the same order. Below <b>620px</b> the zoom slider drops out and the percentage stays. Nothing is moved to a different
+          surface and nothing is dropped: the tool you want is either in the strip or one click into <b>more</b>.</p>
+      </div>
+    </div>
+
+    <!-- 8 · WHERE TOOL OPTIONS LIVE -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">07</span><h3>Where tool options live</h3><span class="lt-sub">Specimen · the top of the Properties group</span></div>
+      <div class="lt-blk-b">
+        <div class="lt-grid">
+          <div class="lt-spec">
+            <div class="lt-spec-h">Crop active<span class="lt-tag">tool options lead</span></div>
+            <div class="lt-spec-b">
+              <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:color-mix(in srgb, var(--panel-2) 45%, transparent)">
+                <div class="dgrp" style="--gh:190px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Crop</span></div>
+                  <div class="dgrp-b">
+                    <div class="section"><div class="sec-h">Tool options <span class="mut">Crop</span></div>
+                      <div class="irow"><span class="rl">Ratio</span><span class="select"><span class="lead">16 : 9</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                      <div class="irow split"><span class="rl">Flip</span>
+                        <button class="btn secondary sm"><i class="ic ic-flip-horizontal"></i> H</button>
+                        <button class="btn secondary sm"><i class="ic ic-flip-vertical"></i> V</button>
+                      </div>
+                    </div>
+                    <div class="section"><div class="sec-h">Document <span class="mut">2560 × 1440</span></div>
+                      <div class="grid2"><div class="field"><span class="k">W</span><span class="v">2560</span></div><div class="field"><span class="k">H</span><span class="v">1440</span></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="lt-spec">
+            <div class="lt-spec-h">Text active<span class="lt-tag">same slot, different options</span></div>
+            <div class="lt-spec-b">
+              <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:color-mix(in srgb, var(--panel-2) 45%, transparent)">
+                <div class="dgrp" style="--gh:190px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Text</span></div>
+                  <div class="dgrp-b">
+                    <div class="section"><div class="sec-h">Tool options <span class="mut">Text</span></div>
+                      <div class="irow"><span class="rl">Family</span><span class="select"><span class="lead">New York</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                      <div class="irow split"><span class="rl">Size</span><span class="select"><span class="lead">36</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                        <span class="seg" data-radio="button"><button class="on" title="Bold"><i class="ic xs ic-bold"></i></button><button title="Italic"><i class="ic xs ic-italic"></i></button></span>
+                      </div>
+                      <div class="irow split"><span class="rl">Align</span>
+                        <span class="seg" data-radio="button"><button class="on" title="Left"><i class="ic xs ic-align-left"></i></button><button title="Center"><i class="ic xs ic-align-center"></i></button><button title="Right"><i class="ic xs ic-align-right"></i></button></span>
+                      </div>
+                    </div>
+                    <div class="section"><div class="sec-h">Fill <span class="mut">Ink</span></div>
+                      <div class="irow"><span class="rl">Colour</span><span class="select"><span class="lead"><span class="sw" style="background:var(--ink)"></span> Ink</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="lt-note"><b>There is no options bar.</b> Tools are global and always in the same place; the <i>options</i> for the active
+          tool are contextual, so they lead the <b>Properties</b> group in the dock, above whatever the selection contributes. That keeps a
+          growing tool set from growing a new row of chrome every release, and it means the options are next to the rest of the settings you
+          are about to change. A tool with one or two options may instead use a popover on the tool itself.</p>
+      </div>
+    </div>
+
+    <!-- 9 · RULES -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">08</span><h3>Rules</h3><span class="lt-sub">Do / Don't</span></div>
+      <div class="lt-blk-b">
+        <div class="lt-dd">
+          <span class="lt-do">Keep the order Select → create → measure → Hand → Zoom, in every workspace.</span>
+          <span class="lt-no">Re-slot or re-glyph a shared tool because a page needed room.</span>
+          <span class="lt-do">Split clusters with a thin separator, never a box.</span>
+          <span class="lt-no">Add a permanent options-bar row. Tool options lead the Properties group.</span>
+          <span class="lt-do">Mark low-frequency tools <code>.ovf</code> so they fold into <b>more</b> when narrow.</span>
+          <span class="lt-no">Drop a tool at a small width, or move it to a different surface.</span>
+          <span class="lt-do">Print each tool's single-key shortcut in its tooltip.</span>
+          <span class="lt-no">Two active tools in one strip at the same time.</span>
+          <span class="lt-do">Keep the command row to commands: menu, ⌘K, History, the active system.</span>
+          <span class="lt-no">Draw a fake macOS menu bar. The real one is native and always there.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 · IN THE API -->
+    <div class="lt-blk">
+      <div class="lt-blk-h"><span class="lt-n">09</span><h3>In the API</h3><span class="lt-sub">Every button is one named command</span></div>
+      <div class="lt-blk-b">
+        <div class="lt-api">
+          <div class="lt-r"><code>run("tool.crop")</code><span>Picks a tool. The strip highlights it, the cursor changes, and the <b>Tool options</b> section swaps.</span></div>
+          <div class="lt-r"><code>tool.active</code><span>Reads back the current tool, so an agent can restore it after doing its own work.</span></div>
+          <div class="lt-r"><code>tool.options</code><span>The active tool's option set. The same values the Properties group shows.</span></div>
+          <div class="lt-r"><code>workspace.set("video")</code><span>Swaps the strip to that workspace's D4 inventory. Same document, different lens.</span></div>
+          <div class="lt-r"><code>view.zoom = 1.0</code><span>The zoom control. <code>"fit"</code> and <code>"100%"</code> are named values.</span></div>
+          <div class="lt-r"><code>palette.open()</code><span>Raises ⌘K, the fourth equal way to reach any of the above.</span></div>
+        </div>
+        <p class="lt-cap">Four equal paths to one call: the tool strip, a right-click, the command surface, and ⌘K. That is why an
+          <b data-target="agent">agent</b> can drive the app without a special mode. See it whole in
+          <b class="backchip" data-target="app-shell">App shell</b>.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>One small floating bar holds the tools, the colour pair, and zoom, and it floats so it costs the document nothing. Learn it once on a screenshot and it reads the same on a component or a video clip, because the same command drives every button.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The strip could be <b>user-pinnable</b>: promote the two tools you reach for most in a given workspace out of <b>more</b> and into the strip, remembered per document, without ever changing the order of the shared tools around them.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>When several objects of different types are selected, the tool options are unambiguous but the selection properties are not. Does Properties show the intersection, the union with disabled extras, or a plain "mixed selection" summary?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the workspace lens drives the D4 tool inventory (decision D4).
+     Everything else on this page (collapse, resize, rail, overlay, overflow,
+     tool selection, zoom) is shared DS behavior. */
+  (function () {
+    var SEP = { sep: true };
+    var STRIPS = {
+      image: [
+        { i: 'cursor', t: 'Select', k: 'V' },
+        { i: 'lasso', t: 'Lasso', k: 'L' },
+        { i: 'wand', t: 'Select subject', k: 'W' }, SEP,
+        { i: 'crop', t: 'Crop', k: 'C', on: true },
+        { i: 'brush', t: 'Brush', k: 'B' },
+        { i: 'eraser', t: 'Eraser', k: 'E', ovf: true },
+        { i: 'heal', t: 'Heal', k: 'J', ovf: true },
+        { i: 'clone', t: 'Clone', k: 'S', ovf: true },
+        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
+        { i: 'text', t: 'Text', k: 'T', ovf: true },
+        { i: 'square', t: 'Shape', k: 'U', ovf: true },
+        { sep: true, ovf: true },
+        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
+        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
+      ],
+      ui: [
+        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
+        { i: 'frame', t: 'Frame', k: 'F' },
+        { i: 'component', t: 'Component insert', k: 'C', tint: true },
+        { i: 'square', t: 'Shape', k: 'R', ovf: true },
+        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
+        { i: 'text', t: 'Text', k: 'T', ovf: true },
+        { sep: true, ovf: true },
+        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
+        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
+      ],
+      video: [
+        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
+        { i: 'blade', t: 'Blade / split', k: 'B' },
+        { i: 'text', t: 'Title / Text', k: 'T', ovf: true },
+        { i: 'square', t: 'Shape', k: 'R', ovf: true },
+        { sep: true, ovf: true },
+        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
+        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
+      ]
+    };
+
+    function stripHTML(list) {
+      return list.map(function (x) {
+        if (x.sep) return '<span class="tsep' + (x.ovf ? ' ovf' : '') + '"></span>';
+        return '<button class="tool' + (x.on ? ' on' : '') + (x.ovf ? ' ovf' : '') +
+          '" title="' + x.t + ' (' + x.k + ')"' + (x.tint ? ' style="color:var(--comp)"' : '') +
+          '><i class="ic sm ic-' + x.i + '"></i></button>';
+      }).join('');
+    }
+    function menuHTML(list) {
+      return list.filter(function (x) { return x.ovf && !x.sep; }).map(function (x) {
+        return '<div class="menuitem"><i class="ic ic-' + x.i + '"></i> ' + x.t +
+          ' <span class="sc">' + x.k + '</span></div>';
+      }).join('');
+    }
+
+    var strip = document.getElementById('ltStrip');
+    var ovf = document.getElementById('ltOvf2');
+    var wsw = document.getElementById('ltWsw');
+    var cnt = document.getElementById('ltToolCnt');
+    var nm = document.getElementById('ltToolName');
+    if (!strip || !wsw) return;
+
+    function label(name) {
+      if (cnt) cnt.textContent = name;
+      if (nm) nm.textContent = name;
+    }
+    function wire(items) {
+      var tools = [].slice.call(strip.querySelectorAll('.tool'));
+      tools.forEach(function (t, idx) {
+        t.addEventListener('click', function () {
+          tools.forEach(function (x) { x.classList.remove('on'); });
+          t.classList.add('on');
+          if (items[idx]) label(items[idx].t);
+        });
+      });
+    }
+    function setWorkspace(ws) {
+      var list = STRIPS[ws];
+      if (!list) return;
+      var items = list.filter(function (x) { return !x.sep; });
+      strip.innerHTML = stripHTML(list);
+      if (ovf) ovf.innerHTML = menuHTML(list);
+      wire(items);
+      [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
+        var on = b.getAttribute('data-ws') === ws;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      var active = items.filter(function (x) { return x.on; })[0] || items[0];
+      label(active.t);
+    }
+    [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
+      b.addEventListener('click', function () { setWorkspace(b.getAttribute('data-ws')); });
+    });
+    setWorkspace('image');
+  })();
+</script>
+</body>
+</html>

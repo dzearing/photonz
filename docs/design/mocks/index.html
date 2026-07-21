@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · Creation Vision · Direction Study</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  html,body{height:100%;margin:0;overflow:hidden}
+  .shellbody{display:grid;grid-template-rows:auto 1fr;height:100vh;font-family:var(--sans);background:var(--stage);color:var(--ink)}
+  .framearea{min-height:0}
+  .framearea iframe{width:100%;height:100%;border:0;display:block;background:var(--stage)}
+  .nav .wip{display:inline-block;margin-left:6px;font-size:8.5px;font-weight:700;letter-spacing:.05em;color:var(--comp);background:var(--comp-soft);border:1px solid var(--comp-line);padding:1px 5px;border-radius:5px;vertical-align:1px;white-space:nowrap}
+  .nav{line-height:1.35}
+  .raildiv{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 9px 3px;margin-top:16px;border-top:1px solid var(--line-soft)}
+  .raildiv:first-child{margin-top:2px;border-top:0}
+  .rail .gtoggle{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:0;background:transparent;font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600;margin:1px 0;padding:7px 9px;border-radius:8px;cursor:pointer}
+  .rail .gtoggle:hover{background:var(--panel-2)}
+  .rail .gtoggle .gchev{margin-left:auto;width:15px;height:15px;color:var(--dim);transition:transform .15s ease}
+  .rail .gtoggle:hover .gchev{color:var(--ink)}
+  .rail .gtoggle.collapsed .gchev{transform:rotate(-90deg)}
+  .subnav{display:flex;flex-direction:column}
+  .subnav.collapsed{display:none}
+  .nav.sub{padding:6px 9px 6px 24px;font-size:12px}
+  .themebtn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 11px;font-size:11.5px;font-weight:560;color:var(--dim)}
+  .themebtn:hover{border-color:var(--accent-line);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="shellbody">
+  <div class="pbar">
+    <span class="mark"></span>
+    <h1>Photonz</h1>
+    <span class="tag">Creation Vision · direction study</span>
+    <span class="spacer"></span>
+    <span class="hint"><b>Non-functional mockups.</b> Each page is independent &amp; shares one design system · <span style="color:var(--comp)">◆</span> = agent building it now.</span>
+    <button class="themebtn" id="theme" style="margin-left:16px">◐ Theme</button>
+  </div>
+  <div class="body" style="min-height:0">
+    <nav class="rail" id="rail">
+      <div class="raildiv">App Design · canonical</div>
+      <button class="grp gtoggle" data-group="ad-core">Overview &amp; shell<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav" data-group="ad-core">
+        <button class="nav sub" data-page="app-design">App design overview</button>
+        <button class="nav sub" data-page="app-shell">App shell</button>
+        <button class="nav sub" data-page="foundations">Foundations</button>
+        <button class="nav sub" data-page="home">Home &amp; launcher</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="ad-surfaces">Surfaces &amp; primitives<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="ad-surfaces">
+        <button class="nav sub" data-page="editor">Editor surface</button>
+        <button class="nav sub" data-page="image">Image workspace</button>
+        <button class="nav sub" data-page="video">Video workspace</button>
+        <button class="nav sub" data-page="paint">Paint · fill primitive</button>
+        <button class="nav sub" data-page="effects">Effects · the stack</button>
+        <button class="nav sub" data-page="redline">Measure &amp; redline</button>
+        <button class="nav sub" data-page="documents">Saving &amp; modifying</button>
+        <button class="nav sub" data-page="export-share">Export &amp; share</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="ad-dsystem">Design system<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="ad-dsystem">
+        <button class="nav sub" data-page="dsys">Design system</button>
+        <button class="nav sub" data-page="components">Component library</button>
+        <button class="nav sub" data-page="states">Component states</button>
+        <button class="nav sub" data-page="typography">Typography</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="ad-lang">Design language<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="ad-lang">
+        <button class="nav sub" data-page="language">Overview</button>
+        <button class="nav sub" data-page="lang-frame">Frame &amp; chrome</button>
+        <button class="nav sub" data-page="lang-toolbars">Toolbars</button>
+        <button class="nav sub" data-page="lang-panels">Panels &amp; docking</button>
+        <button class="nav sub" data-page="lang-resize">Resizable panes</button>
+        <button class="nav sub" data-page="lang-sections">Collapsible sections</button>
+        <button class="nav sub" data-page="lang-overlays">Overlays &amp; menus</button>
+        <button class="nav sub" data-page="lang-selection">Selection &amp; canvas</button>
+        <button class="nav sub" data-page="lang-elevation">Elevation &amp; glass</button>
+        <button class="nav sub" data-page="lang-spacing">Density &amp; spacing</button>
+        <button class="nav sub" data-page="lang-motion">Motion</button>
+        <button class="nav sub" data-page="lang-color">Color &amp; states</button>
+        <button class="nav sub" data-page="lang-keyboard">Keyboard</button>
+      </div>
+
+      <div class="raildiv">Usage clickthroughs</div>
+      <button class="grp gtoggle collapsed" data-group="use-image">Image<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="use-image">
+        <button class="nav sub" data-page="capture-wt">Capture &amp; redline</button>
+        <button class="nav sub" data-page="img-retouch-wt">Retouch a portrait</button>
+        <button class="nav sub" data-page="img-grade-wt">Color grade</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="use-ui">UI<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="use-ui">
+        <button class="nav sub" data-page="walk">Create &amp; reuse a component</button>
+        <button class="nav sub" data-page="composites">From nothing → card list</button>
+        <button class="nav sub" data-page="component-configure-wt">Build a component</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="use-video">Video<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="use-video">
+        <button class="nav sub" data-page="video-create-wt">Create a video</button>
+        <button class="nav sub" data-page="video-animate-wt">Animate</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="use-ds">Design system<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="use-ds">
+        <button class="nav sub" data-page="ds-build-wt">Build a design system</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="use-auto">Automation<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="use-auto">
+        <button class="nav sub" data-page="agent-generate-wt">Prompt to design</button>
+      </div>
+
+      <div class="raildiv">Prototypes &amp; ideas · explorations</div>
+      <button class="grp gtoggle collapsed" data-group="proto-image">Image<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="proto-image">
+        <button class="nav sub" data-page="draw">Draw &amp; paint</button>
+        <button class="nav sub" data-page="draw-boolean">Boolean ops</button>
+        <button class="nav sub" data-page="vector-wt">Vector illustration</button>
+        <button class="nav sub" data-page="brush-editor">Brush editor</button>
+        <button class="nav sub" data-page="brush-library">Brush library</button>
+        <button class="nav sub" data-page="img-bg-remove">Remove background</button>
+        <button class="nav sub" data-page="img-masking">Masking</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="proto-ui">UI<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="proto-ui">
+        <button class="nav sub" data-page="ui-variants">Variants &amp; properties</button>
+        <button class="nav sub" data-page="ui-nested">Nested components</button>
+        <button class="nav sub" data-page="ui-autolayout">Auto-layout</button>
+        <button class="nav sub" data-page="ui-grid">Layout grids</button>
+        <button class="nav sub" data-page="ui-build-screen">Build a screen</button>
+        <button class="nav sub" data-page="ui-prototype">Prototyping</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="proto-video">Video<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="proto-video">
+        <button class="nav sub" data-page="video-transitions">Transitions</button>
+        <button class="nav sub" data-page="video-audio">Audio editing</button>
+        <button class="nav sub" data-page="video-captions">Captions</button>
+        <button class="nav sub" data-page="video-motion">Motion graphics</button>
+        <button class="nav sub" data-page="video-speed">Speed &amp; remap</button>
+        <button class="nav sub" data-page="video-compositing">Compositing</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="proto-ds">Design system<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="proto-ds">
+        <button class="nav sub" data-page="ds-switch">Switch systems</button>
+        <button class="nav sub" data-page="ds-modes">Token modes</button>
+      </div>
+      <button class="grp gtoggle collapsed" data-group="proto-auto">Automation &amp; ideas<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav collapsed" data-group="proto-auto">
+        <button class="nav sub" data-page="agent">Agent automation</button>
+        <button class="nav sub" data-page="agent-edit">Agent-assisted edit</button>
+        <button class="nav sub" data-page="agent-variations">Generate variations</button>
+        <button class="nav sub" data-page="ideas">Idea board</button>
+      </div>
+    </nav>
+    <div class="framearea">
+      <iframe id="frame" src="/pages/app-design.html" title="Photonz mock"></iframe>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var frame = document.getElementById('frame');
+  var navs = [].slice.call(document.querySelectorAll('.nav[data-page]'));
+  var theme = null; // null = follow system
+  function paintActive(id) {
+    navs.forEach(function (n) { n.classList.toggle('on', n.dataset.page === id); });
+  }
+  function setGroup(g, collapsed) {
+    document.querySelectorAll('.gtoggle[data-group="' + g + '"], .subnav[data-group="' + g + '"]')
+      .forEach(function (el) { el.classList.toggle('collapsed', collapsed); });
+  }
+  function expandGroupFor(id) {
+    var el = document.querySelector('.subnav .nav[data-page="' + id + '"]');
+    if (el) setGroup(el.closest('.subnav').dataset.group, false);
+  }
+  function go(id) {
+    if (!id) return;
+    frame.src = '/pages/' + id + '.html';
+    paintActive(id);
+    expandGroupFor(id);
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+  }
+  navs.forEach(function (n) { n.addEventListener('click', function () { go(n.dataset.page); }); });
+  document.querySelectorAll('.gtoggle').forEach(function (t) {
+    t.addEventListener('click', function () { setGroup(t.dataset.group, !t.classList.contains('collapsed')); });
+  });
+  // pages ask to navigate via postMessage (cross-links)
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.photonzNav) go(d.photonzNav);
+  });
+  // theme toggle: cycle system -> dark -> light -> system, and push to the iframe
+  function applyTheme() {
+    if (theme) document.documentElement.setAttribute('data-theme', theme);
+    else document.documentElement.removeAttribute('data-theme');
+    try { frame.contentWindow.postMessage({ photonzTheme: theme || '' }, '*'); } catch (e) {}
+  }
+  document.getElementById('theme').addEventListener('click', function () {
+    theme = theme === null ? 'dark' : theme === 'dark' ? 'light' : null;
+    this.textContent = theme === null ? '◐ Theme' : theme === 'dark' ? '● Dark' : '○ Light';
+    applyTheme();
+  });
+  frame.addEventListener('load', applyTheme); // re-assert theme on each page load
+  // deep link on first load
+  var initial = (location.hash || '').replace('#', '');
+  if (initial) { go(initial); }
+  else { paintActive('app-design'); expandGroupFor('app-design'); }
+})();
+</script>
+</body>
+</html>

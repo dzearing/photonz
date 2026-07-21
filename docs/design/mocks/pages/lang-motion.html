@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-motion</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ===== Motion sub-page. Composes the shared DS; adds a small, disciplined
+     motion vocabulary: three durations, three easings, and live demos that
+     honor prefers-reduced-motion. Spacing on the 4pt scale only. ===== */
+  #lang-motion{
+    /* motion tokens: the whole vocabulary is these six values */
+    --dur-1:120ms; --dur-2:180ms; --dur-3:240ms;
+    --ease-standard:cubic-bezier(.4,0,.2,1);
+    --ease-decel:cubic-bezier(0,0,.2,1);
+    --ease-spring:cubic-bezier(.34,1.4,.5,1);
+  }
+  /* shared layout of a documentation block: specimen left, name + rule right */
+  #lang-motion .intro{font-size:13px;line-height:1.55;color:var(--dim);margin:0;max-width:760px}
+  #lang-motion .intro b{color:var(--ink)}
+  #lang-motion .headrow{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap}
+  #lang-motion .rmswitch{margin-left:auto;display:inline-flex;align-items:center;gap:var(--gap-sm);font-size:11px;color:var(--dim);font-weight:520}
+  #lang-motion .toggle{width:34px;height:20px;border-radius:999px;background:var(--line-strong);border:0;position:relative;flex:none;transition:background var(--dur-1) var(--ease-standard)}
+  #lang-motion .toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform var(--dur-2) var(--ease-standard)}
+  #lang-motion .toggle.on{background:var(--accent)}
+  #lang-motion .toggle.on::after{transform:translateX(14px)}
+
+  #lang-motion .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
+  #lang-motion .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
+  #lang-motion .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-motion .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-motion .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
+  #lang-motion .rule{font-size:11.5px;line-height:1.5;color:var(--dim);margin:0}
+  #lang-motion .rule b{color:var(--ink);font-weight:600}
+  #lang-motion .dd{display:flex;flex-direction:column;gap:var(--s1);margin-top:var(--s1)}
+  #lang-motion .dd span{font-size:10.5px;line-height:1.4;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-motion .dd .do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-motion .dd .no::before{content:"Not";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-motion .api{font-size:10.5px;line-height:1.45;color:var(--faint);margin-top:auto;padding-top:var(--gap-sm);border-top:1px solid var(--line-soft)}
+  #lang-motion .api code{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+  #lang-motion .api b{color:var(--dim);font-weight:600}
+  #lang-motion .note{font-size:10.5px;color:var(--faint);line-height:1.45}
+
+  /* ---- Anatomy: duration + easing chips ---- */
+  #lang-motion .toklab{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:660;margin:var(--s1) 0 var(--s1)}
+  #lang-motion .durs{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+  #lang-motion .dur{flex:1 1 120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm)}
+  #lang-motion .dur .n{font-size:13px;font-weight:640;color:var(--ink);font-variant-numeric:tabular-nums}
+  #lang-motion .dur .u{font-size:10px;color:var(--faint);margin-bottom:var(--gap-sm)}
+  #lang-motion .dur .track{height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+  #lang-motion .dur .track i{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--accent);border-radius:4px;transform:translateX(-100%)}
+  #lang-motion .dur.d1 .track i{animation:sweep var(--dur-1) var(--ease-standard) infinite alternate}
+  #lang-motion .dur.d2 .track i{animation:sweep var(--dur-2) var(--ease-standard) infinite alternate}
+  #lang-motion .dur.d3 .track i{animation:sweep var(--dur-3) var(--ease-standard) infinite alternate}
+  @keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+
+  #lang-motion .eases{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+  #lang-motion .ease{flex:1 1 120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);cursor:pointer}
+  #lang-motion .ease:hover{border-color:var(--accent-line)}
+  #lang-motion .ease .t{font-size:11px;font-weight:620;color:var(--ink);margin-bottom:2px}
+  #lang-motion .ease .c{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-bottom:var(--gap-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #lang-motion .ease .rail{height:14px;position:relative}
+  #lang-motion .ease .rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+  #lang-motion .ease .dot{position:absolute;top:50%;left:0;width:10px;height:10px;border-radius:50%;background:var(--accent);transform:translate(0,-50%)}
+  #lang-motion .ease.go .dot{animation:glide 900ms both}
+  #lang-motion .ease.es .dot{animation-timing-function:var(--ease-standard)}
+  #lang-motion .ease.ed .dot{animation-timing-function:var(--ease-decel)}
+  #lang-motion .ease.esp .dot{animation-timing-function:var(--ease-spring)}
+  @keyframes glide{from{left:0}to{left:calc(100% - 10px)}}
+
+  /* ---- What animates: legend map ---- */
+  #lang-motion .maps{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm)}
+  #lang-motion .mapr{display:flex;align-items:center;gap:var(--gap-sm);background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm);font-size:11px;color:var(--dim)}
+  #lang-motion .mapr b{color:var(--ink);font-weight:600}
+  #lang-motion .mapr .g{width:22px;height:22px;border-radius:var(--r1);display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent);font-size:12px}
+  #lang-motion .mapr .tt{font-family:var(--mono);font-size:9px;color:var(--faint);margin-left:auto;white-space:nowrap}
+
+  /* ---- Variants: enter / exit / move ---- */
+  #lang-motion .variants{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-sm)}
+  #lang-motion .vcell{background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-motion .vcell .vh{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:660;display:flex;align-items:center;justify-content:space-between}
+  #lang-motion .vstage{height:70px;border-radius:var(--r2);background:var(--panel-2);border:1px solid var(--line-soft);position:relative;overflow:hidden;display:grid;place-items:center}
+  #lang-motion .vbox{width:40px;height:40px;border-radius:var(--r2);background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 6px 16px -6px rgba(177,77,255,.6)}
+  /* dashed slots mark start/end so the motion reads even before you press Play */
+  #lang-motion .vslot{position:absolute;width:40px;height:40px;border-radius:var(--r2);border:1.5px dashed var(--line-strong);top:50%;transform:translateY(-50%);opacity:.55}
+  #lang-motion .vslot.a{left:12px}
+  #lang-motion .vslot.b{right:12px}
+  #lang-motion .vslot.c{left:50%;transform:translate(-50%,-50%)}
+  /* base (no .go) = the START state per variant; .go animates to the END and HOLDS it (forwards);
+     pressing Play removes .go (snap back to START) then re-adds it, so every run resets and replays. */
+  #lang-motion .vcell.enter .vbox{opacity:0;transform:translateY(10px) scale(.96)}
+  #lang-motion .vcell.exit  .vbox{opacity:1}
+  #lang-motion .vcell.move  .vbox{position:absolute;left:12px;top:50%;transform:translateY(-50%)}
+  #lang-motion .vcell.enter.go .vbox{animation:vEnter var(--dur-3) var(--ease-decel) forwards}
+  #lang-motion .vcell.exit.go  .vbox{animation:vExit var(--dur-2) var(--ease-standard) forwards}
+  #lang-motion .vcell.move.go  .vbox{animation:vMove var(--dur-3) var(--ease-spring) forwards}
+  @keyframes vEnter{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes vExit{from{opacity:1;transform:none}to{opacity:0;transform:translateY(6px) scale(.97)}}
+  @keyframes vMove{from{left:12px}to{left:calc(100% - 52px)}}
+
+  /* ---- States timeline ---- */
+  #lang-motion .stateline{display:flex;align-items:stretch;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden}
+  #lang-motion .stcell{flex:1;padding:var(--pad-sm);text-align:center;border-right:1px solid var(--line-soft)}
+  #lang-motion .stcell:last-child{border-right:0}
+  #lang-motion .stcell .st{font-size:11px;font-weight:620;color:var(--ink)}
+  #lang-motion .stcell .sd{font-size:9.5px;color:var(--faint);line-height:1.35;margin-top:2px}
+  #lang-motion .stcell .pd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-bottom:var(--s1)}
+
+  /* ---- Live micro-interactions ---- */
+  #lang-motion .replay{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--panel);border-radius:var(--r1);font-size:9.5px;font-weight:600;color:var(--dim);padding:2px 7px;cursor:pointer;line-height:1.4}
+  #lang-motion .replay:hover{border-color:var(--accent-line);color:var(--ink)}
+  #lang-motion .demorow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;align-items:stretch}
+  #lang-motion .demo{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);display:flex;flex-direction:column;gap:var(--gap-sm);min-width:0}
+  #lang-motion .demo .dh{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:660}
+  #lang-motion .demo .db{flex:1;display:grid;place-items:center;min-height:96px;position:relative}
+
+  /* hover-a-control demo */
+  #lang-motion .hbtn{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--accent-ink);background:var(--accent);border:0;border-radius:var(--r3);padding:9px 16px;box-shadow:0 4px 12px -6px rgba(76,111,255,.5);transition:transform var(--dur-1) var(--ease-standard),box-shadow var(--dur-1) var(--ease-standard),filter var(--dur-1) var(--ease-standard)}
+  #lang-motion .hbtn:hover{transform:translateY(-2px);box-shadow:0 10px 22px -8px rgba(76,111,255,.6)}
+  #lang-motion .hbtn:active{transform:translateY(0) scale(.98);filter:brightness(.94)}
+  #lang-motion .hbtn .h{font-size:9px;color:var(--faint);position:absolute;bottom:0}
+
+  /* collapsing section demo */
+  #lang-motion .csec{width:100%;border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:var(--panel-2)}
+  #lang-motion .csec .ch{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);font-size:11px;font-weight:600;color:var(--ink);cursor:pointer;user-select:none}
+  #lang-motion .csec .ch .cv{color:var(--faint);font-size:9px;transition:transform var(--dur-2) var(--ease-standard)}
+  #lang-motion .csec.closed .ch .cv{transform:rotate(-90deg)}
+  #lang-motion .csec .cbody{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--dur-3) var(--ease-standard)}
+  #lang-motion .csec.closed .cbody{grid-template-rows:0fr}
+  #lang-motion .csec .cinner{overflow:hidden;min-height:0}
+  #lang-motion .csec .crow{padding:6px var(--pad-sm);font-size:10.5px;color:var(--dim);border-top:1px solid var(--line-soft);display:flex;justify-content:space-between}
+
+  /* toast demo */
+  #lang-motion .tstage{width:100%;height:96px;border-radius:var(--r2);background:radial-gradient(220px 120px at 50% 20%,#141826,var(--artboard));border:1px solid var(--line);position:relative;overflow:hidden}
+  #lang-motion .dtoast{position:absolute;top:12px;left:50%;display:inline-flex;align-items:center;gap:7px;background:var(--good);color:#fff;font-size:11px;font-weight:640;padding:6px 12px;border-radius:var(--r3);box-shadow:0 8px 20px -8px rgba(0,0,0,.5);white-space:nowrap;transform:translate(-50%,-140%);opacity:0}
+  #lang-motion .dtoast.in{animation:toastIn var(--dur-3) var(--ease-decel) forwards}
+  #lang-motion .dtoast.out{animation:toastOut var(--dur-2) var(--ease-standard) forwards}
+  @keyframes toastIn{from{transform:translate(-50%,-140%);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+  @keyframes toastOut{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-140%);opacity:0}}
+  #lang-motion .tbtn{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);border:1px solid var(--line-strong);background:var(--panel);border-radius:var(--r2);font-size:10.5px;font-weight:560;color:var(--ink);padding:5px 11px;cursor:pointer}
+  #lang-motion .tbtn:hover{border-color:var(--accent-line)}
+
+  /* reduced-motion callout */
+  #lang-motion .rmcard{border:1px solid var(--accent-line);background:linear-gradient(120deg,var(--accent-soft),transparent);border-radius:var(--r3);padding:var(--pad-sm) var(--pad);font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #lang-motion .rmcard b{color:var(--ink)}
+  #lang-motion .rmcard code{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+
+  /* ===== The rule this page documents, enforced two ways ===== */
+  /* 1. A live toggle on the page: adding .rm collapses every demo to instant. */
+  #lang-motion.rm *,#lang-motion.rm *::before,#lang-motion.rm *::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+  }
+  /* 2. The real system preference always wins, even without the toggle. */
+  @media (prefers-reduced-motion:reduce){
+    #lang-motion *,#lang-motion *::before,#lang-motion *::after{
+      animation-duration:.001ms!important;animation-iteration-count:1!important;
+      transition-duration:.001ms!important;scroll-behavior:auto!important;
+    }
+  }
+
+  @media (max-width:720px){
+    #lang-motion .blk{grid-template-columns:1fr}
+    #lang-motion .meta{border-left:0;border-top:1px solid var(--line)}
+    #lang-motion .variants{grid-template-columns:1fr}
+    #lang-motion .maps{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-motion">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Motion</h2><span class="k">· Design language · duration, easing, and what is allowed to move</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i>Design language</a></div>
+    <div class="headrow">
+      <div class="rmswitch"><span>Simulate reduced motion</span><button class="toggle" id="rmToggle" aria-pressed="false" title="Toggle reduced motion"></button></div>
+    </div>
+    <p class="intro">A small, disciplined motion system. <b>Three durations, three easings, and one job for each: explain a state change, then get out of the way.</b> Motion is never decoration and never loops on its own. Everything here is live; flip the switch above to feel how it collapses to instant under <b>prefers-reduced-motion</b> while the result stays identical.</p>
+
+    <!-- 2 · ANATOMY: duration + easing tokens -->
+    <div class="blk">
+      <div class="spec">
+        <div class="toklab">Duration tokens</div>
+        <div class="durs">
+          <div class="dur d1"><div class="n">120</div><div class="u">ms · dur-1</div><div class="track"><i></i></div></div>
+          <div class="dur d2"><div class="n">180</div><div class="u">ms · dur-2</div><div class="track"><i></i></div></div>
+          <div class="dur d3"><div class="n">240</div><div class="u">ms · dur-3</div><div class="track"><i></i></div></div>
+        </div>
+        <div class="toklab">Easing tokens <span style="text-transform:none;letter-spacing:0;font-weight:520;color:var(--faint)">· click a card to replay</span></div>
+        <div class="eases">
+          <div class="ease es" data-ease><div class="t">Standard</div><div class="c">cubic-bezier(.4,0,.2,1)</div><div class="rail"><span class="dot"></span></div></div>
+          <div class="ease ed" data-ease><div class="t">Decelerate</div><div class="c">cubic-bezier(0,0,.2,1)</div><div class="rail"><span class="dot"></span></div></div>
+          <div class="ease esp" data-ease><div class="t">Spring</div><div class="c">cubic-bezier(.34,1.4,.5,1)</div><div class="rail"><span class="dot"></span></div></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
+        <p class="rule">A motion is a <b>duration</b> paired with an <b>easing</b>. Short moves use <code style="font-family:var(--mono)">dur-1</code>, panels and toasts <code style="font-family:var(--mono)">dur-3</code>. <b>Standard</b> for most transitions, <b>decelerate</b> for things entering, <b>spring</b> only for a deliberate settle.</p>
+        <div class="dd"><span class="do">Pick from these six values, nothing between.</span><span class="no">Reach for a 500ms ease-in-out because it "feels smooth".</span></div>
+        <p class="api"><b>API</b> <code>motion.duration = "dur-2"</code> · <code>motion.easing = "standard"</code>. Tokens resolve to the same CSS variables the UI uses.</p>
+      </div>
+    </div>
+
+    <!-- 3 · WHAT ANIMATES -->
+    <div class="blk">
+      <div class="spec">
+        <div class="maps">
+          <div class="mapr"><span class="g"><i class="ic sm ic-chevron-down"></i></span><b>Disclosure</b>&nbsp;chevron rotate<span class="tt">180ms · standard</span></div>
+          <div class="mapr"><span class="g"><i class="ic sm ic-cursor"></i></span><b>Hover</b>&nbsp;lift + shadow<span class="tt">120ms · standard</span></div>
+          <div class="mapr"><span class="g"><i class="ic sm ic-circle"></i></span><b>Selection</b>&nbsp;ring fade in<span class="tt">120ms · standard</span></div>
+          <div class="mapr"><span class="g"><i class="ic sm ic-transition"></i></span><b>Page / panel</b>&nbsp;fade + rise<span class="tt">240ms · decelerate</span></div>
+          <div class="mapr"><span class="g"><i class="ic sm ic-check"></i></span><b>Toast</b>&nbsp;drop in, auto-fade<span class="tt">240ms · decelerate</span></div>
+          <div class="mapr"><span class="g"><i class="ic sm ic-frame"></i></span><b>Sheet</b>&nbsp;scrim + scale up<span class="tt">240ms · decelerate</span></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">02</div><h3 class="bname">What animates</h3>
+        <p class="rule">A short list, on purpose. Only <b>discrete state changes</b> animate: something opened, closed, appeared, was picked, or moved. Continuous values (dragging a slider, typing, panning) track the input directly and are never tweened.</p>
+        <div class="dd"><span class="do">Animate the exact property that changed.</span><span class="no">Animate large layout on every keystroke.</span></div>
+        <p class="api"><b>API</b> each is one command with implicit motion <code>run("panel.open")</code>. The token pairs above are the defaults; a command can override per call.</p>
+      </div>
+    </div>
+
+    <!-- 4 · VARIANTS: enter / exit / move -->
+    <div class="blk">
+      <div class="spec">
+        <div class="variants">
+          <div class="vcell enter" data-variant><div class="vh">Enter <button class="replay" data-replay><i class="ic xs ic-play"></i><span class="rlab">Play</span></button></div><div class="vstage"><span class="vslot c"></span><span class="vbox"></span></div><div class="note">hidden → visible · fade + rise · decelerate · 240ms</div></div>
+          <div class="vcell exit" data-variant><div class="vh">Exit <button class="replay" data-replay><i class="ic xs ic-play"></i><span class="rlab">Play</span></button></div><div class="vstage"><span class="vslot c"></span><span class="vbox"></span></div><div class="note">visible → hidden · fade + sink · standard · 180ms</div></div>
+          <div class="vcell move" data-variant><div class="vh">Move <button class="replay" data-replay><i class="ic xs ic-play"></i><span class="rlab">Play</span></button></div><div class="vstage"><span class="vslot a"></span><span class="vslot b"></span><span class="vbox"></span></div><div class="note">left → right · reposition · spring · 240ms</div></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">03</div><h3 class="bname">Variants</h3>
+        <p class="rule">Three shapes cover everything. <b>Enter</b> arrives on decelerate so it lands softly. <b>Exit</b> is quicker and plainer so leaving never feels sluggish. <b>Move</b> can spring, but only to settle an object into a new place.</p>
+        <div class="dd"><span class="do">Make exit faster than enter.</span><span class="no">Spring an enter, or bounce an exit.</span></div>
+        <p class="api"><b>API</b> <code>motion.variant = "enter"</code> is picked from the transition's direction; you rarely set it by hand.</p>
+      </div>
+    </div>
+
+    <!-- 5 · STATES -->
+    <div class="blk">
+      <div class="spec">
+        <div class="stateline">
+          <div class="stcell"><span class="pd" style="background:var(--faint)"></span><div class="st">Idle</div><div class="sd">at rest, no motion pending</div></div>
+          <div class="stcell"><span class="pd" style="background:var(--warn)"></span><div class="st">Trigger</div><div class="sd">state flips: open, select, add</div></div>
+          <div class="stcell"><span class="pd" style="background:var(--accent)"></span><div class="st">Animating</div><div class="sd">one duration, interruptible</div></div>
+          <div class="stcell"><span class="pd" style="background:var(--good)"></span><div class="st">Settled</div><div class="sd">final state, fully interactive</div></div>
+        </div>
+        <p class="note">Reduced motion jumps straight from <b style="color:var(--dim)">Trigger</b> to <b style="color:var(--dim)">Settled</b>: same start, same end, zero duration in between.</p>
+      </div>
+      <div class="meta">
+        <div class="bnum">04</div><h3 class="bname">States</h3>
+        <p class="rule">A motion has a lifecycle, and it is always <b>interruptible</b>. Trigger the same control mid-animation and it retargets from where it is; it never queues or fights itself.</p>
+        <div class="dd"><span class="do">Let a new input take over the current animation.</span><span class="no">Block the UI while something is still moving.</span></div>
+        <p class="api"><b>API</b> a command resolves once the target state is set, not when the animation ends, so an agent never waits on visuals.</p>
+      </div>
+    </div>
+
+    <!-- 6 · LIVE MICRO-INTERACTIONS -->
+    <div class="blk">
+      <div class="spec">
+        <div class="demorow">
+          <div class="demo">
+            <div class="dh">Hover a control</div>
+            <div class="db"><button class="hbtn">Export<span class="h">hover · press me</span></button></div>
+          </div>
+          <div class="demo">
+            <div class="dh">Collapsing section</div>
+            <div class="db" style="align-items:stretch">
+              <div class="csec" id="csec">
+                <div class="ch" id="csecH"><span class="cv"><i class="ic xs ic-chevron-down"></i></span>Effects<span style="margin-left:auto;color:var(--faint);font-weight:520">2</span></div>
+                <div class="cbody"><div class="cinner"><div class="crow"><span>Card glow</span><span style="color:var(--faint)">style</span></div><div class="crow"><span>Drop shadow</span><span style="color:var(--faint)">y 8 · blur 24</span></div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="demo">
+            <div class="dh">Toast</div>
+            <div class="db">
+              <div class="tstage"><span class="dtoast" id="dtoast"><i class="ic ic-check"></i> Shadow added</span><button class="tbtn" id="toastBtn">Run command</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">05</div><h3 class="bname">Live examples</h3>
+        <p class="rule">Three you meet constantly. The button <b>lifts on hover, presses on click</b>. The section grows its own height on <code>dur-3</code>. The toast <b>drops in, holds, and auto-fades</b> so you never dismiss it.</p>
+        <div class="dd"><span class="do">Keep a hover cue subtle: 2px and a soft shadow.</span><span class="no">Animate height by pixel guesses instead of the row's real size.</span></div>
+        <p class="api"><b>API</b> <code>section.collapsed = true</code> and <code>toast("Shadow added")</code> carry their motion for free.</p>
+      </div>
+    </div>
+
+    <!-- 7 · REDUCED MOTION -->
+    <div class="rmcard">
+      <b>The reduced-motion rule.</b> Every demo on this page is wrapped so it works with motion off. When <code>prefers-reduced-motion: reduce</code> is set, or the switch at the top is on, transitions and keyframes collapse to <b>near-instant</b>: the chevron still rotates, the toast still appears and clears, the section still opens. Nothing that conveys meaning is lost, only the in-between frames. We never gate content or feedback behind an animation, so removing motion removes nothing but the drift.
+    </div>
+
+    <!-- 8 · IN THE API -->
+    <div class="blk">
+      <div class="spec">
+        <div class="stateline" style="border-radius:var(--r3)">
+          <div class="stcell"><div class="st" style="font-family:var(--mono);font-size:11px;color:var(--accent)">motion.reduced</div><div class="sd">true when the user asked for less</div></div>
+          <div class="stcell"><div class="st" style="font-family:var(--mono);font-size:11px;color:var(--accent)">motion.duration</div><div class="sd">"dur-1" · "dur-2" · "dur-3"</div></div>
+          <div class="stcell"><div class="st" style="font-family:var(--mono);font-size:11px;color:var(--accent)">motion.easing</div><div class="sd">"standard" · "decelerate" · "spring"</div></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">06</div><h3 class="bname">In the API</h3>
+        <p class="rule">Motion is data, not a hardcoded style. A command reads <b><code style="font-family:var(--mono)">motion.reduced</code></b> and picks the zero-duration path itself, so the same script drives both a lush UI and an accessible one.</p>
+        <div class="dd"><span class="do">Branch on <code>motion.reduced</code> in one place.</span><span class="no">Sprinkle animation timings through feature code.</span></div>
+        <p class="api"><b>API</b> <code>motion.reduced</code> mirrors the OS setting · <b data-target="editor">see it in the editor</b> · pairs with <b data-target="language">the language overview</b>.</p>
+      </div>
+    </div>
+
+    <!-- 9 · RESPONSIVE / COMPACT -->
+    <div class="blk">
+      <div class="spec">
+        <div class="demorow">
+          <div class="demo" style="flex:1 1 100%"><div class="dh">Small window</div><div class="db" style="min-height:auto;justify-items:start;display:grid;gap:var(--gap-sm);width:100%">
+            <div class="mapr" style="width:100%"><span class="g"><i class="ic sm ic-chevron-down"></i></span><b>Durations shrink one step</b>&nbsp;dur-3 → dur-2<span class="tt">less travel, faster</span></div>
+            <div class="mapr" style="width:100%"><span class="g"><i class="ic sm ic-transition"></i></span><b>Move can drop to a fade</b>&nbsp;no reposition on tight layouts<span class="tt">standard · 120ms</span></div>
+          </div></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">07</div><h3 class="bname">Responsive &amp; compact</h3>
+        <p class="rule">In a small or compact window there is less distance to cover, so durations <b>step down one token</b> and long "move" animations may simplify to a plain fade. The vocabulary stays the same; only the amount of travel shrinks.</p>
+        <p class="api"><b>API</b> compact windows set <code>ui.density = "compact"</code>, which nudges motion to the shorter tokens automatically.</p>
+      </div>
+    </div>
+
+    <!-- CAPTIONS -->
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Motion earns its place only when it <b>explains a change</b>. Three durations and three easings are enough to make the whole app feel alive without a single thing bouncing or spinning for attention.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Bake the tokens into the render layer so a command like <code>toast()</code> or <code>section.collapse()</code> carries its own motion, and honoring <code>motion.reduced</code> is automatic rather than something each feature remembers.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should <b>spring</b> exist at all? It is the one easing that can feel playful. Do we keep it for a couple of deliberate settles, or drop to two easings and stay strictly functional?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  (function(){
+    var root = document.getElementById('lang-motion');
+    if(!root) return;
+
+    // Live "reduced motion" switch: proves the rule without needing OS settings.
+    var t = document.getElementById('rmToggle');
+    if(t){ t.addEventListener('click', function(){
+      var on = root.classList.toggle('rm');
+      t.classList.toggle('on', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }); }
+
+    // Replay helper: re-trigger a keyframe animation by removing/adding a class.
+    function replay(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+    // Easing cards replay their glide on click.
+    root.querySelectorAll('[data-ease]').forEach(function(c){
+      c.addEventListener('click', function(){ replay(c, 'go'); });
+    });
+
+    // Variant cells: Play runs start -> end and holds it (button becomes Reset);
+    // Reset snaps back to the start state (button becomes Play).
+    root.querySelectorAll('[data-variant]').forEach(function(cell){
+      var b = cell.querySelector('[data-replay]');
+      function setBtn(icName, label){ if(!b) return; var ic=b.querySelector('.ic'), lb=b.querySelector('.rlab'); if(ic) ic.className='ic xs '+icName; if(lb) lb.textContent=label; }
+      function play(){ cell.classList.remove('go'); void cell.offsetWidth; cell.classList.add('go'); setBtn('ic-undo','Reset'); }
+      function reset(){ cell.classList.remove('go'); setBtn('ic-play','Play'); }
+      function toggle(){ cell.classList.contains('go') ? reset() : play(); }
+      if(b) b.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
+      cell.addEventListener('click', toggle);
+    });
+
+    // Collapsing section demo (bespoke so the height transition is visible).
+    var csec = document.getElementById('csec'), csecH = document.getElementById('csecH');
+    if(csecH){ csecH.addEventListener('click', function(){ csec.classList.toggle('closed'); }); }
+
+    // Toast demo: drop in, hold, auto-fade.
+    var toast = document.getElementById('dtoast'), tbtn = document.getElementById('toastBtn'), tTimer;
+    if(tbtn){ tbtn.addEventListener('click', function(){
+      clearTimeout(tTimer);
+      toast.classList.remove('out');
+      replay(toast, 'in');
+      tTimer = setTimeout(function(){ toast.classList.remove('in'); replay(toast, 'out'); }, 1600);
+    }); }
+  })();
+</script>
+</body>
+</html>

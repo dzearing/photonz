@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · lang-keyboard</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local: the design-language block grammar (specimen left, name+rule
+     right) matches its sibling `language.html`. New here: a token-based keycap
+     component (.kc) and a shortcut row (.scut). Spacing on the 4pt scale only. */
+  #lang-keyboard .intro{font-size:13px;line-height:1.55;color:var(--dim);margin:0;max-width:760px}
+  #lang-keyboard .intro b{color:var(--ink)}
+  #lang-keyboard .headrow{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
+
+  #lang-keyboard .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
+  #lang-keyboard .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
+  #lang-keyboard .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-keyboard .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
+  #lang-keyboard .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
+  #lang-keyboard .rule{font-size:11.5px;line-height:1.5;color:var(--dim);margin:0}
+  #lang-keyboard .rule b{color:var(--ink);font-weight:600}
+  #lang-keyboard .dd{display:flex;flex-direction:column;gap:var(--s1);margin-top:var(--s1)}
+  #lang-keyboard .dd span{font-size:10.5px;line-height:1.4;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #lang-keyboard .dd .do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-keyboard .dd .no::before{content:"Not";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:26px}
+  #lang-keyboard .api{font-size:10.5px;line-height:1.45;color:var(--faint);margin-top:auto;padding-top:var(--gap-sm);border-top:1px solid var(--line-soft)}
+  #lang-keyboard .api code{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+  #lang-keyboard .api b{color:var(--dim);font-weight:600}
+
+  /* ── the keycap component ── */
+  #lang-keyboard .kc{display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:560;line-height:1;color:var(--ink);background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--r2);min-width:22px;height:22px;padding:0 var(--s2);box-shadow:0 1px 0 rgba(0,0,0,.04)}
+  #lang-keyboard .kc.sm{min-width:18px;height:18px;font-size:9.5px;padding:0 var(--s1)}
+  #lang-keyboard .kc.lg{min-width:30px;height:30px;font-size:14px;border-radius:var(--r3)}
+  #lang-keyboard .kc.wide{padding:0 var(--pad-sm)}
+  #lang-keyboard .kc.mod{color:var(--dim)}
+  #lang-keyboard .kc.press{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);transform:translateY(1px);border-bottom-width:1px;box-shadow:none}
+  #lang-keyboard .kc.dis{opacity:.4}
+  #lang-keyboard .kc.foc{outline:2px solid var(--accent);outline-offset:2px}
+  #lang-keyboard .combo{display:inline-flex;align-items:center;gap:3px}
+  #lang-keyboard .plus{color:var(--faint);font-size:10px;font-family:var(--mono)}
+  #lang-keyboard .then{font-size:9px;font-weight:600;color:var(--faint);letter-spacing:.04em;padding:0 var(--s1)}
+
+  /* ── shortcut row (command left, combo right) ── */
+  #lang-keyboard .scut{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;color:var(--dim);padding:var(--s1) 0}
+  #lang-keyboard .scut .cmd{color:var(--ink);font-weight:520}
+  #lang-keyboard .scut .combo{margin-left:auto}
+
+  /* ── anatomy callouts ── */
+  #lang-keyboard .anat{display:flex;flex-direction:column;gap:var(--pad);align-items:flex-start}
+  #lang-keyboard .anat .big{display:flex;align-items:center;gap:var(--gap-sm)}
+  #lang-keyboard .legend{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--pad);width:100%}
+  #lang-keyboard .legend .li{display:flex;align-items:baseline;gap:var(--gap-sm);font-size:10.5px;color:var(--dim);line-height:1.4}
+  #lang-keyboard .legend .li b{color:var(--accent);font-family:var(--mono);font-size:9.5px;flex:none;width:14px}
+  #lang-keyboard .legend .li i{color:var(--ink);font-style:normal;font-weight:560}
+  #lang-keyboard .rowspec{width:100%;border:1px solid var(--line);border-radius:var(--r3);background:var(--panel);padding:var(--gap-sm) var(--pad-sm)}
+
+  /* ── the legend-by-category grid ── */
+  #lang-keyboard .cats{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #lang-keyboard .cat{border:1px solid var(--line);border-radius:var(--r3);background:var(--panel);overflow:hidden}
+  #lang-keyboard .cat h4{margin:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--gap-sm) var(--pad-sm);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:var(--s2)}
+  #lang-keyboard .cat h4 .dot{width:6px;height:6px;border-radius:50%;flex:none}
+  #lang-keyboard .cat .body{padding:var(--s1) var(--pad-sm) var(--gap-sm)}
+
+  /* ── modifier conventions ── */
+  #lang-keyboard .mods{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #lang-keyboard .mrow{display:flex;align-items:center;gap:var(--pad-sm);font-size:11px;color:var(--dim)}
+  #lang-keyboard .mrow .nm{color:var(--ink);font-weight:560;width:64px;flex:none}
+  #lang-keyboard .mrow .ms{color:var(--dim)}
+  #lang-keyboard .order{display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--faint);flex-wrap:wrap}
+
+  /* ── chord model ── */
+  #lang-keyboard .chords{display:flex;flex-direction:column;gap:var(--pad-sm)}
+  #lang-keyboard .chord{display:flex;align-items:center;gap:var(--pad-sm);background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--gap-sm) var(--pad-sm)}
+  #lang-keyboard .chord .lb{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:660;width:70px;flex:none}
+  #lang-keyboard .chord .tx{font-size:10.5px;color:var(--dim);margin-left:auto;line-height:1.4}
+
+  /* ── discoverability (menu / palette / tooltip) ── */
+  #lang-keyboard .disc{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);align-items:start}
+  #lang-keyboard .disc .full{grid-column:1 / -1}
+  #lang-keyboard .cpal-mini{background:var(--chrome-solid);border:1px solid var(--line-strong);border-radius:var(--r4);box-shadow:var(--shadow);overflow:hidden}
+  #lang-keyboard .cpal-mini .in{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm);border-bottom:1px solid var(--line);font-size:12px;color:var(--ink)}
+  #lang-keyboard .cpal-mini .in .sp{width:18px;height:18px;border-radius:6px;background:linear-gradient(120deg,#6E8BFF,#c56cff);flex:none}
+  #lang-keyboard .cpal-mini .li{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);font-size:11px;color:var(--dim)}
+  #lang-keyboard .cpal-mini .li.on{background:var(--panel-2);color:var(--ink)}
+  #lang-keyboard .cpal-mini .li .combo{margin-left:auto}
+  #lang-keyboard .tipwrap{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:flex-start;justify-content:center}
+  #lang-keyboard .tipcap{font-size:10px;color:var(--faint)}
+
+  /* ── the API block ── */
+  #lang-keyboard .codeblk{background:var(--artboard);border-radius:var(--r3);padding:var(--pad-sm) var(--pad);font-family:var(--mono);font-size:10.5px;line-height:1.7;color:#c9d3ef;overflow-x:auto;border:1px solid #20263a}
+  #lang-keyboard .codeblk .k{color:#7f9bff}
+  #lang-keyboard .codeblk .s{color:#7fd7a6}
+  #lang-keyboard .codeblk .c{color:#5c6680}
+  #lang-keyboard .codeblk .p{color:#e0a5ff}
+  #lang-keyboard .remap{display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm)}
+  #lang-keyboard .remap .warnchip{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--warn);background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r1);padding:2px 6px;flex:none}
+
+  @media (max-width:720px){
+    #lang-keyboard .blk{grid-template-columns:1fr}
+    #lang-keyboard .meta{border-left:0;border-top:1px solid var(--line)}
+    #lang-keyboard .cats,#lang-keyboard .disc{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="lang-keyboard">
+
+    <!-- 1 · BREADCRUMB + INTRO -->
+    <div class="scen-head">
+      <span class="pip" style="background:var(--accent)"></span>
+      <h2>Keyboard &amp; shortcuts</h2>
+      <span class="k">· Design language</span>
+      <a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a>
+    </div>
+    <p class="intro">Every action has a name and, where it earns one, a key. Shortcuts follow <b>Photoshop</b> so muscle memory carries over: single letters pick tools, <b>⌘</b> runs commands. Each key maps to exactly one named command, the same id the <b data-target="agent">agent</b> and the command palette use, so anything you can do by keyboard can be done by a call, and every binding is user-remappable.</p>
+
+    <!-- 2 · ANATOMY -->
+    <div class="blk">
+      <div class="spec">
+        <div class="anat">
+          <div class="big">
+            <span class="kc lg">⌘</span><span class="plus">+</span><span class="kc lg">⇧</span><span class="plus">+</span><span class="kc lg">Z</span>
+          </div>
+          <div class="rowspec">
+            <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">Z</span></span></div>
+          </div>
+          <div class="legend">
+            <div class="li"><b>1</b><span><i>Keycap.</i> Mono glyph, raised 2px bottom bevel, 22px cap.</span></div>
+            <div class="li"><b>2</b><span><i>Modifier glyph.</i> Dimmed cap: ⌘ ⌥ ⇧ ⌃.</span></div>
+            <div class="li"><b>3</b><span><i>Base key.</i> The one letter or symbol that fires.</span></div>
+            <div class="li"><b>4</b><span><i>Command name.</i> The human label, left of the row.</span></div>
+            <div class="li"><b>5</b><span><i>Combo.</i> The caps, right-aligned, in reading order.</span></div>
+            <div class="li"><b>6</b><span><i>Row.</i> Name + combo, the unit menus and the palette reuse.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
+        <p class="rule">A <b>keycap</b> renders one key. A <b>shortcut row</b> pairs a command name with its combo, right-aligned, so a column of them scans as a table. The row is the shared atom: menus, tooltips, and the palette all print the exact same combo.</p>
+        <div class="dd"><span class="do">Show modifiers as glyphs, in reading order.</span><span class="no">Spell out "Cmd+Shift+Z" in running UI.</span></div>
+        <p class="api"><b>API</b> <code>keymap.for("edit.redo")</code> returns the combo a row draws.</p>
+      </div>
+    </div>
+
+    <!-- 3 · VARIANTS & SIZES -->
+    <div class="blk">
+      <div class="spec">
+        <div class="anat" style="gap:var(--gap-sm)">
+          <div class="scut" style="width:100%"><span class="cmd">Single key</span><span class="combo"><span class="kc">V</span></span></div>
+          <div class="scut" style="width:100%"><span class="cmd">Modifier combo (held together)</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">G</span></span></div>
+          <div class="scut" style="width:100%"><span class="cmd">Stacked modifiers</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">K</span></span></div>
+          <div class="scut" style="width:100%"><span class="cmd">Chord (pressed in sequence)</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">K</span><span class="then">then</span><span class="kc">B</span></span></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:var(--pad-sm);margin-top:var(--gap-sm)">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--s1)"><span class="kc sm">S</span><span class="tipcap">sm · menus</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--s1)"><span class="kc">S</span><span class="tipcap">md · rows</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--s1)"><span class="kc lg">S</span><span class="tipcap">lg · teaching</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--s1)"><span class="kc wide">Space</span><span class="tipcap">wide · word keys</span></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">02</div><h3 class="bname">Variants &amp; sizes</h3>
+        <p class="rule">Three shapes: a <b>single key</b>, a <b>modifier combo</b> held at once, and a <b>chord</b> pressed in sequence. Three sizes: small in dense menus, medium in inspector rows, large only when teaching. Word keys widen; they never shrink their label.</p>
+        <div class="dd"><span class="do">Reserve chords for a deep command family.</span><span class="no">Make a chord do a job one key could.</span></div>
+        <p class="api"><b>API</b> a combo string parses both forms: <code>"cmd+g"</code> and <code>"cmd+k b"</code>.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="blk">
+      <div class="spec">
+        <div style="display:flex;align-items:flex-end;gap:var(--pad);flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)"><span class="kc lg">Z</span><span class="tipcap">Rest</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)"><span class="kc lg foc">Z</span><span class="tipcap">Focus</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)"><span class="kc lg press">Z</span><span class="tipcap">Pressed</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)"><span class="kc lg dis">Z</span><span class="tipcap">Disabled</span></div>
+        </div>
+        <div class="rowspec" style="margin-top:var(--gap-sm)">
+          <div class="scut"><span class="cmd" style="color:var(--accent)">Zoom in</span><span class="combo"><span class="kc mod press">⌘</span><span class="kc press">+</span></span></div>
+          <div class="scut"><span class="cmd" style="color:var(--faint)">Redo</span><span class="combo"><span class="kc mod dis">⌘</span><span class="kc mod dis">⇧</span><span class="kc dis">Z</span></span></div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">03</div><h3 class="bname">States</h3>
+        <p class="rule">A cap shows <b>focus</b> (accent ring, for keyboard users), <b>pressed</b> (accent fill, sinks 1px as the bevel flattens), and <b>disabled</b> (dimmed). A command that cannot run right now dims its whole row, combo included, so the reason is visible before you reach.</p>
+        <div class="dd"><span class="do">Dim the combo when its command is unavailable.</span><span class="no">Fire a shortcut with no visible result or reason.</span></div>
+        <p class="api"><b>API</b> <code>can("edit.redo")</code> drives the disabled state, and reports why.</p>
+      </div>
+    </div>
+
+    <!-- 5 · LIVE EXAMPLE: THE LEGEND, BY CATEGORY -->
+    <div class="blk">
+      <div class="spec">
+        <div class="cats">
+          <div class="cat">
+            <h4><span class="dot" style="background:var(--accent)"></span>Tools</h4>
+            <div class="body">
+              <div class="scut"><span class="cmd">Move</span><span class="combo"><span class="kc">V</span></span></div>
+              <div class="scut"><span class="cmd">Marquee</span><span class="combo"><span class="kc">M</span></span></div>
+              <div class="scut"><span class="cmd">Text</span><span class="combo"><span class="kc">T</span></span></div>
+              <div class="scut"><span class="cmd">Brush</span><span class="combo"><span class="kc">B</span></span></div>
+              <div class="scut"><span class="cmd">Pen</span><span class="combo"><span class="kc">P</span></span></div>
+              <div class="scut"><span class="cmd">Zoom</span><span class="combo"><span class="kc">Z</span></span></div>
+              <div class="scut"><span class="cmd">Pan (hold)</span><span class="combo"><span class="kc wide">Space</span></span></div>
+              <div class="scut"><span class="cmd">Brush size</span><span class="combo"><span class="kc">[</span><span class="plus">/</span><span class="kc">]</span></span></div>
+            </div>
+          </div>
+          <div class="cat">
+            <h4><span class="dot" style="background:var(--good)"></span>Edit</h4>
+            <div class="body">
+              <div class="scut"><span class="cmd">Undo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
+              <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">Z</span></span></div>
+              <div class="scut"><span class="cmd">Copy</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">C</span></span></div>
+              <div class="scut"><span class="cmd">Paste</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">V</span></span></div>
+              <div class="scut"><span class="cmd">Duplicate</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">D</span></span></div>
+              <div class="scut"><span class="cmd">Group</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">G</span></span></div>
+            </div>
+          </div>
+          <div class="cat">
+            <h4><span class="dot" style="background:#12c2e9"></span>View</h4>
+            <div class="body">
+              <div class="scut"><span class="cmd">Zoom in</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">+</span></span></div>
+              <div class="scut"><span class="cmd">Zoom out</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">−</span></span></div>
+              <div class="scut"><span class="cmd">Fit</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">0</span></span></div>
+              <div class="scut"><span class="cmd">100%</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">1</span></span></div>
+              <div class="scut"><span class="cmd">Rulers</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">R</span></span></div>
+              <div class="scut"><span class="cmd">Palette</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">K</span></span></div>
+            </div>
+          </div>
+          <div class="cat">
+            <h4><span class="dot" style="background:var(--comp)"></span>Components</h4>
+            <div class="body">
+              <div class="scut"><span class="cmd">Create component</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">K</span></span></div>
+              <div class="scut"><span class="cmd">Edit component</span><span class="combo"><span class="kc">↩</span></span></div>
+              <div class="scut"><span class="cmd">Swap instance</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">O</span></span></div>
+              <div class="scut"><span class="cmd">Reset overrides</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">R</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">04</div><h3 class="bname">The legend</h3>
+        <p class="rule">Grouped the way the menus are: <b>Tools</b>, <b>Edit</b>, <b>View</b>, <b>Components</b>. Tools take a bare letter, Photoshop's; edit and view take <b>⌘</b>; the component tier (purple) stacks <b>⌘⌥</b> so it never collides with a familiar key.</p>
+        <div class="dd"><span class="do">Keep every tool one keystroke away.</span><span class="no">Let a new feature steal an established key.</span></div>
+        <p class="api"><b>API</b> a category is just a menu: <code>menu("View").items</code> each carry their command and combo.</p>
+      </div>
+    </div>
+
+    <!-- 6 · MODIFIER CONVENTIONS -->
+    <div class="blk">
+      <div class="spec">
+        <div class="mods">
+          <div class="mrow"><span class="kc mod">⌘</span><span class="nm">Command</span><span class="ms">Run a command. The verb key.</span></div>
+          <div class="mrow"><span class="kc mod">⇧</span><span class="nm">Shift</span><span class="ms">Extend or constrain. Add to a selection, lock an axis.</span></div>
+          <div class="mrow"><span class="kc mod">⌥</span><span class="nm">Option</span><span class="ms">Alternate. Duplicate on drag, sample instead of paint.</span></div>
+          <div class="mrow"><span class="kc mod">⌃</span><span class="nm">Control</span><span class="ms">Contextual. Reserved for the system menu.</span></div>
+        </div>
+        <div class="order" style="margin-top:var(--gap-sm)">
+          Always displayed in order
+          <span class="combo"><span class="kc mod sm">⌃</span><span class="kc mod sm">⌥</span><span class="kc mod sm">⇧</span><span class="kc mod sm">⌘</span></span>
+          then the key, matching macOS.
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">05</div><h3 class="bname">Modifier conventions</h3>
+        <p class="rule">Each modifier means one thing everywhere. <b>⌘ runs</b>, <b>⇧ extends</b>, <b>⌥ alternates</b>. Glyphs always print in the macOS order ⌃ ⌥ ⇧ ⌘, so a combo looks the same in a menu, a tooltip, and this legend.</p>
+        <div class="dd"><span class="do">Hold ⌥ for the "other" version of an action.</span><span class="no">Give one modifier two unrelated meanings.</span></div>
+        <p class="api"><b>API</b> the parser normalizes order, so <code>"shift+cmd+z"</code> and <code>"cmd+shift+z"</code> bind the same.</p>
+      </div>
+    </div>
+
+    <!-- 7 · CHORD MODEL -->
+    <div class="blk">
+      <div class="spec">
+        <div class="chords">
+          <div class="chord">
+            <span class="lb">Combo</span>
+            <span class="combo"><span class="kc mod">⌘</span><span class="kc">G</span></span>
+            <span class="tx">Held together. Fires the instant the last key goes down.</span>
+          </div>
+          <div class="chord">
+            <span class="lb">Chord</span>
+            <span class="combo"><span class="kc mod">⌘</span><span class="kc">K</span><span class="then">then</span><span class="kc">B</span></span>
+            <span class="tx">A leader, then a key. Opens a family: <code style="font-family:var(--mono);font-size:9.5px">K B</code> border, <code style="font-family:var(--mono);font-size:9.5px">K S</code> shadow.</span>
+          </div>
+          <div class="chord">
+            <span class="lb">Timeout</span>
+            <span class="combo"><span class="kc mod">⌘</span><span class="kc">K</span><span class="then">then…</span></span>
+            <span class="tx">A hint bar shows the next keys; Esc cancels, no accidental fire.</span>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">06</div><h3 class="bname">Chord model</h3>
+        <p class="rule">A <b>combo</b> is keys at once; a <b>chord</b> is a leader followed by a key, for a whole command family without burning a top-level shortcut. After the leader, a hint bar lists what is next, so a chord is discoverable, not memorized.</p>
+        <div class="dd"><span class="do">Surface the follow-up keys after the leader.</span><span class="no">Leave a half-typed chord armed with no way out.</span></div>
+        <p class="api"><b>API</b> <code>bind("cmd+k b", "effect.border")</code> registers the sequence as one command.</p>
+      </div>
+    </div>
+
+    <!-- 8 · LIVE EXAMPLE: DISCOVERABILITY -->
+    <div class="blk">
+      <div class="spec">
+        <div class="disc">
+          <div class="cpal-mini full">
+            <div class="in"><span class="sp"></span><span style="flex:1">Add a drop shadow</span><span style="font-family:var(--mono);font-size:9px;color:var(--faint)">⌘K</span></div>
+            <div class="li on"><span>Effects · Drop shadow</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc sm">K</span><span class="then">then</span><span class="kc sm">S</span></span></div>
+            <div class="li"><span>Layer · Group</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc sm">G</span></span></div>
+            <div class="li"><span>Make component</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc mod sm">⌥</span><span class="kc sm">K</span></span></div>
+          </div>
+          <div class="popover menu">
+            <div class="menuitem"><span class="ic ic-clone"></span>Duplicate<span class="sc">⌘D</span></div>
+            <div class="menuitem"><span class="ic ic-component"></span>Make component<span class="sc">⌘⌥K</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><span class="ic ic-frame"></span>Group<span class="sc">⌘G</span></div>
+          </div>
+          <div class="tipwrap">
+            <span class="tooltip">Move · V</span>
+            <span class="tipcap">Hover a tool for its key.</span>
+            <span class="tooltip">Text · T</span>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="bnum">07</div><h3 class="bname">Discoverability</h3>
+        <p class="rule">You never have to memorize. The <b>palette</b> (<span class="combo"><span class="kc mod sm">⌘</span><span class="kc sm">K</span></span>) searches every command and prints its key; <b>menus</b> right-align the same combo; a <b>tooltip</b> shows a tool's letter on hover. Learn a shortcut by seeing it, three ways.</p>
+        <div class="dd"><span class="do">Print the combo beside its command, everywhere.</span><span class="no">Ship a command reachable only by a hidden key.</span></div>
+        <p class="api"><b>API</b> the palette lists <code>commands()</code>; each item is <code>{ id, name, combo }</code>.</p>
+      </div>
+    </div>
+
+    <!-- 9 · IN THE API -->
+    <div class="blk">
+      <div class="spec">
+        <div class="codeblk"><span class="c">// one key, one named command. the id the palette and agent share</span><br>
+<span class="k">bind</span>(<span class="s">"v"</span>, <span class="s">"tool.select"</span>)<br>
+<span class="k">bind</span>(<span class="s">"cmd+shift+z"</span>, <span class="s">"edit.redo"</span>)<br>
+<span class="k">bind</span>(<span class="s">"cmd+k b"</span>, <span class="s">"effect.border"</span>) <span class="c">// a chord</span><br>
+<br>
+<span class="c">// the UI, the palette, and the agent all call the same id</span><br>
+<span class="k">run</span>(<span class="s">"tool.text"</span>) <span class="c">// == pressing T</span><br>
+<br>
+<span class="c">// user remaps freely; conflicts are reported, not silent</span><br>
+keymap.<span class="p">set</span>(<span class="s">"edit.redo"</span>, <span class="s">"cmd+y"</span>)</div>
+        <div class="remap"><span class="warnchip">Conflict</span><span><b style="color:var(--ink);font-weight:600">⌘Y</b> is free · rebinding <b style="color:var(--ink);font-weight:600">Redo</b> leaves <b style="color:var(--ink);font-weight:600">⌘⇧Z</b> unbound. Reset to defaults anytime.</span></div>
+      </div>
+      <div class="meta">
+        <div class="bnum">08</div><h3 class="bname">In the API</h3>
+        <p class="rule">A shortcut is a thin binding over a command id. <code>bind(key, command)</code> is the only mapping; the id is what the UI, the palette, and the <b data-target="agent">agent</b> all call. Because the key is not the command, <b>every binding is remappable</b> and a conflict is surfaced, never silent.</p>
+        <div class="dd"><span class="do">Route each key through one shared command id.</span><span class="no">Hard-wire behavior to a keystroke.</span></div>
+        <p class="api"><b>API</b> <code>run("tool.text")</code> · <code>bind()</code> · <code>keymap.reset()</code> · <b data-target="editor">see it in use</b>.</p>
+      </div>
+    </div>
+
+    <!-- Responsive / compact -->
+    <p class="intro" style="max-width:none;color:var(--faint);font-size:11.5px">
+      <b style="color:var(--dim)">Compact.</b> In a narrow window the legend stacks to one column and menus drop to the small keycap, but a combo never wraps: the command name truncates first so the keys stay whole and readable.
+    </p>
+
+    <!-- Captions -->
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Borrow Photoshop's keys so nobody relearns the basics, then make <b>every</b> command reachable from the keyboard through one shared id, so the fast path and the agent path are the same path.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Chords (a <code>⌘K</code> leader plus a letter) could open deep families, effects, export presets, component ops, without spending scarce top-level keys, as long as the hint bar keeps them discoverable.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>How far do we let people remap? A full custom keymap is powerful but drifts from the shared defaults an <b data-target="agent">agent</b> assumes. Do we ship a couple of trusted presets, or fully open remapping with one-key reset?</p></div>
+    </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

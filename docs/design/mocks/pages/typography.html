@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · typography</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* typography · ONE real app screen (PRODUCT-MODEL §4c Kind 1) with a text
+     layer selected and every type control living in the Properties group of
+     the one right dock, plus honest SPECIMENS (Kind 2) for the scale ramp,
+     what a text layer carries, rhythm, scripts and auto-contrast.
+     Every page-local class is namespaced under #typography so nothing here
+     can silently collide with a design-system class. 4pt tokens only. */
+  #typography .win.shell{height:720px;min-height:0}  /* ---- SPECIMEN card (Kind 2): a part of the app, never app chrome ---- */
+  #typography .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #typography .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  #typography .spec.wide{grid-column:1/-1}
+  #typography .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
+    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
+  #typography .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+  #typography .spec-b{padding:0 var(--pad) var(--pad)}
+
+  /* ---- canvas composition: a real poster, not lorem ---- */
+  #typography .tpost{display:flex;flex-direction:column;align-items:flex-start;gap:var(--pad-sm);max-width:460px}
+  #typography .tkick{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+  #typography .thead{font-family:var(--serif);font-size:46px;line-height:1;font-weight:700;letter-spacing:-.025em;
+    background:linear-gradient(120deg,#8f7bff,#ff5d8f 90%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 22px rgba(143,123,255,.55))}
+  #typography .tbody{font-family:var(--sans);font-size:14px;line-height:1.55;font-weight:440;color:rgba(255,255,255,.72);margin:0}
+
+  /* ---- specimen: what a text layer carries ---- */
+  #typography .tscenes{display:flex;flex-direction:column;gap:var(--s5)}
+  #typography .tscene{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-sm)}
+  #typography .tsample{display:inline-block;font-family:var(--serif);font-size:38px;line-height:1;font-weight:700;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;flex:none}
+  #typography .tsample.gtext{background:linear-gradient(120deg,#8f7bff,#ff5d8f 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #typography .tsample.glow{color:var(--ink);text-shadow:0 0 22px rgba(127,155,255,.9),0 0 6px rgba(197,108,255,.7)}
+  #typography .tlead{display:flex;align-items:center;flex:none;margin-left:var(--s2)}
+  #typography .tdot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);flex:none}
+  #typography .tln{width:40px;height:2px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 35%,transparent));flex:none}
+  #typography .tcallout{display:inline-flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--pad-sm);border-radius:var(--r3);
+    background:var(--glass-thin);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  #typography .tcallout .ic{color:var(--faint)}
+  #typography .tcallout .ct{display:flex;flex-direction:column;line-height:1.15}
+  #typography .tcallout .cl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:680;font-family:var(--sans)}
+  #typography .tcallout .cv{font-size:12.5px;color:var(--ink);font-weight:600;font-family:var(--sans);margin-top:1px}
+  #typography .tcallout .gsw{width:20px;height:20px;border-radius:6px;flex:none;border:1px solid var(--edge-lo);background:linear-gradient(135deg,#8f7bff,#ff5d8f)}
+
+  /* ---- specimen: the type scale ramp ---- */
+  #typography .tramp{display:flex;flex-direction:column}
+  #typography .trow{display:flex;align-items:baseline;gap:var(--gap);padding:var(--pad-sm) 0;border-bottom:1px solid var(--line-soft)}
+  #typography .trow:last-child{border-bottom:0}
+  #typography .tname{width:88px;flex:none;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:660;align-self:center}
+  #typography .tsam{flex:1;min-width:0;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #typography .tmetr{display:flex;gap:var(--gap-sm);flex:none;align-self:center;flex-wrap:wrap}
+  #typography .tmetr .field{padding:4px 8px}
+
+  /* ---- inspector helpers ---- */
+  #typography .taxis{margin:var(--s3) 0}
+  #typography .taxis .tp{display:flex;align-items:baseline;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-bottom:5px}
+  #typography .taxis .tp b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  #typography .tot{display:flex;flex-wrap:wrap;gap:var(--gap-sm)}
+  /* OpenType feature toggles: .chip has no shared "on" state, so define the
+     selected look here rather than inventing a new control */
+  #typography .tot .chip{padding:4px 9px}
+  #typography .tot .chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:640}
+  #typography .tnums{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm);margin-top:var(--s3)}
+  #typography .tnums .tcell{border:1px solid var(--edge-lo);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm);background:var(--glass-thin)}
+  #typography .tnums .tcl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:660;margin-bottom:3px}
+  #typography .tnums .tcv{font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+  #typography .tnums .tcv.old{font-variant-numeric:oldstyle-nums}
+
+  /* ---- specimen: rhythm / scripts / contrast ---- */
+  #typography .trhythm{position:relative;border:1px solid var(--edge-lo);border-radius:var(--r2);padding:var(--pad-sm);
+    background:repeating-linear-gradient(180deg,transparent 0,transparent 23px,var(--line-soft) 23px,var(--line-soft) 24px)}
+  #typography .trhythm .rr{font-family:var(--serif);font-size:19px;line-height:24px;color:var(--ink);margin:0}
+  #typography .trhythm .rq{font-size:12px;line-height:24px;color:var(--dim);margin:0}
+  #typography .tscripts{display:flex;flex-wrap:wrap;gap:var(--gap-sm);font-size:24px;color:var(--ink);line-height:1.1}
+  #typography .tcontrast{display:flex;gap:var(--gap-sm)}
+  #typography .tcontrast .tk{flex:1;border-radius:var(--r2);padding:var(--pad-sm);font-weight:640;font-size:13px;text-align:center;border:1px solid rgba(0,0,0,.08)}
+  #typography .tcontrast .tk.dark{background:#161422;color:#fff}
+  #typography .tcontrast .tk.mid{background:linear-gradient(135deg,#7c4dff,#ff5d8f);color:#fff}
+  #typography .tcontrast .tk.light{background:#f0eaff;color:#2a1a4a}
+
+  @media (max-width:820px){#typography .specs{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="typography">
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Type</h2><span class="k">· a primitive, not an afterthought: pair, scale, paint, reuse</span></div>
+
+    <p class="pglead">A <b>text layer</b> is a layer like any other. It sits in the same stack, it takes a <b>Paint</b> fill and
+      an <b>Effect</b> stack, and everything you would expect from a type panel lives in the same <b>Properties</b> group as
+      every other property. There is no separate type mode and no separate type window: the screen below is the editor with
+      the <b>Text</b> tool active and one headline layer selected.</p>
+
+    <!-- ============================================================
+         KIND 1 · AN APP SCREEN. Title bar carries document identity only.
+         Type controls live in the dock, not in an options-bar row.
+         ============================================================ -->
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>brand-poster</b> · 1200 × 630</div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). No fake menu bar, and no
+           permanent options-bar row: type controls belong in Properties. -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+            <div class="mlabel">Type</div>
+            <div class="menuitem"><i class="ic ic-bold"></i> Bold <span class="sc">⌘B</span></div>
+            <div class="menuitem"><i class="ic ic-italic"></i> Italic <span class="sc">⌘I</span></div>
+            <div class="menuitem"><i class="ic ic-align-center"></i> Align center <span class="sc">⇧⌘C</span></div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save as text style</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Layer</div>
+            <div class="menuitem" data-target="paint"><i class="ic ic-swatch"></i> Edit fill paint</div>
+            <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">1200 × 630 · New York + SF</div>
+            <div class="tpost">
+              <span class="tkick">New · 2026</span>
+              <div class="selwrap" style="align-self:stretch">
+                <div class="thead">Made on a Mac</div>
+                <!-- SELECTION, place 1 of 3: on the canvas -->
+                <span class="sel-ring" style="inset:-10px;border-radius:14px"></span>
+                <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                <span class="mtag">Headline · New York 46/46</span>
+              </div>
+              <p class="tbody">A quieter kind of power. Capture, design, and automate on one canvas, with type that stays
+                crisp at any size because the faces already live on the machine.</p>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · D4 UI inventory · Text is the active tool -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" data-target="dsys" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+              <button class="tool on" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#8f7bff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#8f7bff,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">Brand poster</span><span class="ago">just now</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                  <span class="cap"><span class="nm">Docs header</span><span class="ago">40 min ago</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Drop a capture in and set a headline over it. Same layer stack, same type controls.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="220" data-max="420"></div>
+
+        <div class="pdock" id="dock">
+
+          <div class="dgrp" id="gLayers" style="--gh:124px">
+            <div class="dgrp-h">
+              <span class="ttl">Layers</span><span class="cnt">5</span>
+              <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="lrow"><i class="ic ic-text"></i><span class="nm">Kicker</span><i class="ic sm ic-eye eye"></i></div>
+              <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+              <div class="lrow sel"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-sparkle"></i><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-text"></i><span class="nm">Body</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="320"></div>
+
+          <!-- SELECTION, place 3 of 3: Properties. Every type control lives
+               here, including the ones a lesser app hides in a toolbar row. -->
+          <div class="dgrp" id="gProps" style="--gh:240px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Text</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+
+              <div class="section">
+                <div class="sec-h">Typeface <span class="mut">pairing</span></div>
+                <div class="seg" id="faceSeg"><button class="on">New York</button><button>SF Pro</button><button>SF Mono</button></div>
+                <div class="irow" style="margin-top:var(--s3)"><span class="rl">Style</span><span class="select"><span class="lead">Display · 700</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Emphasis</span>
+                  <span class="seg" id="emphSeg" style="justify-self:start">
+                    <button class="on" title="Bold" aria-pressed="true"><i class="ic sm ic-bold"></i></button>
+                    <button title="Italic" aria-pressed="false"><i class="ic sm ic-italic"></i></button>
+                  </span>
+                </div>
+                <div class="irow"><span class="rl">Align</span>
+                  <span class="seg" id="alignSeg" style="justify-self:start" data-radio="button">
+                    <button title="Align left"><i class="ic sm ic-align-left"></i></button>
+                    <button class="on" title="Align center"><i class="ic sm ic-align-center"></i></button>
+                    <button title="Align right"><i class="ic sm ic-align-right"></i></button>
+                  </span>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Metrics</div>
+                <div class="irow"><span class="rl">Size</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:70%"></i></span><span class="val">46</span></span></div>
+                <div class="irow"><span class="rl">Weight</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:78%"></i></span><span class="val">700</span></span></div>
+                <div class="irow"><span class="rl">Tracking</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:36%"></i></span><span class="val">-.025</span></span></div>
+                <div class="irow"><span class="rl">Leading</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:20%"></i></span><span class="val">1.0</span></span></div>
+                <div class="irow"><span class="rl">¶ Space</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:33%"></i></span><span class="val">12</span></span></div>
+                <div class="irow"><span class="rl">Wrap</span><span class="select"><span class="lead">Balanced</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Variable axes <span class="mut">live</span></div>
+                <div class="taxis"><div class="tp"><span>Weight · wght</span><b>700</b></div><span class="bar"><i style="width:78%"></i></span></div>
+                <div class="taxis"><div class="tp"><span>Optical · opsz</span><b>52 auto</b></div><span class="bar"><i style="width:70%"></i></span></div>
+                <div class="taxis"><div class="tp"><span>Width · wdth</span><b>100</b></div><span class="bar"><i style="width:50%"></i></span></div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">OpenType</div>
+                <div class="tot">
+                  <button class="chip on">Ligatures</button>
+                  <button class="chip on">Kerning</button>
+                  <button class="chip">Small caps</button>
+                  <button class="chip">Fractions</button>
+                </div>
+                <div class="tnums">
+                  <div class="tcell"><div class="tcl">Tabular</div><div class="tcv">1,309.40</div></div>
+                  <div class="tcell"><div class="tcl">Oldstyle</div><div class="tcv old">1,309.40</div></div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Fill &amp; effect <span class="mut">same primitives as any layer</span></div>
+                <div class="irow"><span class="rl">Paint</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(120deg,#8f7bff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="efx click" data-target="effects" style="margin-top:var(--s2)"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">24 · comp</span></div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Text style <span class="mut">named and reused</span></div>
+                <div class="irow"><span class="rl">Saved as</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(120deg,#8f7bff,#ff5d8f)"></span> Display / 46</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                <p class="note">6 layers use this style. Retune size, tracking or leading once and all of them follow.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrp grow" id="gLibrary">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeLbl">Styles</span>
+              <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" id="scopeSeg">
+                  <button data-scope="media">Media</button>
+                  <button data-scope="components">Comp</button>
+                  <button class="on" data-scope="styles">Styles</button>
+                  <button data-scope="assets">Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search text styles" aria-label="Search text styles"></span>
+              </div>
+              <div class="libgrid">
+                <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(120deg,#8f7bff,#ff5d8f);display:grid;place-items:center;font-family:var(--serif);font-weight:700;color:#fff;font-size:20px">Aa</span><span class="cap"><span class="nm">Display / 46</span><span class="mt">6 uses</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:#232838;display:grid;place-items:center;font-family:var(--serif);font-weight:640;color:#e6e9f2;font-size:17px">Aa</span><span class="cap"><span class="nm">Title / 28</span><span class="mt">11 uses</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th" style="background:#232838;display:grid;place-items:center;font-family:var(--sans);font-weight:440;color:#e6e9f2;font-size:15px">Aa</span><span class="cap"><span class="nm">Body / 15</span><span class="mt">64 uses</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drail">
+          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+
+        <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
+          <div class="mlabel">Add adjustment</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+        </div>
+        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+          <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+          <div class="menuitem"><i class="ic ic-text"></i> Convert to outlines</div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+        </div>
+        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:200px;z-index:11">
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save as text style</div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy type properties</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset to style</div>
+        </div>
+        <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save as text style</div>
+          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">Pairing done right</div><p>Display in <b>New York</b> (a real macOS serif) over body in <b>SF</b>. The serif brings voice, the sans keeps reading effortless. Both live on the machine, so text stays crisp at any size.</p></div>
+      <div class="c"><div class="lab g2">Text takes Paint and Effects</div><p>The selected headline is filled with a <b>Paint</b> style and carries an <b>Effect</b>. Those are the same two rows a shape or a photo layer gets, in the same panel, in the same order.</p></div>
+      <div class="c"><div class="lab g2">API mirror</div><p><code>text("Made on a Mac", face:"New York", fill: style("Brand/gradient"), effect: glow(24))</code></p></div>
+    </div>
+
+    <!-- ============================================================
+         KIND 2 · SPECIMENS. Parts of the product, so no traffic lights
+         and no fake title bars. Labeled bordered cards only.
+         ============================================================ -->
+    <div class="specs">
+
+      <div class="spec wide">
+        <div class="spec-h"><i class="ic sm ic-text"></i> What a text layer carries <span class="sub">(three properties, one layer type)</span></div>
+        <div class="spec-b">
+          <div class="tscenes">
+            <div class="tscene">
+              <span class="tsample">Refined</span>
+              <span class="tlead"><span class="tdot"></span><span class="tln"></span></span>
+              <span class="tcallout"><i class="ic sm ic-text"></i><span class="ct"><span class="cl">Typeface</span><span class="cv">New York · Display</span></span></span>
+            </div>
+            <div class="tscene">
+              <span class="tsample gtext">Brand</span>
+              <span class="tlead"><span class="tdot"></span><span class="tln"></span></span>
+              <span class="tcallout"><span class="gsw"></span><span class="ct"><span class="cl">Fill</span><span class="cv">Brand gradient · a Paint</span></span></span>
+            </div>
+            <div class="tscene">
+              <span class="tsample glow">Glow</span>
+              <span class="tlead"><span class="tdot"></span><span class="tln"></span></span>
+              <span class="tcallout"><i class="ic sm ic-sparkle"></i><span class="ct"><span class="cl">Effect</span><span class="cv">Outer glow · 24</span></span></span>
+            </div>
+          </div>
+          <p class="note">Three words, three properties, one layer type. Nothing here is baked into pixels: change the face, swap the Paint, or switch the glow off and the text is still text.</p>
+        </div>
+      </div>
+
+      <div class="spec wide">
+        <div class="spec-h"><i class="ic sm ic-layers"></i> Type scale <span class="sub">(one ramp, five roles, each a saved Text Style)</span></div>
+        <div class="spec-b">
+          <div class="tramp">
+            <div class="trow">
+              <span class="tname">Display</span>
+              <span class="tsam" style="font-family:var(--serif);font-size:44px;line-height:1;font-weight:700;letter-spacing:-.02em">Made on a Mac</span>
+              <span class="tmetr"><span class="field"><span class="k">SIZE</span><span class="v">44</span></span><span class="field"><span class="k">W</span><span class="v">700</span></span><span class="field"><span class="k">LH</span><span class="v">1.0</span></span><span class="field"><span class="k">TR</span><span class="v">-.02</span></span></span>
+            </div>
+            <div class="trow">
+              <span class="tname">Title</span>
+              <span class="tsam" style="font-family:var(--serif);font-size:28px;line-height:1.1;font-weight:640;letter-spacing:-.01em">A quieter kind of power</span>
+              <span class="tmetr"><span class="field"><span class="k">SIZE</span><span class="v">28</span></span><span class="field"><span class="k">W</span><span class="v">640</span></span><span class="field"><span class="k">LH</span><span class="v">1.1</span></span><span class="field"><span class="k">TR</span><span class="v">-.01</span></span></span>
+            </div>
+            <div class="trow">
+              <span class="tname">Heading</span>
+              <span class="tsam" style="font-family:var(--sans);font-size:20px;line-height:1.25;font-weight:620">Controls a designer expects</span>
+              <span class="tmetr"><span class="field"><span class="k">SIZE</span><span class="v">20</span></span><span class="field"><span class="k">W</span><span class="v">620</span></span><span class="field"><span class="k">LH</span><span class="v">1.25</span></span><span class="field"><span class="k">TR</span><span class="v">0</span></span></span>
+            </div>
+            <div class="trow">
+              <span class="tname">Body</span>
+              <span class="tsam" style="font-family:var(--sans);font-size:15px;line-height:1.5;font-weight:440;color:var(--dim)">Readable at length, tuned leading, balanced wraps. This is where most words live.</span>
+              <span class="tmetr"><span class="field"><span class="k">SIZE</span><span class="v">15</span></span><span class="field"><span class="k">W</span><span class="v">440</span></span><span class="field"><span class="k">LH</span><span class="v">1.5</span></span><span class="field"><span class="k">TR</span><span class="v">0</span></span></span>
+            </div>
+            <div class="trow">
+              <span class="tname">Caption</span>
+              <span class="tsam" style="font-family:var(--sans);font-size:12px;line-height:1.4;font-weight:520;color:var(--faint);letter-spacing:.01em">Metadata, hints, and the small print · 12/16</span>
+              <span class="tmetr"><span class="field"><span class="k">SIZE</span><span class="v">12</span></span><span class="field"><span class="k">W</span><span class="v">520</span></span><span class="field"><span class="k">LH</span><span class="v">1.4</span></span><span class="field"><span class="k">TR</span><span class="v">.01</span></span></span>
+            </div>
+          </div>
+          <p class="note">Every step shows <b style="color:var(--ink)">size · weight · line-height · tracking</b> as tabular figures, so the ramp is a spec and not a guess. Each role is a saved <b style="color:var(--ink)">Text Style</b> living in the <span data-target="dsys" style="color:var(--accent);cursor:pointer">design system</span>: retune Body once and every caption follows.</p>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-h"><i class="ic sm ic-grid"></i> Vertical rhythm <span class="sub">(leading lands on the spacing scale)</span></div>
+        <div class="spec-b">
+          <div class="trhythm"><p class="rr">Baselines snap</p><p class="rq">to an 8pt grid, so leading</p><p class="rq">lines up with spacing tokens.</p></div>
+          <p class="note">Line-height rounds to the <b style="color:var(--ink)">4pt scale</b>, so text sits on the same rhythm as padding and gaps. Nothing floats a half pixel off.</p>
+        </div>
+      </div>
+
+      <div class="spec">
+        <div class="spec-h"><i class="ic sm ic-text"></i> Every script <span class="sub">(one style, deep coverage)</span></div>
+        <div class="spec-b">
+          <div class="tscripts"><span>Aa</span><span>Гг</span><span>Ωω</span><span>あ</span><span>한</span><span>ع</span><span>अ</span></div>
+          <p class="note">SF and New York ship deep Unicode coverage, so Latin, Cyrillic, Greek, CJK and Arabic all render from the same style with no font swap and no fallback jumps.</p>
+        </div>
+      </div>
+
+      <div class="spec wide">
+        <div class="spec-h"><i class="ic sm ic-eyedropper"></i> Auto-contrast ink <span class="sub">(text reads the Paint behind it)</span></div>
+        <div class="spec-b">
+          <div class="tcontrast"><span class="tk dark">Aa</span><span class="tk mid">Aa</span><span class="tk light">Aa</span></div>
+          <p class="note">Text color can read the Paint behind it and pick <b style="color:var(--ink)">ink or white</b> for legibility, then lock the moment you override it. Accessible by default, never surprising after you decide.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Type is the fifth <b>primitive</b>. It pairs real macOS faces, carries Paint and Effects, and reduces to reusable <b>Text Styles</b>, the same reuse tier as color and components.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Lean fully into <b>variable fonts</b>: expose wght, opsz and wdth as animatable axes so a headline can breathe on scroll or across breakpoints, driven by one Style.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>How far do we auto-apply optical sizing and wrap balance before it surprises people? Smart defaults are great until they quietly move a line the designer set on purpose.</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the emphasis toggles and the OpenType chips are real controls
+     with real state, and the Library scope switch matches the editor page.
+     Collapse, resize, rail, overlay, overflow, tool selection and the align
+     segmented control (data-radio) are all shared DS behavior. */
+  (function () {
+    'use strict';
+
+    var emph = document.getElementById('emphSeg');
+    if (emph) {
+      [].slice.call(emph.querySelectorAll('button')).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var on = b.classList.toggle('on');
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      });
+    }
+
+    [].slice.call(document.querySelectorAll('#typography .tot .chip')).forEach(function (c) {
+      c.addEventListener('click', function () {
+        var on = c.classList.toggle('on');
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      c.setAttribute('aria-pressed', c.classList.contains('on') ? 'true' : 'false');
+    });
+
+    var scope = document.getElementById('scopeSeg');
+    if (scope) {
+      var sb = [].slice.call(scope.querySelectorAll('[data-scope]'));
+      var label = document.getElementById('scopeLbl');
+      var names = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+      sb.forEach(function (b) {
+        b.addEventListener('click', function () {
+          sb.forEach(function (x) { x.classList.toggle('on', x === b); });
+          if (label) label.textContent = names[b.getAttribute('data-scope')] || '';
+        });
+      });
+    }
+
+    [].slice.call(document.querySelectorAll('#typography .libgrid')).forEach(function (grid) {
+      var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+      tiles.forEach(function (tile) {
+        tile.addEventListener('click', function () {
+          tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+        });
+      });
+    });
+
+    var face = document.getElementById('faceSeg');
+    if (face) {
+      var fb = [].slice.call(face.querySelectorAll('button'));
+      var head = document.querySelector('#typography .thead');
+      var faces = { 'New York': 'var(--serif)', 'SF Pro': 'var(--sans)', 'SF Mono': 'var(--mono)' };
+      fb.forEach(function (b) {
+        b.addEventListener('click', function () {
+          fb.forEach(function (x) { x.classList.toggle('on', x === b); });
+          if (head) head.style.fontFamily = faces[b.textContent.trim()] || 'var(--serif)';
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · agent-edit</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-only additions · agent-assisted EDIT / diff flow.
+
+     SCREEN CONTRACT (PRODUCT-MODEL §4c). This page has ONE window and it is a
+     KIND 1 APP SCREEN: the complete shell. Title bar carries document identity
+     only (the old "hero-card · edit" put a mode name there). The agent is not
+     bespoke chrome bolted to the side of a canvas: it is an **Agent panel
+     group** in the one right dock, exactly like Layers or Properties, because
+     "new capability is a new group" (UX-PATTERNS §3). Selection on the canvas
+     uses the canonical .sel-ring / .handle / .mtag, not a local look-alike.
+     Everything sizes off the 4pt tokens. */
+
+  #agent-edit .ae-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;padding:6px 10px 3px}
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #agent-edit .win.shell{height:640px;min-height:0}
+  /* --- canvas: the live, editable element --- */
+  .demo-card{width:min(344px,calc(100% - var(--s6)));overflow:visible}
+  .demo-card .hc-h{font-size:32px;margin-top:14px}
+  .demo-card .hc-sub{margin-bottom:20px}
+
+  /* the selected element (the CTA) + its selection ring */
+  .ctaslot{position:relative;display:inline-flex}
+  .dcta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:640;color:#3a1d6e;background:linear-gradient(180deg,#fff,#f0eaff);padding:10px 18px;border-radius:12px;box-shadow:0 8px 20px -6px rgba(255,255,255,.5),0 0 0 1px rgba(255,255,255,.6) inset;transition:font-size .22s ease,padding .22s ease,border-radius .22s ease,background .22s ease,color .22s ease,box-shadow .22s ease}
+  /* proposed / applied property deltas (data-driven by the demo) */
+  .dcta.ap-big{font-size:16px;padding:14px 24px}
+  .dcta.ap-accent{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));color:var(--accent-ink)}
+  .dcta.ap-round{border-radius:22px}
+  .dcta.ap-shadow{box-shadow:0 14px 34px -8px rgba(20,24,40,.55),0 0 0 1px rgba(255,255,255,.5) inset}
+
+  /* canonical selection parts, tightened for this small inline element */
+  .ctaslot .sel-ring{inset:-8px;border-radius:16px;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+  .ctaslot .handle.tl{top:-12px;left:-12px}.ctaslot .handle.tr{top:-12px;right:-12px}
+  .ctaslot .handle.bl{bottom:-12px;left:-12px}.ctaslot .handle.br{bottom:-12px;right:-12px}
+  .ctaslot .mtag{top:-30px;display:inline-flex;align-items:center;gap:5px}
+
+  /* ghost preview of the PROPOSED state, overlaid vs the current element */
+  .ghostpv{position:absolute;left:0;top:0;opacity:.62;pointer-events:none;transform:translate(10px,12px);outline:1.5px dashed var(--accent);outline-offset:3px;filter:saturate(1.05)}
+  .ghost-tag{position:absolute;left:0;top:0;transform:translate(10px,-20px);z-index:2;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;box-shadow:0 6px 16px -6px rgba(157,108,255,.6);pointer-events:none}
+  .ghostpv,.ghost-tag{display:none}
+  .aedit.st-proposed .ghostpv,.aedit.st-proposed .ghost-tag{display:inline-flex}
+
+  /* --- the Agent panel GROUP body (a .dgrp-b, not bespoke chrome) --- */
+  .apanel{display:flex;flex-direction:column;gap:var(--pad-sm);padding:var(--pad-sm) var(--pad-sm) var(--pad);min-height:0}
+  .ap-h{display:flex;align-items:center;gap:var(--gap-sm);font-size:11px;font-weight:660;color:var(--ink);flex-wrap:wrap}
+  .ap-h .ic{color:var(--accent)}
+  .ap-h .eng{margin-left:auto;background:var(--good);color:#fff;border-color:transparent;font-weight:600}
+  .ap-note{font-size:10.5px;color:var(--faint);line-height:1.5}
+  .ap-note b{color:var(--dim);font-weight:600}
+
+  /* preset prompts ride the canonical .chip control (allowed interactive slot);
+     .preset only adds a roomier hit area + a selected modifier. */
+  .presets{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
+  .chip.preset{font-size:11px;padding:5px 11px;color:var(--dim)}
+  .chip.preset.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600}
+
+  .promptbox{display:flex;align-items:center;gap:var(--gap-sm);background:var(--glass);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border:1px solid var(--edge-lo);border-radius:var(--r-md);padding:var(--gap-sm);box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow)}
+  .pglow{width:26px;height:26px;border-radius:8px;background:linear-gradient(120deg,#6E8BFF,#c56cff);display:grid;place-items:center;color:#fff;flex:none}
+  .ptext{flex:1;font-size:12.5px;color:var(--ink);line-height:1.35;min-width:0}
+  .apiline{font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--dim);background:var(--artboard);border:1px solid #20263a;border-radius:var(--r2);padding:9px 11px;overflow-x:auto}
+  .apiline .fn{color:#7f9bff}.apiline .s{color:#7fd7a6}.apiline .p{color:#e0a5ff}.apiline .ar{color:#5c6680}
+
+  /* the proposed diff */
+  .diffcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--lg-shadow);overflow:hidden;display:none}
+  .aedit.st-proposed .diffcard,.aedit.st-applied .diffcard{display:block}
+  .diff-h{display:flex;align-items:center;gap:var(--gap-sm);font-size:11px;font-weight:660;color:var(--ink);padding:var(--pad-sm) var(--pad-sm) var(--gap-sm);border-bottom:1px solid var(--line-soft)}
+  .diff-h .ic{color:var(--accent)}
+  .diff-h .cnt{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint);font-weight:520}
+  .aedit.st-applied .diff-h .ic{color:var(--good)}
+  .drow{display:grid;grid-template-columns:58px 1fr 14px 1fr;align-items:center;gap:var(--gap-sm);padding:7px var(--pad-sm);font-size:11px;border-bottom:1px solid var(--line-soft)}
+  .drow:last-child{border-bottom:0}
+  .drow .dp{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .dbefore{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--line-strong);font-variant-numeric:tabular-nums}
+  .darr{color:var(--faint);display:grid;place-items:center}
+  .dafter{color:var(--accent);font-weight:640;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:5px}
+  .aedit.st-applied .dafter{color:var(--good)}
+  .aedit.st-applied .dbefore{opacity:.55}
+  .emit{font-family:var(--mono);font-size:9.5px;color:var(--dim);padding:8px var(--pad-sm);background:var(--panel-2);border-top:1px solid var(--line-soft);overflow-x:auto;white-space:nowrap}
+  .emit .fn{color:var(--accent)}.emit .p{color:var(--comp)}
+
+  .actionrow{display:flex;align-items:center;gap:var(--gap-sm);margin-top:auto;padding-top:var(--gap-sm)}
+  .actionrow .sp{flex:1}
+
+  .statuspill{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);background:var(--panel);color:var(--dim)}
+  .aedit.st-applied .statuspill{background:color-mix(in srgb,var(--good) 16%,transparent);border-color:transparent;color:var(--good)}
+  .statuspill .ic{width:12px;height:12px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="agent-edit">
+    <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Agent-assisted edit</h2><span class="k">· select, ask, accept</span></div>
+
+    <!-- =====================================================================
+         KIND 1 · APP SCREEN. The complete shell: title bar (document identity
+         only) › command surface › canvas + floating tool bar › splitter › the
+         one right dock, where Agent is a panel group › the rail.
+         ===================================================================== -->
+    <div class="win tall cq shell">
+
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>hero-card</b><span class="meta">· 1200 × 630</span></div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#aeCmd"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#aeHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+        <div style="position:relative">
+          <div class="popover menu pop" id="aeCmd" style="position:absolute;right:0;top:26px;width:228px;z-index:12">
+            <div class="ae-mlabel">Edit</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+            <div class="menuitem"><i class="ic ic-sparkle"></i> Ask the agent <span class="sc">⌘⌥A</span></div>
+            <div class="menu-sep"></div>
+            <div class="ae-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edit lean aedit st-idle" id="aedit" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas">
+            <div class="artboard-label">1200 × 630 · one layer selected</div>
+            <div class="hero-card demo-card">
+              <span class="hc-badge"><i class="ic ic-sparkle xs"></i> New</span>
+              <div class="hc-h">Ship it faster.</div>
+              <p class="hc-sub">Capture, design, and automate.</p>
+              <div class="ctaslot">
+                <span class="ghost-tag" id="ghostTag"><i class="ic ic-sparkle xs"></i> Proposed</span>
+                <span class="dcta ghostpv" id="ghostCta">Get Photonz <i class="ic ic-chevron-right sm"></i></span>
+                <span class="dcta" id="liveCta">Get Photonz <i class="ic ic-chevron-right sm"></i></span>
+                <span class="sel-ring"></span>
+                <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                <span class="mtag"><i class="ic ic-cursor xs"></i> CTA · button</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#aedit" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#aeHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING TOOL BAR · D4 UI inventory -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="dsys"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#aeOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:var(--accent)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="ae-zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="aeOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <!-- OVERLAY · capture history, the front door -->
+          <div class="sheet down" id="aeHist" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">Hero card</span><span class="ago">just now</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                  <span class="cap"><span class="nm">Settings window</span><span class="ago">12 min ago</span></span>
+                  <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Pick a capture to open it as a layer in this document, then ask for the same edit.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitter v" data-min="260" data-max="440"></div>
+
+        <!-- THE RIGHT DOCK · Agent is a panel group, not bolted-on chrome -->
+        <div class="pdock" style="--dock-w:328px">
+
+          <div class="dgrp grow" id="aeAgent">
+            <div class="dgrp-h"><span class="ttl">Agent</span><span class="cnt val" id="statusVal">1 selected</span>
+              <button class="btn ghost icon sm" title="Reset this demo" id="resetBtn"><i class="ic ic-undo"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="apanel">
+                <div class="ap-h"><i class="ic ic-sparkle sm"></i> Edit selection <span class="chip eng">Local · Qwen</span></div>
+                <div class="ap-note">Model-agnostic. A local <b>Qwen</b> (MLX) runs on-device by default; a <b>frontier model via MCP</b> when you want more. Same command schema either way.</div>
+
+                <div class="presets" id="presets">
+                  <button class="chip preset on" data-preset="a">make the CTA bigger and use the accent color</button>
+                  <button class="chip preset" data-preset="b">round the corners more and add a soft shadow</button>
+                </div>
+
+                <div class="promptbox">
+                  <span class="pglow"><i class="ic ic-sparkle sm"></i></span>
+                  <div class="ptext" id="promptText">make the CTA bigger and use the accent color</div>
+                  <button class="btn primary sm" id="askBtn"><i class="ic ic-sparkle"></i> Ask</button>
+                </div>
+
+                <div class="apiline" id="apiLine"><span class="fn">agent.edit</span>(selection, <span class="s">"bigger CTA, accent color"</span>)</div>
+
+                <!-- PROPOSED DIFF (before to after) -->
+                <div class="diffcard" id="diffCard">
+                  <div class="diff-h"><i class="ic ic-sliders sm"></i> <span id="diffTitle">Proposed change</span><span class="cnt" id="diffCnt">3 edits</span></div>
+                  <div id="diffRows"></div>
+                  <div class="emit" id="emitLine"></div>
+                </div>
+
+                <div class="actionrow">
+                  <span class="statuspill" id="statusPill"><i class="ic ic-cursor xs"></i> <span id="statusText">Ready to ask</span></span>
+                  <span class="sp"></span>
+                  <button class="btn ghost sm" id="undoBtn" disabled><i class="ic ic-undo"></i> Undo</button>
+                  <button class="btn primary sm" id="acceptBtn" disabled><i class="ic ic-check"></i> Accept</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="320"></div>
+
+          <div class="dgrp" id="aeProps" style="--gh:160px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Button</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="sec-h">Fill <span class="mut">Paint style</span></div>
+                <div class="irow"><span class="rl">Style</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:var(--accent)"></span> Brand / accent</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              </div>
+              <div class="section" style="border-bottom:0">
+                <div class="sec-h">Transform</div>
+                <div class="grid2"><div class="field"><span class="k">W</span><span class="v">168</span></div><div class="field"><span class="k">H</span><span class="v">44</span></div><div class="field"><span class="k">R</span><span class="v">12</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dgrp collapsed" id="aeLayers" style="--gh:150px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+            <div class="dgrp-b">
+              <div class="lrow"><i class="ic ic-frame"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Ship it faster.</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Get Photonz</span><i class="ic sm ic-component cmark"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL · what the dock collapses to -->
+        <div class="drail">
+          <button class="drailtab" data-group="#aeAgent" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+          <button class="drailtab" data-group="#aeProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#aeLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Select a real element, ask in plain language, and the agent answers with a <b>readable diff</b> · every property change shown before to after, previewed as a ghost on the canvas before anything sticks. <b>Accept</b> applies it, <b>Undo</b> takes it back.</p></div>
+      <div class="c"><div class="lab g2">Direction · one edit, one call</div><p>The edit is the same API the inspector calls, so it lands as a single undoable step in history · <code>agent.edit(selection, "…")</code> emits <code>set(node, {…})</code>. Local <b>Qwen</b> by default, a <b>frontier model via MCP</b> when you want more. No special mode, no baked pixels.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>When a change touches many nodes, do you review one combined diff, or step through each node's edit with its own accept · and should a rejected diff leave a note the agent can learn from next time?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Real interactive EDIT loop: select, ask, propose diff + ghost, accept / undo.
+   State machine drives the canvas element, the diff list, and the buttons. */
+(function () {
+  var root = document.getElementById('aedit');
+  var liveCta = document.getElementById('liveCta');
+  var ghostCta = document.getElementById('ghostCta');
+  var promptText = document.getElementById('promptText');
+  var apiLine = document.getElementById('apiLine');
+  var diffRows = document.getElementById('diffRows');
+  var diffCnt = document.getElementById('diffCnt');
+  var diffTitle = document.getElementById('diffTitle');
+  var emitLine = document.getElementById('emitLine');
+  var askBtn = document.getElementById('askBtn');
+  var acceptBtn = document.getElementById('acceptBtn');
+  var undoBtn = document.getElementById('undoBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var statusText = document.getElementById('statusText');
+  var statusVal = document.getElementById('statusVal');
+  var presetBtns = [].slice.call(document.querySelectorAll('.preset'));
+
+  var ALL_CLS = ['ap-big', 'ap-accent', 'ap-round', 'ap-shadow'];
+
+  var presets = {
+    a: {
+      prompt: 'make the CTA bigger and use the accent color',
+      arg: 'bigger CTA, accent color',
+      emit: 'set(node, {scale:1.2, fill:"accent"})',
+      rows: [
+        ['scale', '1.0', '1.2'],
+        ['fill', 'White', 'Accent'],
+        ['padding', '10', '14']
+      ],
+      cls: ['ap-big', 'ap-accent']
+    },
+    b: {
+      prompt: 'round the corners more and add a soft shadow',
+      arg: 'rounder corners, soft shadow',
+      emit: 'set(node, {radius:22, shadow:"soft"})',
+      rows: [
+        ['radius', '12', '22'],
+        ['shadow', 'none', 'soft']
+      ],
+      cls: ['ap-round', 'ap-shadow']
+    }
+  };
+
+  var active = 'a';        // selected preset key
+  var state = 'idle';      // idle | proposed | applied
+
+  function clearCls(el) { ALL_CLS.forEach(function (c) { el.classList.remove(c); }); }
+
+  function renderDiff(p, applied) {
+    diffRows.innerHTML = '';
+    p.rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'drow';
+      var after = applied
+        ? '<span class="dafter"><i class="ic ic-check xs"></i>' + r[2] + '</span>'
+        : '<span class="dafter">' + r[2] + '</span>';
+      row.innerHTML =
+        '<span class="dp">' + r[0] + '</span>' +
+        '<span class="dbefore">' + r[1] + '</span>' +
+        '<span class="darr"><i class="ic ic-chevron-right xs"></i></span>' +
+        after;
+      diffRows.appendChild(row);
+    });
+    diffCnt.textContent = p.rows.length + (p.rows.length === 1 ? ' edit' : ' edits');
+    emitLine.innerHTML = '<span class="fn">emit</span> · ' +
+      p.emit.replace(/(\{[^}]*\})/, '<span class="p">$1</span>');
+  }
+
+  function apply(el, p) { clearCls(el); p.cls.forEach(function (c) { el.classList.add(c); }); }
+
+  function setState(s) {
+    state = s;
+    root.classList.remove('st-idle', 'st-proposed', 'st-applied');
+    root.classList.add('st-' + s);
+    var p = presets[active];
+
+    if (s === 'idle') {
+      clearCls(liveCta);
+      askBtn.disabled = false;
+      acceptBtn.disabled = true;
+      undoBtn.disabled = true;
+      statusText.textContent = 'Ready to ask';
+      statusVal.textContent = '1 selected';
+    } else if (s === 'proposed') {
+      apply(ghostCta, p);      // ghost shows the proposed state
+      renderDiff(p, false);
+      diffTitle.textContent = 'Proposed change';
+      askBtn.disabled = true;
+      acceptBtn.disabled = false;
+      undoBtn.disabled = true;
+      statusText.textContent = 'Review the diff';
+      statusVal.textContent = 'proposed · not applied';
+    } else if (s === 'applied') {
+      apply(liveCta, p);       // the live element updates for real
+      renderDiff(p, true);
+      diffTitle.textContent = 'Applied';
+      askBtn.disabled = false;
+      acceptBtn.disabled = true;
+      undoBtn.disabled = false;
+      statusText.textContent = 'Applied · one undoable step';
+      statusVal.textContent = 'applied';
+    }
+  }
+
+  function selectPreset(key) {
+    active = key;
+    presetBtns.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-preset') === key); });
+    var p = presets[key];
+    promptText.textContent = p.prompt;
+    apiLine.innerHTML = '<span class="fn">agent.edit</span>(selection, <span class="s">"' +
+      p.arg + '"</span>)';
+    clearCls(ghostCta);
+    apply(ghostCta, p);
+    setState('idle');   // changing the prompt resets the loop
+  }
+
+  presetBtns.forEach(function (b) {
+    b.addEventListener('click', function () { selectPreset(b.getAttribute('data-preset')); });
+  });
+  askBtn.addEventListener('click', function () { setState('proposed'); });
+  acceptBtn.addEventListener('click', function () { setState('applied'); });
+  undoBtn.addEventListener('click', function () { setState('idle'); });
+  resetBtn.addEventListener('click', function () { selectPreset('a'); });
+
+  selectPreset('a');
+})();
+</script>
+</body>
+</html>

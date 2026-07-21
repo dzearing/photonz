@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-variants</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ui-variants · the live component sheet, sitting in the ONE shell. One Button,
+     every variant and size on the canvas, a real Properties group wired to a live
+     instance, and the Library group holding the main it is linked to. Only what
+     the shared DS does not cover lives here; 4pt spacing + tokens throughout.
+     comp(purple) = component language. */
+
+  /* definite window height so the dock is bounded and each group scrolls */
+  #ui-variants .win.shell{height:720px;min-height:0}
+  /* the canvas is a component sheet, so it scrolls instead of centering */
+  .sheetcv{display:block;overflow-y:auto;padding:var(--s6) var(--s5) var(--s7)}
+  .sheetcv .artboard-label{position:static;transform:none;display:block;text-align:center;margin-bottom:var(--s5)}
+
+  .cvblock{max-width:640px;margin:0 auto var(--s6)}
+  .cvblock:last-child{margin-bottom:0}
+  .cv-h{display:flex;align-items:center;gap:var(--gap-sm);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(255,255,255,.5);font-weight:660;margin-bottom:var(--pad-sm)}
+  .cv-h .di{color:#c8a8ff}
+  .cv-h .mut{color:rgba(255,255,255,.4);font-weight:520;letter-spacing:0;text-transform:none;font-size:10.5px}
+
+  /* live instance, centered on its own stage */
+  .instwrap{display:grid;place-items:center;min-height:132px}
+  .previnst{position:relative}
+  .previnst .cring{inset:-12px;border-radius:18px}
+  .previnst .cbadge{top:-32px;left:50%;transform:translateX(-50%)}
+
+  /* variant x size matrix */
+  .pmatrix{display:grid;grid-template-columns:auto repeat(3,1fr);gap:var(--s2);align-items:center;
+    background:rgba(255,255,255,.05);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    border:1px solid rgba(255,255,255,.12);border-radius:var(--r-md);padding:var(--pad);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+  .pmatrix .mh{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:rgba(255,255,255,.5);font-weight:660;text-align:center}
+  .pmatrix .rv{font-size:11px;font-weight:620;color:rgba(255,255,255,.85);text-align:right;padding-right:var(--s2);white-space:nowrap}
+  .pmcell{display:grid;place-items:center;padding:var(--s2) var(--s1);border-radius:var(--r2);border:1px solid transparent;
+    cursor:pointer;transition:var(--ctl-tr)}
+  .pmcell:hover{border-color:var(--comp-line);background:rgba(154,92,255,.16)}
+  .pmcell:focus-visible{outline:none;box-shadow:var(--ring)}
+  .pmcell:active{transform:scale(.98)}
+  .pmcell.on{border-color:var(--comp);background:rgba(154,92,255,.22);box-shadow:0 0 0 1px rgba(154,92,255,.3)}
+
+  /* Properties controls the shared system does not ship */
+  .prop{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:var(--s3);margin:var(--s3) 0}
+  .prop>.pl{color:var(--faint);font-size:10.5px;display:flex;align-items:center;gap:var(--s1)}
+  .prop>.pl .di{color:var(--comp);font-size:10px}
+  /* .prop .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  /* a three-option seg needs the full dock width, so its label sits above */
+  .prop.stack{grid-template-columns:1fr;gap:var(--s2)}
+
+  /* boolean prop: a real focusable switch with every interaction state */
+  .pswitch{width:38px;height:22px;border-radius:999px;background:var(--line-strong);border:1px solid var(--edge-lo);
+    position:relative;padding:0;flex:none;transition:var(--ctl-tr);box-shadow:var(--ctl-gloss)}
+  .pswitch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.32);transition:left .15s ease}
+  .pswitch[aria-checked="true"]{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));border-color:transparent}
+  .pswitch[aria-checked="true"]::after{left:18px}
+  .pswitch:hover{filter:brightness(1.06);box-shadow:var(--ctl-gloss),0 2px 6px -3px rgba(20,24,40,.4)}
+  .pswitch:active{transform:scale(.96)}
+  .pswitch:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
+  .pswitch[disabled],.pswitch.disabled{opacity:.42;pointer-events:none}
+  .switchrow{display:flex;align-items:center;gap:var(--s2)}
+  .switchrow .st{font-size:11px;font-weight:560;color:var(--dim);font-variant-numeric:tabular-nums}
+
+  /* text prop: a real editable field with hover/focus */
+  .ptext{display:flex;align-items:center;gap:var(--s2);height:var(--ctl-h);padding:0 10px;border-radius:var(--r2);
+    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    border:1px solid var(--edge-lo);box-shadow:var(--ctl-gloss);transition:var(--ctl-tr)}
+  .ptext input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-family:var(--sans);font-size:12px;color:var(--ink)}
+  .ptext input::placeholder{color:var(--faint)}
+  .ptext:hover{border-color:color-mix(in srgb,var(--accent) 26%,var(--edge-lo))}
+  .ptext:focus-within{border-color:transparent;box-shadow:var(--ctl-gloss),var(--ring)}
+  .ptext .di{color:var(--faint);flex:none}
+
+  /* instance-swap prop: a .select that opens a real icon menu */
+  .swapwrap{position:relative}
+  .swapwrap .select{width:100%}
+  .iconmenu{position:absolute;top:calc(100% + var(--s1));left:0;right:0;z-index:20;display:none}
+  .iconmenu.open{display:block;animation:mpop .12s ease}
+  @keyframes mpop{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  .iconmenu .menuitem .ck{margin-left:auto;color:var(--comp);display:none}
+  .iconmenu .menuitem.sel .ck{display:inline-flex}
+  .iconmenu .menuitem.sel{color:var(--comp)}
+
+  @media (prefers-reduced-motion:reduce){.iconmenu.open{animation:none}.pswitch::after{transition:none}}
+
+  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
+  @container shell (max-width:880px){ .toolbar .chip{display:none} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="ui-variants">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Variants and properties</h2><span class="k">· one component, many forms</span></div>
+
+    <!-- ============ THE ONE SHELL · UI workspace, the Button sheet ============ -->
+    <div class="win tall cq shell">
+
+      <!-- TITLE BAR -->
+      <div class="titlebar">
+        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+        <div class="wtitle"><b>button-sheet</b> · 1200 × 720</div>
+        <div class="wsw" role="tablist" aria-label="Workspace">
+          <button class="wsw-seg" data-ws="image" role="tab" aria-selected="false" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+          <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+          <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+        </div>
+        <div class="tbtns">
+          <button class="btn ghost sm" id="reset" title="Restore the main defaults"><i class="ic ic-undo"></i> Reset</button>
+          <button class="btn sm" data-target="dsys">Design system <i class="ic xs ic-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The agent is a separate path. -->
+      <div class="toolbar">
+        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+        <span class="tspacer"></span>
+        <span class="chip comp"><i class="ic xs ic-component"></i> Button</span>
+        <span class="chip" id="chipState">Primary · Medium</span>
+        <button class="pill ai" data-target="agent"><i class="ic sm ic-sparkle"></i> Ask the agent</button>
+        <div style="position:relative">
+          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
+            <div class="menuitem"><i class="ic ic-component"></i> Add variant <span class="sc">⌘⌥V</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add property</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Reset to main <span class="sc">⌘⌥R</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+      <div class="edit lean" id="shellVar" data-dock="open">
+
+        <div class="cnv">
+          <div class="canvas sheetcv" id="canvas">
+            <div class="artboard-label">Component sheet · Button · every variant across every size</div>
+
+            <div class="cvblock">
+              <div class="cv-h"><span class="di"><i class="ic xs ic-component"></i></span> Live instance <span class="mut">· edit the properties on the right and this updates instantly</span></div>
+              <div class="instwrap">
+                <div class="previnst" id="previnst">
+                  <button class="btn primary" id="preview"><i class="ic ic-sparkle"></i><span id="prevlabel">Get Photonz</span></button>
+                  <span class="cring"></span>
+                  <span class="cbadge"><i class="ic xs ic-component"></i> instance of Button</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cvblock">
+              <div class="cv-h"><span class="di"><i class="ic xs ic-component"></i></span> Variant × size <span class="mut">· every cell is a real specimen · click one to load it above</span></div>
+              <div class="pmatrix" id="matrix">
+                <span></span>
+                <span class="mh">Small</span><span class="mh">Medium</span><span class="mh">Large</span>
+
+                <span class="rv">Primary</span>
+                <button class="pmcell" data-variant="primary" data-size="sm"><span class="btn primary sm"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell on" data-variant="primary" data-size="md"><span class="btn primary"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell" data-variant="primary" data-size="lg"><span class="btn primary lg"><i class="ic ic-sparkle"></i>Get</span></button>
+
+                <span class="rv">Secondary</span>
+                <button class="pmcell" data-variant="secondary" data-size="sm"><span class="btn secondary sm"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell" data-variant="secondary" data-size="md"><span class="btn secondary"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell" data-variant="secondary" data-size="lg"><span class="btn secondary lg"><i class="ic ic-sparkle"></i>Get</span></button>
+
+                <span class="rv">Ghost</span>
+                <button class="pmcell" data-variant="ghost" data-size="sm"><span class="btn ghost sm"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell" data-variant="ghost" data-size="md"><span class="btn ghost"><i class="ic ic-sparkle"></i>Get</span></button>
+                <button class="pmcell" data-variant="ghost" data-size="lg"><span class="btn ghost lg"><i class="ic ic-sparkle"></i>Get</span></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- canvas action cluster -->
+          <div class="cnv-act">
+            <button class="tool on" data-dock-toggle="#shellVar" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
+          <div class="tbar">
+            <span class="tstrip" data-radio=".tool">
+              <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+              <button class="tool" title="Component insert (C)" style="color:var(--comp)" data-target="components"><i class="ic sm ic-component"></i></button>
+              <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+              <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+              <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+              <span class="tsep ovf"></span>
+              <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+              <span class="tsep"></span>
+              <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+              <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+            </span>
+            <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+            <span class="tsep"></span>
+            <span class="swpair" title="Foreground and background color">
+              <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+              <span class="bg" style="background:#ffffff"></span>
+            </span>
+            <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+            <span class="tsep"></span>
+            <span class="zoomctl">
+              <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+              <span class="val zval">100%</span>
+            </span>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
+          </div>
+
+          <!-- HISTORY OVERLAY (⌘⇧H) -->
+          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-h">
+              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+              <span class="sp"></span>
+              <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+              <span class="sp"></span>
+              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+            </div>
+            <div class="sheet-b">
+              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                <div class="filmcard sel" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                  <span class="cap"><span class="nm">Button states</span><span class="ago">6 min ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#4c6fff)"></span>
+                  <span class="cap"><span class="nm">Sheet review</span><span class="ago">2 hr ago</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+                <div class="filmcard" tabindex="0" role="button">
+                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:09</span></span>
+                  <span class="cap"><span class="nm">Hover pass</span><span class="ago">Yesterday</span></span>
+                  <span class="acts">
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+              <p class="note" style="margin:0">Right-click any capture and choose <b>Add to Library</b> to turn it into reusable content.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPLITTER -->
+        <div class="splitter v" data-min="220" data-max="420"></div>
+
+        <!-- THE RIGHT DOCK -->
+        <div class="pdock" id="dock" style="--dock-w:296px">
+
+          <!-- LAYERS · the instance and its parts, selection place 2 of 3 -->
+          <div class="dgrp" id="gLayers" style="--gh:140px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Button sheet</div>
+              <div class="lrow child sel selc" id="layerInst"><i class="ic ic-component"></i><span class="nm" id="layerInstNm">Button · Primary</span><i class="ic sm ic-component cmark"></i></div>
+              <div class="lrow child" id="layerIcon" style="padding-left:40px"><i class="ic ic-sparkle"></i><span class="nm">Icon</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child" style="padding-left:40px"><i class="ic ic-text"></i><span class="nm" id="layerLabel">Get Photonz</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-grid"></i><span class="nm">Variant matrix</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Sheet background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+
+          <div class="splitter h" data-min="90" data-max="300"></div>
+
+          <!-- PROPERTIES · contextual to the instance, selection place 3 of 3 -->
+          <div class="dgrp" id="gProps" style="--gh:232px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span>
+              <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+
+              <div class="section">
+                <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
+                <div class="prop stack">
+                  <span class="pl">Variant</span>
+                  <div class="seg" id="segVariant">
+                    <button data-v="primary" class="on">Primary</button>
+                    <button data-v="secondary">Secondary</button>
+                    <button data-v="ghost">Ghost</button>
+                  </div>
+                </div>
+                <div class="prop stack">
+                  <span class="pl">Size</span>
+                  <div class="seg" id="segSize">
+                    <button data-s="sm">Small</button>
+                    <button data-s="md" class="on">Medium</button>
+                    <button data-s="lg">Large</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="sec-h comp">Instance properties <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i></span></div>
+
+                <div class="prop">
+                  <span class="pl"><span class="di"><i class="ic xs ic-eye"></i></span> Show icon</span>
+                  <div class="switchrow">
+                    <button class="pswitch" id="swIcon" role="switch" aria-checked="true" aria-label="Show icon"></button>
+                    <span class="st" id="swState">On</span>
+                  </div>
+                </div>
+
+                <div class="prop">
+                  <span class="pl"><span class="di"><i class="ic xs ic-text"></i></span> Label</span>
+                  <label class="ptext">
+                    <span class="di"><i class="ic sm ic-text"></i></span>
+                    <input id="txtLabel" type="text" value="Get Photonz" autocomplete="off" spellcheck="false" aria-label="Label text" placeholder="Button label">
+                  </label>
+                </div>
+
+                <div class="prop">
+                  <span class="pl"><span class="di"><i class="ic xs ic-component"></i></span> Icon</span>
+                  <div class="swapwrap">
+                    <button class="select comp" id="iconTrigger" aria-haspopup="menu" aria-expanded="false">
+                      <span class="lead"><i class="ic sm ic-sparkle" id="iconLead"></i><span id="iconName">Sparkle</span></span>
+                      <span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                    </button>
+                    <div class="popover menu iconmenu" id="iconMenu" role="menu">
+                      <div class="menuitem sel" data-icon="sparkle" data-nm="Sparkle" role="menuitemradio"><i class="ic sm ic-sparkle"></i> Sparkle <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                      <div class="menuitem" data-icon="wand" data-nm="Wand" role="menuitemradio"><i class="ic sm ic-wand"></i> Wand <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                      <div class="menuitem" data-icon="swatch" data-nm="Swatch" role="menuitemradio"><i class="ic sm ic-swatch"></i> Swatch <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                      <div class="menuitem" data-icon="layers" data-nm="Layers" role="menuitemradio"><i class="ic sm ic-layers"></i> Layers <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                      <div class="menuitem" data-icon="brush" data-nm="Brush" role="menuitemradio"><i class="ic sm ic-brush"></i> Brush <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                      <div class="menu-sep"></div>
+                      <div class="menuitem" data-icon="none" data-nm="None" role="menuitemradio"><i class="ic sm ic-x"></i> No icon <span class="ck"><i class="ic xs ic-check"></i></span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="note">Swap the leading icon like any instance property. The instance stays linked to the main <b style="color:var(--comp)">Button</b>, so a change to the main still flows through.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">In the API <span class="mut">the same props, one call</span></div>
+                <div class="codeblk" id="apiline"></div>
+                <p class="note">Everything this group does is one command, so an <b data-target="agent" style="color:var(--comp);cursor:pointer">agent</b> can set the same props. Default is the local model; a frontier model can run over the same schema.</p>
+              </div>
+
+              <div class="section">
+                <div class="sec-h">Reset <span class="mut">back to the main defaults</span></div>
+                <button class="btn secondary block" id="reset2"><i class="ic sm ic-undo"></i> Reset props</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIBRARY (D1/D2): one surface, four scopes. The main lives here. -->
+          <div class="dgrp grow" id="gLibrary">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
+              <button class="btn ghost icon sm" title="Add to Library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg" id="scopeSeg">
+                  <button data-scope="media">Media</button>
+                  <button class="on" data-scope="components">Comp</button>
+                  <button data-scope="styles">Styles</button>
+                  <button data-scope="assets">Assets</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" type="text" placeholder="Search components" autocomplete="off" spellcheck="false" aria-label="Search components"></span>
+              </div>
+              <div class="libgrid">
+                <div class="libtile comp sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">3 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffe9a8,#f6c453)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">3 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Card</span><span class="mt">2 variants</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Field</span><span class="mt">5 states</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">Nav bar</span><span class="mt">1 variant</span></span></div>
+                <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span><span class="cap"><span class="nm">Toast</span><span class="mt">3 variants</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE RAIL -->
+        <div class="drail">
+          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+          <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+          <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+        </div>
+
+        <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+          <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate instance <span class="sc">⌘D</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+        </div>
+        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:230px;width:200px;z-index:11">
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset to main</div>
+        </div>
+        <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
+          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+          <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A <b style="color:var(--comp)" data-target="dsys">component</b> exposes <b>variants</b> (its named forms) and <b>properties</b> (the knobs on one instance). The canvas is the live sheet for both: the matrix shows every Button variant across every size, and the Properties group edits a real instance so the preview updates as you type.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because props are just data, the panel and the <b>API</b> are the same surface. Set <code>showIcon</code>, retype the <code>label</code>, or swap the <code>icon</code> and it is one call either way. <span data-target="components" style="color:var(--comp);font-weight:600;cursor:pointer">See it in the library <i class="ic xs ic-chevron-right"></i></span></p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Should a variant be a fixed enum on the main, or should any saved <b>property set</b> be promotable to a named variant later, so a one-off instance can graduate into the sheet without a round trip through the design system?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ui-variants page · live component demo. Guarded so a missing node is a no-op.
+   State drives one preview instance; the variant/size segs, the show-icon switch,
+   the label field, and the icon-swap menu all mutate it and re-render. The same
+   selection reads on the canvas (ring + badge), in Layers, and in Properties. */
+(function () {
+  var preview = document.getElementById('preview');
+  var prevlabel = document.getElementById('prevlabel');
+  if (!preview || !prevlabel) return;
+
+  var DEFAULTS = { variant: 'primary', size: 'md', showIcon: true, label: 'Get Photonz', icon: 'sparkle' };
+  var ICONS = { sparkle: 'Sparkle', wand: 'Wand', swatch: 'Swatch', layers: 'Layers', brush: 'Brush', none: 'None' };
+  var SIZES = { sm: 'Small', md: 'Medium', lg: 'Large' };
+  var VARIANTS = { primary: 'Primary', secondary: 'Secondary', ghost: 'Ghost' };
+  var state = Object.assign({}, DEFAULTS);
+
+  function byId(id) { return document.getElementById(id); }
+  var segVariant = byId('segVariant');
+  var segSize = byId('segSize');
+  var swIcon = byId('swIcon');
+  var swState = byId('swState');
+  var txtLabel = byId('txtLabel');
+  var iconTrigger = byId('iconTrigger');
+  var iconMenu = byId('iconMenu');
+  var iconLead = byId('iconLead');
+  var iconName = byId('iconName');
+  var apiline = byId('apiline');
+  var matrix = byId('matrix');
+  var chipState = byId('chipState');
+  var layerInstNm = byId('layerInstNm');
+  var layerLabel = byId('layerLabel');
+  var layerIcon = byId('layerIcon');
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function render() {
+    // rebuild the preview button from state
+    preview.className = 'btn ' + state.variant + (state.size !== 'md' ? ' ' + state.size : '');
+    preview.innerHTML = '';
+    if (state.showIcon && state.icon !== 'none') {
+      var ic = document.createElement('i');
+      ic.className = 'ic ic-' + state.icon;
+      preview.appendChild(ic);
+    }
+    var span = document.createElement('span');
+    span.id = 'prevlabel';
+    span.textContent = state.label || 'Label';
+    preview.appendChild(span);
+
+    if (iconLead) iconLead.className = 'ic sm ic-' + (state.icon === 'none' ? 'x' : state.icon);
+    if (iconName) iconName.textContent = ICONS[state.icon] || 'Sparkle';
+
+    if (swState) swState.textContent = state.showIcon ? 'On' : 'Off';
+    if (swIcon) {
+      swIcon.setAttribute('aria-checked', state.showIcon ? 'true' : 'false');
+      swIcon.classList.toggle('disabled', state.icon === 'none');
+    }
+
+    if (segVariant) [].forEach.call(segVariant.querySelectorAll('button'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-v') === state.variant);
+    });
+    if (segSize) [].forEach.call(segSize.querySelectorAll('button'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-s') === state.size);
+    });
+
+    if (matrix) [].forEach.call(matrix.querySelectorAll('.pmcell'), function (c) {
+      c.classList.toggle('on', c.getAttribute('data-variant') === state.variant && c.getAttribute('data-size') === state.size);
+    });
+
+    // the selection reads the same in the toolbar chip and in Layers
+    var vname = VARIANTS[state.variant] || 'Primary';
+    if (chipState) chipState.textContent = vname + ' · ' + (SIZES[state.size] || 'Medium');
+    if (layerInstNm) layerInstNm.textContent = 'Button · ' + vname;
+    if (layerLabel) layerLabel.textContent = state.label || 'Label';
+    if (layerIcon) layerIcon.style.opacity = (state.showIcon && state.icon !== 'none') ? '' : '.45';
+
+    if (apiline) {
+      var iconVal = state.icon === 'none' ? 'null' : '"' + esc(state.icon) + '"';
+      apiline.innerHTML =
+        '<span class="k">instance</span>.props = {<br>' +
+        '&nbsp;&nbsp;variant: <span class="s">"' + esc(state.variant) + '"</span>,<br>' +
+        '&nbsp;&nbsp;size: <span class="s">"' + esc(state.size) + '"</span>,<br>' +
+        '&nbsp;&nbsp;showIcon: <span class="p">' + (state.showIcon ? 'true' : 'false') + '</span>,<br>' +
+        '&nbsp;&nbsp;label: <span class="s">"' + esc(state.label) + '"</span>,<br>' +
+        '&nbsp;&nbsp;icon: <span class="s">' + iconVal + '</span><br>' +
+        '}';
+    }
+  }
+
+  if (segVariant) [].forEach.call(segVariant.querySelectorAll('button'), function (b) {
+    b.addEventListener('click', function () { state.variant = b.getAttribute('data-v'); render(); });
+  });
+  if (segSize) [].forEach.call(segSize.querySelectorAll('button'), function (b) {
+    b.addEventListener('click', function () { state.size = b.getAttribute('data-s'); render(); });
+  });
+
+  if (swIcon) {
+    swIcon.addEventListener('click', function () { state.showIcon = !state.showIcon; render(); });
+    swIcon.addEventListener('keydown', function (e) {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); state.showIcon = !state.showIcon; render(); }
+    });
+  }
+
+  if (txtLabel) txtLabel.addEventListener('input', function () { state.label = txtLabel.value; render(); });
+
+  function closeMenu() {
+    if (iconMenu) iconMenu.classList.remove('open');
+    if (iconTrigger) iconTrigger.setAttribute('aria-expanded', 'false');
+  }
+  if (iconTrigger && iconMenu) {
+    iconTrigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = iconMenu.classList.toggle('open');
+      iconTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    [].forEach.call(iconMenu.querySelectorAll('.menuitem'), function (mi) {
+      mi.addEventListener('click', function (e) {
+        e.stopPropagation();
+        state.icon = mi.getAttribute('data-icon');
+        if (state.icon !== 'none') state.showIcon = true;
+        [].forEach.call(iconMenu.querySelectorAll('.menuitem'), function (x) { x.classList.toggle('sel', x === mi); });
+        closeMenu();
+        render();
+      });
+    });
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+  }
+
+  if (matrix) [].forEach.call(matrix.querySelectorAll('.pmcell'), function (c) {
+    c.addEventListener('click', function () {
+      state.variant = c.getAttribute('data-variant');
+      state.size = c.getAttribute('data-size');
+      render();
+    });
+  });
+
+  function reset() {
+    state = Object.assign({}, DEFAULTS);
+    if (txtLabel) txtLabel.value = DEFAULTS.label;
+    [].forEach.call(iconMenu ? iconMenu.querySelectorAll('.menuitem') : [], function (x) {
+      x.classList.toggle('sel', x.getAttribute('data-icon') === DEFAULTS.icon);
+    });
+    closeMenu();
+    render();
+  }
+  var r1 = byId('reset');
+  var r2 = byId('reset2');
+  if (r1) r1.addEventListener('click', reset);
+  if (r2) r2.addEventListener('click', reset);
+
+  /* Library scope switch (Media · Components · Styles · Assets) */
+  var seg = byId('scopeSeg');
+  var scopeCnt = byId('scopeCnt');
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  if (seg) {
+    var sbtns = [].slice.call(seg.querySelectorAll('button'));
+    sbtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        if (scopeCnt) scopeCnt.textContent = NAMES[b.getAttribute('data-scope')] || 'Components';
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+    var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+    tiles.forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+      });
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

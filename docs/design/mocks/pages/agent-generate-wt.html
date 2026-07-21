@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · agent-generate-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* agent-generate-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. The agent is not a
+     separate app or a floating chat: you reach it from the same command
+     surface a person uses, it runs the same named commands, and it reuses the
+     same Library. Page-local CSS is the window height and the generated
+     pricing artwork on the canvas. */
+  #agent-generate-wt .win.shell{height:764px;min-height:0}  /* the automation accent for this scenario's step number (gradient pip language) */
+  #agent-generate-wt .wt-cap.auto .wt-n{background:linear-gradient(120deg,#6E8BFF,#c56cff);color:#fff}
+
+  /* the plan rows: a numbered, readable command list inside the Agent group */
+  #agent-generate-wt .qn{width:18px;height:18px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--dim);font-size:9.5px;font-weight:700;display:grid;place-items:center;flex:none;font-family:var(--mono)}
+  #agent-generate-wt .cpx{padding:5px 8px;gap:var(--gap-sm);font-size:11px}
+  #agent-generate-wt .cpx .tk{margin-left:auto;color:var(--good);flex:none}
+  #agent-generate-wt .chg{display:flex;align-items:center;gap:var(--gap-sm);padding:6px 8px;border-radius:var(--r2);
+    font-size:11px;color:var(--dim);cursor:pointer;border:1px solid transparent;text-align:left;width:100%;background:transparent}
+  #agent-generate-wt .chg:hover{background:var(--panel-2);border-color:var(--line);color:var(--ink)}
+  #agent-generate-wt .chg:active{transform:scale(.99)}
+  #agent-generate-wt .chg:focus-visible{outline:none;box-shadow:var(--ring)}
+  #agent-generate-wt .chg.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
+  #agent-generate-wt .chg .ic{color:var(--good);flex:none}
+  #agent-generate-wt .chg b{color:var(--ink);font-weight:640}
+
+  /* the generated pricing section · real designed content, not gray boxes */
+  #agent-generate-wt .selwrap{width:min(432px,92%)}
+  #agent-generate-wt .psec{display:flex;gap:var(--gap-sm);align-items:stretch;justify-content:center}
+  #agent-generate-wt .pcard{position:relative;flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--r5);padding:var(--pad-sm);display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 14px 34px -18px rgba(0,0,0,.55)}
+  #agent-generate-wt .pcard.pop{background:linear-gradient(160deg,#7c4dff,#b14dff 55%,#ff5d8f);border-color:transparent;
+    box-shadow:0 0 42px -8px rgba(177,77,255,.55),0 14px 34px -14px rgba(0,0,0,.5)}
+  #agent-generate-wt .ptier{font-size:9px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--dim)}
+  #agent-generate-wt .pprice{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.02em}
+  #agent-generate-wt .pprice span{font-family:var(--sans);font-size:10px;color:var(--faint);font-weight:520;letter-spacing:0}
+  #agent-generate-wt .pfeat{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);line-height:1.2}
+  #agent-generate-wt .pfeat .ic{color:var(--good);width:11px;height:11px;flex:none}
+  #agent-generate-wt .pcta{margin-top:auto;padding-top:var(--s2)}
+  #agent-generate-wt .pcta .uibtn{width:100%;justify-content:center;font-size:11px;font-weight:640;padding:7px 0;box-shadow:none}
+  #agent-generate-wt .pcard.pop .ptier,#agent-generate-wt .pcard.pop .pprice,#agent-generate-wt .pcard.pop .pfeat{color:#fff}
+  #agent-generate-wt .pcard.pop .pprice span{color:rgba(255,255,255,.82)}
+  #agent-generate-wt .pcard.pop .pfeat .ic{color:#fff}
+  #agent-generate-wt .pcard.pop .uibtn{background:#fff;color:#6a2bd6}
+  #agent-generate-wt .poptag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(10,12,20,.72);border:1px solid rgba(255,255,255,.28);
+    padding:3px 8px;border-radius:999px;white-space:nowrap}
+  #agent-generate-wt .cvempty{width:100%;min-height:200px;border:1.5px dashed var(--line-strong);border-radius:var(--r5);
+    display:grid;place-items:center;gap:var(--s2);color:var(--faint);font-size:12px;text-align:center;padding:var(--pad)}
+
+  @container shell (max-width:880px){
+    #agent-generate-wt .pprice{font-size:19px}
+    #agent-generate-wt .pcard{padding:var(--gap-sm)}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="agent-generate-wt">
+  <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Prompt to design</h2><span class="k">· usage clickthrough · UI workspace</span></div>
+
+  <p class="pglead">The agent is not a second app and not a floating chat window. You reach it from the <b>same command surface</b>
+    a person types into, it runs the <b>same named commands</b> the panels call, and it builds from the <b>same Library</b> you
+    already filled. Eight real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtAgent">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>pricing-section</b> · 1440 × 900</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6).
+             This is where the agent is reached: one more thing you can run. -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" id="cmdk" tabindex="0" role="button" data-menu="#cmdkPop"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip style"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>brand-system v1.0 <i class="ic xs ic-chevron-down"></i></span>
+
+          <!-- the ⌘K palette · the same list a person picks from, with the agent
+               at the top. Not a chat window: an entry in the command surface. -->
+          <div class="popover pop" id="cmdkPop" style="position:absolute;left:46px;top:38px;width:min(428px,76%);z-index:14">
+            <div style="padding:var(--s1) var(--s1) 0">
+              <span class="srch"><i class="ic sm ic-search"></i><input id="cmdkInput" name="command" value="Make a pricing section on brand" aria-label="Search or run a command"></span>
+            </div>
+            <div class="mlabel">Ask</div>
+            <div class="menuitem" id="miAsk"><i class="ic ic-sparkle"></i> Ask the agent · Make a pricing section on brand <span class="sc">↩</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Commands</div>
+            <div class="menuitem"><i class="ic ic-frame"></i> Frame · create <span class="sc">F</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Component · insert instance <span class="sc">C</span></div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Paint · apply style</div>
+          </div>
+
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:228px;z-index:12">
+              <div class="mlabel">Layer</div>
+              <div class="menuitem"><i class="ic ic-frame"></i> Create frame <span class="sc">F</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i> Insert instance <span class="sc">C</span></div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Agent</div>
+              <div class="menuitem"><i class="ic ic-sparkle"></i> Ask the agent <span class="sc">⌘K</span></div>
+              <div class="menuitem"><i class="ic ic-undo"></i> Undo last batch <span class="sc">⌘Z</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="artboard-label">1440 × 900 · pricing-section</div>
+
+              <div class="selwrap">
+                <div class="cvempty" id="cvEmpty">
+                  <span><i class="ic lg ic-frame"></i></span>
+                  Empty document. Describe what you want, or draw it yourself.
+                </div>
+
+                <div class="psec wt-off" id="cvPricing">
+                  <div class="pcard" id="cvCard1">
+                    <div class="ptier">Starter</div>
+                    <div class="pprice">$0<span> / mo</span></div>
+                    <div class="pfeat"><i class="ic ic-check"></i> 2 projects</div>
+                    <div class="pfeat"><i class="ic ic-check"></i> Local export</div>
+                    <div class="pcta"><span class="uibtn">Choose</span></div>
+                    <span class="wt-off" id="instRing1"><span class="cinst" style="inset:-6px;border-radius:16px"></span></span>
+                  </div>
+
+                  <div class="pcard pop" id="cvCard2">
+                    <div class="poptag">Popular</div>
+                    <div class="ptier">Studio</div>
+                    <div class="pprice">$18<span> / mo</span></div>
+                    <div class="pfeat"><i class="ic ic-check"></i> Unlimited projects</div>
+                    <div class="pfeat"><i class="ic ic-check"></i> Components and styles</div>
+                    <div class="pcta"><span class="uibtn" id="ctaStudio">Choose</span>
+                      <span class="wt-off" id="selCta">
+                        <span class="sel-ring" style="inset:-6px;border-radius:16px"></span>
+                        <span class="mtag">CTA · Choose Studio</span>
+                      </span>
+                    </div>
+                    <span class="wt-off" id="instRing2"><span class="cinst" style="inset:-6px;border-radius:16px"></span><span class="cbadge" style="top:-26px;left:-6px"><i class="ic xs ic-component"></i> Card · instance</span></span>
+                    <span class="wt-off" id="selCard2"><span class="sel-ring" style="inset:-10px;border-radius:20px"></span>
+                      <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                    </span>
+                  </div>
+
+                  <div class="pcard" id="cvCard3">
+                    <div class="ptier">Team</div>
+                    <div class="pprice">$44<span> / mo</span></div>
+                    <div class="pfeat"><i class="ic ic-check"></i> Shared library</div>
+                    <div class="pfeat"><i class="ic ic-check"></i> Review and roles</div>
+                    <div class="pcta"><span class="uibtn">Choose</span></div>
+                    <span class="wt-off" id="instRing3"><span class="cinst" style="inset:-6px;border-radius:16px"></span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 UI inventory. The agent drives the same
+                 commands these tools run, so the bar never changes for it. -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tFrame" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                <button class="tool" id="tComp" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="bg" style="background:#ffffff"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">pricing-page</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">31 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                    <span class="cap"><span class="nm">settings-window</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span>
+                    <span class="cap"><span class="nm">nav-bar</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span>
+                    <span class="cap"><span class="nm">toast-states</span><span class="ago">3 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#1b7a8c,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">4 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups.
+               The agent is a GROUP here, not new chrome. -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:96px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">0</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="empty" id="layersEmpty" style="padding:var(--s4)"><span class="g"><i class="ic lg ic-layers"></i></span>Nothing yet</div>
+                <div class="wt-off" id="layersList">
+                  <div class="lrow" id="lrFrame"><i class="ic ic-frame"></i><span class="nm">Pricing</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child" id="lrCard1"><i class="ic ic-component"></i><span class="nm">Card · Starter</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child" id="lrCard2"><i class="ic ic-component"></i><span class="nm">Card · Studio</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child" id="lrCard3"><i class="ic ic-component"></i><span class="nm">Card · Team</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <div class="dgrp collapsed" id="gProps" style="--gh:150px">
+              <div class="dgrp-h" id="gPropsH"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s4)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer to edit it</div>
+                <div id="propsSel" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> instance</span></div>
+                    <div class="irow"><span class="rl">Main</span><span class="select comp"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Card</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                    <div class="irow"><span class="rl">Link</span><span class="select"><span class="lead">intact · 3 instances</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Fill <span class="mut" id="pFillKind">Style</span></div>
+                    <div class="irow"><span class="rl">Paint</span><span class="select"><span class="lead"><span class="sw" id="pFillSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> <span id="pFillVal">Brand / gradient</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Type</span><span class="select"><span class="lead">Price / 28</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <p class="note" id="pFillNote">The agent painted with your named styles, so nothing here is a one-off value it invented.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- THE AGENT · a panel group like any other. New capability is a new
+                 group, never new chrome. -->
+            <div class="dgrp collapsed" id="gAgent" style="--gh:172px">
+              <div class="dgrp-h" id="gAgentH"><span class="ttl">Agent</span><span class="cnt" id="agentState">idle</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#agentMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="empty" id="agentEmpty" style="padding:var(--s4)"><span class="g"><i class="ic lg ic-sparkle"></i></span>Ask for something in the command surface</div>
+
+                <div id="agentPlan" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Plan <span class="mut">the same commands the panels call</span></div>
+                    <div class="cpx"><span class="qn">1</span><code>frame.create</code> "Pricing" · 3 cols<i class="ic xs ic-check tk wt-off" id="tk1"></i></div>
+                    <div class="cpx"><span class="qn">2</span><code>layout.set</code> row · gap 12<i class="ic xs ic-check tk wt-off" id="tk2"></i></div>
+                    <div class="cpx"><span class="qn">3</span><code>component.instance</code> "Card" ×3<i class="ic xs ic-check tk wt-off" id="tk3"></i></div>
+                    <div class="cpx"><span class="qn">4</span><code>layer.bindStyle</code> "Brand / gradient"<i class="ic xs ic-check tk wt-off" id="tk4"></i></div>
+                    <div class="cpx"><span class="qn">5</span><code>text.set</code> from tokens · Price / 28<i class="ic xs ic-check tk wt-off" id="tk5"></i></div>
+                    <div class="cpx"><span class="qn">6</span><code>button.add</code> label "Choose"<i class="ic xs ic-check tk wt-off" id="tk6"></i></div>
+                    <div class="irow"><span class="rl">Model</span><span class="select"><span class="lead">Local · Qwen (MLX)</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Run</span><button class="btn primary sm" id="btnRun"><i class="ic ic-play"></i> Run plan</button></div>
+                    <p class="note">You read the plan before anything happens, and every line undoes on its own.</p>
+                  </div>
+                </div>
+
+                <div id="agentChanges" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Last change <span class="mut">2 commands · undoable</span></div>
+                    <button class="chg" id="chgSize" type="button"><i class="ic xs ic-check"></i> CTA · size 11 to <b>13</b></button>
+                    <button class="chg" id="chgFill" type="button"><i class="ic xs ic-check"></i> CTA · fill to <b>Accent / 500</b></button>
+                    <p class="note">Click a change to select it on the canvas and keep going by hand.</p>
+                  </div>
+                </div>
+
+                <div class="chat-in">
+                  <span class="box" id="agentAsk">make the Studio CTA bigger and use the accent</span>
+                  <button class="btn primary icon sm" id="btnSend" title="Send to the agent"><i class="ic ic-sparkle"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · the source the agent reused. Same panel, same scopes. -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Components</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button class="on" data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+
+                <div data-scope-body="media" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media imported</div>
+                </div>
+
+                <div data-scope-body="components">
+                  <div class="libgrid">
+                    <div class="libtile comp" id="libCard" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Card</span><span class="mt" id="libCardMt">1 variant</span></span></div>
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">3 variants</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">The agent instanced these, it did not draw look-alikes. Edit the main Card and all three tiers follow.</p>
+                </div>
+
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="libBrand" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" id="libAccent" tabindex="0"><span class="th" style="background:var(--accent)"></span><span class="cap"><span class="nm">Accent / 500</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#2b3350,#0f1320)"></span><span class="cap"><span class="nm">Price / 28</span><span class="mt">type</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">Named styles resolve through tokens, so re-painting the system re-paints what the agent built.</p>
+                </div>
+
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gAgent" title="Agent"><i class="ic sm ic-sparkle"></i><span class="lb">Agent</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+          </div>
+          <div class="popover menu pop" id="agentMenu" style="position:absolute;right:var(--s4);top:34px;width:220px;z-index:11">
+            <div class="menuitem"><i class="ic ic-sliders"></i> Choose a model…</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Undo the whole batch <span class="sc">⌘Z</span></div>
+            <div class="menuitem"><i class="ic ic-export"></i> Copy plan as commands</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:216px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Open the command surface"
+          data-cue="#cmdk" data-cue-label="Click the command surface, or press ⌘K" data-cue-place="bottom"
+          data-pop="#cmdkPop">
+        <div class="wt-cap auto">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>command surface</b>, or press <code>⌘K</code></p>
+          <p class="wt-where">the toolbar, next to History</p>
+          <p class="wt-res">the palette opens on the goal you typed. It lists the ordinary commands you can run, and at the top, <b>Ask the agent</b>. The agent is not a separate window: it is one more thing you can run from here.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Hand the goal to the agent"
+          data-cue="#miAsk" data-cue-label="Click Ask the agent" data-cue-place="bottom"
+          data-pop="#cmdkPop" data-open="#gAgent"
+          data-show="#agentPlan" data-hide="#agentEmpty"
+          data-set="#agentState=planning">
+        <div class="wt-cap auto">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Ask the agent · Make a pricing section on brand</b></p>
+          <p class="wt-where">the command palette</p>
+          <p class="wt-res">the <b>Agent</b> group opens in the dock with a readable plan: six named commands, the same ones the tool bar and the panels call. Nothing has run yet, and you can see the model it will use.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Run the plan"
+          data-cue="#btnRun" data-cue-label="Click Run plan" data-cue-place="left"
+          data-open="#gAgent"
+          data-show="#agentPlan,#tk1,#tk2,#tk3,#tk4,#tk5,#tk6,#cvPricing,#layersList,#instRing1,#instRing2,#instRing3"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty"
+          data-set="#agentState=ran 6 commands|#layerCount=4">
+        <div class="wt-cap auto">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Run plan</b></p>
+          <p class="wt-where">the Agent group, under the command list</p>
+          <p class="wt-res">the section builds on the canvas, command by command. Layers fills with a real <b>Pricing</b> frame and three <b>Card</b> instances, each plan line checks off, and the purple rings show that these are linked instances, not flattened art.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="See what it reused"
+          data-cue="#gLibraryH" data-cue-label="Click the Library header" data-cue-place="left"
+          data-open="#gAgent,#gLibrary" data-scope="components"
+          data-show="#agentPlan,#tk1,#tk2,#tk3,#tk4,#tk5,#tk6,#cvPricing,#layersList,#instRing1,#instRing2,#instRing3"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty"
+          data-set="#agentState=ran 6 commands|#layerCount=4|#libCardMt=3 instances">
+        <div class="wt-cap auto">
+          <span class="wt-n">4</span>
+          <p class="wt-do">the <b>Library</b> group header</p>
+          <p class="wt-where">the right dock, bottom group</p>
+          <p class="wt-res">Library opens at scope <b>Components</b> and <b>Card</b> now reads <b>3 instances</b>. That is the proof the agent reused your component instead of drawing a look-alike.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="And which styles it painted with"
+          data-cue="#scopeStyles" data-cue-label="Click Styles" data-cue-place="left"
+          data-open="#gAgent,#gLibrary" data-scope="styles"
+          data-show="#agentPlan,#tk1,#tk2,#tk3,#tk4,#tk5,#tk6,#cvPricing,#layersList,#instRing1,#instRing2,#instRing3"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty"
+          data-set="#agentState=ran 6 commands|#layerCount=4|#libCardMt=3 instances">
+        <div class="wt-cap auto">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Styles</b></p>
+          <p class="wt-where">the Library scope switch</p>
+          <p class="wt-res">the same panel, a different scope: <b>Brand / gradient</b> and <b>Price / 28</b> are the named paint and type it used. Re-paint the system later and everything it built re-resolves with the rest of your work.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Take it by hand"
+          data-cue="#cvCard2" data-cue-label="Click the Studio card" data-cue-place="top"
+          data-open="#gAgent,#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrCard2"
+          data-show="#agentPlan,#tk1,#tk2,#tk3,#tk4,#tk5,#tk6,#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#selCard2,#propsSel"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty"
+          data-set="#agentState=ran 6 commands|#layerCount=4|#propKind=Instance|#libCardMt=3 instances">
+        <div class="wt-cap auto">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Studio</b> card</p>
+          <p class="wt-where">the canvas, with the Select tool</p>
+          <p class="wt-res">the ordinary three-place selection: the ring on the canvas, <b>Card · Studio</b> in Layers, and Properties. What the agent made is a live layer tree, so from here it edits exactly like anything you drew.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Ask for a change"
+          data-cue="#btnSend" data-cue-label="Click send" data-cue-place="left"
+          data-open="#gAgent,#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrCard2"
+          data-show="#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#selCard2,#propsSel,#agentChanges"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty,#agentPlan"
+          data-css="#ctaStudio=background:var(--accent);color:var(--accent-ink);font-size:13px;padding:10px 0"
+          data-set="#agentState=2 commands|#layerCount=4|#propKind=Instance|#ctaStudio=Choose Studio">
+        <div class="wt-cap auto">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>send</b>, with the request typed in the Agent group</p>
+          <p class="wt-where">the Agent group, at the bottom of the panel</p>
+          <p class="wt-res">two named commands come back, not a redraw: the CTA grows and repaints with <b>Accent / 500</b>. You can read both before deciding, and either one undoes on its own.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select a change on the canvas"
+          data-cue="#chgFill" data-cue-label="Click the fill change" data-cue-place="left"
+          data-open="#gAgent,#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrCard2" data-activate="#chgFill"
+          data-show="#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#propsSel,#agentChanges,#selCta"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty,#agentPlan,#selCard2"
+          data-css="#ctaStudio=background:var(--accent);color:var(--accent-ink);font-size:13px;padding:10px 0|#pFillSw=background:var(--accent)"
+          data-set="#agentState=2 commands|#layerCount=4|#propKind=Text layer|#ctaStudio=Choose Studio|#pFillVal=Accent / 500|#pFillNote=The change is a normal bound style on a normal layer. Nothing about it is agent-only, so you can keep editing or undo just this line.">
+        <div class="wt-cap auto">
+          <span class="wt-n">8</span>
+          <p class="wt-do">the <b>CTA · fill to Accent / 500</b> row</p>
+          <p class="wt-where">the Agent group, in <b>Last change</b></p>
+          <p class="wt-res">the selection jumps to that exact layer on the canvas and Properties shows the bound style. The agent hands the work back as ordinary layers, which is the whole point: the design stays yours.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the empty document"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Everything the UI does is <b>one command</b>, so the agent needs no private API and no private window. It is reached from the command surface, it appears as a <b>panel group</b> like Layers or Library, and what it produces is ordinary layers bound to your components and styles.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Because the command schema is the contract, the model is pluggable: a local <b>Qwen</b> (MLX) as the private, offline default, or a frontier model over MCP. Same commands either way, and only valid, undoable steps.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>How much plan should you see before it runs: the whole list up front, or commands that stream and draw as they execute with one undo for the batch? And should <b data-target="dsys" style="color:#9d6cff;cursor:pointer">a published system</b> be able to forbid raw values outright, so the agent cannot invent a color even if asked?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the automation accent for the step number, and a live Library
+     scope switch when a person clicks it directly (the walkthrough drives the
+     same state declaratively). Everything else is shared DS behavior. */
+  (function () {
+    var seg = document.querySelector('#agent-generate-wt .scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

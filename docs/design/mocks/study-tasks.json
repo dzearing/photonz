@@ -1,0 +1,972 @@
+{
+  "project": "Photonz creation-vision direction study",
+  "updated": "2026-07-20",
+  "purpose": "Audit the clickable mock for usability + consistency, then keep improving it in bounded tasks: make controls consistent, make interactions legible (drag/choose/create/save/modify), and deeply flesh out real video + image editing workflows.",
+  "loop": {
+    "contextBudget": "Each task must fit in ~200k context. The coordinator dispatches ONE task at a time to a fresh subagent (its own 200k), or resets its own context via /reset-context with the continuation 'go'.",
+    "protocol": [
+      "On 'go': read this file. Pick the highest-priority task with status 'pending' whose deps are all 'done'.",
+      "Set it 'in_progress'. Dispatch to a subagent following shared/AGENTS.md (page authors) or, for shared-DS tasks, allow editing shared/photonz-ds.css + AGENTS.md.",
+      "Verify: curl the touched pages return 200, spot-check the specific fix, confirm consistency + copy rules (glass look, 4pt spacing, canonical controls, no em dashes, say 'agent' not 'Claude').",
+      "Mark 'done' with a short note. Append any NEW problems found to 'discovered' as new pending tasks.",
+      "If coordinator context is getting large, run /reset-context with 'go' so the next task starts fresh. State here is the single source of truth."
+    ]
+  },
+  "conventions": {
+    "controls": "ONE canonical control system (see task ctrl-system). Buttons: sizes sm/md/lg, variants primary/secondary/ghost/danger, plus icon-button; every control has visible hover/active/focus/disabled response. No ad-hoc square/tiny/round buttons.",
+    "look": "macOS Liquid Glass: translucent materials, luminous edges, capsule controls, continuous rounding (see LIQUID GLASS pass in photonz-ds.css).",
+    "spacing": "4pt scale tokens only.",
+    "legibility": "Every asserted interaction must be SHOWN, not just claimed: how to pick/drag a component, how a keyframe maps to a value over time, how a tool changes the canvas. Prefer real, resettable interactive demos over static pixels.",
+    "copy": "Plain human language, no em dashes, never say 'Claude' (say 'agent')."
+  },
+  "tasks": [
+    {
+      "id": "vr1-geometry-chrome",
+      "area": "visual",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "VISUAL RULES 1-3 + 11 (shared DS only, ~1 file): consistent padding; CONCENTRIC RADII (inner = outer - gap, so the edge gap stays constant around the corner; add a token/helper e.g. calc(var(--r4) - var(--pad))); ROUND-INSIDE-ROUND (an icon control inside a pill/capsule container must be circular, not a rounded rect - the selected tool in the floating .tbar is the live offender); MENUS/POPOVERS MUST BE OPAQUE (darkened AND blurred, text fully legible - the systray menu is currently see-through and unreadable)",
+      "notes": "DONE + browser-verified. (11) ROOT CAUSE of the unreadable menu: the liquid-glass pass at line ~618 repainted .popover with --glass-chrome = rgba(30,34,45,.6), i.e. 60% opaque. Added a dedicated --glass-menu token to all 4 theme blocks (dark rgba(22,25,33,.95) / light rgba(252,253,255,.96)) and applied it to .popover/.menu/.mbmenu with blur(24px) saturate(180%) + a deeper shadow. MEASURED alpha 0.6 -> 0.95. (3) ROUND-IN-ROUND: .cnv .tbar .tool and .cnv-act .tool are now 30x30 with border-radius:999px (were 30x28 @ 9px radius inside a 999px pill). MEASURED circular:true. (2) CONCENTRIC RADII: added the .r-nest helper (--r-in = --r-out minus --pad-in) plus the rule in AGENTS.md; it is a utility for authors, not yet applied per page - the vr6 sweep adopts it. (1) padding consistency is documented in AGENTS.md VISUAL RULES; enforcement happens in vr6."
+    },
+    {
+      "id": "vr2-canvas-grid",
+      "area": "visual",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "VISUAL RULE 5 (shared DS): ONE canonical canvas treatment - the grid plus subtle radial gradient - used identically for image, UI and video. The grid MUST SCALE WITH ZOOM so grid density reads as the zoom level. Wire it to the .zoomctl so changing zoom visibly changes grid spacing",
+      "notes": "DONE. shared/photonz-ds.css .canvas rewritten as the ONE canonical canvas: minor grid + major grid every 5 cells + radial artboard, all sized from --zoom (1=100%) x --grid-cell (22px; 18px for .canvas.mini). photonz-ds.js zslider handler now sets --zoom on the canvases inside the slider's own .cnv/.edit/.wt-step/.win/.shell scope (verified on app-shell: slider 1 moved ONLY its own canvas, 22->66px at 300%, 11px at 50%; the page's 3 other canvases stayed at 22px). New tokens --artboard-grid-major (all 4 theme blocks) and three page-tunable knobs --artboard-glow/--artboard-ink/--artboard-bg replacing the hardcoded #141826. Added .canvas.mini for inline specimen canvases. DELETED all 4 hand-rolled grid canvases (grep artboard-grid in pages/ = 0): language .mini-canvas, export-share .expreview, lang-elevation .scene .cv, ds-modes .dm-art -- each now carries class 'canvas mini' (ds-modes uses full .canvas, flat via ink==bg) and keeps only its local size/radius. Browser-verified all 4: correct 5-layer background-size, non-zero boxes, children centered, 0 horizontal overflow."
+    },
+    {
+      "id": "vr3-panel-ergonomics",
+      "area": "visual",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "VISUAL RULES 4 + 6 + 7 + 9 (shared DS): (4) every .dgrp header gets a visible collapse/expand affordance and the dock gets an obvious way to manage which panes show; (6) NO .seg in narrow panels - it wraps to two rows in a 268px dock; provide a narrow-safe scope control (select/menu or wrapping chips) and make .seg refuse to be used narrow; (7) no input+button on one skinny row (a search field next to Import truncates to 'Search cor') - give a stacked narrow layout; (9) counts become BADGES immediately after the header label, left-aligned, never right-aligned across the row",
+      "notes": "DONE, all four rules, shared DS only + deletion of the page-local workarounds they replace. VR9: .dgrp-h .ttl no longer takes the free space; .cnt is a pill badge right after it and the first element AFTER label-or-badge takes margin-left:auto, so trailing buttons stay right-aligned with zero page edits. VR7: .libtools wraps, flex bases 160 (srch) / 120 (btn) decide - a dock cannot fit both so each takes a full line, a wide window keeps them side by side; no breakpoint, reflows during a splitter drag. VR6: any .seg inside .pdock/.dgrp-b is now an auto-fit GRID (not wrapping flex - flex wrapped 6 items 4+2 and stretched the survivors to 115px); column floor --segmin is measured in JS from the widest label, +paddingRight because scrollWidth omits it. VR4: chevrons were already auto-injected; the missing piece was the dock decision - every .pdock with 2+ groups gets a sticky .dockmgr footer whose PANELS checklist is BUILT FROM ITS OWN GROUPS (58 managers across 64 pages, zero page markup). .dgrp.hidden = display:none; .drailtab now un-hides as well as un-collapses. DELETED: 34 inline seg width hacks, 7 page-local seg display overrides (ui-grid, ui-prototype, ui-autolayout, video-motion, ui-nested, ui-variants, ui-build-screen), img-masking's .seg.wrap. VERIFIED by browser sweep over ALL 64 pages / 97 panel segs: 0 truncated chips, 0 uneven chips, 0 stranded counts, 0 clipped toolbars, 0 zero-size canvases, 0 horizontal overflow, and every seg asserted to actually compute display:grid. Harness saved at shared/audit-sweep.js."
+    },
+    {
+      "id": "vr4-library-tiles",
+      "area": "visual",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "VISUAL RULE 8 (shared DS): Library tiles must stay recognizable - justify/size the .libgrid so a card reads as a card (min tile width + auto-fill), never squeezed into skinny unrecognizable slivers",
+      "notes": "DONE for tile SHAPE (the rule as written); tile HEIGHT budget is an open design call, see discovered/library-vertical-budget-fork. .libgrid was repeat(3,1fr) - a FIXED column count, so a 268px dock gave 76px tiles with a 46px thumb. Now repeat(auto-fill,minmax(96px,1fr)) so the DOCK decides the count (2 at rest, 4 widened), and .libtile .th is aspect-ratio:16/10 instead of a fixed 46px strip. auto-fill deliberately, NOT auto-fit: with 2 tiles in a wide container auto-fit would stretch each to half the width; auto-fill keeps them card-sized and leaves the empty tracks. Also raised .dgrp.grow floor 124->212 and its body 88->168 (strictly better, but does not fully solve the cut-off row - the chrome eats it). VERIFIED across 64 pages / 209 visible tiles: smallest tile 107px (was 76), 0 ellipsised names, 0 overflow. HEIGHT RESOLVED after the user chose option A (drop the body Import button): removed from 39 pages where the group HEADER already carries a + Import menu, so no affordance was lost. That cut the Library chrome 102px -> 77px, and the .grow floor moved 124/88 -> 244/200, so a WHOLE card row is now fully visible with the next row peeking as scroll affordance (verified whole=2 cut=0 on app-shell, editor, image, video, dsys, paint, states, typography). SIDE FIX along the way: --segmin was measured with scrollWidth, which returns max(content, clientWidth) and so reported the chip's CURRENT box once it was wider than its text - a feedback loop that grew the floor until a 4-chip scope wrapped. Now measured with width:max-content, which cannot drift."
+    },
+    {
+      "id": "vr5-walkthrough-nav",
+      "area": "visual",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "VISUAL RULE 10 (shared DS): walkthrough nav. USER RESTATED THIS ANGRILY - it is still broken. (1) CONSOLIDATE the controls INTO THE BOX ABOVE THEM - the nav must live inside the step card, not as a detached bar underneath it. (2) Buttons RIGHT-ALIGNED, in the order RESET / BACK / NEXT. Never Back on one side and Next on the other. (3) ARROW-KEY navigation must work (left/right steps).",
+      "notes": "DONE, all three parts, shared DS only - zero page edits across the 12 walkthrough pages.\n(1) CONSOLIDATED: the .wbar was authored as a SIBLING of .wt-steps, which is why it read as a detached strip under the caption card. ds.js now wraps .wt-steps + .wbar in a generated .wt-panel, the border/radius/background moved from .wt-cap up to .wt-panel, and the bar carries a border-top divider - so the caption and the controls are literally one box.\n(2) ORDER: deleted `.wbar .wt-reset{margin-left:auto}` (that was what stranded Back at the far left and Next at the far right). ds.js reorders the bar's children IN THE DOM - dots, label, Reset, Back, Next - rather than with CSS `order`, which would have moved them visually while leaving tab order lying. .wlabel takes margin-right:auto so the trio sits together at the right edge.\n(3) ARROW KEYS: keydown bound per .wt. A page with exactly one .wt responds without needing focus; more than one requires focus, since guessing would steal arrows from the wrong widget. Never intercepts arrows aimed at input/textarea/select/contenteditable, or any modifier combo.\nVERIFIED in-browser on ALL 12 pages (walk, capture-wt, vector-wt, agent-generate-wt, video-animate-wt, img-grade-wt, component-configure-wt, img-retouch-wt, ds-build-wt, video-create-wt, composites, ui-build-screen): DOM order Reset<Back<Next, x-order 900<990<1077, trio adjacent and flush to the bar's right edge, bar AND caption both inside .wt-panel's box, ArrowRight advances a step and ArrowLeft goes back. 0 horizontal overflow. FOLLOW-UP (user, mid-vr6): the nav bar moved to the TOP of .wt-panel, above the caption. ds.js appends bar-then-steps and the divider is border-bottom. Rationale: the controls are what you drive the walkthrough with, so they must hold one fixed position instead of sliding down the page whenever a step's caption runs longer; bar-first also makes them the panel's first tab stops. Verified on all 11 walkthrough pages: DOM bar-first, bar above steps, flush (barBottom==stepsTop), order dots>label>Reset>Back>Next."
+    },
+    {
+      "id": "vr6-page-sweep",
+      "area": "visual",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "vr1-geometry-chrome",
+        "vr2-canvas-grid",
+        "vr3-panel-ergonomics",
+        "vr4-library-tiles",
+        "vr5-walkthrough-nav"
+      ],
+      "title": "Sweep pages to adopt VR1-VR5 and DELETE the page-local workarounds they replace. Batch into disjoint page sets so each batch fits a fresh context",
+      "notes": "DONE. Scouted first with a duplicate-rule scan instead of reading 64 pages: the pages had already adopted VR1-VR5 (the rules landed centrally and swept clean), so the real content of vr6 was the page-local DUPLICATION. 7 primitives were being written out by hand, byte-identical, in 4-37 pages each: .pglead(32) .mlabel(35) .rl(8) .setrow(5) .actstack(4) .seg.stack(5) and `.win.shell .canvas{min-height:0}`(37). Promoted all 7 into shared/photonz-ds.css (see the `VR6 - PROMOTED PRIMITIVES` block at the end) and deleted 161 local rules from 45 pages with vr6-strip.py, which only cuts a rule when selector AND normalised body match exactly AND the rule is at top level (never inside @media). 4 genuinely divergent bodies were left alone and are listed by the script. VERIFIED three ways: (1) geometry diff of all 35,582 elements across 64 pages before/after -- identical within 2px except the animated .pulse cue and lang-motion's animated demo; (2) computed-style assertions that each promoted rule is IN EFFECT on the pages that no longer declare it (33 pglead, 112 mlabel, 33 rl, 13 setrow, 5 actstack, 5 seg.stack, 49 shell canvases); (3) the standing audit sweep: 64 pages, 72 segs, 58 dock managers, ZERO issues. Bonus: each promoted name was an UNPREFIXED bare local class, i.e. the collision class documented at the top of the DS, so promoting it reserves the name and fixes the hazard in one move."
+    },
+    {
+      "id": "ctrl-system",
+      "title": "Canonical control/button system in shared DS (sizes, variants, states, icon buttons) + normalize pill/tool/chip + mandate in AGENTS.md",
+      "area": "design-system",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE. Added .btn (sizes sm/md/lg; variants primary/secondary/ghost/danger; .btn.icon/.btn.block) with real hover/active/:focus-visible/disabled states; normalized .pill/.tool/.chip/.select/.seg to match; mandated in AGENTS.md. Root fix for inconsistent buttons."
+    },
+    {
+      "id": "audit",
+      "title": "Usability + consistency audit across all pages -> audit-findings.json (prioritized)",
+      "area": "audit",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE. 36 findings (11 high) in audit-findings.json. Confirms: keyframe panel decorative (f-001/002), no create-video on-ramp (f-003), component drag never shown (f-010/011), image tools under-shown (f-009), read-only tags look clickable (f-012/013), image double-toolbar + emoji icons (f-007/008), backchip/glyph/segmented inconsistencies (f-014/017/019), ds.js em dash (f-023), Claude in 2 code comments (f-030), save/dirty missing (f-020), playhead misalign (f-027)."
+    },
+    {
+      "id": "apply-controls",
+      "title": "Sweep all pages to use the canonical control system; remove ad-hoc buttons",
+      "area": "consistency",
+      "priority": "P0",
+      "status": "done",
+      "deps": [
+        "ctrl-system",
+        "audit"
+      ],
+      "notes": "DONE. Core pages swept: action pills -> canonical .btn (real states); read-only values -> static .val. New pages already canonical."
+    },
+    {
+      "id": "video-section",
+      "title": "Turn Video into a full multi-page section (like Design language): overview + sub-pages",
+      "area": "video",
+      "priority": "P0",
+      "status": "pending",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "User strongly wants video expanded. Rail already supports collapsible sections. [DEFERRED: do after the UX foundation + reconciliation phase.]"
+    },
+    {
+      "id": "video-create-flow",
+      "title": "Video: a real step-by-step 'how to create a video' walkthrough (import -> arrange -> title -> transition -> caption -> export)",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE (video agent): a 'New video' 4-step stepper on video.html (empty -> import media -> drop first clip -> arrange & keyframe), each step swaps a live illustration."
+    },
+    {
+      "id": "video-keyframes",
+      "title": "Replace the decorative keyframe panel with a REAL keyframe editor (value-over-time graph, add/move/delete keys, easing between keys, playhead scrub)",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE. Real value-over-time editor sharing the timeline's time axis; draggable keys on true clip times; switchable easing; playhead scrubs curve+timeline with live readout; K/Add/Delete place/remove keys; preview animates from the curves. Fixed a shared-DS bug: .btn.ghost collided with .ghost (position/width) -> patched in shared CSS."
+    },
+    {
+      "id": "video-timeline-interactions",
+      "title": "Video: explain + show timeline interactions (drag clips, trim, split, ripple, snap, drag a component onto a track)",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE (video agent): model-driven timeline, clips drag to move, edge-drag to trim, blade splits, snapping to ticks/playhead, select reflects .sel. Select tool is now a real pointer arrow. Also covers playhead-align (playhead sits at stated time)."
+    },
+    {
+      "id": "component-drag-choose",
+      "title": "Show HOW you choose and drag components: a component library/picker + a real drag-to-canvas interaction with drop targets",
+      "area": "components",
+      "priority": "P0",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE. pages/components.html: searchable Library (categories, thumbnails, counts), pointer-driven pick-up -> drag ghost -> armed drop target -> drop = linked instance (ring + badge), double-click insert, Reset. Interactive + verified in browser. In rail under UI & content design."
+    },
+    {
+      "id": "save-flow",
+      "title": "Explain saving: documents, autosave, versions/history, export presets",
+      "area": "workflow",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (documents.html): dirty<->saved dot, autosave, Save (\u2318S) appends a version, version-history restore, export presets menu; portable document note."
+    },
+    {
+      "id": "modify-flow",
+      "title": "Explain modifying: select -> inspect -> change, undo/redo, non-destructive edits",
+      "area": "workflow",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (documents.html): select->inspect->change cycle on sample objects, live property edits, Undo/Redo (\u2318Z/\u21e7\u2318Z) with history list, non-destructive effects."
+    },
+    {
+      "id": "ds-switching",
+      "title": "Show using/switching between different design systems (apply team system, swap Brand, live re-theme)",
+      "area": "workflow",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE. pages/ds-switch.html: pick from 5 systems -> live re-theme of a sample artboard (accent/face/radius/surface) via token swap; semantic-token map (names stay, values change); before/after of a component; Apply team system + agent API (system.apply). In rail under UI & content design."
+    },
+    {
+      "id": "image-adjustment-layers",
+      "title": "Image: adjustment layers that change color (add a Hue/Curves/Color-balance layer, masked, non-destructive) shown as a real flow",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (same agent also did image-toolbar-refine). Add-adjustment popover; Hue/Sat/Curves/Color-balance/WB as non-destructive layers w/ mask; dragging Hue live-recolors the sunset via backdrop-filter; toggle = before/after. One consolidated toolbar, monochrome icons, static .val readouts."
+    },
+    {
+      "id": "image-vector-draw",
+      "title": "Image/UI: drawing on the surface with VECTORS (pen tool, points, handles, shapes) as a real interaction",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (draw.html): interactive SVG pen - click adds anchors, drag pulls bezier handles, close applies Paint fill; Smooth/Corner, stroke, undo/clear; makes a vector Layer."
+    },
+    {
+      "id": "image-brush",
+      "title": "Image: brush drawing (brush picker: size/hardness/flow/color) shown drawing on the canvas",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (draw.html): canvas brush - drag paints; live size/hardness/flow/opacity + Paint color + presets; acts on a raster Layer."
+    },
+    {
+      "id": "image-erase",
+      "title": "Image: erasing (eraser + mask-based erase) shown",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE (draw.html): destructive erase (destination-out) + reversible layer-MASK erase (destination-in) with restore; mask erase preferred."
+    },
+    {
+      "id": "static-control",
+      "title": "Add a read-only/static control variant so value tags (5200K, 100%, '3 variants') don't look clickable; apply across pages (f-012/013)",
+      "area": "controls",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE. Shared .val added + applied across core pages (paint/effects/agent/ideas/composites/home). New pages already use it."
+    },
+    {
+      "id": "image-toolbar-refine",
+      "title": "Image editor: merge the two stacked toolbars, replace emoji icons with monochrome glyphs, de-crowd (f-007/008)",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": "DONE with image-adjustment-layers agent. Canonical .val promoted to shared DS for static readouts (f-012/013); sweep other pages to use it in the consistency pass."
+    },
+    {
+      "id": "save-dirty-state",
+      "title": "Show Save + dirty-state + autosave across editors (f-020)",
+      "area": "workflow",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [
+        "ctrl-system"
+      ],
+      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]"
+    },
+    {
+      "id": "glyph-convention",
+      "title": "Consistent tool-glyph set; fix collisions (measure vs crop, patch vs keyframe) (f-019)",
+      "area": "consistency",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE (lang scope): unified back-chip glyph; Crop \u2317->\u25f2 to stop colliding with Measure. Remaining minor: patch(\u25c7) vs keyframe(\u25c7) live on different pages (image vs video), not an in-page collision."
+    },
+    {
+      "id": "quick-copy-fixes",
+      "title": "Remove em dash in shared ds.js walkthrough label (f-023) and the two 'Claude' leaks in code comments (f-030)",
+      "area": "copy",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "notes": "DONE: replaced the em dash in ds.js walkthrough label with a middot and the two Claude comment leaks with agent."
+    },
+    {
+      "id": "playhead-align",
+      "title": "Fix video playhead/time readout alignment (f-027)",
+      "area": "video",
+      "priority": "P2",
+      "status": "done",
+      "deps": [
+        "video-section"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "consistency-pass",
+      "title": "Global refinement pass: alignment, gaps, dead controls, hover states, wrap issues across the whole study",
+      "area": "consistency",
+      "priority": "P2",
+      "status": "pending",
+      "deps": [
+        "apply-controls"
+      ],
+      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]"
+    },
+    {
+      "id": "typography-labels",
+      "title": "Typography page: floating labels (serif/New York, Paint fill, effect glow) do not anchor to anything and overlap. Fix: separate into 3 distinct examples, each showing ONE element selected (selection outline) with its label placed beside it (leader line, no overlap). No random floating pills.",
+      "area": "typography",
+      "priority": "P1",
+      "status": "done",
+      "deps": [
+        "icon-sweep-ui"
+      ],
+      "notes": "DONE. Poster split into 3 separated specimens (.tscenes): Typeface (New York, sel-ring+handles), Paint fill (Brand gradient), Effect (glow) - each its own selection with a dot-on-edge + leader line + compact callout chip. No floating clustered pills."
+    },
+    {
+      "id": "redline-rebuild",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Rebuild Measure & redline into a REAL tool: realistic screenshot + dimension lines (end ticks) measuring actual element sizes/gaps with correct values, alignment guide, hover-to-measure. Current one is arbitrary rules over gray bars.",
+      "notes": "DONE. Realistic macOS Settings screenshot; 6 dimension lines with end ticks + labels anchored on span (verified vs getBoundingClientRect): size (button 128x40, input h32) in pink, spacing (inset 24, gap 16, margin 32) in blue; legend; dashed alignment guide (shared left/right edges); interactive hover W x H box + click-two-points measure mode with live px. Icons + .btn + glass. Caliper conversion done: measurements render as U-bracket calipers (arms + base, label on base, 4 orientations, hover + click-to-measure)."
+    },
+    {
+      "id": "video-wt-create",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: Create a video start to finish (stepped .wsteps): new/empty project -> import media (bin) -> drop clips on the timeline -> trim/arrange -> add a title (component) -> add a transition -> add captions -> add audio + duck -> keyframe a simple move -> export MP4. Interactive stepper; each step swaps a live illustration.",
+      "notes": "DONE. pages/video-create-wt.html: 10-step .wsteps walkthrough (new->import->drop->trim->title->transition->captions->audio+duck->keyframe->export MP4), each step swaps a live .win illustration; .ic icons only, canonical .btn, 3 caption notes. curl 200. In rail under Video Editing."
+    },
+    {
+      "id": "video-wt-animate",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: Animate with the video editor (stepped): select a layer -> open keyframe editor -> add keys for Opacity/Position/Scale -> set easing between keys -> scrub to preview -> apply a motion preset -> animate a component lower-third -> export. Interactive; reuse the real keyframe editor patterns from video.html.",
+      "notes": "DONE. pages/video-animate-wt.html: 8-step .wsteps walkthrough (select->keyframe editor->add Opacity/Position/Scale keys->easing->scrub->motion preset->component lower-third->export); accurate value-over-time SVG curves on a shared 6s time axis, key diamonds on true times, playhead readout. curl 200. Rail: Video Editing."
+    },
+    {
+      "id": "more-examples",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Go through each section adding more examples/walkthroughs: UI Design (build-a-screen walkthrough, auto-layout resize), Design system (build-a-system), Image (retouch walkthrough, background remove, adjustment recipe), Draw (illustrate-a-shape), Automation (prompt -> generated design walkthrough). Enumerate into sub-tasks as you go.",
+      "notes": "DONE (decomposed + executed). Split into concrete per-section walkthroughs/demos now built: video (create/animate/transitions/audio/captions/motion), UI (build-screen/auto-layout/grid/variants/prototype/component-configure), design system (build/modes), image (retouch/bg-remove/grade/brush-editor/brush-library/vector), automation (prompt-to-design/agent-edit). Remaining P2 sub-topics tracked as their own tasks."
+    },
+    {
+      "id": "icon-sweep-rest",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Icon sweep for the pages neither earlier sweep covered: foundations, home, walk, composites, agent, ideas, and the 13 lang-* pages. Replace ascii glyphs with .ic icons.",
+      "notes": "SUPERSEDED by icon-library-consolidate (foundation phase), which does the icon grammar + ascii/emoji fix across ALL pages under one library."
+    },
+    {
+      "id": "missing-icons",
+      "area": "video",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Add missing icons to the generator (transition, skip-back, skip-forward, audio/note, clock/history, warning, heal, lasso, clone, maximize) so near-miss fallbacks become exact.",
+      "notes": "DONE. Added 10 icons to shared/photonz-ds.css (transition, skip-back, skip-forward, audio, history, warning, heal, lasso, clone, maximize) in the Lucide/Feather encoding; added names to AGENTS.md Available list. CSS curl 200."
+    },
+    {
+      "id": "video-motion-graphics",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Video: animated title sequence / motion graphics (text on paths, staggered reveals, kinetic type)",
+      "notes": "DONE. pages/video-motion.html: motion graphics. Play runs a staggered title sequence (text on SVG path, staggered word reveals, kinetic type) on the keyframe engine; stagger control; preset .seg; synced keyframe timeline+playhead; type.animateIn API. Rail: Video Editing."
+    },
+    {
+      "id": "video-captions",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Video: auto-captions + caption styling (word-level timing, styles from the type system, safe areas)",
+      "notes": "DONE. pages/video-captions.html: captions. Word-level timing track, active word highlights on scrub; auto-generate flow; styled captions from Type Styles; title/action safe areas; transport w/ disabled ends; captions.autoGenerate API. Rail: Video Editing."
+    },
+    {
+      "id": "video-transitions",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Video: transitions library deep-dive (cross dissolve, dip to color, slide, push, morph) applied between clips",
+      "notes": "DONE. pages/video-transitions.html: transitions deep-dive. 6 real behaviors (dissolve/dip-to-color/slide/push/morph/cut) animate A->B in preview; library tiles apply to the cut; duration handles + slider; smart disabled states; clip.transitionTo API. Rail: Video Editing."
+    },
+    {
+      "id": "video-audio",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Video: audio editing (levels, fades, ducking under voiceover, waveform trim, mute/solo)",
+      "notes": "DONE. pages/video-audio.html: audio editing. SVG waveforms scaled by level envelope; meters, mute/solo, faders; fade handles + seg; volume automation nodes; duck-under-voiceover toggle draws envelope live; track().duckUnder API. Rail: Video Editing."
+    },
+    {
+      "id": "video-speed",
+      "area": "video",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Video: speed ramp / time remap (slow-mo, freeze frame, curve)",
+      "notes": "DONE. pages/video-speed.html: speed/time-remap. Draggable speed curve, presets, freeze-frame twin stop, retimed clip stretch, live x readout."
+    },
+    {
+      "id": "video-compositing",
+      "area": "video",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Video: masking / green-screen / compositing (chroma key, track matte, blend)",
+      "notes": "DONE. pages/video-compositing.html: chroma key toggle+threshold+spill, track matte seg, blend-mode seg; scenes from gradients."
+    },
+    {
+      "id": "ui-wt-build-screen",
+      "area": "ui",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: build a full UI screen start to finish (frame -> auto-layout -> drop components -> style with tokens -> preview)",
+      "notes": "DONE. pages/ui-build-screen.html: 7-step .wsteps (frame->auto-layout->drop components->style w/tokens->real content->preview->hand off/export); designed iPhone screen illustration. curl 200. Rail: UI Design."
+    },
+    {
+      "id": "ui-autolayout",
+      "area": "ui",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Auto-layout / flexbox-like structure in components: direction (row/col), gap, padding, alignment, distribution, and hug/fill/fixed resizing shown live as content changes",
+      "notes": "DONE. pages/ui-autolayout.html: live flexbox-driven auto-layout demo. Direction/gap/padding/align/distribute controls reflow real children; per-child hug/fill/fixed; add/remove item; frame resize seg; live API code block. node --check clean, 0 console errors. curl 200. Rail: UI Design."
+    },
+    {
+      "id": "ui-grid",
+      "area": "ui",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Layout grids + constraints: column/row grids, snapping, and pin/stretch constraints so elements respond when the frame resizes (interactive resize)",
+      "notes": "DONE. pages/ui-grid.html: live layout-grids + pin/stretch constraints. Resizable frame (drag handle + seg) reflows constrained elements; grid overlay toggle; column/gutter/margin; per-element constraint editor + badges; live API. Rail: UI Design."
+    },
+    {
+      "id": "ui-variants-props",
+      "area": "ui",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Component variants & properties: boolean/text/instance-swap props, a variant matrix, and swapping an instance property live",
+      "notes": "DONE. pages/ui-variants.html: variant x size matrix of real specimens; boolean/text/instance-swap props drive a live instance preview; clicking a matrix cell loads it; live instance.props API. Rail: UI Design."
+    },
+    {
+      "id": "ui-prototyping",
+      "area": "ui",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Prototyping / interactions: wire component states together with triggers (tap -> state), transitions, and a play-through",
+      "notes": "DONE. pages/ui-prototype.html: wire states with triggers; connections graph w/ labeled arrows; live Play demo (tap->navigate slide/dissolve, tap->toggle-state), Reset; per-connection transition/duration editor; live on(tap) API. Rail: UI Design."
+    },
+    {
+      "id": "ui-nested",
+      "area": "ui",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Nested / composite components deep-dive: a component built from components built from components, with overrides at each level",
+      "notes": "DONE. pages/ui-nested.html: IconButton->Toolbar->AppBar nesting tree; overrides per level, deeper mains stay linked; reset per level."
+    },
+    {
+      "id": "ds-wt-build",
+      "area": "ds",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: build a design system from scratch (define tokens -> name styles -> make components -> publish)",
+      "notes": "DONE. pages/ds-build-wt.html: 5-step .wsteps (define tokens->name styles->make components->organize library->publish); real swatches/type/component specimens; ties Tokens->Styles->Components. Rail: UI Design."
+    },
+    {
+      "id": "ds-modes",
+      "area": "ds",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Token modes / themes: light/dark/brand modes on the same tokens, switch a mode and everything re-resolves",
+      "notes": "DONE. pages/ds-modes.html: token modes (Light/Dark/Brand). Same semantic tokens resolve differently per mode; .seg swaps --m-* on the sample scope, live recolor; color input edits a mode value; names stay/values change; system.mode API. Rail: UI Design."
+    },
+    {
+      "id": "img-wt-retouch",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: photo retouch (heal, clone, frequency separation, dodge/burn) on a portrait",
+      "notes": "DONE. pages/img-retouch-wt.html: 5-step .wsteps portrait retouch (heal->clone->frequency separation->dodge&burn->before/after), portrait built from gradients, non-destructive layers, new ic-heal/ic-clone icons. Rail: Image Editing."
+    },
+    {
+      "id": "img-bg-remove",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Image: background remove / subject select (AI select -> refine edge -> cut out) as a real flow",
+      "notes": "DONE. pages/img-bg-remove.html: live bg-remove flow. Select subject (marching ants)->cut out (checkerboard)->edge feather (SVG alpha filter)->replace background swatch; disabled states gated; run(select.subject) API. Rail: Image Editing."
+    },
+    {
+      "id": "img-adjust-recipe",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Image: a color-grade recipe walkthrough (exposure -> curves -> HSL -> split tone) building up non-destructively",
+      "notes": "DONE. pages/img-grade-wt.html: 5-step .wsteps color grade (exposure->curves->HSL->split tone->stack) cumulative CSS filters on one sunset photo; non-destructive adjustment-layer stack, press-hold Compare. Rail: Image Editing."
+    },
+    {
+      "id": "img-masking",
+      "area": "image",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Image: masking deep-dive (layer mask, luminosity, gradient, AI) with live before/after",
+      "notes": "DONE. pages/img-masking.html: mask types (Layer/Luma/Gradient/AI) re-derive a live CSS mask; feather/strength; before-after; show-mask."
+    },
+    {
+      "id": "draw-brush-editor",
+      "area": "draw",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "BRUSH EDITOR: design a brush (tip shape, size, spacing, scatter, angle/roundness, pressure & tilt dynamics, texture, wet/flow) with a live stroke preview that updates",
+      "notes": "DONE. pages/brush-editor.html: live brush editor. Canvas stroke re-renders on tip shape/size/spacing/scatter/angle/roundness/pressure+tilt dynamics/grain/wet/flow/opacity; dynamics curve; presets+reset; live run(brush.set) API line. 0 console errors. curl 200. Rail: Image Editing."
+    },
+    {
+      "id": "draw-brush-library",
+      "area": "draw",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Brush library / presets (categories, custom brushes, import) + picking a brush",
+      "notes": "DONE. pages/brush-library.html: brush LIBRARY (distinct from brush-editor). Category .seg + search filter; canvas-rendered stroke thumbnails; pick->live sample+settings; New/Import adds custom; delete gated to customs; run(brush.pick) API. Rail: Image Editing."
+    },
+    {
+      "id": "draw-vector-wt",
+      "area": "draw",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: build a vector illustration (pen paths, shapes, boolean ops, fills) step by step",
+      "notes": "DONE. pages/vector-wt.html: 6-step .wsteps vector illustration (pen paths->shapes->boolean ops->fills/strokes->final mark->API) with real inline-SVG anchors/handles specimens. Rail: Image Editing."
+    },
+    {
+      "id": "draw-boolean",
+      "area": "draw",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Vector boolean operations (union / subtract / intersect / exclude) shown on overlapping shapes",
+      "notes": "DONE. pages/draw-boolean.html: union/subtract/intersect/exclude via SVG masks/clips; draggable A; swap order; live API."
+    },
+    {
+      "id": "agent-wt",
+      "area": "automation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: prompt -> generated design (multi-step: describe -> agent plans commands -> builds on canvas -> you refine), reusing the components/styles",
+      "notes": "DONE. pages/agent-generate-wt.html: 6-step .wsteps (describe->agent plans commands->builds on canvas->reuses components/styles->refine by chat w/diff). Model-agnostic thesis (local Qwen/MLX default, frontier via MCP), says agent not Claude. curl 200. Rail: Across everything."
+    },
+    {
+      "id": "agent-edit",
+      "area": "automation",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Agent-assisted edit: select something -> ask the agent -> see the proposed diff -> accept/undo",
+      "notes": "DONE. pages/agent-edit.html: agent EDIT/diff flow (distinct from agent-generate-wt). Select->Ask->proposed diff (before->after list + ghost preview)->Accept applies live/Undo reverts; model-agnostic; agent.edit() API. Rail: Across everything."
+    },
+    {
+      "id": "agent-variations",
+      "area": "automation",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Agent batch: generate N on-brand variations of a design and pick one",
+      "notes": "DONE. pages/agent-variations.html: generate 4 on-brand poster variants, pick one (ring+kept), regenerate reshuffles tokens; model-agnostic."
+    },
+    {
+      "id": "capture-wt",
+      "area": "workflow",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: capture -> annotate -> redline -> copy/share (the fast daily path), showing the caliper measure tool",
+      "notes": "DONE. pages/capture-wt.html: 5-step .wsteps capture->annotate->redline(red calipers, black labels, outside the shot)->redact->copy/share."
+    },
+    {
+      "id": "export-share",
+      "area": "workflow",
+      "priority": "P2",
+      "status": "done",
+      "deps": [],
+      "title": "Export & share flows: formats/presets, share link, hand-off to devs (specs)",
+      "notes": "DONE. pages/export-share.html: export formats/scale seg + live output summary + progress; share link copy; dev hand-off specs panel."
+    },
+    {
+      "id": "fix-animate-l3-selection",
+      "area": "video",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "video-animate-wt step 7: lower-third selection ring was offset (card had a transform the ring/badge did not share)",
+      "notes": "DONE. Moved translateX(-14px) scale(.97) from .vwt-l3 to the positioned container (transform-origin:left bottom) so card+.cinst ring+badge transform together and the ring stays tight. Reported by user w/ screenshot."
+    },
+    {
+      "id": "fix-redline-caliper-anchor",
+      "area": "image",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "redline.html calipers used eyeballed magic-number coords; several detached from the element they measure (input-height 32 floated at far left; button calipers were short stubs not reaching the button)",
+      "notes": "DONE. Replaced the 6 static calipers with JS buildDims() anchored to real element rects (same getBoundingClientRect pattern as hover): arms land exactly on each measured edge and extension arms reach from the element to the dimension line. Rebuilds on resize. Verified geometrically (CDP blocked by dev-server SSE). User reported the 128 caliper not spanning the button. ROUND 2 (user follow-up): calipers restyled to classic redline look - solid red (#e5484d) lines, black-text white label chips (was translucent glass), and SIZE calipers now extend past the card edge so the dimension line+label sit OUTSIDE the screenshot with extension arms stretching from the element (demonstrates long calipers). Gap labels stay in-gap."
+    },
+    {
+      "id": "component-configure-wt",
+      "area": "ui",
+      "priority": "P1",
+      "status": "done",
+      "deps": [],
+      "title": "Guided walkthrough: build a settings/inspector control as a reusable COMPONENT and configure its settings (props/variants/tokens) - user asked for how to build this as a component and configure its settings",
+      "notes": "DONE. pages/component-configure-wt.html: 6-step .wsteps building an inspector Setting-row component (label+toggle+segmented) then exposing boolean/text/variant props, binding to Styles, configuring a linked instance. User request. Rail: UI Design."
+    },
+    {
+      "id": "ux-foundation-doc",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Author shared/UX-PATTERNS.md: one app shell, navigation to surfaces (media pool/catalog/tools), panel taxonomy, selection global-vs-contextual, layers flat-vs-grouped, menu/command system, one icon library",
+      "notes": "DONE (v1.0). All six section-10 open questions resolved into baked decisions D1-D6 and propagated into sections 2/6/7. D1: media pool = left-dock Library panel, scope=Media, open via toolbar Library button/\u2325\u2318L/\u2318K, add via +Import/drag-drop/Capture. D2: ONE Library panel, two left-dock tabs (Layers|Library), internal segmented scope switch (Media\u00b7Components\u00b7Styles\u00b7Assets), no per-scope docks. D3: mock shows a compact command surface + \u2318K, NOT a faked native menu bar (shipping app keeps the real menu bar; mock doesn't draw it). D4: canonical ordered tool-strip inventory per app (UI/image/video/draw) with shared tools (Select/Hand/Zoom/Text/Shape/Measure) keeping same glyph+slot everywhere. D5: walkthroughs embed the REAL shell (may reduce, never relocate). D6: adopt \u2318K command palette as the fourth equal command entry, the clearest UI==API==agent proof. This doc is the rubric; app-shell-spec + icon-library-consolidate + ux-audit-run now unblocked."
+    },
+    {
+      "id": "app-shell-spec",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [
+        "ux-foundation-doc"
+      ],
+      "title": "Build ONE reusable app shell in shared DS (title bar + options bar with tool strip + left dock Layers/Library tabs + canvas + right dock Inspector + bottom timeline) and an app-shell.html reference page; pages compose this instead of reinventing chrome",
+      "notes": "DONE. Extended the existing .win/.edit/.toolbar/.timeline system (no parallel shell). New shared classes in an APP SHELL block of shared/photonz-ds.css: .dnav/.dtab(.on) left-dock tab header (Layers|Library); .libtools Library toolbar; .srch reusable capsule search; .libgrid + .libtile(.sel/.comp + .th/.cap/.nm/.mt) draggable tiles; .cmdk \u2318K launcher. Command surface reuses .tool+ic-more + existing .popover/.menu; scope switch reuses .seg. Built pages/app-shell.html reference page: tool strip in exact D4 UI order (Select\u00b7Frame\u00b7Component\u00b7Shape\u00b7Pen\u00b7Text\u00b7Measure\u00b7Hand\u00b7Zoom), Layers|Library tabs + Media\u00b7Components\u00b7Styles\u00b7Assets scope switch, command surface+\u2318K (no faked menu bar), \u00a74 selection shown in 3 places. Documented composition in AGENTS.md ('App shell (compose this, don't reinvent)'). Verified: page+css 200, node --check clean, zero ascii/emoji glyphs, no em dashes, no 'Claude'. Coordinator independently re-verified 200s + new classes present + page clean."
+    },
+    {
+      "id": "icon-library-consolidate",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "ONE consistent icon library: enforce one line-icon grammar, fix mixed styles + ascii/emoji glyphs across ALL pages, one-concept-one-icon, add any missing glyphs to the set. Supersedes icon-sweep-rest",
+      "notes": "DONE. (A) Shared-DS fixes: ds.js '\u25be' textContent -> injected `.ic ic-chevron-down`; `.transition::after` '\u292b' -> masked ic-x glyph; added ic-library glyph (+mapped app-shell Library button off the ic-grid stopgap); fixed a `<span class=ic>T</span>` solid-box bug in lang-resize. (B) Added 9 recurring glyphs to shared: chevron-left, star, trash, group, flip-horizontal, flip-vertical, align-left, align-center, align-right (+AGENTS available list). (C) Swept 31 pages via 6 disjoint parallel subagents (~250 icon-role glyph conversions \u25c8\u25be\u25c9T\u25ad\u22ee\u22ef\u2726\u2713 etc -> .ic-*); excluded 10 pages whose only suspects were legit keyboard shortcuts. (D) Baked a durable AGENTS.md carve-out rule: keyboard-shortcut symbols (\u2318\u2325\u21e7\u2303\u2326\u232b\u21a9\u238b) in .kbd/.sc/<code> and prose connectors (\u2192 \u00b7 in flow text) are NOT icons. (E) Standardized ALL backchips onto ic-chevron-left across 17 pages (removed the scaleX(-1) flip stopgaps + literal '\u2039'). (F) Adopted ic-star (ideas favorites x5), ic-trash + ic-group (lang-overlays menuitems). VERIFIED: all 63 pages 200, css 200, js node --check OK; global scan shows only legitimate carve-outs remain (values like \u221222, <kbd> keys, CSS comments, prose breadcrumbs \u25b8, walkthrough \u2190 Back nav text)."
+    },
+    {
+      "id": "ux-audit-agent-doc",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Author the UX-audit agent spec (shared/ux-audit-agent.md) that checks pages against UX-PATTERNS.md",
+      "notes": "DONE. Written at shared/ux-audit-agent.md: reads UX-PATTERNS+AGENTS+DS, audits shell/wayfinding/library/selection/layers/icons/controls/copy/coherence, writes ux-audit-findings.json (append). Report-only unless told to fix."
+    },
+    {
+      "id": "ux-audit-run",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [
+        "ux-foundation-doc",
+        "ux-audit-agent-doc"
+      ],
+      "title": "Run the UX-audit agent across ALL pages (disjoint batches) -> ux-audit-findings.json; cluster findings",
+      "notes": "DONE. 7 disjoint read-only audit subagents covered all 63 pages (~180 raw findings). Coordinator clustered into 7 recurring patterns (A shell, B command surface+\u2318K, C left-dock Library tabs, D bespoke library widgets, E selection->Inspector, F bespoke chrome/one-off controls, G icon near-misses + copy tail) written to ux-audit-clusters.md. Clean pages: app-shell, ds-modes, lang-resize, lang-spacing. Drives the conform pass."
+    },
+    {
+      "id": "product-model-doc",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Author shared/PRODUCT-MODEL.md: the unified product model (one document, layers-are-everything, surfaces-as-lenses), the 3 real Photonz surfaces, the reuse tier + design-system answers, success criteria, IA (App Design/Usage/Prototypes), and the refine loop",
+      "notes": "DONE + user-approved. Canonical answer to 'how does it all fit together'. Sits above UX-PATTERNS. Key decisions: ONE document engine; Image/UI/Video are workspaces (lenses) over the same layer stack (raster/vector/text/component/adjustment/group); adjustment+filter layers apply to UI frames exactly as photos; Video = same doc + time dimension (timeline bottom dock when time exists); Tokens->Styles->Components->Design Systems with semantic binding so systems re-theme components; system.extract(url) + Library scope=Styles catalog + agent maps foreign tokens; 6 success criteria; 3-zone IA replacing the standalone Guided-walkthrough section."
+    },
+    {
+      "id": "foundation-adjust",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "in_progress",
+      "deps": [
+        "product-model-doc"
+      ],
+      "title": "Model pass: adjust the shared shell/DS to express the model - workspace switch (Image/UI/Video lens) in the shell, timeline-when-time, adjustment/filter layer as a first-class layer type in the Layers panel + Inspector, and align UX-PATTERNS \u00a71 with 'surfaces are workspaces over one document'. Add any missing icon glyphs the conform pass needs (boolean/union, eyedropper, swap, flow-h/v, dodge-burn, bold, italic).",
+      "notes": "Shared-DS task (sequential, single CSS file). Do BEFORE the conform pass so pages adopt real shared pieces. Add glyphs listed in ux-audit-clusters.md cluster G so subagents stop stopgapping."
+    },
+    {
+      "id": "ia-restructure",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "in_progress",
+      "deps": [
+        "product-model-doc"
+      ],
+      "title": "Restructure index.html navigation into 3 zones: App Design (canonical: model, shell, surfaces, entrypoints, primitives, iconography, design language), Usage clickthroughs (folded under each surface, one template), Prototypes & Ideas (speculative feature pages). Remove the standalone 'Guided walkthrough' section; move its pages into their homes.",
+      "notes": "Single file (index.html) + maybe a new App Design overview page. Reflects PRODUCT-MODEL \u00a76."
+    },
+    {
+      "id": "layout-system",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [
+        "foundation-adjust"
+      ],
+      "title": "Build the scalable layout/panel system in shared DS (collapsible + resizable panel groups with independent scroll areas, collapsed rails, responsive small-width behavior, floating bottom tool bar with overflow, slide-down overlay/history) and RE-BASE app-shell.html onto it, matching the real shipping app's lean canvas-first language",
+      "notes": "USER REQUIREMENTS (PRODUCT-MODEL \u00a74b): responsive at every width; every dock/panel group collapsible; Photoshop-like resizable panes; long lists (Layers/Effects) scroll inside their own bounded group; history-first capture->edit loop preserved; new capability must reuse the same small pattern vocabulary. Real app reference: floating bottom tool bar w/ overflow collapse + color swatch + zoom; single collapsible right Layers panel; native macOS menu bar; \u2318\u21e7H slide-down history (All/Screenshots/Videos filmstrip + per-item actions); video bottom transport bar."
+    },
+    {
+      "id": "conform-pass",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "in_progress",
+      "deps": [
+        "foundation-adjust",
+        "ia-restructure",
+        "layout-system"
+      ],
+      "title": "Conform ALL pages to the model + shell (batched disjoint subagents) per ux-audit-clusters.md clusters A-G + copy tail: shell composition, command surface+\u2318K, left-dock Library tabs, docked Library instead of bespoke widgets, selection->Inspector, shared controls/timelines/rings, icon near-misses. Promote repeated fixes into shared DS.",
+      "notes": "The big reconcile. Batch by disjoint page sets. Reference ux-audit-clusters.md for exact per-page fixes. Clean-reference pages: app-shell/ds-modes/lang-resize/lang-spacing."
+    },
+    {
+      "id": "entries-pass",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "pending",
+      "deps": [
+        "conform-pass"
+      ],
+      "title": "Build ONE consistent blank-slate usage clickthrough per surface (Image, UI, Video) using a single shared walkthrough template that embeds the REAL docked shell in every step (D5). Each: start from the history/launcher blank slate -> click -> reach the key outcome. Fold the old walkthrough pages into this template or move to Prototypes & Ideas.",
+      "notes": "Success criteria 3+4: legible entries + one template so learning one teaches the rest. Depends on the shell being conformed first."
+    },
+    {
+      "id": "reaudit",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [
+        "conform-pass",
+        "entries-pass"
+      ],
+      "title": "Re-audit all pages against the 6 PRODUCT-MODEL success criteria; feed misses back into the loop until clean",
+      "notes": "Closes the refine loop. Use ux-audit-agent.md + the 6 criteria."
+    }
+  ],
+  "discovered": [
+    {
+      "id": "fix-dgrp-grow-crush",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS BUG: with 4 stacked groups the .dgrp.grow Library body collapses to ~8px (editor.html) vs 94px (app-shell). Add a min-height to .dgrp.grow > .dgrp-b (or a shell-level height budget) so every adopter gets a usable Library without hand-tuning --gh and window heights",
+      "notes": "Found by the C3 conform agent. Central CSS fix = retroactively fixes every conformed page, no page rework needed. Apply once shared/photonz-ds.css is free (the operated-walkthrough agent owns it right now)."
+    },
+    {
+      "id": "fix-export-share-scale",
+      "area": "content",
+      "priority": "P2",
+      "status": "pending",
+      "deps": [],
+      "title": "CONTENT BUG in export-share.html: picking SVG or PDF disables the scale segmented control but never resets scale to 1, so the generated filename still reads 'launch-poster@2x.svg'",
+      "notes": "Pre-existing, found by the title-bar sweep agent while re-chroming (it correctly left content alone). A vector format has no @2x."
+    },
+    {
+      "id": "ds-consolidated-cleanup",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "pending",
+      "deps": [
+        "build-shell-surfaces"
+      ],
+      "title": "ONE consolidated shared-DS cleanup pass (run after the systray/toast agent releases shared/*). Land every accumulated central defect + promote the repeatedly hand-rolled primitives, then delete the page-local workarounds they replace",
+      "notes": "ACCUMULATED LIST (each found by a conform agent, each currently worked around per page = the divergence we are removing): (1) `.grow` MUST BE THE LAST dock group - putting .dgrp.grow in the middle causes REAL visual overlap of group headers/bodies (hit on paint.html); add a DS guard (e.g. flex-shrink floor on .dgrp:not(.grow)) or state the rule in AGENTS.md. (2) `.chip` has no `.on` state though it is the natural control for OpenType toggles and export presets (defined page-locally twice). (3) `.efx .en` is styled as a span so making it a real <button> needs appearance:none/border:0/padding:0 + hover/active/focus-visible. (4) titlebar responsive contract (see titlebar-responsive-contract - lift the @container block from #lang-frame). (5) `.spec` specimen-card primitive + SPECIMEN label (makes \u00a74c enforceable by class). (6) shared .is-hover/.is-focus forced-state classes. (7) `.handle` 8-point + rotate. (8) preset-picker, ARTBOARD primitive, .rng/.rrow slider row, canonical toggle/switch. (9) .codeblk display:block + .dgrp.grow min-height (already sent to the systray agent). AFTER landing: sweep pages to delete their now-redundant local overrides. ADDITIONAL (from the title-bar sweeps): (10) `.efx .meta` is only reachable at (0,1,1) specificity so ANY page-local `#page .meta` silently wins - this bit language.html and is now riskier since `.wtitle .meta` became a shared responsive hook; scope it harder or rename. (11) `.dgrp-b` has no scroll affordance, so a bounded group clips its last row with no visual hint that it scrolls - add a fade or scrollbar gutter so the bounded-scroller contract is legible."
+    },
+    {
+      "id": "titlebar-responsive-contract",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "SHARED-DS: `.titlebar` has NO responsive contract - it just clips. The DS responds at <=880/<=620 for the dock, rail and tool bar, but the title bar does not. MEASURED clipping at a 420px page width: editor.html 504>370, app-shell.html 566>370, ui-nested.html 536>370. Move the documented behaviour into shared CSS: .wsw and the document size drop out at <=880, compact buttons at <=620, and the document name ellipses instead of wrapping to three lines",
+      "notes": "DONE. Lifted into shared/photonz-ds.css as a general @container shell contract (not page-scoped): .wtitle now min-width:0 + nowrap + ellipsis so it can never wrap to three lines; <=880 drops .wsw and .wtitle .meta; <=620 compacts .tbtns .btn and shrinks the title. NEXT: delete the now-redundant local block from pages/lang-frame.html."
+    },
+    {
+      "id": "ds-specimen-card",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS: promote a `.spec` specimen-card primitive (+ a SPECIMEN label) into the DS. All six lang-* pages AND app-shell.html hand-rolled the same -spec/-spec-h/-blk scaffolding",
+      "notes": "HIGH CONCEPTUAL VALUE: a shared specimen card makes the PRODUCT-MODEL \u00a74c Kind-1 (app screen) vs Kind-2 (specimen) distinction enforceable BY CLASS rather than by convention - an auditor can then just check that anything wearing traffic lights is a complete shell and anything in a .spec card wears no chrome. Also promote shared forced-state classes (.is-hover/.is-focus) so state ladders stop copying DS declarations verbatim and drifting."
+    },
+    {
+      "id": "ds-handle-eight-point",
+      "area": "foundation",
+      "priority": "P2",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS: `.handle` ships only four corner slots; a real transform frame has eight plus a rotate handle. lang-selection defines .handle.tc/.bc/.ml/.mr and a rotate stem locally and marked them as DS-extension candidates",
+      "notes": "Low risk, additive. Lift the local definitions from lang-selection into the shared DS."
+    },
+    {
+      "id": "ds-missing-primitives",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "Promote 4 repeatedly hand-rolled primitives into the shared DS (each is currently copy-pasted across pages = the exact divergence the study exists to kill): (1) preset-picker `.bpick`/`.bchip` - canvas-previewable thumbnail chips in a role=radiogroup, generic for brushes/paints/styles/transitions; (2) an ARTBOARD primitive - position:relative + aspect-ratio + overflow:hidden with stacked <canvas> and <svg> at inset:0, needed anywhere geometry and pixels must register (hand-rolled as .draw-art and .bart); (3) `.rng`/`.rrow` slider row (copied across draw, brush-editor, brush-library, vector-wt); (4) a canonical TOGGLE/SWITCH - none exists, so authors fake it with a two-button .seg",
+      "notes": "Reported by the brush-stroked-vector agent. The artboard primitive is the most valuable: registering a canvas and an SVG pixel-for-pixel is now needed by every page that mixes geometry with pixels, and getting it wrong silently collapses artwork to zero size."
+    },
+    {
+      "id": "build-shell-surfaces",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "done",
+      "deps": [],
+      "title": "Build the two MISSING shell surfaces as shared patterns (PRODUCT-MODEL \u00a74e): (1) the menu-bar/systray app menu with its real command list (Capture Region \u21e7\u23184 \u00b7 Capture Full Screen \u21e7\u23183 \u00b7 Stop Recording \u21e7\u23185 \u00b7 Show History \u21e7\u2318H \u00b7 New Window \u00b7 New from Clipboard \u00b7 Open\u2026 \u00b7 Check for Updates\u2026 \u00b7 Welcome & Permissions\u2026 \u00b7 Preferences\u2026 \u00b7 About \u00b7 Quit \u2318Q); (2) the CAPTURE TOAST - a floating card showing the real captured thumbnail + a green check and 'Copied to clipboard!', stacking for multiple captures",
+      "notes": "DONE. .desk/.deskbody/.mbar/.mbitem/.mbicon/.mbmenu systray menu (verified to match Sources/Photonz/PhotonzApp.swift MenuBarMenu EXACTLY) + new ic-aperture glyph taken from MenuBarIcon.swift; .ctoast-stack/.ctoast/.cshot/.cfm/.ok capture toast with a [data-toast] hook that live-clones a card so stacking is demonstrable; .wshot reusable miniature window screenshot. Both demoed on app-shell.html as chromeless desk plates (Kind 2). Verified at 1280/900/620/560/420 in native light AND dark. Bug found+fixed: local .shot collided with DS .shot{width:420px} and blew the toast up -> renamed .cshot."
+    },
+    {
+      "id": "supersede-workspace-switcher",
+      "area": "foundation",
+      "priority": "P0",
+      "status": "pending",
+      "deps": [],
+      "title": "Remove/repurpose the persistent workspace switcher (.wsw Image\u00b7UI\u00b7Video lens) now superseded by PRODUCT-MODEL \u00a74f: UI and image are NOT different apps and there is no live mode toggle. Replace with document identity in the title bar, tools/Properties contextual to the SELECTED LAYER, and the timeline appearing only when the document has time",
+      "notes": "The .wsw was built during foundation-adjust and has since been adopted across ~25 conformed pages, so this is a sweep. Keep a workspace concept ONLY as a starting template chosen at New (menu-bar New Window / New from Clipboard / Open\u2026), never as a live switcher. Also revert the UX-PATTERNS \u00a71 text that describes workspaces as a lens you toggle."
+    },
+    {
+      "id": "fix-canvas-child-sizing",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS: `.canvas` is display:grid + place-items:center, so a nested child with a percentage/min() width resolves against a shrink-to-fit parent and COLLAPSES TO 0. Add a shared `.canvas > *` sizing rule (or document the pattern) so authors put the definite width on the direct grid child",
+      "notes": "Caused a live invisible-content bug in brush-library.html (.bstage + #smpCanvas measured 0x250, sample stroke invisible). FIXED in that page by moving the width to .selwrap; verified in-browser at 560x250 with 21512 painted px. The hazard is shared, so other pages can hit it. Added a zero-size render check to ux-audit-agent.md \u00a70a."
+    },
+    {
+      "id": "fix-titlebar-tight-widths",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS: `.wtitle` (document identity, e.g. 'sketch-sheet \u00b7 1200 x 630') wraps to three lines below ~640px window width, and the Library `.seg` with four scope labels wraps to two rows at the default 268px dock. Add ellipsis/hide-at-tight rules in the DS",
+      "notes": "Found by the C4 conform agent. Affects EVERY conformed page since both are shared chrome. Agents are working around it by shortening scope labels per page, which is exactly the per-page divergence the study is trying to kill."
+    },
+    {
+      "id": "reserve-data-target",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "SHARED-DS LANDMINE: `[data-target]` is a global cross-page nav hook in photonz-ds.js that preventDefault+stopPropagation on click. Any page using data-target as its own page data breaks SILENTLY. Either namespace the nav hook (data-goto) or document the reservation loudly in AGENTS.md",
+      "notes": "Found by the C1 conform agent: img-masking's luminosity buttons used data-target='highlights|midtones|shadows' and never worked. That page is fixed (renamed data-lum). Verified study-wide: every remaining data-target now resolves to a real page id, so no active breakage - but the hazard remains for future authors. Prefer renaming the hook to data-goto."
+    },
+    {
+      "id": "fix-class-collisions",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [],
+      "title": "Page-local kind classes named like DS classes (bar, btn, card, dsub, sw) silently inherit DS rules and break layout (ui-grid: DS .bar/.btn overflow:hidden swallowed the selection ring; ui-prototype: .dsub inherited uppercase). Sweep pages for colliding local class names and namespace them",
+      "notes": "Found by the C3 conform agent, which fixed ui-grid (gbar/gbtn/gavatar/ghero) and ui-prototype. Added as an audit-agent grep rule. Other pages likely have the same latent hazard."
+    },
+    {
+      "id": "dedupe-dock-tabs",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "deps": [
+        "app-shell-spec"
+      ],
+      "title": "Consolidate the three overlapping left-dock tab constructs in the DS (.ptabs/.ptab, .dock-tabs/.dock-tab, .dnav/.dtab) onto the canonical .dnav/.dtab and deprecate the older two (.ptab/.dock-tab lack focus states and are div-based)",
+      "notes": "Found while building app-shell-spec. Do during ux-reconcile so pages migrate to the one tab system in the same pass."
+    },
+    {
+      "id": "icon-semantic-refine",
+      "area": "foundation",
+      "priority": "P2",
+      "status": "pending",
+      "deps": [
+        "icon-library-consolidate"
+      ],
+      "title": "Adopt the newly-added glyphs where sweeps left a semantically-close stopgap: lang-toolbars text-align seg (L/C/R text -> ic-align-left/center/right) + flip H/V (both ic-transition -> ic-flip-horizontal/ic-flip-vertical, now distinguishable); optionally walkthrough .wbar nav '\u2190 Back'/'Next \u2192' -> ic-chevron-left/right for consistency with standardized backchips",
+      "notes": "Pages are already icon-clean (no ascii/emoji); this is semantic polish. Low-value acceptable stopgaps intentionally left: ic-clone for duplicate (\u29c9), ic-sparkle for decorative 'New' badges (\u25c6), ic-warning for detach (\u26a1), ic-circle for status-dot (\u25cf), text labels 'Rad'/'Rot' for corner-radius/rotation. The ux-audit pass will flag any that matter."
+    },
+    {
+      "id": "zoom-scales-grid-not-artwork",
+      "from": "vr2-canvas-grid",
+      "severity": "medium",
+      "note": "Zoom now changes grid density but the artwork stays the same size, so the readout can say 260% while 'Hero card 420x260' renders at 420x260. Honest fix: scale the canvas's centred artwork (.canvas>.selwrap) by --zoom and COUNTER-scale the selection chrome (.sel-ring border+inset, .handle size+offsets, .mtag) by 1/--zoom so rings and handles stay constant-size like a real editor. At zoom 1 it is a no-op, so default rendering cannot regress. NEEDS A CALL: it changes what zoom means across every editor page."
+    },
+    {
+      "id": "light-artboard-grid-invisible",
+      "from": "vr2-canvas-grid",
+      "severity": "low",
+      "note": "--artboard-grid/-major are white, so on a LIGHT artboard (ds-modes Light/Brand sample) the grid vanishes. Pre-existing, not caused by the canvas rewrite. Shared fix: a .canvas.on-light variant flipping both grid colours to rgba(0,0,0,.06/.11), toggled by the ds-modes mode switch."
+    },
+    {
+      "id": "radial-only-stages",
+      "from": "vr2-canvas-grid",
+      "severity": "medium",
+      "note": "9 more page-local artboard surfaces use the radial gradient WITHOUT the grid, so they are still per-page canvases under VISUAL RULE 5: components.html:102, ds-switch:113, effects:44 and :58, paint:66, lang-motion:135, lang-elevation:49, lang-resize:34, video-motion:22. Fold into vr6-page-sweep: replace each with .canvas.mini + an --artboard-glow override."
+    },
+    {
+      "id": "stray-comment-deleted-a-shared-rule",
+      "from": "vr3-panel-ergonomics",
+      "severity": "high",
+      "note": "A stray `*/` left mid-comment in photonz-ds.css silently DELETED the rule that followed it (CSS error recovery skips to the end of the next block). Every page still rendered plausibly and the measured numbers still looked right, because a different rule happened to cover for it. LESSON now baked into shared/audit-sweep.js: assert a shared rule is ACTUALLY IN EFFECT (getComputedStyle(el).display === 'grid'), never just that the result looks reasonable."
+    },
+    {
+      "id": "library-tiles-have-no-vertical-budget",
+      "from": "vr3-panel-ergonomics",
+      "severity": "medium",
+      "note": "On app-shell the Library tiles start ~15px above the dock bottom, so the grid reads as slivers. Measured BOTH before and after the VR7 stack, so it is not caused by it: even with the old single-row toolbar the grid began at y=753 against a dock bottom of 770. vr4-library-tiles must fix the group's VERTICAL budget (--gh / .grow floor), not only the tile min-width."
+    },
+    {
+      "id": "import-header-menu-missing-3-pages",
+      "from": "vr4-library-tiles",
+      "severity": "low",
+      "note": "3 Library groups kept their body Import button because their header has no + menu to move it to: img-grade-wt (1) and lang-panels (2). For vr6: give those headers the standard `.btn.ghost.icon.sm [data-menu]` + affordance, then delete the body button like the other 39."
+    },
+    {
+      "id": "components-page-chrome",
+      "from": "vr4-library-tiles",
+      "severity": "low",
+      "note": "components.html is the one page whose Library row is still cut: it adds a bespoke 52px .catrow on top of the standard chrome (156px total vs 77px). No shared floor can cover per-page chrome - fold the category row into the scope control during vr6."
+    },
+    {
+      "id": "vr6-tier2-primitives",
+      "area": "foundation",
+      "priority": "P1",
+      "status": "pending",
+      "title": "VR6 leftovers: 3 primitives that ARE duplicated across pages but whose bodies genuinely diverge, so they need a variable-driven DS version rather than a straight copy",
+      "notes": "Found by the same duplicate-rule scan that drove vr6 (re-run it: the scan is 40 lines of python over each page's <style> block, grouping rules by normalised selector+body). (1) `.rng` slider + `::-webkit-slider-thumb`/`::-moz-range-thumb` -- 6 pages, 18 distinct rules; the base and both thumbs are identical, only focus/disabled states drift, so promote the base and the thumbs. (2) `.rrow` -- 6 pages, 15 distinct rules; the divergence is ONLY the first/last column widths (62/40, 64/42, 60/42), so promote it with `--rl-w`/`--rv-w` custom properties and let pages retune those. (3) the video timeline `.tlbar`/`.tlgrid`/`.tlz` -- 6 pages, 38 distinct rules for .tlgrid alone; this is a real component with real per-page extension, so it needs a designed DS version, not a lift. Also: `.apiline` (8 pages, 17 rules) and the lang-* specimen doc-block cluster `.blk/.bname/.bnum/.api/.intro/.dd` (6-7 pages) -- the latter is ds-specimen-card, and note `.dd` COLLIDES with a colour-dot class on one page, so that one needs a markup rename, not just a CSS move."
+    }
+  ],
+  "findingsFile": "ux-audit-clusters.md",
+  "currentGoal": "MODEL-DRIVEN REFINE LOOP (user-approved). The site is pretty but not cohesively designed. Establish the product MODEL first, then refine everything against it in a loop with clear success criteria. Canonical model = shared/PRODUCT-MODEL.md: ONE document engine; Image/UI/Video are workspaces (lenses) over the same layer stack; adjustment/filter layers apply to UI frames exactly as photos; Video = same doc + time; Tokens->Styles->Components->Design Systems with semantic binding (extract-from-URL, catalog, AI re-theme); everything is one command (UI==API==agent). 6 success criteria (one model written down; shell coherence; legible blank-slate entries; ONE walkthrough template; foundation-gated features; the build test). 3-zone IA: App Design (canonical) / Usage clickthroughs (folded per surface, one template) / Prototypes & Ideas (speculative). User wants to return to LOTS of improvements ready.",
+  "resume": "ON GO: (1) server: cd docs/design/mocks; curl -s localhost:8791 >/dev/null || nohup node dev-server.mjs >/tmp/photonz-mock-server.log 2>&1 & disown. (2) DO vr5-walkthrough-nav FIRST - the user restated it angrily and its task notes contain the full scouted plan; do not re-explore. (3) Then vr6-page-sweep in disjoint ~10-page batches. (4) Then the older backlog: ds-consolidated-cleanup, supersede-workspace-switcher (.wsw off ~25 pages), reaudit. VERIFY EVERYTHING with the browser harness in shared/audit-sweep.js - it loads all 64 pages into hidden iframes from ONE chrome-devtools evaluate_script call. Assert shared rules are IN EFFECT (computed style), never just that output looks plausible: a stray */ once silently deleted a rule and every page still looked fine. STATE OF PLAY: vr1-vr4 done. 64/64 pages serve 200 and sweep clean. RESET CONTEXT between VR tasks."
+}

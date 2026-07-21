@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · documents</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* documents · two REAL app screens (PRODUCT-MODEL §4c Kind 1): saving a
+   document, and the edit loop that changes it. Both use the one shell, the
+   shared selection grammar (.sel-ring / .handle / .mtag), and dock groups
+   instead of bespoke side panels. Version history and undo history are new
+   PANEL GROUPS, not new chrome. Page-local classes are namespaced under
+   #documents. 4pt tokens only. */
+#documents .win.shell{height:680px;min-height:0}/* ---- dirty / saved state, inside the title bar next to the name ---- */
+#documents .dstate{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:580;margin-left:var(--s2);font-variant-numeric:tabular-nums}
+#documents .dstate .ddot{width:7px;height:7px;border-radius:50%;flex:none;transition:background .18s ease}
+#documents .dstate.saved{color:var(--good)} #documents .dstate.saved .ddot{background:var(--good)}
+#documents .dstate.edited{color:var(--warn)} #documents .dstate.edited .ddot{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
+#documents .dext{color:var(--faint);font-weight:520}
+#documents .autoread{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--faint)}
+#documents .autoread .adot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+
+/* ---- export menu size presets ---- */
+#documents .szrow{display:flex;gap:var(--s1);padding:var(--s1) var(--s2) var(--s2);flex-wrap:wrap}
+/* .chip has no shared "on" state, so define the selected preset look here */
+#documents .szrow .chip{padding:3px 9px}
+#documents .szrow .chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:640}
+#documents .exfmt{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto}
+
+/* ---- the document on the canvas: a small poster ---- */
+#documents .poster{width:320px;border-radius:var(--r4);overflow:hidden;box-shadow:0 22px 50px -18px rgba(0,0,0,.6)}
+#documents .poster .part{height:186px;padding:var(--pad);display:flex;flex-direction:column;justify-content:flex-end;color:#fff;position:relative;transition:background .3s ease}
+#documents .poster .pkick{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+#documents .poster .phead{font-family:var(--serif);font-size:28px;line-height:1.02;font-weight:700;margin-top:6px;letter-spacing:-.02em}
+#documents .poster .pfoot{background:var(--panel);padding:var(--s2) var(--pad-sm);display:flex;align-items:center;gap:var(--gap-sm);font-size:10.5px;color:var(--faint)}
+#documents .poster .ppath{font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---- version history, as a normal panel group body ---- */
+#documents .vhist{position:relative;padding:var(--gap-sm) var(--pad-sm) var(--pad-sm) var(--s5)}
+#documents .vhist::before{content:"";position:absolute;left:var(--pad);top:var(--pad-sm);bottom:var(--pad-sm);width:2px;background:var(--line);border-radius:2px}
+#documents .vitem{position:relative;display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s2) var(--s2) var(--s3);border-radius:var(--r2);margin-bottom:var(--s1)}
+#documents .vitem::before{content:"";position:absolute;left:calc(var(--s3) * -1);top:15px;width:9px;height:9px;border-radius:50%;background:var(--panel);border:2px solid var(--line-strong)}
+#documents .vitem.cur::before{background:var(--accent);border-color:var(--accent)}
+#documents .vitem.restored::before{background:var(--good);border-color:var(--good)}
+#documents .vitem .vmeta{flex:1;min-width:0}
+#documents .vitem .vnm{font-size:11.5px;font-weight:580;color:var(--ink);display:flex;align-items:center;gap:6px}
+#documents .vitem .vtag{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:999px}
+#documents .vitem .vtag.now{background:var(--accent-soft);color:var(--accent)}
+#documents .vitem .vtag.auto{background:var(--panel-2);color:var(--faint)}
+#documents .vitem .vtm{font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:2px}
+#documents .vitem:hover{background:var(--glass-thin)}
+
+/* ---- the edit-loop teaching strip, OUTSIDE the window where it belongs ---- */
+#documents .loopbar{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;margin:0 0 var(--gap)}
+#documents .lstep{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--pad-sm);border-radius:999px;
+  border:1px solid var(--edge-lo);background:var(--glass-thin);box-shadow:inset 0 1px 0 var(--edge-hi);transition:var(--ctl-tr)}
+#documents .lstep .ln{width:20px;height:20px;border-radius:50%;background:var(--panel-2);color:var(--dim);font-size:10px;font-weight:700;display:grid;place-items:center;flex:none}
+#documents .lstep .lt{font-size:11.5px;font-weight:600;color:var(--dim)}
+#documents .lstep .lt small{display:block;font-size:9.5px;font-weight:520;color:var(--faint);letter-spacing:0}
+#documents .lstep.on{border-color:var(--accent-line);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+#documents .lstep.on .ln{background:var(--accent);color:var(--accent-ink)}
+#documents .lstep.on .lt{color:var(--ink)}
+#documents .larrow{color:var(--faint);display:inline-flex;align-items:center}
+
+/* ---- canvas objects, using the SHARED selection grammar ---- */
+#documents .objstack{display:flex;flex-direction:column;align-items:center;gap:var(--s6)}
+#documents .mobj{position:relative;display:inline-block;cursor:pointer;transition:transform .1s ease}
+#documents .mobj:hover{transform:translateY(-1px)}
+#documents .mobj:focus-visible{outline:none;box-shadow:var(--ring)}
+#documents .mobj .sel-ring,#documents .mobj .handle,#documents .mobj .mtag{display:none}
+#documents .mobj.sel .sel-ring,#documents .mobj.sel .handle,#documents .mobj.sel .mtag{display:block}
+#documents .o-card{width:236px;height:120px;padding:var(--pad);display:flex;flex-direction:column;justify-content:flex-end;color:#fff;box-shadow:0 16px 40px -14px rgba(0,0,0,.55)}
+#documents .o-card .olab{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+#documents .o-card .ot{font-family:var(--serif);font-size:22px;font-weight:700;margin-top:4px;line-height:1}
+#documents .o-btn{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:660;color:#fff;padding:12px 22px;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
+#documents .o-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:7px 13px}
+
+/* ---- inspector helpers ---- */
+#documents .stepper{display:inline-flex;align-items:center;gap:var(--s2)}
+#documents .stepper .val{min-width:44px;text-align:center}
+#documents .swrow{display:flex;gap:var(--s2);flex-wrap:wrap}
+#documents .swopt{width:26px;height:26px;border-radius:var(--r2);border:1.5px solid transparent;cursor:pointer;transition:var(--ctl-tr);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);padding:0}
+#documents .swopt:hover{transform:scale(1.06)}
+#documents .swopt:focus-visible{outline:none;box-shadow:var(--ring)}
+#documents .swopt.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--accent)}
+
+/* ---- undo history list ---- */
+#documents .hlist{display:flex;flex-direction:column;gap:2px;padding:var(--gap-sm) var(--pad-sm)}
+#documents .hrow{display:flex;align-items:center;gap:var(--s2);font-size:11px;padding:5px var(--s2);border-radius:var(--r2);color:var(--faint)}
+#documents .hrow .ic{flex:none;color:var(--faint)}
+#documents .hrow .hlbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim)}
+#documents .hrow .hval{font-family:var(--mono);font-size:10px;color:var(--faint)}
+#documents .hrow.cur{background:var(--accent-soft);color:var(--accent)}
+#documents .hrow.cur .hlbl,#documents .hrow.cur .hval,#documents .hrow.cur .ic{color:var(--accent)}
+#documents .hrow.undone{opacity:.42}
+
+/* ---- live toast on the canvas ---- */
+#documents .dtoast{position:absolute;left:50%;top:var(--pad-sm);transform:translateX(-50%);display:none;align-items:center;gap:7px;
+  background:var(--good);color:#fff;font-size:11px;font-weight:600;padding:6px 13px;border-radius:999px;
+  box-shadow:0 8px 20px -8px rgba(0,0,0,.4);z-index:7;white-space:nowrap}
+#documents .dtoast.show{display:inline-flex;animation:fade .2s ease}
+
+@media (prefers-reduced-motion:reduce){#documents .dtoast.show{animation:none}}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="documents">
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Documents</h2><span class="k">· how a file persists, and the edit loop that changes it</span></div>
+
+  <p class="pglead">A document is a plain <code>.phz</code> file holding layers, Styles and effects as data, never baked pixels.
+    Two things make it feel safe: you can always tell whether it is <b>saved</b>, and you can always get back to a version you
+    liked. Both live in the same shell as everything else, with <b>Versions</b> as one more panel group in the one right dock.</p>
+
+  <!-- ============================================================
+       KIND 1 · AN APP SCREEN · saving, autosave, versions, export.
+       Title bar carries document identity: name, extension, save state.
+       ============================================================ -->
+  <div class="win tall cq shell">
+
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>Launch poster</b><span class="dext">.phz</span><span class="dstate saved" id="dstate"><span class="ddot"></span><span id="dstateT">Saved</span></span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm" id="exportBtn" data-menu="#exMenu"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tsep"></span>
+      <button class="btn secondary sm" id="saveBtn"><i class="ic ic-save"></i> Save <span class="kbd">⌘S</span></button>
+      <span class="autoread"><span class="adot"></span><span id="autoRead">Autosave on · saved just now</span></span>
+      <span class="tspacer"></span>
+      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:220px;z-index:12">
+          <div class="mlabel">File</div>
+          <div class="menuitem"><i class="ic ic-save"></i> Save <span class="sc">⌘S</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⇧⌘S</span></div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⇧⌘E</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+        <div class="popover menu pop" id="exMenu" role="menu" style="position:absolute;right:0;top:26px;width:236px;z-index:13">
+          <div class="mlabel">Image</div>
+          <div class="menuitem" data-export="PNG"><i class="ic ic-image"></i> PNG <span class="exfmt">.png · lossless</span></div>
+          <div class="menuitem" data-export="JPG"><i class="ic ic-image"></i> JPG <span class="exfmt">.jpg · photo</span></div>
+          <div class="menuitem" data-export="SVG"><i class="ic ic-pen"></i> SVG <span class="exfmt">.svg · vector</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Motion</div>
+          <div class="menuitem" data-export="MP4"><i class="ic ic-play"></i> MP4 <span class="exfmt">.mp4 · H.264</span></div>
+          <div class="menuitem" data-export="GIF"><i class="ic ic-image"></i> GIF <span class="exfmt">.gif · looping</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Size preset</div>
+          <div class="szrow">
+            <button class="chip" data-size="1x">1×</button>
+            <button class="chip on" data-size="2x">2×</button>
+            <button class="chip" data-size="3x">3×</button>
+            <button class="chip" data-size="1080p">1080p</button>
+            <button class="chip" data-size="story">Story</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="shellA" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1080 × 1350 · Launch poster</div>
+          <div class="poster">
+            <div class="part" id="posterArt" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)">
+              <div class="pkick" id="posterKick">New · 2026</div>
+              <div class="phead" id="posterH">Ship it faster.</div>
+            </div>
+            <div class="pfoot"><i class="ic sm ic-image"></i><span class="ppath">~/Photonz/Launch poster.phz</span></div>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shellA" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" data-target="dsys" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvfA"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom-a" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvfA" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Launch poster</span><span class="ago">just now</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#febc2e,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Event banner</span><span class="ago">3 hr ago</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Captures are their own timeline. Opening one starts a new document, so it can never overwrite this file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <div class="pdock" id="dockA">
+
+        <div class="dgrp" id="gLayersA" style="--gh:112px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenuA"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lrow sel"><i class="ic ic-frame"></i><span class="nm">Poster art</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Kicker</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <div class="dgrp" id="gPropsA" style="--gh:206px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
+          <div class="dgrp-b">
+            <div class="section">
+              <div class="sec-h">Fill <span class="mut">Paint style</span></div>
+              <div class="irow"><span class="rl">Palette</span>
+                <span class="select" data-edit="palette" tabindex="0" role="button" title="Cycle the poster palette">
+                  <span class="lead"><span class="sw" id="palSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> <span id="palName">Violet · Pink</span></span>
+                  <span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                </span>
+              </div>
+            </div>
+            <div class="section">
+              <div class="sec-h">Text</div>
+              <div class="irow"><span class="rl">Headline</span>
+                <span class="select" data-edit="head" tabindex="0" role="button" title="Cycle the headline">
+                  <span class="lead" id="headVal">Ship it faster.</span><span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                </span>
+              </div>
+              <div class="irow"><span class="rl">Kicker</span>
+                <span class="select" data-edit="kick" tabindex="0" role="button" title="Cycle the kicker">
+                  <span class="lead" id="kickVal">New · 2026</span><span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                </span>
+              </div>
+              <p class="note">Change any of these and the title bar flips to <b style="color:var(--warn)">Edited</b> straight away. Press <code>⌘S</code> to pin a version.</p>
+            </div>
+            <div class="section">
+              <div class="sec-h">File</div>
+              <div class="irow"><span class="rl">Format</span><span class="val">.phz · document</span></div>
+              <div class="irow"><span class="rl">Size</span><span class="val">4.2 MB</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW CAPABILITY = A NEW PANEL GROUP, not new chrome. -->
+        <div class="dgrp grow" id="gVersions">
+          <div class="dgrp-h"><span class="ttl">Versions</span><span class="cnt" id="verCount">3 versions</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#verMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="vhist" id="vhist"><!-- versions injected --></div>
+            <p class="note" style="padding:0 var(--pad-sm) var(--pad-sm)">Restoring an older version does not delete the newer ones. It lands as an unsaved change you can review and then save.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayersA" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gPropsA" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gVersions" title="Versions"><i class="ic sm ic-history"></i><span class="lb">Versions</span></button>
+      </div>
+
+      <div class="popover menu pop" id="layerMenuA" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="verMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-pin"></i> Pin a named version</div>
+        <div class="menuitem"><i class="ic ic-trash"></i> Clear auto versions</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Saving, made legible</div><p>A dot on the title reads <b style="color:var(--warn)">Edited</b> the moment you change something and clears to <b style="color:var(--good)">Saved</b> on <code>⌘S</code>. Autosave keeps a running copy, so "saved a moment ago" is always true. An explicit Save just pins a named point you can return to.</p></div>
+    <div class="c"><div class="lab g2">Portable by design</div><p>The document is a plain <code>.phz</code> file: layers, Styles and effects as data, never baked pixels. It round-trips the same way the <span class="chip" data-target="dsys">design system</span> does, so a file opened anywhere rebuilds identically.</p></div>
+    <div class="c"><div class="lab g2">Versions are a panel group</div><p>Version history did not need a new sidebar or a new window. It is a <b>Versions</b> group in the one dock, so it collapses, resizes and scrolls like Layers does.</p></div>
+  </div>
+
+  <!-- ============================================================
+       KIND 1 · AN APP SCREEN · the edit loop. The teaching stepper for
+       select / inspect / change sits OUTSIDE the window, because it is
+       narration, not chrome.
+       ============================================================ -->
+  <div class="scen-head" style="margin-top:var(--s5)"><span class="pip" style="background:var(--accent)"></span><h2>The edit loop</h2><span class="k">· select, inspect, change · every edit undoable</span></div>
+
+  <div class="loopbar" id="loopBar">
+    <div class="lstep" data-stage="select"><span class="ln">1</span><span class="lt">Select<small>click an object</small></span></div>
+    <span class="larrow"><i class="ic sm ic-chevron-right"></i></span>
+    <div class="lstep" data-stage="inspect"><span class="ln">2</span><span class="lt">Inspect<small>see its properties</small></span></div>
+    <span class="larrow"><i class="ic sm ic-chevron-right"></i></span>
+    <div class="lstep" data-stage="change"><span class="ln">3</span><span class="lt">Change<small>edit a value, live</small></span></div>
+  </div>
+
+  <div class="win tall cq shell">
+
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>untitled-1</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenuB"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheetB" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <button class="pill ai" data-target="agent" title="Ask the agent to make this change"><i class="ic sm ic-sparkle"></i> Ask agent</button>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenuB" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="shellB" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · click a shape to select it</div>
+          <div class="dtoast" id="modToast"></div>
+          <div class="objstack" id="modCanvas">
+            <span class="mobj" data-obj="card" tabindex="0" role="button" aria-label="Select the card">
+              <span class="o-card" id="oCard"><span class="olab">Feature</span><span class="ot">Bright ideas.</span></span>
+              <span class="sel-ring"></span>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Card · 236 × 120</span>
+            </span>
+            <span class="mobj" data-obj="button" tabindex="0" role="button" aria-label="Select the button">
+              <span class="o-btn" id="oBtn">Get started <i class="ic sm ic-chevron-right"></i></span>
+              <span class="sel-ring" style="border-radius:22px"></span>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Button · 168 × 44</span>
+            </span>
+            <span class="mobj" data-obj="badge" tabindex="0" role="button" aria-label="Select the badge">
+              <span class="o-badge" id="oBadge"><i class="ic sm ic-component"></i> New</span>
+              <span class="sel-ring" style="border-radius:999px"></span>
+              <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+              <span class="mtag">Badge · 84 × 30</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shellB" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheetB" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Component insert (C)" data-target="dsys" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvfB"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom-b" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvfB" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <div class="sheet down" id="histSheetB" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Feature card</span><span class="ago">just now</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">The capture front door. Pick a shot to open it as a layer in this same document.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <div class="pdock" id="dockB">
+
+        <div class="dgrp" id="gLayersB" style="--gh:112px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenuB"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b" id="modLayers">
+            <div class="lrow" data-obj="card"><i class="ic ic-frame"></i><span class="nm">Card</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow" data-obj="button"><i class="ic ic-square"></i><span class="nm">Button</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow" data-obj="badge"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="300"></div>
+
+        <div class="dgrp" id="gPropsB" style="--gh:220px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="inspSub">Nothing selected</span></div>
+          <div class="dgrp-b" id="inspBody">
+            <div class="empty" id="inspEmpty"><span class="g"><i class="ic lg ic-cursor"></i></span>Select an object on the canvas to inspect and change its properties. Every edit is undoable and non-destructive.</div>
+          </div>
+        </div>
+
+        <!-- undo history: another panel group, same vocabulary -->
+        <div class="dgrp grow" id="gHistory">
+          <div class="dgrp-h"><span class="ttl">History</span><span class="cnt" id="histCount">0 steps</span>
+            <button class="btn ghost icon sm" id="undoBtn" title="Undo (⌘Z)" disabled><i class="ic ic-undo"></i></button>
+            <button class="btn ghost icon sm" id="redoBtn" title="Redo (⇧⌘Z)" disabled><i class="ic ic-redo"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="hlist" id="hlist"><div class="hrow cur"><i class="ic sm ic-circle"></i><span class="hlbl">Opened document</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayersB" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gPropsB" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gHistory" title="History"><i class="ic sm ic-undo"></i><span class="lb">History</span></button>
+      </div>
+
+      <div class="popover menu pop" id="layerMenuB" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">One loop, everywhere</div><p><b>Select</b> puts a ring on an object and highlights its row in Layers, <b>Inspect</b> fills the Properties group with its real values, and <b>Change</b> updates the canvas the instant you edit one. The same three steps drive a shape, a photo layer, or a <span class="chip" data-target="editor">component instance</span>.</p></div>
+    <div class="c"><div class="lab g2">Non-destructive</div><p>Corner radius, fill, opacity, effects and adjustments are stored as re-editable settings, never flattened. The original is always intact, so any value can be dialed back later or undone step by step.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Undo history is per document today. Should named checkpoints, like the version snapshots above, and step-level undo be the <b>same</b> timeline, or stay two layers a power user switches between?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   Documents page interactions. Two guarded modules: SAVING and
+   MODIFYING. Nothing runs unless its elements exist, so a missing
+   node is a no-op and selectors never throw. Popovers, docks,
+   splitters, rails and sheets are all shared DS behavior.
+   ============================================================ */
+(function(){
+  "use strict";
+
+  /* ---------------- PART A · SAVING ---------------- */
+  (function(){
+    var state   = document.getElementById("dstate");
+    var stateT  = document.getElementById("dstateT");
+    var saveBtn = document.getElementById("saveBtn");
+    var autoRead= document.getElementById("autoRead");
+    var vhist   = document.getElementById("vhist");
+    var verCount= document.getElementById("verCount");
+    var art     = document.getElementById("posterArt");
+    var posterH = document.getElementById("posterH");
+    var posterKick = document.getElementById("posterKick");
+    if(!state || !saveBtn || !vhist) return;
+
+    var dirty = false, saveNo = 3;
+    var palettes = [
+      {css:"linear-gradient(135deg,#7c4dff,#ff5d8f)", nm:"Violet · Pink"},
+      {css:"linear-gradient(135deg,#12c2e9,#7c4dff)", nm:"Cyan · Violet"},
+      {css:"linear-gradient(135deg,#1a9e6a,#12c2e9)", nm:"Green · Cyan"},
+      {css:"linear-gradient(135deg,#febc2e,#ff5d8f)", nm:"Amber · Pink"}
+    ];
+    var palIx = 0;
+    var heads = ["Ship it faster.","Make it yours.","One canvas.","Bright ideas."];
+    var headIx = 0;
+    var kicks = ["New · 2026","Preview","Launch day","Coming soon"];
+    var kickIx = 0;
+
+    var palSw = document.getElementById("palSw");
+    var palName = document.getElementById("palName");
+    var headVal = document.getElementById("headVal");
+    var kickVal = document.getElementById("kickVal");
+
+    // seed versions (newest first)
+    var versions = [
+      {name:"Working copy", tag:"now",  time:"now",        kind:"cur"},
+      {name:"Draft layout", tag:"auto", time:"12 min ago", kind:""},
+      {name:"First cut",    tag:null,   time:"1 hr ago",   kind:""}
+    ];
+
+    function renderVersions(){
+      vhist.innerHTML = "";
+      versions.forEach(function(v){
+        var el = document.createElement("div");
+        el.className = "vitem" + (v.kind ? " "+v.kind : "");
+        var tag = v.tag === "now" ? '<span class="vtag now">Current</span>'
+                : v.tag === "auto" ? '<span class="vtag auto">Auto</span>' : '';
+        el.innerHTML =
+          '<div class="vmeta"><div class="vnm">'+v.name+tag+'</div><div class="vtm">'+v.time+'</div></div>'+
+          (v.kind==="cur" ? '' : '<button class="btn ghost sm" data-restore="'+v.name+'"><i class="ic ic-undo"></i> Restore</button>');
+        vhist.appendChild(el);
+      });
+      verCount.textContent = versions.length + " versions";
+    }
+
+    function setDirty(on){
+      dirty = on;
+      state.classList.toggle("edited", on);
+      state.classList.toggle("saved", !on);
+      stateT.textContent = on ? "Edited" : "Saved";
+      saveBtn.disabled = !on;
+      saveBtn.classList.toggle("primary", on);
+      saveBtn.classList.toggle("secondary", !on);
+      if(on){ autoRead.textContent = "Autosave on · unsaved change kept"; }
+    }
+
+    function makeEdit(){
+      setDirty(true);
+      versions.forEach(function(v){ if(v.kind==="restored") v.kind=""; });
+      renderVersions();
+    }
+
+    // quick-edit property controls mutate the visible poster and dirty the doc
+    document.querySelectorAll("#documents [data-edit]").forEach(function(b){
+      function run(){
+        var kind = b.getAttribute("data-edit");
+        if(kind==="palette" && art){
+          palIx=(palIx+1)%palettes.length;
+          art.style.background=palettes[palIx].css;
+          if(palSw) palSw.style.background=palettes[palIx].css;
+          if(palName) palName.textContent=palettes[palIx].nm;
+        }
+        else if(kind==="head" && posterH){
+          headIx=(headIx+1)%heads.length;
+          posterH.textContent=heads[headIx];
+          if(headVal) headVal.textContent=heads[headIx];
+        }
+        else if(kind==="kick" && posterKick){
+          kickIx=(kickIx+1)%kicks.length;
+          posterKick.textContent=kicks[kickIx];
+          if(kickVal) kickVal.textContent=kicks[kickIx];
+        }
+        makeEdit();
+      }
+      b.addEventListener("click", run);
+      b.addEventListener("keydown", function(e){
+        if(e.key==="Enter" || e.key===" "){ e.preventDefault(); run(); }
+      });
+    });
+
+    saveBtn.addEventListener("click", function(){
+      if(!dirty) return;
+      saveNo++;
+      setDirty(false);
+      autoRead.textContent = "Autosave on · saved just now";
+      versions.forEach(function(v){ if(v.kind==="cur"){ v.kind=""; v.tag="auto"; v.time="just now"; v.name="Snapshot v"+(saveNo-1); } });
+      versions.unshift({name:"Working copy", tag:"now", time:"now", kind:"cur"});
+      if(versions.length>7) versions.pop();
+      renderVersions();
+    });
+
+    // restore a version (event-delegated so injected buttons work)
+    vhist.addEventListener("click", function(e){
+      var btn = e.target.closest("[data-restore]");
+      if(!btn) return;
+      var nm = btn.getAttribute("data-restore");
+      versions.forEach(function(v){ v.kind = (v.name===nm) ? "restored" : (v.kind==="restored"?"":v.kind); });
+      renderVersions();
+      setDirty(true);
+      autoRead.textContent = "Restored " + nm + " · review and save";
+    });
+
+    // export menu: the shared popover opens it, this only handles the choices
+    var exportBtn = document.getElementById("exportBtn");
+    var exMenu = document.getElementById("exMenu");
+    if(exportBtn && exMenu){
+      exMenu.addEventListener("click", function(e){
+        var fmt = e.target.closest("[data-export]");
+        var sz  = e.target.closest("[data-size]");
+        if(sz){
+          e.stopPropagation();
+          exMenu.querySelectorAll("[data-size]").forEach(function(c){ c.classList.toggle("on", c===sz); });
+          return;
+        }
+        if(fmt){
+          var label = fmt.getAttribute("data-export");
+          exportBtn.innerHTML = '<i class="ic ic-check"></i> Exported '+label;
+          exMenu.classList.remove("on");
+          setTimeout(function(){ exportBtn.innerHTML = '<i class="ic ic-export"></i> Export'; }, 1400);
+        }
+      });
+    }
+
+    // ⌘S saves
+    document.addEventListener("keydown", function(e){
+      if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="s"){ e.preventDefault(); saveBtn.click(); }
+    });
+
+    renderVersions();
+    setDirty(false);
+  })();
+
+  /* ---------------- PART B · MODIFYING ---------------- */
+  (function(){
+    var canvas = document.getElementById("modCanvas");
+    var body   = document.getElementById("inspBody");
+    var inspSub= document.getElementById("inspSub");
+    var layers = document.getElementById("modLayers");
+    var hlist  = document.getElementById("hlist");
+    var histCount = document.getElementById("histCount");
+    var undoBtn= document.getElementById("undoBtn");
+    var redoBtn= document.getElementById("redoBtn");
+    var loop   = document.getElementById("loopBar");
+    var toast  = document.getElementById("modToast");
+    if(!canvas || !body || !hlist) return;
+
+    var fills = [
+      {n:"Violet", css:"linear-gradient(135deg,#7c4dff,#b14dff)"},
+      {n:"Sunset", css:"linear-gradient(135deg,#ff7e5f,#ff5d8f)"},
+      {n:"Ocean",  css:"linear-gradient(135deg,#12c2e9,#7c4dff)"},
+      {n:"Forest", css:"linear-gradient(135deg,#1a9e6a,#12c2e9)"},
+      {n:"Amber",  css:"linear-gradient(135deg,#febc2e,#ff7e5f)"}
+    ];
+    var objs = {
+      card:  {label:"Card",   el:document.getElementById("oCard"),  wrap:null, radius:14, fill:0, opacity:100},
+      button:{label:"Button", el:document.getElementById("oBtn"),   wrap:null, radius:12, fill:2, opacity:100},
+      badge: {label:"Badge",  el:document.getElementById("oBadge"), wrap:null, radius:999,fill:1, opacity:100}
+    };
+    Object.keys(objs).forEach(function(id){
+      var o=objs[id];
+      o.wrap = o.el ? o.el.closest(".mobj") : null;
+      paint(id);
+    });
+
+    var sel = null;
+    var hist = [], hp = -1;   // commands {id,prop,from,to,label}; hp = last applied
+
+    function paint(id){
+      var o=objs[id]; if(!o.el) return;
+      o.el.style.borderRadius = (o.radius>=999?999:o.radius)+"px";
+      o.el.style.background = fills[o.fill].css;
+      o.el.style.opacity = (o.opacity/100);
+    }
+
+    function setStage(stage){
+      if(!loop) return;
+      var order=["select","inspect","change"], reached=order.indexOf(stage);
+      loop.querySelectorAll(".lstep").forEach(function(s){
+        s.classList.toggle("on", order.indexOf(s.getAttribute("data-stage"))<=reached && reached>=0);
+      });
+    }
+
+    function flash(msg){
+      if(!toast) return;
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(function(){ toast.classList.remove("show"); }, 1100);
+    }
+
+    function select(id){
+      sel = id;
+      Object.keys(objs).forEach(function(k){ if(objs[k].wrap) objs[k].wrap.classList.toggle("sel", k===id); });
+      if(layers){
+        layers.querySelectorAll(".lrow").forEach(function(r){
+          r.classList.toggle("sel", r.getAttribute("data-obj")===id);
+        });
+      }
+      renderInspector();
+      setStage("inspect");
+    }
+
+    function renderInspector(){
+      if(!sel){
+        inspSub.textContent = "Nothing selected";
+        body.innerHTML = '<div class="empty"><span class="g"><i class="ic lg ic-cursor"></i></span>Select an object on the canvas to inspect and change its properties. Every edit is undoable and non-destructive.</div>';
+        return;
+      }
+      var o = objs[sel];
+      inspSub.textContent = o.label;
+      var sw = fills.map(function(f,i){
+        return '<button class="swopt'+(i===o.fill?" on":"")+'" data-fill="'+i+'" style="background:'+f.css+'" title="'+f.n+'" aria-label="'+f.n+'"></button>';
+      }).join("");
+      var radLabel = o.radius>=999 ? "Full" : o.radius+"px";
+      body.innerHTML =
+        '<div class="section"><div class="sec-h">Shape <span class="mut">re-editable</span></div>'+
+          '<div class="irow"><span class="rl">Corner</span><span class="stepper"><button class="btn secondary icon sm" data-step="radius:-2" title="Smaller corner"><i class="ic sm ic-minus"></i></button><span class="val" id="radVal">'+radLabel+'</span><button class="btn secondary icon sm" data-step="radius:2" title="Larger corner"><i class="ic sm ic-plus"></i></button></span></div>'+
+          '<div class="irow"><span class="rl">Opacity</span><span class="stepper"><button class="btn secondary icon sm" data-step="opacity:-10" title="Less opaque"><i class="ic sm ic-minus"></i></button><span class="val" id="opVal">'+o.opacity+'%</span><button class="btn secondary icon sm" data-step="opacity:10" title="More opaque"><i class="ic sm ic-plus"></i></button></span></div>'+
+        '</div>'+
+        '<div class="section"><div class="sec-h">Fill <span class="mut">Paint</span></div>'+
+          '<div class="swrow" id="swrow">'+sw+'</div>'+
+          '<p class="note">Painted as a setting, not baked in. Swap the fill and the original is untouched.</p>'+
+        '</div>'+
+        '<div class="section"><div class="sec-h">Effects <span class="mut">non-destructive</span></div>'+
+          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,10,24</span></div>'+
+          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Inner glow</span><span class="meta">off</span></div>'+
+        '</div>';
+    }
+
+    function apply(id, prop, val){
+      objs[id][prop] = val;
+      paint(id);
+      if(sel===id){
+        var rv=document.getElementById("radVal"), ov=document.getElementById("opVal");
+        if(rv && prop==="radius") rv.textContent = val>=999?"Full":val+"px";
+        if(ov && prop==="opacity") ov.textContent = val+"%";
+        if(prop==="fill"){
+          var sw=document.getElementById("swrow");
+          if(sw) sw.querySelectorAll(".swopt").forEach(function(s){ s.classList.toggle("on", +s.getAttribute("data-fill")===val); });
+        }
+      }
+    }
+
+    function record(id, prop, from, to, label){
+      hist = hist.slice(0, hp+1);   // drop any redo tail
+      hist.push({id:id, prop:prop, from:from, to:to, label:label});
+      hp = hist.length-1;
+      renderHistory();
+      setStage("change");
+    }
+
+    function change(id, prop, to, label){
+      var from = objs[id][prop];
+      if(from===to) return;
+      apply(id, prop, to);
+      record(id, prop, from, to, label);
+    }
+
+    function undo(){
+      if(hp<0) return;
+      var c=hist[hp];
+      apply(c.id, c.prop, c.from);
+      if(sel!==c.id) select(c.id); else renderInspector();
+      hp--; renderHistory();
+      flash("Undo · "+hist[hp+1].label);
+    }
+    function redo(){
+      if(hp>=hist.length-1) return;
+      hp++; var c=hist[hp];
+      apply(c.id, c.prop, c.to);
+      if(sel!==c.id) select(c.id); else renderInspector();
+      renderHistory();
+      flash("Redo · "+c.label);
+    }
+
+    function renderHistory(){
+      var rows = ['<div class="hrow'+(hp<0?" cur":"")+'"><i class="ic sm ic-circle"></i><span class="hlbl">Opened document</span></div>'];
+      hist.forEach(function(c,i){
+        var cls = i===hp ? "cur" : (i>hp ? "undone" : "");
+        var val = c.prop==="fill" ? fills[c.to].n : (c.prop==="radius" ? (c.to>=999?"Full":c.to+"px") : c.to+"%");
+        rows.push('<div class="hrow '+cls+'"><i class="ic sm ic-keyframe"></i><span class="hlbl">'+c.label+'</span><span class="hval">'+val+'</span></div>');
+      });
+      hlist.innerHTML = rows.join("");
+      if(histCount) histCount.textContent = hist.length + (hist.length===1 ? " step" : " steps");
+      if(undoBtn) undoBtn.disabled = hp<0;
+      if(redoBtn) redoBtn.disabled = hp>=hist.length-1;
+    }
+
+    // canvas selection
+    canvas.addEventListener("click", function(e){
+      var wrap = e.target.closest(".mobj");
+      if(wrap){ setStage("select"); select(wrap.getAttribute("data-obj")); }
+    });
+    canvas.querySelectorAll(".mobj").forEach(function(w){
+      w.addEventListener("keydown", function(e){
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(w.getAttribute("data-obj")); }
+      });
+    });
+
+    // selecting from Layers is the same selection
+    if(layers){
+      layers.addEventListener("click", function(e){
+        var row = e.target.closest(".lrow[data-obj]");
+        if(row) select(row.getAttribute("data-obj"));
+      });
+    }
+
+    // inspector edits (delegated, the inspector is re-rendered)
+    body.addEventListener("click", function(e){
+      if(!sel) return;
+      var step = e.target.closest("[data-step]");
+      var swo  = e.target.closest("[data-fill]");
+      if(step){
+        var parts = step.getAttribute("data-step").split(":");
+        var prop = parts[0], delta = +parts[1];
+        var o = objs[sel], next;
+        if(prop==="radius"){ next = o.radius>=999 ? 40 : Math.max(0, Math.min(64, o.radius+delta)); }
+        else { next = Math.max(10, Math.min(100, o.opacity+delta)); }
+        change(sel, prop, next, o.label+" "+(prop==="radius"?"corner":"opacity"));
+      } else if(swo){
+        var fi=+swo.getAttribute("data-fill");
+        change(sel, "fill", fi, objs[sel].label+" fill · "+fills[fi].n);
+      }
+    });
+
+    if(undoBtn) undoBtn.addEventListener("click", undo);
+    if(redoBtn) redoBtn.addEventListener("click", redo);
+
+    document.addEventListener("keydown", function(e){
+      if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="z"){
+        e.preventDefault();
+        if(e.shiftKey) redo(); else undo();
+      }
+    });
+
+    renderHistory();
+  })();
+})();
+</script>
+</body>
+</html>

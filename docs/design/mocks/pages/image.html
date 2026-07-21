@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · image</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* image page extras · spacing on the 4pt scale, colors from tokens.
+     The shell (dock, groups, splitters, rail, tool bar, overlay) is all shared DS;
+     only the photo art and the two live sliders are page-local. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #image .win.shell{height:780px;min-height:0}  .photowrap{position:relative}
+  .photo{width:400px;height:300px}
+  /* selection ring follows the photo's corner radius */
+  #image .selwrap .sel-ring{border-radius:14px;inset:-8px}
+
+  /* page-scoped readout chip (was a local override of the shared .val) */
+  .imgval{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;
+       font-variant-numeric:tabular-nums;color:var(--faint);
+       background:color-mix(in srgb,var(--ink) 6%, transparent);
+       border-radius:5px;padding:2px 6px;cursor:default;white-space:nowrap}
+  .imgval.lg{font-size:10.5px}
+
+  /* NON-DESTRUCTIVE adjustment layer sitting ABOVE the pixels.
+     backdrop-filter re-colors whatever is painted below it; toggling it off
+     shows the raw pixels again, a real before / after. */
+  .photo .adjlayer{position:absolute;inset:0;pointer-events:none;
+       backdrop-filter:hue-rotate(var(--hue,31deg)) saturate(var(--sat,1.3));
+       -webkit-backdrop-filter:hue-rotate(var(--hue,31deg)) saturate(var(--sat,1.3));
+       transition:backdrop-filter .18s ease}
+  .photo .adjlayer.off{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .adjbadge{position:absolute;right:8px;top:8px;font-family:var(--mono);font-size:9.5px;
+       font-weight:600;letter-spacing:.03em;color:#fff;background:rgba(0,0,0,.5);
+       padding:3px 7px;border-radius:6px;transition:opacity .18s ease;pointer-events:none}
+  .cvhint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);white-space:nowrap;
+       font-size:10px;color:rgba(255,255,255,.72);background:rgba(0,0,0,.36);
+       padding:4px 10px;border-radius:7px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .cvhint b{color:#fff;font-weight:640}
+
+  /* quiet subject-select marquee on the sky */
+  .photo .submask{position:absolute;left:6%;right:6%;top:8%;height:42%;border:1.5px dashed rgba(127,227,255,.75);border-radius:6px;background:rgba(120,220,255,.08)}
+  .photo .subtag{position:absolute;left:6%;top:calc(8% - 10px);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#0b0d14;background:#7fe3ff;padding:2px 6px;border-radius:5px}
+
+  /* stamped component watermark, re-painted with a Style */
+  .photo .stamp{position:absolute;right:16px;bottom:48px}
+  .stamp-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--serif);font-size:14px;font-weight:700;color:#3a2a08;background:linear-gradient(135deg,#ffe9a8,#f6c453);border:1px solid rgba(255,255,255,.6);padding:5px 11px;border-radius:9px;letter-spacing:.01em;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+
+  /* layer rows: mask thumbnail + group counts */
+  .lrow .mth{width:16px;height:12px;border-radius:3px;flex:none;border:1px solid var(--line-strong)}
+  .lrow .eye{cursor:pointer}
+  .lgroup .cnt{color:var(--faint);font-weight:520;margin-left:5px}
+
+  /* mask list rows: editing highlight + tag */
+  .masklist.on{color:var(--ink);font-weight:560}
+  .masklist .tag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:1px 6px;border-radius:5px}
+
+  /* live inspector slider · looks like the DS bar, driven by a real range input */
+  .hsl{position:relative;flex:1;height:18px;display:flex;align-items:center;min-width:0}
+  .hsl .bar{flex:1}
+  .hsl.hue .bar{height:8px;background:linear-gradient(90deg,#4c9fff,#3ecf8e,#f6c453,#ff7e5f,#b98cff)}
+  .hsl.hue .bar i{background:transparent}
+  .hsl.sat .bar i{background:linear-gradient(90deg,#8b8f99,#ff7e5f)}
+  .hsl input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;z-index:2}
+  .hsl .knob{position:absolute;top:50%;left:50%;width:13px;height:13px;border-radius:50%;background:var(--panel);border:1.5px solid var(--accent);transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none;z-index:1}
+
+  /* per-channel curve overlays */
+  .curve .ch-r{stroke:#f0685c}.curve .ch-g{stroke:#3ecf8e}.curve .ch-b{stroke:#7f9bff}
+
+  /* tool-option buttons wrap inside the Properties group */
+  .optrow{display:flex;flex-wrap:wrap;gap:var(--s2)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="image">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Image editing</h2><span class="k">· adjustment layers that change color · non-destructive, Photoshop-class</span></div>
+
+  <p class="pglead">The <b>Image workspace</b> is a lens over the same document: the tool strip swaps to the photo
+    inventory, the dock foregrounds Layers and Properties, and the layer stack never changes. Color editing here is a
+    stack of <b>adjustment layers</b> that sit above the pixels and never rewrite them.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR · document · workspace lens · document actions -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>sunset-edit</b> · 4032 × 3024</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" data-ws="video" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar is
+         the real command surface; the mock never draws a fake one. -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <button class="btn ghost sm" data-target="agent" title="Ask the agent"><i class="ic ic-sparkle"></i> Ask agent</button>
+      <span class="imgval lg" title="Document precision">32-bit float · Display P3</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:218px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate layer <span class="sc">⌘J</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menuitem"><i class="ic ic-wand"></i> Select subject</div>
+          <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas" style="background:radial-gradient(700px 420px at 50% 30%,#141826,#0a0c11)">
+          <div class="artboard-label">4032 × 3024 · 32-bit float · Display P3</div>
+          <div class="photowrap selwrap">
+            <div class="photo">
+              <div class="sky"></div><div class="sun"></div><div class="hill"></div>
+              <!-- the non-destructive Hue / Saturation layer, above the pixels -->
+              <div class="adjlayer" id="adjlayer"></div>
+              <div class="adjbadge" id="adjBadge">Hue/Sat +31°</div>
+              <div class="submask"></div><span class="subtag"><i class="ic xs ic-sparkle"></i> subject mask</span>
+              <div class="stamp">
+                <span class="stamp-badge"><i class="ic sm ic-component"></i> SUNSET '26</span>
+                <span class="cinst"></span>
+                <span class="cbadge" data-target="dsys"><i class="ic xs ic-component"></i> Badge · Gold style</span>
+              </div>
+              <div class="cvhint">Toggle the <b>Hue / Saturation</b> layer, or drag Hue.</div>
+            </div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag">Hue / Saturation · adjustment layer</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 Image inventory, in order:
+             Select cluster → create/retouch cluster → Measure → Hand → Zoom -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <button class="tool" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+            <button class="tool" title="Magic wand select (W)"><i class="ic sm ic-wand"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+            <button class="tool" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+            <button class="tool ovf" title="Eraser (E)"><i class="ic sm ic-eraser"></i></button>
+            <button class="tool ovf" title="Heal (J)"><i class="ic sm ic-heal"></i></button>
+            <button class="tool ovf" title="Clone stamp (S)"><i class="ic sm ic-clone"></i></button>
+            <button class="tool ovf" title="Patch (P)"><i class="ic sm ic-patch"></i></button>
+            <button class="tool ovf" title="Dodge / Burn (O)"><i class="ic sm ic-dodge-burn"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:linear-gradient(135deg,#ff7e5f,#7b4397)"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+            <div class="menuitem"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+            <div class="menuitem"><i class="ic ic-heal"></i> Heal <span class="sc">J</span></div>
+            <div class="menuitem"><i class="ic ic-clone"></i> Clone stamp <span class="sc">S</span></div>
+            <div class="menuitem"><i class="ic ic-patch"></i> Patch <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-dodge-burn"></i> Dodge / Burn <span class="sc">O</span></div>
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen</div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) · the front door, slides over the canvas -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(160deg,#ffb36b,#ff7e5f 45%,#7b4397)"></span>
+                <span class="cap"><span class="nm">sunset-edit</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(160deg,#16233f,#6d6a92 55%,#f4c184)"></span>
+                <span class="cap"><span class="nm">golden-ridge</span><span class="ago">18 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(160deg,#f0c39c,#2b6f7a)"></span>
+                <span class="cap"><span class="nm">portrait-cutout</span><span class="ago">2 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="228" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+      <div class="pdock" id="dock" style="--dock-w:284px">
+
+        <div class="dgrp" id="gLayers" style="--gh:150px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">9</span>
+            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lrow"><i class="ic ic-component"></i><span class="nm">Watermark · Gold</span><i class="ic sm ic-component cmark"></i></div>
+
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Adjustments <span class="cnt">above the pixels</span></div>
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow child sel adj"><i class="ic ic-sliders" style="color:#ff7e5f"></i><span class="clipmark"></span><span class="nm">Hue / Saturation</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye adjtoggle" id="adjEye" title="Toggle layer"></i></div>
+            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#4c9fff"></i><span class="nm">Color balance</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="nm">Curves</span><span class="mth" style="background:linear-gradient(135deg,#fff 40%,#111)"></span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#7f9bff"></i><span class="nm">White balance</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#3ecf8e"></i><span class="nm">Clarity + Texture</span><i class="ic sm ic-eye eye"></i></div>
+
+            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Pixels</div>
+            <div class="lrow child"><i class="ic ic-heal"></i><span class="nm">Retouch · heal / clone</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Foreground · mask</span><span class="mth" style="background:linear-gradient(135deg,#000 45%,#fff)"></span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-image"></i><span class="nm">IMG_4021 · linked</span><span class="imgval">RAW</span></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="96" data-max="340"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties, contextual to what is selected.
+             Tool options live at the top of this group, never in an options bar. -->
+        <div class="dgrp" id="gProps" style="--gh:176px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Hue / Saturation</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h">Tool options <span class="mut">Select</span></div>
+              <div class="optrow">
+                <button class="btn secondary sm" data-target="img-bg-remove"><i class="ic ic-sparkle"></i> Subject</button>
+                <button class="btn secondary sm" data-target="img-masking"><i class="ic ic-image"></i> Sky</button>
+                <button class="btn secondary sm" data-target="img-masking"><i class="ic ic-sliders"></i> Luminosity</button>
+                <button class="btn ghost sm" data-target="agent"><i class="ic ic-sparkle"></i> Gen fill</button>
+                <button class="btn ghost sm" data-target="img-bg-remove"><i class="ic ic-eraser"></i> Remove bg</button>
+              </div>
+              <p class="note">Options belong to the active tool, so they change when the tool changes. Pick Lasso or the wand in the tool bar and this row follows.</p>
+            </div>
+
+            <!-- LIVE: the selected Hue / Saturation adjustment layer -->
+            <div class="section">
+              <div class="sec-h">Hue / Saturation <span class="mut">selected layer</span></div>
+              <div class="row"><span class="rl">Hue</span><span class="hsl hue" id="hueSlider" data-out="hueVal"><span class="bar"><i></i></span><span class="knob"></span><input type="range" min="0" max="100" value="72" aria-label="Hue"></span><span class="val" id="hueVal">+31°</span></div>
+              <div class="row"><span class="rl">Saturation</span><span class="hsl sat" id="satSlider" data-out="satVal"><span class="bar"><i></i></span><span class="knob"></span><input type="range" min="0" max="100" value="63" aria-label="Saturation"></span><span class="val" id="satVal">+18</span></div>
+              <div class="row"><span class="rl">Lightness</span><span class="bar"><i style="width:50%"></i></span><span class="val">0</span></div>
+              <p class="note">This is a <b style="color:var(--ink)">Layer</b>, not a baked filter. Drag it in the stack, mask it, or toggle its eye and the pixels underneath never change.</p>
+            </div>
+
+            <!-- blend + mask for the selected adjustment -->
+            <div class="section">
+              <div class="sec-h">Blend &amp; mask <span class="mut">Luminosity · shadows</span></div>
+              <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:88%"></i></span><span class="val">88%</span></div>
+              <div class="row"><span class="rl">Range</span><span class="bar"><i style="width:34%"></i></span><span class="val">shadows</span></div>
+              <div class="row"><span class="rl">Feather</span><span class="bar"><i style="width:28%"></i></span><span class="val">2.0px</span></div>
+              <div class="masklist on"><span class="mm" style="background:linear-gradient(135deg,#111,#eee)"></span>Luminosity · shadows<span class="tag">editing</span></div>
+              <div class="masklist"><span class="mm" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>Subject · agent select</div>
+              <div class="masklist"><span class="mm" style="background:linear-gradient(180deg,#fff,#000)"></span>Gradient · sky</div>
+              <p class="note">The mask is just an alpha <b style="color:var(--ink)">Paint</b> layer. Brush it, or drop a subject, gradient or luminosity mask in. <span data-target="img-masking" style="color:var(--accent)">Masking →</span></p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Histogram <span class="mut">RGB</span></div>
+              <div class="histogram"><i style="height:20%"></i><i style="height:35%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:95%"></i><i style="height:70%"></i><i style="height:48%"></i><i style="height:60%"></i><i style="height:38%"></i><i style="height:25%"></i><i style="height:42%"></i><i style="height:30%"></i><i style="height:18%"></i><i style="height:10%"></i></div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Curves <span class="mut">per channel</span></div>
+              <div class="seg" style="margin-bottom:8px" data-radio="button"><button class="on">RGB</button><button style="color:#f0685c">R</button><button style="color:#3ecf8e">G</button><button style="color:#7f9bff">B</button></div>
+              <div class="curve"><svg viewBox="0 0 100 96" preserveAspectRatio="none"><line x1="0" y1="96" x2="100" y2="0" stroke="var(--line)" stroke-width=".5"/><path class="ch-r" d="M2 92 C34 82 52 40 98 12" fill="none" stroke-width="1" opacity=".5"/><path class="ch-b" d="M2 94 C30 78 46 30 98 4" fill="none" stroke-width="1" opacity=".5"/><path d="M2 92 C30 74 44 30 98 6" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EFFECTS · the adjustment stack, reorderable, each row a layer -->
+        <div class="dgrp collapsed" id="gEffects" style="--gh:88px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">5</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:var(--s2) var(--s3)">
+            <div class="efx" style="border-color:var(--accent-line)"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en adjtoggle" id="stackAdjEye" title="Toggle layer"></span><span class="nm">Hue / Saturation</span><span class="meta">+31 / +18</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Color balance</span><span class="meta">warm</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Curves</span><span class="meta">RGB</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">White balance</span><span class="meta">5200K</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Clarity + Texture</span><span class="meta">+18 / +22</span></div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · one surface, four scopes (D1/D2). A dock group, never a left dock. -->
+        <div class="dgrp grow" id="gLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Components</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+            </div>
+            <div class="libgrid">
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffe9a8,#f6c453)"></span><span class="cap"><span class="nm">Badge</span><span class="mt">Gold style</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">4 variants</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Caption</span><span class="mt">2 variants</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#ffb36b,#ff7e5f 45%,#7b4397)"></span><span class="cap"><span class="nm">IMG_4021</span><span class="mt">RAW · 4032</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(160deg,#16233f,#6d6a92 55%,#f4c184)"></span><span class="cap"><span class="nm">IMG_4088</span><span class="mt">RAW · 6000</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Grade · warm</span><span class="mt">4 layers</span></span></div>
+            </div>
+            <p class="note" style="padding:0 var(--pad-sm) var(--pad)">The gold badge stamped on the photo is the <b style="color:var(--comp)">Badge</b> component from this Library, re-painted with the Gold style. <span data-target="dsys" style="color:var(--comp)">Design system →</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL · what the dock collapses to -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:216px;z-index:11">
+        <div class="mlabel">Add adjustment layer</div>
+        <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:conic-gradient(from 0deg,#ff7e5f,#f6c453,#3ecf8e,#4c9fff,#b98cff,#ff7e5f)"></span>Hue / Saturation <span class="sc">⌘U</span></div>
+        <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(135deg,#fff 40%,#111)"></span>Curves <span class="sc">⌘M</span></div>
+        <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(135deg,#4c9fff,#f0685c)"></span>Color balance <span class="sc">⌘B</span></div>
+        <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(90deg,#4c9fff,#ff9a44)"></span>White balance</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Clarity + Texture</div>
+      </div>
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:250px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy adjustment</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to default</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:432px;width:192px;z-index:11">
+        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
+        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Grain</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:208px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Color editing is just <b>layers</b>. Add a Hue/Saturation, Curves, Color balance, or White balance <b>adjustment layer</b> above the pixels · it recolors everything below it, stays reorderable, and never touches the original.</p></div>
+    <div class="c"><div class="lab g2">One selection, three places</div><p>The ring on the canvas, the highlighted row in <b>Layers</b>, and the <b>Properties</b> group are the same adjustment layer. Tool options live at the top of Properties, so there is no options bar to learn.</p></div>
+    <div class="c"><div class="lab g2">Components anywhere</div><p>That gold <b style="color:var(--comp)"><i class="ic xs ic-component"></i> Badge</b> is the very same component from UI design, <b>re-painted</b> with a Style and stamped on the shot. It comes from the <b>Library</b> group in the dock. <span data-target="dsys" style="color:var(--comp)">Open in the design system →</span></p></div>
+    <div class="c"><div class="lab g2">Automation</div><p>"Recover the shadows, mask the sky, remove the background" becomes a handful of the same API calls · every control here is one call, so the <span data-target="agent" style="color:var(--accent)">agent</span> can do it too.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Scoped, self-guarding: the Hue/Saturation adjustment layer really recolors the
+   canvas. Toggling its visibility or dragging Hue / Saturation updates the
+   backdrop-filter on the layer that sits above the pixels, plus every readout.
+   Collapse, resize, rail, overlay, popovers and tool selection are shared DS. */
+(function () {
+  var overlay = document.getElementById('adjlayer');
+  if (!overlay) return;
+  var badge = document.getElementById('adjBadge');
+  var state = { hue: 31, sat: 18, on: true };
+  var toggles = [].slice.call(document.querySelectorAll('.adjtoggle'));
+
+  function render() {
+    overlay.classList.toggle('off', !state.on);
+    overlay.style.setProperty('--hue', state.hue + 'deg');
+    overlay.style.setProperty('--sat', ((100 + state.sat * 1.7) / 100).toFixed(2));
+    if (badge) {
+      badge.textContent = 'Hue/Sat ' + (state.hue >= 0 ? '+' : '') + state.hue + '°';
+      badge.style.opacity = state.on ? '1' : '0';
+    }
+    toggles.forEach(function (t) {
+      if (t.classList.contains('en')) t.classList.toggle('off', !state.on);
+      else { t.classList.toggle('ic-eye', state.on); t.classList.toggle('ic-eye-off', !state.on); }
+    });
+  }
+
+  toggles.forEach(function (t) {
+    t.addEventListener('click', function (e) {
+      e.stopPropagation();
+      state.on = !state.on;
+      render();
+    });
+  });
+
+  function initSlider(id, map) {
+    var wrap = document.getElementById(id);
+    if (!wrap) return;
+    var input = wrap.querySelector('input');
+    var fill = wrap.querySelector('.bar i');
+    var knob = wrap.querySelector('.knob');
+    var out = document.getElementById(wrap.getAttribute('data-out'));
+    if (!input) return;
+    function upd() {
+      var min = +input.min, max = +input.max, v = +input.value;
+      var pct = (v - min) / (max - min) * 100;
+      if (fill) fill.style.width = pct + '%';
+      if (knob) knob.style.left = pct + '%';
+      var label = map(v);
+      if (out) out.textContent = label;
+      state.on = true;
+      render();
+    }
+    input.addEventListener('input', upd);
+    upd();
+  }
+
+  initSlider('hueSlider', function (v) {
+    state.hue = Math.round((v - 50) * 1.4);
+    return (state.hue >= 0 ? '+' : '') + state.hue + '°';
+  });
+  initSlider('satSlider', function (v) {
+    state.sat = Math.round((v - 50) * 1.4);
+    return (state.sat >= 0 ? '+' : '') + state.sat;
+  });
+  render();
+
+  /* Library scope switch + tile selection (same behavior as the other editors). */
+  var seg = document.getElementById('scopeSeg');
+  if (seg) {
+    var btns = [].slice.call(seg.querySelectorAll('button'));
+    var label = document.querySelector('#gLibrary .dgrp-h .cnt');
+    var names = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        if (label) label.textContent = names[b.getAttribute('data-scope')] || '';
+      });
+    });
+  }
+  [].slice.call(document.querySelectorAll('.libgrid')).forEach(function (grid) {
+    var tiles = [].slice.call(grid.querySelectorAll('.libtile'));
+    tiles.forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        tiles.forEach(function (x) { x.classList.toggle('sel', x === tile); });
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

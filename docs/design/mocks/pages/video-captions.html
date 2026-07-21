@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-captions</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* captions page · the shared shell (title bar, command surface, canvas + floating
+   tool bar, one right dock, transport, timeline). Captions are what the Title /
+   Text tool does in the Video workspace, so the tool is selected in the tool bar
+   and its options live at the top of Properties. Nothing here replaces the
+   canonical chrome; only the caption track and the styled caption line are page
+   local, and both sit inside shared regions. 4pt scale, shared tokens only. */
+
+#video-captions .win.shell{height:800px;min-height:0}
+#video-captions .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}/* ---------- preview: safe areas + the live styled caption ---------- */
+#video-captions .vframe{width:440px;height:248px}
+.cap-stage{position:absolute;inset:0}
+.cap-scene{position:absolute;inset:0;background:radial-gradient(120% 80% at 30% 20%,rgba(255,255,255,.18),transparent 55%),linear-gradient(160deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.35))}
+.cap-scene .sun{position:absolute;top:18%;left:24%;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,#fff6d6,rgba(255,210,122,.35) 60%,transparent);opacity:.8}
+.safe{position:absolute;border:1px dashed;border-radius:3px;pointer-events:none;opacity:0;transition:opacity .18s ease}
+.cap-stage.safe-on .safe{opacity:1}
+.safe.action{inset:4%;border-color:rgba(255,255,255,.55)}
+.safe.title{inset:9%;border-color:rgba(255,224,106,.85)}
+.safe .slab{position:absolute;font-size:8px;font-family:var(--mono);letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:rgba(0,0,0,.42);white-space:nowrap}
+.safe.action .slab{top:3px;left:4px;color:rgba(255,255,255,.9)}
+.safe.title .slab{bottom:3px;right:4px;color:#ffe06a}
+.capline{position:absolute;display:flex;flex-wrap:wrap;gap:5px;line-height:1.24;z-index:2}
+.capline.cc{left:50%;bottom:12%;transform:translateX(-50%);max-width:78%;justify-content:center;text-align:center}
+.capline.ll{left:9%;bottom:13%;max-width:64%;justify-content:flex-start;border-radius:var(--r2)}
+.capline.bg-pill{background:rgba(0,0,0,.6);padding:6px 12px;border-radius:var(--r2)}
+.capline.bg-grad{background:linear-gradient(120deg,rgba(154,92,255,.94),rgba(197,108,255,.86));padding:8px 14px;box-shadow:0 8px 22px -8px rgba(0,0,0,.5)}
+.capline.bg-none{text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.cw{transition:color .12s ease,transform .12s ease}
+.cw.active{transform:translateY(-1px)}
+/* SELECTION, place 1 of 3: the selected cue's line is ringed on the canvas */
+.capline .capring{position:absolute;inset:-6px;border:1.5px solid var(--accent);border-radius:var(--r3);pointer-events:none}
+.l3badge{position:absolute;top:-11px;left:0;background:var(--comp);color:#fff;font-size:8.5px;font-weight:640;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;z-index:3}
+.capline:not(.ll) .l3badge{display:none}
+.autoflag{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;z-index:3;box-shadow:0 6px 16px -6px rgba(157,108,255,.6)}
+
+/* ---------- the timeline dock: a caption track on shared primitives ---------- */
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:300px;overflow:auto;padding:0;display:flex;flex-direction:column}
+.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+.tlbar .trk-auto{display:inline-flex;align-items:center;gap:5px;color:var(--comp);font-size:10px;font-weight:640;white-space:nowrap}
+.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tlbar .now b{color:var(--accent)}
+.tlz{padding:var(--s2) var(--s3) var(--s3);position:relative}
+.tlgrid{position:relative}
+.tlgrid .track{margin:var(--s1) 0}
+.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
+.tlgrid .track .tl .trk-auto{display:inline-flex;align-items:center;gap:4px;color:var(--comp);min-width:0}
+.tlgrid .track .lane.rlane{height:20px;display:block}
+.tlgrid .rlane>.ruler{margin-bottom:0;height:19px;cursor:ew-resize}
+.tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);flex:none}
+.tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+.tlgrid .track .lane.cuelane{height:22px;display:block}
+.tlgrid .track .lane.wordlane{height:26px;display:block}
+.tlgrid .lane .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--edge-lo);pointer-events:none}
+/* a cue is a clip on the caption track: shared .clip.txt, positioned in % */
+.tlgrid .lane>.clip.cue{position:absolute;top:0;height:22px;background:color-mix(in srgb,var(--comp) 20%,transparent);border:1px solid var(--comp-line);color:var(--comp);font-size:9.5px;cursor:pointer}
+.tlgrid .lane>.clip.cue.live{background:color-mix(in srgb,var(--comp) 34%,transparent);border-color:var(--comp)}
+.tlgrid .lane>.clip.cue.sel{outline:2px solid var(--accent);outline-offset:1px;z-index:2}
+.wchip{position:absolute;top:3px;height:20px;min-width:20px;border-radius:var(--r1);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);display:flex;align-items:center;padding:0 5px;font-size:9.5px;font-weight:560;color:var(--dim);overflow:hidden;white-space:nowrap;box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer;transition:var(--ctl-tr)}
+.wchip .wt{overflow:hidden;text-overflow:ellipsis}
+.wchip.spoken{color:var(--faint);opacity:.72}
+.wchip:hover{border-color:var(--accent-line);color:var(--ink)}
+.wchip:focus-visible{outline:none;box-shadow:var(--ring)}
+.wchip.active{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 88%,white 12%),var(--accent));border-color:transparent;color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 10px -4px color-mix(in srgb,var(--accent) 60%,transparent);z-index:2}
+.playstrip{position:absolute;left:calc(var(--gutter) + 8px);right:0;top:0;bottom:0;pointer-events:none;z-index:5}
+.tlgrid .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px);left:0}
+.tlgrid .playhead::before{content:none}
+.tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit);pointer-events:auto;cursor:ew-resize}
+
+/* empty + transcribing states for the auto-generate flow */
+.capempty{display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm);padding:var(--s5) var(--pad);text-align:center;color:var(--faint)}
+.capempty .g{color:var(--faint);opacity:.6}
+.capempty p{margin:0;font-size:11.5px;max-width:340px;line-height:1.5}
+.captrans{padding:var(--s4) var(--pad)}
+.captrans .tl{display:flex;align-items:center;gap:var(--gap-sm);font-size:11px;color:var(--dim);margin-bottom:var(--gap-sm)}
+.captrans .tl .sp{width:14px;height:14px;border:2px solid var(--comp-line);border-top-color:var(--comp);border-radius:50%;animation:spin .8s linear infinite}
+.capprog{height:6px;border-radius:4px;background:var(--line);overflow:hidden}
+.capprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6E8BFF,#c56cff);border-radius:4px}
+
+/* ---------- Properties helpers ---------- */
+.specrow{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin:var(--s2) 0}
+.specrow .val{text-transform:none;letter-spacing:0;margin-left:auto;color:var(--ink);font-weight:520;font-family:var(--mono);font-size:10.5px}
+.specsw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}/* ---------- in-the-API strip ---------- */
+.apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
+.apibar code{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 8px;border-radius:6px;white-space:nowrap}
+.xlink{cursor:pointer}
+.xlink:hover{border-color:var(--accent-line);color:var(--ink)}
+
+/* ---------- narrow: the window container query, not the viewport ---------- */
+@container shell (max-width:880px){
+  #tlDock{--gutter:52px}
+  #video-captions .vframe{width:300px;height:169px}
+  .tlbar .now{display:none}
+}
+@container shell (max-width:620px){
+  #tlDock{--gutter:52px}
+  #video-captions .vframe{width:216px;height:122px}
+  .tlbar .trk-auto{display:none}
+}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-captions">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Captions</h2><span class="k">· word-level timing</span></div>
+
+  <p class="pglead">Captions are not a mode that replaces the app. They are what the <b>Title / Text tool</b> does when the
+    document has time: the tool is picked in the floating tool bar, its options sit at the top of <b>Properties</b>, and the
+    generated cues land on the <b>timeline</b> as a normal track. Each word owns its own time span.</p>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR · document · workspace lens · document actions -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>launch-teaser</b> · 1920 x 1080 · 0:06 <span id="capDirty" style="color:var(--faint)">· saved</span></div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" data-ws="image" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" data-ws="ui" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg on" data-ws="video" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip style xlink" data-target="typography"><span class="sw"></span>Caption / Regular <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+          <div class="mlabel">Captions</div>
+          <div class="menuitem" id="mGen"><i class="ic ic-sparkle"></i> Auto-generate captions</div>
+          <div class="menuitem" id="mClear"><i class="ic ic-x"></i> Clear caption track</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export SRT</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">View</div>
+          <div class="menuitem" id="mSafe"><i class="ic ic-frame"></i> Title and action safe areas</div>
+          <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset this demo</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="vframe">
+            <div class="cap-stage safe-on" id="capStage">
+              <div class="cap-scene"><span class="sun"></span></div>
+              <span class="autoflag" id="autoFlag"><i class="ic ic-sparkle xs"></i> Auto · en</span>
+              <div class="safe action"><span class="slab">Action safe · 93%</span></div>
+              <div class="safe title"><span class="slab">Title safe · 90%</span></div>
+              <div class="capline cc bg-pill" id="capLine"><!-- word spans injected --></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · D4 video inventory · Title / Text is the active tool -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="blade" title="Blade / split (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool on" data-tool="text" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool ovf" data-tool="shape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" data-tool="measure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="hand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" data-tool="zoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" style="background:#ffd76a"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- HISTORY OVERLAY (⌘⇧H) -->
+        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
+                <span class="cap"><span class="nm">Launch teaser</span><span class="ago">open now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Open a recording and the transport bar and timeline dock appear, ready to caption.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="212" data-max="420"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock" id="dock">
+
+        <!-- SELECTION, place 2 of 3 -->
+        <div class="dgrp" id="gLayers" style="--gh:76px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">4</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b" id="layerList"><!-- injected --></div>
+        </div>
+
+        <div class="splitter h" data-min="80" data-max="260"></div>
+
+        <!-- SELECTION, place 3 of 3, plus the ACTIVE TOOL's options at the top -->
+        <div class="dgrp grow" id="gProps">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Caption</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- TOOL OPTIONS: contextual to the active tool, per the selection model -->
+            <div class="section">
+              <div class="sec-h"><i class="ic xs ic-text"></i> Title / Text <span class="mut">tool options</span></div>
+              <div class="irow"><span class="rl">Language</span>
+                <span class="select" id="langSel" tabindex="0" role="button" title="Transcription language">
+                  <span class="lead"><i class="ic xs ic-sparkle" style="color:var(--comp)"></i> English (en)</span><span class="car"><i class="ic xs ic-chevron-down"></i></span>
+                </span>
+              </div>
+              <div class="irow"><span class="rl">Guides</span>
+                <button class="btn secondary sm" id="safeBtn" aria-pressed="true" title="Show title and action safe areas"><i class="ic ic-frame"></i> Safe areas</button>
+              </div>
+              <div class="irow"><span class="rl">Generate</span>
+                <button class="btn primary sm" id="autoBtn"><i class="ic ic-sparkle"></i> Auto captions</button>
+              </div>
+            </div>
+
+            <div class="section" id="cueSec">
+              <div class="sec-h">Cue <span class="mut" id="cueMeta">1 of 2</span></div>
+              <div class="grid2" id="cueFields"></div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Caption style <span class="mut">named Type style</span></div>
+              <div class="seg stack" id="styleSeg" style="width:100%">
+                <button class="on" data-style="A">Caption</button>
+                <button data-style="B">Lower third</button>
+                <button data-style="C">Karaoke</button>
+              </div>
+              <div id="capSpec"><!-- spec readouts injected --></div>
+              <p class="note">The line is a text layer wearing a named style. Change the style in the design system and every cue re-skins.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp collapsed" id="gEffects" style="--gh:150px">
+          <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">1</span>
+            <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Text shadow</span><span class="meta">0,2,12</span></div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · media pool is this group with scope = Media (D1) -->
+        <div class="dgrp" id="gLibrary" style="--gh:104px">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libScope">Media</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="scopeSeg">
+                <button class="on" data-scope="media">Media</button>
+                <button data-scope="components">Comp</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
+            </div>
+            <div class="libgrid" id="mediaGrid">
+              <div class="libtile sel" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">teaser.mov</span><span class="mt">0:06</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">voice.wav</span><span class="mt">0:06</span></span></div>
+              <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span><span class="cap"><span class="nm">bumper.mov</span><span class="mt">0:03</span></span></div>
+              <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower-third</span><span class="mt">component</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE RAIL -->
+      <div class="drail">
+        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+        <div class="menuitem"><i class="ic ic-text"></i> New caption cue</div>
+        <div class="menuitem"><i class="ic ic-sparkle"></i> Re-transcribe this clip</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
+      </div>
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:200px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to style</div>
+      </div>
+      <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:180px;width:190px;z-index:11">
+        <div class="menuitem"><i class="ic ic-square"></i> Text shadow</div>
+        <div class="menuitem"><i class="ic ic-image"></i> Blur behind</div>
+      </div>
+      <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT BAR · the document has time -->
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" id="skipBack" title="Previous word"><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" id="playBtn" title="Play or pause" aria-pressed="false"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" id="skipFwd" title="Next word"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur" id="tcCur">0:01</span>
+      <span class="scrub" id="tScrub" data-duration="6" role="slider" aria-label="Scrub" aria-valuemin="0" aria-valuemax="6" aria-valuenow="1.3" tabindex="0">
+        <span class="fill" style="width:22%"></span>
+        <span class="mark" style="left:3%"></span>
+        <span class="mark" style="left:97%"></span>
+        <span class="knob" style="left:22%"></span>
+      </span>
+      <span class="tc">0:06</span>
+      <span class="grp">
+        <button class="btn ghost sm" id="clearBtn" title="Clear the caption track"><i class="ic ic-x"></i><span class="lb">Clear</span></button>
+        <button class="btn ghost sm" id="resetBtn" title="Reset this demo"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
+        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export SRT</span></button>
+      </span>
+    </div>
+
+    <!-- TIMELINE DOCK · the caption track, on shared timeline primitives -->
+    <div class="timeline" id="tlDock">
+      <div class="tlbar">
+        <span class="lbl">Caption track</span>
+        <span class="trk-auto"><i class="ic xs ic-sparkle"></i> auto · word level</span>
+        <span class="tspacer"></span>
+        <span class="now">Active word <b id="wordRead">·</b></span>
+        <span class="now" id="timeRead">1.30s / 6.00s</span>
+      </div>
+      <div id="capBody"><!-- track grid OR empty / transcribing state injected --></div>
+    </div>
+  </div>
+
+  <!-- in the API -->
+  <div class="apibar">
+    <span class="lab">In the API</span>
+    <code>captions.autoGenerate({lang:"en"})</code>
+    <code>caption.style = "Lower third / Bold"</code>
+    <code>caption.safeArea = "title"</code>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Auto-captions land as a <b>real track with word-level timing</b>. Each word sits on its own time span, the current word lights up in the track and in the preview as the playhead moves, and the whole line is a <b>Type Style</b> you can restyle without touching a single pixel.</p></div>
+    <div class="c"><div class="lab g2">Captions are a tool, not a mode</div><p>Nothing about the shell changes to caption a video. You pick <b>Title / Text</b> in the tool bar, its options appear at the top of <b>Properties</b>, and the cues appear on the timeline. One selected cue reads the same in three places: ringed on the canvas, highlighted in <b>Layers</b>, and open in <b>Properties</b>.</p></div>
+    <div class="c"><div class="lab g2">Safe by default</div><p>Title-safe and action-safe guides keep words off the crop no matter the aspect. Broadcast wants 90% and 93%; social reels want a taller inset. The guide set is a preset an <span class="chip xlink" data-target="agent">agent</span> can pick per platform.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Word timing is easy to generate but tedious to hand-fix. Do we ship an inline nudge on each word chip, or trust re-transcription plus a global offset? The first is precise, the second is faster for most cuts.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* ============================================================
+   Captions demo (scoped, guarded). Shell behavior (collapse,
+   resize, rail, overlay, overflow, tool radio, zoom) is shared
+   DS and is not repeated here.
+   ============================================================ */
+(function(){
+  "use strict";
+  var DURATION = 6.0;
+  var TICKS = [0,1,2,3,4,5,6];
+
+  // word-level timing: {w, t (start s), d (dur s), cue}
+  var WORDS = [
+    {w:"Capture", t:0.20, d:0.55, cue:0},
+    {w:"the",     t:0.82, d:0.20, cue:0},
+    {w:"screen,", t:1.05, d:0.58, cue:0},
+    {w:"design",  t:1.75, d:0.55, cue:0},
+    {w:"it,",     t:2.35, d:0.28, cue:0},
+    {w:"and",     t:2.72, d:0.24, cue:1},
+    {w:"let",     t:3.00, d:0.26, cue:1},
+    {w:"the",     t:3.30, d:0.20, cue:1},
+    {w:"agent",   t:3.56, d:0.55, cue:1},
+    {w:"automate",t:4.18, d:0.78, cue:1},
+    {w:"the",     t:5.02, d:0.20, cue:1},
+    {w:"rest.",   t:5.28, d:0.55, cue:1}
+  ];
+  function cueSpan(ci){
+    var ws = WORDS.filter(function(x){ return x.cue===ci; });
+    var t0 = Math.min.apply(null, ws.map(function(x){ return x.t; }));
+    var t1 = Math.max.apply(null, ws.map(function(x){ return x.t+x.d; }));
+    return {t0:t0, t1:t1, n:ws.length};
+  }
+  var CUES = [cueSpan(0), cueSpan(1)];
+
+  var STYLES = {
+    A:{name:"Caption / Regular", face:"var(--sans)", faceLbl:"SF Pro", size:17, weight:600,
+       base:"#ffffff", spoken:"#ffffff", active:"#ffd76a", pos:"cc", bg:"bg-pill", sw:"#ffd76a"},
+    B:{name:"Lower third / Bold", face:"var(--serif)", faceLbl:"New York", size:21, weight:700,
+       base:"#ffffff", spoken:"#ffffff", active:"#ffffff", pos:"ll", bg:"bg-grad", sw:"#c56cff"},
+    C:{name:"Karaoke / Pop", face:"var(--sans)", faceLbl:"SF Pro", size:20, weight:800,
+       base:"rgba(255,255,255,.5)", spoken:"#ffffff", active:"#12c2e9", pos:"cc", bg:"bg-none", sw:"#12c2e9"}
+  };
+
+  var playT   = 1.30;
+  var styleK  = "A";
+  var safeOn  = true;
+  var gen     = true;
+  var selCue  = 0;
+  var playing = false, raf=null, last=0;
+  var dirty   = false;
+
+  var clamp = function(v,a,b){ return Math.max(a,Math.min(b,v)); };
+  var pct   = function(t){ return (t/DURATION)*100; };
+  var tcode = function(s){ s=Math.max(0,s); var m=Math.floor(s/60), r=Math.floor(s%60); return m+":"+(r<10?"0":"")+r; };
+
+  var stage   = document.getElementById("capStage");
+  var line    = document.getElementById("capLine");
+  var body    = document.getElementById("capBody");
+  var spec    = document.getElementById("capSpec");
+  var autoFlag= document.getElementById("autoFlag");
+  var tScrub  = document.getElementById("tScrub");
+  var tcCur   = document.getElementById("tcCur");
+
+  function activeWordIdx(){
+    for(var i=0;i<WORDS.length;i++){ var x=WORDS[i]; if(playT>=x.t && playT<x.t+x.d) return i; }
+    return -1;
+  }
+  function currentCue(){
+    for(var i=0;i<CUES.length;i++){ if(playT>=CUES[i].t0 && playT<=CUES[i].t1) return i; }
+    return playT < CUES[0].t0 ? 0 : CUES.length-1;
+  }
+
+  /* ---------------- CANVAS PREVIEW (selection, place 1 of 3) ---------------- */
+  function renderPreview(){
+    if(!line) return;
+    var st = STYLES[styleK];
+    line.className = "capline "+st.pos+" "+st.bg;
+    line.style.fontFamily = st.face;
+    line.style.fontSize = st.size+"px";
+    line.style.fontWeight = st.weight;
+    if(!gen){ line.innerHTML=""; line.style.display="none"; if(autoFlag) autoFlag.style.display="none"; return; }
+    line.style.display="";
+    if(autoFlag) autoFlag.style.display="";
+    var ci = currentCue();
+    var ai = activeWordIdx();
+    var html = (st.pos==="ll") ? '<span class="l3badge"><i class="ic ic-component xs"></i> Lower-third</span>' : '';
+    WORDS.forEach(function(x,i){
+      if(x.cue!==ci) return;
+      var col = st.base;
+      var cls = "cw";
+      if(i===ai){ col=st.active; cls+=" active"; }
+      else if(playT >= x.t+x.d){ col=st.spoken; cls+=" spoken"; }
+      html += '<span class="'+cls+'" style="color:'+col+'">'+x.w+'</span>';
+    });
+    if(ci===selCue) html += '<span class="capring"></span>';
+    line.innerHTML = html;
+  }
+
+  /* ---------------- TIMELINE: the caption track ---------------- */
+  var playhead=null;
+  function renderTrack(){
+    if(!body) return;
+    if(!gen){ renderEmpty(); return; }
+    body.innerHTML =
+      '<div class="tlz"><div class="tlgrid" id="tlGrid">'+
+        '<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
+        '<div class="track"><span class="tl">Cues</span><div class="lane cuelane" id="cueLane"></div></div>'+
+        '<div class="track"><span class="tl"><span class="trk-auto"><i class="ic xs ic-text"></i>Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'+
+        '<div class="playstrip"><div class="playhead" id="capHead"><span class="head"></span></div></div>'+
+      '</div></div>';
+    var ruler=document.getElementById("capRuler");
+    TICKS.forEach(function(t,i){
+      var tk=document.createElement("span");
+      tk.className="tk"+(i===TICKS.length-1?" end":"");
+      if(i!==TICKS.length-1) tk.style.left=pct(t)+"%";
+      tk.textContent=t+"s";
+      ruler.appendChild(tk);
+    });
+    var cl=document.getElementById("cueLane");
+    CUES.forEach(function(c,i){
+      var el=document.createElement("div");
+      el.className="clip cue"+(i===currentCue()?" live":"")+(i===selCue?" sel":"");
+      el.style.left=pct(c.t0)+"%"; el.style.width=pct(c.t1-c.t0)+"%";
+      el.setAttribute("data-cue", i);
+      el.textContent="Cue "+(i+1);
+      cl.appendChild(el);
+    });
+    var wl=document.getElementById("wordLane");
+    TICKS.forEach(function(t){ var g=document.createElement("i"); g.className="gl"; g.style.left=pct(t)+"%"; wl.appendChild(g); });
+    var ai=activeWordIdx();
+    WORDS.forEach(function(x,i){
+      var el=document.createElement("button");
+      var cls="wchip";
+      if(i===ai) cls+=" active"; else if(playT>=x.t+x.d) cls+=" spoken";
+      el.className=cls;
+      el.style.left=pct(x.t)+"%"; el.style.width=pct(x.d)+"%";
+      el.setAttribute("data-seek", x.t.toFixed(2));
+      el.title=x.w+" · "+x.t.toFixed(2)+"s to "+(x.t+x.d).toFixed(2)+"s";
+      el.innerHTML='<span class="wt">'+x.w+'</span>';
+      wl.appendChild(el);
+    });
+    playhead=document.getElementById("capHead");
+    positionPlayhead();
+  }
+  function positionPlayhead(){ if(playhead) playhead.style.left=pct(playT)+"%"; }
+
+  function renderEmpty(){
+    body.innerHTML =
+      '<div class="capempty">'+
+        '<span class="g"><i class="ic ic-text lg"></i></span>'+
+        '<p>No captions on this clip yet. Auto-generate a word-level track from the clip audio, then scrub to see each word light up.</p>'+
+        '<button class="btn primary" id="genBtn"><i class="ic ic-sparkle"></i> Auto-generate captions</button>'+
+      '</div>';
+    var gb=document.getElementById("genBtn");
+    if(gb) gb.addEventListener("click", generate);
+  }
+
+  function generate(){
+    if(!body) return;
+    body.innerHTML =
+      '<div class="captrans">'+
+        '<div class="tl"><span class="sp"></span> Transcribing audio, aligning words to time</div>'+
+        '<div class="capprog"><i id="capProg"></i></div>'+
+      '</div>';
+    var bar=document.getElementById("capProg");
+    var p=0;
+    var iv=setInterval(function(){
+      p+=Math.random()*22+10;
+      if(bar) bar.style.width=Math.min(p,100)+"%";
+      if(p>=100){ clearInterval(iv); gen=true; markDirty(); renderTrack(); renderPreview(); renderLayers(); renderProps(); syncControls(); }
+    },90);
+  }
+
+  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
+  var layerList=document.getElementById("layerList");
+  function renderLayers(){
+    if(!layerList) return;
+    var h='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-text"></i> Captions</div>';
+    if(gen){
+      CUES.forEach(function(c,i){
+        var ws=WORDS.filter(function(x){ return x.cue===i; }).map(function(x){ return x.w; }).join(" ");
+        h+='<div class="lrow child'+(i===selCue?" sel":"")+'" data-cue="'+i+'" role="button" tabindex="0">'+
+             '<i class="ic ic-text"></i><span class="nm">'+ws+'</span><i class="ic sm ic-eye eye"></i></div>';
+      });
+    } else {
+      h+='<div class="lrow child" style="color:var(--faint)"><i class="ic ic-text"></i><span class="nm">no cues yet</span></div>';
+    }
+    h+='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>'+
+       '<div class="lrow child"><i class="ic ic-image"></i><span class="nm">teaser.mov</span><i class="ic sm ic-eye eye"></i></div>'+
+       '<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>'+
+       '<div class="lrow child"><i class="ic ic-audio"></i><span class="nm">voice.wav</span><i class="ic sm ic-eye eye"></i></div>';
+    layerList.innerHTML=h;
+  }
+  layerList && layerList.addEventListener("click", function(e){
+    var row=e.target.closest("[data-cue]"); if(!row) return;
+    selectCue(+row.getAttribute("data-cue"), true);
+  });
+
+  function selectCue(i, seek){
+    selCue=i;
+    if(seek) playT=+(CUES[i].t0+0.05).toFixed(2);
+    renderTrack(); renderLayers(); renderProps(); renderPreview(); updateReadouts(); syncControls();
+  }
+
+  /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
+  function renderProps(){
+    var f=document.getElementById("cueFields");
+    var meta=document.getElementById("cueMeta");
+    var kind=document.getElementById("propKind");
+    if(kind) kind.textContent = gen ? "Cue" : "Clip";
+    if(meta) meta.textContent = gen ? ((selCue+1)+" of "+CUES.length) : "none";
+    if(!f) return;
+    if(!gen){ f.innerHTML='<div class="field" style="grid-column:1 / -1"><span class="k">No cues</span><span class="v">generate first</span></div>'; return; }
+    var c=CUES[selCue];
+    f.innerHTML =
+      '<div class="field"><span class="k">In</span><span class="v">'+c.t0.toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Out</span><span class="v">'+c.t1.toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Dur</span><span class="v">'+(c.t1-c.t0).toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Words</span><span class="v">'+c.n+'</span></div>';
+  }
+
+  /* ---------------- STYLE SPEC ---------------- */
+  function renderSpec(){
+    if(!spec) return;
+    var st=STYLES[styleK];
+    spec.innerHTML =
+      '<div class="specrow">Style <span class="val">'+st.name+'</span></div>'+
+      '<div class="specrow">Font <span class="val">'+st.faceLbl+' '+st.weight+'</span></div>'+
+      '<div class="specrow">Size <span class="val">'+st.size+'px</span></div>'+
+      '<div class="specrow">Active <span class="specsw" style="background:'+st.active+'"></span><span class="val">'+(st.active.indexOf("rgba")===0?"rgba":st.active.toUpperCase())+'</span></div>'+
+      '<div class="specrow">Position <span class="val">'+(st.pos==="ll"?"Lower left":"Bottom center")+'</span></div>';
+  }
+
+  /* ---------------- READOUTS ---------------- */
+  function syncTransport(){
+    if(!tScrub) return;
+    var p=(playT/DURATION*100);
+    var f=tScrub.querySelector(".fill"), k=tScrub.querySelector(".knob");
+    if(f) f.style.width=p+"%";
+    if(k) k.style.left=p+"%";
+    if(tcCur) tcCur.textContent=tcode(playT);
+    tScrub.setAttribute("aria-valuenow", playT.toFixed(2));
+  }
+  function updateReadouts(){
+    syncTransport();
+    var tr=document.getElementById("timeRead");
+    if(tr) tr.textContent=playT.toFixed(2)+"s / "+DURATION.toFixed(2)+"s";
+    var wr=document.getElementById("wordRead");
+    var ai=activeWordIdx();
+    if(wr) wr.textContent=(gen && ai>=0)?WORDS[ai].w:"·";
+  }
+  function syncControls(){
+    var sb=document.getElementById("skipBack"), sf=document.getElementById("skipFwd");
+    var first=WORDS[0].t, lastT=WORDS[WORDS.length-1].t;
+    if(sb) sb.disabled = !gen || playT<=first+0.001;
+    if(sf) sf.disabled = !gen || playT>=lastT-0.001;
+    var pb=document.getElementById("playBtn");
+    if(pb) pb.disabled = !gen;
+  }
+  function refreshActive(){
+    var ai=activeWordIdx();
+    var wl=document.getElementById("wordLane");
+    if(wl){
+      [].forEach.call(wl.querySelectorAll(".wchip"), function(el,i){
+        el.classList.toggle("active", i===ai);
+        el.classList.toggle("spoken", i!==ai && playT>=WORDS[i].t+WORDS[i].d);
+      });
+    }
+    var cl=document.getElementById("cueLane");
+    if(cl){ var cc=currentCue(); [].forEach.call(cl.querySelectorAll(".clip.cue"),function(el,i){ el.classList.toggle("live",i===cc); }); }
+    positionPlayhead();
+    renderPreview();
+    updateReadouts();
+    syncControls();
+  }
+
+  /* ---------------- SCRUB ---------------- */
+  function timeFromX(cx, rect){ return clamp((cx-rect.left)/rect.width*DURATION, 0, DURATION); }
+  function startScrub(e, rect){
+    var set=function(cx){ playT=+timeFromX(cx,rect).toFixed(2); refreshActive(); };
+    set(e.clientX);
+    var move=function(ev){ set(ev.clientX); };
+    var up=function(){ document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); };
+    document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
+    e.preventDefault();
+  }
+  if(body){
+    body.addEventListener("pointerdown", function(e){
+      var cue=e.target.closest(".clip.cue");
+      if(cue){ selectCue(+cue.getAttribute("data-cue"), false); return; }
+      var chip=e.target.closest(".wchip");
+      if(chip){ playT=+chip.getAttribute("data-seek"); refreshActive(); return; }
+      var ruler=e.target.closest(".ruler");
+      if(ruler){ startScrub(e, ruler.getBoundingClientRect()); return; }
+      if(e.target.classList && e.target.classList.contains("head")){
+        var strip=body.querySelector(".playstrip");
+        if(strip) startScrub(e, strip.getBoundingClientRect());
+        return;
+      }
+      var lane=e.target.closest(".wordlane,.cuelane");
+      if(lane){ startScrub(e, lane.getBoundingClientRect()); }
+    });
+  }
+  if(tScrub){
+    var scrubSet=function(e){ playT=+timeFromX(e.clientX, tScrub.getBoundingClientRect()).toFixed(2); refreshActive(); };
+    tScrub.addEventListener("pointerdown", function(e){ tScrub.dataset.on="1"; scrubSet(e); });
+    tScrub.addEventListener("pointermove", function(e){ if(tScrub.dataset.on) scrubSet(e); });
+    ["pointerup","pointercancel"].forEach(function(t){ tScrub.addEventListener(t, function(){ delete tScrub.dataset.on; }); });
+    tScrub.addEventListener("keydown", function(e){
+      if(e.key==="ArrowLeft"){ e.preventDefault(); playT=clamp(playT-0.2,0,DURATION); refreshActive(); }
+      if(e.key==="ArrowRight"){ e.preventDefault(); playT=clamp(playT+0.2,0,DURATION); refreshActive(); }
+    });
+  }
+
+  /* ---------------- TRANSPORT ---------------- */
+  var playBtn=document.getElementById("playBtn");
+  function setPlayIcon(){
+    var pi=playBtn&&playBtn.querySelector(".ic");
+    if(pi){ pi.classList.toggle("ic-pause",playing); pi.classList.toggle("ic-play",!playing); }
+    if(playBtn){ playBtn.setAttribute("aria-pressed", playing?"true":"false"); playBtn.title=playing?"Pause":"Play"; }
+  }
+  function tick(ts){
+    if(!playing) return;
+    if(!last) last=ts;
+    playT += (ts-last)/1000; last=ts;
+    if(playT>=DURATION) playT=0;
+    refreshActive();
+    raf=requestAnimationFrame(tick);
+  }
+  if(playBtn) playBtn.addEventListener("click", function(){
+    if(!gen) return;
+    playing=!playing; setPlayIcon(); last=0;
+    if(playing) raf=requestAnimationFrame(tick); else if(raf) cancelAnimationFrame(raf);
+  });
+  var sb=document.getElementById("skipBack"), sf=document.getElementById("skipFwd");
+  if(sb) sb.addEventListener("click", function(){
+    var prev=null; WORDS.forEach(function(x){ if(x.t<playT-0.02) prev=x.t; });
+    if(prev!==null){ playT=prev; refreshActive(); }
+  });
+  if(sf) sf.addEventListener("click", function(){
+    var next=null;
+    for(var i=0;i<WORDS.length;i++){ if(WORDS[i].t>playT+0.02){ next=WORDS[i].t; break; } }
+    if(next!==null){ playT=next; refreshActive(); }
+  });
+
+  /* ---------------- STYLE PICKER ---------------- */
+  var styleSeg=document.getElementById("styleSeg");
+  if(styleSeg) styleSeg.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    [].forEach.call(styleSeg.children,function(x){ x.classList.toggle("on",x===b); });
+    styleK=b.getAttribute("data-style");
+    var chip=document.querySelector('.toolbar .chip.style');
+    if(chip) chip.innerHTML='<span class="sw"></span>'+STYLES[styleK].name+' <i class="ic xs ic-chevron-down"></i>';
+    markDirty(); renderPreview(); renderSpec();
+  });
+
+  /* ---------------- SAFE AREAS ---------------- */
+  var safeBtn=document.getElementById("safeBtn");
+  function setSafe(on){
+    safeOn=on;
+    if(safeBtn){
+      safeBtn.setAttribute("aria-pressed", String(safeOn));
+      safeBtn.classList.toggle("secondary", safeOn);
+      safeBtn.classList.toggle("ghost", !safeOn);
+    }
+    if(stage) stage.classList.toggle("safe-on", safeOn);
+  }
+  if(safeBtn) safeBtn.addEventListener("click", function(){ setSafe(!safeOn); });
+  var mSafe=document.getElementById("mSafe");
+  if(mSafe) mSafe.addEventListener("click", function(){ setSafe(!safeOn); });
+
+  /* ---------------- AUTO / CLEAR / RESET ---------------- */
+  var autoBtn=document.getElementById("autoBtn");
+  if(autoBtn) autoBtn.addEventListener("click", generate);
+  var mGen=document.getElementById("mGen");
+  if(mGen) mGen.addEventListener("click", generate);
+  function clearTrack(){
+    playing=false; setPlayIcon(); if(raf) cancelAnimationFrame(raf);
+    gen=false; markDirty();
+    renderTrack(); renderPreview(); renderLayers(); renderProps(); updateReadouts(); syncControls();
+  }
+  var clearBtn=document.getElementById("clearBtn");
+  if(clearBtn) clearBtn.addEventListener("click", clearTrack);
+  var mClear=document.getElementById("mClear");
+  if(mClear) mClear.addEventListener("click", clearTrack);
+  function resetAll(){
+    playing=false; if(raf) cancelAnimationFrame(raf);
+    playT=1.30; styleK="A"; gen=true; selCue=0;
+    if(styleSeg) [].forEach.call(styleSeg.children,function(x){ x.classList.toggle("on", x.getAttribute("data-style")==="A"); });
+    setSafe(true);
+    var d=document.getElementById("capDirty"); if(d){ d.textContent="· saved"; d.style.color="var(--faint)"; }
+    dirty=false;
+    setPlayIcon(); renderTrack(); renderLayers(); renderProps(); renderPreview(); renderSpec(); updateReadouts(); syncControls();
+  }
+  var resetBtn=document.getElementById("resetBtn");
+  if(resetBtn) resetBtn.addEventListener("click", resetAll);
+  var mReset=document.getElementById("mReset");
+  if(mReset) mReset.addEventListener("click", resetAll);
+
+  /* language select (cycles for the demo) */
+  var LANGS=["English (en)","Espanol (es)","Deutsch (de)","Japanese (ja)"];
+  var li=0, langSel=document.getElementById("langSel");
+  function cycleLang(){
+    li=(li+1)%LANGS.length;
+    var lead=langSel.querySelector(".lead");
+    if(lead) lead.innerHTML='<i class="ic xs ic-sparkle" style="color:var(--comp)"></i> '+LANGS[li];
+    if(autoFlag) autoFlag.innerHTML='<i class="ic ic-sparkle xs"></i> Auto · '+LANGS[li].match(/\(([^)]+)\)/)[1];
+  }
+  if(langSel){
+    langSel.addEventListener("click", cycleLang);
+    langSel.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); cycleLang(); } });
+  }
+
+  /* Library scope switch + tile selection */
+  (function(){
+    var seg=document.getElementById("scopeSeg");
+    var label=document.getElementById("libScope");
+    var names={media:"Media",components:"Components",styles:"Styles",assets:"Assets"};
+    if(seg){
+      var btns=[].slice.call(seg.querySelectorAll("button"));
+      btns.forEach(function(b){
+        b.addEventListener("click", function(){
+          btns.forEach(function(x){ x.classList.toggle("on",x===b); });
+          if(label) label.textContent=names[b.getAttribute("data-scope")]||"";
+        });
+      });
+    }
+    var mg=document.getElementById("mediaGrid");
+    if(mg){
+      var tiles=[].slice.call(mg.querySelectorAll(".libtile"));
+      tiles.forEach(function(t){
+        t.addEventListener("click", function(){ tiles.forEach(function(x){ x.classList.toggle("sel",x===t); }); });
+      });
+    }
+  })();
+
+  function markDirty(){
+    if(dirty) return;
+    dirty=true;
+    var d=document.getElementById("capDirty");
+    if(d){ d.textContent="· edited"; d.style.color="var(--warn)"; }
+  }
+
+  /* keyboard: space play or pause, arrows step words */
+  document.addEventListener("keydown", function(e){
+    if(e.target && /input|textarea/i.test(e.target.tagName)) return;
+    if(e.key===" "){ if(playBtn){ e.preventDefault(); playBtn.click(); } }
+    else if(e.key==="ArrowRight"){ if(sf && !sf.disabled){ e.preventDefault(); sf.click(); } }
+    else if(e.key==="ArrowLeft"){ if(sb && !sb.disabled){ e.preventDefault(); sb.click(); } }
+  });
+
+  /* ---------------- BOOT ---------------- */
+  setSafe(safeOn);
+  renderTrack();
+  renderLayers();
+  renderProps();
+  renderPreview();
+  renderSpec();
+  updateReadouts();
+  syncControls();
+})();
+</script>
+</body>
+</html>

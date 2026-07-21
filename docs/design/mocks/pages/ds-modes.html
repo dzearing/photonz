@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ds-modes</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ds-modes: one set of semantic token NAMES, many resolved values. Switching a
+     mode re-resolves every token at once, but the names never change. 4pt spacing
+     only, radii + colors from tokens, monochrome glyphs. */
+
+  /* BOTH blocks on this page are KIND 2 SPECIMENS (PRODUCT-MODEL §4c): a token
+     map and an API listing depict PARTS, not the product, so neither wears
+     traffic lights or a title bar. They are plain labeled bordered cards. */
+  .dm-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  .dm-blk-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
+    border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  .dm-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
+  .dm-blk-h .dm-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
+    border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
+  .dm-blk-h .dm-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
+
+  /* ---- control row: mode switch + reset ---- */
+  .dm-bar{display:flex;align-items:center;gap:var(--pad-sm);padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--edge-lo);flex-wrap:wrap}
+  .dm-bar .lead{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660}
+  .dm-bar .now{margin-left:auto;display:inline-flex;align-items:center;gap:var(--gap-sm);font-size:11px;font-weight:600;color:var(--ink)}
+  .dm-bar .now .d{width:9px;height:9px;border-radius:50%;flex:none}
+
+  /* ---- the two-up: token map on the left, live sample on the right ---- */
+  .dm-live{display:grid;grid-template-columns:1fr 452px}
+  .dm-mapwrap{padding:var(--pad);border-right:1px solid var(--edge-lo);display:flex;flex-direction:column;gap:var(--pad-sm)}
+
+  /* token map table: name stays constant, one value column per mode */
+  .tmap{display:flex;flex-direction:column;gap:2px}
+  .tmrow{display:grid;grid-template-columns:150px 1fr 1fr 1fr;gap:var(--gap-sm);align-items:center;
+    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r-sm);
+    background:var(--glass-thin);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .tmrow.head{background:transparent;border:0;box-shadow:none;padding-bottom:2px}
+  .tmrow.head span{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:660;display:flex;align-items:center;gap:6px}
+  .tmrow.head .cn{cursor:pointer;justify-content:flex-start}
+  .tmrow.head .cn.active{color:var(--accent)}
+  .tmrow.head .cn .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .tmname{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .tmname b{font-size:11.5px;font-weight:620;color:var(--ink);line-height:1.15}
+  .tmname .t{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  .tmcell{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--dim);min-width:0;
+    padding:3px 6px;border-radius:var(--r1);border:1px solid transparent}
+  .tmcell.active{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:var(--accent-line);color:var(--ink)}
+  .tmcell .sw{width:14px;height:14px;border-radius:5px;flex:none;box-shadow:0 0 0 1px var(--edge-lo) inset}
+  .tmnote{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--s1) 0 0;padding-top:var(--pad-sm);border-top:1px solid var(--edge-lo)}
+  .tmnote b{color:var(--ink)}
+
+  /* inline edit: change one token's value in the active mode, live */
+  .dm-edit{display:flex;align-items:center;gap:var(--pad-sm);flex-wrap:wrap;
+    background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r-md);
+    padding:var(--gap-sm) var(--pad-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .dm-edit .el{font-size:10.5px;color:var(--faint);font-weight:560}
+  .dm-edit .el b{color:var(--ink);font-weight:640}
+  .dm-color{width:26px;height:26px;padding:0;border:1px solid var(--edge-lo);border-radius:var(--r-sm);background:transparent;cursor:pointer;flex:none;transition:var(--ctl-tr)}
+  .dm-color::-webkit-color-swatch-wrapper{padding:2px}
+  .dm-color::-webkit-color-swatch{border:0;border-radius:6px}
+  .dm-color:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo))}
+  .dm-color:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
+  .dm-hex{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:600;min-width:70px}
+  .dm-edit .sp{flex:1}
+
+  /* ---- the live sample (card + button + text) ---- */
+  .dm-stage{display:flex;flex-direction:column;min-width:0}
+  /* the sample artboard IS the shared .canvas (VISUAL RULE 5). It only flattens
+     the glow so the swapped mode colour reads as a solid page background. */
+  .dm-art{--artboard-ink:var(--m-bg,#0c0e14);--artboard-bg:var(--m-bg,#0c0e14);
+    flex:1;padding:var(--s7) var(--pad)}
+  .dm-art .abtag{position:absolute;top:12px;left:16px;font-size:10px;font-family:var(--mono);letter-spacing:.04em;color:color-mix(in srgb,var(--m-text,#fff) 40%,transparent)}
+
+  /* the sample. Every property reads a --m-* var the mode switch re-resolves.
+     --accent / --accent-ink / --ink / --dim are remapped on this scope so the
+     canonical .btn inside re-themes from the SAME mode values. */
+  .dm-sample{--accent:var(--m-accent);--accent-ink:var(--m-accent-ink);--ink:var(--m-text);--dim:var(--m-muted)}
+  .dm-card{width:340px;padding:var(--s5);border-radius:var(--r4);
+    background:var(--m-surface,#141018);color:var(--m-text,#fff);border:1px solid var(--m-line,#333);
+    box-shadow:0 26px 64px -18px rgba(0,0,0,.5),inset 0 1px 0 color-mix(in srgb,var(--m-text,#fff) 8%,transparent);
+    transition:background-color .4s ease,color .4s ease,border-color .4s ease}
+  .dm-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--m-accent);background:color-mix(in srgb,var(--m-accent) 16%,transparent);
+    border:1px solid color-mix(in srgb,var(--m-accent) 42%,transparent);padding:3px 9px;border-radius:999px;
+    transition:color .4s,background-color .4s,border-color .4s}
+  .dm-title{font-family:var(--serif);font-size:28px;line-height:1.06;font-weight:700;letter-spacing:-.02em;
+    color:var(--m-text);margin:var(--pad-sm) 0 var(--gap-sm);transition:color .4s}
+  .dm-body{font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--m-muted);margin:0 0 var(--pad);transition:color .4s}
+  .dm-row{display:flex;align-items:center;gap:var(--pad-sm)}
+  .dm-meta{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--m-muted);
+    border:1px solid var(--m-line);padding:4px 9px;border-radius:999px;transition:color .4s,border-color .4s}
+
+  /* token-name legend under the card: names are CONSTANT, swatches re-resolve */
+  .dm-legend{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap;padding:var(--pad-sm) var(--pad) var(--pad);
+    border-top:1px solid var(--edge-lo);background:var(--glass-thin)}
+  .dm-legend .ll{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:660}
+  .dm-tok{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--dim);
+    background:var(--panel);border:1px solid var(--edge-lo);padding:3px 8px;border-radius:999px;box-shadow:inset 0 1px 0 var(--edge-hi)}
+  .dm-tok .sw{width:11px;height:11px;border-radius:4px;flex:none;box-shadow:0 0 0 1px var(--edge-lo) inset;transition:background-color .4s}
+
+  /* ---- API block sits on the right of a two-column footer window ---- */
+  .dm-api{display:grid;grid-template-columns:1fr 396px}
+  .dm-apil{padding:var(--pad);border-right:1px solid var(--edge-lo);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .dm-apir{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);min-width:0}
+  .dm-grp{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660;margin:0}
+  .dm-flow{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .dm-step{display:flex;align-items:flex-start;gap:var(--pad-sm);font-size:12px;color:var(--dim);line-height:1.5}
+  .dm-step .n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none;margin-top:1px}
+  .dm-step b{color:var(--ink);font-weight:620}
+  .dm-step code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--edge-lo);padding:1px 5px;border-radius:5px}
+  .dm-apmeta{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+  .dm-apmeta b{color:var(--dim);font-weight:600}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="ds-modes">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Token modes</h2><span class="k">· one token, many values</span></div>
+
+    <!-- ===== live sample + token map ===== -->
+    <!-- KIND 2 · SPECIMEN. A token map plus a live sample. No app chrome. -->
+    <div class="dm-blk">
+      <div class="dm-blk-h"><span class="dm-kind">Specimen</span><h3>Switch the mode, every token re-resolves at once</h3><span class="dm-sub"><button class="btn ghost sm" data-target="dsys">The system, in full <i class="ic ic-chevron-right"></i></button></span></div>
+
+      <div class="dm-bar">
+        <span class="lead">Mode</span>
+        <div class="seg" id="dm-seg" role="tablist" aria-label="Token mode">
+          <button data-mode="light" class="on" aria-selected="true"><i class="ic xs ic-eye"></i> Light</button>
+          <button data-mode="dark" aria-selected="false"><i class="ic xs ic-eye-off"></i> Dark</button>
+          <button data-mode="brand" aria-selected="false"><i class="ic xs ic-swatch"></i> Brand</button>
+        </div>
+        <span class="now"><span class="d" id="dm-dot"></span>Now resolving <b id="dm-now" style="margin-left:2px">Light</b></span>
+      </div>
+
+      <div class="dm-live">
+        <!-- token map: names constant, values per mode -->
+        <div class="dm-mapwrap">
+          <div class="tmap" id="dm-tmap">
+            <div class="tmrow head">
+              <span>Semantic token</span>
+              <span class="cn" data-col="light"><span class="dot" style="background:#4C6FFF"></span>Light</span>
+              <span class="cn" data-col="dark"><span class="dot" style="background:#7F9BFF"></span>Dark</span>
+              <span class="cn" data-col="brand"><span class="dot" style="background:#6E8BFF"></span>Brand</span>
+            </div>
+            <!-- rows are built once in markup; JS only toggles the active column -->
+            <div class="tmrow">
+              <span class="tmname"><b>bg</b><span class="t">color/bg</span></span>
+              <span class="tmcell" data-col="light" data-tok="bg"><span class="sw" style="background:#EDEFF4"></span>#EDEFF4</span>
+              <span class="tmcell" data-col="dark" data-tok="bg"><span class="sw" style="background:#0A0C11"></span>#0A0C11</span>
+              <span class="tmcell" data-col="brand" data-tok="bg"><span class="sw" style="background:#14111F"></span>#14111F</span>
+            </div>
+            <div class="tmrow">
+              <span class="tmname"><b>surface</b><span class="t">color/surface</span></span>
+              <span class="tmcell" data-col="light" data-tok="surface"><span class="sw" style="background:#FFFFFF"></span>#FFFFFF</span>
+              <span class="tmcell" data-col="dark" data-tok="surface"><span class="sw" style="background:#17191F"></span>#17191F</span>
+              <span class="tmcell" data-col="brand" data-tok="surface"><span class="sw" style="background:#201B36"></span>#201B36</span>
+            </div>
+            <div class="tmrow">
+              <span class="tmname"><b>text</b><span class="t">color/text</span></span>
+              <span class="tmcell" data-col="light" data-tok="text"><span class="sw" style="background:#16181F"></span>#16181F</span>
+              <span class="tmcell" data-col="dark" data-tok="text"><span class="sw" style="background:#E7E9EE"></span>#E7E9EE</span>
+              <span class="tmcell" data-col="brand" data-tok="text"><span class="sw" style="background:#F2EEFC"></span>#F2EEFC</span>
+            </div>
+            <div class="tmrow">
+              <span class="tmname"><b>muted</b><span class="t">color/muted</span></span>
+              <span class="tmcell" data-col="light" data-tok="muted"><span class="sw" style="background:#5C6371"></span>#5C6371</span>
+              <span class="tmcell" data-col="dark" data-tok="muted"><span class="sw" style="background:#9AA1AF"></span>#9AA1AF</span>
+              <span class="tmcell" data-col="brand" data-tok="muted"><span class="sw" style="background:#A99FC9"></span>#A99FC9</span>
+            </div>
+            <div class="tmrow">
+              <span class="tmname"><b>accent</b><span class="t">color/accent</span></span>
+              <span class="tmcell" data-col="light" data-tok="accent"><span class="sw" style="background:#4C6FFF"></span>#4C6FFF</span>
+              <span class="tmcell" data-col="dark" data-tok="accent"><span class="sw" style="background:#7F9BFF"></span>#7F9BFF</span>
+              <span class="tmcell" data-col="brand" data-tok="accent"><span class="sw" style="background:#6E8BFF"></span>#6E8BFF</span>
+            </div>
+            <div class="tmrow">
+              <span class="tmname"><b>line</b><span class="t">color/line</span></span>
+              <span class="tmcell" data-col="light" data-tok="line"><span class="sw" style="background:#E2E4EA"></span>#E2E4EA</span>
+              <span class="tmcell" data-col="dark" data-tok="line"><span class="sw" style="background:#2A2E38"></span>#2A2E38</span>
+              <span class="tmcell" data-col="brand" data-tok="line"><span class="sw" style="background:#322C4C"></span>#322C4C</span>
+            </div>
+          </div>
+
+          <div class="dm-edit">
+            <span class="el">Edit <b>accent</b> in <b id="dm-editmode">Light</b></span>
+            <input type="color" id="dm-accent" class="dm-color" value="#4C6FFF" aria-label="Accent value for the active mode">
+            <span class="dm-hex" id="dm-accenthex">#4C6FFF</span>
+            <span class="sp"></span>
+            <button class="btn secondary sm" id="dm-reset"><i class="ic ic-undo"></i> Reset</button>
+          </div>
+
+          <p class="tmnote">The token <b>names</b> in the left column never move. A mode is just a column of values. Switch the mode and <b>bg</b>, <b>surface</b>, <b>text</b>, <b>muted</b>, <b>accent</b> and <b>line</b> all re-resolve together, so the sample recolors in one pass with no re-layout.</p>
+        </div>
+
+        <!-- live sample -->
+        <div class="dm-stage">
+          <div class="canvas dm-art dm-sample" id="dm-sample">
+            <span class="abtag">Hero / pricing.card</span>
+            <div class="dm-card">
+              <span class="dm-eyebrow"><i class="ic xs ic-sparkle"></i> Pro plan</span>
+              <h3 class="dm-title">Ship in any mode</h3>
+              <p class="dm-body">One card, one button, one line of text. Nothing here is edited by hand. Every color comes from a semantic token, so the whole sample follows the mode you pick.</p>
+              <div class="dm-row">
+                <button class="btn primary"><i class="ic ic-check"></i> Start free</button>
+                <button class="btn ghost">See plans</button>
+                <span class="dm-meta">v1.0</span>
+              </div>
+            </div>
+          </div>
+          <div class="dm-legend">
+            <span class="ll">Same names</span>
+            <span class="dm-tok"><span class="sw" data-tok="bg"></span>bg</span>
+            <span class="dm-tok"><span class="sw" data-tok="surface"></span>surface</span>
+            <span class="dm-tok"><span class="sw" data-tok="text"></span>text</span>
+            <span class="dm-tok"><span class="sw" data-tok="accent"></span>accent</span>
+            <span class="dm-tok"><span class="sw" data-tok="line"></span>line</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A <b>mode</b> is a set of values behind the same token names. Components reference <b>accent</b>, never a raw hex, so a mode switch re-resolves every token at once and the whole sample recolors in place.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Modes are not only Light and Dark. A <b>Brand</b> mode, a high-contrast mode, or a seasonal mode are all just more value columns for the same names, so any of them can be the active appearance.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>When a layer pins a literal color instead of a token, should a mode switch leave it alone or offer to rebind it to the nearest token so it can follow the mode too?</p></div>
+    </div>
+
+    <!-- ===== in the API ===== -->
+    <!-- KIND 2 · SPECIMEN. An API listing. No app chrome. -->
+    <div class="dm-blk">
+      <div class="dm-blk-h"><span class="dm-kind">Specimen</span><h3>In the API · the mode switch is one call, so the agent does it too</h3><span class="dm-sub"><button class="btn ghost sm" data-target="agent">How the agent runs it <i class="ic ic-chevron-right"></i></button></span></div>
+      <div class="dm-api">
+        <div class="dm-apil">
+          <p class="dm-grp">What the seg above actually does</p>
+          <div class="dm-flow">
+            <div class="dm-step"><span class="n">1</span><div>Set the active mode. Every token re-resolves against that mode's value column. <code>system.mode = "dark"</code></div></div>
+            <div class="dm-step"><span class="n">2</span><div>Read or edit one token's value for a single mode without touching the others. <code>token("accent").value("brand")</code></div></div>
+            <div class="dm-step"><span class="n">3</span><div>Components keep referencing the <b>name</b>, so nothing per layer changes. The sample recolors because its tokens point at the mode.</div></div>
+          </div>
+          <p class="tmnote" style="margin-top:auto">The color picker in the map edits <b>token("accent").value(mode)</b> live. Reset restores the mode's shipped value.</p>
+        </div>
+        <div class="dm-apir">
+          <div class="dm-apmeta"><span><b>token modes</b></span><span>one call · same as the seg</span></div>
+          <div class="codeblk"><span class="c">// switch the active mode: every token re-resolves</span>
+system.<span class="p">mode</span> = <span class="s">"dark"</span>
+
+<span class="c">// the name is constant, the value is per-mode</span>
+token(<span class="s">"accent"</span>).<span class="p">value</span>(<span class="s">"light"</span>)   <span class="c">// "#4C6FFF"</span>
+token(<span class="s">"accent"</span>).<span class="p">value</span>(<span class="s">"dark"</span>)    <span class="c">// "#7F9BFF"</span>
+
+<span class="c">// edit one mode's value, leave the others alone</span>
+token(<span class="s">"accent"</span>).<span class="p">value</span>(<span class="s">"brand"</span>) = <span class="s">"#6E8BFF"</span>
+
+<span class="c">// a component still references the NAME, not a hex</span>
+button.fill = token(<span class="s">"accent"</span>)   <span class="c">// follows every mode</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Because a mode is data, the whole switch is one property set: <code>system.mode = "dark"</code>. Everything the seg does above is a call the <b data-target="agent" style="color:var(--accent);cursor:pointer">agent</b> can make too.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Bind a mode to context: preview <b>Dark</b> while your editor stays in Light, or auto-pick a mode per export target. The sample re-resolves without changing the document.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>If two modes need different type or radius, not just color, should a mode carry <b>any</b> token, or stay color-only so appearance and layout never fight?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* ds-modes: the mode seg swaps the resolved --m-* custom properties on the
+     sample scope so the card, button, and text recolor at once. The token NAMES
+     never change; only their values do. Editing accent for the active mode
+     updates the map cell, the legend swatch, and the sample. Reset restores the
+     shipped values. Scoped + guarded: nothing runs if elements are missing. */
+  (function () {
+    var root = document.getElementById('ds-modes');
+    if (!root) return;
+
+    var DEFAULTS = {
+      light: { label: 'Light', dot: '#4C6FFF',
+        vars: { bg:'#EDEFF4', surface:'#FFFFFF', text:'#16181F', muted:'#5C6371', accent:'#4C6FFF', line:'#E2E4EA', 'accent-ink':'#FFFFFF' } },
+      dark: { label: 'Dark', dot: '#7F9BFF',
+        vars: { bg:'#0A0C11', surface:'#17191F', text:'#E7E9EE', muted:'#9AA1AF', accent:'#7F9BFF', line:'#2A2E38', 'accent-ink':'#0B0D14' } },
+      brand: { label: 'Brand', dot: '#6E8BFF',
+        vars: { bg:'#14111F', surface:'#201B36', text:'#F2EEFC', muted:'#A99FC9', accent:'#6E8BFF', line:'#322C4C', 'accent-ink':'#FFFFFF' } }
+    };
+
+    function clone(src) {
+      var out = {};
+      for (var m in src) {
+        if (!Object.prototype.hasOwnProperty.call(src, m)) continue;
+        out[m] = { label: src[m].label, dot: src[m].dot, vars: {} };
+        for (var k in src[m].vars) {
+          if (Object.prototype.hasOwnProperty.call(src[m].vars, k)) out[m].vars[k] = src[m].vars[k];
+        }
+      }
+      return out;
+    }
+
+    var modes = clone(DEFAULTS);
+    var active = 'light';
+
+    var sample = root.querySelector('#dm-sample');
+    var segBtns = [].slice.call(root.querySelectorAll('#dm-seg button'));
+    var heads = [].slice.call(root.querySelectorAll('.tmrow.head .cn'));
+    var cells = [].slice.call(root.querySelectorAll('.tmcell'));
+    var legendSw = [].slice.call(root.querySelectorAll('.dm-legend .sw'));
+    var nowEl = root.querySelector('#dm-now');
+    var dotEl = root.querySelector('#dm-dot');
+    var editModeEl = root.querySelector('#dm-editmode');
+    var accentIn = root.querySelector('#dm-accent');
+    var accentHex = root.querySelector('#dm-accenthex');
+
+    function paintSample() {
+      if (!sample) return;
+      var v = modes[active].vars;
+      for (var k in v) {
+        if (Object.prototype.hasOwnProperty.call(v, k)) sample.style.setProperty('--m-' + k, v[k]);
+      }
+      legendSw.forEach(function (sw) {
+        var tok = sw.getAttribute('data-tok');
+        if (tok && v[tok]) sw.style.background = v[tok];
+      });
+    }
+
+    function paintCellFor(mode, tok) {
+      var val = modes[mode].vars[tok];
+      cells.forEach(function (c) {
+        if (c.getAttribute('data-col') !== mode || c.getAttribute('data-tok') !== tok) return;
+        var sw = c.querySelector('.sw');
+        if (sw) sw.style.background = val;
+        var txt = c.lastChild;
+        if (txt && txt.nodeType === 3) txt.nodeValue = val.toUpperCase();
+      });
+    }
+
+    function markActiveColumn() {
+      heads.forEach(function (h) { h.classList.toggle('active', h.getAttribute('data-col') === active); });
+      cells.forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-col') === active); });
+    }
+
+    function syncEditor() {
+      if (editModeEl) editModeEl.textContent = modes[active].label;
+      var a = modes[active].vars.accent;
+      if (accentIn) accentIn.value = a;
+      if (accentHex) accentHex.textContent = a.toUpperCase();
+    }
+
+    function setMode(mode) {
+      if (!modes[mode]) return;
+      active = mode;
+      segBtns.forEach(function (b) {
+        var on = b.getAttribute('data-mode') === mode;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      if (nowEl) nowEl.textContent = modes[mode].label;
+      if (dotEl) dotEl.style.background = modes[mode].vars.accent;
+      markActiveColumn();
+      syncEditor();
+      paintSample();
+    }
+
+    segBtns.forEach(function (b) {
+      b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); });
+    });
+    heads.forEach(function (h) {
+      h.addEventListener('click', function () { setMode(h.getAttribute('data-col')); });
+    });
+
+    if (accentIn) {
+      accentIn.addEventListener('input', function () {
+        var val = accentIn.value;
+        modes[active].vars.accent = val;
+        if (accentHex) accentHex.textContent = val.toUpperCase();
+        if (dotEl) dotEl.style.background = val;
+        paintCellFor(active, 'accent');
+        paintSample();
+      });
+    }
+
+    var resetBtn = root.querySelector('#dm-reset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        modes = clone(DEFAULTS);
+        ['light', 'dark', 'brand'].forEach(function (m) { paintCellFor(m, 'accent'); });
+        setMode('light');
+      });
+    }
+
+    setMode('light');
+  })();
+</script>
+</body>
+</html>

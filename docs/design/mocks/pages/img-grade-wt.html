@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · img-grade-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* img-grade-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, then driven by the steps. The window never re-renders, and it
+     is a complete Kind-1 shell (§4c): title bar carrying document identity only,
+     command surface, canvas with the floating tool bar, and the one right dock.
+
+     The grade really composites: the filter on the photo is rebuilt from the
+     adjustment layers currently present and switched on, so the walkthrough and
+     the live eye toggles drive the same code path. Page-local classes are
+     prefixed .g- / .st- and never reuse a shared-DS name. */
+
+  #img-grade-wt .win.shell{height:700px;min-height:0}  #img-grade-wt .selwrap .sel-ring{border-radius:16px;inset:-8px}
+
+  /* ---- the photo: a believable sunset landscape from gradients ---- */
+  .grphoto{width:392px;height:270px;border-radius:12px;position:relative;overflow:hidden;
+    box-shadow:0 22px 46px -14px rgba(0,0,0,.62), 0 0 0 1px rgba(0,0,0,.35)}
+  .grade{position:absolute;inset:0;transition:filter .32s ease}
+  .g-sky{position:absolute;inset:0;
+    background:linear-gradient(180deg,#152a63 0%,#3f3f83 26%,#8c4a86 46%,#d05c72 62%,#ff9159 80%,#ffd693 100%)}
+  .g-glow{position:absolute;left:50%;bottom:22%;width:300px;height:190px;transform:translateX(-50%);
+    background:radial-gradient(ellipse at center,rgba(255,222,158,.92),rgba(255,150,90,.28) 46%,transparent 72%);filter:blur(3px)}
+  .g-sun{position:absolute;left:50%;bottom:30%;width:64px;height:64px;transform:translateX(-50%);border-radius:50%;
+    background:radial-gradient(circle,#fff7df,#ffd784 58%,#ffab5c);box-shadow:0 0 44px 14px rgba(255,202,120,.55)}
+  .g-cloud{position:absolute;border-radius:12px;background:rgba(58,26,58,.34);filter:blur(3px)}
+  .g-cloud.c1{top:17%;left:9%;width:132px;height:9px}
+  .g-cloud.c2{top:27%;right:8%;width:96px;height:7px}
+  .g-cloud.c3{top:37%;left:22%;width:74px;height:6px;background:rgba(90,40,70,.3)}
+  .g-range{position:absolute;left:0;right:0}
+  .g-range.far{height:70px;bottom:31%;background:#4a2f63;opacity:.92;
+    clip-path:polygon(0 62%,12% 44%,26% 60%,40% 30%,54% 56%,70% 36%,86% 58%,100% 46%,100% 100%,0 100%)}
+  .g-range.near{height:92px;bottom:29%;background:#221535;
+    clip-path:polygon(0 60%,18% 40%,34% 64%,50% 40%,66% 66%,82% 46%,100% 62%,100% 100%,0 100%)}
+  .g-water{position:absolute;left:0;right:0;bottom:0;height:30%;
+    background:linear-gradient(180deg,#d0637f 0%,#8a4a76 32%,#3a2450 72%,#1c1230 100%)}
+  .g-reflect{position:absolute;left:50%;bottom:0;width:30px;height:30%;transform:translateX(-50%);
+    background:linear-gradient(180deg,rgba(255,214,146,.8),rgba(255,170,110,.2) 60%,transparent);filter:blur(2px);opacity:.9}
+  /* split-tone overlays: warm highlights (screen) + cool shadows (multiply).
+     Opacity is driven from JS so the walkthrough and the live eye toggles use
+     one code path. */
+  .g-warm{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,184,96,.24),transparent 52%);
+    mix-blend-mode:screen;opacity:0;transition:opacity .32s ease;pointer-events:none}
+  .g-cool{position:absolute;inset:0;background:linear-gradient(0deg,rgba(74,124,214,.30),transparent 46%);
+    mix-blend-mode:multiply;opacity:0;transition:opacity .32s ease;pointer-events:none}
+
+  /* grade label on the photo */
+  .g-badge{position:absolute;left:10px;top:10px;font-family:var(--mono);font-size:9.5px;font-weight:600;
+    letter-spacing:.03em;color:#fff;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:6px;pointer-events:none;z-index:2}
+  .g-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);white-space:nowrap;font-size:10px;
+    color:rgba(255,255,255,.74);background:rgba(0,0,0,.4);padding:4px 10px;border-radius:7px;z-index:2;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .g-hint b{color:#fff;font-weight:640}
+
+  /* compact readouts + rows reused from DS; extra: a switched-off adjustment row */
+  .lrow.off .nm{opacity:.5;text-decoration:line-through}
+  .lrow.off .ic:first-child{opacity:.5}
+  .lgroup .cnt{color:var(--faint);font-weight:520;margin-left:5px}
+
+  /* per-channel curve accent */
+  .curve .s{stroke:var(--accent);stroke-width:1.7;fill:none}
+  .curve .ref{stroke:var(--line);stroke-width:.5}
+
+  /* split-tone wheels (highlight/shadow color pickers) */
+  .stwheel{width:44px;height:44px;border-radius:50%;flex:none;border:1.5px solid rgba(255,255,255,.5);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.2), 0 2px 8px -3px rgba(0,0,0,.4);position:relative}
+  .stwheel::after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;
+    border:1px solid rgba(0,0,0,.35);top:22%;left:70%}
+  .stwheel.hi{background:conic-gradient(from 90deg,#ff9a5c,#ffd27a,#fff2c4,#ffd27a,#ff9a5c)}
+  .stwheel.sh{background:conic-gradient(from 270deg,#4c7cd6,#7fa8e8,#c8dcff,#7fa8e8,#4c7cd6)}
+  .stwheel.sh::after{top:70%;left:30%}
+  .stpair{display:flex;gap:var(--gap);align-items:center;justify-content:space-around;margin:var(--s2) 0}
+  .stcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .stcol .cl{font-size:10px;color:var(--faint)}
+
+  .huebar{flex:1;height:8px;border-radius:4px;
+    background:linear-gradient(90deg,#f0685c,#ffb057,#f6c453,#3ecf8e,#4c9fff,#b98cff,#f0685c)}
+
+  /* narrow: the WINDOW container query, not the viewport */
+  @container shell (max-width:880px){
+    #img-grade-wt .grphoto{width:320px;height:220px}
+    #img-grade-wt .toolbar .val{display:none}
+  }
+  @container shell (max-width:620px){
+    #img-grade-wt .grphoto{width:248px;height:170px}
+    #img-grade-wt .g-hint{display:none}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="img-grade-wt">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Color grade a photo</h2><span class="k">· usage clickthrough · Image workspace</span></div>
+
+  <p class="pglead">One photo, one window, five real clicks. A grade is not a filter you bake in: it is a
+    <b>stack of adjustment layers</b> above the untouched RAW, each re-reading the pixels below it. The window is
+    rendered once and then operated, so you can see exactly where every control lives. At the end, click any eye in
+    Layers to switch a layer off and watch the image change back.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtGrade">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>golden-hour</b> · 6000 × 4000</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm" id="compareBtn" title="Hold to see the untouched RAW"><i class="ic ic-eye"></i> Hold to compare</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="val">32-bit float · Display P3</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+              <div class="mlabel">Layer</div>
+              <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+              <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+              <div class="menuitem"><i class="ic ic-library"></i> Save grade as a style</div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">View</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+              <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="artboard-label">6000 × 4000 · 32-bit float · Display P3</div>
+              <div class="selwrap">
+                <div class="grphoto">
+                  <div class="grade" id="finalGrade">
+                    <div class="g-sky"></div><div class="g-glow"></div><div class="g-sun"></div>
+                    <div class="g-cloud c1"></div><div class="g-cloud c2"></div><div class="g-cloud c3"></div>
+                    <div class="g-range far"></div><div class="g-range near"></div>
+                    <div class="g-water"></div><div class="g-reflect"></div>
+                    <div class="g-warm" id="gWarm"></div><div class="g-cool" id="gCool"></div>
+                  </div>
+                  <div class="g-badge" id="gBadge">RAW · no adjustments</div>
+                  <div class="g-hint" id="gHint">The pixels below are never rewritten. <b>Every move is a layer.</b></div>
+                </div>
+                <div class="sel-ring"></div>
+                <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                <span class="mtag" id="gMtag">golden-hour · RAW</span>
+              </div>
+              <div class="toast wt-off" id="gToast"><i class="ic sm ic-check"></i> Saved Golden hour to Library</div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 image inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <button class="tool" id="tLasso" title="Lasso (L)"><i class="ic sm ic-lasso"></i></button>
+                <button class="tool" id="tWand" title="Select subject (W)"><i class="ic sm ic-wand"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tCrop" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                <button class="tool" id="tBrush" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                <button class="tool ovf" id="tEraser" title="Eraser (E)"><i class="ic sm ic-eraser"></i></button>
+                <button class="tool ovf" id="tHeal" title="Heal (J)"><i class="ic sm ic-heal"></i></button>
+                <button class="tool ovf" id="tClone" title="Clone (S)"><i class="ic sm ic-clone"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:#ffd693"></span>
+                <span class="bg" style="background:#221535"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:184px;z-index:12">
+                <div class="menuitem"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+                <div class="menuitem"><i class="ic ic-heal"></i> Heal <span class="sc">J</span></div>
+                <div class="menuitem"><i class="ic ic-clone"></i> Clone <span class="sc">S</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(180deg,#152a63,#8c4a86 46%,#ffd693)"></span>
+                    <span class="cap"><span class="nm">golden-hour</span><span class="ago">open now</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(180deg,#16233f,#6d6a92 55%,#e88a52)"></span>
+                    <span class="cap"><span class="nm">golden-ridge</span><span class="ago">1 hour ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(180deg,#0f2030,#2f6f7a 55%,#bfe6d4)"></span>
+                    <span class="cap"><span class="nm">harbour-dawn</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(180deg,#2a1330,#7a3b5e 52%,#ffb36b)"></span>
+                    <span class="cap"><span class="nm">desert-road</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="400"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock" style="--dock-w:274px">
+
+            <!-- SELECTION, place 2 of 3 -->
+            <div class="dgrp" id="gLayers" style="--gh:160px">
+              <div class="dgrp-h" id="gLayersH">
+                <span class="ttl">Layers</span><span class="cnt" id="layerCnt">1</span>
+                <button class="btn ghost icon sm" id="btnAddAdj" title="Add adjustment layer" data-menu="#adjMenu"><i class="ic ic-sliders"></i></button>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lgroup" id="lgAdj"><i class="ic sm ic-chevron-down"></i> Adjustments <span class="cnt">above the pixels</span></div>
+                <div class="lrow child adj wt-off" id="lrSplit" data-adj="split"><i class="ic ic-swatch" style="color:#ffb057"></i><span class="clipmark"></span><span class="nm">Split tone</span><i class="ic sm ic-eye eye adjeye" id="eyeSplit"></i></div>
+                <div class="lrow child adj wt-off" id="lrHsl" data-adj="hsl"><i class="ic ic-swatch" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">HSL</span><i class="ic sm ic-eye eye adjeye"></i></div>
+                <div class="lrow child adj wt-off" id="lrCurves" data-adj="curves"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Curves</span><i class="ic sm ic-eye eye adjeye"></i></div>
+                <div class="lrow child adj wt-off" id="lrExposure" data-adj="exposure"><i class="ic ic-sliders" style="color:#ff9a5c"></i><span class="clipmark"></span><span class="nm">Exposure</span><i class="ic sm ic-eye eye adjeye" id="eyeExposure"></i></div>
+                <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Pixels</div>
+                <div class="lrow child sel" id="lrRaw"><i class="ic ic-image"></i><span class="nm">golden-hour</span><span class="val">RAW</span></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="86" data-max="280"></div>
+
+            <!-- SELECTION, place 3 of 3: the selected layer's own parameters -->
+            <div class="dgrp" id="gProps" style="--gh:264px">
+              <div class="dgrp-h" id="gPropsH"><span class="ttl">Properties</span><span class="cnt" id="propKind">golden-hour</span></div>
+              <div class="dgrp-b">
+
+                <div class="section" id="pRaw">
+                  <div class="sec-h">Source <span class="mut">RAW pixels</span></div>
+                  <div class="grid2">
+                    <div class="field"><span class="k">W</span><span class="v">6000</span></div>
+                    <div class="field"><span class="k">H</span><span class="v">4000</span></div>
+                    <div class="field"><span class="k">Depth</span><span class="v">32f</span></div>
+                    <div class="field"><span class="k">Space</span><span class="v">P3</span></div>
+                  </div>
+                  <p class="note">Nothing is baked into these pixels. Every grade below re-reads them at render time, so the file on disk never changes.</p>
+                </div>
+
+                <div class="section wt-off" id="pExposure">
+                  <div class="sec-h">Exposure <span class="mut">selected layer</span></div>
+                  <div class="row"><span class="rl">Exposure</span><span class="bar"><i style="width:62%"></i></span><span class="val">+0.35 EV</span></div>
+                  <div class="row"><span class="rl">Contrast</span><span class="bar"><i style="width:56%"></i></span><span class="val">+8</span></div>
+                  <div class="row"><span class="rl">Highlights</span><span class="bar"><i style="width:38%"></i></span><span class="val">−22</span></div>
+                  <div class="row"><span class="rl">Shadows</span><span class="bar"><i style="width:70%"></i></span><span class="val">+30</span></div>
+                  <p class="note">Recover the sky, lift the foreground. Toggle its eye and the RAW comes back exactly.</p>
+                  <div class="sec-h" style="margin-top:var(--gap-sm)">Histogram <span class="mut">RGB</span></div>
+                  <div class="histogram"><i style="height:14%"></i><i style="height:26%"></i><i style="height:44%"></i><i style="height:70%"></i><i style="height:92%"></i><i style="height:76%"></i><i style="height:52%"></i><i style="height:60%"></i><i style="height:40%"></i><i style="height:24%"></i><i style="height:16%"></i><i style="height:10%"></i></div>
+                </div>
+
+                <div class="section wt-off" id="pCurves">
+                  <div class="sec-h">Curves <span class="mut">RGB · S-curve</span></div>
+                  <div class="seg" data-radio="button" style="margin-bottom:8px"><button class="on">RGB</button><button style="color:#f0685c">R</button><button style="color:#3ecf8e">G</button><button style="color:#7f9bff">B</button></div>
+                  <div class="curve"><svg viewBox="0 0 100 96" preserveAspectRatio="none">
+                    <line class="ref" x1="0" y1="96" x2="100" y2="0"></line>
+                    <path class="s" d="M2 92 C30 90 38 60 50 48 C62 36 70 6 98 4"></path>
+                    <circle cx="34" cy="72" r="2.4" fill="var(--accent)"></circle>
+                    <circle cx="66" cy="24" r="2.4" fill="var(--accent)"></circle>
+                  </svg></div>
+                  <div class="row"><span class="rl">Contrast</span><span class="bar"><i style="width:72%"></i></span><span class="val">strong</span></div>
+                  <p class="note">A gentle <b style="color:var(--ink)">S</b> darkens the shadows and brightens the highlights for filmic contrast. The curve is stored on the layer, editable forever.</p>
+                </div>
+
+                <div class="section wt-off" id="pHsl">
+                  <div class="sec-h">HSL <span class="mut">target a hue band</span></div>
+                  <div class="row"><span class="rl">Hue</span><span class="huebar"></span></div>
+                  <div class="row" style="margin-top:10px"><span class="rl">Oranges</span><span class="bar"><i style="width:78%;background:#ff9a5c"></i></span><span class="val">+38 sat</span></div>
+                  <div class="row"><span class="rl">Reds</span><span class="bar"><i style="width:64%;background:#f0685c"></i></span><span class="val">+16 sat</span></div>
+                  <div class="row"><span class="rl">Blues</span><span class="bar"><i style="width:34%;background:#4c9fff"></i></span><span class="val">−12 sat</span></div>
+                  <div class="row"><span class="rl">Blues hue</span><span class="bar"><i style="width:58%;background:#7f9bff"></i></span><span class="val">+8° cool</span></div>
+                  <p class="note">Saturate and shift <b style="color:var(--ink)">specific hues</b> without touching the rest. The band selection lives on the layer.</p>
+                </div>
+
+                <div class="section wt-off" id="pSplit">
+                  <div class="sec-h">Split tone <span class="mut">highlights · shadows</span></div>
+                  <div class="stpair">
+                    <div class="stcol"><span class="stwheel hi"></span><span class="cl">Highlights</span><span class="val">amber</span></div>
+                    <div class="stcol"><span class="stwheel sh"></span><span class="cl">Shadows</span><span class="val">teal</span></div>
+                  </div>
+                  <div class="row"><span class="rl">Balance</span><span class="bar"><i style="width:58%"></i></span><span class="val">+8</span></div>
+                  <div class="row"><span class="rl">Strength</span><span class="bar"><i style="width:44%"></i></span><span class="val">44%</span></div>
+                  <p class="note">Tint the <b style="color:var(--ink)">highlights warm</b> and the <b style="color:var(--ink)">shadows cool</b> for a cinematic split.</p>
+                </div>
+
+                <div class="section wt-off" id="pMask">
+                  <div class="sec-h">Mask <span class="mut">on this layer</span></div>
+                  <div class="irow"><span class="rl">Mask</span><span class="select" data-target="img-masking"><span class="lead"><span class="sw" style="background:linear-gradient(180deg,#fff,#111)"></span> Luminosity</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                  <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:82%"></i></span><span class="val">82%</span></div>
+                  <p class="note">Every adjustment carries its own <b style="color:var(--ink)">alpha mask</b>. Brush it, gradient it, or drop an agent subject mask in so a layer only touches part of the frame.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · the finished grade saved as a reusable style (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Styles</span>
+                <button class="btn ghost icon sm" id="btnSaveGrade" title="Save this grade as a style"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button class="on" data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search grades" aria-label="Search grades"></span>
+                  <button class="btn secondary sm"><i class="ic ic-import"></i> Import</button>
+                </div>
+                <div data-scope-body="styles">
+                  <div class="libgrid">
+                    <div class="libtile wt-off" id="libGolden" tabindex="0" role="button"><span class="th" style="background:linear-gradient(160deg,#ffd693,#d05c72 55%,#3f3f83)"></span><span class="cap"><span class="nm">Golden hour</span><span class="mt">4 layers</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(160deg,#4c7cd6,#1a2a4a)"></span><span class="cap"><span class="nm">Cool blue</span><span class="mt">3 layers</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(160deg,#f6c453,#3ecf8e)"></span><span class="cap"><span class="nm">Split tone</span><span class="mt">2 layers</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="media" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile sel" tabindex="0" role="button"><span class="th" style="background:linear-gradient(180deg,#152a63,#8c4a86 46%,#ffd693)"></span><span class="cap"><span class="nm">golden-hour.raw</span><span class="mt">6000 × 4000</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(180deg,#16233f,#6d6a92 55%,#e88a52)"></span><span class="cap"><span class="nm">golden-ridge.raw</span><span class="mt">6000 × 4000</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-component"></i></span>No components in this document</div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets linked</div>
+                </div>
+                <p class="note" style="padding:0 var(--pad-sm) var(--pad);margin:0">Save the whole stack here as a grade style and drop it on the next shot.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+          <div class="popover menu pop" id="adjMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="mlabel">Add adjustment layer</div>
+            <div class="menuitem" id="miExposure"><i class="ic ic-sliders"></i> Exposure</div>
+            <div class="menuitem" id="miCurves"><i class="ic ic-sliders"></i> Curves</div>
+            <div class="menuitem" id="miHsl"><i class="ic ic-swatch"></i> HSL</div>
+            <div class="menuitem" id="miSplit"><i class="ic ic-swatch"></i> Split tone</div>
+          </div>
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+            <div class="menuitem"><i class="ic ic-library"></i> Save grade as a style</div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Add an Exposure layer"
+          data-cue="#miExposure" data-cue-label="Click Exposure" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-pop="#adjMenu"
+          data-show="#lrExposure,#pExposure" data-select="#lrExposure"
+          data-hide="#pRaw,#gToast"
+          data-set="#layerCnt=2|#propKind=Exposure|#gMtag=Exposure · adjustment layer">
+        <div class="wt-cap img">
+          <span class="wt-n">1</span>
+          <p class="wt-do"><b>Exposure</b> in the add-adjustment menu</p>
+          <p class="wt-where">the <b>Layers</b> group header, in the right dock</p>
+          <p class="wt-res">an <b>Exposure</b> layer lands above the RAW. Shadows lift, highlights pull back, and Properties opens its sliders and histogram. No pixel was rewritten.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Shape contrast with Curves"
+          data-cue="#miCurves" data-cue-label="Click Curves" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-pop="#adjMenu"
+          data-show="#lrExposure,#lrCurves,#pCurves" data-select="#lrCurves"
+          data-hide="#pRaw,#pExposure"
+          data-set="#layerCnt=3|#propKind=Curves|#gMtag=Curves · adjustment layer">
+        <div class="wt-cap img">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Curves</b>, then drag an <b>S</b> into the graph</p>
+          <p class="wt-where">the same add-adjustment menu, then Properties</p>
+          <p class="wt-res">one point down in the shadows, one up in the highlights. Curves stacks on top of Exposure, so the two compose in order and either can be reopened.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Tune hues with HSL"
+          data-cue="#miHsl" data-cue-label="Click HSL" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-pop="#adjMenu"
+          data-show="#lrExposure,#lrCurves,#lrHsl,#pHsl" data-select="#lrHsl"
+          data-hide="#pRaw,#pExposure,#pCurves"
+          data-set="#layerCnt=4|#propKind=HSL|#gMtag=HSL · adjustment layer">
+        <div class="wt-cap img">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>HSL</b>, then work one color band at a time</p>
+          <p class="wt-where">the add-adjustment menu, then Properties</p>
+          <p class="wt-res">the oranges in the sky saturate, the blues in the water pull back and cool. Targeted color work that is still fully reversible.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Finish with a split tone"
+          data-cue="#miSplit" data-cue-label="Click Split tone" data-cue-place="left"
+          data-open="#gLayers,#gProps" data-pop="#adjMenu"
+          data-show="#lrExposure,#lrCurves,#lrHsl,#lrSplit,#pSplit,#pMask" data-select="#lrSplit"
+          data-hide="#pRaw,#pExposure,#pCurves,#pHsl"
+          data-set="#layerCnt=5|#propKind=Split tone|#gMtag=Split tone · adjustment layer">
+        <div class="wt-cap img">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Split tone</b>, then set warm highlights and cool shadows</p>
+          <p class="wt-where">the add-adjustment menu, then Properties</p>
+          <p class="wt-res">amber into the highlights, teal into the shadows: the cinematic signature. Four adjustment layers now compose the whole grade, top to bottom, and each carries its own mask.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Save the stack as a grade style"
+          data-cue="#btnSaveGrade" data-cue-label="Click Save as style" data-cue-place="left"
+          data-open="#gLayers,#gLibrary" data-scope="styles"
+          data-show="#lrExposure,#lrCurves,#lrHsl,#lrSplit,#pSplit,#pMask,#libGolden,#gToast"
+          data-hide="#pRaw,#pExposure,#pCurves,#pHsl"
+          data-select="#libGolden"
+          data-set="#layerCnt=5|#propKind=Split tone|#gMtag=Split tone · adjustment layer">
+        <div class="wt-cap img">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Save as style</b></p>
+          <p class="wt-where">the <b>Library</b> group header, scope <b>Styles</b></p>
+          <p class="wt-res"><b>Golden hour · 4 layers</b> lands in Library, ready to drop on the next shot. The stack itself is still live: click any eye in Layers, or hold <b>Compare</b> in the title bar, and the untouched RAW comes straight back.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the untouched RAW"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A color grade is not a filter you bake in, it is a <b>stack of adjustment layers</b> sitting above the RAW. Exposure, Curves, HSL and Split tone each re-read the pixels below, so every move stays live and reorderable.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Because each layer is just a <b>Layer</b> with its own <b>alpha mask</b>, any step can be painted onto a region: warm the sky only, cool the water only. Save the four-layer stack as a reusable <b>grade style</b> in the Library and drop it on the next shot.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the default mask be per-layer, or one shared luminosity mask the whole stack references? Per-layer is more flexible but asks more of a first grade; a shared mask keeps a look consistent with one control.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* Scoped and self-guarding. The grade really composites: the photo's filter is
+   rebuilt from the adjustment rows that are PRESENT (not .wt-off) and SWITCHED ON
+   (not .off). The walkthrough only adds and removes those classes, so the
+   declarative steps and the live eye toggles run through one code path.
+   Holding Compare shows the untouched RAW. The stepper, docks, groups,
+   splitters, rails and overlay are shared DS. */
+(function () {
+  var grade = document.getElementById('finalGrade');
+  var layers = document.getElementById('gLayers');
+  if (!grade || !layers) return;
+
+  var badge = document.getElementById('gBadge');
+  var hint  = document.getElementById('gHint');
+  var warm  = document.getElementById('gWarm');
+  var cool  = document.getElementById('gCool');
+
+  var CONTRIB = {
+    exposure: 'brightness(1.09) contrast(1.05)',
+    curves:   'contrast(1.18)',
+    hsl:      'saturate(1.42) hue-rotate(-6deg)',
+    split:    'sepia(.12)'
+  };
+  var ORDER = ['exposure', 'curves', 'hsl', 'split'];
+  var NAMES = { exposure: 'Exposure', curves: 'Curves', hsl: 'HSL', split: 'Split tone' };
+
+  function rowFor(key) { return layers.querySelector('.lrow[data-adj="' + key + '"]'); }
+  function present(row) { return row && !row.classList.contains('wt-off'); }
+  function live(row) { return present(row) && !row.classList.contains('off'); }
+
+  var comparing = false;
+
+  function apply() {
+    var on = ORDER.filter(function (k) { return live(rowFor(k)); });
+    var here = ORDER.filter(function (k) { return present(rowFor(k)); });
+
+    if (comparing) {
+      grade.style.filter = 'none';
+      if (warm) warm.style.opacity = 0;
+      if (cool) cool.style.opacity = 0;
+    } else {
+      grade.style.filter = on.length ? on.map(function (k) { return CONTRIB[k]; }).join(' ') : 'none';
+      var split = on.indexOf('split') > -1 ? 1 : 0;
+      if (warm) warm.style.opacity = split;
+      if (cool) cool.style.opacity = split;
+    }
+
+    if (badge) {
+      if (comparing) badge.textContent = 'RAW · comparing';
+      else if (!here.length) badge.textContent = 'RAW · no adjustments';
+      else if (on.length === here.length) badge.textContent = on.map(function (k) { return NAMES[k]; }).join(' · ');
+      else badge.textContent = on.length + ' of ' + here.length + ' layers on';
+    }
+    if (hint) {
+      hint.innerHTML = here.length >= 4
+        ? 'Click any eye, or <b>hold to compare</b>. Every layer is live, the pixels never changed.'
+        : 'The pixels below are never rewritten. <b>Every move is a layer.</b>';
+    }
+  }
+
+  /* Clicking an adjustment row switches that layer off and on for real. */
+  layers.addEventListener('click', function (e) {
+    var row = e.target.closest('.lrow[data-adj]');
+    if (!row || !present(row)) return;
+    var off = !row.classList.contains('off');
+    row.classList.toggle('off', off);
+    var eye = row.querySelector('.adjeye');
+    if (eye) {
+      eye.classList.toggle('ic-eye', !off);
+      eye.classList.toggle('ic-eye-off', off);
+    }
+    apply();
+  });
+
+  /* The walkthrough adds and removes .wt-off on those same rows, so watch for it
+     and recomposite. One observer, no polling. */
+  new MutationObserver(apply).observe(layers, {
+    subtree: true, attributes: true, attributeFilter: ['class']
+  });
+
+  /* press-and-hold compare: show the raw pixels while held */
+  var btn = document.getElementById('compareBtn');
+  if (btn) {
+    var show = function (e) { if (e) e.preventDefault(); comparing = true; apply(); };
+    var hide = function () { if (!comparing) return; comparing = false; apply(); };
+    btn.addEventListener('pointerdown', show);
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (t) { btn.addEventListener(t, hide); });
+    btn.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') show(e); });
+    btn.addEventListener('keyup', hide);
+    btn.addEventListener('blur', hide);
+  }
+
+  /* Library scope switch, live when clicked directly (the walkthrough drives the
+     same state declaratively). */
+  var seg = document.querySelector('#img-grade-wt .scopeseg');
+  if (seg) {
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  }
+
+  apply();
+})();
+</script>
+</body>
+</html>

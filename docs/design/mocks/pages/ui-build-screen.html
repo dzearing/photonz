@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-build-screen</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ui-build-screen · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, then driven by the steps below. The window never
+     re-renders and it is a complete Kind-1 shell (§4c): title bar carrying
+     document identity only, command surface, canvas with the floating tool bar,
+     and the one right dock of panel groups.
+
+     Every page-local class is prefixed .ub- so it can never inherit a shared-DS
+     rule of the same name. 4pt scale and shared tokens only. */
+
+  #ui-build-screen .win.shell{height:660px;min-height:0}  /* ---------- the device frame on the canvas ---------- */
+  .ub-scr{width:236px;height:420px;border-radius:28px;overflow:hidden;position:relative;flex:none;
+    background:#f6f7fb;color:#1a1c22;
+    box-shadow:0 0 0 6px #0c0e14, 0 0 0 7px rgba(255,255,255,.10), 0 26px 58px -18px rgba(0,0,0,.65)}
+  .ub-scr.ub-blank{background:rgba(255,255,255,.03);border:1.5px dashed var(--comp);
+    box-shadow:0 0 0 6px #0c0e14,0 0 0 7px rgba(255,255,255,.08)}
+  .ub-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s3)}
+  .ub-empty .ub-fplus{width:44px;height:44px;border-radius:var(--r4);display:grid;place-items:center;color:var(--comp);
+    background:var(--comp-soft);border:1px solid var(--comp-line)}
+  .ub-empty .ub-fplus .ic{width:22px;height:22px}
+  .ub-empty .ub-fdim{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* status bar */
+  .ub-sb{height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 var(--pad);
+    font-size:9px;font-weight:700;color:#1a1c22;position:relative;z-index:1}
+  .ub-sb .ub-sig{display:flex;align-items:flex-end;gap:2px;height:8px}
+  .ub-sb .ub-sig i{width:2px;background:#1a1c22;border-radius:1px}
+  .ub-sb .ub-sig i:nth-child(1){height:3px}.ub-sb .ub-sig i:nth-child(2){height:5px}
+  .ub-sb .ub-sig i:nth-child(3){height:7px}.ub-sb .ub-sig i:nth-child(4){height:8px}
+
+  /* auto-layout guide overlay: dashed slots + gap tags, never gray fill */
+  .ub-slots{position:absolute;top:24px;left:0;right:0;bottom:0;padding:var(--pad-sm);
+    display:flex;flex-direction:column;gap:var(--gap-sm)}
+  .ub-slot{border:1.5px dashed var(--comp);border-radius:var(--r4);height:56px;display:flex;align-items:center;
+    padding:0 var(--pad-sm);gap:var(--gap-sm);color:var(--comp);font-size:9px;font-weight:700;
+    background:color-mix(in srgb,var(--comp) 8%,transparent)}
+  .ub-slot.ub-tall{flex:1}
+  .ub-gaptag{align-self:center;font-family:var(--mono);font-size:8px;font-weight:700;color:var(--comp);
+    background:var(--comp-soft);border:1px solid var(--comp-line);border-radius:5px;padding:1px 5px}
+
+  /* the real app body inside the frame */
+  .ub-body{position:absolute;top:24px;left:0;right:0;bottom:0;padding:var(--pad-sm);
+    display:flex;flex-direction:column;gap:var(--pad-sm);overflow:hidden}
+  .ub-nav{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
+    background:#ffffff;border-radius:var(--r3);border:1px solid #eceef3}
+  .ub-nav .ub-brand{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);flex:none}
+  .ub-nav b{font-size:12px;color:#1a1c22;font-weight:720;letter-spacing:-.01em}
+  .ub-nav .ub-more{margin-left:auto;color:#8b92a1;display:grid;place-items:center}
+
+  .ub-hero{border-radius:var(--r5);padding:var(--pad);position:relative;overflow:hidden}
+  .ub-hero.ub-plain{background:#ffffff;border:1px solid #eceef3;color:#1a1c22}
+  .ub-hero.ub-brand{color:#fff;background:linear-gradient(135deg,#7c4dff 0%,#b14dff 44%,#ff5d8f 100%);
+    box-shadow:0 12px 28px -10px rgba(177,77,255,.6)}
+  .ub-hero.ub-brand::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 85% -10%,rgba(255,255,255,.4),transparent 46%);mix-blend-mode:soft-light}
+  .ub-hero .ub-k{font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.92}
+  .ub-hero .ub-h{font-size:19px;line-height:1.06;font-weight:700;margin:6px 0 var(--pad-sm);letter-spacing:-.01em}
+  .ub-hero.ub-brand .ub-h{font-family:var(--serif);font-size:21px;line-height:1.04}
+  .ub-hero .ub-cta{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:720;color:#3a1d6e;
+    background:linear-gradient(180deg,#fff,#f0eaff);padding:7px 13px;border-radius:9px;position:relative;z-index:1}
+  .ub-hero.ub-plain .ub-cta{background:#f2f3f7;border:1px solid #e2e5ec;color:#5a6072}
+
+  .ub-prow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eceef3;
+    border-radius:var(--r4);padding:var(--gap-sm)}
+  .ub-prow .ub-thumb{width:36px;height:36px;border-radius:9px;flex:none}
+  .ub-prow .ub-thumb.a{background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+  .ub-prow .ub-thumb.b{background:linear-gradient(135deg,#ffb36b,#ff5d8f)}
+  .ub-prow .ub-nm{font-size:11px;font-weight:660;color:#1a1c22;line-height:1.2}
+  .ub-prow .ub-mt{font-size:9.5px;color:#8b92a1}
+  .ub-prow .ub-pr{margin-left:auto;font-size:10px;font-weight:700;color:#7c4dff}
+
+  .ub-appcta{margin-top:auto;text-align:center;font-size:11px;font-weight:720;color:#fff;border-radius:var(--r4);
+    padding:11px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 10px 22px -8px rgba(124,77,255,.6)}
+
+  /* component instance outline + flag, shown while the pieces are being placed */
+  .ub-compd{outline:1.5px solid var(--comp);outline-offset:2px}
+  .ub-flag{position:absolute;top:6px;left:6px;z-index:3;display:inline-flex;align-items:center;gap:3px;
+    background:var(--comp);color:#fff;font-size:8px;font-weight:720;padding:2px 6px;border-radius:6px;white-space:nowrap}
+  .ub-flag .ic{width:9px;height:9px}
+  .ub-relwrap{position:relative}
+
+  /* preview badge, only on the clean render */
+  .ub-prevflag{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:4;
+    display:inline-flex;align-items:center;gap:6px;background:rgba(10,12,20,.66);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fff;font-size:10px;font-weight:640;
+    padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);white-space:nowrap}
+  .ub-prevflag .ic{width:12px;height:12px}
+
+  /* Properties helpers */
+  .ub-block{margin:var(--gap-sm) 0}
+  .ub-block .ub-pl{font-size:10.5px;color:var(--faint);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
+  /* .ub-block .seg override deleted: the shared DS lays every panel scope control
+     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
+  .ub-tscale{display:flex;flex-direction:column;gap:6px;margin-top:var(--s1)}
+  .ub-tscale .ub-t{display:flex;align-items:baseline;gap:var(--gap-sm)}
+  .ub-tscale .ub-t .ub-lab{width:38px;font-size:9px;color:var(--faint);font-family:var(--mono)}
+  .ub-tscale .ub-t .ub-sp{color:var(--ink);font-family:var(--serif);line-height:1}
+  .ub-tscale .ub-t.d .ub-sp{font-size:20px;font-weight:700}
+  .ub-tscale .ub-t.h .ub-sp{font-size:14px;font-weight:660}
+  .ub-tscale .ub-t.b .ub-sp{font-size:11px;font-weight:520;font-family:var(--sans);color:var(--dim)}
+
+  /* the export popover's code line */
+  .ub-snip{background:var(--artboard);border:1px solid #20263a;border-radius:var(--r2);padding:8px 10px;
+    font-family:var(--mono);font-size:9.5px;line-height:1.6;color:#c9d3ef;margin-top:var(--s2);
+    overflow-x:auto;white-space:nowrap}
+  .ub-snip .k{color:#7f9bff}.ub-snip .s{color:#7fd7a6}.ub-snip .p{color:#e0a5ff}
+
+  /* narrow: the toolbar sheds its status chip and the device scales down */
+  @container shell (max-width:880px){
+    #ui-build-screen .toolbar .chip{display:none}
+  }
+  @container shell (max-width:620px){
+    #ui-build-screen .ub-scr{width:200px;height:356px}
+    #ui-build-screen .ub-hero .ub-h{font-size:16px}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="ui-build-screen">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Build a screen</h2><span class="k">· usage clickthrough · UI workspace</span></div>
+
+  <p class="pglead">One document, one window, seven real clicks: <b>frame, auto-layout, components, styles, content,
+    preview, export</b>. The window below is rendered once and then operated. Nothing swaps in a different screen, so
+    what you learn here is where each control actually lives.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtBuild">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head and the captions, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>store-app</b> · 393 × 852</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm" id="btnExport" data-menu="#exportPop"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-frame"></i> <span id="chipDevice">iPhone 15 · 393 × 852</span></span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+              <div class="mlabel">Layer</div>
+              <div class="menuitem"><i class="ic ic-frame"></i> New frame from preset <span class="sc">F</span></div>
+              <div class="menuitem"><i class="ic ic-grid"></i> Add auto-layout <span class="sc">⇧A</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">C</span></div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">View</div>
+              <div class="menuitem"><i class="ic ic-eye"></i> Preview <span class="sc">⌘P</span></div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+            <!-- Export sheet, anchored to the title-bar Export button -->
+            <div class="popover pop" id="exportPop" style="position:absolute;right:0;top:26px;width:248px;z-index:12;padding:var(--pad-sm)">
+              <div class="mlabel" style="padding:0 0 var(--s2)">Export</div>
+              <div class="ub-block">
+                <div class="ub-pl">Format</div>
+                <div class="seg" role="group" aria-label="Export format"><button class="on">PNG @3x</button><button>PDF</button><button>SVG</button></div>
+              </div>
+              <div class="irow"><span class="rl">Scope</span><span class="select"><span class="lead">Frame · Home</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Specs</span><span class="chip" style="margin:0" data-target="redline"><i class="ic xs ic-ruler"></i> Redline sheet</span></div>
+              <button class="btn primary block sm" id="btnDoExport" style="margin-top:var(--gap-sm)"><i class="ic ic-export"></i> Export screen</button>
+              <p class="note" style="margin:var(--gap-sm) 0 0">Same result from one call, so an agent can ship it too.</p>
+              <div class="ub-snip"><span class="k">export</span>(frame=<span class="s">"Home"</span>, <span class="p">fmt</span>=<span class="s">"png@3x"</span>)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="artboard-label" id="ubArt">Home · 393 × 852 · iPhone 15</div>
+
+              <div class="selwrap ub-relwrap">
+                <div class="ub-scr ub-blank" id="ubScr">
+
+                  <!-- blank slate -->
+                  <div class="ub-empty" id="ubEmpty">
+                    <span class="ub-fplus"><i class="ic ic-frame"></i></span>
+                    <span class="ub-fdim">393 × 852</span>
+                  </div>
+
+                  <!-- status bar, part of the device once the frame has content -->
+                  <div class="ub-sb wt-off" id="ubSb"><span>9:41</span><span class="ub-sig"><i></i><i></i><i></i><i></i></span></div>
+
+                  <!-- auto-layout guides -->
+                  <div class="ub-slots wt-off" id="ubSlots">
+                    <div class="ub-slot"><i class="ic xs ic-frame"></i> Nav slot</div>
+                    <span class="ub-gaptag">gap 16</span>
+                    <div class="ub-slot ub-tall"><i class="ic xs ic-frame"></i> Content slot</div>
+                    <span class="ub-gaptag">gap 16</span>
+                    <div class="ub-slot"><i class="ic xs ic-frame"></i> Action slot</div>
+                  </div>
+
+                  <!-- the real screen -->
+                  <div class="ub-body wt-off" id="ubBody">
+                    <div class="ub-nav ub-relwrap" id="ubNav">
+                      <span class="ub-flag wt-off"><i class="ic ic-component"></i> Nav</span>
+                      <span class="ub-brand"></span><b>Northwind</b>
+                      <span class="ub-more"><i class="ic sm ic-search"></i></span>
+                    </div>
+
+                    <!-- placeholder hero, before the Brand style is applied -->
+                    <div class="ub-hero ub-plain wt-off" id="ubHeroPlain">
+                      <span class="ub-flag wt-off"><i class="ic ic-component"></i> Card</span>
+                      <div class="ub-k">New season</div>
+                      <div class="ub-h">Placeholder<br>headline.</div>
+                      <span class="ub-cta">Get started <i class="ic xs ic-chevron-right"></i></span>
+                    </div>
+
+                    <!-- the same hero painted with the Brand style -->
+                    <div class="ub-hero ub-brand wt-off" id="ubHeroBrand">
+                      <div class="ub-k">New season</div>
+                      <div class="ub-h" id="ubHeadline">Placeholder headline.</div>
+                      <span class="ub-cta">Get started <i class="ic xs ic-chevron-right"></i></span>
+                    </div>
+
+                    <div class="wt-off" id="ubProducts" style="display:flex;flex-direction:column;gap:var(--gap-sm)">
+                      <div class="ub-prow"><span class="ub-thumb a"></span><div><div class="ub-nm">Trail Runner</div><span class="ub-mt">Lightweight · 4 colors</span></div><span class="ub-pr">$128</span></div>
+                      <div class="ub-prow"><span class="ub-thumb b"></span><div><div class="ub-nm">Alpine Shell</div><span class="ub-mt">Waterproof · unisex</span></div><span class="ub-pr">$210</span></div>
+                    </div>
+
+                    <div class="ub-appcta ub-relwrap wt-off" id="ubCta">
+                      <span class="ub-flag wt-off"><i class="ic ic-component"></i> Button</span>
+                      <span id="ubCtaTx">Shop the drop</span>
+                    </div>
+                  </div>
+
+                  <span class="ub-prevflag wt-off" id="ubPrevflag"><i class="ic ic-eye"></i> Clean render · no editor chrome</span>
+                </div>
+
+                <!-- SELECTION, place 1 of 3: on the canvas -->
+                <span id="ubSel">
+                  <span class="sel-ring" style="inset:-9px;border-radius:34px"></span>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag" id="ubMtag">Frame · Home · 393 × 852</span>
+                </span>
+              </div>
+
+              <div class="toast wt-off" id="ubToast"><i class="ic sm ic-check"></i> Exported Home.png at 3x</div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool" id="btnPreview" title="Preview (⌘P)" aria-pressed="false"><i class="ic sm ic-eye"></i></button>
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 UI inventory, fixed order -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tFrame" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                <button class="tool" id="tComp" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="bg" style="background:#ffffff"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">store-home</span><span class="ago">6 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:11</span></span>
+                    <span class="cap"><span class="nm">checkout-run</span><span class="ago">1 hour ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">product-shot</span><span class="ago">3 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>
+                    <span class="cap"><span class="nm">nav-bar</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span>
+                    <span class="cap"><span class="nm">pricing-page</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
+                    <span class="cap"><span class="nm">settings-window</span><span class="ago">3 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:136px">
+              <div class="dgrp-h" id="gLayersH">
+                <span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+                <div class="lrow sel" id="lrFrame"><i class="ic ic-frame"></i><span class="nm">Frame · Home</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child wt-off" id="lrNav"><i class="ic ic-component"></i><span class="nm">Nav bar</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child wt-off" id="lrHero"><i class="ic ic-component"></i><span class="nm">Hero card</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child wt-off" id="lrProducts"><i class="ic ic-layers"></i><span class="nm">Product list</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow child wt-off" id="lrCta"><i class="ic ic-component"></i><span class="nm">Button · Shop</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="empty wt-off" id="layersEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-layers"></i></span>Nothing on the frame yet</div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="320"></div>
+
+            <!-- SELECTION, place 3 of 3: Properties, contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:216px">
+              <div class="dgrp-h" id="gPropsH"><span class="ttl">Properties</span><span class="cnt" id="propKind">Frame</span></div>
+              <div class="dgrp-b">
+
+                <div class="section" id="pFrame">
+                  <div class="sec-h">Device <span class="mut">preset</span></div>
+                  <div class="irow"><span class="rl">Preset</span><span class="select"><span class="lead">iPhone 15</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <div class="grid2" style="margin-top:var(--gap-sm)">
+                    <div class="field"><span class="k">W</span><span class="v">393</span></div>
+                    <div class="field"><span class="k">H</span><span class="v">852</span></div>
+                  </div>
+                </div>
+
+                <div class="section wt-off" id="pLayout">
+                  <div class="sec-h">Auto-layout <span class="mut" id="layoutMut">vertical</span></div>
+                  <div class="ub-block">
+                    <div class="ub-pl">Direction</div>
+                    <div class="seg" id="segDir" role="group" aria-label="Auto-layout direction">
+                      <button class="on">Vertical</button><button>Horizontal</button>
+                    </div>
+                  </div>
+                  <div class="grid2">
+                    <div class="field"><span class="k">Gap</span><span class="v">16</span></div>
+                    <div class="field"><span class="k">Pad</span><span class="v">12</span></div>
+                  </div>
+                  <div class="irow"><span class="rl">Align</span><span class="select"><span class="lead">Stretch</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <p class="note">Children stack and space themselves. Add or remove a layer and everything reflows.</p>
+                </div>
+
+                <div class="section wt-off" id="pStyle">
+                  <div class="sec-h">Styles <span class="mut" id="styleMut">Brand</span></div>
+                  <div class="irow"><span class="rl">Fill</span><span class="chip style" style="margin:0"><span class="sw"></span> Brand / gradient</span></div>
+                  <div class="irow"><span class="rl">Surface</span><span class="chip" style="margin:0"><span class="swatch" style="width:11px;height:11px;border-radius:3px;background:#f6f7fb"></span> Surface / base</span></div>
+                  <div class="irow"><span class="rl">Text</span><span class="chip" style="margin:0"><i class="ic xs ic-text"></i> Display / serif</span></div>
+                  <div class="ub-tscale">
+                    <div class="ub-t d"><span class="ub-lab">21/700</span><span class="ub-sp">Display</span></div>
+                    <div class="ub-t h"><span class="ub-lab">14/660</span><span class="ub-sp">Heading</span></div>
+                    <div class="ub-t b"><span class="ub-lab">11/520</span><span class="ub-sp">Body copy</span></div>
+                  </div>
+                  <p class="note">One change in the design system repaints every screen that uses these.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2). A dock group, never a left dock. -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Components</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
+                    <button class="on" data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+
+                <div data-scope-body="components">
+                  <div class="libgrid">
+                    <div class="libtile comp" id="libNav" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#4c6fff,#7c4dff)"></span><span class="cap"><span class="nm">Nav bar</span><span class="mt">1 variant</span></span></div>
+                    <div class="libtile comp" id="libHero" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Hero card</span><span class="mt">2 variants</span></span></div>
+                    <div class="libtile comp" id="libBtn" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#b14dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button</span><span class="mt">3 sizes</span></span></div>
+                    <div class="libtile comp" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Product row</span><span class="mt">1 variant</span></span></div>
+                  </div>
+                </div>
+
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="libBrand" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:#f6f7fb"></span><span class="cap"><span class="nm">Surface / base</span><span class="mt">paint</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#1a1c22,#3a3f52)"></span><span class="cap"><span class="nm">Display / serif</span><span class="mt">type</span></span></div>
+                  </div>
+                </div>
+
+                <div data-scope-body="media" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="libShots" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">trail-runner.jpg</span><span class="mt">2400 × 2400</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span><span class="cap"><span class="nm">alpine-shell.jpg</span><span class="mt">2400 × 2400</span></span></div>
+                    <div class="libtile" tabindex="0" role="button"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">catalog.json</span><span class="mt">240 items</span></span></div>
+                  </div>
+                </div>
+
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets linked</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="menuitem"><i class="ic ic-grid"></i> Add auto-layout <span class="sc">⇧A</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Create the frame"
+          data-cue="#tFrame" data-cue-label="Click the Frame tool" data-cue-place="top"
+          data-tool="#tFrame" data-select="#lrFrame" data-dock="open"
+          data-show="#ubEmpty,#layersEmpty,#pFrame,#ubArt,#ubSel"
+          data-hide="#ubSb,#ubSlots,#ubBody,#ubPrevflag,#pLayout,#pStyle,#lrNav,#lrHero,#lrProducts,#lrCta,#ubToast"
+          data-set="#propKind=Frame|#layerCount=1|#ubMtag=Frame · Home · 393 × 852">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Frame</b> tool, then the <b>iPhone 15</b> preset</p>
+          <p class="wt-where">the floating tool bar, under the canvas</p>
+          <p class="wt-res">an empty <b>393 × 852</b> artboard on the canvas, one <b>Frame · Home</b> row in Layers, and the device preset open in Properties.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Add auto-layout"
+          data-cue="#segDir" data-cue-label="Click Vertical" data-cue-place="left"
+          data-tool="#tSelect" data-open="#gProps" data-select="#lrFrame"
+          data-show="#ubSb,#ubSlots,#pLayout"
+          data-hide="#ubEmpty"
+          data-set="#propKind=Frame · stack">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Vertical</b>, then set gap <b>16</b></p>
+          <p class="wt-where">Properties, in the <b>Auto-layout</b> section</p>
+          <p class="wt-res">the frame becomes a vertical stack. The canvas shows the three slots and their <b>gap 16</b> tags, so anything dropped in from here on spaces itself.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop in components"
+          data-cue="#libHero" data-cue-label="Drag Hero card onto the frame" data-cue-place="left"
+          data-open="#gLibrary" data-scope="components" data-select="#lrHero"
+          data-show="#ubBody,#ubHeroPlain,#lrNav,#lrHero,#lrCta,#ubCta,.ub-flag"
+          data-hide="#ubSlots,#layersEmpty,#ubHeroBrand,#ubProducts"
+          data-set="#layerCount=4|#propKind=Instance">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do" data-verb="Drag">the <b>Nav bar</b>, <b>Hero card</b> and <b>Button</b> tiles onto the frame</p>
+          <p class="wt-where">the <b>Library</b> group, scope <b>Components</b></p>
+          <p class="wt-res">auto-layout snaps all three into the stack. Each keeps its purple instance outline, so it is still linked to its main.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Paint it with a Style"
+          data-cue="#libBrand" data-cue-label="Click Brand / gradient" data-cue-place="left"
+          data-open="#gLibrary" data-scope="styles" data-select="#lrHero"
+          data-show="#ubHeroBrand,#pStyle"
+          data-hide="#ubHeroPlain,.ub-flag"
+          data-set="#propKind=Instance · styled|#styleMut=Brand">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Brand / gradient</b></p>
+          <p class="wt-where">the <b>Library</b> group, scope <b>Styles</b></p>
+          <p class="wt-res">the hero is painted by a named Style instead of two hex values, and the type picks up the shared scale. Change the Style once and every screen using it repaints.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Bring in real content"
+          data-cue="#libShots" data-cue-label="Drag trail-runner.jpg in" data-cue-place="left"
+          data-open="#gLibrary" data-scope="media" data-select="#lrProducts"
+          data-show="#ubProducts,#lrProducts"
+          data-set="#layerCount=5|#ubHeadline=Fresh picks, every week.|#ubCtaTx=Browse all 240|#propKind=Product list">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do" data-verb="Drag">the product shots and <b>catalog.json</b> onto the frame</p>
+          <p class="wt-where">the <b>Library</b> group, scope <b>Media</b></p>
+          <p class="wt-res">placeholders are replaced by real copy, photos and prices. Auto-layout absorbs the longer list on its own, so the screen shows what ships.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Preview the screen"
+          data-cue="#btnPreview" data-cue-label="Click Preview" data-cue-place="left"
+          data-dock="closed" data-collapse="#gLibrary"
+          data-show="#ubPrevflag"
+          data-hide="#ubArt,#ubSel">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Preview</b> <span class="kbd">⌘P</span></p>
+          <p class="wt-where">the canvas action cluster, top right of the canvas</p>
+          <p class="wt-res">handles, the artboard label and the dock all step aside. What is left is exactly what the device renders, ready to review or record.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Hand it off"
+          data-cue="#btnExport" data-cue-label="Click Export" data-cue-place="bottom"
+          data-dock="open" data-pop="#exportPop"
+          data-show="#ubArt,#ubSel,#ubToast"
+          data-hide="#ubPrevflag">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Export</b>, then pick <b>PNG @3x</b></p>
+          <p class="wt-where">the title bar, in the document actions</p>
+          <p class="wt-res">the frame goes out as PNG, PDF, or a redline sheet for engineering. It is one call, <code>export(frame="Home", fmt="png@3x")</code>, so an agent can ship the same screen.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the blank slate"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A whole screen from <b>frame, auto-layout, components, styles, content, preview, export</b>, on one canvas in one window. The same five primitives that draw a photo or a video frame build a production UI, so there is no separate "UI mode" to learn.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Ship device presets as <b>responsive variants</b> of one frame, so a phone, tablet and desktop layout stay linked and repaint together when the <b data-target="dsys" style="color:var(--comp);cursor:pointer">Brand</b> style changes.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>When a dropped <b>component</b> already defines its own internal auto-layout, how should the frame's layout and the component's layout negotiate spacing without fighting each other?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch and the Preview toggle live when a
+     person clicks them directly. The walkthrough drives the same state
+     declaratively, so these two only matter for free exploration. Everything
+     else is shared DS behavior. */
+  (function () {
+    var root = document.getElementById('ui-build-screen');
+    if (!root) return;
+
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+
+    var prev = document.getElementById('btnPreview');
+    if (prev) {
+      prev.addEventListener('click', function () {
+        var on = prev.getAttribute('aria-pressed') !== 'true';
+        prev.setAttribute('aria-pressed', on ? 'true' : 'false');
+        prev.classList.toggle('on', on);
+        ['ubArt', 'ubSel'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.classList.toggle('wt-off', on);
+        });
+        var flag = document.getElementById('ubPrevflag');
+        if (flag) flag.classList.toggle('wt-off', !on);
+      });
+    }
+  })();
+</script>
+</body>
+</html>

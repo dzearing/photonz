@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · brush-editor</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* brush-editor · page-local bits only. The shell, dock, panel groups, Library
+     group, tiles, overlays, tool bar and rail are all shared DS classes. */
+
+  /* a definite window height so the dock is bounded and each group scrolls */
+  #brush-editor .win.shell{height:730px;min-height:0}
+  /* the live sample stroke: the document this editor is looking at */
+  #brush-editor .canvas>.selwrap{width:min(560px,calc(100% - var(--s6)))}
+  .be-art{position:relative;width:100%;height:280px;border-radius:var(--r4);overflow:hidden;
+    background:radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.06),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d);
+    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
+  .be-art .plabel{position:absolute;left:10px;top:8px;z-index:3;font-family:var(--mono);font-size:9px;
+    letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
+  .be-art .live{position:absolute;right:10px;top:8px;z-index:3;display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:9px;letter-spacing:.04em;color:rgba(126,255,183,.8);pointer-events:none}
+  .be-art .live .d{width:6px;height:6px;border-radius:50%;background:#3ecf8e;box-shadow:0 0 6px #3ecf8e}
+  .be-art canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* a preset tile hosts its tip mark inside the shared .th */
+  .libtile .th.bth{position:relative;height:46px;display:grid;place-items:center;color:#ff9d7e;
+    background:radial-gradient(120% 120% at 22% 0%,rgba(255,255,255,.05),transparent 55%),
+      linear-gradient(180deg,#20242f,#14161d)}
+  .libtile .th.bth .b{background:currentColor}
+
+  /* range control (4pt scale, accent themed) */
+  .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
+    background:var(--line-strong);outline:none;margin:0}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
+  .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
+    border:2px solid var(--panel);cursor:pointer}
+  .rng:focus-visible{box-shadow:var(--ring);border-radius:999px}
+  .rng:disabled{opacity:.42}
+  .rrow{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:var(--s2);margin:8px 0}  .rrow .val{text-align:right}
+
+  /* toggle switch · built from tokens, full interaction states */
+  .tgl{display:inline-flex;align-items:center;gap:var(--gap-sm);background:none;border:0;padding:4px 0;cursor:pointer}
+  .tgl .sw{width:34px;height:20px;border-radius:999px;background:var(--line-strong);position:relative;flex:none;
+    border:1px solid var(--edge-lo);box-shadow:inset 0 1px 2px rgba(0,0,0,.14);transition:var(--ctl-tr)}
+  .tgl .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.32);transition:transform .15s ease,width .1s ease}
+  .tgl[aria-checked="true"] .sw{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));border-color:transparent}
+  .tgl[aria-checked="true"] .sw::after{transform:translateX(14px)}
+  .tgl:hover .sw{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo))}
+  .tgl:active .sw::after{width:16px}
+  .tgl:focus-visible{outline:none}
+  .tgl:focus-visible .sw{box-shadow:inset 0 1px 2px rgba(0,0,0,.14),var(--ring)}
+  .tgl[disabled],.tgl.disabled{opacity:.42;pointer-events:none}
+  .tgl .lb{font-size:11.5px;color:var(--ink);font-weight:520;text-align:left}
+  .tgl .lb small{display:block;color:var(--faint);font-size:9.5px;font-weight:500;margin-top:1px}
+  .tgrid{display:flex;flex-direction:column;gap:2px}
+
+  /* dynamics curve */
+  .dyncurve{width:100%;height:74px;border-radius:var(--r2);border:1px solid var(--edge-lo);
+    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);display:block;margin:8px 0 4px}
+
+  /* color swatches */
+  .swatches{display:flex;gap:6px;flex-wrap:wrap}
+  .sw-btn{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.2);cursor:pointer;padding:0;transition:transform .1s ease}
+  .sw-btn:hover{transform:scale(1.08)}
+  .sw-btn:focus-visible{outline:none;box-shadow:var(--ring)}
+  .sw-btn.on{outline:2px solid var(--accent);outline-offset:1px}
+
+  .apiline{margin:0}
+  .apiline .codeblk{white-space:pre-wrap;word-break:break-word}</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="brush-editor">
+  <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Brush editor</h2><span class="k">· the Brush tool's full parameters, live on the canvas</span></div>
+
+  <div class="win tall cq shell">
+
+    <!-- TITLE BAR -->
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>brush-proof</b> · 1200 × 600</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
+        <button class="btn primary sm" data-target="draw">Done</button>
+      </div>
+    </div>
+
+    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#beCmd"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#beHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <button class="btn ghost sm" data-sheet="#beBrowse" title="Browse the whole brush library"><i class="ic ic-library"></i> Browse library <span class="kbd">⌥⌘L</span></button>
+      <span class="tspacer"></span>
+      <span class="val" id="beSum">24 px · 10% spacing</span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="beCmd" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+          <div class="mlabel">Brush</div>
+          <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
+          <div class="menuitem"><i class="ic ic-save"></i> Save as preset <span class="sc">⌘S</span></div>
+          <div class="menuitem" id="beResetMenu"><i class="ic ic-undo"></i> Reset parameters</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR ROW -->
+    <div class="edit lean" id="beShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 600 · raster</div>
+          <div class="selwrap">
+            <div class="be-art">
+              <span class="plabel">preview · redraws on every change</span>
+              <span class="live"><span class="d"></span> live</span>
+              <canvas id="beCanvas" width="560" height="280"></canvas>
+            </div>
+            <!-- SELECTION, place 1 of 3: on the canvas -->
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="beTag">Sample stroke · Soft round</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#beShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#beHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <!-- FLOATING TOOL BAR · the D4 Draw inventory, Brush active -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Pen (P)" data-target="draw"><i class="ic sm ic-pen"></i></button>
+            <button class="tool on" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+            <button class="tool" title="Eraser (E)" data-target="draw"><i class="ic sm ic-eraser"></i></button>
+            <button class="tool ovf" title="Shape (U)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#beOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" id="beFg" style="background:#ff9d7e"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="beOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+            <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">U</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <!-- OVERLAY · the same Library content with room to browse -->
+        <div class="sheet down" id="beBrowse" aria-hidden="true" aria-label="Library">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-library"></i> Library · Brushes</span>
+            <span class="sp"></span>
+            <span class="val">pick a preset to load its parameters</span>
+            <button class="btn ghost sm" data-target="brush-library"><i class="ic ic-maximize"></i> Full library</button>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="libgrid" id="bePresetsWide" style="grid-template-columns:repeat(5,1fr)"></div>
+            <p class="note" style="margin:0">The same presets as the Library group in the dock, just with room to browse. Picking one loads its parameters and repaints the sample stroke.</p>
+          </div>
+        </div>
+
+        <!-- OVERLAY · capture history, the front door -->
+        <div class="sheet down" id="beHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Ink proof</span><span class="ago">just now</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                <span class="cap"><span class="nm">Texture sheet</span><span class="ago">18 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>
+                <span class="cap"><span class="nm">Cover sketch</span><span class="ago">Yesterday</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">Pick a capture to open it as a layer in this document. The same stack, a new source.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="230" data-max="430"></div>
+
+      <!-- THE RIGHT DOCK -->
+      <div class="pdock">
+
+        <div class="dgrp" id="beLayers" style="--gh:90px">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#beLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+            <div class="lrow sel"><i class="ic ic-brush"></i><span class="nm">Sample stroke</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Contrast</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Paper</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- SELECTION, place 3 of 3: Properties · every brush parameter -->
+        <div class="dgrp" id="beProps" style="--gh:250px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="beTip">Round tip</span>
+            <button class="btn ghost icon sm" title="Reset parameters" id="beReset"><i class="ic ic-undo"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h"><i class="ic ic-brush sm" style="color:var(--faint)"></i> Tip shape</div>
+              <div class="seg" id="beShape" style="margin-bottom:10px">
+                <button class="on" data-shape="round">Round</button>
+                <button data-shape="flat">Flat</button>
+                <button data-shape="textured">Textured</button>
+              </div>
+              <div class="rrow"><span class="rl">Roundness</span><input class="rng" id="beRound" name="roundness" type="range" min="15" max="100" step="1" value="100"><span class="val" id="beRoundV">100%</span></div>
+              <div class="rrow"><span class="rl">Angle</span><input class="rng" id="beAngle" name="angle" type="range" min="0" max="180" step="1" value="0"><span class="val" id="beAngleV">0°</span></div>
+              <p class="note">Roundness and angle turn the nib into an ellipse. A flat, angled nib gives calligraphic thick and thin edges.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h"><i class="ic ic-sliders sm" style="color:var(--faint)"></i> Stroke</div>
+              <div class="rrow"><span class="rl">Size</span><input class="rng" id="beSize" name="size" type="range" min="4" max="90" step="1" value="24"><span class="val" id="beSizeV">24 px</span></div>
+              <div class="rrow"><span class="rl">Spacing</span><input class="rng" id="beSpacing" name="spacing" type="range" min="2" max="180" step="1" value="10"><span class="val" id="beSpacingV">10%</span></div>
+              <div class="rrow"><span class="rl">Scatter</span><input class="rng" id="beScatter" name="scatter" type="range" min="0" max="100" step="1" value="0"><span class="val" id="beScatterV">0%</span></div>
+              <p class="note">Spacing is the gap between dabs. Push it up and the stroke breaks into dots. Scatter jitters each dab off the path.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h"><i class="ic ic-keyframe sm" style="color:var(--faint)"></i> Dynamics <span class="mut">pressure and tilt</span></div>
+              <div class="tgrid">
+                <button class="tgl" id="beDynSize" role="switch" aria-checked="true"><span class="sw"></span><span class="lb">Size follows pressure<small>light touch tapers the ends</small></span></button>
+                <button class="tgl" id="beDynOpac" role="switch" aria-checked="true"><span class="sw"></span><span class="lb">Opacity follows pressure<small>soft in, soft out</small></span></button>
+                <button class="tgl" id="beDynTilt" role="switch" aria-checked="false"><span class="sw"></span><span class="lb">Tilt shapes the nib<small>tilt flattens toward the ends</small></span></button>
+              </div>
+              <canvas class="dyncurve" id="beCurve" width="248" height="74"></canvas>
+              <p class="note">The curve maps pen pressure across the stroke. With dynamics off, every dab is full size and fully opaque.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h"><i class="ic ic-swatch sm" style="color:var(--faint)"></i> Media</div>
+              <div class="rrow"><span class="rl">Grain</span><input class="rng" id="beGrain" name="grain" type="range" min="0" max="100" step="1" value="0"><span class="val" id="beGrainV">0%</span></div>
+              <div class="rrow"><span class="rl">Wet</span><input class="rng" id="beWet" name="wet" type="range" min="0" max="100" step="1" value="20"><span class="val" id="beWetV">20%</span></div>
+              <div class="rrow"><span class="rl">Flow</span><input class="rng" id="beFlow" name="flow" type="range" min="5" max="100" step="1" value="85"><span class="val" id="beFlowV">85%</span></div>
+              <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="beOpac" name="opacity" type="range" min="10" max="100" step="1" value="100"><span class="val" id="beOpacV">100%</span></div>
+              <p class="note">Grain breaks the dab into texture. Wet softens and bleeds the edge. Flow is per dab, opacity caps the whole stroke.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h"><i class="ic ic-swatch sm" style="color:var(--faint)"></i> Color <span class="mut">Paint</span></div>
+              <div class="swatches" id="beSwatches">
+                <button class="sw-btn on" style="background:#ff9d7e" data-color="#ff9d7e" title="Coral"></button>
+                <button class="sw-btn" style="background:#ff5d8f" data-color="#ff5d8f" title="Pink"></button>
+                <button class="sw-btn" style="background:#7c4dff" data-color="#7c4dff" title="Purple"></button>
+                <button class="sw-btn" style="background:#4c6fff" data-color="#4c6fff" title="Blue"></button>
+                <button class="sw-btn" style="background:#12c2e9" data-color="#12c2e9" title="Cyan"></button>
+                <button class="sw-btn" style="background:#3ecf8e" data-color="#3ecf8e" title="Green"></button>
+                <button class="sw-btn" style="background:#f4f6fb" data-color="#f4f6fb" title="White"></button>
+              </div>
+              <p class="note">The brush color is a <b style="color:var(--ink)">Paint</b>, the same swatch pair the tool bar shows.</p>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Do</div>
+              <div class="actstack">
+                <button class="btn sm primary block" data-target="draw"><i class="ic ic-brush"></i> Use in Draw</button>
+                <button class="btn sm secondary block" id="beSave"><i class="ic ic-save"></i> Save as preset</button>
+                <button class="btn sm secondary block" data-target="brush-library"><i class="ic ic-library"></i> Open the full library</button>
+              </div>
+            </div>
+
+            <div class="section" style="border-bottom:0">
+              <div class="sec-h"><i class="ic ic-sparkle sm" style="color:var(--accent)"></i> In the API</div>
+              <p class="apiline"><span class="codeblk" id="beApi"></span></p>
+              <p class="note">Every control here is one field on the brush object, so the agent designs a brush from a sentence and the same call replays in a script.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIBRARY · presets are reusable content, so they live here as a scope -->
+        <div class="dgrp grow" id="beLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="beScopeLbl">Brushes</span>
+            <button class="btn ghost icon sm" title="Browse in an overlay" data-sheet="#beBrowse"><i class="ic ic-maximize"></i></button>
+            <button class="btn ghost icon sm" title="Add" data-menu="#beLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="beScope">
+                <button data-scope="media">Media</button>
+                <button class="on" data-scope="brushes">Brush</button>
+                <button data-scope="styles">Styles</button>
+                <button data-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input id="beSearch" name="library-search" placeholder="Search presets" aria-label="Search presets"></span>
+            </div>
+            <div class="libgrid" id="bePresets"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#beLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#beProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#beLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <div class="popover menu pop" id="beLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment</div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘J</span></div>
+      </div>
+      <div class="popover menu pop" id="beLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
+        <div class="menuitem" id="beSave2"><i class="ic ic-save"></i> Save current brush as preset</div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-import"></i> Import a brush file</div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Open the full library</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A brush is <b>data, not a black box</b>. Tip shape, spacing, scatter, dynamics, and media are all numbers, and they live in <b>Properties</b> like any other selection, so designing a brush feels like direct manipulation instead of guesswork. <span data-target="draw" style="color:var(--accent);cursor:pointer">Paint with it in Draw →</span></p></div>
+    <div class="c"><div class="lab g2">Direction</div><p>This is the Brush tool with its panel open, not a separate app. Presets sit in the <b>Library</b> group with scope set to <b>Brushes</b>, exactly where the <span data-target="brush-library" style="color:var(--accent);cursor:pointer">brush library</span> keeps them, and pressure and tilt map through an editable curve rather than a fixed on or off.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the preview simulate a chosen input, a mouse, a light pen stroke, a heavy one, so you can proof the dynamics before you commit, and should the agent be able to reverse engineer a brush from a photo of a real mark?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+/* brush-editor · live preview + the preset scope of the Library group.
+   Collapse, resize, rail, overlays, overflow and tool selection are all shared
+   DS behavior. All selectors guarded; a missing node is a no-op. */
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
+
+  var cv = $("beCanvas"); if(!cv) return;
+  var ctx = cv.getContext("2d"); if(!ctx) return;
+  var W = cv.width, H = cv.height;
+  // offscreen buffer so opacity caps the whole stroke, not each overlapping dab
+  var buf = document.createElement("canvas"); buf.width = W; buf.height = H;
+  var bctx = buf.getContext("2d");
+
+  var S = {
+    color:"#ff9d7e", shape:"round",
+    round:1.0, angle:0,
+    size:24, spacing:0.10, scatter:0.0,
+    dynSize:true, dynOpac:true, dynTilt:false,
+    grain:0.0, wet:0.20, flow:0.85, opac:1.0
+  };
+
+  function hexToRgb(h){
+    h = (h||"").replace("#","");
+    if(h.length===3){ h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
+    var n = parseInt(h,16);
+    if(isNaN(n)) return {r:255,g:157,b:126};
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  }
+  // deterministic PRNG so a given brush always previews identically (no flicker)
+  function mkRand(seed){ var s = seed>>>0; return function(){ s = (s*1664525 + 1013904223)>>>0; return s/4294967296; }; }
+
+  // sample the S-curve stroke path into dense points with cumulative arc length
+  function pathPoints(){
+    var m = 46;
+    function bez(p0,p1,p2,p3,t){
+      var u=1-t, a=u*u*u, b=3*u*u*t, c=3*u*t*t, d=t*t*t;
+      return { x:a*p0.x+b*p1.x+c*p2.x+d*p3.x, y:a*p0.y+b*p1.y+c*p2.y+d*p3.y };
+    }
+    var A={x:m,y:H*0.66}, B={x:W*0.30,y:H*0.14}, C={x:W*0.44,y:H*0.16}, D={x:W*0.55,y:H*0.5};
+    var E={x:W*0.66,y:H*0.84}, F={x:W*0.82,y:H*0.86}, G={x:W-m,y:H*0.34};
+    var pts=[], N=260;
+    for(var i=0;i<=N;i++){
+      var t=i/N;
+      pts.push(t<0.5 ? bez(A,B,C,D,t/0.5) : bez(D,E,F,G,(t-0.5)/0.5));
+    }
+    var acc=0; pts[0].s=0;
+    for(var j=1;j<pts.length;j++){ acc += Math.hypot(pts[j].x-pts[j-1].x, pts[j].y-pts[j-1].y); pts[j].s=acc; }
+    return { pts:pts, len:acc };
+  }
+
+  // pressure profile along the stroke (0..1): soft in, plateau, soft out
+  function pressureAt(t){
+    var ramp = 0.20;
+    var a = clamp(t/ramp,0,1), b = clamp((1-t)/ramp,0,1);
+    var edge = Math.pow(Math.min(a,b), 0.85);
+    var mid = 0.9 + 0.1*Math.sin(t*Math.PI);
+    return clamp(0.12 + 0.88*edge*mid, 0, 1);
+  }
+
+  function stamp(x,y,r,ang,round,alpha,rnd){
+    if(r<0.4 || alpha<=0.003) return;
+    bctx.save();
+    bctx.translate(x,y); bctx.rotate(ang); bctx.scale(1, round);
+    var c = hexToRgb(S.color);
+    var rgba = function(a){ return "rgba("+c.r+","+c.g+","+c.b+","+a+")"; };
+    var solid = clamp(0.9 - S.wet*0.8, 0.06, 0.94);
+    if(S.grain>0 || S.shape==="textured"){
+      var density = 0.55 + (S.shape==="textured"?0.25:0) + S.grain*0.5;
+      var specks = Math.max(6, Math.round(r*r*0.5*density));
+      for(var k=0;k<specks;k++){
+        var ang2 = rnd()*Math.PI*2, rad = Math.sqrt(rnd())*r;
+        var sr = 0.6 + rnd()*(r*0.16);
+        var sa = alpha * (0.35 + rnd()*0.65) * (1 - S.grain*0.35);
+        if(rnd() < S.grain*0.45) continue; // grain punches holes
+        bctx.globalAlpha = clamp(sa,0,1);
+        bctx.fillStyle = rgba(1);
+        bctx.beginPath(); bctx.arc(Math.cos(ang2)*rad, Math.sin(ang2)*rad, sr, 0, Math.PI*2); bctx.fill();
+      }
+    } else {
+      var g = bctx.createRadialGradient(0,0,0,0,0,r);
+      g.addColorStop(0, rgba(1));
+      g.addColorStop(solid, rgba(1));
+      g.addColorStop(1, rgba(0));
+      bctx.globalAlpha = clamp(alpha,0,1);
+      bctx.fillStyle = g;
+      bctx.beginPath(); bctx.arc(0,0,r,0,Math.PI*2); bctx.fill();
+    }
+    bctx.restore();
+  }
+
+  function drawPaper(){
+    ctx.clearRect(0,0,W,H);
+    var pg = ctx.createLinearGradient(0,0,0,H);
+    pg.addColorStop(0,"rgba(255,255,255,.02)"); pg.addColorStop(1,"rgba(0,0,0,.04)");
+    ctx.fillStyle = pg; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1; ctx.setLineDash([4,5]);
+    var P = window.__bePath || (window.__bePath = pathPoints());
+    ctx.beginPath(); ctx.moveTo(P.pts[0].x,P.pts[0].y);
+    for(var i=1;i<P.pts.length;i++) ctx.lineTo(P.pts[i].x,P.pts[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  function render(){
+    var P = window.__bePath || (window.__bePath = pathPoints());
+    var pts = P.pts, len = P.len;
+    var rnd = mkRand(0x9e37 ^ Math.round(S.size*7) ^ Math.round(S.scatter*257) ^ Math.round(S.grain*131) ^ S.shape.length*13);
+
+    bctx.clearRect(0,0,W,H);
+    var step = Math.max(1.2, S.spacing * S.size);
+    var baseR = S.size/2;
+    var jit = S.scatter * S.size * 0.9;
+    var angRad = S.angle * Math.PI/180;
+
+    var d = 0, idx = 1;
+    while(d <= len){
+      while(idx < pts.length && pts[idx].s < d) idx++;
+      var p1 = pts[Math.min(idx,pts.length-1)], p0 = pts[Math.max(0,idx-1)];
+      var span = Math.max(0.0001, p1.s - p0.s), f = clamp((d - p0.s)/span,0,1);
+      var x = p0.x + (p1.x-p0.x)*f, y = p0.y + (p1.y-p0.y)*f;
+      var t = d/len;
+      var pr = pressureAt(t);
+
+      var r = baseR * (S.dynSize ? (0.18 + 0.82*pr) : 1);
+      var a = S.flow * (S.dynOpac ? (0.28 + 0.72*pr) : 1);
+      var round = clamp(S.round, 0.05, 1);
+      if(S.dynTilt){ round *= (0.45 + 0.55*pr); } // tilt flattens the nib toward light-pressure ends
+      var ang = angRad + (S.scatter>0 ? (rnd()-0.5)*S.scatter*1.4 : 0);
+
+      var jx = jit ? (rnd()-0.5)*jit : 0, jy = jit ? (rnd()-0.5)*jit : 0;
+      stamp(x+jx, y+jy, r, ang, round, a, rnd);
+      d += step;
+    }
+
+    drawPaper();
+    ctx.globalAlpha = S.opac;
+    ctx.drawImage(buf, 0, 0);
+    ctx.globalAlpha = 1;
+
+    drawCurve();
+    syncReadouts();
+  }
+
+  function drawCurve(){
+    var c = $("beCurve"); if(!c) return;
+    var g = c.getContext("2d"); if(!g) return;
+    var w = c.width, h = c.height, pad = 8;
+    g.clearRect(0,0,w,h);
+    g.strokeStyle = "rgba(128,140,170,.22)"; g.lineWidth = 1;
+    for(var k=0;k<=2;k++){ var yy = pad + (h-2*pad)*k/2; g.beginPath(); g.moveTo(pad,yy); g.lineTo(w-pad,yy); g.stroke(); }
+    function out(t){
+      var pr = pressureAt(t);
+      var s = S.dynSize ? (0.18 + 0.82*pr) : 1;
+      var o = S.dynOpac ? (0.28 + 0.72*pr) : 1;
+      return { s:s, o:o };
+    }
+    function plot(sel, color, dash){
+      g.strokeStyle = color; g.lineWidth = 1.8; g.setLineDash(dash||[]);
+      g.beginPath();
+      for(var i=0;i<=60;i++){
+        var t=i/60, v=out(t)[sel];
+        var px = pad + (w-2*pad)*t, py = (h-pad) - (h-2*pad)*clamp(v,0,1);
+        i?g.lineTo(px,py):g.moveTo(px,py);
+      }
+      g.stroke(); g.setLineDash([]);
+    }
+    plot("s", getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || "#7f9bff", []);
+    plot("o", "rgba(126,215,166,.95)", [4,3]);
+    g.font = "9px ui-monospace,Menlo,monospace"; g.textBaseline="top";
+    g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || "#7f9bff";
+    g.fillText("size", pad, 2);
+    g.fillStyle = "rgba(126,215,166,.95)"; g.fillText("opacity", pad+30, 2);
+    g.fillStyle = "rgba(128,140,170,.7)"; g.textAlign="right"; g.fillText("pressure →", w-pad, h-11); g.textAlign="left";
+  }
+
+  function syncReadouts(){
+    var set = function(id,v){ var e=$(id); if(e) e.textContent=v; };
+    set("beRoundV", Math.round(S.round*100)+"%");
+    set("beAngleV", Math.round(S.angle)+"°");
+    set("beSizeV", Math.round(S.size)+" px");
+    set("beSpacingV", Math.round(S.spacing*100)+"%");
+    set("beScatterV", Math.round(S.scatter*100)+"%");
+    set("beGrainV", Math.round(S.grain*100)+"%");
+    set("beWetV", Math.round(S.wet*100)+"%");
+    set("beFlowV", Math.round(S.flow*100)+"%");
+    set("beOpacV", Math.round(S.opac*100)+"%");
+    set("beTip", ({round:"Round tip",flat:"Flat tip",textured:"Textured tip"})[S.shape]);
+    set("beSum", Math.round(S.size)+" px · "+Math.round(S.spacing*100)+"% spacing");
+    var fg = $("beFg"); if(fg) fg.style.background = S.color;
+    var tag = $("beTag"); if(tag) tag.textContent = "Sample stroke · " + (current ? current.nm : "Custom");
+    var dyn = [];
+    if(S.dynSize) dyn.push('size:"pressure"');
+    if(S.dynOpac) dyn.push('opacity:"pressure"');
+    if(S.dynTilt) dyn.push('roundness:"tilt"');
+    var api = $("beApi");
+    if(api){
+      var parts = [
+        'tip:"'+S.shape+'"',
+        'size:'+Math.round(S.size),
+        'spacing:'+S.spacing.toFixed(2),
+        'scatter:'+S.scatter.toFixed(2),
+        'roundness:'+S.round.toFixed(2),
+        'angle:'+Math.round(S.angle),
+        'grain:'+S.grain.toFixed(2),
+        'wet:'+S.wet.toFixed(2),
+        'flow:'+S.flow.toFixed(2),
+        'opacity:'+S.opac.toFixed(2),
+        'dynamics:{'+dyn.join(", ")+'}'
+      ];
+      api.textContent = 'run("brush.set", {\n  ' + parts.join(",\n  ") + '\n})';
+    }
+  }
+
+  /* ---------- wire controls ---------- */
+  function slider(id, set){
+    var s = $(id); if(!s) return;
+    s.addEventListener("input", function(){ set(parseFloat(s.value)); render(); });
+  }
+  slider("beRound", function(v){ S.round = v/100; });
+  slider("beAngle", function(v){ S.angle = v; });
+  slider("beSize", function(v){ S.size = v; });
+  slider("beSpacing", function(v){ S.spacing = v/100; });
+  slider("beScatter", function(v){ S.scatter = v/100; });
+  slider("beGrain", function(v){ S.grain = v/100; });
+  slider("beWet", function(v){ S.wet = v/100; });
+  slider("beFlow", function(v){ S.flow = v/100; });
+  slider("beOpac", function(v){ S.opac = v/100; });
+
+  var shape = $("beShape");
+  if(shape) shape.addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    shape.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    S.shape = b.getAttribute("data-shape") || "round";
+    render();
+  });
+
+  function toggle(id, key){
+    var b = $(id); if(!b) return;
+    b.addEventListener("click", function(){
+      S[key] = !S[key];
+      b.setAttribute("aria-checked", S[key] ? "true" : "false");
+      render();
+    });
+  }
+  toggle("beDynSize", "dynSize");
+  toggle("beDynOpac", "dynOpac");
+  toggle("beDynTilt", "dynTilt");
+
+  var sws = $("beSwatches");
+  if(sws) sws.addEventListener("click", function(e){
+    var b = e.target.closest(".sw-btn"); if(!b) return;
+    sws.querySelectorAll(".sw-btn").forEach(function(x){ x.classList.toggle("on", x===b); });
+    S.color = b.getAttribute("data-color"); render();
+  });
+
+  /* ---------- presets: the Brushes scope of the Library group ---------- */
+  var PRESETS = [
+    { id:"soft",        nm:"Soft round",  mt:"28 px", tipHtml:'<span class="b" style="width:18px;height:18px;border-radius:50%;filter:blur(2px)"></span>',
+      v:{ shape:"round", round:1.0, angle:0, size:28, spacing:0.06, scatter:0.0, dynSize:true, dynOpac:true, dynTilt:false, grain:0.0, wet:0.55, flow:0.7, opac:1.0, color:"#ff9d7e" } },
+    { id:"ink",         nm:"Flat ink",    mt:"36 px", tipHtml:'<span class="b" style="width:20px;height:7px;border-radius:99px"></span>',
+      v:{ shape:"flat", round:0.35, angle:20, size:36, spacing:0.05, scatter:0.0, dynSize:true, dynOpac:false, dynTilt:true, grain:0.0, wet:0.1, flow:1.0, opac:1.0, color:"#7c4dff" } },
+    { id:"charcoal",    nm:"Charcoal",    mt:"42 px", tipHtml:'<span class="b" style="width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#ff9d7e 30%,transparent 70%)"></span>',
+      v:{ shape:"textured", round:0.9, angle:0, size:42, spacing:0.14, scatter:0.22, dynSize:true, dynOpac:true, dynTilt:false, grain:0.55, wet:0.05, flow:0.85, opac:0.95, color:"#f4f6fb" } },
+    { id:"stipple",     nm:"Stipple",     mt:"18 px", tipHtml:'<span class="b" style="width:6px;height:6px;border-radius:50%;box-shadow:6px 3px 0 currentColor,-5px 4px 0 currentColor,2px -5px 0 currentColor"></span>',
+      v:{ shape:"round", round:1.0, angle:0, size:18, spacing:0.85, scatter:0.65, dynSize:false, dynOpac:true, dynTilt:false, grain:0.2, wet:0.0, flow:1.0, opac:1.0, color:"#12c2e9" } },
+    { id:"calligraphy", nm:"Calligraphy", mt:"30 px", tipHtml:'<span class="b" style="width:22px;height:5px;border-radius:99px;transform:rotate(-38deg)"></span>',
+      v:{ shape:"flat", round:0.18, angle:38, size:30, spacing:0.04, scatter:0.0, dynSize:true, dynOpac:false, dynTilt:true, grain:0.0, wet:0.15, flow:1.0, opac:1.0, color:"#ff5d8f" } }
+  ];
+  var current = PRESETS[0];
+  var search = "";
+
+  function tileHtml(p){
+    return '<div class="libtile' + (current && current.id===p.id ? " sel" : "") + '" tabindex="0" role="button" data-p="' + p.id + '">' +
+      '<span class="th bth">' + p.tipHtml + '</span>' +
+      '<span class="cap"><span class="nm">' + p.nm + '</span><span class="mt">' + p.mt + '</span></span></div>';
+  }
+  function paintGrids(){
+    var list = PRESETS.filter(function(p){
+      return !search || p.nm.toLowerCase().indexOf(search) >= 0;
+    });
+    var html = list.map(tileHtml).join("");
+    var g1 = $("bePresets"), g2 = $("bePresetsWide");
+    if(g1) g1.innerHTML = html || '<p class="note" style="padding:0 var(--pad-sm)">No preset matches that name.</p>';
+    if(g2) g2.innerHTML = PRESETS.map(tileHtml).join("");
+  }
+  function byId(id){ for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].id===id) return PRESETS[i]; } return null; }
+
+  function applyState(){
+    var setR = function(id,v){ var e=$(id); if(e) e.value=v; };
+    setR("beRound", Math.round(S.round*100)); setR("beAngle", Math.round(S.angle));
+    setR("beSize", Math.round(S.size)); setR("beSpacing", Math.round(S.spacing*100));
+    setR("beScatter", Math.round(S.scatter*100)); setR("beGrain", Math.round(S.grain*100));
+    setR("beWet", Math.round(S.wet*100)); setR("beFlow", Math.round(S.flow*100));
+    setR("beOpac", Math.round(S.opac*100));
+    var setT = function(id,on){ var e=$(id); if(e) e.setAttribute("aria-checked", on?"true":"false"); };
+    setT("beDynSize", S.dynSize); setT("beDynOpac", S.dynOpac); setT("beDynTilt", S.dynTilt);
+    if(shape) shape.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-shape")===S.shape); });
+    if(sws) sws.querySelectorAll(".sw-btn").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-color")===S.color); });
+    paintGrids();
+    render();
+  }
+  function loadPreset(id){
+    var p = byId(id); if(!p) return;
+    for(var k in p.v) S[k] = p.v[k];
+    current = p;
+    applyState();
+  }
+  [ "bePresets", "bePresetsWide" ].forEach(function(gid){
+    var g = $(gid); if(!g) return;
+    g.addEventListener("click", function(e){
+      var t = e.target.closest(".libtile"); if(!t) return;
+      loadPreset(t.getAttribute("data-p"));
+    });
+    g.addEventListener("keydown", function(e){
+      if(e.key !== "Enter" && e.key !== " ") return;
+      var t = e.target.closest(".libtile"); if(!t) return;
+      e.preventDefault();
+      loadPreset(t.getAttribute("data-p"));
+    });
+  });
+  var srch = $("beSearch");
+  if(srch) srch.addEventListener("input", function(){ search = srch.value.trim().toLowerCase(); paintGrids(); });
+
+  /* Library scope switch, same behavior as every other shell */
+  var scope = $("beScope");
+  if(scope){
+    var sbtns = [].slice.call(scope.querySelectorAll("button"));
+    var slabel = $("beScopeLbl");
+    var names = { media:"Media", brushes:"Brushes", styles:"Styles", assets:"Assets" };
+    sbtns.forEach(function(b){
+      b.addEventListener("click", function(){
+        sbtns.forEach(function(x){ x.classList.toggle("on", x === b); });
+        if(slabel) slabel.textContent = names[b.getAttribute("data-scope")] || "";
+      });
+    });
+  }
+
+  var DEFAULTS = JSON.parse(JSON.stringify(S));
+  function resetAll(){
+    for(var k in DEFAULTS) S[k] = DEFAULTS[k];
+    current = PRESETS[0];
+    applyState();
+  }
+  [ "beReset", "beResetMenu" ].forEach(function(id){
+    var b = $(id); if(b) b.addEventListener("click", resetAll);
+  });
+
+  var saved = 0;
+  function savePreset(){
+    saved++;
+    var p = { id:"custom" + saved, nm:"Custom " + saved, mt:Math.round(S.size) + " px",
+      tipHtml:'<span class="b" style="width:16px;height:16px;border-radius:50%;filter:blur(1px)"></span>',
+      v: JSON.parse(JSON.stringify(S)) };
+    PRESETS.push(p);
+    current = p;
+    paintGrids();
+  }
+  [ "beSave", "beSave2" ].forEach(function(id){
+    var b = $(id); if(b) b.addEventListener("click", savePreset);
+  });
+
+  applyState();
+})();
+</script>
+</body>
+</html>
