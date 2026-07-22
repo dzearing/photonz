@@ -121,6 +121,7 @@
             <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
           </div>
         </div>
+        <span class="rnum">9</span>
       </div>
 
       <!-- EDITOR ROW: canvas dominant, one dock on the right.
@@ -145,10 +146,9 @@
             </div>
           </div>
 
-          <!-- 9 · CANVAS TOP-RIGHT ACTIONS: the panel toggle lives with the canvas -->
+          <!-- CANVAS TOP-RIGHT ACTIONS: capture history. The panel-dock toggle
+               (region 9) now lives in the command-bar corner, above the rail. -->
           <div class="cnv-act">
-            <span class="rnum pin" style="top:-6px;left:-8px">9</span>
-            <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
             <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           </div>
 
@@ -413,7 +413,7 @@
       <span class="li"><span class="rnum">6</span> <b>Canvas</b> · selection lives here, and it dominates</span>
       <span class="li"><span class="rnum">7</span> <b>Splitter</b> · drag to resize a dock or a group</span>
       <span class="li"><span class="rnum">8</span> <b>Rail</b> · what the dock collapses to, click 9 to see it</span>
-      <span class="li"><span class="rnum">9</span> <b>Panel toggle</b> · show or hide the dock, at the canvas</span>
+      <span class="li"><span class="rnum">9</span> <b>Panel toggle</b> · a square in the command-bar corner, above the rail</span>
     </div>
 
     <!-- the four shell surfaces, and the loop they form -->

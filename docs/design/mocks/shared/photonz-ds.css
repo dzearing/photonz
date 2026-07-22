@@ -151,7 +151,18 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 }
 .tbtns{display:flex;gap:6px;align-items:center;min-width:150px;justify-content:flex-end}
 
-.toolbar{display:flex;align-items:center;gap:4px;padding:7px 12px;background:var(--panel-2);border-bottom:1px solid var(--line);position:relative;z-index:2}
+.toolbar{display:flex;align-items:center;gap:4px;height:var(--rail-w);padding:0 12px;background:var(--panel-2);border-bottom:1px solid var(--line);position:relative;z-index:2}
+/* the panel-dock toggle, relocated to the command bar's top-right corner: a
+   square the same size as the collapsed rail's width, flush to the right edge
+   so it sits directly above the rail it hides/shows. */
+.toolbar.has-corner{padding-right:0}
+.toolbar .dock-corner{width:var(--rail-w);height:var(--rail-w);min-width:var(--rail-w);
+  margin-left:auto;padding:0;border:0;border-left:1px solid var(--line);border-radius:0;
+  background:transparent;color:var(--dim);display:grid;place-items:center;cursor:pointer}
+.toolbar .dock-corner:hover{background:var(--panel);color:var(--ink)}
+.toolbar .dock-corner.on{color:var(--accent)}
+.toolbar .dock-corner:active{transform:scale(.94)}
+.toolbar .dock-corner:focus-visible{outline:none;box-shadow:var(--ring)}
 .tool{min-width:30px;height:28px;padding:0 6px;border-radius:7px;border:1px solid transparent;background:transparent;display:grid;place-items:center;color:var(--dim);transition:.12s;font-size:13px}
 .tool:hover{background:var(--panel);color:var(--ink);border-color:var(--line)}
 .tool.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
@@ -679,6 +690,9 @@ body.page .stage{height:100vh}
 :root{
   /* control heights on the 4pt scale — md is the default */
   --ctl-h:32px; --ctl-h-sm:24px; --ctl-h-lg:40px;
+  /* collapsed panel-dock rail width — the command bar matches this as its
+     height so a square toggle corner sits directly above the rail */
+  --rail-w:34px;
   /* accent focus ring (identical across every control) */
   --ring:0 0 0 3px color-mix(in srgb, var(--accent) 38%, transparent);
   /* luminous inner top-edge shared by all glass controls */
@@ -1051,7 +1065,7 @@ body.page .stage{height:100vh}
 .win.cq{container:shell / inline-size}
 
 /* ---- editor row: canvas-dominant, dock on the right ---- */
-.edit.lean{display:flex;grid-template-columns:none;position:relative;min-height:0;--rail-w:34px}
+.edit.lean{display:flex;grid-template-columns:none;position:relative;min-height:0}
 .cnv{flex:1 1 auto;min-width:0;min-height:0;position:relative;display:flex;flex-direction:column}
 .cnv>.canvas{flex:1 1 auto;min-height:0}
 

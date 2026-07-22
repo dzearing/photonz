@@ -283,6 +283,36 @@
       b.setAttribute('aria-pressed', showing ? 'true' : 'false');
     });
   }
+  /* The dock toggle lives in the command bar's top-right corner. Where a
+     .toolbar sits directly above an .edit.lean shell, inject a square corner
+     button (rail-width) into the bar and relocate the toggle out of the canvas
+     (.cnv-act) — so one control, sitting directly above the collapsed rail.
+     Runs BEFORE the listener wiring below so the corner is picked up there. */
+  all('.edit.lean').forEach(function (shell) {
+    var bar = shell.previousElementSibling;
+    if (!bar || !bar.classList || !bar.classList.contains('toolbar')) return;
+    if (bar.querySelector('.dock-corner')) return; // idempotent
+    var corner = document.createElement('button');
+    corner.type = 'button';
+    corner.className = 'tool dock-corner';
+    corner.setAttribute('data-dock-toggle', shell.id ? '#' + shell.id : '');
+    corner.setAttribute('title', 'Show or hide the panel dock (⌥⌘L)');
+    corner.setAttribute('aria-label', 'Show or hide the panel dock');
+    var open = (shell.getAttribute('data-dock') || 'open') !== 'closed';
+    corner.classList.toggle('on', open);
+    corner.setAttribute('aria-pressed', open ? 'true' : 'false');
+    corner.innerHTML = '<i class="ic sm ic-sidebar"></i>';
+    bar.classList.add('has-corner');
+    bar.appendChild(corner);
+    // relocate: drop the canvas dock toggle this replaces (keep the rest of
+    // .cnv-act, e.g. the history button); remove the cluster if now empty
+    var old = shell.querySelector('.cnv-act [data-dock-toggle]');
+    if (old) {
+      var cluster = old.closest('.cnv-act');
+      old.parentNode.removeChild(old);
+      if (cluster && !cluster.querySelector('button')) cluster.parentNode.removeChild(cluster);
+    }
+  });
   all('[data-dock-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var shell = shellFor(btn);
