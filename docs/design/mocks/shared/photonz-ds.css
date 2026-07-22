@@ -1721,3 +1721,49 @@ button.menuitem{width:100%;border:0;background:transparent;text-align:left;
    answer; shrinking the chips is not. */
 .seg.stack{flex-wrap:wrap;width:100%}
 .seg.stack button{flex:1 1 auto;white-space:nowrap}
+
+/* ============================================================
+   THE EDIT POINT · the cut between two adjacent clips
+   A transition does not belong to a clip. It belongs to the JOIN
+   between two of them, and it changes BOTH sides, so the thing you
+   select to add one is the cut itself, not either neighbour. Final
+   Cut works this way: "a transition is always applied to the edit
+   point of a clip, [so] the transition affects not just the selected
+   clip, but also the clip on the other side of the edit point."
+   Without this primitive a page has no way to express "the join is
+   selected", and the only way left to demo a transition is to split
+   one clip and dissolve it into itself, which is not an edit anyone
+   would make.
+   ============================================================ */
+.editpt{width:9px;height:34px;flex:none;align-self:center;position:relative;
+  margin:0 -2px;border-radius:3px;background:transparent;cursor:pointer;
+  border:0;padding:0;z-index:1}
+/* the seam itself: a hairline sitting exactly on the boundary */
+.editpt::before{content:"";position:absolute;top:2px;bottom:2px;left:50%;width:2px;
+  transform:translateX(-1px);border-radius:1px;background:var(--edge-lo);
+  transition:background .12s ease,box-shadow .12s ease}
+.editpt:hover::before{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
+.editpt:focus-visible{outline:none}
+.editpt:focus-visible::before{background:var(--warn);box-shadow:var(--ring)}
+/* selected: the join reads as one object spanning both neighbours */
+.editpt.sel::before{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 34%,transparent)}
+.editpt.sel{outline:2px solid var(--warn);outline-offset:1px}
+
+/* ============================================================
+   TRANSITION TILES · the shared picker grammar
+   Authored on video-transitions.html and needed by any page that
+   offers a choice of transition. Kept as `.libtile` variants so a
+   transition is picked with the same tile grammar as a component,
+   a style or a brush - one library idiom, four scopes.
+   ============================================================ */
+.libtile.tt .th{height:30px;position:relative;display:block}
+.libtile.tt.sel{border-color:var(--warn);box-shadow:inset 0 1px 0 var(--edge-hi),0 0 0 1px var(--warn)}
+.libtile.tt[disabled]{opacity:.42;pointer-events:none}
+.th-diss{background:linear-gradient(90deg,#12c2e9,#5b53ff 45%,#ff5d8f)}
+.th-dip{background:linear-gradient(90deg,#12c2e9 0%,#000 50%,#ff5d8f 100%)}
+.th-slide{background:linear-gradient(90deg,#12c2e9 0%,#12c2e9 46%,#ff5d8f 54%,#ff5d8f 100%)}
+.th-slide::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:34%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.55));transform:skewX(-16deg)}
+.th-push{background:repeating-linear-gradient(90deg,#7c4dff,#7c4dff 5px,#12c2e9 5px,#12c2e9 10px)}
+.th-morph{background:radial-gradient(70% 120% at 30% 50%,#12c2e9,transparent 60%),radial-gradient(70% 120% at 70% 50%,#ff5d8f,transparent 60%),#5b53ff}
+.th-cut{background:linear-gradient(90deg,#12c2e9 0 50%,#ff5d8f 50% 100%)}
+.th-cut::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:#05060a;transform:translateX(-1px)}
