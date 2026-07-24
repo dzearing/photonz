@@ -52,6 +52,8 @@ struct CanvasView: NSViewRepresentable {
     let textContent: TextContent?
     /// The active measure tool's style, mirrored into the in-flight preview.
     let measureContent: MeasureContent?
+    /// Live label-size preview for the selected caliper during a slider drag.
+    var measureLabelPreview: (id: UUID, scale: CGFloat)?
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
@@ -85,9 +87,9 @@ struct CanvasView: NSViewRepresentable {
     let onAnnotationCommit: (CGPoint, CGPoint) -> Void
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
-    let onMeasureCommit: (CGPoint, CGPoint, MeasureMode) -> Void
-    let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint) -> Void
-    let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint) -> Void
+    let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
+    let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat) -> Void
+    let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -122,7 +124,7 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent, edgeMap: edgeMap,
-                   isCanvasSelected: isCanvasSelected)
+                   isCanvasSelected: isCanvasSelected, measureLabelPreview: measureLabelPreview)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -186,9 +188,9 @@ final class CanvasNSView: NSView {
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
-    var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode) -> Void) = { _, _, _ in }
-    var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
-    var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
+    var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
+    var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
+    var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
@@ -238,6 +240,15 @@ final class CanvasNSView: NSView {
     private let rotateKnobLayer = CAShapeLayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     private let snapGuideLayer = CAShapeLayer()
+    /// Hover snap dot: while the measure tool is active and idle, a dot follows
+    /// the cursor and magnetizes to the nearest detected edge (⌘ bypasses),
+    /// marking where a drag will begin.
+    private let snapDotLayer = CAShapeLayer()
+    /// Latest pointer location in view space, for the hover snap dot.
+    private var hoverPoint: CGPoint?
+    /// Live Liquid-Glass label pills for calipers, keyed by the layer id's UUID
+    /// string. Pass-through subviews positioned + scaled every overlay refresh.
+    private var measureLabelViews: [String: MeasureLabelView] = [:]
     /// Dashed wells + a plus glyph over every EMPTY collage slot — editor
     /// chrome only; empty slots render transparent in the composite.
     private let collageWellsLayer = CAShapeLayer()
@@ -345,10 +356,24 @@ final class CanvasNSView: NSView {
     /// the create preview draws its border so outline-only rectangles show.
     private var annotationStyle: LayerStyle?
     private var measureContent: MeasureContent?
-    /// In-flight measure drag (reuses AnnotationDrag for the anchor/current pair).
-    private var measureDrag: AnnotationDrag?
-    /// In-flight resize of a placed measure by dragging one of its two corners.
-    private var measureCornerDrag: MeasureCornerDrag?
+    /// Live label-size preview for the selected caliper during a slider drag.
+    private var measureLabelPreview: (id: UUID, scale: CGFloat)?
+    /// In-progress 3-click caliper placement: click foot A → move → click foot B →
+    /// move → click sets the head (depth + direction). Nil = idle (hover only).
+    private enum MeasurePlacement {
+        case firstPlaced(foot1: CGPoint)                                   // seeking foot B
+        case secondPlaced(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) // seeking head
+    }
+    private var measurePlacement: MeasurePlacement?
+    /// The mouse-down location (view space) of the current measure press, to tell
+    /// a click from a press-drag on release.
+    private var measurePressDownView: CGPoint?
+    /// True between the mouse-down that first placed foot A and its mouse-up, so a
+    /// no-drag release stays in click/click mode while a dragged release completes
+    /// the measuring line (down/drag/release).
+    private var measureFirstFootPress = false
+    /// In-flight drag of one of a placed caliper's three handles (a foot or head).
+    private var measureHandleDrag: MeasureHandleDrag?
     /// Detected UI edges, mirrored from EditorState; measure corners magnetize to
     /// these (and the pixel grid) while dragging.
     private var edgeMap = EdgeMap.empty
@@ -402,39 +427,56 @@ final class CanvasNSView: NSView {
         lastDragPoint = p
     }
 
-    /// Dragging one corner of a placed measure's box. The dragged corner takes
-    /// its x from start or end (and y likewise); moving it updates just those
-    /// components, so the diagonally-opposite corner stays fixed.
-    private struct MeasureCornerDrag {
+    /// Which of a caliper's three handles is being dragged: either foot of the
+    /// measuring line, or the head (the chip bar's perpendicular offset).
+    private enum MeasureHandle { case footA, footB, head }
+
+    /// Dragging one of a placed caliper's three handles. Feet drags keep the
+    /// measuring line level (the opposite foot follows onto the dragged foot's
+    /// cross-axis); the head drag changes only the signed perpendicular offset.
+    private struct MeasureHandleDrag {
         let layerID: UUID
-        let xFromEnd: Bool
-        let yFromEnd: Bool
-        let originalStart: CGPoint
+        let handle: MeasureHandle
+        let mode: MeasureMode
+        let originalStart: CGPoint   // feet, document space
         let originalEnd: CGPoint
+        let originalHeadOffset: CGFloat
         var current: CGPoint
-        /// The measure's endpoints with this corner drag applied (start, end).
-        func endpoints() -> (start: CGPoint, end: CGPoint) {
-            var s = originalStart, e = originalEnd
-            if xFromEnd { e.x = current.x } else { s.x = current.x }
-            if yFromEnd { e.y = current.y } else { s.y = current.y }
-            return (s, e)
+        /// The caliper's (start, end, headOffset) with this drag applied.
+        func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat) {
+            var s = originalStart, e = originalEnd, off = originalHeadOffset
+            switch handle {
+            case .head:
+                off = mode == .horizontal ? current.y - s.y : current.x - s.x
+                return (s, e, off)
+            case .footA:
+                s = current
+                if mode == .horizontal { e.y = current.y } else { e.x = current.x }
+            case .footB:
+                e = current
+                if mode == .horizontal { s.y = current.y } else { s.x = current.x }
+            }
+            // Dragging a fork keeps the HEAD (chip) fixed in absolute space —
+            // the leg depth grows/shrinks to absorb the feet line's move, so the
+            // label doesn't wander when you adjust the measured span.
+            let headAbs = mode == .horizontal ? originalStart.y + originalHeadOffset
+                                              : originalStart.x + originalHeadOffset
+            let feet = mode == .horizontal ? s.y : s.x
+            off = headAbs - feet
+            return (s, e, off)
         }
-        func originalEndpoints() -> (start: CGPoint, end: CGPoint) {
-            (originalStart, originalEnd)
+        func originalParams() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat) {
+            (originalStart, originalEnd, originalHeadOffset)
         }
     }
 
-    /// The draggable corners of a placed measure, document space: all four box
-    /// corners for a bracket, the two line ends for a straight measure.
-    private func measureCorners(_ layer: Layer) -> [(xFromEnd: Bool, yFromEnd: Bool, point: CGPoint)] {
+    /// The three draggable handles of a placed caliper in document space: the two
+    /// feet (the measuring line) and the head (the chip bar's offset point).
+    private func measureHandles(_ layer: Layer) -> [(handle: MeasureHandle, point: CGPoint)] {
         guard let m = layer.measure,
               let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
-        let combos: [(Bool, Bool)] = m.form == .bracket
-            ? [(false, false), (true, false), (false, true), (true, true)]
-            : [(false, false), (true, true)]
-        return combos.map { xe, ye in
-            (xe, ye, CGPoint(x: xe ? e.x : s.x, y: ye ? e.y : s.y))
-        }
+        let g = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e, headOffset: m.headOffset)
+        return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
     }
     /// The composite that was on screen when an annotation was committed. The
     /// preview shape stays up until a *different* image arrives, so the new
@@ -676,6 +718,19 @@ final class CanvasNSView: NSView {
         rotateKnobLayer.isHidden = true
         layer?.addSublayer(rotateKnobLayer)
 
+        // Hover snap dot: an accent-filled dot with a white ring, on top.
+        snapDotLayer.fillColor = NSColor.controlAccentColor.cgColor
+        snapDotLayer.strokeColor = CGColor(gray: 1, alpha: 0.95)
+        snapDotLayer.lineWidth = 1.5
+        snapDotLayer.isHidden = true
+        layer?.addSublayer(snapDotLayer)
+
+        // Selection handles and the snap dot must sit ABOVE the caliper label
+        // pills (which are NSView subviews), so a caliper's third (head) handle
+        // isn't hidden behind its own glass chip.
+        handlesLayer.zPosition = 100
+        snapDotLayer.zPosition = 100
+
         registerForDraggedTypes([.fileURL])
     }
 
@@ -736,6 +791,255 @@ final class CanvasNSView: NSView {
         if bounds.size != lastReportedSize {
             lastReportedSize = bounds.size
             onViewSizeChange(bounds.size)
+        }
+    }
+
+    // MARK: Hover snap dot (measure tool)
+
+    private var hoverTrackingArea: NSTrackingArea?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea { removeTrackingArea(hoverTrackingArea) }
+        let area = NSTrackingArea(rect: .zero,
+                                  options: [.mouseMoved, .mouseEnteredAndExited,
+                                            .activeInKeyWindow, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        handleMeasureHover(event)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        hoverPoint = nil
+        if tool == .measure { refreshMeasureCreation(modifierFlags: event.modifierFlags) }
+    }
+
+    /// Tracks the pointer for the measure tool's hover dot + placement preview.
+    private func handleMeasureHover(_ event: NSEvent) {
+        hoverPoint = convert(event.locationInWindow, from: nil)
+        // Feed the axis-gating accumulator while seeking foot B so a decisive
+        // drag direction suppresses perpendicular snap jitter.
+        if case .firstPlaced = measurePlacement, let viewport, let hoverPoint {
+            trackDragMotion(viewport.documentPoint(fromView: hoverPoint))
+        }
+        refreshMeasureCreation(modifierFlags: event.modifierFlags)
+    }
+
+    // MARK: Caliper 3-click placement
+
+    /// Snaps the FIRST foot to a nearby edge (small window; ⌘ = free).
+    private func snapMeasureAnchor(_ doc: CGPoint, modifiers: NSEvent.ModifierFlags) -> CGPoint {
+        guard let viewport, !modifiers.contains(.command) else { return doc }
+        return EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom).point
+    }
+
+    /// Snaps the SECOND foot along the measuring line from foot1 (edge magnetize +
+    /// axis gating; ⌘ = free), then levels it to the dominant axis. Returns the
+    /// leveled foot and the chosen axis.
+    private func snapMeasureSecondFoot(from foot1: CGPoint, to doc: CGPoint,
+                                       modifiers: NSEvent.ModifierFlags) -> (foot2: CGPoint, mode: MeasureMode) {
+        var p = doc
+        if let viewport, !modifiers.contains(.command) {
+            p = axisGated(EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
+                                            xSpan: min(foot1.x, doc.x)...max(foot1.x, doc.x),
+                                            ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y)),
+                          raw: doc).point
+        }
+        let mode = MeasureContent.dominantAxis(from: foot1, to: p)
+        let foot2 = mode == .horizontal ? CGPoint(x: p.x, y: foot1.y) : CGPoint(x: foot1.x, y: p.y)
+        return (foot2, mode)
+    }
+
+    /// Signed perpendicular distance from the measuring line to `doc` — the head
+    /// (depth + direction). Kept a hair off zero so a click on the line still
+    /// yields a visible caliper.
+    private func measureHeadOffset(mode: MeasureMode, foot1: CGPoint, point doc: CGPoint) -> CGFloat {
+        let raw = mode == .horizontal ? doc.y - foot1.y : doc.x - foot1.x
+        if abs(raw) < 4 { return raw >= 0 ? 4 : -4 }
+        return raw
+    }
+
+    /// Advances placement on mouse-up. `dragged` = the press moved far enough to
+    /// count as a drag. The measuring line is set by click/click OR by a single
+    /// press-drag-release; the head is a final click (or drag). The last step
+    /// commits the caliper (which auto-reverts to the Select tool).
+    private func advanceMeasurePlacement(at raw: CGPoint, dragged: Bool,
+                                         modifiers: NSEvent.ModifierFlags) {
+        switch measurePlacement {
+        case nil:
+            // mouse-down normally creates .firstPlaced; guard defensively.
+            resetDragMotion(raw)
+            measurePlacement = .firstPlaced(foot1: snapMeasureAnchor(raw, modifiers: modifiers))
+        case .firstPlaced(let foot1):
+            if measureFirstFootPress && !dragged {
+                // A plain click placed foot A — stay and wait for a foot-B click.
+                measureFirstFootPress = false
+            } else {
+                // Either a press-drag-release drew the line, or a later click/drag
+                // set foot B. Complete the measuring line → head-placement mode.
+                measureFirstFootPress = false
+                let (foot2, mode) = snapMeasureSecondFoot(from: foot1, to: raw, modifiers: modifiers)
+                guard hypot(foot2.x - foot1.x, foot2.y - foot1.y) >= 1 else { break }
+                measurePlacement = .secondPlaced(foot1: foot1, foot2: foot2, mode: mode)
+            }
+        case .secondPlaced(let foot1, let foot2, let mode):
+            let off = measureHeadOffset(mode: mode, foot1: foot1, point: raw)
+            measurePlacement = nil
+            measureFirstFootPress = false
+            snapGuide = nil
+            snapDotLayer.isHidden = true
+            clearAnnotationPreview()
+            onMeasureCommit(foot1, foot2, mode, off) // adds, selects, reverts to Select
+        }
+        refreshOverlays()
+    }
+
+    /// Cancels an in-progress placement (⎋ or tool switch).
+    private func cancelMeasurePlacement() {
+        measurePlacement = nil
+        measureFirstFootPress = false
+        measurePressDownView = nil
+        snapGuide = nil
+        snapDotLayer.isHidden = true
+        clearAnnotationPreview()
+    }
+
+    /// Draws the measure tool's creation chrome — the snapping dot(s) and the
+    /// in-progress preview line/squared-U — for the 3-click placement flow. ⌘
+    /// bypasses edge snapping throughout.
+    private func refreshMeasureCreation(modifierFlags: NSEvent.ModifierFlags) {
+        guard tool == .measure, let viewport else {
+            snapDotLayer.isHidden = true
+            return
+        }
+        let cursor = hoverPoint.map { viewport.documentPoint(fromView: $0) }
+        let dots = CGMutablePath()
+        let r: CGFloat = 4
+        func addDot(_ doc: CGPoint) {
+            let v = viewport.viewPoint(fromDocument: doc)
+            dots.addEllipse(in: CGRect(x: v.x - r, y: v.y - r, width: 2 * r, height: 2 * r))
+        }
+        var previewPoints: [CGPoint] = []
+
+        switch measurePlacement {
+        case nil:
+            if let cursor { addDot(snapMeasureAnchor(cursor, modifiers: modifierFlags)) }
+        case .firstPlaced(let foot1):
+            addDot(foot1)
+            if let cursor {
+                let (foot2, _) = snapMeasureSecondFoot(from: foot1, to: cursor, modifiers: modifierFlags)
+                addDot(foot2)
+                previewPoints = [foot1, foot2]
+            }
+        case .secondPlaced(let foot1, let foot2, let mode):
+            addDot(foot1)
+            addDot(foot2)
+            if let cursor {
+                let off = measureHeadOffset(mode: mode, foot1: foot1, point: cursor)
+                let g = MeasureContent.caliperGeometry(mode: mode, start: foot1, end: foot2, headOffset: off)
+                addDot(g.labelAnchor)
+                previewPoints = g.path
+            }
+        }
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        snapDotLayer.path = dots
+        snapDotLayer.isHidden = dots.isEmpty
+        if previewPoints.count >= 2 {
+            let style = measureContent ?? MeasureContent()
+            let path = CGMutablePath()
+            let pts = previewPoints.map { viewport.viewPoint(fromDocument: $0) }
+            path.move(to: pts[0])
+            for p in pts.dropFirst() { path.addLine(to: p) }
+            let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+            annotationPreviewLayer.path = path
+            annotationPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+            annotationPreviewLayer.fillColor = nil
+            annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
+            annotationPreviewLayer.lineJoin = .round
+            annotationPreviewLayer.lineCap = .round
+            annotationPreviewLayer.compositingFilter = nil
+            annotationPreviewHeadLayer.path = nil
+            annotationPreviewLayer.isHidden = false
+        } else {
+            annotationPreviewLayer.isHidden = true
+            annotationPreviewHeadLayer.path = nil
+        }
+        CATransaction.commit()
+    }
+
+    /// Live Liquid-Glass label pills for every visible caliper (and the in-flight
+    /// create-drag preview), positioned each overlay refresh from live geometry so
+    /// they track create/handle/move drags and pan/zoom with zero drift. The
+    /// interactive composite never bakes the label, so these are the only on-screen
+    /// readout; the head line is cut where each pill sits.
+    private func refreshMeasureLabels() {
+        guard let viewport, let document else {
+            for view in measureLabelViews.values { view.isHidden = true }
+            return
+        }
+        let pixelScale = document.pixelScale
+        // The pill scales with zoom so it reads as part of the content (matching
+        // the rasterized caliper + the baked export pill) instead of a fixed-size
+        // overlay painted on top.
+        let zoom = viewport.zoom
+        var wanted = Set<String>()
+
+        func showPill(key: String, content: MeasureContent) {
+            guard content.showLabel else { return }
+            let g = content.caliperGeometry()
+            let view = measureLabelViews[key] ?? {
+                let v = MeasureLabelView()
+                addSubview(v)
+                measureLabelViews[key] = v
+                return v
+            }()
+            // The pill is image content: scale it by zoom (matching the baked
+            // pill + the head-line gap). Font/padding come from the measure's
+            // label size (the inspector slider); the border matches the caliper
+            // line's on-screen width (strokeWidth image px × zoom).
+            view.configure(text: content.label(pixelScale: pixelScale), colorHex: content.colorHex,
+                           fontSize: content.labelPointSize, padding: content.labelPadding,
+                           scale: zoom, borderWidth: content.strokeWidth * zoom)
+            let center = viewport.viewPoint(fromDocument: g.labelAnchor)
+            view.setFrameOrigin(CGPoint(x: (center.x - view.frame.width / 2).rounded(),
+                                        y: (center.y - view.frame.height / 2).rounded()))
+            view.isHidden = false
+            wanted.insert(key)
+        }
+
+        // No pill during the initial create drag — that shows only the red line.
+
+        // Placed calipers (overriding with live drag geometry where applicable).
+        for layer in document.layers where layer.isVisible {
+            guard var mc = layer.measure,
+                  var s = layer.measureEndpoint(.start), var e = layer.measureEndpoint(.end) else { continue }
+            var off = mc.headOffset
+            if let d = measureHandleDrag, d.layerID == layer.id {
+                let p = d.params(); s = p.start; e = p.end; off = p.headOffset
+            }
+            if let mv = moveDrag, mv.layerID == layer.id, mv.moved {
+                let dx = mv.snapped.origin.x - mv.startOrigin.x
+                let dy = mv.snapped.origin.y - mv.startOrigin.y
+                s = CGPoint(x: s.x + dx, y: s.y + dy)
+                e = CGPoint(x: e.x + dx, y: e.y + dy)
+            }
+            mc.start = s; mc.end = e; mc.headOffset = off
+            // Live label-size preview during a slider drag (no history yet).
+            if let preview = measureLabelPreview, preview.id == layer.id {
+                mc.labelScale = preview.scale
+            }
+            showPill(key: layer.id.uuidString, content: mc)
+        }
+
+        for (key, view) in measureLabelViews where !wanted.contains(key) {
+            view.removeFromSuperview()
+            measureLabelViews.removeValue(forKey: key)
         }
     }
 
@@ -837,18 +1141,21 @@ final class CanvasNSView: NSView {
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
             return
         }
-        // The measure tool drags two reference points; ⇧ locks to the dominant axis.
+        // The measure tool: the measuring line is drawn EITHER by click/click OR
+        // by press-drag-release; the head is a final click. On the first press we
+        // place foot A and remember the down point so mouse-up can tell a click
+        // (stay for a foot-B click) from a drag (line done → set the head).
         if tool == .measure {
-            // Snap the anchor too (⌘ bypasses): starting a ruler ON a baseline or
-            // border is half the workflow. No line exists yet, so a small window
-            // around the pointer supplies the candidates.
-            var anchor = p
-            if !event.modifierFlags.contains(.command) {
-                anchor = EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom).point
+            measurePressDownView = convert(event.locationInWindow, from: nil)
+            hoverPoint = measurePressDownView
+            if measurePlacement == nil {
+                resetDragMotion(p)
+                measurePlacement = .firstPlaced(foot1: snapMeasureAnchor(p, modifiers: event.modifierFlags))
+                measureFirstFootPress = true
+            } else {
+                measureFirstFootPress = false
             }
-            resetDragMotion(p)
-            measureDrag = AnnotationDrag(anchor: anchor)
-            refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
+            refreshMeasureCreation(modifierFlags: event.modifierFlags)
             return
         }
         // Canvas pseudo-selection: the boundary handles resize the CANVAS.
@@ -884,23 +1191,24 @@ final class CanvasNSView: NSView {
             refreshOverlays()
             return
         }
-        // A placed measure resizes by dragging any of its box corners; the
-        // diagonally-opposite corner stays fixed and the gap/label update live.
-        if let id = selectedLayerID, let layer = selectedLayer, layer.measure != nil,
+        // A placed caliper is edited by dragging one of its three handles (the
+        // two feet or the head); the others stay put and the value/label update
+        // live.
+        if let id = selectedLayerID, let layer = selectedLayer, let m = layer.measure,
            let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) {
             let tolerance = viewport.zoom > 0 ? 9 / viewport.zoom : 9
-            var best: (xFromEnd: Bool, yFromEnd: Bool, distance: CGFloat)?
-            for corner in measureCorners(layer) {
-                let d = hypot(p.x - corner.point.x, p.y - corner.point.y)
+            var best: (handle: MeasureHandle, distance: CGFloat)?
+            for h in measureHandles(layer) {
+                let d = hypot(p.x - h.point.x, p.y - h.point.y)
                 if d <= tolerance, d < (best?.distance ?? .infinity) {
-                    best = (corner.xFromEnd, corner.yFromEnd, d)
+                    best = (h.handle, d)
                 }
             }
             if let best {
                 resetDragMotion(p)
-                measureCornerDrag = MeasureCornerDrag(layerID: id, xFromEnd: best.xFromEnd,
-                                                      yFromEnd: best.yFromEnd, originalStart: s,
-                                                      originalEnd: e, current: p)
+                measureHandleDrag = MeasureHandleDrag(layerID: id, handle: best.handle, mode: m.mode,
+                                                      originalStart: s, originalEnd: e,
+                                                      originalHeadOffset: m.headOffset, current: p)
                 refreshOverlays()
                 return
             }
@@ -1008,51 +1316,34 @@ final class CanvasNSView: NSView {
             drag.update(to: p)
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
-        } else if var drag = measureDrag {
-            // Snap the growing corner while drawing (⌘ = free): the ruler's lines
-            // span from the anchor to the pointer, so those spans window the
-            // edge candidates, exactly like the corner-resize drag.
-            if event.modifierFlags.contains(.command) {
-                drag.update(to: p)
+        } else if tool == .measure {
+            // Caliper creation is click-based; a drag between clicks just updates
+            // the placement preview (same as moving with the button up).
+            handleMeasureHover(event)
+        } else if var drag = measureHandleDrag {
+            // A FOOT magnetizes to detected UI edges (per-axis) and the pixel grid
+            // unless ⌘ is held; the HEAD is a free perpendicular offset (no edge
+            // snap — it's the label position, not a measured point).
+            if drag.handle == .head || event.modifierFlags.contains(.command) {
+                drag.current = p
                 snapGuide = nil
             } else {
                 trackDragMotion(p)
+                // Window the edge candidates by the span from the opposite foot to
+                // the pointer, exactly like the create drag.
+                let fixed = drag.handle == .footA ? drag.originalEnd : drag.originalStart
                 let snap = axisGated(
                     EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
-                                      xSpan: min(drag.anchor.x, p.x)...max(drag.anchor.x, p.x),
-                                      ySpan: min(drag.anchor.y, p.y)...max(drag.anchor.y, p.y)),
+                                      xSpan: min(fixed.x, p.x)...max(fixed.x, p.x),
+                                      ySpan: min(fixed.y, p.y)...max(fixed.y, p.y)),
                     raw: p)
-                drag.update(to: snap.point)
+                drag.current = snap.point
                 snapGuide = (snap.guideX, snap.guideY)
             }
-            measureDrag = drag
-            refreshMeasurePreview(constrained: event.modifierFlags.contains(.shift))
-            refreshOverlays()
-        } else if var corner = measureCornerDrag {
-            // Magnetize the dragged corner to detected UI edges (per-axis) and the
-            // pixel grid, unless ⌘ is held to drag freely. The moving horizontal
-            // leg spans from the fixed opposite corner's x to the pointer — its y
-            // snaps to horizontal edges under THAT span (text tops/baselines,
-            // borders); the vertical line likewise for x.
-            if event.modifierFlags.contains(.command) {
-                corner.current = p
-                snapGuide = nil
-            } else {
-                trackDragMotion(p)
-                let fixedX = corner.xFromEnd ? corner.originalStart.x : corner.originalEnd.x
-                let fixedY = corner.yFromEnd ? corner.originalStart.y : corner.originalEnd.y
-                let snap = axisGated(
-                    EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
-                                      xSpan: min(fixedX, p.x)...max(fixedX, p.x),
-                                      ySpan: min(fixedY, p.y)...max(fixedY, p.y)),
-                    raw: p)
-                corner.current = snap.point
-                snapGuide = (snap.guideX, snap.guideY)
-            }
-            measureCornerDrag = corner
-            // Live re-render so the gap value updates as the corner moves.
-            let (start, end) = corner.endpoints()
-            onMeasureEndpointPreview(corner.layerID, start, end)
+            measureHandleDrag = drag
+            // Live re-render so the measured value updates as the handle moves.
+            let (start, end, off) = drag.params()
+            onMeasureEndpointPreview(drag.layerID, start, end, off)
             refreshOverlays()
         } else if var session = endpointDrag {
             session.drag.update(to: p)
@@ -1167,6 +1458,17 @@ final class CanvasNSView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport else { return }
+        // The measure tool advances its placement on mouse-up (click/click) or on
+        // a press-drag release (down/drag/release draws the line).
+        if tool == .measure {
+            let up = convert(event.locationInWindow, from: nil)
+            let down = measurePressDownView ?? up
+            let dragged = hypot(up.x - down.x, up.y - down.y) > 4
+            advanceMeasurePlacement(at: viewport.documentPoint(fromView: up),
+                                    dragged: dragged, modifiers: event.modifierFlags)
+            measurePressDownView = nil
+            return
+        }
         if cropDrag != nil {
             cropDrag = nil
             if let rect = cropRect { onCropRectChange(rect) }
@@ -1193,25 +1495,11 @@ final class CanvasNSView: NSView {
                 onAnnotationCommit(drag.anchor,
                                    drag.end(constrained: event.modifierFlags.contains(.shift), shape: shape))
             }
-        } else if let drag = measureDrag {
-            measureDrag = nil
+        } else if let drag = measureHandleDrag {
+            measureHandleDrag = nil
             snapGuide = nil
-            refreshOverlays()
-            if drag.isClick(atZoom: viewport.zoom) {
-                clearAnnotationPreview()
-            } else {
-                // Hold the vector preview until the composite with the new measure
-                // lands (the same no-flash trick the annotation path uses).
-                annotationCommitImage = image
-                let mode = measureModeForCommit(anchor: drag.anchor, current: drag.current,
-                                                constrained: event.modifierFlags.contains(.shift))
-                onMeasureCommit(drag.anchor, drag.current, mode)
-            }
-        } else if let corner = measureCornerDrag {
-            measureCornerDrag = nil
-            snapGuide = nil
-            let (start, end) = corner.endpoints()
-            onMeasureEndpointCommit(corner.layerID, start, end)
+            let (start, end, off) = drag.params()
+            onMeasureEndpointCommit(drag.layerID, start, end, off)
             refreshOverlays()
         } else if let session = endpointDrag {
             endpointDrag = nil
@@ -1395,9 +1683,13 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
-            if annotationDrag != nil || measureDrag != nil {
+            if measurePlacement != nil {
+                cancelMeasurePlacement()
+                refreshOverlays()
+                return
+            }
+            if annotationDrag != nil {
                 annotationDrag = nil
-                measureDrag = nil
                 snapGuide = nil
                 clearAnnotationPreview()
                 refreshOverlays()
@@ -1412,11 +1704,11 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
-            if let corner = measureCornerDrag {
-                measureCornerDrag = nil
+            if let drag = measureHandleDrag {
+                measureHandleDrag = nil
                 snapGuide = nil
-                let (start, end) = corner.originalEndpoints()
-                onMeasureEndpointCommit(corner.layerID, start, end) // History no-op; restores render
+                let (start, end, off) = drag.originalParams()
+                onMeasureEndpointCommit(drag.layerID, start, end, off) // History no-op; restores render
                 refreshOverlays()
                 return
             }
@@ -1543,7 +1835,9 @@ final class CanvasNSView: NSView {
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
-               edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
+               edgeMap: EdgeMap, isCanvasSelected: Bool = false,
+               measureLabelPreview: (id: UUID, scale: CGFloat)? = nil) {
+        self.measureLabelPreview = measureLabelPreview
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -1558,10 +1852,13 @@ final class CanvasNSView: NSView {
         self.cropBounds = cropBounds
         if tool != self.tool {
             self.tool = tool
-            // A tool switch mid-drag abandons the draft annotation/endpoint edit.
+            // A tool switch mid-drag abandons the draft annotation/endpoint edit
+            // and any in-progress caliper placement.
             annotationDrag = nil
-            measureDrag = nil
-            measureCornerDrag = nil
+            measurePlacement = nil
+            measureFirstFootPress = false
+            measurePressDownView = nil
+            measureHandleDrag = nil
             regionDrag = nil
             regionOutlineDrag = nil
             if regionContentDrag != nil {
@@ -1631,6 +1928,8 @@ final class CanvasNSView: NSView {
             selectionAntsLayer.isHidden = true
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
+            snapDotLayer.isHidden = true
+            for view in measureLabelViews.values { view.isHidden = true }
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
@@ -1671,6 +1970,8 @@ final class CanvasNSView: NSView {
         refreshPreviewSprite()
         refreshTextEditorDisplay()
         refreshCollageChrome()
+        refreshMeasureLabels()
+        refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every
@@ -1982,11 +2283,11 @@ final class CanvasNSView: NSView {
             return
         }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
-            || endpointDrag != nil || endpointHoldLayerID != nil || measureCornerDrag != nil
+            || endpointDrag != nil || endpointHoldLayerID != nil || measureHandleDrag != nil
         // The blue selection outline hides during a RESIZE (frame handles,
-        // annotation endpoints, or a measure corner) so the edges being aligned
+        // annotation endpoints, or a caliper handle) so the edges being aligned
         // stay unobstructed; it still tracks moves and rotates.
-        let resizing = resizeDrag != nil || endpointDrag != nil || measureCornerDrag != nil
+        let resizing = resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
 
         // The outline (and frame-handle placement) follows the layer's
         // transform — the in-flight one during a rotate/skew drag.
@@ -2021,9 +2322,10 @@ final class CanvasNSView: NSView {
             rotateKnobLayer.isHidden = true
             if !dragInFlight {
                 let handles = CGMutablePath()
-                // Measures expose all their box corners; lines/arrows their 2 ends.
+                // Calipers expose their three handles (two feet + head); lines/
+                // arrows their two ends.
                 let points: [CGPoint] = selectedLayer.measure != nil
-                    ? measureCorners(selectedLayer).map { $0.point }
+                    ? measureHandles(selectedLayer).map { $0.point }
                     : AnnotationEndpoint.allCases.compactMap { selectedLayer.editEndpoint($0) }
                 for dp in points {
                     let p = viewport.viewPoint(fromDocument: dp)
@@ -2120,6 +2422,9 @@ final class CanvasNSView: NSView {
                 SelectionCursor.cursor(for: selectionMode).set()
             }
         }
+        // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off
+        // the edge live while held.
+        refreshMeasureCreation(modifierFlags: event.modifierFlags)
         super.flagsChanged(with: event)
     }
 
@@ -2261,68 +2566,6 @@ final class CanvasNSView: NSView {
         annotationPreviewLayer.compositingFilter = compositing
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color
-        annotationPreviewLayer.isHidden = false
-        CATransaction.commit()
-    }
-
-    /// The mode a committed measure gets. A bracket measures its dominant axis
-    /// (⇧ flips which axis is the gap). A straight line is free unless ⇧ locks it
-    /// to the dominant axis.
-    private func measureModeForCommit(anchor: CGPoint, current: CGPoint, constrained: Bool) -> MeasureMode {
-        let style = measureContent ?? MeasureContent()
-        if style.form == .bracket {
-            // The bracket keeps the chosen/remembered axis (vertical by default) so
-            // the direction never flips based on how the box is dragged. ⇧ flips it.
-            let axis: MeasureMode = style.mode == .horizontal ? .horizontal : .vertical
-            guard constrained else { return axis }
-            return axis == .vertical ? .horizontal : .vertical
-        }
-        guard constrained else { return .free }
-        return abs(current.x - anchor.x) >= abs(current.y - anchor.y) ? .horizontal : .vertical
-    }
-
-    /// In-flight measure drag: preview the strokes (line+witness, or the bracket
-    /// path). The label plate is added on commit. Reuses the annotation preview
-    /// shape layer.
-    private func refreshMeasurePreview(constrained: Bool) {
-        guard let drag = measureDrag, let viewport else {
-            clearAnnotationPreview()
-            return
-        }
-        var style = measureContent ?? MeasureContent()
-        let mode = measureModeForCommit(anchor: drag.anchor, current: drag.current, constrained: constrained)
-        let path = CGMutablePath()
-        if style.form == .bracket {
-            style.mode = mode
-            style.start = drag.anchor
-            style.end = drag.current
-            let pts = style.bracketGeometry().path.map { viewport.viewPoint(fromDocument: $0) }
-            if let first = pts.first {
-                path.move(to: first)
-                for p in pts.dropFirst() { path.addLine(to: p) }
-            }
-        } else {
-            let geo = MeasureContent.geometry(mode: mode, start: drag.anchor, end: drag.current)
-            func add(_ seg: MeasureSegment) {
-                path.move(to: viewport.viewPoint(fromDocument: seg.a))
-                path.addLine(to: viewport.viewPoint(fromDocument: seg.b))
-            }
-            add(geo.dimension)
-            geo.extensions.forEach(add)
-        }
-        let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        annotationPreviewLayer.path = path
-        annotationPreviewLayer.strokeColor = color
-        annotationPreviewLayer.fillColor = nil
-        // strokeWidth is logical pixels → image px (×pixelScale) → screen (×zoom).
-        let measureScale = document?.pixelScale ?? 1
-        annotationPreviewLayer.lineWidth = max(1, style.strokeWidth * measureScale * viewport.zoom)
-        annotationPreviewLayer.compositingFilter = nil
-        annotationPreviewHeadLayer.path = nil
         annotationPreviewLayer.isHidden = false
         CATransaction.commit()
     }
@@ -2629,6 +2872,72 @@ extension CanvasNSView: NSTextViewDelegate {
         }
         return false
     }
+}
+
+/// A caliper's live label pill: a Liquid-Glass (real backdrop-blur) capsule with
+/// a hairline border in the caliper color and caliper-colored text, centered on
+/// the head line. Sized to the same chip footprint the rasterizer cuts the head
+/// line for, so the stroke never shows behind the translucent glass. Mouse
+/// events pass through (`hitTest` → nil) so the canvas still owns the pointer.
+private final class MeasureLabelView: NSView {
+    private let effect = NSVisualEffectView()
+    private let label = NSTextField(labelWithString: "")
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        // `.withinWindow` blends the content behind the pill inside the window —
+        // i.e. the canvas composite drawn below — giving a real backdrop blur.
+        // `.popover` is a NEUTRAL, appearance-adaptive frost (Decision 2 wanted a
+        // neutral glass, not a dark HUD) so the live pill matches the light/neutral
+        // pill baked into exports.
+        effect.blendingMode = .withinWindow
+        effect.material = .popover
+        effect.state = .active
+        effect.wantsLayer = true
+        effect.layer?.masksToBounds = true
+        effect.layer?.borderWidth = 1
+        addSubview(effect)
+
+        label.alignment = .center
+        label.isBezeled = false
+        label.isEditable = false
+        label.isSelectable = false
+        label.drawsBackground = false
+        label.backgroundColor = .clear
+        effect.addSubview(label)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// The caliper — pill included — is **image content** (it exports to send to
+    /// designers), so the pill scales with zoom exactly like the baked pill:
+    /// `labelFontSize`/`labelPadding` are IMAGE pixels, shown at ×`scale` (zoom).
+    /// `borderWidth` is the caliper line's on-screen width so the border is as
+    /// thick as the caliper lines.
+    func configure(text: String, colorHex: String, fontSize: CGFloat, padding: CGFloat,
+                   scale: CGFloat, borderWidth: CGFloat) {
+        let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        let tint = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        let pad = padding * scale
+        label.font = .systemFont(ofSize: fontSize * scale, weight: .semibold)
+        label.stringValue = text
+        label.textColor = tint
+        label.sizeToFit()
+        let w = (label.frame.width + 2 * pad).rounded()
+        let h = (label.frame.height + 2 * pad).rounded()
+        setFrameSize(CGSize(width: w, height: h))
+        effect.frame = bounds
+        effect.layer?.cornerRadius = h / 2
+        effect.layer?.borderWidth = max(1, borderWidth)
+        effect.layer?.borderColor = tint.withAlphaComponent(0.75).cgColor
+        label.frame = CGRect(x: pad, y: (h - label.frame.height) / 2,
+                             width: w - 2 * pad, height: label.frame.height)
+    }
+
+    // Pass pointer events through to the canvas underneath.
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
 /// The inline text editor. A plain `NSTextView` treats Return as a newline; this

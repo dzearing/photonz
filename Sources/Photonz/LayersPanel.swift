@@ -929,33 +929,6 @@ struct MeasureInspector: View {
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
-                if c.form == .bracket {
-                    field("Direction") {
-                        HStack(spacing: 6) {
-                            Picker("Direction", selection: Binding(
-                                get: { c.mode == .horizontal ? MeasureMode.horizontal : .vertical },
-                                set: { editorState.setMeasureAxis($0) })) {
-                                Text("Horizontal").tag(MeasureMode.horizontal)
-                                Text("Vertical").tag(MeasureMode.vertical)
-                            }
-                            .labelsHidden().pickerStyle(.segmented).controlSize(.small)
-                            Button { editorState.invertMeasure() } label: {
-                                Image(systemName: "arrow.left.arrow.right")
-                            }
-                            .controlSize(.small)
-                            .help("Flip the bracket to the other side")
-                        }
-                    }
-                }
-                field("Style") {
-                    Picker("Style", selection: Binding(
-                        get: { c.form },
-                        set: { editorState.setMeasureForm($0) })) {
-                        Text("Bracket").tag(MeasureForm.bracket)
-                        Text("Line").tag(MeasureForm.line)
-                    }
-                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
-                }
                 field("Unit") {
                     Picker("Unit", selection: Binding(
                         get: { c.unit },
@@ -979,6 +952,30 @@ struct MeasureInspector: View {
                     }
                     .labelsHidden().pickerStyle(.segmented).controlSize(.small)
                 }
+                field("Label size") {
+                    // During a drag the committed doc hasn't changed, so read the
+                    // live preview value (else the thumb snaps back / resets).
+                    let liveScale = editorState.measureLabelPreview?.scale ?? c.labelScale
+                    let px = liveScale * MeasureContent.labelFontSize
+                    let lo = Double(MeasureContent.labelSizeRangePx.lowerBound)
+                    let hi = Double(MeasureContent.labelSizeRangePx.upperBound)
+                    HStack(spacing: 8) {
+                        Slider(value: Binding(
+                            get: { Double(px) },
+                            set: { editorState.previewMeasureLabelScale(CGFloat($0) / MeasureContent.labelFontSize) }),
+                               in: lo...hi,
+                               onEditingChanged: { editing in
+                                   if !editing {
+                                       editorState.commitMeasureLabelScale(
+                                           editorState.measureLabelPreview?.scale ?? c.labelScale)
+                                   }
+                               })
+                            .controlSize(.small)
+                        Text("\(Int(px.rounded())) px")
+                            .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                            .frame(width: 42, alignment: .trailing)
+                    }
+                }
                 // Color is a narrow control, so its label sits to the left.
                 HStack {
                     Text("Color").font(.caption).foregroundStyle(.secondary)
@@ -989,10 +986,6 @@ struct MeasureInspector: View {
                         supportsOpacity: false)
                         .labelsHidden().controlSize(.small)
                 }
-                Toggle("Show size label", isOn: Binding(
-                    get: { c.showLabel },
-                    set: { editorState.setMeasureShowLabel($0) }))
-                    .font(.caption).controlSize(.small)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)

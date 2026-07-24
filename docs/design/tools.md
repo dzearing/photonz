@@ -40,19 +40,84 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 - **Border outlines the GLYPHS, not the box:** a border on a text layer strokes the letter outlines (two-pass: fat border-colored glyphs underneath + normal fill on top → an OUTER outline that grows outward, fill intact). `DocumentRenderer` suppresses the box border for text; the glyph border is threaded into the raster cache key (`variant`).
 - **Editing entry/exit:** **Return** on a selected text layer re-edits it (mirrors double-click); **⌘Return** in the editor commits (plain Return is a newline) via the `InlineTextView` subclass.
 
-## Measure / Ruler (Phase 16) — the user's PRIMARY workflow
+## Measure / Ruler (Phase 16, redesigned 16.12) — the user's PRIMARY workflow
 
-A designer's redline tool for measuring gaps/sizes on a screenshot and checking alignment. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own `LayerContent.measure` case on the two-endpoint pattern (start/end = the two box corners, layer-local once built); `MeasureBuilder` mirrors `AnnotationBuilder` (layer/updating/resized/restyled). Tool = `.measure` (toolbar "ruler", shortcut **M**, `createsMeasureByDrag`).
+A designer's redline tool for measuring gaps/sizes on a screenshot. The
+**caliper** (a squared-U dimension bracket) is the single, opinionated measuring
+interaction — the old free/diagonal mode and the line-vs-bracket form toggle are
+gone. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own
+`LayerContent.measure` case; `MeasureBuilder` mirrors `AnnotationBuilder`
+(layer/updating/resized/restyled). Tool = `.measure` (toolbar "ruler", shortcut
+**i**, `createsMeasureByDrag`). Full design:
+`docs/superpowers/specs/2026-07-23-caliper-redesign-design.md`.
 
-- **Two forms (`MeasureForm`)** — the tool defaults to **`bracket`**:
-  - **`bracket`** (a squared "U") — drag corner **A → opposite corner B**; the connector + **label sit on the START corner's side** and the U opens toward the end (natural TL→BR drag ⇒ label above for horizontal, left for vertical). `bracketGeometry()` returns the 4-point open path + connector midpoint + outward unit. **The axis NEVER auto-flips from the drag's box shape** (a size-dependent `bracketAxis` auto-detect was shipped and removed 2026-06-29 — "the direction changes depending on the size I drag!"): brackets use the persisted `measureStyle.mode`, **default vertical**; ⇧ flips on create; the inspector Direction toggle changes it (and persists as the new default); invert ⇄ swaps corners to flip the label side.
-  - **`line`** — a straight dimension line (+ witness lines in the locked H/V modes), free point-to-point.
-- **Measured value** — `rawDistance` (free=hypot, H/V=|dx|/|dy|, i.e. the gap-axis span). `MeasureUnit` **defaults to `pixels`** (raw image px); `points` divides by `PhotonzDocument.pixelScale` (≤0→1 guard). `label(pixelScale:)` = `%.<decimals>f <suffix>`.
-- **Stroke width is in LOGICAL pixels**, rendered ×`pixelScale` (`MeasureRasterizer` uses butt caps + miter joins for crisp 1px right-angle corners), so a "1px" sizer line aligns to the image's pixel grid. Default 1; inspector offers 1/2/3px.
-- **Rendering** (`PhotonzRender/MeasureRasterizer.swift`): branches on form; the numeric **label** is white CoreText on a rounded plate filled with the measure color — produced via `TextRasterizer` and **blitted** in (drawing CoreText directly into the rasterizer's flipped context renders it upside-down). Cache `variant = "scale:<pixelScale>"` so the points readout invalidates on scale change. The frame reserves `estimatedLabelSize` at `labelCenter(labelSize:)` so the label isn't clipped.
-- **Select / move / resize**: a selected measure shows the universal dotted selection box + **round handles on all 4 box corners** (a `line` shows its 2 ends). Dragging any corner updates the right start/end components (diagonal-opposite stays fixed) and the gap/label **update live** (full re-render per move via `previewMeasureEndpoints`; one undo step on release via `commitMeasureEndpoints`; Esc restores). Move works via hit-testing (`Layer.contains` tests the drawn strokes). `MeasureCornerDrag` carries `(xFromEnd, yFromEnd)`.
-- **Inspector** (`MeasureInspector`, `InspectorSectionID.measure`): styled to match the Effects panel — small secondary caption **above** each control (`.labelsHidden()` segmented pickers, so labels never wrap vertically); narrow controls (Color) get a left label instead. Rows: Direction (**Horizontal listed first**, brackets only) + invert ⇄ (`invertMeasure` swaps corners → flips the bracket to the other side) · Style (Bracket/Line) · Unit (Pixels/Points) · Thickness (1/2/3px) · Color · Show-label toggle. Defaults live in `EditorState.measureStyle` (in-memory; **not yet persisted**).
-- **Open follow-ups**: measureStyle persistence; auto-detect `pixelScale` from the capture's DPI (currently fixed at 1 — the 1×/2× inspector control was removed as confusing); the toolbar S style-popover doesn't cover measures.
+- **A 3-point caliper.** `MeasureContent` stores `start`/`end` = the two **feet**
+  (the measuring line, on the measured space, leveled to one axis) and
+  **`headOffset`** = a signed perpendicular distance to the **head** (the closed
+  outer bar carrying the chip). Its sign is the direction, so there is no invert
+  control. `MeasureMode` is just `{horizontal, vertical}`. `caliperGeometry()`
+  returns the feet, the two head corners, the label anchor (head midpoint), and
+  the squared-U `path` (`footA → headA → headB → footB`). The legs point from the
+  head toward the measured space.
+- **Measured value** — `rawDistance` = the feet line's axis span (`|dx|` / `|dy|`).
+  `MeasureUnit` **defaults to `pixels`** (raw image px); `points` divides by
+  `PhotonzDocument.pixelScale` (≤0→1 guard). `label(pixelScale:)` =
+  `%.<decimals>f <suffix>`.
+- **Stroke width is in LOGICAL pixels**, rendered ×`pixelScale`, so a "1px" sizer
+  line aligns to the image's pixel grid. Default 1; inspector offers 1/2/3px.
+  The two head↔leg joins are **lightly rounded** (round line joins + a small
+  `addArc` fillet), refined not cartoonish.
+- **The label pill is a LIVE Liquid-Glass overlay, not baked** (Decision 2). On
+  the canvas it's a `MeasureLabelView` (`NSVisualEffectView .withinWindow` — a
+  real backdrop blur of the composite — hairline border in the caliper color,
+  caliper-colored text) hosted **inside `CanvasNSView`** and repositioned every
+  overlay refresh from live geometry, so it tracks create/handle/move drags and
+  pan/zoom with zero drift; pointer events pass through it. Centered on the head
+  line, which is **cut around the chip** (a gap) so the translucent glass never
+  reveals a stroke behind it.
+- **Export keeps the label** (the trade-off Decision 2 demanded). `bakeMeasureLabels`
+  threads through `DocumentRenderer.compositeImage → ciImage` (folded into the
+  measure raster cache variant). Interactive (`renderInteractive`), the move-drag
+  sprite, and the drag underlay pass **false** (no baked pill — the glass overlay
+  is the label); export / `render(scale:)` / thumbnails / region-promote pass
+  **true**, and `MeasureRasterizer` bakes a **flat glass-style pill** (neutral
+  translucent fill + hairline caliper-color border + caliper-colored text,
+  `TextRasterizer` glyphs blitted upright) into the same head-line gap. So
+  flattened/exported output still shows the measurement, minus the live blur.
+  Perf: the flag is an early-out; interactive re-render stays ~7.5ms (12MP/10L).
+- **Interaction — placement** (`MeasurePlacement`): while idle a **hover snap dot**
+  magnetizes to the nearest detected edge (⌘ bypasses). The measuring line is drawn
+  **either** by click/click (click foot A, move, click foot B) **or** by a single
+  **press-drag-release** (down at foot A, drag to foot B, release) — a drag past a
+  small tolerance on the first press completes the line. Either way you then land
+  in head-placement mode; a final **click** (or drag) sets the **head** (depth +
+  direction = the cursor's signed perpendicular offset), completing the caliper.
+  The axis is the dominant direction, feet snap along-axis to perpendicular edges,
+  ⎋ cancels. On completion the tool **auto-reverts to Select** and selects the new
+  caliper (the old sticky measure tool felt inconsistent with other apps).
+- **Select / edit = 3 handles** (two feet + head; `MeasureHandleDrag`,
+  `measureHandles`): a foot drag moves that end (the line stays level; snaps via
+  the existing `EdgeSnapping`/`EdgeMap`, ⌘ bypass), the head drag changes only the
+  offset/side (free). Values/label update live (`previewMeasureEndpoints`), one
+  undo step on release (`commitMeasureEndpoints`), Esc restores. Move works via
+  hit-testing (`Layer.contains` walks the caliper path).
+- **Migration**: legacy `line`/`bracket`/`free` payloads decode and coerce to a
+  valid H/V caliper (explicit `CodingKeys` keep the removed keys decode-only;
+  custom `encode` writes only the caliper keys).
+- **Inspector** (`MeasureInspector`): Unit (Pixels/Points) · Thickness (1/2/3px) ·
+  **Label size** slider (`labelScale`, live preview via `previewMeasureLabelScale`,
+  one undo on release) · Color. (No Show-label toggle — the label is always on.)
+  Defaults live in `EditorState.measureStyle` (in-memory).
+- **The caliper is image content.** Lines are ACTUAL image pixels (a "1px" caliper
+  = 1 image px, not ×pixelScale); the label pill scales with zoom exactly like the
+  baked/export pill (sized in image px × zoom), so the live glass pill and the
+  head-line gap match at every zoom and the pill border equals the line width.
+  Selection shows 3 handle dots (two feet + head); the handle layer is raised
+  above the pill so the head dot isn't occluded by its own chip.
+- **Open follow-ups**: measureStyle persistence; auto-detect `pixelScale` from the
+  capture's DPI (fixed at 1); optionally swap the pill's `NSVisualEffectView` for a
+  SwiftUI `.glassEffect` host; tune `labelFontSize`/`defaultHeadOffset`/corner
+  radius to taste.
 
 ### Edge snapping (16.4–16.5, shipped 2026-07-02) — how the ruler finds UI edges
 

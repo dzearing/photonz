@@ -333,22 +333,27 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             return Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance
         }
         if var m = measure {
-            // Hit near the drawn strokes (line + witness, or the bracket path),
-            // not the padded box. Express endpoints in document space.
+            // Hit near the drawn strokes (the squared-U outline), not the padded
+            // box. Express feet in document space, then walk the caliper path.
             m.start = CGPoint(x: frame.minX + m.start.x, y: frame.minY + m.start.y)
             m.end = CGPoint(x: frame.minX + m.end.x, y: frame.minY + m.end.y)
             let tolerance = m.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
-            var segments: [(CGPoint, CGPoint)] = []
-            switch m.form {
-            case .line:
-                let geo = m.geometry()
-                segments = ([geo.dimension] + geo.extensions).map { ($0.a, $0.b) }
-            case .bracket:
-                let path = m.bracketGeometry().path
-                for i in 0..<(path.count - 1) { segments.append((path[i], path[i + 1])) }
-            }
-            for (a, b) in segments where Geometry.distance(from: p, toSegmentFrom: a, to: b) <= tolerance {
+            let geo = m.caliperGeometry()
+            let path = geo.path // footA → headA → headB → footB
+            for i in 0..<(path.count - 1)
+            where Geometry.distance(from: p, toSegmentFrom: path[i], to: path[i + 1]) <= tolerance {
                 return true
+            }
+            // The label chip sits in the head-line gap (no stroke there), so make
+            // its footprint hittable too — otherwise clicking the pill's blank
+            // background selects nothing. `estimatedLabelSize` is a generous
+            // upper bound, which makes the biggest visual target easy to click.
+            if m.showLabel {
+                let size = m.estimatedLabelSize
+                let chip = CGRect(x: geo.labelAnchor.x - size.width / 2,
+                                  y: geo.labelAnchor.y - size.height / 2,
+                                  width: size.width, height: size.height)
+                if chip.insetBy(dx: -tolerance, dy: -tolerance).contains(p) { return true }
             }
             return false
         }

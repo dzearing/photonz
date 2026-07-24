@@ -106,15 +106,16 @@ final class EditorState {
     /// Styling for new text blocks, set from the font picker. Persisted like
     /// annotation styles.
     private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
-    /// Template style for new measures (color, stroke, unit, label toggle, caps).
-    /// In-memory default for now; start/end are ignored (set per drag).
+    /// Template style for new calipers (color, stroke, unit, label toggle). The
+    /// axis and head offset are set per drag, so mode/start/end/headOffset here
+    /// are placeholders. In-memory default for now.
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
     // Default to LOGICAL points, not raw bitmap pixels: redlining a UI expects
     // on-screen (design) sizes, and a 2× Retina screenshot's raw pixels read
     // double that. Actual pixels stay one toggle away in the measure inspector.
-    private(set) var measureStyle = MeasureContent(mode: .vertical, strokeWidth: 1, colorHex: "#FF3B30",
-                                                   showLabel: true, unit: .points, form: .bracket)
+    private(set) var measureStyle = MeasureContent(mode: .horizontal, strokeWidth: 1, colorHex: "#FF3B30",
+                                                   showLabel: true, unit: .points)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -831,17 +832,19 @@ final class EditorState {
         setTool(.select)
     }
 
-    /// Completed measure drag: place a dimension layer with the active style and
-    /// the drag's mode (free / H-lock / V-lock). Sticky like the annotation tools
-    /// unless one-shot; selects the new layer so it can be tweaked.
-    func addMeasure(from start: CGPoint, to end: CGPoint, mode: MeasureMode) {
+    /// Completed 3-click caliper placement: add the dimension layer with the
+    /// active style, then auto-revert to Select and select the new caliper so its
+    /// handles are immediately grabbable — matches other apps (the old sticky
+    /// measure tool felt inconsistent).
+    func addMeasure(from start: CGPoint, to end: CGPoint, mode: MeasureMode, headOffset: CGFloat) {
         var content = measureStyle
         content.mode = mode
+        content.headOffset = headOffset
         let layer = MeasureBuilder.layer(content: content, from: start, to: end)
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.colorHex)
-        // Sticky by default (17.12): the measure tool stays active for the next
-        // dimension. Switch to Select (V) to adjust one.
+        setTool(.select)
+        selectedLayerID = layer.id
     }
 
     // MARK: - Measure styling
@@ -860,35 +863,33 @@ final class EditorState {
         applyMeasureRestyle { MeasureBuilder.restyled($0, unit: unit) }
     }
 
-    func setMeasureShowLabel(_ show: Bool) {
-        measureStyle.showLabel = show
-        applyMeasureRestyle { MeasureBuilder.restyled($0, showLabel: show) }
-    }
-
-    func setMeasureForm(_ form: MeasureForm) {
-        measureStyle.form = form
-        applyMeasureRestyle { MeasureBuilder.restyled($0, form: form) }
-    }
-
     /// Sizer line thickness in logical pixels.
     func setMeasureThickness(_ width: CGFloat) {
         measureStyle.strokeWidth = width
         applyMeasureRestyle { MeasureBuilder.restyled($0, strokeWidth: width) }
     }
 
-    /// Force a measure's orientation (which axis is the gap) instead of relying
-    /// on the drag's dominant axis.
-    func setMeasureAxis(_ axis: MeasureMode) {
-        measureStyle.mode = axis
-        applyMeasureRestyle { MeasureBuilder.restyled($0, mode: axis) }
+    /// The selected caliper's live label-size preview during a slider drag (no
+    /// history); the canvas overlay reads it so the pill resizes live.
+    private(set) var measureLabelPreview: (id: UUID, scale: CGFloat)?
+
+    /// Live label-size slider drag: re-render the baked strokes/gap for the new
+    /// size and publish the preview so the glass pill resizes too (no history).
+    func previewMeasureLabelScale(_ scale: CGFloat) {
+        measureStyle.labelScale = scale
+        guard let layer = selectedMeasureLayer, var doc = document else { return }
+        measureLabelPreview = (layer.id, scale)
+        doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
+        if let frame = doc.layer(id: layer.id)?.frame { previewMove = (layer.id, frame) }
+        submit(doc)
     }
 
-    /// Flip a bracket to the opposite side by swapping its two box corners — the
-    /// U opens the other way and the connector/label move across.
-    func invertMeasure() {
-        guard let layer = selectedMeasureLayer,
-              let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return }
-        perform { $0.updateLayer(id: layer.id) { $0 = MeasureBuilder.updating($0, start: e, end: s) } }
+    /// Slider release: commit the label size in one undo step.
+    func commitMeasureLabelScale(_ scale: CGFloat) {
+        measureLabelPreview = nil
+        previewMove = nil
+        measureStyle.labelScale = scale
+        applyMeasureRestyle { MeasureBuilder.restyled($0, labelScale: scale) }
     }
 
     func setMeasureColor(_ hex: String, commit: Bool) {
@@ -904,20 +905,26 @@ final class EditorState {
         perform { $0.pixelScale = scale }
     }
 
-    /// Live corner-resize of a placed measure (no history) — re-renders so the
-    /// gap value updates as the corner moves.
-    func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+    /// Live handle drag of a placed caliper (no history) — re-renders so the
+    /// measured value updates as a foot or the head moves.
+    func previewMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat) {
         guard var doc = document, doc.layer(id: id)?.measure != nil else { return }
-        doc.updateLayer(id: id) { $0 = MeasureBuilder.updating($0, start: start, end: end) }
+        doc.updateLayer(id: id) {
+            $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
+        }
         if let frame = doc.layer(id: id)?.frame { previewMove = (id, frame) }
         submit(doc)
     }
 
-    /// Mouse-up on a measure corner: one undoable step. Committing the original
-    /// corners is a History no-op (the Esc-cancel path).
-    func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint) {
+    /// Mouse-up on a caliper handle: one undoable step. Committing the original
+    /// values is a History no-op (the Esc-cancel path).
+    func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat) {
         previewMove = nil
-        perform { $0.updateLayer(id: id) { $0 = MeasureBuilder.updating($0, start: start, end: end) } }
+        perform {
+            $0.updateLayer(id: id) {
+                $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
+            }
+        }
     }
 
     var documentPixelScale: CGFloat { document?.pixelScale ?? 1 }
@@ -2364,7 +2371,10 @@ final class EditorState {
         let store = store
         Task.detached(priority: .userInitiated) {
             let underlay = renderer.render(doc, store: store, hiding: id)
-            let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding)
+            // A dragged caliper's label is the live glass overlay, not a baked
+            // pill on the moving sprite.
+            let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding,
+                                               bakeMeasureLabels: false)
             await MainActor.run { [weak self] in
                 guard let self, self.dragPreviewGeneration == generation,
                       let underlay, let sprite else { return }

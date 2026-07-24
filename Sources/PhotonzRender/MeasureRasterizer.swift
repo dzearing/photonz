@@ -3,14 +3,24 @@ import CoreText
 import Foundation
 import PhotonzCore
 
-/// Rasterizes a `MeasureContent` (dimension line, witness lines, end caps, and a
-/// toggleable numeric label) into a transparent-background CGImage. Drawing
-/// happens in the layer's local top-left space — the same space `start`/`end`
-/// are stored in — and the label reads out in the unit chosen by the content,
+/// Rasterizes a caliper (`MeasureContent`) into a transparent-background CGImage:
+/// the squared-U outline (two legs + head bar) with lightly rounded corners, and
+/// — only when `bakeLabel` is set — a flat glass-style label pill baked in.
+///
+/// The live editor draws the pill as a real Liquid-Glass overlay and passes
+/// `bakeLabel: false`, so the caliper bitmap carries no label; export /
+/// thumbnails / region-promote pass `bakeLabel: true` so flattened output still
+/// shows the measurement. Either way, when the label is on the head line is
+/// **split around the chip** (a gap), so a translucent pill never reveals a
+/// stroke behind it.
+///
+/// Drawing happens in the layer's local top-left space — the same space
+/// `start`/`end` are stored in — and the readout uses the content's unit,
 /// divided by `pixelScale` for points.
 public enum MeasureRasterizer {
 
-    public static func rasterize(_ measure: MeasureContent, size: CGSize, pixelScale: CGFloat) -> CGImage? {
+    public static func rasterize(_ measure: MeasureContent, size: CGSize, pixelScale: CGFloat,
+                                 bakeLabel: Bool = true) -> CGImage? {
         let width = Int(size.width.rounded())
         let height = Int(size.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -28,119 +38,102 @@ public enum MeasureRasterizer {
 
         let rgba = RGBA(hex: measure.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
-        // Stroke width is in LOGICAL pixels so a "1px" sizer line aligns with the
-        // image's pixel grid: on a 2× capture one logical pixel is two image px.
-        let scale = pixelScale > 0 ? pixelScale : 1
-        let lineWidth = measure.strokeWidth * scale
+        // Caliper lines are ACTUAL image pixels — a "1px" caliper is exactly one
+        // image pixel (pixel-precise redlining), NOT scaled up by pixelScale.
+        let lineWidth = measure.strokeWidth
         context.setStrokeColor(color)
-        context.setFillColor(color)
         context.setLineWidth(lineWidth)
-        context.setLineCap(.butt)
-        context.setLineJoin(.miter)
+        // Round caps/joins so the corners read refined, not sharp.
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
 
+        let g = measure.caliperGeometry()
+
+        // Chip footprint + the head-line gap it needs (0 when the label is off).
         let labelText = measure.label(pixelScale: pixelScale)
+        var chipSize = CGSize.zero
+        var gapHalf: CGFloat = 0
+        if measure.showLabel {
+            chipSize = chipFootprint(for: labelText, fontSize: measure.labelPointSize,
+                                     padding: measure.labelPadding)
+            gapHalf = min(measure.chipAxisHalfExtent(chipSize: chipSize) + MeasureContent.chipLineGap,
+                          measure.rawDistance / 2)
+        }
 
-        switch measure.form {
-        case .line:
-            let geo = measure.geometry()
-            // Witness/extension lines first (under the dimension line and caps).
-            for seg in geo.extensions {
-                context.move(to: seg.a)
-                context.addLine(to: seg.b)
-            }
-            context.strokePath()
-            // The dimension line.
-            context.move(to: geo.dimension.a)
-            context.addLine(to: geo.dimension.b)
-            context.strokePath()
-            drawCaps(measure: measure, dimension: geo.dimension, lineWidth: lineWidth, color: color, in: context)
-            if measure.showLabel {
-                drawLabel(labelText, at: geo.labelAnchor, plateColor: color, in: context)
-            }
+        // Two rounded L legs; the head line is cut where the chip sits.
+        let mid = g.labelAnchor
+        func gapEdge(toward p: CGPoint) -> CGPoint {
+            let dx = p.x - mid.x, dy = p.y - mid.y
+            let len = hypot(dx, dy)
+            guard len > 0, gapHalf > 0 else { return mid }
+            return CGPoint(x: mid.x + dx / len * gapHalf, y: mid.y + dy / len * gapHalf)
+        }
+        drawLeg(foot: g.footA, head: g.headA, toward: gapEdge(toward: g.headA), in: context)
+        drawLeg(foot: g.footB, head: g.headB, toward: gapEdge(toward: g.headB), in: context)
 
-        case .bracket:
-            // A squared "U": legs in from the start corner, connector across the
-            // gap on the far side, label outside it.
-            let b = measure.bracketGeometry()
-            context.move(to: b.path[0])
-            for p in b.path.dropFirst() { context.addLine(to: p) }
-            context.strokePath()
-            if measure.showLabel {
-                let size = TextRasterizer.naturalSize(
-                    TextContent(string: labelText, fontName: "SF Pro",
-                                fontSize: MeasureContent.labelFontSize))
-                let center = measure.labelCenter(labelSize: size)
-                drawLabel(labelText, at: center, plateColor: color, in: context)
-            }
+        // Flattened pill (export / thumbnails only). On-screen the live glass
+        // overlay fills the same gap.
+        if measure.showLabel, bakeLabel {
+            drawPill(labelText, at: mid, chipSize: chipSize, fontSize: measure.labelPointSize,
+                     borderWidth: lineWidth, colorHex: measure.colorHex, tint: color, in: context)
         }
 
         return context.makeImage()
     }
 
-    /// Perpendicular ticks (the redline convention) or inward arrowheads at the
-    /// dimension line's ends.
-    private static func drawCaps(measure: MeasureContent, dimension: MeasureSegment,
-                                 lineWidth: CGFloat, color: CGColor, in context: CGContext) {
-        let dx = dimension.b.x - dimension.a.x
-        let dy = dimension.b.y - dimension.a.y
-        let length = hypot(dx, dy)
-        guard length > 0 else { return }
-        let ux = dx / length, uy = dy / length // along the line
-
-        switch measure.capStyle {
-        case .ticks:
-            // A serif perpendicular to the line, centered on each endpoint.
-            let nx = -uy, ny = ux // perpendicular unit
-            let reach = measure.capExtent
-            context.setLineWidth(lineWidth)
-            for p in [dimension.a, dimension.b] {
-                context.move(to: CGPoint(x: p.x - nx * reach, y: p.y - ny * reach))
-                context.addLine(to: CGPoint(x: p.x + nx * reach, y: p.y + ny * reach))
-            }
-            context.strokePath()
-
-        case .arrows:
-            // Filled arrowheads pointing inward from each end.
-            let head = max(measure.strokeWidth * 3, 8)
-            let halfW = head * 0.45
-            let nx = -uy, ny = ux
-            func arrow(at tip: CGPoint, along ax: CGFloat, ay: CGFloat) {
-                let baseX = tip.x + ax * head, baseY = tip.y + ay * head
-                context.beginPath()
-                context.move(to: tip)
-                context.addLine(to: CGPoint(x: baseX + nx * halfW, y: baseY + ny * halfW))
-                context.addLine(to: CGPoint(x: baseX - nx * halfW, y: baseY - ny * halfW))
-                context.closePath()
-                context.fillPath()
-            }
-            arrow(at: dimension.a, along: ux, ay: uy)   // points toward b
-            arrow(at: dimension.b, along: -ux, ay: -uy) // points toward a
-        }
+    /// The chip's footprint = measured text (at `fontSize`) + padding on all sides.
+    private static func chipFootprint(for text: String, fontSize: CGFloat, padding: CGFloat) -> CGSize {
+        let size = TextRasterizer.naturalSize(
+            TextContent(string: text, fontName: "SF Pro", fontSize: fontSize))
+        return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
     }
 
-    /// Draws the readout centered at `anchor` on a rounded plate filled with the
-    /// measure color. The glyphs come from `TextRasterizer` (the proven-upright
-    /// path) as a transparent image that's blitted in — drawing CoreText directly
+    /// One caliper leg: `foot → (rounded corner at head) → toward` (the head-line
+    /// cut edge, or the head midpoint when there's no chip gap).
+    private static func drawLeg(foot: CGPoint, head: CGPoint, toward: CGPoint, in context: CGContext) {
+        let legLen = hypot(head.x - foot.x, head.y - foot.y)
+        let armLen = hypot(toward.x - head.x, toward.y - head.y)
+        let radius = max(0, min(MeasureContent.cornerRadius, legLen / 2, armLen))
+        let path = CGMutablePath()
+        path.move(to: foot)
+        if radius > 0.5, armLen > 0.5 {
+            path.addArc(tangent1End: head, tangent2End: toward, radius: radius)
+            path.addLine(to: toward)
+        } else {
+            path.addLine(to: head)
+            if armLen > 0.5 { path.addLine(to: toward) }
+        }
+        context.addPath(path)
+        context.strokePath()
+    }
+
+    /// Draws the flattened readout centered at `anchor`: a neutral translucent
+    /// pill (the glass look minus live blur) with a hairline border in the
+    /// caliper color and caliper-colored text. Glyphs come from `TextRasterizer`
+    /// (the proven-upright path) and are blitted in — drawing CoreText directly
     /// into this already-flipped context renders the text upside down.
-    private static func drawLabel(_ string: String, at anchor: CGPoint,
-                                  plateColor: CGColor, in context: CGContext) {
+    private static func drawPill(_ string: String, at anchor: CGPoint, chipSize: CGSize,
+                                 fontSize: CGFloat, borderWidth: CGFloat, colorHex: String,
+                                 tint: CGColor, in context: CGContext) {
+        let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
+                          width: chipSize.width, height: chipSize.height)
+        let radius = chipSize.height / 2
+        let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        // Neutral translucent fill.
+        context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.92))
+        context.addPath(pill)
+        context.fillPath()
+        // Border in the caliper color, matched to the caliper's stroke width.
+        context.setStrokeColor(tint.copy(alpha: 0.7) ?? tint)
+        context.setLineWidth(max(1, borderWidth))
+        context.addPath(pill)
+        context.strokePath()
+
+        // Caliper-colored text, blitted upright.
         let text = TextContent(string: string, fontName: "SF Pro",
-                               fontSize: MeasureContent.labelFontSize, colorHex: "#FFFFFF")
+                               fontSize: fontSize, colorHex: colorHex)
         let textSize = TextRasterizer.naturalSize(text)
         guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
-
-        let pad = MeasureContent.labelPadding
-        let plateOrigin = CGPoint(x: anchor.x - textSize.width / 2 - pad,
-                                  y: anchor.y - textSize.height / 2 - pad)
-        let plateSize = CGSize(width: textSize.width + 2 * pad, height: textSize.height + 2 * pad)
-        let plate = CGRect(origin: plateOrigin, size: plateSize)
-        context.setFillColor(plateColor)
-        context.addPath(CGPath(roundedRect: plate, cornerWidth: plate.height / 2,
-                               cornerHeight: plate.height / 2, transform: nil))
-        context.fillPath()
-
-        // Blit the upright glyph image. The context is flipped (top-left), so
-        // locally un-flip around the text rect to keep the image upright.
         let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
                               width: textSize.width, height: textSize.height)
         context.saveGState()

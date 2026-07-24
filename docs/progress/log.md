@@ -1809,3 +1809,77 @@ NEXT: `vr6-tier2-primitives` (logged) — `.rng`, `.rrow` (needs `--rl-w`/`--rv-
 rather than a straight lift) and the video timeline, which is a real component
 with real per-page extension. Then the older backlog: ds-consolidated-cleanup,
 supersede-workspace-switcher, reaudit. Reset context before starting.
+
+## 2026-07-23 — Caliper redesign (measure tool → one 3-point caliper)
+
+Reworked the measure/ruler tool so the **caliper** is the single measuring
+interaction. Design spec: `docs/superpowers/specs/2026-07-23-caliper-redesign-design.md`.
+Phase task **16.12**.
+
+WHAT CHANGED
+- **Model (`PhotonzCore/Measure.swift`)**: collapsed to one caliper. `MeasureMode`
+  → `{horizontal, vertical}` (dropped `.free`); **deleted `MeasureForm` and
+  `MeasureCapStyle`**. `MeasureContent` is now `start`/`end` = the two **feet**
+  (the measuring line, leveled to one axis) + **`headOffset`** (signed
+  perpendicular distance to the head/chip bar; sign = side, so no invert). New
+  `caliperGeometry()` → feet + head corners + label anchor (head midpoint) +
+  squared-U `path`. `MeasureBuilder` updated (added `updating(…, headOffset:)`;
+  `resized` scales the offset with the perpendicular dimension). **Codable
+  migration**: legacy `line`/`bracket`/`free` payloads decode and coerce to a
+  valid H/V caliper (explicit `CodingKeys` keep the old keys decode-only; custom
+  `encode`).
+- **Rasterizer (`PhotonzRender/MeasureRasterizer.swift`)**: squared-U with
+  lightly **rounded corners** (two `addArc(tangent…)` L-legs). When the label is
+  on, the **head line is cut around the chip** (a gap) so a translucent pill
+  never reveals a stroke behind it. New `bakeLabel` param: draws a **flat
+  glass-style pill** (neutral translucent fill + hairline caliper-color border +
+  caliper-colored text) — export/thumbnails only.
+- **Export path**: threaded **`bakeMeasureLabels`** through
+  `DocumentRenderer.compositeImage → ciImage` (folded into the measure raster
+  cache variant). `renderInteractive` + the move-drag `renderSprite` + the
+  drag-underlay pass **false** (the live glass overlay is the on-screen label);
+  `render(…)`/`render(scale:)`/thumbnails pass **true** so flattened/exported
+  output keeps the measurement. Perf: interactive edit re-render median **7.5ms**
+  (12MP/10-layer), unchanged — the flag only adds an early-out.
+- **App (`CanvasView.swift`)**: **3 handles** (two feet + head) replace the 4 box
+  corners (`MeasureHandleDrag`, `measureHandles`). Create drag → feet leveled,
+  axis = dominant drag direction, head offset default with side from the drag's
+  perpendicular drift. Feet snap via the existing `EdgeSnapping`/`EdgeMap` (⌘
+  bypass); the head is a free offset. **Hover snap dot** (new `NSTrackingArea` +
+  `mouseMoved`/`flagsChanged`) magnetizes to the nearest edge, ⌘ = free. **Live
+  glass label pill** = `MeasureLabelView` (`NSVisualEffectView .withinWindow`,
+  hairline border, caliper-colored text) hosted in the canvas, repositioned every
+  overlay refresh from live geometry (tracks create/handle/move drags + pan/zoom;
+  pointer passes through).
+- **Inspector (`LayersPanel.swift`)** trimmed to Color · Thickness · Unit ·
+  Show-label; removed Style/Direction/invert. `EditorState` lost
+  `setMeasureForm`/`invertMeasure`/`setMeasureAxis`.
+
+TESTS: rewrote `MeasureTests` (geometry/units/migration/builder) and
+`MeasureRenderingTests` (rounded U, head-gap present on the interactive path, flat
+pill baked only with the flag, upright text). Full suite **748 green**.
+
+OPEN / FOLLOW-UPS: interactive feel verified in the dev app (snap dot, drag,
+glass pill, 3-handle edit, export round-trip). Possible upgrade: swap the pill's
+`NSVisualEffectView` for a SwiftUI `.glassEffect` host if the exact Liquid-Glass
+look is wanted (current frosted look reliably blurs the canvas). Tune
+`labelFontSize`/`defaultHeadOffset`/corner radius to taste.
+
+USER-FEEDBACK ROUND (2026-07-23, same session): fixed live bugs found in the dev
+app. (1) Initial create no longer previews the whole U — only the red measuring
+line. (2) The live glass pill now **scales with zoom** (font/padding/border) so it
+reads as part of the content instead of a fixed-size overlay; pill material
+switched `.hudWindow` → `.popover` (neutral, matches the baked pill). (3) The label
+chip's footprint is now **hittable** (`Layer.contains` adds `estimatedLabelSize`
+around the head anchor) so clicking the pill selects the caliper. (4) **Creation
+reworked to a 3-click placement** (`MeasurePlacement` state machine in
+`CanvasView`): click foot A → move → click foot B → move → click sets head
+depth/direction; each on mouse-up, ⎋ cancels, snap dot + preview persist between
+clicks; the old press-drag path (`measureDrag`/`caliperForCreate`/
+`refreshMeasurePreview`) was removed. (5) On completion the tool **auto-reverts to
+Select** and selects the new caliper (`addMeasure` now `setTool(.select)` +
+selects; reverses the 17.12 sticky decision). (6) **Border precision**: the pill
+border width now equals the caliper stroke's on-screen width (`strokeWidth ×
+pixelScale × zoom`), and the baked pill border matches the caliper `lineWidth`, so
+a "1px" caliper reads as a precise 1px and the chip border matches the strokes at
+every zoom. 750 tests green (+2 chip-hit tests).

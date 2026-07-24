@@ -1,32 +1,20 @@
 import CoreGraphics
 import Foundation
 
-/// What a measure reports and how its witness lines are drawn. `free` measures
-/// the straight point-to-point distance; `horizontal`/`vertical` measure only
-/// the dx/dy span (CAD-style redline) with extension lines projecting from any
-/// off-axis reference point onto the dimension line.
+/// Which axis a caliper measures. The measuring line (the two feet) is always
+/// horizontal or vertical; the axis picks which. There is no free/diagonal mode
+/// — the caliper is the one opinionated measure tool.
 public enum MeasureMode: String, CaseIterable, Hashable, Codable, Sendable {
-    case free
     case horizontal
     case vertical
-}
-
-/// How a measure is drawn. `line` is a straight dimension line (with witness
-/// lines in the locked modes). `bracket` is a squared "U" that wraps the gap
-/// between two opposite corners — legs reach in from the start corner, the
-/// closed connector spans the measured gap on the far side, and the label sits
-/// outside it. Built for redlining the space between two UI elements.
-public enum MeasureForm: String, CaseIterable, Hashable, Codable, Sendable {
-    case line
-    case bracket
 }
 
 /// The unit a measure's readout is shown in. Both read out as "px" — the
 /// distinction is logical vs device pixels, matching how CSS treats `px` as a
 /// logical unit. `points` divides the raw bitmap distance by the document's
 /// `pixelScale`, so a 2× Retina capture reads in LOGICAL pixels (on-screen /
-/// design size — the default); `pixels` shows the raw DEVICE-pixel distance
-/// (2× larger on Retina — an opt-in for when you truly want bitmap pixels).
+/// design size); `pixels` shows the raw DEVICE-pixel distance (2× larger on
+/// Retina — an opt-in for when you truly want bitmap pixels).
 public enum MeasureUnit: String, CaseIterable, Hashable, Codable, Sendable {
     case points
     case pixels
@@ -36,99 +24,170 @@ public enum MeasureUnit: String, CaseIterable, Hashable, Codable, Sendable {
     public var suffix: String { "px" }
 }
 
-/// How the ends of the dimension line are terminated.
-public enum MeasureCapStyle: String, CaseIterable, Hashable, Codable, Sendable {
-    /// Perpendicular serif/tick marks (the redline / CAD convention).
-    case ticks
-    /// Inward-pointing arrowheads.
-    case arrows
-}
-
-/// A directed line segment, used for a measure's dimension and witness lines.
-/// A small named type (not a tuple) so geometry results stay `Equatable`.
-public struct MeasureSegment: Equatable, Sendable {
-    public var a: CGPoint
-    public var b: CGPoint
-
-    public init(_ a: CGPoint, _ b: CGPoint) {
-        self.a = a
-        self.b = b
-    }
-}
-
-/// The drawable geometry of a measure: the main dimension line, zero–two
-/// extension (witness) lines connecting off-axis reference points to it, and
-/// the anchor where the numeric label is centered. All in the same coordinate
-/// space as the input points (layer-local or document).
-public struct MeasureGeometry: Equatable, Sendable {
-    public var dimension: MeasureSegment
-    public var extensions: [MeasureSegment]
+/// The drawable geometry of a caliper: the two **feet** on the measured space
+/// (the measuring line), the two **head** corners (the closed, perpendicular
+/// outer end offset from the feet), and the label anchor at the head midpoint.
+/// All in the same coordinate space as the input points (layer-local or doc).
+///
+/// The squared-U outline is `footA → headA → headB → footB`: legs point from the
+/// head down to the feet, and the chip sits centered on the head line.
+public struct CaliperGeometry: Equatable, Sendable {
+    public var footA: CGPoint
+    public var footB: CGPoint
+    public var headA: CGPoint
+    public var headB: CGPoint
+    /// Head-line midpoint — where the chip/label centers (the outer edge).
     public var labelAnchor: CGPoint
+    public var axis: MeasureMode
 
-    public init(dimension: MeasureSegment, extensions: [MeasureSegment], labelAnchor: CGPoint) {
-        self.dimension = dimension
-        self.extensions = extensions
+    public init(footA: CGPoint, footB: CGPoint, headA: CGPoint, headB: CGPoint,
+                labelAnchor: CGPoint, axis: MeasureMode) {
+        self.footA = footA
+        self.footB = footB
+        self.headA = headA
+        self.headB = headB
         self.labelAnchor = labelAnchor
+        self.axis = axis
     }
+
+    /// The open squared-U outline, corner order `footA → headA → headB → footB`.
+    public var path: [CGPoint] { [footA, headA, headB, footB] }
 }
 
-/// A measurement annotation: two reference points plus how the span between
-/// them is reported. Mirrors `AnnotationContent`'s two-endpoint shape (start/end
-/// are layer-local once built), but carries its own readout model — mode, unit,
-/// decimals, and a toggleable label — so it can live as its own `LayerContent`.
+/// A measurement annotation: the two feet of a measuring line plus a signed
+/// perpendicular `headOffset` to the head/chip bar, and how the span is reported.
+/// Mirrors the two-endpoint layer pattern (`start`/`end` = the feet, layer-local
+/// once built) but carries its own readout model — mode, unit, decimals, and a
+/// toggleable label.
 public struct MeasureContent: Hashable, Codable, Sendable {
-    /// Reference points, layer-local once placed by `MeasureBuilder`.
+    /// The two feet of the measuring line, on the measured space; layer-local
+    /// once placed. Kept level (shared cross-axis coordinate) so the line is
+    /// exactly horizontal or vertical.
     public var start: CGPoint
     public var end: CGPoint
+    /// Signed perpendicular distance from the feet line to the head/chip bar. Its
+    /// sign is the caliper's direction (which side the head sits) — an invert
+    /// control is redundant.
+    public var headOffset: CGFloat
     public var mode: MeasureMode
     public var strokeWidth: CGFloat
     public var colorHex: String
-    /// Whether the numeric size readout is drawn. The label is part of the
-    /// layer, toggleable like any other style.
+    /// Whether the numeric size readout is drawn. The label is always shown in the
+    /// UI now (no toggle); the field stays for internal/legacy use.
     public var showLabel: Bool
     public var unit: MeasureUnit
     public var decimals: Int
-    public var capStyle: MeasureCapStyle
-    public var form: MeasureForm
+    /// Multiplier on the base label font/pill size, driven by the inspector's
+    /// "Label size" slider. 1 = default.
+    public var labelScale: CGFloat
 
-    public init(start: CGPoint = .zero, end: CGPoint = .zero, mode: MeasureMode = .free,
-                strokeWidth: CGFloat = 2, colorHex: String = "#FF3B30", showLabel: Bool = true,
-                unit: MeasureUnit = .points, decimals: Int = 0, capStyle: MeasureCapStyle = .ticks,
-                form: MeasureForm = .line) {
+    public init(start: CGPoint = .zero, end: CGPoint = .zero,
+                headOffset: CGFloat = MeasureContent.defaultHeadOffset,
+                mode: MeasureMode = .horizontal, strokeWidth: CGFloat = 1,
+                colorHex: String = "#FF3B30", showLabel: Bool = true,
+                unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1) {
         self.start = start
         self.end = end
+        self.headOffset = headOffset
         self.mode = mode
         self.strokeWidth = strokeWidth
         self.colorHex = colorHex
         self.showLabel = showLabel
         self.unit = unit
         self.decimals = decimals
-        self.capStyle = capStyle
-        self.form = form
+        self.labelScale = labelScale
     }
 
+    enum CodingKeys: String, CodingKey {
+        case start, end, headOffset, mode, strokeWidth, colorHex, showLabel, unit, decimals, labelScale
+        // Legacy keys (decode-only) from the pre-caliper measure model.
+        case form, capStyle
+    }
+
+    /// Explicit so the legacy-only `CodingKeys` cases don't block synthesis; only
+    /// the current caliper keys are written.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(start, forKey: .start)
+        try c.encode(end, forKey: .end)
+        try c.encode(headOffset, forKey: .headOffset)
+        try c.encode(mode, forKey: .mode)
+        try c.encode(strokeWidth, forKey: .strokeWidth)
+        try c.encode(colorHex, forKey: .colorHex)
+        try c.encode(showLabel, forKey: .showLabel)
+        try c.encode(unit, forKey: .unit)
+        try c.encode(decimals, forKey: .decimals)
+        try c.encode(labelScale, forKey: .labelScale)
+    }
+
+    /// Decodes new caliper payloads directly and **migrates** legacy measures
+    /// (the old box-corner `line`/`bracket`/`free` model) to the nearest H/V
+    /// caliper. New payloads carry `headOffset`; legacy ones don't.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        start = try c.decode(CGPoint.self, forKey: .start)
-        end = try c.decode(CGPoint.self, forKey: .end)
-        mode = try c.decode(MeasureMode.self, forKey: .mode)
+        let s = try c.decode(CGPoint.self, forKey: .start)
+        let e = try c.decode(CGPoint.self, forKey: .end)
         strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
         colorHex = try c.decode(String.self, forKey: .colorHex)
         showLabel = try c.decode(Bool.self, forKey: .showLabel)
         unit = try c.decode(MeasureUnit.self, forKey: .unit)
         decimals = try c.decode(Int.self, forKey: .decimals)
-        capStyle = try c.decode(MeasureCapStyle.self, forKey: .capStyle)
-        // `form` postdates the type; older payloads default to the straight line.
-        form = try c.decodeIfPresent(MeasureForm.self, forKey: .form) ?? .line
+        labelScale = try c.decodeIfPresent(CGFloat.self, forKey: .labelScale) ?? 1
+
+        // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
+        let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
+
+        if let offset = try c.decodeIfPresent(CGFloat.self, forKey: .headOffset) {
+            // New caliper payload.
+            start = s
+            end = e
+            headOffset = offset
+            mode = MeasureMode(rawValue: modeString ?? "") ?? Self.dominantAxis(from: s, to: e)
+            return
+        }
+
+        // Legacy payload → migrate to a caliper.
+        let form = try c.decodeIfPresent(String.self, forKey: .form) ?? "line"
+        let legacyMode = MeasureMode(rawValue: modeString ?? "")
+        let axis = legacyMode ?? Self.dominantAxis(from: s, to: e)
+        mode = axis
+        if form == "bracket" {
+            // Old bracket: `start` was a head-side corner, `end` the opposite
+            // foot-side corner. Feet lie on the end side; the head sat on the
+            // start side. Re-express as (feet line + signed offset to the head).
+            switch axis {
+            case .horizontal:
+                start = CGPoint(x: s.x, y: e.y)
+                end = CGPoint(x: e.x, y: e.y)
+                headOffset = s.y - e.y
+            case .vertical:
+                start = CGPoint(x: e.x, y: s.y)
+                end = CGPoint(x: e.x, y: e.y)
+                headOffset = s.x - e.x
+            }
+        } else {
+            // Old line/free: keep the two points as the feet (leveled by
+            // geometry) and give the head a default reach.
+            start = s
+            end = e
+            headOffset = Self.defaultHeadOffset
+        }
+    }
+
+    /// The axis whose span dominates the drag from `s` to `e`.
+    public static func dominantAxis(from s: CGPoint, to e: CGPoint) -> MeasureMode {
+        abs(e.x - s.x) >= abs(e.y - s.y) ? .horizontal : .vertical
     }
 }
 
 extension MeasureContent {
-    /// The measured span in raw document pixels: euclidean for `free`, the
-    /// absolute dx/dy for the locked modes.
+    /// Default perpendicular reach of the legs (feet → head), in layer-local
+    /// units, used when a caliper is first created.
+    public static let defaultHeadOffset: CGFloat = 28
+
+    /// The measured span in raw document pixels: the feet line's axis extent.
     public var rawDistance: CGFloat {
         switch mode {
-        case .free: hypot(end.x - start.x, end.y - start.y)
         case .horizontal: abs(end.x - start.x)
         case .vertical: abs(end.y - start.y)
         }
@@ -144,139 +203,119 @@ extension MeasureContent {
         }
     }
 
-    /// The formatted readout, e.g. "120 px" (both units read out in px; the
-    /// Logical/Actual mode is what differs, not the suffix).
+    /// The formatted readout, e.g. "120 px".
     public func label(pixelScale: CGFloat) -> String {
         let value = displayDistance(pixelScale: pixelScale)
         return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix)
     }
 
-    /// Drawable geometry for this measure's own reference points.
-    public func geometry() -> MeasureGeometry {
-        Self.geometry(mode: mode, start: start, end: end)
+    /// Drawable geometry for this measure's own points (feet + head + anchor).
+    public func caliperGeometry() -> CaliperGeometry {
+        Self.caliperGeometry(mode: mode, start: start, end: end, headOffset: headOffset)
     }
 
-    /// Pure geometry from two reference points: where the dimension line and any
-    /// witness lines fall, and where the label centers. The locked modes level
-    /// the dimension line onto the *end* point's axis and drop a witness line
-    /// from the start point when it sits off that axis.
-    public static func geometry(mode: MeasureMode, start s: CGPoint, end e: CGPoint) -> MeasureGeometry {
-        func mid(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
-            CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
-        }
+    /// Pure geometry from the two feet + a signed head offset. The feet are
+    /// leveled onto a single cross-axis value (start's) so the measuring line is
+    /// exactly horizontal/vertical; the head is that line shifted perpendicular
+    /// by `headOffset`; the label anchors at the head midpoint.
+    public static func caliperGeometry(mode: MeasureMode, start s: CGPoint, end e: CGPoint,
+                                       headOffset: CGFloat) -> CaliperGeometry {
         switch mode {
-        case .free:
-            return MeasureGeometry(dimension: MeasureSegment(s, e), extensions: [], labelAnchor: mid(s, e))
         case .horizontal:
-            let y = e.y
-            let dim = MeasureSegment(CGPoint(x: s.x, y: y), CGPoint(x: e.x, y: y))
-            var extensions: [MeasureSegment] = []
-            if s.y != y { extensions.append(MeasureSegment(s, CGPoint(x: s.x, y: y))) }
-            return MeasureGeometry(dimension: dim, extensions: extensions, labelAnchor: mid(dim.a, dim.b))
+            let footY = s.y
+            let headY = footY + headOffset
+            return CaliperGeometry(
+                footA: CGPoint(x: s.x, y: footY), footB: CGPoint(x: e.x, y: footY),
+                headA: CGPoint(x: s.x, y: headY), headB: CGPoint(x: e.x, y: headY),
+                labelAnchor: CGPoint(x: (s.x + e.x) / 2, y: headY), axis: .horizontal)
         case .vertical:
-            let x = e.x
-            let dim = MeasureSegment(CGPoint(x: x, y: s.y), CGPoint(x: x, y: e.y))
-            var extensions: [MeasureSegment] = []
-            if s.x != x { extensions.append(MeasureSegment(s, CGPoint(x: x, y: s.y))) }
-            return MeasureGeometry(dimension: dim, extensions: extensions, labelAnchor: mid(dim.a, dim.b))
+            let footX = s.x
+            let headX = footX + headOffset
+            return CaliperGeometry(
+                footA: CGPoint(x: footX, y: s.y), footB: CGPoint(x: footX, y: e.y),
+                headA: CGPoint(x: headX, y: s.y), headB: CGPoint(x: headX, y: e.y),
+                labelAnchor: CGPoint(x: headX, y: (s.y + e.y) / 2), axis: .vertical)
         }
     }
 
-    /// The squared-U bracket between `start` and `end` (opposite corners): the
-    /// four-point open path (leg → connector → leg), the connector midpoint where
-    /// the label anchors, and the outward unit pointing away from the opening (the
-    /// side the label sits on). Mode selects which axis the connector spans.
-    ///
-    /// The closed back (connector + label) sits on the START corner's side and the
-    /// U opens toward the END. For the natural top-left→bottom-right drag that puts
-    /// the label ABOVE (horizontal) or on the LEFT (vertical); the invert control
-    /// swaps start/end to flip it to the other side.
-    public func bracketGeometry() -> (path: [CGPoint], connectorMid: CGPoint, outward: CGVector) {
-        let x0 = start.x, y0 = start.y, x1 = end.x, y1 = end.y
-        if mode == .horizontal {
-            // Legs vertical (at x0 and x1), connector horizontal at y0 (the start
-            // side); legs drop toward y1. Label sits outside, away from y1.
-            let path = [CGPoint(x: x0, y: y1), CGPoint(x: x0, y: y0),
-                        CGPoint(x: x1, y: y0), CGPoint(x: x1, y: y1)]
-            return (path, CGPoint(x: (x0 + x1) / 2, y: y0), CGVector(dx: 0, dy: y0 >= y1 ? 1 : -1))
-        } else {
-            // Legs horizontal (at y0 and y1), connector vertical at x0 (the start
-            // side); legs reach toward x1. Label sits outside, away from x1.
-            let path = [CGPoint(x: x1, y: y0), CGPoint(x: x0, y: y0),
-                        CGPoint(x: x0, y: y1), CGPoint(x: x1, y: y1)]
-            return (path, CGPoint(x: x0, y: (y0 + y1) / 2), CGVector(dx: x0 >= x1 ? 1 : -1, dy: 0))
-        }
+    /// Where the chip/label centers: the head-line midpoint (the outer edge).
+    public var labelAnchor: CGPoint { caliperGeometry().labelAnchor }
+
+    /// The head handle's position (document/layer space): the head midpoint,
+    /// dragged perpendicular to change the offset (distance) and side.
+    public var headHandle: CGPoint { labelAnchor }
+
+    /// The along-axis half-length of the chip's footprint, given its size — the
+    /// extent the (translucent) pill blocks on the head line. Horizontal chips
+    /// block their width; vertical head lines are blocked by the chip height.
+    public func chipAxisHalfExtent(chipSize: CGSize) -> CGFloat {
+        (mode == .horizontal ? chipSize.width : chipSize.height) / 2
     }
 
-    /// Where the label plate centers, given its size. Line: on the dimension line.
-    /// Bracket: outside the connector, offset by the plate half-extent + a gap.
-    public func labelCenter(labelSize: CGSize) -> CGPoint {
-        switch form {
-        case .line:
-            return geometry().labelAnchor
-        case .bracket:
-            let b = bracketGeometry()
-            let reach = (abs(b.outward.dx) > 0 ? labelSize.width : labelSize.height) / 2 + Self.labelOutwardGap
-            return CGPoint(x: b.connectorMid.x + b.outward.dx * reach,
-                           y: b.connectorMid.y + b.outward.dy * reach)
-        }
-    }
+    /// Base label text point size (in image pixels) — the default label size, at
+    /// `labelScale` 1. Multiplied by `labelScale` (the inspector slider) for the
+    /// effective size. Shared by the baked pill and the live glass overlay so the
+    /// head-line gap always matches the pill.
+    public static let labelFontSize: CGFloat = 18
+    /// Base padding inside the label pill, each side (image pixels).
+    public static let labelPadding: CGFloat = 8
 
-    /// Gap between a bracket's connector and its outside label plate.
-    public static let labelOutwardGap: CGFloat = 6
+    /// The effective label font size = base × `labelScale`.
+    public var labelPointSize: CGFloat { Self.labelFontSize * labelScale }
+    /// The effective pill padding = base × `labelScale` (so proportions hold).
+    public var labelPadding: CGFloat { Self.labelPadding * labelScale }
+    /// Allowed range for the label-size slider.
+    public static let labelScaleRange: ClosedRange<CGFloat> = 0.5...5
+    /// The label-size slider's range in effective PIXELS (what the inspector shows).
+    public static let labelSizeRangePx: ClosedRange<CGFloat> = 8...64
+    /// Extra clearance between the head line's cut ends and the chip, so a
+    /// translucent pill never reveals a stroke behind it.
+    public static let chipLineGap: CGFloat = 5
+    /// Nominal rounded-corner radius at the two head↔leg joins (clamped to the
+    /// caliper's size at draw time).
+    public static let cornerRadius: CGFloat = 5
 
-    /// Label text plate point size. Fixed (independent of the document's
-    /// `pixelScale`) so a measure's frame never shifts when the unit toggles.
-    public static let labelFontSize: CGFloat = 24
-    /// Padding inside the label plate, each side.
-    public static let labelPadding: CGFloat = 7
-
-    /// Perpendicular reach of the end caps (ticks/arrowheads) past the line.
-    public var capExtent: CGFloat { (strokeWidth * 1.5 + 4).rounded(.up) }
-
-    /// How far drawing can extend past the reference-point bounding box: half the
-    /// stroke or the cap reach, whichever is larger.
-    public var renderPadding: CGFloat {
-        max(strokeWidth / 2, capExtent).rounded(.up)
-    }
-
-    /// A generous estimate of the label plate's footprint, used by the builder to
+    /// A generous estimate of the chip's footprint, used by the builder to
     /// reserve frame space. Sized from the raw-pixel magnitude (an upper bound on
     /// digit count across units), so it stays stable when the unit/scale changes.
     /// The rasterizer measures the real text and centers within this reservation.
     public var estimatedLabelSize: CGSize {
         let digits = max(1, String(Int(rawDistance.rounded())).count)
         let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
-        let w = chars * Self.labelFontSize * 0.62 + 2 * Self.labelPadding
-        let h = Self.labelFontSize * 1.3 + 2 * Self.labelPadding
+        let w = chars * labelPointSize * 0.62 + 2 * labelPadding
+        let h = labelPointSize * 1.3 + 2 * labelPadding
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
+    }
+
+    /// How far drawing can extend past the caliper's point bounding box: half the
+    /// stroke plus the corner radius, so rounded joins never clip.
+    public var renderPadding: CGFloat {
+        (strokeWidth / 2 + Self.cornerRadius + 2).rounded(.up)
     }
 }
 
-/// Builds and edits measure layers, mirroring `AnnotationBuilder`: the frame is
-/// the reference-point bounding box padded for cap overhang, and start/end are
-/// re-expressed layer-local so the drawn shape scales with the frame.
+/// Builds and edits caliper layers, mirroring `AnnotationBuilder`: the frame is
+/// the caliper's bounding box (feet + head + reserved chip) padded for stroke
+/// overhang, and the feet are re-expressed layer-local so the shape scales with
+/// the frame. `headOffset` is a delta, so it's translation-invariant.
 public enum MeasureBuilder {
 
-    /// The layer a placement from `start` to `end` (document coordinates)
-    /// creates. Frame = padded bbox; endpoints become layer-local.
+    /// The layer a placement whose feet run from `start` to `end` (document
+    /// coordinates) creates. Frame = padded bbox (+ chip reservation); feet
+    /// become layer-local.
     public static func layer(content: MeasureContent, from start: CGPoint, to end: CGPoint) -> Layer {
         var content = content
-        // Adopt the real span up front so `rawDistance`-derived metrics
-        // (renderPadding, estimatedLabelSize) reflect THIS measure, not the
-        // input content's stale endpoints. Endpoints are re-localized below.
         content.start = start
         content.end = end
+        let g = content.caliperGeometry()
         let pad = content.renderPadding
-        var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
-                         width: abs(end.x - start.x), height: abs(end.y - start.y))
-            .insetBy(dx: -pad, dy: -pad)
-        // Reserve room for the label plate (on the line, or outside a bracket's
-        // connector) so the number isn't clipped at the frame edge.
+        var box = boundingBox(of: [g.footA, g.footB, g.headA, g.headB]).insetBy(dx: -pad, dy: -pad)
+        // Reserve room for the chip centered on the head so the number isn't
+        // clipped at the frame edge.
         if content.showLabel {
             let size = content.estimatedLabelSize
-            let center = content.labelCenter(labelSize: size)
-            box = box.union(CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+            box = box.union(CGRect(x: g.labelAnchor.x - size.width / 2,
+                                   y: g.labelAnchor.y - size.height / 2,
                                    width: size.width, height: size.height))
         }
         box.size.width = max(box.size.width, 1)
@@ -286,8 +325,18 @@ public enum MeasureBuilder {
         return Layer(name: "Measure", content: .measure(content), frame: box)
     }
 
-    /// Redraw a measure between document-space `start` and `end`: identity,
-    /// name, and style survive; the frame is rebuilt with fresh padding.
+    private static func boundingBox(of points: [CGPoint]) -> CGRect {
+        guard let first = points.first else { return .zero }
+        var minX = first.x, minY = first.y, maxX = first.x, maxY = first.y
+        for p in points.dropFirst() {
+            minX = min(minX, p.x); minY = min(minY, p.y)
+            maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+        }
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    /// Redraw a caliper whose feet run between document-space `start` and `end`:
+    /// identity, name, style, and `headOffset` survive; the frame is rebuilt.
     public static func updating(_ layer: Layer, start: CGPoint, end: CGPoint) -> Layer {
         guard let m = layer.measure else { return layer }
         let rebuilt = self.layer(content: m, from: start, to: end)
@@ -297,24 +346,43 @@ public enum MeasureBuilder {
         return updated
     }
 
-    /// Handle-resize remap: reference points scale proportionally into the
-    /// proposed frame, then the layer is rebuilt so caps keep full padding.
+    /// Redraw a caliper with a new signed `headOffset` (the head-handle drag),
+    /// keeping the feet anchored in document space.
+    public static func updating(_ layer: Layer, start: CGPoint, end: CGPoint,
+                                headOffset: CGFloat) -> Layer {
+        guard var m = layer.measure else { return layer }
+        m.headOffset = headOffset
+        var updated = layer
+        updated.content = .measure(m)
+        return updating(updated, start: start, end: end)
+    }
+
+    /// Handle-resize remap: feet scale proportionally into the proposed frame and
+    /// `headOffset` scales with the perpendicular dimension, then the layer is
+    /// rebuilt so strokes keep full padding. (Measures don't expose frame handles,
+    /// so this is only hit by whole-document resize.)
     public static func resized(_ layer: Layer, to frame: CGRect) -> Layer {
-        guard let m = layer.measure,
+        guard var m = layer.measure,
               layer.frame.width > 0, layer.frame.height > 0 else { return layer }
         func remap(_ p: CGPoint) -> CGPoint {
             CGPoint(x: frame.minX + p.x / layer.frame.width * frame.width,
                     y: frame.minY + p.y / layer.frame.height * frame.height)
         }
-        return updating(layer, start: remap(m.start), end: remap(m.end))
+        let ratio = m.mode == .horizontal ? frame.height / layer.frame.height
+                                          : frame.width / layer.frame.width
+        m.headOffset *= ratio
+        // remap() maps a layer-local point into the new frame's document space.
+        let startDoc = remap(m.start), endDoc = remap(m.end)
+        var updated = layer
+        updated.content = .measure(m)
+        return updating(updated, start: startDoc, end: endDoc)
     }
 
-    /// Style/readout edit on an existing measure: reference points stay anchored
-    /// in document space while the frame re-pads for any new stroke width.
+    /// Style/readout edit on an existing measure: feet stay anchored in document
+    /// space while the frame re-pads for any new stroke width.
     public static func restyled(_ layer: Layer, colorHex: String? = nil, strokeWidth: CGFloat? = nil,
                                 showLabel: Bool? = nil, unit: MeasureUnit? = nil, decimals: Int? = nil,
-                                mode: MeasureMode? = nil, capStyle: MeasureCapStyle? = nil,
-                                form: MeasureForm? = nil) -> Layer {
+                                mode: MeasureMode? = nil, labelScale: CGFloat? = nil) -> Layer {
         guard var m = layer.measure,
               let start = layer.measureEndpoint(.start),
               let end = layer.measureEndpoint(.end) else { return layer }
@@ -324,8 +392,7 @@ public enum MeasureBuilder {
         if let unit { m.unit = unit }
         if let decimals { m.decimals = decimals }
         if let mode { m.mode = mode }
-        if let capStyle { m.capStyle = capStyle }
-        if let form { m.form = form }
+        if let labelScale { m.labelScale = labelScale }
         var updated = layer
         updated.content = .measure(m)
         return updating(updated, start: start, end: end)

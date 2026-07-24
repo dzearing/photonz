@@ -32,75 +32,90 @@ struct MeasureRenderingTests {
     }
 
     private func isRed(_ p: (r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool {
-        p.r > 200 && p.g < 80 && p.b < 80
+        p.r > 200 && p.g < 80 && p.b < 80 && p.a > 40
     }
     private func isWhite(_ p: (r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool {
         p.r > 240 && p.g > 240 && p.b > 240
     }
+    /// Scans a rectangular band for any pixel matching `predicate`.
+    private func anyPixel(_ img: CGImage, xs: ClosedRange<Int>, ys: ClosedRange<Int>,
+                          where predicate: ((r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool) -> Bool {
+        for y in ys where y >= 0 && y < img.height {
+            for x in xs where x >= 0 && x < img.width {
+                if predicate(pixel(img, x: x, y: y)) { return true }
+            }
+        }
+        return false
+    }
 
     private func render(_ content: MeasureContent, from: CGPoint, to: CGPoint,
-                        canvas: Int = 260, pixelScale: CGFloat = 1) -> CGImage {
+                        canvas: Int = 300, pixelScale: CGFloat = 1, bakeLabels: Bool = true) -> CGImage {
         let store = ImageStore()
         let base = store.register(solidImage(width: canvas, height: canvas, r: 255, g: 255, b: 255))
         var doc = PhotonzDocument.withBaseImage(base, pixelScale: pixelScale)
         doc.addLayer(MeasureBuilder.layer(content: content, from: from, to: to))
-        return DocumentRenderer().render(doc, store: store)!
+        return DocumentRenderer().render(doc, store: store, bakeMeasureLabels: bakeLabels)!
     }
 
     private func content(mode: MeasureMode, showLabel: Bool = true, strokeWidth: CGFloat = 6) -> MeasureContent {
         MeasureContent(mode: mode, strokeWidth: strokeWidth, colorHex: "#FF0000", showLabel: showLabel)
     }
 
-    @Test func dimensionLineStrokesBetweenEndpoints() {
-        let out = render(content(mode: .horizontal),
+    // Feet run at y=130 from x=20..240; head sits +28 below at y=158.
+
+    @Test func caliperStrokesTheLegsAndHeadLine() {
+        let out = render(content(mode: .horizontal, showLabel: false),
                          from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130))
-        #expect(isRed(pixel(out, x: 50, y: 130)), "the dimension line should be stroked")
-        #expect(isWhite(pixel(out, x: 50, y: 105)), "above the line (clear of the plate) is untouched")
-        #expect(isWhite(pixel(out, x: 10, y: 130)), "before the start point is untouched")
+        #expect(isRed(pixel(out, x: 20, y: 145)), "the left leg should be stroked")
+        #expect(isRed(pixel(out, x: 240, y: 145)), "the right leg should be stroked")
+        #expect(isRed(pixel(out, x: 130, y: 158)), "the head line spans the middle (no label ⇒ no gap)")
+        #expect(isWhite(pixel(out, x: 130, y: 100)), "above the caliper is untouched")
     }
 
-    @Test func labelPlateRendersWhenEnabledAndIsAbsentWhenDisabled() {
-        // A point just above the dimension line but inside the centered plate band.
-        let labelled = render(content(mode: .horizontal, showLabel: true),
-                              from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130))
-        #expect(isRed(pixel(labelled, x: 130, y: 112)), "the label plate fills above the line")
-
-        // White text glyphs exist on the red plate (scan the plate interior for a
-        // white pixel surrounded by red fill).
-        var foundGlyph = false
-        for x in 110...150 where isWhite(pixel(labelled, x: x, y: 130)) { foundGlyph = true }
-        #expect(foundGlyph, "white label text should render on the plate")
-
-        let bare = render(content(mode: .horizontal, showLabel: false),
-                          from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130))
-        #expect(isWhite(pixel(bare, x: 130, y: 112)), "no plate when the label is toggled off")
+    @Test func bakedPillFillsTheHeadGapWithColoredText() {
+        // With the label baked, the head-line center carries the pill (colored
+        // text + hairline border), so the chip band shows caliper-colored ink.
+        let out = render(content(mode: .horizontal, showLabel: true),
+                         from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130), bakeLabels: true)
+        #expect(anyPixel(out, xs: 105...155, ys: 150...166, where: isRed),
+                "the baked pill draws caliper-colored ink at the head")
     }
 
-    @Test func witnessLineDropsFromAnOffsetStart() {
-        // Start sits 60px above the dimension line (which levels onto end.y); a
-        // vertical witness line connects it down to the line.
-        let out = render(content(mode: .horizontal),
-                         from: CGPoint(x: 40, y: 70), to: CGPoint(x: 200, y: 130))
-        #expect(isRed(pixel(out, x: 40, y: 95)), "witness line drops from the offset start")
-        #expect(isWhite(pixel(out, x: 70, y: 95)), "no witness line away from the start column")
+    @Test func interactiveOmitsThePillAndCutsTheHeadLine() {
+        // bakeLabel:false is the on-screen path — the head line is cut for the
+        // (live overlay) chip, so its center is transparent, not a baked pill.
+        let img = MeasureRasterizer.rasterize(
+            MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: false)!
+        #expect(pixel(img, x: 120, y: 88).a == 0, "the head-line gap is empty on the interactive path")
+        #expect(isRed(pixel(img, x: 40, y: 88)), "the head line still strokes outside the gap")
     }
 
-    @Test func freeMeasureStrokesTheDiagonal() {
-        let out = render(content(mode: .free),
-                         from: CGPoint(x: 30, y: 30), to: CGPoint(x: 200, y: 170))
-        // On the line near the start (y = 30 + 0.8235*(x-30)); at x=50 → ~46.5.
-        #expect(isRed(pixel(out, x: 50, y: 46)), "the diagonal is stroked")
-        #expect(isWhite(pixel(out, x: 50, y: 75)), "off the diagonal is untouched")
+    @Test func bakedPillIsPresentAndAbsentWithTheFlag() {
+        let baked = MeasureRasterizer.rasterize(
+            MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
+        #expect(pixel(baked, x: 120, y: 88).a > 0, "the baked pill fills the head gap")
     }
 
-    /// Normalized vertical ink profile of the white (text) pixels, resampled to
-    /// `bins` over the ink's vertical extent. Orientation-sensitive.
-    private func whiteRowProfile(_ img: CGImage, bins: Int = 24) -> [Double] {
+    @Test func labelHiddenLeavesAContinuousHeadLine() {
+        let out = render(content(mode: .horizontal, showLabel: false),
+                         from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130))
+        #expect(isRed(pixel(out, x: 130, y: 158)), "no label ⇒ the head line is continuous")
+    }
+
+    /// Normalized red-ink row profile within a central column band (excludes the
+    /// legs at the far edges), over the ink's vertical extent. Orientation-sensitive.
+    private func redRowProfile(_ img: CGImage, xRange: ClosedRange<Int>, bins: Int = 24) -> [Double] {
         var counts = [Int](repeating: 0, count: img.height)
         var minY = Int.max, maxY = -1
         for y in 0..<img.height {
             var c = 0
-            for x in 0..<img.width where isWhite(pixel(img, x: x, y: y)) { c += 1 }
+            for x in xRange where x >= 0 && x < img.width {
+                if isRed(pixel(img, x: x, y: y)) { c += 1 }
+            }
             counts[y] = c
             if c > 0 { minY = min(minY, y); maxY = max(maxY, y) }
         }
@@ -114,19 +129,18 @@ struct MeasureRenderingTests {
     }
 
     @Test func labelTextRendersUprightNotFlipped() {
-        // The measure blits TextRasterizer's (proven-upright) glyphs. Its vertical
-        // ink profile must match TextRasterizer's upright profile, NOT its flip —
-        // a regression that drew the label upside down would invert it.
+        // The pill blits TextRasterizer's (proven-upright) glyphs. Its red-ink
+        // profile in the chip band must match upright text, not its vertical flip.
         let measureImg = MeasureRasterizer.rasterize(
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
-            size: CGSize(width: 240, height: 120), pixelScale: 1)!
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
         let text = TextContent(string: "200 px", fontName: "SF Pro",
-                               fontSize: MeasureContent.labelFontSize, colorHex: "#FFFFFF")
+                               fontSize: MeasureContent.labelFontSize, colorHex: "#FF0000")
         let textImg = TextRasterizer.rasterize(text, size: TextRasterizer.naturalSize(text))!
 
-        let measureProfile = whiteRowProfile(measureImg)
-        let upright = whiteRowProfile(textImg)
+        let measureProfile = redRowProfile(measureImg, xRange: 95...145)
+        let upright = redRowProfile(textImg, xRange: 0...(textImg.width - 1))
         let flipped = Array(upright.reversed())
         func ssd(_ a: [Double], _ b: [Double]) -> Double {
             zip(a, b).reduce(0) { $0 + ($1.0 - $1.1) * ($1.0 - $1.1) }
@@ -135,15 +149,10 @@ struct MeasureRenderingTests {
                 "label ink profile matches upright text, not its vertical flip")
     }
 
-    @Test func pointsReadoutHalvesAtRetinaScale() {
-        // Same 200px span reads "200" at 1× and "100" at 2× — the rendered plate
-        // narrows accordingly. We can't OCR, but the 1× plate (3 digits) must be
-        // wider than the 2× plate (3 digits too here, so instead compare a tiny
-        // span). Simpler: assert the label toggles the plate; scale correctness is
-        // covered by the core MeasureUnitsTests. This test guards the render path
-        // accepts pixelScale without crashing and still draws a plate.
+    @Test func retinaScaleStillRendersAPill() {
         let out = render(content(mode: .horizontal), from: CGPoint(x: 20, y: 130),
                          to: CGPoint(x: 220, y: 130), pixelScale: 2)
-        #expect(isRed(pixel(out, x: 120, y: 112)), "plate still renders under a Retina pixelScale")
+        #expect(anyPixel(out, xs: 100...160, ys: 150...166, where: isRed),
+                "the baked pill still renders under a Retina pixelScale")
     }
 }
