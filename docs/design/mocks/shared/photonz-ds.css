@@ -50,7 +50,7 @@
     --stage:#08090d; --stage-2:#0d0f15;
     --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
     --panel:#14161d; --panel-2:#181b22;
-    --ink:#e7e9ee; --dim:#9aa1af; --faint:#666d7b;
+    --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
     --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
     --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
     --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
@@ -70,7 +70,7 @@
 }
 :root[data-theme="dark"]{
   --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
-  --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#9aa1af; --faint:#666d7b;
+  --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
   --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
   --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
   --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
@@ -152,17 +152,13 @@ button{font-family:inherit;color:inherit;cursor:pointer}
 .tbtns{display:flex;gap:6px;align-items:center;min-width:150px;justify-content:flex-end}
 
 .toolbar{display:flex;align-items:center;gap:4px;height:var(--rail-w);padding:0 12px;background:var(--panel-2);border-bottom:1px solid var(--line);position:relative;z-index:2}
-/* the panel-dock toggle, relocated to the command bar's top-right corner: a
-   square the same size as the collapsed rail's width, flush to the right edge
-   so it sits directly above the rail it hides/shows. */
-.toolbar.has-corner{padding-right:0}
-.toolbar .dock-corner{width:var(--rail-w);height:var(--rail-w);min-width:var(--rail-w);
-  margin-left:auto;padding:0;border:0;border-left:1px solid var(--line);border-radius:0;
-  background:transparent;color:var(--dim);display:grid;place-items:center;cursor:pointer}
-.toolbar .dock-corner:hover{background:var(--panel);color:var(--ink)}
-.toolbar .dock-corner.on{color:var(--accent)}
-.toolbar .dock-corner:active{transform:scale(.94)}
-.toolbar .dock-corner:focus-visible{outline:none;box-shadow:var(--ring)}
+/* the panel-dock toggle is a plain .tool icon button — NO bespoke visual styling,
+   highlighted (via the shared .tool.on state) only while the dock is open. It is
+   a small square the height of the search box, centered horizontally over the
+   collapsed rail below it. The negative right margin cancels the command bar's
+   12px right padding so the square can center on the rail column. */
+.toolbar .dock-corner{margin-left:auto;width:24px;height:24px;min-width:24px;padding:0;
+  margin-right:calc((var(--rail-w) - 24px) / 2 - 12px)}
 .tool{min-width:30px;height:28px;padding:0 6px;border-radius:7px;border:1px solid transparent;background:transparent;display:grid;place-items:center;color:var(--dim);transition:.12s;font-size:13px}
 .tool:hover{background:var(--panel);color:var(--ink);border-color:var(--line)}
 .tool.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
@@ -603,24 +599,24 @@ body.page .stage{height:100vh}
    web-isms (flat fills, hard 1px borders, tight corners, boxy controls).
    ============================================================ */
 :root{
-  --glass:rgba(255,255,255,.58); --glass-thin:rgba(255,255,255,.42); --glass-chrome:rgba(250,251,253,.66); --glass-menu:rgba(252,253,255,.96);
+  --glass:rgba(255,255,255,.74); --glass-thin:rgba(255,255,255,.58); --glass-chrome:rgba(250,251,253,.88); --glass-menu:rgba(252,253,255,.96);
   --edge-hi:rgba(255,255,255,.9); --edge-lo:rgba(22,26,42,.10);
   --lg-shadow:0 14px 44px -14px rgba(22,26,42,.30), 0 2px 8px -4px rgba(22,26,42,.14);
   --lg-blur:saturate(185%) blur(22px); --lg-blur-sm:saturate(180%) blur(12px);
   --r-lg:18px; --r-md:13px; --r-sm:9px;
 }
 @media (prefers-color-scheme:dark){:root{
-  --glass:rgba(36,40,52,.55); --glass-thin:rgba(48,53,67,.42); --glass-chrome:rgba(30,34,45,.6); --glass-menu:rgba(22,25,33,.95);
+  --glass:rgba(26,29,39,.72); --glass-thin:rgba(30,34,45,.6); --glass-chrome:rgba(22,25,34,.78); --glass-menu:rgba(22,25,33,.96);
   --edge-hi:rgba(255,255,255,.11); --edge-lo:rgba(0,0,0,.45);
   --lg-shadow:0 20px 54px -16px rgba(0,0,0,.66), 0 3px 10px -5px rgba(0,0,0,.5);
 }}
 :root[data-theme="light"]{
-  --glass:rgba(255,255,255,.58); --glass-thin:rgba(255,255,255,.42); --glass-chrome:rgba(250,251,253,.66); --glass-menu:rgba(252,253,255,.96);
+  --glass:rgba(255,255,255,.74); --glass-thin:rgba(255,255,255,.58); --glass-chrome:rgba(250,251,253,.88); --glass-menu:rgba(252,253,255,.96);
   --edge-hi:rgba(255,255,255,.9); --edge-lo:rgba(22,26,42,.10);
   --lg-shadow:0 14px 44px -14px rgba(22,26,42,.30), 0 2px 8px -4px rgba(22,26,42,.14);
 }
 :root[data-theme="dark"]{
-  --glass:rgba(36,40,52,.55); --glass-thin:rgba(48,53,67,.42); --glass-chrome:rgba(30,34,45,.6); --glass-menu:rgba(22,25,33,.95);
+  --glass:rgba(26,29,39,.72); --glass-thin:rgba(30,34,45,.6); --glass-chrome:rgba(22,25,34,.78); --glass-menu:rgba(22,25,33,.96);
   --edge-hi:rgba(255,255,255,.11); --edge-lo:rgba(0,0,0,.45);
   --lg-shadow:0 20px 54px -16px rgba(0,0,0,.66), 0 3px 10px -5px rgba(0,0,0,.5);
 }
@@ -973,15 +969,20 @@ body.page .stage{height:100vh}
    (the on-screen proof that UI == API == agent). Reads as a search
    box, opens the command palette. Pair with a .tool ic-more command
    surface button + the shared .popover/.menu for the grouped menu. */
-.cmdk{display:inline-flex;align-items:center;gap:var(--gap-sm);height:var(--ctl-h-sm);
-  padding:0 var(--pad-sm);border:1px solid var(--edge-lo);border-radius:999px;
-  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
-  box-shadow:inset 0 1px 0 var(--edge-hi);color:var(--faint);font-size:11px;font-weight:520;
+/* search field: an INSET well etched into the glass, not a raised button. A
+   recessed dark fill + an inner top shadow + a dark inner hairline read as
+   "carved in"; no --edge-hi top highlight (that reads as raised). */
+.cmdk{display:inline-flex;align-items:center;gap:var(--gap-sm);height:28px;
+  padding:0 var(--s3);border:0;border-radius:999px;
+  background:color-mix(in srgb, var(--stage) 58%, transparent);
+  box-shadow:inset 0 1.5px 2px rgba(0,0,0,.42), inset 0 0 0 1px color-mix(in srgb, black 34%, var(--edge-lo));
+  color:var(--faint);font-size:12px;font-weight:520;
   white-space:nowrap;cursor:text;transition:var(--ctl-tr)}
 .cmdk .ic{color:var(--faint);flex:none}
 .cmdk .kbd{font-family:var(--mono);font-size:9.5px;opacity:.8;margin-left:var(--s1)}
-.cmdk:hover{border-color:color-mix(in srgb,var(--accent) 28%, var(--edge-lo));color:var(--dim)}
-.cmdk:focus-visible{outline:none;box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.cmdk:hover{background:color-mix(in srgb, var(--stage) 68%, transparent);color:var(--dim)}
+.cmdk:focus-within,.cmdk:focus-visible{outline:none;
+  box-shadow:inset 0 1.5px 2px rgba(0,0,0,.42), var(--ring)}
 
 /* Workspace switcher (the lens selector). Image · UI · Video are workspaces
    over ONE document (see PRODUCT-MODEL.md §1). Switching a workspace re-arranges
@@ -1083,9 +1084,37 @@ body.page .stage{height:100vh}
    --gh and window heights per page to avoid a collapsed Library). */
 .pdock{flex:0 0 auto;width:var(--dock-w,268px);min-width:180px;max-width:460px;
   display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;
-  overscroll-behavior:contain;
+  scrollbar-gutter:stable;overscroll-behavior:contain;
   border-left:1px solid var(--edge-lo);
-  background:color-mix(in srgb, var(--panel-2) 45%, transparent)}
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur)}
+/* The SCROLLER reserves its OWN scrollbar column: scrollbar-gutter:stable
+   reserves 0 with macOS overlay scrollbars, so give it a slim classic scrollbar
+   that actually takes space. The gutter is always reserved, so collapsing panels
+   never changes the panel width, and the panel scrollbar can't overlap a pane's.
+   Old (command-strip) pages scroll .pdock directly; the new pattern scrolls the
+   inner .dock-body instead (fixed header + scrolling body + fixed footer). */
+.pdock::-webkit-scrollbar,.dock-body::-webkit-scrollbar{width:11px}
+.pdock::-webkit-scrollbar-track,.dock-body::-webkit-scrollbar-track{background:transparent}
+.pdock::-webkit-scrollbar-thumb,.dock-body::-webkit-scrollbar-thumb{min-height:32px;border:3px solid transparent;border-radius:999px;
+  background:color-mix(in srgb, var(--ink) 20%, transparent);background-clip:content-box}
+.pdock::-webkit-scrollbar-thumb:hover,.dock-body::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb, var(--ink) 32%, transparent);background-clip:content-box}
+/* new pattern: the dock itself does not scroll — its .dock-body does */
+.pdock:has(>.dock-body){overflow:hidden;scrollbar-gutter:auto}
+.dock-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;overscroll-behavior:contain}
+
+/* the panel's own HEADER ROW (no-command-strip pattern): holds the × collapse
+   button on its own row, above the scrolling body, so it never interferes with a
+   group header. A fixed row (the body below it scrolls, the footer stays put). */
+.dock-head{flex:none;display:flex;align-items:center;justify-content:flex-end;
+  min-height:32px;padding:4px 6px;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border-bottom:1px solid var(--edge-lo)}
+.dock-head .dock-close{width:24px;height:24px;padding:0;border:0;border-radius:7px;cursor:pointer;
+  display:grid;place-items:center;color:var(--dim);background:transparent;transition:.12s}
+.dock-head .dock-close:hover{background:var(--glass-thin);color:var(--ink)}
+.dock-head .dock-close:active{transform:scale(.94)}
+.dock-head .dock-close:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* dock states: open (inline) · closed (railed) · overlay (narrow, floats) */
 .edit.lean[data-dock="closed"]>.pdock,
@@ -1118,9 +1147,11 @@ body.page .stage{height:100vh}
 .dgrp.collapsed>.dgrp-b{display:none}
 .dgrp.collapsed{flex:0 0 auto}
 
-/* THE RULE THAT MAKES IT SCALE: each body has its OWN bounded height and
-   its own scroller, so a 60-layer stack never pushes Effects or Library
-   off screen. Override the bound per group with --gh. */
+/* Per-pane scroll: each group body has its OWN bounded height and its own
+   scroller, so a long list scrolls inside its group instead of stretching the
+   dock or bleeding into the next group. The dock reserves a stable scrollbar
+   gutter (see .pdock) so the panel's own scrollbar sits in its own column and
+   never overlaps a pane's. Override the bound per group with --gh. */
 .dgrp-b{max-height:var(--gh,200px);overflow-y:auto;overscroll-behavior:contain;
   scrollbar-width:thin;padding-bottom:var(--s2)}
 /* one group per dock may take the leftover space instead of a fixed bound.
@@ -1191,7 +1222,7 @@ body.page .stage{height:100vh}
 .drail{display:none;flex:none;width:var(--rail-w,34px);flex-direction:column;align-items:center;
   position:relative;z-index:9;
   gap:var(--s2);padding:var(--s2) 0;border-left:1px solid var(--edge-lo);
-  background:color-mix(in srgb, var(--panel-2) 40%, transparent)}
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur)}
 .drailtab{display:flex;flex-direction:column;align-items:center;gap:var(--s2);
   width:26px;padding:var(--s2) 0;border:1px solid transparent;border-radius:var(--r-sm);
   background:transparent;color:var(--dim);font-family:inherit;font-size:10px;font-weight:600;
@@ -1305,14 +1336,19 @@ body.page .stage{height:100vh}
    Keep these numbers in sync with NARROW/TIGHT in photonz-ds.js.
    ============================================================ */
 @container shell (max-width:880px){
-  /* dock: never inline, only an overlay you summon from the rail. It sits
-     beside the rail (never on top of it) and turns fully opaque glass so the
-     canvas does not read through the panels. */
-  .edit.lean>.pdock{display:none;position:absolute;right:var(--rail-w);top:0;bottom:0;z-index:8;
+  /* dock: never inline, only an overlay you summon from the rail. Opening it
+     covers the rail and slides/fades in OVER the canvas. The rail keeps its
+     layout space (hidden with visibility, not removed) so toggling never shifts
+     the canvas. Opaque glass so nothing reads through. */
+  .edit.lean>.pdock{position:absolute;right:0;top:0;bottom:0;z-index:8;
     width:min(272px,78%);max-width:none;
     background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
-    box-shadow:var(--lg-shadow)}
-  .edit.lean[data-dock="overlay"]>.pdock{display:flex}
+    box-shadow:var(--lg-shadow);
+    opacity:0;visibility:hidden;transform:translateX(14px);pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+  .edit.lean[data-dock="overlay"]>.pdock{opacity:1;visibility:visible;transform:none;pointer-events:auto;
+    transition:opacity .2s ease,transform .2s ease}
+  .edit.lean[data-dock="overlay"]>.drail{visibility:hidden}
   .edit.lean>.splitter.v{display:none}
   .edit.lean>.drail{display:flex}
   /* tool bar: overflow tools collapse into the "more" affordance */

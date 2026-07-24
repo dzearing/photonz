@@ -59,6 +59,43 @@
     font-size:14px;font-weight:700;letter-spacing:-.01em;text-shadow:0 1px 7px rgba(0,0,0,.5)}
   #app-shell .shotsub{position:absolute;left:11px;top:30px;color:rgba(255,255,255,.86);font-size:9.5px}
   @media (max-width:820px){.specs{grid-template-columns:1fr}}
+  /* --- REDLINE CALLOUTS ------------------------------------------------------
+     Numbered callouts live in gutters BESIDE the window (never inside the UI)
+     with a leader line pointing at each region. The frame reserves a fixed
+     gutter at every width so the badges always have somewhere to sit. --- */
+  .rl-frame{--rl-gut:88px;position:relative;padding:0 var(--rl-gut);align-self:stretch}
+  .rl-frame>.win{width:100%}
+  .rl-co{position:absolute;display:flex;align-items:center;z-index:20;pointer-events:none;--rl-line:56px}
+  .rl-co .n{width:19px;height:19px;flex:none;border:0;padding:0;font-family:inherit;cursor:pointer;pointer-events:auto;
+    border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:10.5px;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums;
+    box-shadow:0 2px 7px -2px rgba(0,0,0,.55);transition:transform .1s ease}
+  .rl-co .n:hover{transform:scale(1.14)}
+  .rl-co .n:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 42%,transparent)}
+  .rl-co .l{height:1.5px;flex:none;border-radius:2px;position:relative}
+  /* a dot marks the exact target at the tip of the line; the bg-colored ring
+     keeps it legible against whatever feature it lands on */
+  .rl-co .l::after{content:"";position:absolute;top:50%;transform:translateY(-50%);
+    width:4px;height:4px;border-radius:50%;background:var(--accent);border:1.5px solid color-mix(in srgb, var(--panel-2) 50%, transparent)}
+  .rl-co.l-side .l::after{right:-3.5px}
+  .rl-co.r-side .l::after{left:-3.5px}
+  .rl-co.l-side{left:0}
+  .rl-co.l-side .l{width:var(--rl-line);margin-left:5px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 12%,transparent))}
+  .rl-co.r-side{right:0;flex-direction:row-reverse}
+  .rl-co.r-side .l{width:var(--rl-line);margin-right:5px;background:linear-gradient(270deg,var(--accent),color-mix(in srgb,var(--accent) 12%,transparent))}
+  /* click-to-open explainer card, positioned by the number's gutter + row */
+  .rl-co .card{position:absolute;display:none;width:236px;z-index:40;text-align:left;
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:var(--lg-shadow);
+    padding:11px 13px;font-size:12px;line-height:1.45;color:var(--dim)}
+  .rl-co .card b{display:block;color:var(--ink);font-weight:640;font-size:12.5px;margin-bottom:3px}
+  .rl-co.open{z-index:50}
+  .rl-co.open .card{display:block;animation:rlpop .13s ease}
+  @keyframes rlpop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .rl-co.l-side .card{left:0;top:27px}
+  .rl-co.r-side .card{right:0;top:27px}
+  .rl-co.up .card{top:auto;bottom:27px}
+  @media (max-width:900px){ .rl-frame{padding:0;max-width:none} .rl-co{display:none} }
 </style>
 </head>
 <body class="page">
@@ -73,12 +110,12 @@
     <!-- ============ THE ONE CANONICAL SHELL (compose this, don't reinvent) ============
          .win.cq makes the window the container query root, so everything below
          responds to the WINDOW width, not the browser viewport. -->
+    <div class="rl-frame">
     <div class="win tall cq shell">
 
       <!-- 1 · TITLE BAR -->
       <div class="titlebar">
         <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <span class="rnum">1</span>
         <div class="wtitle"><b>marketing-site</b> · 1440 × 1024</div>
         <!-- WORKSPACE SWITCHER (lens selector) - Image · UI · Video are workspaces
              over ONE document; switching swaps the tool strip and the timeline dock. -->
@@ -87,42 +124,16 @@
           <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
           <button class="wsw-seg" data-ws="video" role="tab"><i class="ic sm ic-play"></i> Video</button>
         </div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-          <button class="btn primary sm">Done</button>
-        </div>
+        <!-- The ⌘K palette lives at the title bar's right (the single command
+             affordance); the native menu bar remains the real command surface.
+             No Share/Export/Done — those live in the menu bar. -->
+        <span class="cmdk" style="flex:none;min-width:230px"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
       </div>
 
-      <!-- 2 · COMMAND SURFACE + ⌘K + the history entry (D3 / D6).
-           The shipping app's real command surface is the native macOS menu bar;
-           the mock never draws a fake one. This thin row is what the mock shows
-           instead: commands, the palette, and the front door. -->
-      <div class="toolbar">
-        <span class="rnum">2</span>
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip style"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:212px;z-index:12">
-            <div class="mlabel">File</div>
-            <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
-            <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘E</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Layer</div>
-            <div class="menuitem"><i class="ic ic-layers"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-        <span class="rnum">9</span>
-      </div>
+      <!-- No command strip: the dock carries its own affordances. Expanded, the
+           panel shows an "×" to collapse it; collapsed, it becomes the vertical
+           rail of headers. The ⌘K palette lives in the title bar; the native
+           macOS menu bar is the real command surface. -->
 
       <!-- EDITOR ROW: canvas dominant, one dock on the right.
            data-dock = open | closed (railed) | overlay (narrow) -->
@@ -131,7 +142,6 @@
         <!-- 6 · CANVAS COLUMN: the document plus everything that floats over it -->
         <div class="cnv">
           <div class="canvas">
-            <span class="rnum pin" style="top:10px;left:10px">6</span>
             <div class="artboard-label">1440 × 1024 · Brand tokens</div>
             <div class="selwrap">
               <div class="hero-card">
@@ -149,12 +159,10 @@
           <!-- CANVAS TOP-RIGHT ACTIONS: capture history. The panel-dock toggle
                (region 9) now lives in the command-bar corner, above the rail. -->
           <div class="cnv-act">
-            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           </div>
 
           <!-- 3 · FLOATING BOTTOM TOOL BAR: tools · color · zoom, with overflow -->
           <div class="tbar">
-            <span class="rnum pin" style="top:8px;left:-24px">3</span>
             <span class="tstrip" id="toolStrip" data-radio=".tool">
               <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
               <span class="tsep"></span>
@@ -188,7 +196,6 @@
                Overlays slide over the canvas, so they cost no permanent width. -->
           <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
             <div class="sheet-h">
-              <span class="rnum">5</span>
               <span class="ttl"><i class="ic sm ic-history"></i> History</span>
               <span class="sp"></span>
               <div class="seg" data-radio="button">
@@ -267,7 +274,6 @@
         <div class="pdock" id="dock">
           <div class="dgrp" id="gLayers" style="--gh:150px">
             <div class="dgrp-h">
-              <span class="rnum">4</span>
               <span class="ttl">Layers</span><span class="cnt">14</span>
               <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
               <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
@@ -293,7 +299,7 @@
           </div>
 
           <!-- 7 · a horizontal splitter resizes the group above it -->
-          <div class="splitter h" data-min="90" data-max="360"><span class="rnum pin" style="top:-8px;right:6px">7</span></div>
+          <div class="splitter h" data-min="90" data-max="360"></div>
 
           <div class="dgrp" id="gProps" style="--gh:150px">
             <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Frame</span>
@@ -355,7 +361,6 @@
 
         <!-- 8 · THE RAIL: what the dock collapses to. Canvas dominates. -->
         <div class="drail">
-          <span class="rnum">8</span>
           <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
           <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
           <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
@@ -402,19 +407,22 @@
         <div class="playhead" style="left:30%"></div>
       </div>
     </div>
+    <!-- redline callouts: a numbered button in the gutter, a leader line to its
+         feature, and a click-to-open card. Positions + line lengths are set LIVE
+         by positionCallouts() so each dot lands on its target, and a callout
+         hides when its region isn't currently shown (e.g. the dock vs the rail). -->
+    <span class="rl-co l-side" style="top:13px"><button class="n" type="button" aria-label="Region 1: Title bar">1</button><span class="l"></span><span class="card"><b>Title bar</b>Document name + the workspace lens (Image / UI / Video). No actions live here.</span></span>
+    <span class="rl-co r-side" style="top:13px"><button class="n" type="button" aria-label="Region 2: Command palette">2</button><span class="l"></span><span class="card"><b>Command palette</b>⌘K runs any command. The native macOS menu bar is the real command surface.</span></span>
+    <span class="rl-co l-side" style="top:600px"><button class="n" type="button" aria-label="Region 3: Floating tool bar">3</button><span class="l"></span><span class="card"><b>Floating tool bar</b>Tools · color · zoom. Overflow tools collapse into a "more" menu.</span></span>
+    <span class="rl-co r-side" style="top:150px"><button class="n" type="button" aria-label="Region 4: Right dock">4</button><span class="l"></span><span class="card"><b>Right dock</b>Stacked panel groups (Layers, Properties, Library).</span></span>
+    <span class="rl-co l-side" style="top:340px"><button class="n" type="button" aria-label="Region 5: Canvas">5</button><span class="l"></span><span class="card"><b>Canvas</b>Selection lives here, and it dominates the shell.</span></span>
+    <span class="rl-co r-side" style="top:340px"><button class="n" type="button" aria-label="Region 6: Splitter">6</button><span class="l"></span><span class="card"><b>Splitter</b>Drag to resize a dock or a group.</span></span>
+    <span class="rl-co r-side" style="top:450px"><button class="n" type="button" aria-label="Region 7: Rail">7</button><span class="l"></span><span class="card"><b>Rail</b>What the dock collapses to. Click 8 to open the panel over it.</span></span>
+    <span class="rl-co r-side" style="top:51px"><button class="n" type="button" aria-label="Region 8: Collapse the panel">8</button><span class="l"></span><span class="card"><b>Collapse</b>The × collapses the panel to the rail. Collapsed, the rail's vertical headers expand it again — no command-bar row needed.</span></span>
+    </div><!-- /.rl-frame -->
 
-    <!-- region legend -->
-    <div class="leg">
-      <span class="li"><span class="rnum">1</span> <b>Title bar</b> · document, workspace lens, Share / Export / Done</span>
-      <span class="li"><span class="rnum">2</span> <b>Command surface + ⌘K</b> · the native menu bar is the real one</span>
-      <span class="li"><span class="rnum">3</span> <b>Floating tool bar</b> · tools · color · zoom, overflow collapses</span>
-      <span class="li"><span class="rnum">4</span> <b>Right dock</b> · stacked panel groups</span>
-      <span class="li"><span class="rnum">5</span> <b>History overlay</b> · ⌘⇧H slide-down, the front door</span>
-      <span class="li"><span class="rnum">6</span> <b>Canvas</b> · selection lives here, and it dominates</span>
-      <span class="li"><span class="rnum">7</span> <b>Splitter</b> · drag to resize a dock or a group</span>
-      <span class="li"><span class="rnum">8</span> <b>Rail</b> · what the dock collapses to, click 9 to see it</span>
-      <span class="li"><span class="rnum">9</span> <b>Panel toggle</b> · a square in the command-bar corner, above the rail</span>
-    </div>
+    <!-- region legend now lives in the callouts: click a number to read it -->
+    <p class="pglead" style="margin-top:var(--s3);color:var(--faint);font-size:12px">Click any numbered marker to read what that region does.</p>
 
     <!-- the four shell surfaces, and the loop they form -->
     <p class="pglead" style="margin-top:var(--s2)">The window above is only one of <b>four shell surfaces</b>. Photonz is a
@@ -907,6 +915,84 @@
   // Page-local wiring: the workspace lens. Everything else (collapse, resize,
   // rail, overlay, overflow, selection) is the shared DS behavior.
   (function () {
+    // Redline callouts: click a numbered marker to toggle its explainer card.
+    var cos = [].slice.call(document.querySelectorAll('#app-shell .rl-co'));
+    cos.forEach(function (co) {
+      var btn = co.querySelector('.n');
+      if (!btn) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = co.classList.contains('open');
+        cos.forEach(function (x) { x.classList.remove('open'); });
+        if (!open) co.classList.add('open');
+      });
+    });
+    document.addEventListener('click', function () {
+      cos.forEach(function (x) { x.classList.remove('open'); });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') cos.forEach(function (x) { x.classList.remove('open'); });
+    });
+
+    // Position each callout so its leader-line dot lands exactly on its target,
+    // at any window width (the reference window is responsive). Anchors are
+    // measured live, so nothing is hard-coded to one layout.
+    (function positionCallouts() {
+      var frame = document.querySelector('#app-shell .rl-frame');
+      var win = document.querySelector('#app-shell .win.shell');
+      var shell = document.querySelector('#app-shell .edit.lean');
+      if (!frame || !win) return;
+      var mid = function (r) { return { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 }; };
+      // number -> [target selector, gutter side, anchor point within the target]
+      var MAP = {
+        '1': ['.titlebar', 'l', function (r) { return { x: r.left + 8, y: (r.top + r.bottom) / 2 }; }],
+        '2': ['.cmdk', 'r', function (r) { return { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 }; }],
+        '3': ['.tbar', 'l', function (r) { return { x: r.left, y: (r.top + r.bottom) / 2 }; }],
+        '4': ['.pdock', 'r', function (r) { return { x: r.left + 44, y: r.top + 34 }; }],
+        '5': ['.canvas', 'l', function (r) { return { x: r.left + 48, y: (r.top + r.bottom) / 2 }; }],
+        '6': ['.splitter', 'r', function (r) { return { x: (r.left + r.right) / 2, y: r.top + 120 }; }],
+        '7': ['.drail', 'r', function (r) { return { x: (r.left + r.right) / 2, y: r.top + 40 }; }],
+        '8': ['.dock-close', 'r', mid]
+      };
+      function visible(el) {
+        if (!el) return false;
+        var s = getComputedStyle(el);
+        if (s.display === 'none' || s.visibility === 'hidden') return false;
+        var r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      }
+      function place() {
+        var fr = frame.getBoundingClientRect();
+        if (fr.width < 2) return;
+        cos.forEach(function (co) {
+          var n = co.querySelector('.n'); if (!n) return;
+          var m = MAP[n.textContent.trim()]; if (!m) return;
+          var t = win.querySelector(m[0]);
+          // hide a callout whose region isn't currently on screen, so nothing
+          // ever points at empty background (e.g. the dock when it's collapsed)
+          if (!visible(t)) { co.style.display = 'none'; return; }
+          co.style.display = '';
+          var a = m[2](t.getBoundingClientRect());
+          var ax = a.x - fr.left, ay = a.y - fr.top;
+          co.style.top = Math.round(ay - 9.5) + 'px';
+          var line = (m[1] === 'l') ? (ax - 24) : (fr.width - 24 - ax);
+          co.style.setProperty('--rl-line', Math.max(16, Math.round(line)) + 'px');
+          co.classList.toggle('up', ay > fr.height * 0.62);
+        });
+      }
+      requestAnimationFrame(place);
+      window.addEventListener('resize', place);
+      // Re-place when the dock opens/collapses (rail <-> panel swap). Run once
+      // now AND after the 0.2s open/close transition settles — otherwise a
+      // callout whose target is mid-fade still reads as visible (e.g. region 4
+      // stayed shown after collapsing because .pdock's visibility:hidden is
+      // delayed until the fade ends).
+      if (shell) new MutationObserver(function () {
+        requestAnimationFrame(place);
+        setTimeout(place, 240);
+      }).observe(shell, { attributes: true, attributeFilter: ['data-dock'] });
+    })();
+
     // Library scope switch (Media · Components · Styles · Assets) - visual state.
     var seg = document.getElementById('scopeSeg');
     if (seg) {

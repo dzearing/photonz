@@ -279,33 +279,61 @@
     var showing = narrow ? state === 'overlay' : state !== 'closed';
     all('[data-dock-toggle]').forEach(function (b) {
       if (shellFor(b) !== shell) return;
+      // reuse the shared toggle-on state: .tool.on when the dock is showing.
       b.classList.toggle('on', showing);
       b.setAttribute('aria-pressed', showing ? 'true' : 'false');
     });
   }
-  /* The dock toggle lives in the command bar's top-right corner. Where a
-     .toolbar sits directly above an .edit.lean shell, inject a square corner
-     button (rail-width) into the bar and relocate the toggle out of the canvas
-     (.cnv-act) — so one control, sitting directly above the collapsed rail.
-     Runs BEFORE the listener wiring below so the corner is picked up there. */
+  /* Panel-dock affordance. Two patterns coexist during the migration:
+     - Pages WITH a command strip (.toolbar above the shell): a square toggle in
+       the strip's corner (.dock-corner).
+     - Pages WITHOUT one (the strip was removed): the expanded panel carries an
+       "×" to collapse it (.dock-close); collapsed, the rail's tabs expand it.
+     Both are [data-dock-toggle], wired by the listener below. Runs first so the
+     new control is picked up there. */
   all('.edit.lean').forEach(function (shell) {
     var bar = shell.previousElementSibling;
-    if (!bar || !bar.classList || !bar.classList.contains('toolbar')) return;
-    if (bar.querySelector('.dock-corner')) return; // idempotent
-    var corner = document.createElement('button');
-    corner.type = 'button';
-    corner.className = 'tool dock-corner';
-    corner.setAttribute('data-dock-toggle', shell.id ? '#' + shell.id : '');
-    corner.setAttribute('title', 'Show or hide the panel dock (⌥⌘L)');
-    corner.setAttribute('aria-label', 'Show or hide the panel dock');
-    var open = (shell.getAttribute('data-dock') || 'open') !== 'closed';
-    corner.classList.toggle('on', open);
-    corner.setAttribute('aria-pressed', open ? 'true' : 'false');
-    corner.innerHTML = '<i class="ic sm ic-sidebar"></i>';
-    bar.classList.add('has-corner');
-    bar.appendChild(corner);
-    // relocate: drop the canvas dock toggle this replaces (keep the rest of
-    // .cnv-act, e.g. the history button); remove the cluster if now empty
+    var hasBar = bar && bar.classList && bar.classList.contains('toolbar');
+    var sel = shell.id ? '#' + shell.id : '';
+    if (hasBar) {
+      if (bar.querySelector('.dock-corner')) return; // idempotent
+      var corner = document.createElement('button');
+      corner.type = 'button';
+      corner.className = 'tool dock-corner';
+      corner.setAttribute('data-dock-toggle', sel);
+      corner.setAttribute('title', 'Show or hide the panel dock (⌥⌘L)');
+      corner.setAttribute('aria-label', 'Show or hide the panel dock');
+      // "on" = panel actually showing (narrow: only 'overlay'); mirror setDock.
+      var st = shell.getAttribute('data-dock') || 'open';
+      var open = isNarrow(shell) ? st === 'overlay' : st !== 'closed';
+      corner.classList.toggle('on', open);
+      corner.setAttribute('aria-pressed', open ? 'true' : 'false');
+      corner.innerHTML = '<i class="ic sm ic-sidebar"></i>';
+      bar.appendChild(corner);
+    } else {
+      var pdock = shell.querySelector('.pdock');
+      if (!pdock || pdock.querySelector('.dock-head')) return; // idempotent
+      var head = document.createElement('div');
+      head.className = 'dock-head';
+      var x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'dock-close';
+      x.setAttribute('data-dock-toggle', sel);
+      x.setAttribute('title', 'Collapse the panel dock (⌥⌘L)');
+      x.setAttribute('aria-label', 'Collapse the panel dock');
+      x.innerHTML = '<i class="ic sm ic-x"></i>';
+      head.appendChild(x);
+      // wrap the panes in a scrolling body between the header and any footer
+      // (.dockmgr), so the scroll area starts below the header, stops above the
+      // footer, and reserves its gutter on the body (not the whole dock).
+      var foot = pdock.querySelector(':scope > .dockmgr');
+      var body = document.createElement('div');
+      body.className = 'dock-body';
+      [].slice.call(pdock.children).forEach(function (k) { if (k !== foot) body.appendChild(k); });
+      pdock.insertBefore(body, foot);   // body before the footer (or last if none)
+      pdock.insertBefore(head, body);   // header on its own row, first
+    }
+    // relocate: drop any canvas dock toggle this replaces
     var old = shell.querySelector('.cnv-act [data-dock-toggle]');
     if (old) {
       var cluster = old.closest('.cnv-act');
@@ -335,7 +363,16 @@
         grp.classList.remove('hidden');
         var h = grp.querySelector('.dgrp-h');
         if (h) h.setAttribute('aria-expanded', 'true');
-        if (grp.scrollIntoView) grp.scrollIntoView({ block: 'nearest' });
+        // Reveal the group by scrolling ONLY the dock, never the page. Native
+        // scrollIntoView bubbles to every scroll ancestor (incl. the page), so
+        // expanding from a rail tab made the whole page jiggle. Scope it to the
+        // dock and defer a frame so it doesn't fight the expand transition.
+        var dock = grp.closest('.pdock');
+        if (dock) requestAnimationFrame(function () {
+          var g = grp.getBoundingClientRect(), d = dock.getBoundingClientRect();
+          if (g.top < d.top) dock.scrollTop += g.top - d.top - 8;
+          else if (g.bottom > d.bottom) dock.scrollTop += g.bottom - d.bottom + 8;
+        });
       }
     });
   });
