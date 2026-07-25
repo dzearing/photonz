@@ -262,20 +262,25 @@ the dock, or a `.sheet.down` overlay.
 The single biggest consistency smell was mixed icon styles and ascii/emoji
 glyphs. Rules:
 
-- One monochrome line-icon library, Feather/Lucide grammar: 24x24 viewBox, 2px
-  stroke, round caps/joins, `currentColor`, no fills except where the glyph is
-  intrinsically solid. Defined once in `shared/photonz-ds.css` as `.ic-*`.
+- One monochrome line-icon library on one grid: 24x24 viewBox, 20x20 live area,
+  square keyline 18x18, circle keyline d17.2, 1.75 stroke, round caps/joins,
+  `currentColor`, no fills except where the glyph is intrinsically solid.
+  Authored in `shared/icons.mjs`, generated into `photonz-ds.css` as `.ic-*` by
+  `node shared/build-icons.mjs`, and documented on `pages/iconography.html`
+  (searchable, click to copy).
 - Use `<i class="ic ic-NAME"></i>` everywhere. NEVER ascii/unicode symbols
   (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ → ← etc.) as icons, NEVER emoji, NEVER a second icon style.
 - One concept = one icon, app-wide (e.g. component is always `ic-component`; add
   is always `ic-plus`). Maintain the concept->icon mapping in AGENTS.md.
-- If a glyph is missing, ADD it to the library (one line in the CSS icon block)
-  rather than substituting a near-miss or an ascii symbol. Keep the new glyph in
-  the same grammar.
-- Sizes come from `.ic.xs/.sm/.lg` or the button size, never ad-hoc px.
+- If a glyph is missing, ADD it to `shared/icons.mjs` and regenerate, rather
+  than substituting a near-miss or an ascii symbol. Keep the new glyph in the
+  same grammar and drawn to a keyline. Never hand-edit the generated CSS block.
+- Sizes come from `.ic.xs` 12 / `.ic.sm` 14 / `.ic` 16 / `.ic.lg` 20 /
+  `.ic.xl` 24, never ad-hoc px.
 
-Action item: audit every page for icon-library conformance and fix (see the
-audit agent). The icon set must look drawn by one hand.
+Done: the set was redrawn to one grid and one weight (199 glyphs in 12 groups,
+plus aliases for the older names). Remaining action item: keep auditing pages
+for conformance (see the audit agent). The icon set must look drawn by one hand.
 
 ---
 
@@ -417,11 +422,94 @@ swatch. The picker is a `.popover` but it is **sticky**: clicks inside it do not
 dismiss it, because you operate it rather than pick one item from it.
 
 Its regions, in this order, always: before/after preview + slot name + eyedropper
-· saturation/value field · hue then alpha tracks · HEX / RGB / HSL entry, one
-format at a time · a **derived shades row** (nine steps of the current hue, light
-to dark) · a related-hue row · recents and document colors · contrast readout and
-"Save style". The shades row is the point: the most common color edit is "the same
-color, a bit darker", and it must cost one click and no numbers.
+· **four paint-type thumbnails** · (gradients only) the **aim pad + ramp + selected
+stop** · saturation/value field · a centered **HSL / RGB / HEX** switch · **one
+slider per channel** · **one swatch row with a scope switch** (shades of this
+color / related hues / in this document) · contrast readout and "Save style".
+
+Two rules inside it matter more than the layout:
+
+1. **One control per channel.** The format switch picks which channels you are
+   sliding; it is not a second way to see the same ones. So there is no hue
+   slider sitting next to an H field. HEX has no channels to slide, so that mode
+   keeps the hue and alpha tracks and adds a text field, which is also the paste
+   target (it takes hex, `rgb()` or `hsl()`).
+2. **Every value is typable where it lives.** Each slider carries its number as
+   an editable field on the right, and right-clicking a track focuses it. There
+   is no separate numeric-entry row to reach for.
+
+The shades row is the point of the whole control: the most common color edit is
+"the same color, a bit darker", and it must cost one click and no numbers.
+
+**A color slot holds a PAINT, not a color.** That is how you get a gradient onto a
+fill, a stroke or a text layer, and it is the first control in the popover:
+**Solid / Linear / Radial / Angular**, drawn as four thumbnails that each render
+the CURRENT stops at the CURRENT angle. You choose between four outcomes, not four
+words. Pick a gradient and the aim pad, ramp and selected-stop row appear in
+place, seeded from the color you already had; the picker below then edits whichever
+stop is selected. A stop is a color slot like any other, so selecting one costs
+nothing new to learn: drag a key to move it, click the bare strip to add one.
+
+**Direction is aimed, never typed.** The aim pad is a small square showing the
+paint with handles you drag; the angle readout follows the handles rather than
+leading them. "135°" is a value a person has to decode, so it is a readout, not
+the control.
+
+The pad carries **two handles of one family**: a small dot for the paint's
+**origin** and a larger one for its **direction**, with a line between them so
+they read as one object. Both are live on every gradient type, including linear -
+a CSS linear gradient has no origin of its own, so moving it slides every stop
+along the axis, and a sideways move correctly does nothing. A radial has no
+direction, so it shows the origin alone.
+
+Three rules came out of getting this wrong:
+
+- **Never draw a handle on something the pointer cannot pick up.** A dead dot
+  that looks grabbable is worse than no dot.
+- **Grab, do not teleport.** Pressing near a handle keeps the offset so it does
+  not jump out from under the pointer. The cursor is `grab`/`grabbing`, never
+  `crosshair` (which promises "click to place"), and the handles react to hover
+  even though the SVG they live in cannot take pointer events.
+- **A hover-revealed overlay needs hover intent.** The stop callout floats clear
+  of the ramp, so travelling between them crosses a few pixels of nothing.
+  Hiding on that gap makes the card vanish exactly when you reach for it, so
+  leaving only schedules the hide and arriving anywhere in the pair cancels it.
+
+**The selected stop names itself, where it is.** Its color, its number and a
+labelled Position field ride in a small beaked card over the stop on the ramp,
+not in a row underneath. A row parks the label away from its subject and competes
+for width the row does not have; the card is an overlay, so it costs no layout
+height. It is up while you are working the ramp AND while anything in the ramp
+block holds focus, because a focused thing must not lose its label just because
+the pointer wandered off.
+
+That card is also the DS's only **elev 3** surface, and it is the reason the level
+exists: a card sitting ON an elev-2 popover cannot reuse the popover's own tokens,
+or it reads as a hole punched in it rather than a plate above it. In dark it lifts
+by growing **lighter**, in light by casting **further**, never both, and it is
+opaque because glass over glass doubles the blur. Use `.elev-3`; see
+`pages/lang-elevation.html`.
+
+**Two rules that keep it usable:**
+
+3. **Show the outcome, do not name it.** A word or a number is the fallback for
+   when a control cannot show you the answer. Here it can.
+4. **The popover has a height budget.** It must fit a laptop window with room to
+   spare, which means nothing stacks a second copy of anything: no preview beside
+   a type list, no aim pad beside an angle row, and the shades / related /
+   in-document families share one row behind a scope switch rather than stacking
+   three labelled grids.
+
+**The switch appears only where a paint applies.** A drop shadow takes a flat
+color, so the Shadow row opens straight into the picker with no type switch, the
+same rule as opacity: a control that cannot apply is not shown doing nothing. The
+non-color paint types (image, noise) are the same switch with their own body; see
+`pages/paint.html`.
+
+**Spacing inside it:** 12 between blocks, 8 inside a block, 4 between swatches in
+a grid. Nothing else. (`.popover.pop.on{display:block}` out-specifies a bare
+`.cpick{display:flex}`, so the layout declaration is written as
+`.cpick, .popover.pop.on.cpick` - get that wrong and every gap silently dies.)
 
 Authoring: `data-cp-color` seeds it, `data-cp-fill` / `data-cp-text` bind live
 outputs, a `cp:change` event carries `{hex, rgba, r,g,b,a, h,s,l}`, and a

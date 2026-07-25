@@ -110,10 +110,12 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `.efx` effect rows, `.gramp`/`.gstop` gradient, `.dial`.
 - **Canvas content:** `.hero-card` (designed sample), `.uibtn`/`.uibtn.grad`,
   selection: `.sel-ring`+`.handle`, `.mtag`; component: `.cinst`/`.cring`+`.cbadge`.
-- **Color:** `.cpick` (the ONE color picker popover: SV field, hue + alpha
-  tracks, HEX/RGB/HSL entry, derived shades and related-hue rows, recents,
-  contrast readout) opened by a `.cpick-btn` swatch trigger. Never author a
-  second color UI; see UX-PATTERNS.md D7 and `pages/color.html`.
+- **Color:** `.cpick` (the ONE paint popover: a Solid/Linear/Radial/Angular type
+  switch, the gradient ramp + stop rows when a gradient is chosen, an SV field, a
+  centered HSL/RGB/HEX switch, one slider per channel with an editable value,
+  derived shades and related-hue rows, recents, contrast readout) opened by a
+  `.cpick-btn` swatch trigger. Never author a second color UI, and never a
+  separate gradient editor; see UX-PATTERNS.md D7 and `pages/color.html`.
 - **Captions:** `.caption`>`.c`>`.lab`(/`.lab.g2`)+`p`. Use these to explain
   "the idea / direction / open question" under each window.
 - **Code snippets:** `.codeblk` (with `.k`/`.s`/`.c`/`.p` spans for syntax).
@@ -121,6 +123,10 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   inline element would fragment a multi-line snippet across line boxes.
 - **Walkthrough:** `.wt` (see "Usage walkthroughs" below). The old
   `.wsteps`>`.wstep` slideshow is **legacy**; do not author new pages with it.
+- **Elevation:** `.elev-0/1/2` and now `.elev-3`, the only surface allowed to sit
+  ON a popover (a callout anchored to something inside it). It must not reuse the
+  popover's tokens: dark lifts by getting lighter (`--glass-3`), light lifts by
+  casting further (`--lg-shadow-3`). See `pages/lang-elevation.html`.
 - **Scenario accent pips:** UI/components `var(--comp)`, image `#ff7e5f`,
   video `#12c2e9`, automation gradient `linear-gradient(120deg,#6E8BFF,#c56cff)`.
 
@@ -381,14 +387,21 @@ always exact. Nothing is animated into place by hand.
 | `data-select="#lrHero"` | exclusive selection across `.lrow` / `.libtile` / `.filmcard` / `.clip`. Class from `data-select-class`, else the target's `data-sel-class`, else `sel` |
 | `data-show` / `data-hide` | drop or add `.wt-off` (reveal canvas content, selection rings, badges, empty states) |
 | `data-sheet-open` / `data-sheet-shut` | the `.sheet.down` overlay (history) |
-| `data-pop="#layerMenu"` | open a `.popover.pop`, so a cue can sit on a real menu item |
+| `data-pop="#layerMenu"` | open a `.popover.pop`, so a cue can sit on a real menu item. Every step shuts every popover first, so a menu that stays open across two steps declares it on both |
 | `data-time="on\|off"` | the document has time: shows or hides `.transport` + `.timeline` |
 | `data-set="#id=text\|#id2=text"` | set a readout's text (counts, titles, values) |
 | `data-css="#clipA=width:26%"` | inline geometry (a trimmed clip, a bar) |
+| `data-class="#trans1=blk\|#cvTitle=-caret"` | add a variant class for this step; a leading `-` takes one off again |
 | `data-cue` / `data-cue-label` / `data-cue-place` | the click cue and its label; place is `top\|bottom\|left\|right`, auto if omitted |
 
 `.wt-off` is the ONE class for "not in the document yet". Author the finished
 state in markup and hide the parts a later step reveals.
+
+**The timeline measures the lanes, not the window.** `.ruler` is inset by the
+track label, and `.playhead` takes `--t`, a 0..1 position in LANE space
+(`data-css="#playhead=--t:0.44"`), so a time on the ruler, a clip edge, and the
+playhead all land on the same pixel. An inline `left:%` still works for the older
+pages, and it is wrong by the width of the track label.
 
 ### The cue
 
@@ -431,17 +444,23 @@ concrete: name the panel, the badge, the row, the chrome that appeared.
   that starts from capture history must invoke it from the **menu-bar icon** or
   **⌘⇧H**, with no editor window open, and the editor is what a capture *opens
   into* (PRODUCT-MODEL §4b req 5). An in-window History button is a convenience,
-  never the taught path. `pages/video-create-wt.html` shows the small desktop +
+  never the taught path. `pages/capture-wt.html` shows the small desktop +
   menu-bar agent representation this needs.
 
 Reference implementations: `pages/ds-build-wt.html` and
-`pages/video-create-wt.html`.
+`pages/video-transition-wt.html`.
+
+**One scenario per page.** The video clickthroughs are the model: `transition`,
+`cut`, `title`, `move`, `zoom`, `freeze`, each answering one question a person
+actually arrives with ("how do I put a dissolve on that cut?"). A page that
+teaches importing AND cutting AND titling AND exporting teaches none of them,
+which is why `video-create-wt` was retired.
 
 ### Legacy: `.wsteps`
 
 `.wsteps` > `.wstep`(+`.on`), `.wcap` > `.num` + `.tx`, driven by the same
 `.wbar`, still works because several pages have not been converted yet
-(`walk`, `capture-wt`, `img-grade-wt`, `img-retouch-wt`, `video-animate-wt`,
+(`walk`, `capture-wt`, `img-grade-wt`, `img-retouch-wt`,
 `component-configure-wt`, `agent-generate-wt`, `vector-wt`). It swaps a whole
 illustration per step, which is exactly the failure §4d forbids. **Do not author
 new pages with it; convert to `.wt` instead.**
@@ -549,18 +568,49 @@ NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ 
    AS an icon: inside an interactive control (`.tool`/`.btn`/tab/menuitem), a
    `.lrow`/badge, a toolbar, or as a status/disclosure indicator.
 
-Usage: `<i class="ic ic-<name>"></i>` — inherits `currentColor`, sizes with
-`.ic.xs/.sm/.lg` or explicit width/height. It works inside `.tool`, `.btn`,
-`.lrow`, badges, etc.
+Usage: `<i class="ic ic-<name>"></i>` — inherits `currentColor`, sized by role
+with `.ic.xs` 12 / `.ic.sm` 14 / `.ic` 16 / `.ic.lg` 20 / `.ic.xl` 24. Never an
+ad-hoc `width:15px`. It works inside `.tool`, `.btn`, `.lrow`, `.menuitem` and
+badges.
 
-Available names: chevron-down chevron-right plus minus x check search eye eye-off
-lock sliders more play pause export import save undo redo cursor move frame circle
-square pen text image crop ruler brush eraser layers component keyframe sparkle
-wand grid folder swatch blade zoom hand audio clone heal history lasso maximize
-skip-back skip-forward transition warning library chevron-left star trash group
-flip-horizontal flip-vertical align-left align-center align-right boolean-union
-eyedropper swap flow-horizontal flow-vertical dodge-burn bold italic patch
-volume sidebar pin copy.
+The set is drawn to one grid: 24 x 24 box, 20 x 20 live area, square keyline
+18 x 18, circle keyline d17.2, stroke 1.75 with round caps and joins, fills
+only where the glyph is solid by nature (play, keyframe, star, cursor, sparkle,
+dots). Adding a glyph means adding it to `shared/icons.mjs` and running
+`node shared/build-icons.mjs` from `docs/design/mocks` — that regenerates the
+CSS, the iconography page and this list together. Do NOT hand-write a mask rule
+into `photonz-ds.css`; the generated block is overwritten.
+
+The full searchable library, with the grid and the drawing rules, is
+`pages/iconography.html`. Names by group:
+
+<!-- ICONNAMES:BEGIN -->
+**Navigation & disclosure** — chevron-up chevron-down chevron-left chevron-right chevron-updown arrow-up arrow-down arrow-left arrow-right more more-vertical external
+
+**Core actions** — plus minus x check check-circle x-circle search trash copy duplicate undo redo save export import share link unlink refresh settings info help filter
+
+**Documents & library** — document document-new folder folder-open library grid list tag image star history pin archive
+
+**View & canvas** — zoom-in zoom-out zoom-fit zoom-actual hand maximize minimize sidebar-left sidebar-right panel-bottom canvas-grid rulers snap
+
+**Tools** — cursor move marquee-rect marquee-ellipse lasso wand subject crop straighten ruler eyedropper pen pencil brush eraser fill gradient clone heal patch dodge-burn blur-tool text
+
+**Shapes & vector** — square circle line triangle polygon frame bezier node corner-radius boolean-union boolean-subtract boolean-intersect boolean-exclude flatten
+
+**Layers & structure** — layers layer-add group ungroup component instance mask clip eye eye-off lock unlock opacity blend merge
+
+**Transform & arrange** — flip-horizontal flip-vertical rotate-left rotate-right align-left align-center-h align-right align-top align-middle align-bottom distribute-h distribute-v bring-forward send-backward swap scale flow-horizontal flow-vertical
+
+**Adjust & effects** — sliders swatch exposure contrast saturation temperature curves levels sharpen blur noise vignette shadow glow border effects
+
+**Type** — bold italic underline strikethrough text-align-left text-align-center text-align-right text-align-justify line-height letter-spacing font-size list-bullet list-number
+
+**Media & timeline** — play pause stop skip-back skip-forward step-back step-forward loop keyframe transition blade trim speed timeline audio waveform volume volume-off mic captions video film camera aperture
+
+**Agent, capture & system** — sparkle chat capture record window display cloud download upload branch compare restore keyboard command warning
+
+Aliases (older names, still render): zoom→zoom-in sidebar→sidebar-right edit→pencil fullscreen→maximize align-center→align-center-h color→swatch agent→sparkle add→plus close→x delete→trash split→blade measure→ruler visible→eye hidden→eye-off
+<!-- ICONNAMES:END -->
 
 Glyph -> icon mapping when sweeping: select/pointer -> cursor; move -> move;
 frame -> frame; shape/rect -> square (or circle for ellipse); pen/edit -> pen;

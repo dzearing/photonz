@@ -1948,3 +1948,312 @@ releases/latest/download URL returns 200; the site reports 0.13.0.
 NEXT: phases 16 and 17 are both still `in_progress` (nothing completed by this
 release). Phase 17 (region selection system) is flagged as the user's next
 priority.
+
+## 2026-07-25 — Vision mock: the icon library
+
+The creation-vision study had 76 icons, hand-written as data URIs directly in
+`photonz-ds.css`, drawn at wildly different measures (one glyph filled 24 grid
+units, its neighbour filled 14) and at a 2.0 stroke that read chunky at 16px.
+`align-left/center/right` were three near-identical text-alignment glyphs doing
+double duty as object alignment, and `bezier`/`gradient` were referenced by
+pages but never defined.
+
+**What landed**
+
+- `docs/design/mocks/shared/icons.mjs` — the icon set as source of truth.
+  199 glyphs in 12 groups plus 14 aliases, each with a blurb and search
+  keywords. Drawn to one grid: 24 box, 20 live area, square keyline 18,
+  circle keyline d17.2 (deliberately smaller — a circle reads bigger at the
+  same measure), stroke 1.75, round caps/joins, fills only where the glyph is
+  solid by nature.
+- `shared/build-icons.mjs` — regenerates three marked regions in lockstep:
+  the `.ic-*` block in `photonz-ds.css`, the grid in `pages/iconography.html`,
+  and the name list in `AGENTS.md`. Run it from `docs/design/mocks`. Never
+  hand-edit inside the markers.
+- `pages/iconography.html` — the searchable library (name + meaning + keywords,
+  `/` to focus, click a glyph to copy its markup, size segment 12/16/22/32/48
+  that retargets every cell at once) plus four spec blocks: the keylines, the
+  weight, the size ramp, and the set judged in a real tool bar and layer rows.
+  Wired into the Design system nav group and cross-linked from `dsys.html`.
+- Size ramp is now `.xs` 12 / `.sm` 14 / default 16 / `.lg` 20 / `.xl` 24
+  (was 11/13/16/20). Nothing else changed size.
+
+**Gotchas worth keeping**
+
+- CSS masks are ALPHA masks. `fill='white'` does not knock a hole in a glyph —
+  it paints. Use an SVG `<mask>` (luminance) for a real knockout; that is how
+  `boolean-subtract` works. `fill-rule='evenodd'` gives XOR, which is
+  `boolean-exclude`, NOT subtract.
+- Mask alpha honours gradients, so `blur`, `vignette`, `glow`, `shadow` and
+  `gradient` use real `<linearGradient>`/`<radialGradient>` stops rather than
+  faking softness with dots.
+- Page-local class names collide with DS ones. `#iconography .ramp` inherited
+  `flex-direction:column` from the DS `.ramp` until it was set explicitly, and
+  `.tools` is not a DS class at all (the floating tool bar is `.cnv > .tbar`).
+- Renamed `align-*` to object alignment (edge rule + two objects) and added a
+  separate `text-align-*` family; the four pages that meant text alignment were
+  swept over.
+
+NEXT: iterate on the glyphs the user flags. The open question on the page is
+whether to cut a second, heavier mask for 12 and 14 the way macOS optical sizes
+do, or keep one weight as the simpler promise.
+
+### 2026-07-25, same session — picker rev 2 (user review)
+
+Four things came back from review, all fixed:
+
+1. **Every gap in the picker was dead.** `.popover.pop.on{display:block}` is three
+   classes and out-specified a bare `.cpick{display:flex}`, so the flex container
+   never existed and every `gap` was ignored: measured 0px between blocks. Written
+   now as `.cpick, .popover.pop.on.cpick`. Rhythm is 12 between blocks / 8 inside a
+   block / 4 between swatches, and nothing else.
+2. **Controls were undersized against the rest of the site.** The bespoke format
+   switch was 20px tall with 10px text; the DS `.seg` is 23px / 11px. Dropped the
+   bespoke control and used `.seg`. Same for the value fields (now the `.field`
+   metric) and the swatch chips (now 22px / `--r1`, the DS `.swatch` geometry).
+   The switch is also centered.
+3. **A hue slider AND a hex/rgb/hsl entry row is two controls for one channel.**
+   Rebuilt the lower half as ONE slider per channel: the format switch picks the
+   channel set (HSL / RGB / HEX), each track is shaded to show what moving it
+   does, and each slider carries its number as an editable field. Right-clicking a
+   track focuses that number. HEX keeps hue + alpha tracks plus a text field,
+   since hex has no channels to slide and paste needs a home.
+4. **A light hairline down the right and bottom of the SV field.** Not a border:
+   the popover was anchored at a fractional x/y (getBoundingClientRect returns
+   fractions), so child edges landed on half pixels and the lighter popover
+   background bled through. The anchor now rounds, then re-measures and takes any
+   remaining fraction back out, since the offset parent can be fractional too.
+
+Also added, because the page claimed "gradient stop" was a color slot without
+showing it: a **Gradients specimen** where the ramp, three stop rows (each with
+the same swatch trigger) and add/remove sit next to the same picker, retitled
+"Stop 2 of 3", with the ramp applied live to a fill, a stroke and type. The point
+it makes: nothing gradient-specific is inside the picker.
+
+D7 in `shared/UX-PATTERNS.md` rewritten to match.
+
+## 2026-07-25 — video usage clickthroughs: one scenario per page
+
+The two video walkthroughs did not answer the questions people arrive with.
+`video-create-wt` ran history → open → library → drag → blade → split →
+transition → export in one page, so it taught eight ideas and landed none of
+them, and `video-animate-wt` drifted from keyframes into styles and components
+by its last third. Both are retired.
+
+Six scenario clickthroughs replace them, each one job start to finish, all on the
+same `promo-cut · 1920 × 1080 · 0:18` document so the shell never changes shape
+between them:
+
+- `video-transition-wt` — **the cut is selectable.** Select the seam, pick a
+  type, drag the length, set the curve, swap the type (settings survive), then
+  change the alignment and watch which clip pays for it.
+- `video-cut-wt` — detach the audio first, blade at the playhead, trim the
+  fumble off the second piece, drag it back until it snaps. Nothing destroyed:
+  a split is two layers on one recording, a trim is an in point moving.
+- `video-title-wt` — a title, a piece of clip art, and a component instance all
+  arrive the same way, because each is a layer with an in and an out. Tracks
+  appear when something needs one.
+- `video-move-wt` — two keys and the road between them. The lane on the timeline
+  and the dashed path on the canvas are the same pair of values.
+- `video-zoom-wt` — a punch-in is Scale + Centre with keys on them. After the
+  last key a value just holds, so the hold is free.
+- `video-freeze-wt` — a freeze is a clip whose in and out are the same frame.
+  Includes the ripple choice (push everything vs picture only) and ends by
+  annotating the held frame, which is the screenshot workflow arriving in video.
+
+Shared DS changes this needed (all additive, all in `photonz-ds.js` / `.css`):
+
+1. **The timeline was lying.** `.ruler` was spread across the whole timeline
+   while clips live in the lane, so `4s` sat ~120px left of the frame it named,
+   and `.playhead{left:%}` was off by the width of the track label. The ruler is
+   now inset by label + gap, and the playhead takes `--t` (0..1 in lane space).
+   Inline `left:%` still works, so no old page moved.
+2. `data-class="#id=blk|#id2=-caret"` — add a variant class for a step, `-x`
+   removes one. Steps replay cumulatively, so removal had to be expressible.
+3. **Popovers close themselves.** A menu opened by `data-pop` in step 2 was
+   still hanging open in step 8. Every step now shuts every `.popover.pop`
+   first; a menu that spans two steps declares it on both.
+4. `data-activate` matched siblings by the target's FIRST class, so a bare
+   `<button>` in a `.seg` (and any button already carrying `on`) silently did
+   nothing. It now skips `on` and falls back to the tag name.
+
+Also repaired: a concurrent icon-generator run spliced out ~130 lines of shared
+app-shell CSS along with the old inline icon block (`.dnav .srch .libtools
+.libgrid .libtile .cmdk .wsw .lrow.adj .clipmark`), which left library tiles,
+search fields, the ⌘K well and the workspace switcher unstyled on every page.
+Restored below the `ICONS:BEGIN/END` fence so a re-run cannot take them again.
+
+Next: the same treatment for the image and UI clickthroughs, which still bundle
+several ideas per page (`walk`, `composites`).
+
+### 2026-07-25, same session — picker rev 3: a slot holds a paint
+
+Review question: "I have no idea how to select a gradient color for fill, border,
+text." Correct, and rev 2 made it worse by putting gradients in a separate
+specimen and stating that the picker knows nothing about them. There was no route
+from a Fill swatch to a gradient at all.
+
+Fixed by making the popover a PAINT editor, not a color editor:
+
+- The first control under the head is a **Solid / Linear / Radial / Angular**
+  switch. Choosing a gradient reveals a ramp, one row per stop, an angle slider
+  and add / remove / reverse, all above the unchanged picker. Everything below the
+  switch keeps working, which is the point: a gradient is not a different editor.
+- Switching to a gradient **seeds the stops from the color you already had**, so
+  the first thing you see is your own color, not a stock preset.
+- A stop is a color slot: select it on the ramp or in the list and the picker
+  edits it, with the popover title reading "Fill · stop 2 of 3". Stops drag along
+  the ramp, clicking the empty strip adds one.
+- **The switch only appears where a paint applies.** The Shadow row has no
+  `data-cl-paint`, so it opens straight into the picker, same rule as opacity.
+- `cp:change` now carries `css` (the full paint) and a `paint` object
+  `{type, angle, stops}`; `cp:set` accepts the same, so a page can point the
+  picker at an existing gradient. Re-seeding now emits `cp:change` instead of
+  being silent, so a page never has to special-case the value it opened on.
+- The demo card composes fill and stroke as two background layers
+  (padding-box / border-box), so a gradient stroke on the canvas is a real
+  gradient stroke, and gradient text is real background-clip:text.
+
+The standalone gradient specimen was rewritten to explain the type switch and to
+show one paint landing in three slots (fill, stroke, type) at once.
+
+D7 and the AGENTS class list corrected again: the picker IS where gradients are
+made, and no page should author a separate gradient editor.
+
+### 2026-07-25, same session — picker rev 4: shorter, and shows instead of tells
+
+Three problems from review: the popover ran off the window in gradient mode, the
+words "linear / radial / angular" are not a picture of anything, and "135°" is a
+number a person has to decode. Relayered:
+
+- **Paint type is four live thumbnails**, each rendering the CURRENT stops at the
+  CURRENT angle. Before any stops exist the gradient tiles preview the pair that
+  picking them would actually seed, so a thumbnail always predicts the result.
+  Choosing between four outcomes beats reading four words.
+- **Direction is aimed, not typed.** The angle row is gone; there is a 64px aim
+  pad showing the paint with a handle you drag. The angle readout sits in the
+  corner of the pad and follows the handle. On a radial the same pad moves the
+  center. Arrow keys nudge by 5, shift by 15.
+- **Height budget.** 700px tall to 503 solid / 579 gradient, in a 622px mock
+  shell. What went: the shades / related / in-document grids became ONE row
+  behind a scope switch (saved ~80px), the stop list became stop keys on the ramp
+  plus a single selected-stop row (~80px), and the separate angle row folded into
+  the pad. The SV field is 104px.
+- The picker also re-anchors when its own height changes, so switching to a
+  gradient can no longer push it off the bottom.
+
+The general rule this adds, written into D7: **show the outcome, do not name it.**
+A word or a number is what you fall back on when a control cannot show you the
+answer. And: nothing in the popover stacks a second copy of anything, because a
+popover that does not fit is broken no matter how good it reads.
+
+### 2026-07-25, same session — picker rev 5: the stop names itself
+
+Two more from review.
+
+**"The percentage you type in reads like scale."** It was an unlabelled number
+field sitting next to "STOP 1/2", in a row too narrow to also carry three
+buttons, so it truncated as well. Replaced per the user's suggestion: the
+selected stop now gets a **beaked callout over its key on the ramp**, holding its
+color swatch, "Stop N", and a labelled **Position** field. Three facts, next to
+their subject, on an overlay that costs no layout height. The row under the ramp
+keeps only add / remove / reverse. Shift-dragging a key still snaps to fives.
+The card shows while you are working the ramp or while its own field has focus,
+so it never parks itself on top of the control you reach for next.
+
+**"The radial center looks draggable but isn't."** It was draggable, and driving
+it proved that. The fault was the affordance, in three parts, all fixed:
+- the cursor was `crosshair`, which promises "click to place", not "grab" - now
+  `grab`, and `grabbing` while dragging;
+- the SVG handle has `pointer-events:none` so it never reacted to hover - the
+  circles now thicken and gain a shadow on pad hover and drag;
+- pressing NEAR the handle teleported the center to the pointer, which reads as
+  "I did not grab it". Pressing within 18% of the handle now keeps the offset;
+  press well away from it and it still places directly, which is the faster
+  gesture when you mean it.
+
+Also hardened `drag()`: `setPointerCapture` is wrapped in try/catch, because a
+throw there silently swallowed the whole drag and made the control look dead
+rather than degraded.
+
+Both rules are now in D7: a handle is GRABBED not teleported, and the selected
+stop names itself where it is.
+
+### 2026-07-25, same session — picker rev 6: the DS gains an elev 3
+
+Two more, both correct.
+
+**"Isn't that a double elevation?"** Yes. The stop callout sits on an elev-2
+popover but was drawn with the popover's own tokens (`--glass-menu`,
+`--shadow`), so it read as a hole punched in the popover rather than a plate
+above it - in dark it was actually DARKER than the surface it floated on. The
+DS ladder stopped at elev 2, so this was a missing foundation level, not a
+page-local fix:
+
+- new tokens `--glass-3` / `--lg-shadow-3` in all four theme blocks, and an
+  `.elev-3` utility;
+- **dark lifts by growing lighter** (rgba(46,51,66,.97) against the popover's
+  rgba(22,25,33,.96)), **light lifts by casting further** (a longer, deeper
+  shadow on an already near-white plate). One signal per step, which is the rule
+  the elevation page already stated;
+- opaque on purpose: glass over glass doubles the blur and muddies both.
+- `pages/lang-elevation.html` gained the sixth rung so the design language does
+  not contradict the DS, and D7 + AGENTS.md record when to reach for it.
+
+**"When the stop key is focused the overlay should stay visible."** It hid on
+pointerleave unless the Position field had focus. Now the card is up while the
+pointer is over the ramp block OR anything inside it holds focus - the stop key
+itself included - because a focused thing must not lose its label when the
+pointer wanders. Pressing a key now also focuses it, so selected and focused
+agree, and arrow keys nudge a focused stop (shift = 5).
+
+### 2026-07-25, same session — picker rev 7: the beak joins the border
+
+The callout's beak was a 9px rotated square with sharp corners: too small to
+read, and it looked tacked under the card rather than being part of its outline.
+Redrawn as a 13px rotated square (18px across the base, 8px of protrusion),
+centred ON the card's bottom edge so its upper half sits inside the card and its
+opaque fill hides the border it crosses. Its two lower edges therefore ARE the
+card's border carrying on around the point. The tip is rounded (4px) like every
+other corner in the app, and the two joins are eased (3px) so the point grows out
+of the card instead of being stuck to it. The JS clamp that keeps the beak inside
+the card grew to match the wider base.
+
+### 2026-07-25, same session — picker rev 8: one path, one handle family
+
+**The beak.** Three attempts, and the first two were the same mistake in
+different clothes. A rotated square overlapped onto the card lets you see its
+other two edges through the fill. Clipping it to a V (`clip-path` polygon, which
+is applied in the element's own coordinates and so rotates with it) killed the
+diamond, but the beak's 1px border still met the card's 1px border at an acute
+angle, and because the edge colour is semi-transparent that junction darkened
+into a dimple on each shoulder. Fixed by removing the junction: the card now
+draws NO background and NO border, and an SVG behind its content paints ONE path
+- rounded rect, eased shoulders, rounded tip - filled once and stroked once.
+`drop-shadow` on that SVG makes the elevation follow the beak instead of stopping
+at a rectangle. `--glass-3` also went fully opaque; at .97 the card's own border
+bled through the beak and the overlap double-composited.
+
+**The callout vanished on hover.** It floats 7px clear of the ramp, so moving
+from one to the other crossed a gap that fired `pointerleave` before the card
+could receive the pointer: it disappeared exactly when you reached for it.
+Leaving now only schedules the hide (160ms) and arriving anywhere in the pair
+cancels it.
+
+**The aim pad's dead centre.** On linear and angular the centre dot looked
+grabbable and was not. It is now a real handle on every type, drawn as a smaller
+version of the direction handle with a line between them so the two read as one
+object. For a linear that is honest work, not decoration: a CSS linear gradient
+has no origin, so moving it slides every stop along the axis, and a sideways move
+correctly does nothing. A radial has no direction, so it shows the origin alone.
+
+The rule this leaves in D7: **never draw a handle on something the pointer cannot
+pick up**, and its companion, grab rather than teleport.
+
+### 2026-07-25, same session — pad line, centre to centre
+
+The connector started 5px out from the origin while that dot's radius is 2.6, so
+it visibly missed. Both circles are painted after the line, so the line now runs
+between the two CENTRES and the dots cap it exactly. Starting a connector clear
+of its endpoint is a gap that has to be tuned by eye and breaks the moment either
+radius changes.

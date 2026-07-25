@@ -29,7 +29,7 @@
   #lang-elevation .api b{color:var(--dim);font-weight:600}
 
   /* exploded elevation stack */
-  #lang-elevation .estack{position:relative;min-height:296px;padding:var(--s2) 0}
+  #lang-elevation .estack{position:relative;min-height:352px;padding:var(--s2) 0}
   #lang-elevation .plate{position:absolute;height:48px;border-radius:var(--r3);border:1px solid var(--line-strong);display:flex;align-items:center;gap:var(--gap-sm);padding:0 var(--pad-sm);font-size:11.5px;color:var(--ink);box-sizing:border-box}
   #lang-elevation .plate .t{font-weight:620;letter-spacing:-.01em}
   #lang-elevation .plate .lv{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--faint)}
@@ -138,7 +138,7 @@
   <section class="screen on" id="lang-elevation">
     <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Elevation &amp; glass</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
 
-    <p class="intro">Depth is a ladder, not a decoration. Every surface sits at one of a few levels: <b>stage &lt; window &lt; panel &lt; popover &lt; menu</b>. Shadow shows how far a surface floats above content, and Liquid Glass tints and blurs whatever scrolls behind a transient one, so the stack reads at a glance. Reach for it whenever you need to say "this floats over that" without a heavy container.</p>
+    <p class="intro">Depth is a ladder, not a decoration. Every surface sits at one of a few levels: <b>stage &lt; window &lt; panel &lt; popover &lt; menu &lt; callout</b>. Shadow shows how far a surface floats above content, and Liquid Glass tints and blurs whatever scrolls behind a transient one, so the stack reads at a glance. Reach for it whenever you need to say "this floats over that" without a heavy container.</p>
 
     <!-- 1 · ANATOMY -->
     <div class="blk">
@@ -149,17 +149,19 @@
           <div class="plate" style="left:44px;bottom:112px;width:220px;background:var(--panel-2);box-shadow:none"><span class="dot">2</span><span class="t">Panel</span><span class="lv">elev 1 · docked, flat</span></div>
           <div class="plate elev-2" style="left:66px;bottom:168px;width:198px;background:var(--chrome-solid)"><span class="dot">3</span><span class="t">Popover</span><span class="lv">elev 2 · shadow</span></div>
           <div class="plate elev-2 glass" style="left:88px;bottom:224px;width:176px;background:var(--chrome)"><span class="dot">4</span><span class="t">Menu</span><span class="lv">elev 2 · glass</span></div>
+          <div class="plate elev-3" style="left:110px;bottom:280px;width:154px"><span class="dot">5</span><span class="t">Callout</span><span class="lv">elev 3</span></div>
         </div>
       </div>
       <div class="meta">
         <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
-        <p class="rule">One exploded stack, five roles. Each step up adds either a hairline, a shadow, or glass, never all three at once.</p>
+        <p class="rule">One exploded stack, six roles. Each step up adds either a hairline, a shadow, or glass, never all three at once.</p>
         <div class="leg">
           <span class="li"><span class="n">0</span><span><b>Stage</b> the desktop the window floats on. Fully opaque, no shadow.</span></span>
           <span class="li"><span class="n">1</span><span><b>Window</b> the document frame. Hairline border plus the ambient window shadow the OS draws.</span></span>
           <span class="li"><span class="n">2</span><span><b>Panel</b> docked chrome inside the window. Flat, divided by hairlines, never shadowed.</span></span>
           <span class="li"><span class="n">3</span><span><b>Popover</b> a transient float: inspector detach, color picker. Real shadow lifts it off the panel.</span></span>
-          <span class="li"><span class="n">4</span><span><b>Menu</b> the top rung. Glass tint plus blur plus the big shadow, because it covers live content.</span></span>
+          <span class="li"><span class="n">4</span><span><b>Menu</b> glass tint plus blur plus the big shadow, because it covers live content.</span></span>
+          <span class="li"><span class="n">5</span><span><b>Callout</b> the top rung, and the only thing allowed to sit <i>on</i> a float: a card anchored to something inside a popover. It cannot reuse the popover's own tokens or it reads as a hole punched in it, so in dark it lifts by growing <b>lighter</b> and in light by casting <b>further</b>. Opaque, because glass over glass doubles the blur and muddies both. Class: <code>.elev-3</code>.</span></span>
         </div>
         <p class="api"><b>API</b> depth is a role, not a number you pick: <code>surface.level</code> is derived from what the surface <i>is</i>.</p>
       </div>
