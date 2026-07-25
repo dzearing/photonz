@@ -2,6 +2,18 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.13.0 — 2026-07-25
+
+**A new measure tool.** Measuring is now one caliper instead of a pile of ruler styles. Drag or click out the span you want, then click once more to place the label arm wherever it reads best. The tool snaps to the edges it finds in your screenshot, so lining up on a button or a margin takes no fiddling. Hold Command if you want to ignore the snapping.
+
+**Measurements you can adjust after the fact.** A finished caliper has three handles: the two ends and the label arm. Drag an end to change what you're measuring and the label stays put. Click the label itself to select the caliper.
+
+**A label that stays readable at any zoom.** The measurement chip renders live over the canvas, so it looks the same whether you're zoomed way in or way out, and its border matches the caliper's line weight. Exported and flattened images still carry the label baked in.
+
+**Simpler measure settings.** The inspector is down to what matters: unit, line thickness, label size, and color. Style, direction, and invert are gone because the caliper handles all of that by itself.
+
+**Closing a window no longer loses your edits.** Closing an edited window, including a capture opened from history, asks whether to save instead of quietly throwing the work away. This had regressed in 0.12.0.
+
 ## 0.12.0 — 2026-07-19
 
 **Windows open at the right size.** Opening a capture now sizes the window to the image. It shows at 100% whenever it fits, growing the window to give the canvas room to breathe, and only reduces the zoom when even a full-screen window can't hold the whole image at 100%. Your inspector panel's width and whether it's open carry over between sessions and factor into the sizing.
