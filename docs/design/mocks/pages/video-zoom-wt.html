@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-zoom-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-zoom-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario, start to finish.
+     Page-local CSS is the window height, the program artwork, and the marks
+     this scenario needs on the timeline. Everything else is the shared DS. */
+  #video-zoom-wt .win.shell{height:884px;min-height:0}
+
+  /* THE PROGRAM · designed artwork on the canvas, never chrome */
+  #video-zoom-wt .pvwrap{width:min(470px,88%)}
+  #video-zoom-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f);
+    box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
+  #video-zoom-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.16);overflow:hidden;transform-origin:72% 62%}
+  #video-zoom-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
+  #video-zoom-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-zoom-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-zoom-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  #video-zoom-wt .shot .cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
+    background:linear-gradient(180deg,#fff,#dfe6ff);padding:4px 9px;border-radius:6px}
+
+  /* lanes that place clips at real times */
+  #video-zoom-wt .lane.abs{display:block;position:relative}
+  #video-zoom-wt .lane.abs>.clip,#video-zoom-wt .lane.abs>.kfd,#video-zoom-wt .lane.abs>.kfseg{position:absolute}
+  #video-zoom-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block;line-height:34px;top:0}
+  #video-zoom-wt .clip.gfx{background:linear-gradient(135deg,#febc2e,#ff9d5c)}
+  #video-zoom-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
+
+  /* keyframe lanes · the same timeline, one row per animated property */
+  #video-zoom-wt .track.kft{margin:2px 0}
+  #video-zoom-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
+  #video-zoom-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
+  #video-zoom-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
+    border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+  #video-zoom-wt .kfseg{position:absolute;top:50%;height:2px;border-radius:2px;background:var(--accent);opacity:.45;transform:translateY(-50%)}
+
+  /* the punch-in is a transform on the picture itself, previewed live */
+  #video-zoom-wt .shot{transform-origin:50% 50%;transition:none}
+  /* the button sits inside the shot, not on its corner, so a punch-in on
+     it never exposes the edge of the source */
+  #video-zoom-wt .shot .cta{right:32%;bottom:36%}
+  #video-zoom-wt .mtag{top:auto;bottom:-26px;left:50%}
+  #video-zoom-wt .zoomtag{position:absolute;right:12px;top:12px;background:var(--accent);color:var(--accent-ink);
+    font-family:var(--mono);font-size:10px;font-weight:640;padding:3px 8px;border-radius:6px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-zoom-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Zoom in on a detail over time</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: start wide, punch in on the button, and let it hold. The move is <b>two keys on Scale and two on Centre</b>, and it is built with the same three gestures as every other animation in Photonz: move the playhead, change the thing, let the change be recorded. Eight real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtZoom">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · <span id="docLen">0:18</span></div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+              <div class="mlabel">Reframe</div>
+              <div class="menuitem"><i class="ic ic-zoom"></i> Punch in <span class="sc">⇧Z</span></div>
+              <div class="menuitem"><i class="ic ic-keyframe"></i> Key at playhead <span class="sc">K</span></div>
+              <div class="menuitem"><i class="ic ic-undo"></i> Reset reframe</div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Window</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="pvwrap">
+                <div class="pvframe" id="cvFrame">
+                  <div class="shot" id="cvShot">
+                    <div class="sb"><i></i><i></i><i></i></div>
+                    <div class="bars">
+                      <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                      <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                    </div>
+                    <span class="cta">Get Photonz</span>
+                  </div>
+                  <div class="zoomtag wt-off" id="zoomTag">220%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · the strip swaps with the workspace (D4) -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                <button class="tool" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · it
+                 belongs to the resident agent, not to this window -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:76px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-keyframe wt-off" id="lrRecKf"></i><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- PROPERTIES · contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:330px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip or a layer</div>
+                <div id="propsClip" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Clip <span class="mut">screen-recording</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">In</span><span class="v">0:00</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v">0:18</span></div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Reframe <span class="mut" id="pKeyCount">no keys</span></div>
+                    <div class="irow split"><span class="rl">Scale</span><span class="field"><span class="v" id="vScale">100%</span></span>
+                      <button class="btn ghost icon sm" id="kfScale" title="Keyframe Scale"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Centre</span><span class="field"><span class="v" id="vCentre">960, 540</span></span>
+                      <button class="btn ghost icon sm" id="kfCentre" title="Keyframe Centre"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow"><span class="rl">&nbsp;</span><button class="btn secondary sm" id="btnReset"><i class="ic ic-undo"></i> Reset reframe</button></div>
+                    <p class="note" id="pZoomNote">Reframing is Scale and Centre on the clip. A punch-in is those two values changing over time, which is why it uses the same keys and the same lanes as anything else that moves.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secEase">
+                    <div class="sec-h">Between the keys <span class="mut" id="pEaseState">Linear</span></div>
+                    <div class="irow" style="grid-template-columns:1fr"><span class="rl">Easing</span>
+                      <span class="seg pseg" role="group" aria-label="Easing">
+                        <button class="on" id="cvLin">Linear</button>
+                        <button id="cvEase">Ease in-out</button>
+                      </span>
+                    </div>
+                    <p class="note" id="pEaseNote">A linear punch-in reads like a machine. Easing in and out is what makes it look like someone leaned in.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
+                    <button data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets" id="scopeAssets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Pop in</span><span class="mt">motion</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+          </span>
+          <span class="tc cur" id="tcCur">0:00</span>
+          <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="0" aria-valuemin="0" aria-valuemax="18" tabindex="0">
+            <span class="fill" id="scrubFill" style="width:0%"></span>
+            <span class="knob" id="scrubKnob" style="left:0%"></span>
+          </span>
+          <span class="tc" id="tcEnd">0:18</span>
+          <span class="grp">
+            <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
+            <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
+            <button class="btn ghost sm" title="Duplicate"><i class="ic ic-copy"></i><span class="lb">Duplicate</span></button>
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline" style="min-height:170px">
+          <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="lane abs"><div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div></div>
+          </div>
+
+          <div class="track kft wt-off" id="laneScale"><span class="tl">Scale</span>
+            <div class="lane rlane kfl">
+              <span class="kfseg wt-off" id="segScale" style="left:16.7%;width:11.1%"></span>
+              <span class="kfd wt-off" id="kdS1" style="left:16.7%"></span>
+              <span class="kfd wt-off" id="kdS2" style="left:27.8%"></span>
+            </div>
+          </div>
+          <div class="track kft wt-off" id="laneCentre"><span class="tl">Centre</span>
+            <div class="lane rlane kfl">
+              <span class="kfseg wt-off" id="segCentre" style="left:16.7%;width:11.1%"></span>
+              <span class="kfd wt-off" id="kdC1" style="left:16.7%"></span>
+              <span class="kfd wt-off" id="kdC2" style="left:27.8%"></span>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+            <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
+          </div>
+          <div class="playhead" id="playhead" style="--t:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the clip"
+          data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-set="#propKind=Clip">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>screen-recording</b> clip</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">Properties shows the clip and a <b>Reframe</b> section: Scale and Centre. There is no crop mode and no separate effect. Where you are looking is a property of the clip.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Go to where the move starts"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:03" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
+          data-set="#propKind=Clip|#tcCur=0:03">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> to <b>0:03</b>, just before the click you want to show</p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">this is where the camera should still be wide. A move needs a starting value, and a starting value is a key at a time.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Record the wide shot"
+          data-cue="#kfScale" data-cue-label="Click the keyframe button on Scale" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#lrRecKf" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
+          data-set="#propKind=Clip|#tcCur=0:03|#pKeyCount=1 key|#vScale=100%">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do">the <b>keyframe</b> button on the <b>Scale</b> row, still at 100%</p>
+          <p class="wt-where">Properties, in the Reframe section</p>
+          <p class="wt-res">a key at <b>0:03</b> holding 100%. Keying a value you have not changed feels odd for a second, and it is the whole trick: you are nailing down where the move begins so it cannot creep backwards.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Go to where it should be tight"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:05" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#lrRecKf" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278"
+          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=1 key|#vScale=100%">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> to <b>0:05</b></p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">two seconds is a comfortable punch. Long enough to read as a move, short enough that nobody waits for it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Zoom in"
+          data-cue="#vScale" data-cue-label="Drag the Scale value up to 220%" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2)"
+          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=2 keys|#vScale=220%">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do" data-verb="Drag">the <b>Scale</b> value up to <b>220%</b></p>
+          <p class="wt-where">Properties, in the Reframe section</p>
+          <p class="wt-res">the canvas punches in live as you drag, and the second key writes itself at 0:05. The Scale lane on the timeline now shows the span between wide and tight: that span is the move.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Put the button in the middle"
+          data-cue="#cvFrame" data-cue-label="Drag the picture to frame the button" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
+          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do" data-verb="Drag">the <b>picture</b> until the button sits in the middle of the frame</p>
+          <p class="wt-where">the canvas</p>
+          <p class="wt-res">dragging the picture is Centre, and Centre keys itself the same way Scale did. Its own lane appears under the Scale lane, because a punch-in is really two properties travelling together.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Ease the move"
+          data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-activate="#cvEase"
+          data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
+          data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pEaseState=Ease in-out">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Ease in-out</b></p>
+          <p class="wt-where">Properties, under <b>Between the keys</b></p>
+          <p class="wt-res">the punch stops arriving at a constant rate. It leans in and settles, which is the difference between a camera move and a zoom slider being dragged.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Let it hold"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-activate="#cvEase"
+          data-css="#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
+          data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pZoomNote=After the last key a value simply stays. Pulling back out later is one more key holding the old 100%, which is why the wide shot was worth recording in step 3.">
+        <div class="wt-cap vid">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> on to <b>0:08</b></p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">three seconds past the last key and the frame has not moved: after its final key a property just holds. That is the hold, and you did not have to ask for it. To pull back out, key 100% again wherever you want the move to land.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the wide shot"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A punch-in is not a zoom tool. It is <b>Scale and Centre with keys on them</b>, the same two properties you would animate on a title or a piece of clip art. Learning it once means you have learned every move in the app.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Most punch-ins point at something the app can already find: a click, a cursor, a window. <b>Punch in on the pointer</b> could write these keys for you from the recording’s own click track, and leave them fully editable.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>220% of a 1080p source is soft. Should the canvas warn when a punch-in passes the source resolution, and should <b>Export</b> quietly render from the original capture at full size when it can?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and any segmented control on this
+     page stay live when a person clicks them directly. The walkthrough drives
+     the same state declaratively. */
+  (function () {
+    var root = document.getElementById('video-zoom-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () {
+          bs.forEach(function (x) { x.classList.toggle('on', x === b); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

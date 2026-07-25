@@ -7,23 +7,32 @@
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
   /* video-transition-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
-     screen, rendered once, driven by the steps below. ONE scenario: the cut
-     between two clips is a thing you can select, and a transition is an object
-     configured on it (type, length, alignment, curve), never a sealed effect.
-     Page-local CSS is the window height, the program artwork, and the edit
-     point + transition marker on the timeline. */
-  #video-transition-wt .win.shell{height:872px;min-height:0}
+     screen, rendered once, driven by the steps below. ONE scenario, and the
+     whole point of it is WHERE THE FRAMES COME FROM.
 
-  /* THE PROGRAM · two frames stacked, cross-faded by the step's state. This is
-     designed artwork on the canvas, not chrome. */
-  #video-transition-wt .pvwrap{width:min(470px,88%)}
+     A cross dissolve needs both clips on screen at once, so it needs an
+     OVERLAP, and an overlap has to be paid for with spare media past a clip's
+     in or out point. A dip to black needs no overlap at all: each clip fades
+     inside its own time. The two are not variants of one widget, and the
+     timeline has to show the difference instead of hiding it behind a block
+     wedged between two clips.
+
+     Rules this page holds to:
+       · an untouched cut draws NOTHING and takes NO width. Clips butt.
+       · a transition is drawn ON TOP of the two clips, never between them, so
+         adding one never nudges anything.
+       · time only moves when you ask for it (a hold on black), and then the
+         timeline shows the clips moving. */
+  #video-transition-wt .win.shell{height:940px;min-height:0}
+
+  /* THE PROGRAM · two frames stacked, cross-faded by the step's state */
+  #video-transition-wt .pvwrap{width:min(430px,82%)}
   #video-transition-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
     overflow:hidden;background:#06070d;box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
   #video-transition-wt .fr{position:absolute;inset:0}
   #video-transition-wt .fr.a{background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f)}
   #video-transition-wt .fr.b{background:linear-gradient(135deg,#ff9d5c,#ff5d8f 58%,#7c4dff);opacity:0}
   #video-transition-wt .fr.blk{background:#000;opacity:0}
-  /* frame A: a screen recording of an app */
   #video-transition-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
     background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
     border:1px solid rgba(255,255,255,.16);overflow:hidden}
@@ -32,36 +41,101 @@
   #video-transition-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
   #video-transition-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
   #video-transition-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
-  /* frame B: b-roll */
-  #video-transition-wt .fr.b .sun{position:absolute;right:18%;top:18%;width:64px;height:64px;border-radius:50%;
+  #video-transition-wt .fr.b .sun{position:absolute;right:18%;top:18%;width:58px;height:58px;border-radius:50%;
     background:radial-gradient(circle,#fff,rgba(255,255,255,.35) 62%,transparent 70%)}
   #video-transition-wt .fr.b .hill{position:absolute;left:-10%;right:-10%;bottom:-32%;height:70%;border-radius:50%;
     background:rgba(0,0,0,.28)}
 
-  /* THE EDIT POINT · the cut itself, a real target on the lane. Empty it is a
-     slim grabber; with a transition on it, it is the marker. */
-  #video-transition-wt .editpt{flex:none;align-self:center;width:9px;height:34px;border-radius:3px;
-    margin:0 -4px;z-index:2;background:var(--line-strong);cursor:pointer;position:relative}
-  #video-transition-wt .editpt:hover{background:var(--accent-line)}
-  #video-transition-wt .editpt.sel{background:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
-  #video-transition-wt .transition{width:26px;margin:0 -13px;z-index:3;display:flex;align-items:center;
-    justify-content:center;color:#3a2c05;cursor:pointer;
-    background:linear-gradient(90deg,#12c2e9,#febc2e 50%,#ff9d5c)}
-  #video-transition-wt .transition::after{display:none}
-  #video-transition-wt .transition.sel{box-shadow:0 0 0 2px var(--accent)}
-  #video-transition-wt .transition.blk{background:linear-gradient(90deg,#12c2e9,#0a0a0f 50%,#ff9d5c);color:#fff}
-  #video-transition-wt .clip{white-space:nowrap;cursor:pointer}
+  /* ---------- the timeline, which is where the argument is made ---------- */
+  #video-transition-wt .lane.abs{display:block;position:relative}
+  #video-transition-wt .lane.abs>*{position:absolute;top:0}
+  #video-transition-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;
+    display:block;line-height:34px}
+  #video-transition-wt .clip.blk{background:#05060a;border:1px solid #2a2f45;color:#8b93b5;line-height:32px}
 
-  /* the transition picker · tiles, because a transition is a thing you pick */
-  #video-transition-wt #transPick{width:232px}
+  /* THE CUT · zero width, drawn over the seam. At rest it is invisible: two
+     clips that butt look like two clips that butt. */
+  #video-transition-wt .cut{width:14px;height:34px;transform:translateX(-50%);z-index:7;cursor:pointer;
+    background:transparent;border:0;padding:0}
+  #video-transition-wt .cut::before{content:"";position:absolute;left:50%;top:2px;bottom:2px;width:2px;
+    transform:translateX(-50%);border-radius:2px;background:transparent;transition:background .12s ease}
+  #video-transition-wt .cut:hover::before{background:rgba(255,255,255,.55)}
+  #video-transition-wt .cut.sel::before{background:var(--accent);top:-3px;bottom:-3px;width:3px;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 24%, transparent)}
+
+  /* SPARE MEDIA · the frames past a clip's in or out point that an overlap can
+     be paid for with. Shown while the cut is selected: A's spare runs forward
+     along the top, B's spare runs back along the bottom. */
+  #video-transition-wt .spare{height:5px;border-radius:3px;z-index:5;opacity:.95}
+  #video-transition-wt .spare.a{top:-2px;background:repeating-linear-gradient(90deg,#9a7dff,#9a7dff 3px,transparent 3px,transparent 6px)}
+  #video-transition-wt .spare.b{top:auto;bottom:-2px;background:repeating-linear-gradient(90deg,#ffb98a,#ffb98a 3px,transparent 3px,transparent 6px)}
+  /* the label rides INSIDE the clip body, so it never collides with the ruler */
+  #video-transition-wt .spare .lb{position:absolute;top:7px;left:2px;font-size:8.5px;font-family:var(--mono);
+    color:#dbe4ff;white-space:nowrap;background:rgba(8,10,18,.72);padding:1px 4px;border-radius:3px}
+  #video-transition-wt .spare.b .lb{top:auto;bottom:7px;right:2px;left:auto}
+
+  /* THE TRANSITION · a band ON the two clips. It never occupies a slot of its
+     own, so putting one on never moves a frame of anything. */
+  #video-transition-wt .xband{height:34px;border-radius:6px;z-index:6;cursor:grab;
+    background:linear-gradient(90deg,rgba(18,194,233,.75),rgba(255,157,92,.75));
+    border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 10px -3px rgba(0,0,0,.5);
+    display:flex;align-items:center;justify-content:center;color:#0b0d18}
+  /* a dip spans fade-out + hold + fade-in, and what is underneath (the tail,
+     the black, the head) has to stay readable, so it is an outline not a fill */
+  #video-transition-wt .xband.blk{background:transparent;border:1px dashed rgba(255,255,255,.6);
+    box-shadow:none;color:#fff;align-items:flex-start;padding-top:1px}
+  #video-transition-wt .xband.sel{box-shadow:0 0 0 2px var(--accent),0 2px 10px -3px rgba(0,0,0,.5)}
+  #video-transition-wt .xband .gr{position:absolute;top:50%;width:5px;height:16px;transform:translateY(-50%);
+    border-radius:2px;background:rgba(255,255,255,.9)}
+  #video-transition-wt .xband .gr.l{left:-2px} #video-transition-wt .xband .gr.r{right:-2px}
+  /* a fade that lives INSIDE one clip's own time: no overlap, nothing moves */
+  #video-transition-wt .fade{height:34px;z-index:6;border-radius:6px;pointer-events:none}
+  #video-transition-wt .fade.out{background:linear-gradient(90deg,transparent,#05060a)}
+  #video-transition-wt .fade.in{background:linear-gradient(90deg,#05060a,transparent)}
+
+  /* THE EXPANDED CUT · the same two clips on their own rows, so an overlap is
+     literally two clips at the same time */
+  #video-transition-wt .track.xrow{margin:3px 0}
+  #video-transition-wt .track.xrow .tl{font-size:9.5px;text-transform:none;letter-spacing:0;color:var(--faint)}
+  #video-transition-wt .track.xrow .lane{height:22px}
+  #video-transition-wt .track.xrow .clip{height:22px;line-height:22px;font-size:9.5px;border-radius:5px}
+  #video-transition-wt .track.xrow .fade{height:22px;border-radius:5px}
+  #video-transition-wt .used{height:22px;z-index:3;border-radius:5px;
+    background:repeating-linear-gradient(45deg,rgba(255,255,255,.36),rgba(255,255,255,.36) 3px,transparent 3px,transparent 7px)}
+  #video-transition-wt .bothmark{height:22px;z-index:4;border-radius:5px;border:1px dashed rgba(255,255,255,.9);
+    background:rgba(255,255,255,.08)}
+  #video-transition-wt .bothmark .lb{position:absolute;left:50%;top:-15px;transform:translateX(-50%);
+    font-size:8.5px;font-weight:700;letter-spacing:.03em;color:#fff;white-space:nowrap;
+    background:rgba(10,12,22,.82);border-radius:4px;padding:1px 5px}
+  #video-transition-wt .xbtn{border:0;background:transparent;color:var(--faint);padding:0;margin-right:2px;
+    display:inline-flex;align-items:center;cursor:pointer}
+  #video-transition-wt .xbtn:hover{color:var(--ink)}
+  #video-transition-wt .xbtn .ic{transform:rotate(-90deg);transition:transform .15s ease}
+  #video-transition-wt .xbtn.open .ic{transform:rotate(0deg)}
+
+  /* the picker · tiles, and the ones this cut cannot pay for say so */
+  #video-transition-wt #transPick{width:248px}
   #video-transition-wt #transPick .libgrid{grid-template-columns:1fr 1fr;padding:var(--s2);gap:var(--s2)}
   #video-transition-wt #transPick .th{height:26px;aspect-ratio:auto}
+  #video-transition-wt .libtile.off{opacity:.42}
+  #video-transition-wt .libtile.off .mt{color:#febc2e}
   #video-transition-wt .th.tx-diss{background:linear-gradient(90deg,#12c2e9,#ff9d5c)}
   #video-transition-wt .th.tx-black{background:linear-gradient(90deg,#12c2e9,#05060a 50%,#ff9d5c)}
   #video-transition-wt .th.tx-white{background:linear-gradient(90deg,#12c2e9,#fff 50%,#ff9d5c)}
   #video-transition-wt .th.tx-push{background:linear-gradient(115deg,#12c2e9 48%,#ff9d5c 52%)}
   #video-transition-wt .th.tx-wipe{background:linear-gradient(90deg,#12c2e9 48%,#ff9d5c 48%)}
   #video-transition-wt .th.tx-blur{background:linear-gradient(90deg,#12c2e9,#8fa 40%,#ff9d5c);filter:blur(2px)}
+  #video-transition-wt .pickhead{display:flex;align-items:center;gap:6px;padding:var(--s2) var(--s3) 0;
+    font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  #video-transition-wt .pickhead .sp{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:560;
+    font-family:var(--mono);font-size:9.5px}
+
+  /* a warning that belongs to the edit, not to a dialog */
+  #video-transition-wt .warnbox{display:flex;gap:7px;align-items:flex-start;margin:var(--s2) 0 0;
+    padding:var(--s2) var(--s3);border-radius:var(--r2);background:rgba(254,188,46,.12);
+    border:1px solid rgba(254,188,46,.34);font-size:10.5px;line-height:1.45;color:var(--dim)}
+  #video-transition-wt .warnbox .ic{color:#febc2e;flex:none;margin-top:1px}
+  #video-transition-wt .warnbox b{color:var(--ink)}
 </style>
 </head>
 <body class="page">
@@ -69,10 +143,11 @@
 <section class="screen on" id="video-transition-wt">
   <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Put a transition on a cut</h2><span class="k">· usage clickthrough · one scenario</span></div>
 
-  <p class="pglead">One job, start to finish: take the cut between two clips and make it a <b>dissolve</b>, then tune it.
-    The point is that <b>the cut is selectable</b>. A transition is not a sticker you drop between clips, it is an object
-    that belongs to that edit point and carries a type, a length, an alignment, and a curve. Eight real clicks on ONE
-    screen, which never re-renders below.</p>
+  <p class="pglead">One job: make the cut between two clips a dissolve, then change it to a dip to black. The interesting part
+    is not the picker, it is <b>where the frames come from</b>. A dissolve has to show both clips at once, so it needs an
+    <b>overlap</b>, and an overlap is paid for with spare media past a clip's in or out point. A dip to black needs no overlap
+    at all: each clip fades inside its own time. Photonz never moves a clip to make either of those work unless you ask, and
+    it shows you the bill before you agree to it. Ten real clicks on ONE screen, which never re-renders below.</p>
 
   <!-- ============================================================
        THE WALKTHROUGH · ONE shell, rendered once, then operated.
@@ -82,11 +157,10 @@
     <div class="wt-stage">
       <div class="win tall cq shell">
 
-        <!-- TITLE BAR · document identity only. The lesson title lives in
-             .scen-head above, never here. -->
+        <!-- TITLE BAR · document identity only -->
         <div class="titlebar">
           <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · 0:18</div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · <span id="docLen">0:18</span></div>
           <div class="wsw" role="tablist" aria-label="Workspace">
             <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
             <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
@@ -107,10 +181,10 @@
           <span class="tspacer"></span>
           <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
           <div style="position:relative">
-            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:248px;z-index:12">
               <div class="mlabel">Edit point</div>
               <div class="menuitem"><i class="ic ic-transition"></i> Add transition</div>
-              <div class="menuitem"><i class="ic ic-copy"></i> Copy transition <span class="sc">⌘C</span></div>
+              <div class="menuitem"><i class="ic ic-swap"></i> Expand the cut <span class="sc">⌥E</span></div>
               <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
               <div class="menu-sep"></div>
               <div class="mlabel">Window</div>
@@ -125,7 +199,7 @@
           <div class="cnv">
             <div class="canvas">
               <div class="pvwrap">
-                <div class="pvframe">
+                <div class="pvframe" id="cvFrame">
                   <div class="fr a">
                     <div class="shot">
                       <div class="sb"><i></i><i></i><i></i></div>
@@ -145,14 +219,14 @@
               <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
             </div>
 
-            <!-- FLOATING TOOL BAR · the strip swaps with the workspace (D4) -->
+            <!-- FLOATING TOOL BAR · D4 video inventory -->
             <div class="tbar">
               <span class="tstrip" data-radio=".tool">
                 <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
                 <span class="tsep"></span>
                 <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
                 <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
-                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
                 <span class="tsep ovf"></span>
                 <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
                 <span class="tsep"></span>
@@ -166,12 +240,11 @@
                 <span class="val zval">100%</span>
               </span>
               <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
-                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
                 <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
               </div>
             </div>
 
-            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) -->
             <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
               <div class="sheet-b">
                 <div class="histbar">
@@ -190,7 +263,7 @@
                     </span>
                   </div>
                   <div class="filmcard" tabindex="0" role="button">
-                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:09</span></span>
                     <span class="cap"><span class="nm">b-roll</span><span class="ago">2 hours ago</span></span>
                     <span class="acts">
                       <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
@@ -200,18 +273,8 @@
                     </span>
                   </div>
                   <div class="filmcard" tabindex="0" role="button">
-                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
-                    <span class="cap"><span class="nm">hero-card</span><span class="ago">yesterday</span></span>
-                    <span class="acts">
-                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
-                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                    </span>
-                  </div>
-                  <div class="filmcard" tabindex="0" role="button">
-                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
-                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:04</span></span>
+                    <span class="cap"><span class="nm">outro</span><span class="ago">yesterday</span></span>
                     <span class="acts">
                       <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
                       <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
@@ -223,26 +286,25 @@
               </div>
             </div>
 
-            <!-- THE TRANSITION PICKER · opened from the Properties row it
-                 belongs to. It sits in .edit.lean, not inside the scrolling
-                 group body, so it is never clipped. -->
-            <div class="popover pop" id="transPick" style="position:absolute;right:var(--s4);bottom:60px;z-index:14">
-              <div class="mlabel" style="padding:var(--s2) var(--s3) 0">At this cut</div>
+            <!-- THE TRANSITION PICKER · opened from the Properties row it belongs
+                 to, and it knows what this cut can pay for -->
+            <div class="popover pop" id="transPick" style="position:absolute;right:var(--s4);bottom:56px;z-index:14">
+              <div class="pickhead">At this cut <span class="sp" id="pickSpare">spare 2.0s / 1.5s</span></div>
               <div class="libgrid">
-                <div class="libtile" id="txDiss" tabindex="0"><span class="th tx-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">0.6s</span></span></div>
-                <div class="libtile" id="txBlack" tabindex="0"><span class="th tx-black"></span><span class="cap"><span class="nm">Dip to black</span><span class="mt">0.6s</span></span></div>
-                <div class="libtile" tabindex="0"><span class="th tx-white"></span><span class="cap"><span class="nm">Dip to white</span><span class="mt">0.6s</span></span></div>
-                <div class="libtile" tabindex="0"><span class="th tx-push"></span><span class="cap"><span class="nm">Push</span><span class="mt">0.5s</span></span></div>
-                <div class="libtile" tabindex="0"><span class="th tx-wipe"></span><span class="cap"><span class="nm">Wipe</span><span class="mt">0.5s</span></span></div>
-                <div class="libtile" tabindex="0"><span class="th tx-blur"></span><span class="cap"><span class="nm">Blur through</span><span class="mt">0.8s</span></span></div>
+                <div class="libtile" id="txDiss" tabindex="0"><span class="th tx-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt" id="mtDiss">needs overlap</span></span></div>
+                <div class="libtile" id="txBlack" tabindex="0"><span class="th tx-black"></span><span class="cap"><span class="nm">Dip to black</span><span class="mt">no overlap</span></span></div>
+                <div class="libtile" id="txWhite" tabindex="0"><span class="th tx-white"></span><span class="cap"><span class="nm">Dip to white</span><span class="mt">no overlap</span></span></div>
+                <div class="libtile" id="txPush" tabindex="0"><span class="th tx-push"></span><span class="cap"><span class="nm">Push</span><span class="mt" id="mtPush">needs overlap</span></span></div>
+                <div class="libtile" id="txWipe" tabindex="0"><span class="th tx-wipe"></span><span class="cap"><span class="nm">Wipe</span><span class="mt" id="mtWipe">needs overlap</span></span></div>
+                <div class="libtile" id="txBlur" tabindex="0"><span class="th tx-blur"></span><span class="cap"><span class="nm">Blur through</span><span class="mt" id="mtBlur">needs overlap</span></span></div>
               </div>
-              <p class="note" style="margin:0 var(--s3) var(--s3)">Every one of these is keyframed, so whichever you pick you can still drag its ends and change its curve.</p>
+              <p class="note" style="margin:0 var(--s3) var(--s3)" id="pickNote">The ones that need an overlap put both clips on screen together, so they spend spare media. The dips do not: each clip fades inside the time it already has.</p>
             </div>
           </div>
 
           <div class="splitter v" data-min="220" data-max="420"></div>
 
-          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <!-- THE RIGHT DOCK -->
           <div class="pdock" id="dock">
 
             <div class="dgrp" id="gLayers" style="--gh:96px">
@@ -259,9 +321,9 @@
 
             <div class="splitter h" data-min="90" data-max="300"></div>
 
-            <!-- PROPERTIES · contextual to what is selected. A cut is not a
-                 layer, so this is the one place it can speak for itself. -->
-            <div class="dgrp" id="gProps" style="--gh:380px">
+            <!-- PROPERTIES · a cut is not a layer, so this is the one place it
+                 can speak for itself, including what it can afford -->
+            <div class="dgrp" id="gProps" style="--gh:398px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
               <div class="dgrp-b">
                 <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip, a layer, or a cut</div>
@@ -270,10 +332,14 @@
                   <div class="section">
                     <div class="sec-h">Edit point <span class="mut" id="pCutAt">at 0:08</span></div>
                     <div class="grid2">
-                      <div class="field"><span class="k">Out</span><span class="v">screen-rec</span></div>
-                      <div class="field"><span class="k">In</span><span class="v">b-roll</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v" id="pOutName">screen-rec</span></div>
+                      <div class="field"><span class="k">In</span><span class="v" id="pInName">b-roll</span></div>
                     </div>
-                    <p class="note">A cut is the seam between two clips, so it belongs to neither of them. Selecting it is how you get at the seam itself.</p>
+                    <div class="grid2" style="margin-top:7px">
+                      <div class="field"><span class="k">Spare after</span><span class="v" id="pSpareA">2.0s</span></div>
+                      <div class="field"><span class="k">Spare before</span><span class="v" id="pSpareB">1.5s</span></div>
+                    </div>
+                    <p class="note" id="pSpareNote">Spare media is the frames either side is not using yet: the recording keeps running for two seconds past its out point, and b-roll starts a second and a half after its own first frame. That spare is what an overlap gets paid for with.</p>
                   </div>
 
                   <div class="section">
@@ -289,20 +355,32 @@
                     <div class="irow wt-off" id="rowLen"><span class="rl">Length</span>
                       <span class="select"><span class="lead" id="pLen">0.6s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
-                    <div class="irow wt-off" id="rowAlign" style="grid-template-columns:1fr"><span class="rl">Alignment</span>
-                      <span class="seg alignseg" role="group" aria-label="Alignment">
-                        <button id="alEnd">Ends</button>
-                        <button class="on" id="alCenter">Centered</button>
-                        <button id="alStart">Starts</button>
+
+                    <!-- for the overlapping types -->
+                    <div class="irow wt-off" id="rowPaid"><span class="rl">Paid with</span>
+                      <span class="field" style="width:100%"><span class="v" id="pPaid">0.3s + 0.3s of spare</span></span>
+                    </div>
+                    <div class="irow wt-off" id="rowAlign" style="grid-template-columns:1fr"><span class="rl">The overlap sits</span>
+                      <span class="seg pseg" role="group" aria-label="Where the overlap sits">
+                        <button id="alBefore">Before the cut</button>
+                        <button class="on" id="alAcross">Across it</button>
+                        <button id="alAfter">After it</button>
                       </span>
                     </div>
-                    <div class="irow wt-off" id="rowCurve" style="grid-template-columns:1fr"><span class="rl">Curve</span>
-                      <span class="seg curveseg" role="group" aria-label="Curve">
-                        <button class="on" id="cvLin">Linear</button>
-                        <button id="cvEase">Ease in-out</button>
-                      </span>
+
+                    <!-- for the dips, which need no overlap at all -->
+                    <div class="irow wt-off" id="rowHold"><span class="rl">Hold on black</span>
+                      <span class="select" id="selHold" tabindex="0" role="button"><span class="lead" id="pHold">0.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                     </div>
-                    <p class="note" id="pTransNote">A transition rides the same keyframe engine as a layer effect, so its length and its curve are ordinary properties, not settings buried in a dialog.</p>
+
+                    <p class="note" id="pTransNote">Nothing on the timeline moved. The dissolve is drawn over the seam because that is what it is: an interval where both clips are on screen, not a third object wedged between them.</p>
+
+                    <div class="warnbox wt-off" id="warnBox"><i class="ic sm ic-warning"></i>
+                      <span><b>outro.mov has no spare frames before its in point.</b> A dissolve here can only be paid for by shortening the cut by 1.0s, which moves outro and everything after it. That is a decision, so it is offered rather than taken.</span>
+                    </div>
+                    <div class="irow wt-off" id="rowForce"><span class="rl">Or</span>
+                      <button class="btn secondary sm" id="btnShorten"><i class="ic ic-swap"></i> Shorten the cut by 1.0s</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -327,7 +405,7 @@
                 </div>
                 <div data-scope-body="media">
                   <div class="libgrid">
-                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:09</span></span></div>
                     <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">outro.mov</span><span class="mt">0:04</span></span></div>
                   </div>
                 </div>
@@ -338,7 +416,7 @@
                 </div>
                 <div data-scope-body="styles" class="wt-off">
                   <div class="libgrid">
-                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Pop in</span><span class="mt">motion</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th tx-diss" style="height:26px;aspect-ratio:auto"></span><span class="cap"><span class="nm">House dissolve</span><span class="mt">transition</span></span></div>
                   </div>
                 </div>
                 <div data-scope-body="assets" class="wt-off">
@@ -348,7 +426,6 @@
             </div>
           </div>
 
-          <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
             <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
@@ -365,7 +442,7 @@
           </div>
         </div>
 
-        <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+        <!-- TRANSPORT + TIMELINE -->
         <div class="transport">
           <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
           <span class="grp">
@@ -375,10 +452,10 @@
           </span>
           <span class="tc cur" id="tcCur">0:03</span>
           <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" tabindex="0">
-            <span class="fill" id="scrubFill" style="width:17%"></span>
-            <span class="knob" id="scrubKnob" style="left:17%"></span>
+            <span class="fill" id="scrubFill" style="width:16.7%"></span>
+            <span class="knob" id="scrubKnob" style="left:16.7%"></span>
           </span>
-          <span class="tc">0:18</span>
+          <span class="tc" id="tcEnd">0:18</span>
           <span class="grp">
             <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
             <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
@@ -386,25 +463,62 @@
           </span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:126px">
-          <div class="ruler"><span>0s</span><span>4s</span><span>8s</span><span>12s</span><span>16s</span></div>
+        <div class="timeline" id="timeline" style="min-height:186px">
+          <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
-            <div class="lane">
-              <div class="clip v1" id="clipA" style="width:44%" tabindex="0" role="button">screen-recording</div>
-              <span class="editpt" id="cut1" tabindex="0" role="button" title="The cut at 0:08"></span>
-              <span class="transition wt-off" id="trans1" tabindex="0" role="button" title="Cross dissolve · 0.6s"><i class="ic xs ic-transition"></i></span>
-              <div class="clip" id="clipB" style="width:32%;background:linear-gradient(135deg,#ff9d5c,#ff5d8f)" tabindex="0" role="button">b-roll.mov</div>
-              <span class="editpt" id="cut2" tabindex="0" role="button" title="The cut at 0:14"></span>
-              <div class="clip v2" id="clipC" style="width:20%" tabindex="0" role="button">outro.mov</div>
+          <!-- V1 · the result. Clips butt. A cut draws nothing until you point
+               at it, and a transition is drawn ON the clips, never between. -->
+          <div class="track"><span class="tl">
+              <button class="xbtn" id="btnExpand" title="Expand the cut (⌥E)"><i class="ic xs ic-chevron-down"></i></button>
+              <i class="ic xs ic-image"></i> V1</span>
+            <div class="lane abs">
+              <div class="clip v1" id="clipA" style="left:0;width:44.444%" tabindex="0" role="button">screen-recording</div>
+              <div class="clip blk wt-off" id="clipBlack" style="left:38.095%;width:14.286%" tabindex="0" role="button">Black</div>
+              <div class="clip" id="clipB" style="left:44.444%;width:33.333%;background:linear-gradient(135deg,#ff9d5c,#ff5d8f)" tabindex="0" role="button">b-roll.mov</div>
+              <div class="clip v2" id="clipC" style="left:77.778%;width:22.222%" tabindex="0" role="button">outro.mov</div>
+
+              <!-- the spare media either side of the selected cut -->
+              <span class="spare a wt-off" id="spareA" style="left:44.444%;width:11.111%"><span class="lb" id="spareALb">2.0s spare</span></span>
+              <span class="spare b wt-off" id="spareB" style="left:36.111%;width:8.333%"><span class="lb" id="spareBLb">1.5s spare</span></span>
+
+              <!-- fades that live inside a clip's own time (the dips) -->
+              <span class="fade out wt-off" id="fadeOut" style="left:41.667%;width:2.778%"></span>
+              <span class="fade in wt-off" id="fadeIn" style="left:44.444%;width:2.778%"></span>
+
+              <!-- the transition itself, drawn over the seam -->
+              <span class="xband wt-off" id="xband" style="left:42.778%;width:3.333%" tabindex="0" role="button">
+                <i class="ic xs ic-transition"></i><span class="gr l"></span><span class="gr r"></span>
+              </span>
+
+              <!-- the cuts: zero width, invisible until pointed at -->
+              <button class="cut" id="cut1" style="left:44.444%" title="The cut at 0:08" aria-label="Cut at 0:08"></button>
+              <button class="cut" id="cut2" style="left:77.778%" title="The cut at 0:14" aria-label="Cut at 0:14"></button>
+            </div>
+          </div>
+
+          <!-- THE EXPANDED CUT · the same two clips on their own rows, where an
+               overlap is literally two clips at the same time -->
+          <div class="track xrow wt-off" id="rowA"><span class="tl">A</span>
+            <div class="lane abs">
+              <div class="clip v1" id="xClipA" style="left:0;width:44.444%">screen-recording</div>
+              <span class="used wt-off" id="usedA" style="left:44.444%;width:2.778%"></span>
+              <span class="fade out wt-off" id="xFadeOut" style="left:41.667%;width:2.778%"></span>
+            </div>
+          </div>
+          <div class="track xrow wt-off" id="rowB"><span class="tl">B</span>
+            <div class="lane abs">
+              <div class="clip" id="xClipB" style="left:44.444%;width:33.333%;background:linear-gradient(135deg,#ff9d5c,#ff5d8f)">b-roll.mov</div>
+              <span class="used wt-off" id="usedB" style="left:41.667%;width:2.778%"></span>
+              <span class="fade in wt-off" id="xFadeIn" style="left:44.444%;width:2.778%"></span>
+              <span class="bothmark wt-off" id="bothMark" style="left:41.667%;width:5.556%"><span class="lb">both on screen · 1.0s</span></span>
             </div>
           </div>
 
           <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
-            <div class="lane"><div class="clip aud" style="width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
+            <div class="lane abs"><div class="clip aud" id="clipAud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
 
-          <div class="playhead" id="playhead" style="left:17%"></div>
+          <div class="playhead" id="playhead" style="--t:0.167"></div>
         </div>
       </div>
     </div>
@@ -414,118 +528,147 @@
 
       <li class="wt-step"
           data-title="Select the cut"
-          data-cue="#cut1" data-cue-label="Click the cut between the two clips" data-cue-place="top"
-          data-select="#cut1" data-show="#propsCut" data-hide="#propsEmpty"
+          data-cue="#cut1" data-cue-label="Click the seam between the two clips" data-cue-place="top"
+          data-select="#cut1" data-show="#propsCut,#spareA,#spareB" data-hide="#propsEmpty"
           data-set="#propKind=Edit point">
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
-          <p class="wt-do">the <b>cut</b> between <b>screen-recording</b> and <b>b-roll.mov</b></p>
-          <p class="wt-where">the V1 track on the timeline. Every seam between two clips carries this grabber</p>
-          <p class="wt-res">the cut itself is selected, and Properties speaks for it: which clip goes out, which comes in, and that there is no transition on it yet. A cut is not a layer, so this is the only place it can have properties of its own.</p>
+          <p class="wt-do">the <b>seam</b> where screen-recording ends and b-roll begins</p>
+          <p class="wt-where">the V1 track. Nothing is drawn there: the two clips butt, and an untouched cut takes no width on the timeline</p>
+          <p class="wt-res">the seam highlights and Properties speaks for it. The two dashed strips are the <b>spare media</b> either side: the recording runs two seconds past its out point, and b-roll has a second and a half before its in point. Hold on to those two numbers, because a dissolve is about to spend them.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Open the transition picker"
           data-cue="#btnAddTrans" data-cue-label="Click Add transition" data-cue-place="left"
-          data-select="#cut1" data-show="#propsCut" data-hide="#propsEmpty"
+          data-select="#cut1" data-show="#propsCut,#spareA,#spareB" data-hide="#propsEmpty"
           data-pop="#transPick"
           data-set="#propKind=Edit point">
         <div class="wt-cap vid">
           <span class="wt-n">2</span>
           <p class="wt-do"><b>Add transition</b></p>
           <p class="wt-where">Properties, in the <b>Transition</b> section</p>
-          <p class="wt-res">the picker opens beside the row it belongs to, showing what can go on this cut. Each tile previews the move and names its default length.</p>
+          <p class="wt-res">the picker opens, and it already knows what this cut can afford: <code>spare 2.0s / 1.5s</code> along its top. Every tile says which kind it is. <b>Cross dissolve, Push, Wipe, Blur</b> put both clips on screen at once, so they need an overlap. <b>Dip to black</b> and <b>Dip to white</b> never do.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Choose Cross dissolve"
+          data-title="Take the dissolve"
           data-cue="#txDiss" data-cue-label="Click Cross dissolve" data-cue-place="left"
-          data-select="#txDiss" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-select="#txDiss" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign" data-hide="#propsEmpty,#rowAdd"
           data-pop="#transPick"
-          data-set="#propKind=Edit point|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=0.6s">
+          data-set="#propKind=Edit point|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=0.6s|#pPaid=0.3s + 0.3s of spare">
         <div class="wt-cap vid">
           <span class="wt-n">3</span>
           <p class="wt-do"><b>Cross dissolve</b></p>
           <p class="wt-where">the picker</p>
-          <p class="wt-res">a 0.6 second dissolve lands on the cut. The grabber becomes a marker that straddles the seam, and Properties fills in with the four things a transition actually has: type, length, alignment, curve.</p>
+          <p class="wt-res">a 0.6 second dissolve lands, drawn as a band <b>over</b> the two clips instead of between them, so nothing shifted by a frame. Properties says what it cost: <code>0.3s + 0.3s of spare</code>, three tenths borrowed from each side's dashed strip. Your clips are exactly where you put them.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Stretch it to a second"
-          data-cue="#trans1" data-cue-label="Drag the marker's edge out to 1.0s" data-cue-place="top"
-          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
-          data-css="#trans1=width:42px;margin:0 -21px"
-          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s">
+          data-title="Make it a full second"
+          data-cue="#xband" data-cue-label="Drag the band's edge out to 1.0s" data-cue-place="top"
+          data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign" data-hide="#propsEmpty,#rowAdd"
+          data-css="#xband=left:41.667%;width:5.556%"
+          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare|#pSpareNote=A full second of overlap spends half a second from each side. There is still 1.5s of spare on the left and 1.0s on the right, so this cut could carry a dissolve three times this long before it ran out of frames.">
         <div class="wt-cap vid">
           <span class="wt-n">4</span>
-          <p class="wt-do" data-verb="Drag">the marker's <b>edge</b> out until it reads <b>1.0s</b></p>
-          <p class="wt-where">the timeline, on the cut</p>
-          <p class="wt-res">the transition grows on the timeline and the Length row follows. Length is a direct drag on the thing, not a number you go and find, and the readout in Properties is the same value seen from the other side.</p>
+          <p class="wt-do" data-verb="Drag">the band's <b>edge</b> outward until it reads <b>1.0s</b></p>
+          <p class="wt-where">the timeline, on the seam</p>
+          <p class="wt-res">the band grows and the cost keeps up: half a second now comes from each side. The dashed strips are the budget, and you can watch the dissolve eat into them. Still nothing has moved.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Give it a curve"
-          data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
-          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
-          data-activate="#cvEase"
-          data-css="#trans1=width:42px;margin:0 -21px"
-          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pTransNote=Linear blends at a flat rate the whole way. Ease in-out lingers on each shot and does most of the blending in the middle, which is why it reads softer at the same length.">
+          data-title="See the overlap"
+          data-cue="#btnExpand" data-cue-label="Click the chevron on V1" data-cue-place="right"
+          data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign,#rowA,#rowB,#usedA,#usedB,#bothMark" data-hide="#propsEmpty,#rowAdd"
+          data-class="#btnExpand=open"
+          data-css="#xband=left:41.667%;width:5.556%|#xClipA=width:47.222%|#xClipB=left:41.667%;width:36.111%"
+          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare">
         <div class="wt-cap vid">
           <span class="wt-n">5</span>
-          <p class="wt-do"><b>Ease in-out</b></p>
-          <p class="wt-where">Properties, in the <b>Curve</b> row</p>
-          <p class="wt-res">the blend stops running at a flat rate. It holds on the outgoing shot, moves through the middle, and settles on the incoming one, all in the same 1.0 seconds.</p>
+          <p class="wt-do">the <b>chevron</b> on the V1 track label, or press <code>⌥E</code></p>
+          <p class="wt-where">the timeline, at the left of the track</p>
+          <p class="wt-res">the cut opens into the two clips it is made of, and there is the answer to how a dissolve works: <b>A now runs half a second past the cut and B starts half a second early</b>, so for one second both are on screen. The hatched pieces are the spare frames being spent. This is why the overlapping types need media to spend and the dips do not.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Scrub into the middle of it"
+          data-title="Look at the middle of it"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
-          data-activate="#cvEase"
-          data-css="#trans1=width:42px;margin:0 -21px|#frB=opacity:.5|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
-          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s">
+          data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign,#rowA,#rowB,#usedA,#usedB,#bothMark" data-hide="#propsEmpty,#rowAdd"
+          data-class="#btnExpand=open"
+          data-css="#xband=left:41.667%;width:5.556%|#xClipA=width:47.222%|#xClipB=left:41.667%;width:36.111%|#frB=opacity:.5|#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pPaid=0.5s + 0.5s of spare">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
-          <p class="wt-do" data-verb="Drag">the <b>playhead</b> onto the cut, at <b>0:08</b></p>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> onto the seam, at <b>0:08</b></p>
           <p class="wt-where">the transport scrubber, under the canvas</p>
-          <p class="wt-res">the canvas shows the halfway frame: both shots at once, the recording going and the b-roll arriving. Nothing rendered first. Scrubbing is the preview, so a transition is checked the same way any other value over time is.</p>
+          <p class="wt-res">the canvas shows both shots at once, half and half, and the playhead crosses both expanded rows at the same instant. What is on screen and what is on the timeline are saying the same thing.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Swap the type, keep the settings"
-          data-cue="#selType" data-cue-label="Click the Type row, then Dip to black" data-cue-place="left"
-          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
-          data-activate="#cvEase"
-          data-css="#trans1=width:42px;margin:0 -21px|#frBlk=opacity:1|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
-          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s"
-          data-class="#trans1=blk">
+          data-title="Change it to a dip to black"
+          data-cue="#selType" data-cue-label="Click Type, then Dip to black" data-cue-place="left"
+          data-select="#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark"
+          data-class="#btnExpand=open|#xband=blk"
+          data-css="#xband=left:41.667%;width:5.556%|#frB=opacity:0|#frBlk=opacity:1|#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#xClipA=width:44.444%|#xClipB=left:44.444%;width:33.333%"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pTransNote=Nothing overlaps now. A fades out inside its own last half second and B fades in inside its own first half second, so the borrowed spare goes back and the clips are still exactly where they were.">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do">the <b>Type</b> row, and pick <b>Dip to black</b></p>
           <p class="wt-where">Properties, in the Transition section</p>
-          <p class="wt-res">the type changes and everything you tuned survives it: still 1.0 seconds, still eased, still centred on the cut. At 0:08 the frame is now fully black, because the middle of a dip is the bottom of the dip.</p>
+          <p class="wt-res">the overlap is <b>released</b>. Look at the expanded rows: A and B no longer reach past each other, because a dip does not need them to. Each clip fades inside the time it already had, the spare goes back in the bank, and the frame at 0:08 is black. The <b>Paid with</b> and <b>overlap</b> rows are gone and a <b>Hold on black</b> row has taken their place.</p>
         </div>
       </li>
 
       <li class="wt-step"
-          data-title="Move it off the seam"
-          data-cue="#alEnd" data-cue-label="Click Ends" data-cue-place="left"
-          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
-          data-activate="#alEnd"
-          data-css="#trans1=width:42px;margin:0 4px 0 -46px|#frB=opacity:1|#frBlk=opacity:0|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
-          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pTransNote=Centred spends half the transition on each shot. Ends means the whole second is taken out of the outgoing clip. Starts takes it out of the incoming one."
-          data-class="#trans1=blk">
+          data-title="Sit on black for a beat"
+          data-cue="#selHold" data-cue-label="Set Hold on black to 3.0s" data-cue-place="left"
+          data-select="#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
+          data-class="#btnExpand=open|#xband=blk"
+          data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:38.095%;width:9.524%|#spareB=left:30.952%;width:7.143%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:1|#scrubFill=width:38.1%|#scrubKnob=left:38.1%|#playhead=--t:0.381"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s|#docLen=0:21|#tcEnd=0:21|#pTransNote=This is the only thing on this page that moved a clip, and you asked for it by name. Set the hold back to 0.0s and b-roll and outro slide back to where they were.">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
-          <p class="wt-do"><b>Ends</b></p>
-          <p class="wt-where">Properties, in the <b>Alignment</b> row</p>
-          <p class="wt-res">the marker slides back so the dip finishes exactly on the cut, and the playhead has not moved: at 0:08 you are now looking at clean b-roll. Alignment decides which clip pays for the transition, and the timeline shows you the answer instead of describing it.</p>
+          <p class="wt-do">the <b>Hold on black</b> row, and choose <b>3.0s</b></p>
+          <p class="wt-where">Properties, in the Transition section</p>
+          <p class="wt-res">now, and only now, the timeline moves. Three seconds of real black are <b>inserted</b> between the two clips, b-roll and outro slide right, the document goes from 0:18 to 0:21, and the ruler grows a division to say so. That is the difference worth knowing: an overlap is paid for with spare frames, a hold is paid for with time.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Move along to the next cut"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:17" data-cue-place="top"
+          data-select="#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
+          data-class="#btnExpand=open|#xband=blk"
+          data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:38.095%;width:9.524%|#spareB=left:30.952%;width:7.143%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:0|#frB=opacity:1|#scrubFill=width:81%|#scrubKnob=left:81%|#playhead=--t:0.81"
+          data-set="#propKind=Transition|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s">
+        <div class="wt-cap vid">
+          <span class="wt-n">9</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> along to <b>0:17</b>, the seam into outro</p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">the canvas is back on b-roll, on its last frame before the outro. This seam looks exactly like the first one did, which is the whole point of the last step: two cuts can look identical and be able to afford completely different things.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="A cut that cannot afford an overlap"
+          data-cue="#cut2" data-cue-label="Click the second seam" data-cue-place="top"
+          data-select="#cut2" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7,#warnBox,#rowForce,#spareA" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareB"
+          data-class="#btnExpand=open|#xband=blk|#txDiss=off|#txPush=off|#txWipe=off|#txBlur=off"
+          data-pop="#transPick"
+          data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:80.952%;width:3.81%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:0|#frB=opacity:1|#scrubFill=width:81%|#scrubKnob=left:81%|#playhead=--t:0.81"
+          data-set="#propKind=Edit point|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pCutAt=at 0:17|#pOutName=b-roll|#pInName=outro|#pSpareA=0.8s|#pSpareB=none|#pickSpare=spare 0.8s / none|#spareALb=0.8s spare|#mtDiss=no spare|#mtPush=no spare|#mtWipe=no spare|#mtBlur=no spare|#pTransState=None|#pSpareNote=outro.mov was exported from its own first frame, so there is nothing before its in point to borrow. b-roll has 0.8s spare on its side, but an overlap has to come from both.|#pickNote=The dips are still fine here, because they never needed an overlap. Forcing a dissolve would mean shortening the cut, which moves outro and everything after it, so Photonz offers that rather than doing it quietly.">
+        <div class="wt-cap vid">
+          <span class="wt-n">10</span>
+          <p class="wt-do">the <b>second seam</b>, between b-roll and outro</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">only one dashed strip this time: <b>outro.mov starts at its own first frame</b>, so there is nothing on that side to borrow. The picker greys out everything that needs an overlap and says why, the dips stay available, and Properties offers the only other way to pay for one: shorten the cut, which moves outro and everything after it. Your positions are never spent without you saying so.</p>
         </div>
       </li>
 
@@ -541,17 +684,17 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>The <b>cut is selectable</b>. That one decision removes the usual transition dance: no dragging an effect from a bin and hoping it snaps, no dialog. Select the seam, and the seam has properties, because a transition belongs to the edit point rather than to either clip.</p></div>
-    <div class="c"><div class="lab g2">A direction</div><p>Swapping the type keeps length, alignment, and curve. That suggests a <b>transition is a style</b>: pick one you like, save it to Library at scope Styles, and apply it to every cut in a cut-down with one click.</p></div>
-    <div class="c"><div class="lab g2">Open question</div><p>Should a cut with no transition still show a grabber on every seam, or should the seam only become a target when you hover it? Always-on is discoverable and it is also a lot of small marks on a 40-clip edit.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>A transition is <b>an interval where two clips are both on screen</b>, not an object that sits between them. So it is drawn over the seam, and it costs <b>spare media</b> rather than position. An untouched cut draws nothing and takes no width, because nothing is there. The only thing here that ever moves a clip is a hold on black, and that is a number you choose.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Spare media could be visible <b>all the time</b> as a hairline past every clip edge, so you could see at a glance which cuts in a forty-clip edit can take a dissolve. The risk is a timeline that looks busy when transitions are the last thing on your mind, which is why here it appears only on the selected cut.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>With no spare, the choices are shorten the cut, use a dip, or go back and re-trim. Should there be a fourth: <b>hold the last frame</b> for the length of the dissolve, so outro freezes for half a second instead of moving? It costs no position and no media, and on a title card nobody would ever see it.</p></div>
   </div>
 </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-  /* Page-local: keep the Library scope switch, the Alignment and Curve
-     segmented controls, and the picker live when a person clicks them
-     directly. The walkthrough drives the same state declaratively. */
+  /* Page-local: the Library scope switch, the segmented controls, the picker
+     and the expand chevron stay live when a person clicks them directly. The
+     walkthrough drives the same state declaratively. */
   (function () {
     var root = document.getElementById('video-transition-wt');
     var seg = root.querySelector('.scopeseg');
@@ -568,9 +711,7 @@
         });
       });
     }
-    ['.alignseg', '.curveseg'].forEach(function (sel) {
-      var g = root.querySelector(sel);
-      if (!g) return;
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
       var bs = [].slice.call(g.querySelectorAll('button'));
       bs.forEach(function (b) {
         b.addEventListener('click', function () {
@@ -579,8 +720,14 @@
       });
     });
     var pick = document.getElementById('transPick');
-    [document.getElementById('btnAddTrans'), document.getElementById('selType')].forEach(function (b) {
+    ['btnAddTrans', 'selType'].forEach(function (id) {
+      var b = document.getElementById(id);
       if (b && pick) b.addEventListener('click', function () { pick.classList.toggle('on'); });
+    });
+    var xb = document.getElementById('btnExpand');
+    if (xb) xb.addEventListener('click', function () {
+      xb.classList.toggle('open');
+      ['rowA', 'rowB'].forEach(function (id) { document.getElementById(id).classList.toggle('wt-off'); });
     });
   })();
 </script>

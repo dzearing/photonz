@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-freeze-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-freeze-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario, start to finish.
+     Page-local CSS is the window height, the program artwork, and the marks
+     this scenario needs on the timeline. Everything else is the shared DS. */
+  #video-freeze-wt .win.shell{height:896px;min-height:0}
+
+  /* THE PROGRAM · designed artwork on the canvas, never chrome */
+  #video-freeze-wt .pvwrap{width:min(470px,88%)}
+  #video-freeze-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f);
+    box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
+  #video-freeze-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.16);overflow:hidden;transform-origin:72% 62%}
+  #video-freeze-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
+  #video-freeze-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-freeze-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-freeze-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  #video-freeze-wt .shot .cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
+    background:linear-gradient(180deg,#fff,#dfe6ff);padding:4px 9px;border-radius:6px}
+
+  /* lanes that place clips at real times */
+  #video-freeze-wt .lane.abs{display:block;position:relative}
+  #video-freeze-wt .lane.abs>.clip,#video-freeze-wt .lane.abs>.kfd,#video-freeze-wt .lane.abs>.kfseg{position:absolute}
+  #video-freeze-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block;line-height:34px;top:0}
+  #video-freeze-wt .clip.gfx{background:linear-gradient(135deg,#febc2e,#ff9d5c)}
+  #video-freeze-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
+
+  /* keyframe lanes · the same timeline, one row per animated property */
+  #video-freeze-wt .track.kft{margin:2px 0}
+  #video-freeze-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
+  #video-freeze-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
+  #video-freeze-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
+    border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+  #video-freeze-wt .kfseg{position:absolute;top:50%;height:2px;border-radius:2px;background:var(--accent);opacity:.45;transform:translateY(-50%)}
+
+  /* a still is a clip whose in and out are the same frame, so it gets its
+     own read on the timeline: hatched, and labelled with the frame it holds */
+  #video-freeze-wt .clip.frz{background:repeating-linear-gradient(45deg,#3a4a7d,#3a4a7d 4px,#2b3763 4px,#2b3763 8px);
+    border:1px solid #55689f;color:#dbe4ff;display:flex;align-items:center;gap:5px;line-height:32px}
+  #video-freeze-wt .clip.frz .ic{color:#dbe4ff}
+  #video-freeze-wt .frzBadge{position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:6px;
+    background:rgba(10,12,22,.72);border:1px solid rgba(255,255,255,.16);color:#dbe4ff;
+    font-size:10.5px;font-weight:600;padding:5px 10px;border-radius:8px;backdrop-filter:blur(6px)}
+  #video-freeze-wt .arrow{position:absolute;left:28%;top:26%;width:150px;height:96px;z-index:4}
+  #video-freeze-wt .arrow svg{width:100%;height:100%;overflow:visible}
+  #video-freeze-wt .arrow path{fill:none;stroke:#ff5d5d;stroke-width:3.4;stroke-linecap:round}
+  #video-freeze-wt .arrow polygon{fill:#ff5d5d}
+  #video-freeze-wt .gapmark{position:absolute;top:0;height:34px;border:1px dashed var(--line-strong);border-radius:6px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-freeze-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Freeze a frame and mark it up</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: stop on the frame that shows the result, hold it for three seconds, and point at it. A freeze is not a special object: it is a <b>clip whose in and out are the same frame</b>, so it drops into the timeline like any other clip. Seven real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtFreeze">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · <span id="docLen">0:18</span></div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+              <div class="mlabel">Clip</div>
+              <div class="menuitem"><i class="ic ic-pause"></i> Freeze frame at playhead <span class="sc">⇧F</span></div>
+              <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
+              <div class="menuitem"><i class="ic ic-swap"></i> Speed…</div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Window</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="pvwrap">
+                <div class="pvframe" id="cvFrame">
+                  <div class="shot">
+                    <div class="sb"><i></i><i></i><i></i></div>
+                    <div class="bars">
+                      <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                      <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                    </div>
+                    <span class="cta">Get Photonz</span>
+                  </div>
+
+                  <div class="arrow wt-off" id="cvArrow">
+                    <svg viewBox="0 0 150 96" aria-hidden="true">
+                      <path d="M6 8 C 54 10, 96 34, 122 68"></path>
+                      <polygon points="124,74 112,58 132,56"></polygon>
+                    </svg>
+                    <span class="sel-ring wt-off" id="arrowRing" style="inset:-6px;border-radius:10px"></span>
+                  </div>
+
+                  <div class="frzBadge wt-off" id="frzBadge"><i class="ic xs ic-pause"></i> <span id="frzBadgeTx">Held frame · 0:06</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · the strip swaps with the workspace (D4) -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                <button class="tool" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · it
+                 belongs to the resident agent, not to this window -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:100px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow wt-off" id="lrArrow"><i class="ic ic-cursor"></i><span class="nm">Arrow</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrStill"><i class="ic ic-pause"></i><span class="nm">Still · 0:06</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- PROPERTIES · contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:320px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip or a layer</div>
+                <div id="propsClip" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Clip <span class="mut" id="pClipName">screen-recording</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">In</span><span class="v" id="pIn">0:00</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v" id="pOut">0:18</span></div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Time <span class="mut" id="pTimeState">plays at 100%</span></div>
+                    <div class="irow" id="rowFreeze"><span class="rl">Hold</span>
+                      <button class="btn secondary sm" id="btnFreeze"><i class="ic ic-pause"></i> Freeze frame</button>
+                    </div>
+                    <div class="irow wt-off" id="rowHoldLen"><span class="rl">Length</span>
+                      <span class="select"><span class="lead" id="pHoldLen">3.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow wt-off" id="rowRipple" style="grid-template-columns:1fr"><span class="rl">The insert pushes</span>
+                      <span class="seg pseg" role="group" aria-label="Ripple">
+                        <button class="on" id="ripAll">Everything</button>
+                        <button id="ripPic">Picture only</button>
+                      </span>
+                    </div>
+                    <p class="note" id="pFreezeNote">A freeze is not a new kind of object. It is a clip whose in and out are the same frame, which is why it trims, moves, and takes a transition like any other clip.</p>
+                  </div>
+                </div>
+
+                <div id="propsArrow" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Shape <span class="mut">Arrow</span></div>
+                    <div class="irow"><span class="rl">Stroke</span><span class="select"><span class="lead">3.4 · Alert red</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Time <span class="mut">0:06 to 0:09</span></div>
+                    <p class="note">The arrow was drawn while the playhead sat inside the hold, so it takes the hold’s in and out. It is on screen for exactly as long as the frozen frame is.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
+                    <button data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets" id="scopeAssets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Pop in</span><span class="mt">motion</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+          </span>
+          <span class="tc cur" id="tcCur">0:00</span>
+          <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="0" aria-valuemin="0" aria-valuemax="18" tabindex="0">
+            <span class="fill" id="scrubFill" style="width:0%"></span>
+            <span class="knob" id="scrubKnob" style="left:0%"></span>
+          </span>
+          <span class="tc" id="tcEnd">0:18</span>
+          <span class="grp">
+            <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
+            <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
+            <button class="btn ghost sm" title="Duplicate"><i class="ic ic-copy"></i><span class="lb">Duplicate</span></button>
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline" style="min-height:160px">
+          <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
+          <div class="track wt-off" id="trackGfx"><span class="tl"><i class="ic xs ic-cursor"></i> Gfx</span>
+            <div class="lane abs">
+              <div class="clip gfx wt-off" id="clipArrow" style="left:28.57%;width:14.29%" tabindex="0" role="button">Arrow</div>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="lane abs">
+              <div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div>
+              <div class="clip frz wt-off" id="clipFrz" style="left:28.57%;width:14.29%" tabindex="0" role="button"><i class="ic xs ic-pause"></i> Still · 0:06</div>
+              <div class="clip v1 wt-off" id="clipB" style="left:42.86%;width:57.14%" tabindex="0" role="button">screen-recording · 2</div>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+            <div class="lane abs">
+              <div class="clip aud" id="clipAud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div>
+              <div class="clip aud wt-off" id="clipAud2" style="left:42.86%;width:57.14%"><span class="wave"><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i><i style="height:35%"></i></span></div>
+              <span class="gapmark wt-off" id="audGap" style="left:28.57%;width:14.29%"></span>
+            </div>
+          </div>
+          <div class="playhead" id="playhead" style="--t:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Find the frame worth holding"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:06" data-cue-place="top"
+          data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.333"
+          data-set="#tcCur=0:06">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> to <b>0:06</b>, the frame that shows the result</p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">the canvas shows that frame. A freeze always starts here, because the frame you are looking at is the frame you are about to hold.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select the clip"
+          data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.333"
+          data-set="#tcCur=0:06|#propKind=Clip">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>screen-recording</b> clip</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">Properties shows the clip’s in and out, and a <b>Time</b> section. Everything about how a clip behaves in time lives in one place: freeze, speed, and hold.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Freeze the frame"
+          data-cue="#btnFreeze" data-cue-label="Click Freeze frame" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7,#clipAud2,#audGap" data-hide="#propsEmpty"
+          data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:28.57%"
+          data-set="#tcCur=0:06|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Freeze frame</b></p>
+          <p class="wt-where">Properties, in the <b>Time</b> section</p>
+          <p class="wt-res">the clip splits at the playhead and a three second <b>still</b> drops in between the halves. It is hatched on the timeline and named for the frame it holds. The cut is now 0:21, and the ruler grew a division to say so, because inserting a hold inserts time.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Decide what gets pushed"
+          data-cue="#ripPic" data-cue-label="Click Picture only" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-activate="#ripPic"
+          data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:85.7%"
+          data-set="#tcCur=0:06|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21|#pFreezeNote=Everything pushes the whole timeline, which keeps sound locked to the picture it belongs to. Picture only holds the image while the voice keeps running, which is what you want when you are talking over the frozen frame.">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Picture only</b></p>
+          <p class="wt-where">Properties, in the <b>The insert pushes</b> row</p>
+          <p class="wt-res">the gap closes in the audio lane and the voiceover runs straight through the hold. The picture stops, the talking does not. That choice is the entire difference between a freeze that feels deliberate and one that feels like a glitch.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Look inside the hold"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-activate="#ripPic"
+          data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
+          data-set="#tcCur=0:08|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21|#frzBadgeTx=Held frame · 0:06">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> two seconds further, to <b>0:08</b></p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">the picture has not changed, and the badge on the canvas says why: you are looking at the frame from 0:06. Time is moving, the image is not, and the waveform under it is still going.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up the Shape tool"
+          data-cue="#tShape" data-cue-label="Click the Shape tool" data-cue-place="top"
+          data-tool="#tShape" data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-activate="#ripPic"
+          data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
+          data-set="#tcCur=0:08|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Shape</b> tool, or press <code>R</code></p>
+          <p class="wt-where">the floating tool bar</p>
+          <p class="wt-res">the same annotation tools you use on a screenshot. A held frame is the moment they finally make sense in a video: there is something standing still to point at.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Point at the thing"
+          data-cue="#cvArrow" data-cue-label="Drag an arrow towards the button" data-cue-place="right"
+          data-tool="#tShape" data-select="#clipArrow" data-show="#clipFrz,#clipB,#lrStill,#frzBadge,#tick7,#cvArrow,#arrowRing,#trackGfx,#clipArrow,#lrArrow,#propsArrow" data-hide="#propsEmpty,#propsClip,#clipAud2,#audGap"
+          data-activate="#ripPic"
+          data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
+          data-set="#tcCur=0:08|#propKind=Shape|#layerCount=4|#docLen=0:21|#tcEnd=0:21">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do" data-verb="Drag">an <b>arrow</b> across the frame, towards the button</p>
+          <p class="wt-where">the canvas</p>
+          <p class="wt-res">the arrow lands as a layer, and its clip on the Gfx track lines up exactly with the hold, because that is where the playhead was when you drew it. Freeze, mark it up, carry on: the annotation kit and the timeline are the same document.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the running take"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A freeze is <b>a clip whose in and out are the same frame</b>. Nothing new was invented for it, which is why it trims, moves, takes a transition, and carries annotations exactly like footage does.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Holding a frame to point at something is the screenshot workflow arriving in video. The natural next step is <b>Measure on a held frame</b>: freeze, dimension the gap, and the label rides the hold.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Picture only lets sound and image drift on purpose. Should the timeline <b>show that drift</b>, with an offset badge on the pair, or does that clutter the common case where nobody cares?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and any segmented control on this
+     page stay live when a person clicks them directly. The walkthrough drives
+     the same state declaratively. */
+  (function () {
+    var root = document.getElementById('video-freeze-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () {
+          bs.forEach(function (x) { x.classList.toggle('on', x === b); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

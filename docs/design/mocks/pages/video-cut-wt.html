@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-cut-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-cut-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario, start to finish.
+     Page-local CSS is the window height, the program artwork, and the marks
+     this scenario needs on the timeline. Everything else is the shared DS. */
+  #video-cut-wt .win.shell{height:876px;min-height:0}
+
+  /* THE PROGRAM · designed artwork on the canvas, never chrome */
+  #video-cut-wt .pvwrap{width:min(470px,88%)}
+  #video-cut-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f);
+    box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
+  #video-cut-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.16);overflow:hidden;transform-origin:72% 62%}
+  #video-cut-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
+  #video-cut-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-cut-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-cut-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  #video-cut-wt .shot .cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
+    background:linear-gradient(180deg,#fff,#dfe6ff);padding:4px 9px;border-radius:6px}
+
+  /* lanes that place clips at real times */
+  #video-cut-wt .lane.abs{display:block;position:relative}
+  #video-cut-wt .lane.abs>.clip,#video-cut-wt .lane.abs>.kfd,#video-cut-wt .lane.abs>.kfseg{position:absolute}
+  #video-cut-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block;line-height:34px;top:0}
+  #video-cut-wt .clip.gfx{background:linear-gradient(135deg,#febc2e,#ff9d5c)}
+  #video-cut-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
+
+  /* keyframe lanes · the same timeline, one row per animated property */
+  #video-cut-wt .track.kft{margin:2px 0}
+  #video-cut-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
+  #video-cut-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
+  #video-cut-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
+    border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+  #video-cut-wt .kfseg{position:absolute;top:50%;height:2px;border-radius:2px;background:var(--accent);opacity:.45;transform:translateY(-50%)}
+
+  /* sound that still lives inside the picture clip */
+  #video-cut-wt .clip.v1 .wave{position:absolute;left:0;right:0;bottom:2px;height:11px;padding:0 6px;opacity:.5}
+  #video-cut-wt .clip.v1 .wave i{background:#cfe6ff}
+  #video-cut-wt .clip .lbl{position:relative;z-index:1}
+  /* the snap line the drag lands against */
+  #video-cut-wt .snap{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--good);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 22%, transparent);border-radius:2px;z-index:5}
+  #video-cut-wt .gap{position:absolute;top:0;height:34px;border:1px dashed var(--line-strong);
+    border-radius:6px;background:repeating-linear-gradient(45deg,transparent,transparent 5px,var(--panel-2) 5px,var(--panel-2) 10px)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-cut-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Cut a recording apart and place the pieces</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: get rid of a fumble in the middle of a take without losing the voiceover over it. Split, trim, move, snap. The thing worth watching is that <b>nothing is ever destroyed</b>: a split makes two layers that read the same recording, and a trim only moves an in point. Eight real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtCut">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · <span id="docLen">0:18</span></div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+              <div class="mlabel">Clip</div>
+              <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
+              <div class="menuitem"><i class="ic ic-audio"></i> Detach audio <span class="sc">⌃⇧D</span></div>
+              <div class="menuitem"><i class="ic ic-trash"></i> Ripple delete <span class="sc">⌥⌫</span></div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Window</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="pvwrap">
+                <div class="pvframe" id="cvFrame">
+                  <div class="shot">
+                    <div class="sb"><i></i><i></i><i></i></div>
+                    <div class="bars">
+                      <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                      <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                    </div>
+                    <span class="cta">Get Photonz</span>
+                  </div>
+                  <div class="toast wt-off" id="toastDetach"><i class="ic sm ic-audio"></i> Audio detached to its own layer</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · the strip swaps with the workspace (D4) -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                <button class="tool" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · it
+                 belongs to the resident agent, not to this window -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:88px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow wt-off" id="lrRec2"><i class="ic ic-image"></i><span class="nm">screen-recording · 2</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrVoice"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- PROPERTIES · contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:330px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip or a layer</div>
+                <div id="propsClip" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Clip <span class="mut" id="pClipName">screen-recording</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">In</span><span class="v" id="pIn">0:00</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v" id="pOut">0:18</span></div>
+                      <div class="field"><span class="k">Speed</span><span class="v">100%</span></div>
+                      <div class="field"><span class="k">Vol</span><span class="v" id="pVol">0 dB</span></div>
+                    </div>
+                    <p class="note" id="pTrimNote">In and out are where you start and stop reading the source. Trimming never touches the file, so the frames you cut off are still there if you drag the edge back out.</p>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Sound <span class="mut" id="pSoundState">in the clip</span></div>
+                    <div class="irow" id="rowDetach"><span class="rl">Audio</span>
+                      <button class="btn secondary sm" id="btnDetach"><i class="ic ic-audio"></i> <span id="btnDetachLb">Detach audio</span></button>
+                    </div>
+                    <p class="note">While the sound is inside the picture, every cut to the picture cuts the sound too. Detaching makes it an ordinary layer, so the two can be edited apart.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
+                    <button data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets" id="scopeAssets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Pop in</span><span class="mt">motion</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+          </span>
+          <span class="tc cur" id="tcCur">0:00</span>
+          <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="0" aria-valuemin="0" aria-valuemax="18" tabindex="0">
+            <span class="fill" id="scrubFill" style="width:0%"></span>
+            <span class="knob" id="scrubKnob" style="left:0%"></span>
+          </span>
+          <span class="tc" id="tcEnd">0:18</span>
+          <span class="grp">
+            <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
+            <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
+            <button class="btn ghost sm" title="Duplicate"><i class="ic ic-copy"></i><span class="lb">Duplicate</span></button>
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline" style="min-height:126px">
+          <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="lane abs">
+              <div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button"><span class="lbl">screen-recording</span>
+                <span class="wave" id="vWave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span>
+              </div>
+              <span class="gap wt-off" id="theGap" style="left:39%;width:16.5%"></span>
+              <div class="clip v2 wt-off" id="clipB" style="left:39%;width:61%" tabindex="0" role="button"><span class="lbl">screen-recording · 2</span></div>
+              <span class="snap wt-off" id="snapLine" style="left:39%"></span>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+            <div class="lane abs">
+              <div class="clip aud wt-off" id="clipVoice" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div>
+              <div class="empty wt-off" id="audEmpty" style="padding:0;font-size:9.5px;height:34px;align-items:flex-start;justify-content:center">the sound is inside the clip above</div>
+            </div>
+          </div>
+          <div class="playhead" id="playhead" style="--t:0.0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the clip"
+          data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-set="#propKind=Clip">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>screen-recording</b> clip</p>
+          <p class="wt-where">the V1 track on the timeline</p>
+          <p class="wt-res">the clip outlines, its row lights up in Layers, and Properties shows what a clip really is: a layer with an <b>in</b> and an <b>out</b>. The little waveform drawn inside it is the tell that its sound is still part of the picture.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Get the sound out of the picture"
+          data-cue="#btnDetach" data-cue-label="Click Detach audio" data-cue-place="left"
+          data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice,#toastDetach" data-hide="#propsEmpty,#vWave,#audEmpty"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Detach audio</b></p>
+          <p class="wt-where">Properties, in the <b>Sound</b> section</p>
+          <p class="wt-res">the sound moves out onto the Audio track as its own layer, and the waveform inside the picture clip goes away. From here, cutting the picture leaves the voice alone. This is the step people skip and then fight for an hour.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Go to the moment to cut"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:07" data-cue-place="top"
+          data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> to <b>0:07</b>, where the fumble starts</p>
+          <p class="wt-where">the transport scrubber</p>
+          <p class="wt-res">the playhead is the cut line. It runs through every track at once, so you can see exactly what a split here would touch.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up the Blade"
+          data-cue="#tBlade" data-cue-label="Click the Blade tool" data-cue-place="top"
+          data-tool="#tBlade" data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do">the <b>Blade</b>, or press <code>B</code></p>
+          <p class="wt-where">the floating tool bar</p>
+          <p class="wt-res">the same tool bar in the same place as every other workspace, carrying the video inventory. Blade is a tool, not a menu command, because you are about to use it on a specific thing.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Split it"
+          data-cue="#clipA" data-cue-label="Click the clip at the playhead" data-cue-place="top"
+          data-tool="#tBlade" data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pOut=0:07">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do">the <b>clip</b>, at the playhead</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">one clip becomes two and the <b>audio lane does not move</b>. Nothing was destroyed either: both halves point at the same recording with different in and out points, which is why a split costs nothing and can always be undone.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Take the second piece"
+          data-cue="#clipB" data-cue-label="Click screen-recording · 2" data-cue-place="top"
+          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:07|#pOut=0:18">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the second half, <b>screen-recording · 2</b>, with the Select tool</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">Properties swaps to the piece you picked: in 0:07, out 0:18. Same three places, same three fields, whichever half you are holding.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Trim off the fumble"
+          data-cue="#clipB" data-cue-label="Drag its left edge to 0:10" data-cue-place="top"
+          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2,#theGap" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%|#clipB=left:55.5%;width:44.5%"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#pTrimNote=In moved from 0:07 to 0:10. The three seconds are not deleted, they are just not being read: drag the edge back out and they return.">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do" data-verb="Drag">the piece’s <b>left edge</b> right, to <b>0:10</b></p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">three seconds of fumbling stop playing, and a gap opens where they were. Only the <b>in</b> point changed, so nothing has been thrown away.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Close the gap"
+          data-cue="#clipB" data-cue-label="Drag the piece left until it snaps" data-cue-place="top"
+          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2,#snapLine" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%|#clipB=left:39%;width:44.5%"
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#docLen=0:15|#tcEnd=0:15">
+        <div class="wt-cap vid">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag">the piece <b>left</b> until it snaps against the first half</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">the green line is the snap: edges find each other, so a closed gap is really closed. The cut is now 0:15 and the voiceover underneath has not moved a frame, which is the whole reason for detaching it first.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the uncut take"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Cutting is <b>non-destructive by construction</b>. A clip is a layer with an in and an out, so a split is two layers pointing at one recording and a trim is a number changing. Nothing is copied, nothing is deleted, and undo is never a rescue mission.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Detaching audio is so often the right first move that it could be <b>the default for a screen recording</b>, with the two layers linked until you break the link. The risk is a link people cannot see.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Dragging a piece left closed the gap by hand. Should a <b>ripple delete</b> (<code>⌥⌫</code>) that closes everything downstream be the taught path instead, and if so, what tells you which tracks it will move?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch and any segmented control on this
+     page stay live when a person clicks them directly. The walkthrough drives
+     the same state declaratively. */
+  (function () {
+    var root = document.getElementById('video-cut-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () {
+          bs.forEach(function (x) { x.classList.toggle('on', x === b); });
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

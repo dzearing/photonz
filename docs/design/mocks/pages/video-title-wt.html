@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-title-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-title-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. ONE scenario: put things
+     ON TOP of the footage. A title, a piece of clip art, and a component all
+     arrive the same way, because in a document with time they are all just
+     layers that happen to have an in and an out. Page-local CSS is the window
+     height, the program artwork, and the absolute-positioned lanes. */
+  #video-title-wt .win.shell{height:906px;min-height:0}
+
+  /* THE PROGRAM · the recording, plus whatever is laid over it */
+  #video-title-wt .pvwrap{width:min(470px,88%)}
+  #video-title-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f);
+    box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
+  #video-title-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.16);overflow:hidden}
+  #video-title-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
+  #video-title-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-title-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-title-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+
+  #video-title-wt .cvTitle{position:absolute;left:8%;top:14%;color:#fff;font-size:17px;font-weight:600;
+    letter-spacing:0;text-shadow:0 2px 12px rgba(0,0,0,.45);white-space:nowrap}
+  #video-title-wt .cvTitle.caret::after{content:"";display:inline-block;width:1.5px;height:1em;
+    margin-left:2px;background:#fff;vertical-align:-2px}
+  #video-title-wt .cvArt{position:absolute;left:44%;top:52%;width:74px;height:74px;
+    display:grid;place-items:center;color:#ffd36b;transform-origin:center}
+  #video-title-wt .cvArt .ic{width:100%;height:100%;filter:drop-shadow(0 6px 16px rgba(0,0,0,.5))}
+  #video-title-wt .cvL3{position:absolute;left:8%;bottom:12%;padding:var(--s2) var(--pad-sm);border-radius:var(--r2);
+    background:linear-gradient(120deg,rgba(154,92,255,.94),rgba(197,108,255,.86));color:#fff;
+    box-shadow:0 10px 26px -8px rgba(0,0,0,.55)}
+  #video-title-wt .cvL3 .n{font-family:var(--serif);font-size:14px;font-weight:700;line-height:1.15}
+  #video-title-wt .cvL3 .r{font-size:9px;opacity:.92;letter-spacing:.02em}
+
+  /* lanes that place clips at real times, so a title can start at 0:04 */
+  #video-title-wt .lane.abs{display:block;position:relative}
+  #video-title-wt .lane.abs>.clip{position:absolute;top:0}
+  #video-title-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block;line-height:34px}
+  #video-title-wt .clip.gfx{background:linear-gradient(135deg,#febc2e,#ff9d5c)}
+  #video-title-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
+  #video-title-wt .clip.cmp{background:linear-gradient(135deg,#9a5cff,#c56cff)}
+
+  /* clip art tiles read as art, not as a video thumbnail */
+  #video-title-wt .libtile .th.art{display:grid;place-items:center;height:38px;aspect-ratio:auto;
+    background:linear-gradient(160deg,rgba(255,211,107,.22),rgba(124,77,255,.18))}
+  #video-title-wt .libtile .th.art .ic{color:#ffd36b}
+  #video-title-wt .libtile .th.type{display:grid;place-items:center;height:38px;aspect-ratio:auto;
+    background:linear-gradient(160deg,rgba(124,77,255,.28),rgba(18,194,233,.18));
+    font-family:var(--serif);font-weight:700;color:#fff}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-title-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Lay a title and clip art over the shot</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: get words and a piece of art on top of the footage, then reuse something you already built.
+    A title is a <b>text layer with an in and an out</b>. Clip art is an <b>asset layer</b>. A lower third is a
+    <b>component instance</b>. Same document, same Layers panel, same Library, so there is nothing new to learn once you
+    have placed one of them. Nine real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtTitle">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · 0:18</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+              <div class="mlabel">Insert</div>
+              <div class="menuitem"><i class="ic ic-text"></i> Title <span class="sc">T</span></div>
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i> Component instance</div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Window</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="pvwrap">
+                <div class="pvframe" id="cvFrame">
+                  <div class="shot">
+                    <div class="sb"><i></i><i></i><i></i></div>
+                    <div class="bars">
+                      <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                      <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                    </div>
+                  </div>
+                  <div class="cvTitle wt-off" id="cvTitle">Type your title</div>
+                  <div class="cvArt wt-off" id="cvArt">
+                    <i class="ic ic-sparkle" style="width:100%;height:100%"></i>
+                    <span class="sel-ring wt-off" id="artRing" style="inset:-7px;border-radius:12px"></span>
+                    <span class="handle tl wt-off" id="artH1"></span>
+                    <span class="handle br wt-off" id="artH2"></span>
+                  </div>
+                  <div class="cvL3 wt-off" id="cvL3"><div class="n">Dana Zearing</div><div class="r">Design · Photonz</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 video inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:100px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow wt-off" id="lrL3"><i class="ic ic-component"></i><span class="nm">Lower third</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrArt"><i class="ic ic-sparkle"></i><span class="nm">Sparkle</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrTitle"><i class="ic ic-text"></i><span class="nm" id="lrTitleName">Title</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- PROPERTIES · contextual to what is selected -->
+            <div class="dgrp" id="gProps" style="--gh:222px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip or a layer</div>
+
+                <!-- a text layer -->
+                <div id="propsText" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Text <span class="mut" id="pStyle">Default</span></div>
+                    <div class="irow" style="grid-template-columns:1fr"><span class="rl">Words</span>
+                      <span class="select"><span class="lead" id="pText">Type your title</span><span class="car"><i class="ic xs ic-pen"></i></span></span>
+                    </div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">Size</span><span class="v" id="pSize">28</span></div>
+                      <div class="field"><span class="k">Weight</span><span class="v" id="pWeight">Regular</span></div>
+                    </div>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Time <span class="mut" id="pTime">0:04 to 0:07</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">In</span><span class="v">0:04</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v">0:07</span></div>
+                    </div>
+                    <p class="note">A title is a text layer that happens to live in a document with time, so it gets an in and an out. Nothing else about it is special.</p>
+                  </div>
+                </div>
+
+                <!-- a clip-art layer -->
+                <div id="propsArt" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Transform <span class="mut" id="pArtKind">Asset</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">X</span><span class="v" id="pX">920</span></div>
+                      <div class="field"><span class="k">Y</span><span class="v" id="pY">640</span></div>
+                      <div class="field"><span class="k">W</span><span class="v" id="pW">148</span></div>
+                      <div class="field"><span class="k">H</span><span class="v" id="pH">148</span></div>
+                    </div>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Time <span class="mut" id="pArtTime">0:04 to 0:09</span></div>
+                    <div class="irow"><span class="rl">Length</span><span class="select"><span class="lead" id="pArtLen">5.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <p class="note" id="pArtNote">Clip art is an asset layer. Drag its edge on the timeline to say how long it is on screen, exactly like you would with a clip of footage.</p>
+                  </div>
+                </div>
+
+                <!-- a component instance -->
+                <div id="propsComp" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h comp">Component <span class="mut">Lower third</span></div>
+                    <div class="irow"><span class="rl">Variant</span><span class="select"><span class="lead">Name · role</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Name</span><span class="select"><span class="lead">Dana Zearing</span><span class="car"><i class="ic xs ic-pen"></i></span></span></div>
+                    <p class="note">This is a linked instance of the component you built on a UI canvas. Edit the main and every instance in every document follows.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2). Titles take Styles,
+                 clip art is Assets, the lower third is a Component. -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
+                    <button data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets" id="scopeAssets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                </div>
+
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                  </div>
+                </div>
+
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" id="libL3" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                    <div class="libtile comp" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">End card</span><span class="mt">1 variant</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">A component is a layer tree you already built. Dropping one on a track places a linked instance, not a copy.</p>
+                </div>
+
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="styDisplay" tabindex="0"><span class="th type" style="font-size:15px">Aa</span><span class="cap"><span class="nm">Display / 48</span><span class="mt">type</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th type" style="font-size:11px">Aa</span><span class="cap"><span class="nm">Caption / 18</span><span class="mt">type</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">paint</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">The same type styles your UI documents use. One system, so a title in a cut and a heading in a screen cannot drift apart.</p>
+                </div>
+
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" id="artSparkle" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-cursor"></i></span><span class="cap"><span class="nm">Cursor</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-circle"></i></span><span class="cap"><span class="nm">Dot</span><span class="mt">svg</span></span></div>
+                  </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">Assets are flat art: svg, png, a logo. They keep their own scale, so blowing one up on a 4K frame stays crisp.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT + TIMELINE -->
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+          </span>
+          <span class="tc cur" id="tcCur">0:00</span>
+          <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="0" aria-valuemin="0" aria-valuemax="18" tabindex="0">
+            <span class="fill" id="scrubFill" style="width:0%"></span>
+            <span class="knob" id="scrubKnob" style="left:0%"></span>
+          </span>
+          <span class="tc">0:18</span>
+          <span class="grp">
+            <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
+            <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
+            <button class="btn ghost sm" title="Duplicate"><i class="ic ic-copy"></i><span class="lb">Duplicate</span></button>
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline" style="min-height:150px">
+          <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
+
+          <!-- tracks appear when something needs one -->
+          <div class="track wt-off" id="trackGfx"><span class="tl"><i class="ic xs ic-sparkle"></i> Gfx</span>
+            <div class="lane abs">
+              <div class="clip gfx wt-off" id="clipArt" style="left:22%;width:28%" tabindex="0" role="button">Sparkle</div>
+            </div>
+          </div>
+
+          <div class="track wt-off" id="trackTitle"><span class="tl"><i class="ic xs ic-text"></i> Title</span>
+            <div class="lane abs">
+              <div class="clip txt wt-off" id="clipTitle" style="left:22%;width:17%" tabindex="0" role="button">Title</div>
+              <div class="clip cmp wt-off" id="clipL3" style="left:56%;width:22%" tabindex="0" role="button">Lower third</div>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="lane abs"><div class="clip v1" style="left:0;width:100%">screen-recording</div></div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+            <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
+          </div>
+
+          <div class="playhead" id="playhead" style="--t:0.0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Park the playhead where it should appear"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:04" data-cue-place="top"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
+          data-set="#tcCur=0:04">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> to <b>0:04</b></p>
+          <p class="wt-where">the transport scrubber, under the canvas</p>
+          <p class="wt-res">time moves, and nothing else does. This is the only preparation the next step needs: whatever you insert lands at the playhead, because in a document with time the playhead is where you are.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick up the Title tool"
+          data-cue="#tTitle" data-cue-label="Click the Title tool" data-cue-place="top"
+          data-tool="#tTitle"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
+          data-set="#tcCur=0:04">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do">the <b>Title</b> tool, or press <code>T</code></p>
+          <p class="wt-where">the floating tool bar, under the canvas</p>
+          <p class="wt-res">the same tool, in the same slot, as in an image or a UI document. The strip swaps its inventory per workspace, not its layout, so your hand already knows where this is.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Click on the frame"
+          data-cue="#cvFrame" data-cue-label="Click where the title should sit" data-cue-place="left"
+          data-tool="#tTitle"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#propsText" data-hide="#propsEmpty"
+          data-select="#clipTitle" data-class="#cvTitle=caret"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
+          data-set="#tcCur=0:04|#propKind=Text layer|#layerCount=3">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do">on the <b>frame</b>, where the words should sit</p>
+          <p class="wt-where">the canvas</p>
+          <p class="wt-res">three things appear at once and they are the same thing seen three ways: a caret on the canvas, a <b>Title</b> row in Layers, and a clip on a new <b>Title</b> track that starts at the playhead and runs three seconds. The track was not there a moment ago because nothing needed it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Type the words"
+          data-cue="#cvTitle" data-cue-label="Type the title" data-cue-place="bottom"
+          data-tool="#tTitle"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#propsText" data-hide="#propsEmpty"
+          data-select="#clipTitle" data-class="#cvTitle=caret"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
+          data-set="#tcCur=0:04|#propKind=Text layer|#layerCount=3|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do" data-verb="Type"><b>Ship it faster</b></p>
+          <p class="wt-where">straight onto the canvas, where the caret is</p>
+          <p class="wt-res">the words go in on the frame, at the size they will really be. The layer names itself from its own text, and so does the clip on the timeline, so a busy Title track stays readable without you naming anything.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it a type style"
+          data-cue="#styDisplay" data-cue-label="Click Display / 48" data-cue-place="left"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#propsText" data-hide="#propsEmpty"
+          data-open="#gLibrary" data-scope="styles" data-select="#styDisplay"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
+          data-set="#tcCur=0:04|#propKind=Text layer|#layerCount=3|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Display / 48</b></p>
+          <p class="wt-where">Library, at scope <b>Styles</b></p>
+          <p class="wt-res">the title takes the style and Properties says which one it is wearing. These are the same type styles your UI documents pull from, so a title in a cut and a heading in a screen cannot quietly drift apart.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Switch the Library to Assets"
+          data-cue="#scopeAssets" data-cue-label="Click Assets" data-cue-place="left"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#propsText" data-hide="#propsEmpty"
+          data-open="#gLibrary" data-scope="assets" data-select="#clipTitle"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
+          data-set="#tcCur=0:04|#propKind=Text layer|#layerCount=3|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Assets</b></p>
+          <p class="wt-where">the Library scope switch</p>
+          <p class="wt-res">the same panel, a different scope. Clip art is not a separate browser with its own rules, it is the Library holding flat art: svg, png, a logo you dropped in last week.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drag clip art onto the frame"
+          data-cue="#artSparkle" data-cue-label="Drag Sparkle onto the frame" data-cue-place="left"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#cvArt,#trackGfx,#clipArt,#lrArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do" data-verb="Drag"><b>Sparkle</b> onto the frame</p>
+          <p class="wt-where">Library at scope Assets, over to the canvas</p>
+          <p class="wt-res">the art lands where you dropped it, selected, with handles. A <b>Gfx</b> track appears under the Title track carrying its clip, so the thing you see on the frame and the thing you see on the timeline are one layer, never two objects to keep in sync.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Size it and place it"
+          data-cue="#artH2" data-cue-label="Drag the corner handle" data-cue-place="right"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#cvArt,#trackGfx,#clipArt,#lrArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px"
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104">
+        <div class="wt-cap vid">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag">the corner <b>handle</b> in, then the art itself up beside the title</p>
+          <p class="wt-where">the canvas</p>
+          <p class="wt-res">the numbers in Properties keep up as you drag, because the handles and the fields are two views of the same four values. Art scales from its own vector, so it stays crisp however big the frame is.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Say how long it stays"
+          data-cue="#clipArt" data-cue-label="Drag the clip's right edge to 0:07" data-cue-place="top"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#cvArt,#trackGfx,#clipArt,#lrArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
+          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px|#clipArt=width:17%"
+          data-set="#tcCur=0:04|#propKind=Asset layer|#layerCount=4|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104|#pArtTime=0:04 to 0:07|#pArtLen=3.0s|#pArtNote=Both clips now start and end together. Drag either edge to change it, or select both and trim them as one.">
+        <div class="wt-cap vid">
+          <span class="wt-n">9</span>
+          <p class="wt-do" data-verb="Drag">the art clip's <b>right edge</b> back until it lines up with the title</p>
+          <p class="wt-where">the Gfx track on the timeline</p>
+          <p class="wt-res">the art now comes and goes with the words. Trimming a piece of clip art is the same gesture as trimming footage, because on the timeline they are the same kind of object: a layer with an in and an out.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Reuse something you already built"
+          data-cue="#libL3" data-cue-label="Drag Lower third onto the Title track" data-cue-place="left"
+          data-tool="#tSelect" data-class="#cvTitle=-caret"
+          data-show="#cvTitle,#trackTitle,#clipTitle,#lrTitle,#cvArt,#trackGfx,#clipArt,#lrArt,#cvL3,#clipL3,#lrL3,#propsComp" data-hide="#propsEmpty,#propsText,#propsArt,#artRing,#artH1,#artH2"
+          data-open="#gLibrary" data-scope="components" data-select="#clipL3"
+          data-css="#scrubFill=width:56%|#scrubKnob=left:56%|#playhead=--t:0.56|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em;opacity:.25|#cvArt=left:60%;top:26%;width:52px;height:52px;opacity:.25|#clipArt=width:17%"
+          data-set="#tcCur=0:10|#propKind=Component instance|#layerCount=5|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#lrTitleName=Ship it faster">
+        <div class="wt-cap vid">
+          <span class="wt-n">10</span>
+          <p class="wt-do" data-verb="Drag"><b>Lower third</b> onto the <b>Title</b> track, after the title</p>
+          <p class="wt-where">Library at scope Components, down to the timeline</p>
+          <p class="wt-res">a linked instance lands at 0:10, so the playhead jumps there and the earlier layers fade out of the frame the way they will in the cut. It is the component you built on a UI canvas, with its variant and its text still editable. One library, three kinds of thing, one gesture for all of them.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the bare recording"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Everything you lay over footage is a <b>layer with an in and an out</b>. Words, art, and a component instance differ in what they draw, not in how you place, style, move, or trim them. That is why there is no separate titler, no shape mode, and no clip-art browser.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Tracks appear when something needs one and could <b>disappear when the last clip leaves</b>, which keeps a simple cut simple. The open risk is a track quietly vanishing under you while you are dragging.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>A title and its clip art almost always travel together. Should selecting both and pressing <code>⌘G</code> make a <b data-target="components" style="color:#12c2e9;cursor:pointer">component</b> on the spot, so the pair becomes reusable the moment it exists?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch stays live when a person clicks it
+     directly. The walkthrough drives the same state declaratively. */
+  (function () {
+    var root = document.getElementById('video-title-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = root.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>
