@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-transition-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-transition-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. ONE scenario: the cut
+     between two clips is a thing you can select, and a transition is an object
+     configured on it (type, length, alignment, curve), never a sealed effect.
+     Page-local CSS is the window height, the program artwork, and the edit
+     point + transition marker on the timeline. */
+  #video-transition-wt .win.shell{height:872px;min-height:0}
+
+  /* THE PROGRAM · two frames stacked, cross-faded by the step's state. This is
+     designed artwork on the canvas, not chrome. */
+  #video-transition-wt .pvwrap{width:min(470px,88%)}
+  #video-transition-wt .pvframe{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:#06070d;box-shadow:0 20px 44px -16px rgba(0,0,0,.62)}
+  #video-transition-wt .fr{position:absolute;inset:0}
+  #video-transition-wt .fr.a{background:radial-gradient(120% 115% at 26% 6%,#233070,#0e1122 60%,#07080f)}
+  #video-transition-wt .fr.b{background:linear-gradient(135deg,#ff9d5c,#ff5d8f 58%,#7c4dff);opacity:0}
+  #video-transition-wt .fr.blk{background:#000;opacity:0}
+  /* frame A: a screen recording of an app */
+  #video-transition-wt .shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+    border:1px solid rgba(255,255,255,.16);overflow:hidden}
+  #video-transition-wt .shot .sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.12)}
+  #video-transition-wt .shot .sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-transition-wt .shot .bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-transition-wt .shot .bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  /* frame B: b-roll */
+  #video-transition-wt .fr.b .sun{position:absolute;right:18%;top:18%;width:64px;height:64px;border-radius:50%;
+    background:radial-gradient(circle,#fff,rgba(255,255,255,.35) 62%,transparent 70%)}
+  #video-transition-wt .fr.b .hill{position:absolute;left:-10%;right:-10%;bottom:-32%;height:70%;border-radius:50%;
+    background:rgba(0,0,0,.28)}
+
+  /* THE EDIT POINT · the cut itself, a real target on the lane. Empty it is a
+     slim grabber; with a transition on it, it is the marker. */
+  #video-transition-wt .editpt{flex:none;align-self:center;width:9px;height:34px;border-radius:3px;
+    margin:0 -4px;z-index:2;background:var(--line-strong);cursor:pointer;position:relative}
+  #video-transition-wt .editpt:hover{background:var(--accent-line)}
+  #video-transition-wt .editpt.sel{background:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  #video-transition-wt .transition{width:26px;margin:0 -13px;z-index:3;display:flex;align-items:center;
+    justify-content:center;color:#3a2c05;cursor:pointer;
+    background:linear-gradient(90deg,#12c2e9,#febc2e 50%,#ff9d5c)}
+  #video-transition-wt .transition::after{display:none}
+  #video-transition-wt .transition.sel{box-shadow:0 0 0 2px var(--accent)}
+  #video-transition-wt .transition.blk{background:linear-gradient(90deg,#12c2e9,#0a0a0f 50%,#ff9d5c);color:#fff}
+  #video-transition-wt .clip{white-space:nowrap;cursor:pointer}
+
+  /* the transition picker · tiles, because a transition is a thing you pick */
+  #video-transition-wt #transPick{width:232px}
+  #video-transition-wt #transPick .libgrid{grid-template-columns:1fr 1fr;padding:var(--s2);gap:var(--s2)}
+  #video-transition-wt #transPick .th{height:26px;aspect-ratio:auto}
+  #video-transition-wt .th.tx-diss{background:linear-gradient(90deg,#12c2e9,#ff9d5c)}
+  #video-transition-wt .th.tx-black{background:linear-gradient(90deg,#12c2e9,#05060a 50%,#ff9d5c)}
+  #video-transition-wt .th.tx-white{background:linear-gradient(90deg,#12c2e9,#fff 50%,#ff9d5c)}
+  #video-transition-wt .th.tx-push{background:linear-gradient(115deg,#12c2e9 48%,#ff9d5c 52%)}
+  #video-transition-wt .th.tx-wipe{background:linear-gradient(90deg,#12c2e9 48%,#ff9d5c 48%)}
+  #video-transition-wt .th.tx-blur{background:linear-gradient(90deg,#12c2e9,#8fa 40%,#ff9d5c);filter:blur(2px)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-transition-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Put a transition on a cut</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job, start to finish: take the cut between two clips and make it a <b>dissolve</b>, then tune it.
+    The point is that <b>the cut is selectable</b>. A transition is not a sticker you drop between clips, it is an object
+    that belongs to that edit point and carries a type, a length, an alignment, and a curve. Eight real clicks on ONE
+    screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtTrans">
+
+    <div class="wt-stage">
+      <div class="win tall cq shell">
+
+        <!-- TITLE BAR · document identity only. The lesson title lives in
+             .scen-head above, never here. -->
+        <div class="titlebar">
+          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · 0:18</div>
+          <div class="wsw" role="tablist" aria-label="Workspace">
+            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
+            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
+          </div>
+          <div class="tbtns">
+            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+          </div>
+        </div>
+
+        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
+        <div class="toolbar">
+          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
+          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+          <span class="tsep"></span>
+          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+          <span class="tspacer"></span>
+          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
+          <div style="position:relative">
+            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
+              <div class="mlabel">Edit point</div>
+              <div class="menuitem"><i class="ic ic-transition"></i> Add transition</div>
+              <div class="menuitem"><i class="ic ic-copy"></i> Copy transition <span class="sc">⌘C</span></div>
+              <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
+              <div class="menu-sep"></div>
+              <div class="mlabel">Window</div>
+              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+          <div class="cnv">
+            <div class="canvas">
+              <div class="pvwrap">
+                <div class="pvframe">
+                  <div class="fr a">
+                    <div class="shot">
+                      <div class="sb"><i></i><i></i><i></i></div>
+                      <div class="bars">
+                        <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                        <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="fr b" id="frB"><span class="sun"></span><span class="hill"></span></div>
+                  <div class="fr blk" id="frBlk"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · the strip swaps with the workspace (D4) -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) · chromeless -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:18</span></span>
+                    <span class="cap"><span class="nm">screen-recording</span><span class="ago">9 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:07</span></span>
+                    <span class="cap"><span class="nm">b-roll</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:42</span></span>
+                    <span class="cap"><span class="nm">onboarding-run</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- THE TRANSITION PICKER · opened from the Properties row it
+                 belongs to. It sits in .edit.lean, not inside the scrolling
+                 group body, so it is never clipped. -->
+            <div class="popover pop" id="transPick" style="position:absolute;right:var(--s4);bottom:60px;z-index:14">
+              <div class="mlabel" style="padding:var(--s2) var(--s3) 0">At this cut</div>
+              <div class="libgrid">
+                <div class="libtile" id="txDiss" tabindex="0"><span class="th tx-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">0.6s</span></span></div>
+                <div class="libtile" id="txBlack" tabindex="0"><span class="th tx-black"></span><span class="cap"><span class="nm">Dip to black</span><span class="mt">0.6s</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th tx-white"></span><span class="cap"><span class="nm">Dip to white</span><span class="mt">0.6s</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th tx-push"></span><span class="cap"><span class="nm">Push</span><span class="mt">0.5s</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th tx-wipe"></span><span class="cap"><span class="nm">Wipe</span><span class="mt">0.5s</span></span></div>
+                <div class="libtile" tabindex="0"><span class="th tx-blur"></span><span class="cap"><span class="nm">Blur through</span><span class="mt">0.8s</span></span></div>
+              </div>
+              <p class="note" style="margin:0 var(--s3) var(--s3)">Every one of these is keyframed, so whichever you pick you can still drag its ends and change its curve.</p>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="220" data-max="420"></div>
+
+          <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:96px">
+              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt">4</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrBroll"><i class="ic ic-image"></i><span class="nm">b-roll.mov</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrOutro"><i class="ic ic-image"></i><span class="nm">outro.mov</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="90" data-max="300"></div>
+
+            <!-- PROPERTIES · contextual to what is selected. A cut is not a
+                 layer, so this is the one place it can speak for itself. -->
+            <div class="dgrp" id="gProps" style="--gh:380px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip, a layer, or a cut</div>
+
+                <div id="propsCut" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Edit point <span class="mut" id="pCutAt">at 0:08</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">Out</span><span class="v">screen-rec</span></div>
+                      <div class="field"><span class="k">In</span><span class="v">b-roll</span></div>
+                    </div>
+                    <p class="note">A cut is the seam between two clips, so it belongs to neither of them. Selecting it is how you get at the seam itself.</p>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Transition <span class="mut" id="pTransState">None</span></div>
+
+                    <div class="irow" id="rowAdd"><span class="rl">At the cut</span>
+                      <button class="btn secondary sm" id="btnAddTrans"><i class="ic ic-transition"></i> Add transition</button>
+                    </div>
+
+                    <div class="irow wt-off" id="rowType"><span class="rl">Type</span>
+                      <span class="select" id="selType" tabindex="0" role="button"><span class="lead" id="pType">Cross dissolve</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow wt-off" id="rowLen"><span class="rl">Length</span>
+                      <span class="select"><span class="lead" id="pLen">0.6s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow wt-off" id="rowAlign" style="grid-template-columns:1fr"><span class="rl">Alignment</span>
+                      <span class="seg alignseg" role="group" aria-label="Alignment">
+                        <button id="alEnd">Ends</button>
+                        <button class="on" id="alCenter">Centered</button>
+                        <button id="alStart">Starts</button>
+                      </span>
+                    </div>
+                    <div class="irow wt-off" id="rowCurve" style="grid-template-columns:1fr"><span class="rl">Curve</span>
+                      <span class="seg curveseg" role="group" aria-label="Curve">
+                        <button class="on" id="cvLin">Linear</button>
+                        <button id="cvEase">Ease in-out</button>
+                      </span>
+                    </div>
+                    <p class="note" id="pTransNote">A transition rides the same keyframe engine as a layer effect, so its length and its curve are ordinary properties, not settings buried in a dialog.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
+                </div>
+                <div data-scope-body="media">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">outro.mov</span><span class="mt">0:04</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">Pop in</span><span class="mt">motion</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-folder"></i></span>No assets yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE RAIL · what the dock collapses to -->
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+          </div>
+        </div>
+
+        <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+        <div class="transport">
+          <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+          <span class="grp">
+            <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+            <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+            <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+          </span>
+          <span class="tc cur" id="tcCur">0:03</span>
+          <span class="scrub" id="scrub" data-duration="18" role="slider" aria-label="Scrub" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" tabindex="0">
+            <span class="fill" id="scrubFill" style="width:17%"></span>
+            <span class="knob" id="scrubKnob" style="left:17%"></span>
+          </span>
+          <span class="tc">0:18</span>
+          <span class="grp">
+            <button class="btn ghost sm" title="Blade"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
+            <button class="btn ghost sm" title="Crop"><i class="ic ic-crop"></i><span class="lb">Crop</span></button>
+            <button class="btn ghost sm" title="Duplicate"><i class="ic ic-copy"></i><span class="lb">Duplicate</span></button>
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline" style="min-height:126px">
+          <div class="ruler"><span>0s</span><span>4s</span><span>8s</span><span>12s</span><span>16s</span></div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+            <div class="lane">
+              <div class="clip v1" id="clipA" style="width:44%" tabindex="0" role="button">screen-recording</div>
+              <span class="editpt" id="cut1" tabindex="0" role="button" title="The cut at 0:08"></span>
+              <span class="transition wt-off" id="trans1" tabindex="0" role="button" title="Cross dissolve · 0.6s"><i class="ic xs ic-transition"></i></span>
+              <div class="clip" id="clipB" style="width:32%;background:linear-gradient(135deg,#ff9d5c,#ff5d8f)" tabindex="0" role="button">b-roll.mov</div>
+              <span class="editpt" id="cut2" tabindex="0" role="button" title="The cut at 0:14"></span>
+              <div class="clip v2" id="clipC" style="width:20%" tabindex="0" role="button">outro.mov</div>
+            </div>
+          </div>
+
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+            <div class="lane"><div class="clip aud" style="width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
+          </div>
+
+          <div class="playhead" id="playhead" style="left:17%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Select the cut"
+          data-cue="#cut1" data-cue-label="Click the cut between the two clips" data-cue-place="top"
+          data-select="#cut1" data-show="#propsCut" data-hide="#propsEmpty"
+          data-set="#propKind=Edit point">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>cut</b> between <b>screen-recording</b> and <b>b-roll.mov</b></p>
+          <p class="wt-where">the V1 track on the timeline. Every seam between two clips carries this grabber</p>
+          <p class="wt-res">the cut itself is selected, and Properties speaks for it: which clip goes out, which comes in, and that there is no transition on it yet. A cut is not a layer, so this is the only place it can have properties of its own.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the transition picker"
+          data-cue="#btnAddTrans" data-cue-label="Click Add transition" data-cue-place="left"
+          data-select="#cut1" data-show="#propsCut" data-hide="#propsEmpty"
+          data-pop="#transPick"
+          data-set="#propKind=Edit point">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Add transition</b></p>
+          <p class="wt-where">Properties, in the <b>Transition</b> section</p>
+          <p class="wt-res">the picker opens beside the row it belongs to, showing what can go on this cut. Each tile previews the move and names its default length.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Choose Cross dissolve"
+          data-cue="#txDiss" data-cue-label="Click Cross dissolve" data-cue-place="left"
+          data-select="#txDiss" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-pop="#transPick"
+          data-set="#propKind=Edit point|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=0.6s">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Cross dissolve</b></p>
+          <p class="wt-where">the picker</p>
+          <p class="wt-res">a 0.6 second dissolve lands on the cut. The grabber becomes a marker that straddles the seam, and Properties fills in with the four things a transition actually has: type, length, alignment, curve.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Stretch it to a second"
+          data-cue="#trans1" data-cue-label="Drag the marker's edge out to 1.0s" data-cue-place="top"
+          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-css="#trans1=width:42px;margin:0 -21px"
+          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do" data-verb="Drag">the marker's <b>edge</b> out until it reads <b>1.0s</b></p>
+          <p class="wt-where">the timeline, on the cut</p>
+          <p class="wt-res">the transition grows on the timeline and the Length row follows. Length is a direct drag on the thing, not a number you go and find, and the readout in Properties is the same value seen from the other side.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it a curve"
+          data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
+          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-activate="#cvEase"
+          data-css="#trans1=width:42px;margin:0 -21px"
+          data-set="#propKind=Transition|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s|#pTransNote=Linear blends at a flat rate the whole way. Ease in-out lingers on each shot and does most of the blending in the middle, which is why it reads softer at the same length.">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>Ease in-out</b></p>
+          <p class="wt-where">Properties, in the <b>Curve</b> row</p>
+          <p class="wt-res">the blend stops running at a flat rate. It holds on the outgoing shot, moves through the middle, and settles on the incoming one, all in the same 1.0 seconds.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Scrub into the middle of it"
+          data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
+          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-activate="#cvEase"
+          data-css="#trans1=width:42px;margin:0 -21px|#frB=opacity:.5|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=1.0s">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do" data-verb="Drag">the <b>playhead</b> onto the cut, at <b>0:08</b></p>
+          <p class="wt-where">the transport scrubber, under the canvas</p>
+          <p class="wt-res">the canvas shows the halfway frame: both shots at once, the recording going and the b-roll arriving. Nothing rendered first. Scrubbing is the preview, so a transition is checked the same way any other value over time is.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Swap the type, keep the settings"
+          data-cue="#selType" data-cue-label="Click the Type row, then Dip to black" data-cue-place="left"
+          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-activate="#cvEase"
+          data-css="#trans1=width:42px;margin:0 -21px|#frBlk=opacity:1|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s"
+          data-class="#trans1=blk">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do">the <b>Type</b> row, and pick <b>Dip to black</b></p>
+          <p class="wt-where">Properties, in the Transition section</p>
+          <p class="wt-res">the type changes and everything you tuned survives it: still 1.0 seconds, still eased, still centred on the cut. At 0:08 the frame is now fully black, because the middle of a dip is the bottom of the dip.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Move it off the seam"
+          data-cue="#alEnd" data-cue-label="Click Ends" data-cue-place="left"
+          data-select="#trans1" data-show="#propsCut,#trans1,#rowType,#rowLen,#rowAlign,#rowCurve" data-hide="#propsEmpty,#cut1,#rowAdd"
+          data-activate="#alEnd"
+          data-css="#trans1=width:42px;margin:0 4px 0 -46px|#frB=opacity:1|#frBlk=opacity:0|#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=left:44%"
+          data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pTransNote=Centred spends half the transition on each shot. Ends means the whole second is taken out of the outgoing clip. Starts takes it out of the incoming one."
+          data-class="#trans1=blk">
+        <div class="wt-cap vid">
+          <span class="wt-n">8</span>
+          <p class="wt-do"><b>Ends</b></p>
+          <p class="wt-where">Properties, in the <b>Alignment</b> row</p>
+          <p class="wt-res">the marker slides back so the dip finishes exactly on the cut, and the playhead has not moved: at 0:08 you are now looking at clean b-roll. Alignment decides which clip pays for the transition, and the timeline shows you the answer instead of describing it.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the untouched cut"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>The <b>cut is selectable</b>. That one decision removes the usual transition dance: no dragging an effect from a bin and hoping it snaps, no dialog. Select the seam, and the seam has properties, because a transition belongs to the edit point rather than to either clip.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Swapping the type keeps length, alignment, and curve. That suggests a <b>transition is a style</b>: pick one you like, save it to Library at scope Styles, and apply it to every cut in a cut-down with one click.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should a cut with no transition still show a grabber on every seam, or should the seam only become a target when you hover it? Always-on is discoverable and it is also a lot of small marks on a 40-clip edit.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: keep the Library scope switch, the Alignment and Curve
+     segmented controls, and the picker live when a person clicks them
+     directly. The walkthrough drives the same state declaratively. */
+  (function () {
+    var root = document.getElementById('video-transition-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    ['.alignseg', '.curveseg'].forEach(function (sel) {
+      var g = root.querySelector(sel);
+      if (!g) return;
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () {
+          bs.forEach(function (x) { x.classList.toggle('on', x === b); });
+        });
+      });
+    });
+    var pick = document.getElementById('transPick');
+    [document.getElementById('btnAddTrans'), document.getElementById('selType')].forEach(function (b) {
+      if (b && pick) b.addEventListener('click', function () { pick.classList.toggle('on'); });
+    });
+  })();
+</script>
+</body>
+</html>
