@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · color</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* color · ONE app screen (PRODUCT-MODEL §4c Kind 1) where every color slot
+     opens the same picker, plus specimens (Kind 2) for its anatomy, the slot
+     inventory and the derived shades. The picker itself is shared DS
+     (`.cpick` + `.cpick-btn` in photonz-ds.css, driven by photonz-ds.js), so
+     this page composes it rather than owning it. Page-local CSS is only: a
+     definite window height, the specimen card, and the anatomy callouts.
+     Every local class is prefixed `cl-`. 4pt tokens only. */
+  #color .win.shell{height:700px;min-height:0}
+
+  /* ---- specimen card (Kind 2): a part of the app, never app chrome ---- */
+  #color .cl-specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  #color .cl-spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
+    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  #color .cl-spec.wide{grid-column:1/-1}
+  #color .cl-spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
+    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:var(--gap-sm)}
+  #color .cl-spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+  #color .cl-spec-b{padding:0 var(--pad) var(--pad)}
+
+  /* ---- anatomy: a live picker with numbered callouts beside a legend ---- */
+  #color .cl-anat{display:grid;grid-template-columns:auto 1fr;gap:var(--gap-lg);align-items:start}
+  #color .cl-anat-fig{position:relative;flex:none}
+  #color .cl-anat-fig .cpick{position:static;display:flex}
+  #color .cl-num{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9.5px;font-weight:700;display:grid;place-items:center;z-index:4;left:-9px}
+  #color .cl-leg{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm) var(--gap-lg);align-content:start}
+  #color .cl-leg .li{display:grid;grid-template-columns:16px 1fr;gap:var(--gap-sm);align-items:start;
+    font-size:11.5px;color:var(--dim);line-height:1.5}
+  #color .cl-leg .li b{color:var(--ink);font-weight:600}
+  #color .cl-leg .n{width:16px;height:16px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+    font-size:9.5px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+
+  /* ---- the slot inventory: one trigger grammar, eight places ---- */
+  #color .cl-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+  #color .cl-slot{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #color .cl-slot .sn{font-size:11px;font-weight:600;color:var(--ink)}
+  #color .cl-slot .sd{font-size:10.5px;color:var(--faint);line-height:1.4}
+
+  /* ---- shade derivation: three bases, same nine steps ---- */
+  #color .cl-ramps{display:flex;flex-direction:column;gap:var(--gap)}
+  #color .cl-ramp{display:grid;grid-template-columns:96px 1fr;gap:var(--gap-sm);align-items:center}
+  #color .cl-ramp .nm{font-size:11px;font-weight:600;color:var(--ink);font-family:var(--mono);font-size:10.5px}
+  #color .cl-steps{display:grid;grid-template-columns:repeat(9,1fr);gap:var(--s1)}
+  #color .cl-steps span{height:24px;border-radius:6px;border:1px solid var(--edge-lo);
+    box-shadow:inset 0 1px 0 var(--edge-hi);position:relative}
+  #color .cl-steps span.cur::after{content:"";position:absolute;inset:-3px;border-radius:9px;border:2px solid var(--accent)}
+
+  /* ---- the rules list ---- */
+  #color .cl-rules{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #color .cl-rules .r{display:grid;grid-template-columns:16px 1fr;gap:var(--gap-sm);align-items:start;
+    font-size:11.5px;color:var(--dim);line-height:1.5}
+  #color .cl-rules .r b{color:var(--ink);font-weight:600}
+  #color .cl-rules .r .ic{color:var(--good);margin-top:2px}
+
+  @media (max-width:820px){
+    #color .cl-specs{grid-template-columns:1fr}
+    #color .cl-slots{grid-template-columns:repeat(2,1fr)}
+    #color .cl-anat{grid-template-columns:1fr}
+    #color .cl-leg{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="color">
+  <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#12c2e9,#7c4dff 55%,#ff5d8f)"></span><h2>Color</h2><span class="k">· the picking primitive · one popover, every slot</span></div>
+
+  <p class="pglead">A color is picked one way in this app. Click a swatch, anywhere, and the same popover opens:
+    a saturation field, a hue track, hex or RGB or HSL typed straight in, and a row of shades derived from the color
+    you are already on so "a bit darker" costs one click instead of a second dialog. There is no second color UI,
+    no slot that quietly hands you the system color panel, and no place where the swatch is not the thing you click.</p>
+
+  <!-- ============================================================
+       KIND 1 · AN APP SCREEN. The picker is open on the Fill slot,
+       anchored to the swatch that opened it. Click any other swatch
+       in the dock or the tool bar and it re-anchors, keeping its
+       recents and its shades ramp.
+       ============================================================ -->
+  <div class="win tall cq shell">
+
+    <div class="titlebar">
+      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+      <div class="wtitle"><b>pricing-card</b> · 1200 × 630</div>
+      <div class="wsw" role="tablist" aria-label="Workspace">
+        <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
+        <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
+        <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
+      </div>
+      <div class="tbtns">
+        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
+        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="tool" title="Commands" data-menu="#clCmdMenu"><i class="ic sm ic-more"></i></button>
+      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
+      <span class="tsep"></span>
+      <button class="btn ghost sm" data-sheet="#clHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+      <span class="tspacer"></span>
+      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
+      <div style="position:relative">
+        <div class="popover menu pop" id="clCmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo color change <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-eyedropper"></i> Sample a color <span class="sc">I</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy color as hex <span class="sc">⌥⌘C</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save color as style</div>
+          <div class="menuitem"><i class="ic ic-swap"></i> Swap fill and stroke <span class="sc">⇧X</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit lean" id="clShell" data-dock="open">
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1200 × 630 · Brand tokens</div>
+          <div class="selwrap">
+            <div class="hero-card" id="clCard" style="border:2px solid #12C2E9">
+              <span class="hc-badge">Pro</span>
+              <div class="hc-h" id="clTitle">Everything, unlocked</div>
+              <p class="hc-sub" id="clSub">One document, every layer, no export dance.</p>
+              <span class="hc-cta">Start free</span>
+            </div>
+            <div class="sel-ring" style="border-radius:26px"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag">Card · 400 × 260</span>
+          </div>
+        </div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#clShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+        </div>
+
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+            <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <button class="tool ovf" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+            <button class="tool ovf" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <span class="tsep ovf"></span>
+            <button class="tool ovf" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+            <button class="tool" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+          </span>
+          <button class="tool tbar-more" title="More tools" data-menu="#clToolOvf"><i class="ic sm ic-more"></i></button>
+          <span class="tsep"></span>
+          <!-- TRIGGER 1 of 5: the foreground swatch. Same popover as the dock. -->
+          <span class="swpair" title="Foreground and background color">
+            <span class="fg" id="clFgSw" data-menu="#clPicker" data-cl-slot="Foreground"
+                  data-cl-color="#7C4DFF" data-cl-fill="#clFgSw" style="background:#7C4DFF"></span>
+            <span class="bg" style="background:#ffffff"></span>
+          </span>
+          <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+          <span class="tsep"></span>
+          <span class="zoomctl">
+            <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+            <span class="val zval">100%</span>
+          </span>
+          <div class="popover menu pop" id="clToolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+            <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+            <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+            <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+          </div>
+        </div>
+
+        <div class="sheet down" id="clHist" aria-hidden="true" aria-label="Capture history">
+          <div class="sheet-h">
+            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
+            <span class="sp"></span>
+            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+            <span class="sp"></span>
+            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="sheet-b">
+            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                <span class="cap"><span class="nm">Pricing card</span><span class="ago">just now</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+              <div class="filmcard" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(135deg,#12c2e9,#3ecf8e)"></span>
+                <span class="cap"><span class="nm">Settings window</span><span class="ago">18 min ago</span></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+              </div>
+            </div>
+            <p class="note" style="margin:0">A capture is a source of color too. Open the eyedropper from any picker and sample a pixel out of one of these.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="220" data-max="420"></div>
+
+      <div class="pdock" id="clDock">
+
+        <div class="dgrp" id="clLayers" style="--gh:112px">
+          <div class="dgrp-h">
+            <span class="ttl">Layers</span><span class="cnt">4</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#clLayerMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div class="lrow sel"><i class="ic ic-square"></i><span class="nm">Card</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-text"></i><span class="nm">Everything, unlocked</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-square"></i><span class="nm">Start free</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
+          </div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- Every color row is the SAME control: a swatch plus its hex.
+             Clicking any of them re-anchors the one picker. -->
+        <div class="dgrp" id="clProps" style="--gh:236px">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Card</span>
+            <button class="btn ghost icon sm" title="Panel menu" data-menu="#clPropMenu"><i class="ic ic-more"></i></button>
+          </div>
+          <div class="dgrp-b">
+
+            <div class="section">
+              <div class="sec-h">Fill</div>
+              <div class="irow"><span class="rl">Color</span>
+                <button class="cpick-btn wide" id="clFillBtn" data-menu="#clPicker" data-cl-slot="Fill"
+                        data-cl-color="#7C4DFF" data-cl-fill="#clFillSw" data-cl-text="#clFillHex">
+                  <span class="sw" id="clFillSw" style="background:#7C4DFF"></span><span id="clFillHex">#7C4DFF</span>
+                </button>
+              </div>
+              <div class="irow"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Stroke</div>
+              <div class="irow"><span class="rl">Color</span>
+                <button class="cpick-btn wide" id="clStrokeBtn" data-menu="#clPicker" data-cl-slot="Stroke"
+                        data-cl-color="#12C2E9" data-cl-fill="#clStrokeSw" data-cl-text="#clStrokeHex" data-cl-var="--cl-stroke">
+                  <span class="sw" id="clStrokeSw" style="background:#12C2E9"></span><span id="clStrokeHex">#12C2E9</span>
+                </button>
+              </div>
+              <div class="irow"><span class="rl">Width</span><span class="field"><span class="k">px</span><span class="v">2</span></span></div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Text</div>
+              <div class="irow"><span class="rl">Color</span>
+                <button class="cpick-btn wide" id="clTextBtn" data-menu="#clPicker" data-cl-slot="Text"
+                        data-cl-color="#F4F6FF" data-cl-fill="#clTextSw" data-cl-text="#clTextHex" data-cl-var="--cl-text">
+                  <span class="sw" id="clTextSw" style="background:#F4F6FF"></span><span id="clTextHex">#F4F6FF</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="sec-h">Shadow</div>
+              <div class="irow"><span class="rl">Color</span>
+                <button class="cpick-btn wide" id="clShadowBtn" data-menu="#clPicker" data-cl-slot="Shadow"
+                        data-cl-color="#150A33" data-cl-fill="#clShadowSw" data-cl-text="#clShadowHex" data-cl-var="--cl-shadow">
+                  <span class="sw" id="clShadowSw" style="background:#150A33"></span><span id="clShadowHex">#150A33</span>
+                </button>
+              </div>
+              <div class="irow"><span class="rl">Blur</span><span class="field"><span class="k">px</span><span class="v">40</span></span></div>
+              <p class="note">Four color rows, one control. The picker keeps its recents and its shades when it moves between them, so
+                matching a shadow to a fill is two clicks, not two dialogs.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dgrp grow" id="clLibrary">
+          <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="clScopeLbl">Styles</span>
+            <button class="btn ghost icon sm" title="Add to library" data-menu="#clLibMenu"><i class="ic ic-plus"></i></button>
+          </div>
+          <div class="dgrp-b">
+            <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+              <div class="seg" id="clScopeSeg">
+                <button data-cl-scope="media">Media</button>
+                <button data-cl-scope="components">Comp</button>
+                <button class="on" data-cl-scope="styles">Styles</button>
+                <button data-cl-scope="assets">Assets</button>
+              </div>
+            </div>
+            <div class="libtools">
+              <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search styles" aria-label="Search styles"></span>
+            </div>
+            <div style="padding:0 var(--pad-sm)">
+              <div class="styrow" data-cl-pick="#7C4DFF"><span class="sw" style="background:#7C4DFF"></span><span class="nm">Brand / 500</span><span class="use">41 uses</span></div>
+              <div class="styrow" data-cl-pick="#5B3AD9"><span class="sw" style="background:#5B3AD9"></span><span class="nm">Brand / 600</span><span class="use">12 uses</span></div>
+              <div class="styrow" data-cl-pick="#12C2E9"><span class="sw" style="background:#12C2E9"></span><span class="nm">Accent / cyan</span><span class="use">9 uses</span></div>
+              <div class="styrow" data-cl-pick="#3ECF8E"><span class="sw" style="background:#3ECF8E"></span><span class="nm">Status / good</span><span class="use">6 uses</span></div>
+              <div class="styrow" data-cl-pick="#0C0E14"><span class="sw" style="background:#0C0E14"></span><span class="nm">Ink / 900</span><span class="use">28 uses</span></div>
+            </div>
+            <p class="note" style="padding:0 var(--pad-sm)">A style is a color with a name. Save one from the picker and every layer pointing at the name follows it.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="drail">
+        <button class="drailtab" data-group="#clLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+        <button class="drailtab" data-group="#clProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+        <button class="drailtab" data-group="#clLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+      </div>
+
+      <!-- ============================================================
+           THE PICKER. One instance, anchored to whichever swatch was
+           clicked. It lives outside .pdock so the dock's scroller
+           cannot clip it.
+           ============================================================ -->
+      <div class="popover cpick pop on" id="clPicker" data-cp-color="#7C4DFF"
+           data-cp-fill="#clFillSw" data-cp-text="#clFillHex"
+           style="position:absolute;right:296px;top:56px;z-index:14" aria-label="Color">
+        <div class="cp-head">
+          <span class="cp-prev"><i class="was"></i><i class="now"></i></span>
+          <span class="cp-name" id="clPickerName">Fill</span>
+          <span class="sp"></span>
+          <button class="btn ghost icon sm" title="Sample a color from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>
+          <button class="btn ghost icon sm" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>
+        </div>
+
+        <div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>
+
+        <div class="cp-tracks">
+          <span class="cp-track hue" data-cp-hue role="slider" aria-label="Hue"><span class="cp-knob"></span></span>
+          <span class="cp-track alpha" data-cp-alpha role="slider" aria-label="Opacity"><span class="cp-knob"></span></span>
+        </div>
+
+        <div class="cp-fields">
+          <span class="cp-mode" data-cp-mode role="group" aria-label="Color format">
+            <button class="on" data-cp-m="hex">HEX</button>
+            <button data-cp-m="rgb">RGB</button>
+            <button data-cp-m="hsl">HSL</button>
+          </span>
+          <div class="cp-ins" data-cp-ins></div>
+        </div>
+
+        <div class="cp-row cp-ramp">
+          <span class="cp-lbl">Shades <span class="sp"></span><span class="hint">this hue, light to dark</span></span>
+          <div class="cp-chips" data-cp-ramp></div>
+        </div>
+
+        <div class="cp-row cp-harm">
+          <span class="cp-lbl">Related <span class="sp"></span><span class="hint">same tone, other hues</span></span>
+          <div class="cp-chips" data-cp-harm></div>
+        </div>
+
+        <div class="cp-row cp-swrow">
+          <span class="cp-lbl">In this document</span>
+          <div class="cp-chips">
+            <button class="cp-chip" data-cp-set="#7C4DFF" title="#7C4DFF" style="background:#7C4DFF"></button>
+            <button class="cp-chip" data-cp-set="#5B3AD9" title="#5B3AD9" style="background:#5B3AD9"></button>
+            <button class="cp-chip" data-cp-set="#12C2E9" title="#12C2E9" style="background:#12C2E9"></button>
+            <button class="cp-chip" data-cp-set="#3ECF8E" title="#3ECF8E" style="background:#3ECF8E"></button>
+            <button class="cp-chip" data-cp-set="#FFB36B" title="#FFB36B" style="background:#FFB36B"></button>
+            <button class="cp-chip" data-cp-set="#FF5D8F" title="#FF5D8F" style="background:#FF5D8F"></button>
+            <button class="cp-chip" data-cp-set="#F4F6FF" title="#F4F6FF" style="background:#F4F6FF"></button>
+            <button class="cp-chip" data-cp-set="#4A5068" title="#4A5068" style="background:#4A5068"></button>
+            <button class="cp-chip" data-cp-set="#0C0E14" title="#0C0E14" style="background:#0C0E14"></button>
+          </div>
+        </div>
+
+        <div class="cp-foot">
+          <span class="cp-ctr" data-cp-ctr></span>
+          <span class="sp"></span>
+          <button class="btn secondary sm"><i class="ic ic-swatch"></i> Save style</button>
+        </div>
+      </div>
+
+      <div class="popover menu pop" id="clLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+      </div>
+      <div class="popover menu pop" id="clPropMenu" style="position:absolute;right:var(--s4);top:170px;width:206px;z-index:11">
+        <div class="menuitem"><i class="ic ic-copy"></i> Copy color as hex <span class="sc">⌥⌘C</span></div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save color as style</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset to style value</div>
+      </div>
+      <div class="popover menu pop" id="clLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save current color as style</div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import a palette</div>
+        <div class="menuitem"><i class="ic ic-history"></i> Sample from capture history</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">One popover, five triggers</div><p>The Fill, Stroke, Text and Shadow rows and the tool bar's foreground swatch all open the same picker. It re-anchors to the swatch you clicked and keeps its recents and its shades, so moving between slots never resets what you were working from.</p></div>
+    <div class="c"><div class="lab g2">Try it</div><p>Drag inside the field, drag the hue track, or switch to <b>RGB</b> or <b>HSL</b> and type. The hex field also accepts a pasted <code>rgb(124, 77, 255)</code> or <code>hsl(258 100% 65%)</code>, because paste is how a color usually arrives.</p></div>
+    <div class="c"><div class="lab g2">API mirror</div><p><code>layer.fill = color("#7C4DFF")</code> · <code>color.shade(-2)</code> for one step darker · <code>color.style("Brand/500")</code> once it has a name.</p></div>
+  </div>
+
+  <!-- ============================================================
+       KIND 2 · SPECIMENS. Parts of the app, so no window chrome.
+       ============================================================ -->
+  <div class="cl-specs">
+
+    <div class="cl-spec wide">
+      <div class="cl-spec-h"><i class="ic sm ic-swatch"></i> Anatomy <span class="sub">(one control, eight regions, no modes)</span></div>
+      <div class="cl-spec-b">
+        <div class="cl-anat">
+          <div class="cl-anat-fig">
+            <!-- Each callout parks itself against the region it names, so the
+                 numbers cannot drift when the picker changes height. -->
+            <span class="cl-num" data-cl-at=".cp-head">1</span>
+            <span class="cl-num" data-cl-at=".cp-sv">2</span>
+            <span class="cl-num" data-cl-at=".cp-tracks">3</span>
+            <span class="cl-num" data-cl-at=".cp-fields">4</span>
+            <span class="cl-num" data-cl-at=".cp-ramp">5</span>
+            <span class="cl-num" data-cl-at=".cp-harm">6</span>
+            <span class="cl-num" data-cl-at=".cp-swrow">7</span>
+            <span class="cl-num" data-cl-at=".cp-foot">8</span>
+            <div class="popover cpick" id="clAnat" data-cp-color="#12C2E9" aria-label="Color picker anatomy">
+              <div class="cp-head">
+                <span class="cp-prev"><i class="was"></i><i class="now"></i></span>
+                <span class="cp-name">Stroke</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" title="Sample a color from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>
+                <button class="btn ghost icon sm" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>
+              </div>
+              <div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>
+              <div class="cp-tracks">
+                <span class="cp-track hue" data-cp-hue role="slider" aria-label="Hue"><span class="cp-knob"></span></span>
+                <span class="cp-track alpha" data-cp-alpha role="slider" aria-label="Opacity"><span class="cp-knob"></span></span>
+              </div>
+              <div class="cp-fields">
+                <span class="cp-mode" data-cp-mode role="group" aria-label="Color format">
+                  <button class="on" data-cp-m="hex">HEX</button>
+                  <button data-cp-m="rgb">RGB</button>
+                  <button data-cp-m="hsl">HSL</button>
+                </span>
+                <div class="cp-ins" data-cp-ins></div>
+              </div>
+              <div class="cp-row cp-ramp">
+                <span class="cp-lbl">Shades <span class="sp"></span><span class="hint">this hue, light to dark</span></span>
+                <div class="cp-chips" data-cp-ramp></div>
+              </div>
+              <div class="cp-row cp-harm">
+                <span class="cp-lbl">Related <span class="sp"></span><span class="hint">same tone, other hues</span></span>
+                <div class="cp-chips" data-cp-harm></div>
+              </div>
+              <div class="cp-row cp-swrow">
+                <span class="cp-lbl">Recent</span>
+                <div class="cp-chips">
+                  <button class="cp-chip" data-cp-set="#7C4DFF" title="#7C4DFF" style="background:#7C4DFF"></button>
+                  <button class="cp-chip" data-cp-set="#FF5D8F" title="#FF5D8F" style="background:#FF5D8F"></button>
+                  <button class="cp-chip" data-cp-set="#FFB36B" title="#FFB36B" style="background:#FFB36B"></button>
+                  <button class="cp-chip" data-cp-set="#3ECF8E" title="#3ECF8E" style="background:#3ECF8E"></button>
+                  <button class="cp-chip" data-cp-set="#12C2E9" title="#12C2E9" style="background:#12C2E9"></button>
+                  <button class="cp-chip" data-cp-set="#5B3AD9" title="#5B3AD9" style="background:#5B3AD9"></button>
+                  <button class="cp-chip" data-cp-set="#0C0E14" title="#0C0E14" style="background:#0C0E14"></button>
+                  <button class="cp-chip" data-cp-set="#4A5068" title="#4A5068" style="background:#4A5068"></button>
+                  <button class="cp-chip" data-cp-set="#F4F6FF" title="#F4F6FF" style="background:#F4F6FF"></button>
+                </div>
+              </div>
+              <div class="cp-foot">
+                <span class="cp-ctr" data-cp-ctr></span>
+                <span class="sp"></span>
+                <button class="btn secondary sm"><i class="ic ic-swatch"></i> Save style</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cl-leg">
+            <span class="li"><span class="n">1</span><span><b>Before and after</b> · the color you opened on sits beside the one you are making, so you can tell whether you actually improved it. The slot's name is right there, so you always know what you are editing.</span></span>
+            <span class="li"><span class="n">2</span><span><b>Saturation and brightness field</b> · drag anywhere in it. Arrow keys nudge by one, shift by five, which is how you match a color you already have.</span></span>
+            <span class="li"><span class="n">3</span><span><b>Hue and opacity tracks</b> · hue on top, opacity over a checkerboard below it, and opacity is hidden in the slots where it has no meaning rather than sitting there doing nothing.</span></span>
+            <span class="li"><span class="n">4</span><span><b>HEX, RGB, HSL</b> · one row of fields, one format at a time, so the numbers never crowd. The hex field also parses a pasted <code>rgb()</code> or <code>hsl()</code> string.</span></span>
+            <span class="li"><span class="n">5</span><span><b>Shades</b> · nine steps of the current hue from light to dark, recomputed on every change, with your color ringed in place. This is the "a bit darker" row, and it is the reason you rarely need the field at all.</span></span>
+            <span class="li"><span class="n">6</span><span><b>Related</b> · the same tone at other hues, for when the color is right but the family is wrong.</span></span>
+            <span class="li"><span class="n">7</span><span><b>Recent and in this document</b> · shared across every picker and every window, because a palette is a property of what you are making, not of one popover.</span></span>
+            <span class="li"><span class="n">8</span><span><b>Contrast and save</b> · a live WCAG readout for the color on white or black, and one button to promote it to a named style.</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cl-spec">
+      <div class="cl-spec-h"><i class="ic sm ic-layers"></i> Every color slot <span class="sub">(one trigger grammar)</span></div>
+      <div class="cl-spec-b">
+        <div class="cl-slots">
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#7C4DFF"></span>#7C4DFF</button><span class="sn">Fill</span><span class="sd">shape, frame, text</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#12C2E9"></span>#12C2E9</button><span class="sn">Stroke</span><span class="sd">any width</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#150A33"></span>#150A33</button><span class="sn">Shadow</span><span class="sd">drop or inner</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#FF5D8F"></span>#FF5D8F</button><span class="sn">Gradient stop</span><span class="sd">on the ramp</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#FFB36B"></span>#FFB36B</button><span class="sn">Annotation</span><span class="sd">arrow, box, text</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#0C0E14"></span>#0C0E14</button><span class="sn">Background</span><span class="sd">document or export</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#3ECF8E"></span>#3ECF8E</button><span class="sn">Token</span><span class="sd">design system value</span></div>
+          <div class="cl-slot"><button class="cpick-btn"><span class="sw" style="background:#4A5068"></span>#4A5068</button><span class="sn">Tool color</span><span class="sd">brush, fill, shape</span></div>
+        </div>
+        <p class="note">Eight places you can set a color, one control that sets it. The trigger is always a swatch with its hex beside it, never a labelled button, never a color well that opens something else. If you can see the swatch you already know what clicking it does.</p>
+      </div>
+    </div>
+
+    <div class="cl-spec">
+      <div class="cl-spec-h"><i class="ic sm ic-sliders"></i> Shades are derived, not authored <span class="sub">(the same nine steps for any base)</span></div>
+      <div class="cl-spec-b">
+        <div class="cl-ramps" id="clRamps">
+          <div class="cl-ramp" data-cl-base="#7C4DFF"><span class="nm">#7C4DFF</span><div class="cl-steps"></div></div>
+          <div class="cl-ramp" data-cl-base="#12C2E9"><span class="nm">#12C2E9</span><div class="cl-steps"></div></div>
+          <div class="cl-ramp" data-cl-base="#FF5D8F"><span class="nm">#FF5D8F</span><div class="cl-steps"></div></div>
+          <div class="cl-ramp" data-cl-base="#3ECF8E"><span class="nm">#3ECF8E</span><div class="cl-steps"></div></div>
+        </div>
+        <p class="note">A shade holds the hue and the saturation and moves only the lightness, so a ramp reads as one color family instead of drifting toward gray or toward a different hue. The ring marks where your current color sits, which also tells you how much darker you can still go before you run out.</p>
+      </div>
+    </div>
+
+    <div class="cl-spec wide">
+      <div class="cl-spec-h"><i class="ic sm ic-check"></i> The rules that make it consistent <span class="sub">(each one is a thing that is wrong today)</span></div>
+      <div class="cl-spec-b">
+        <div class="cl-rules">
+          <span class="r"><i class="ic xs ic-check"></i><span><b>A swatch is the only trigger.</b> Every color in the app is set by clicking a swatch that shows the current color. No color wells, no "Choose..." buttons, no double-click-to-discover.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>The same popover opens every time.</b> No slot falls through to the system color panel, so the layout, the shortcuts and the recents never change under you.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>The canvas updates while you drag, undo does not.</b> The whole visit to the picker is one undo step, so ⌘Z takes you back to the color you had, not to the middle of a drag.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>Recents are one list, app-wide.</b> A color used on an annotation is offered on a fill, in every window, because it is your palette and not the popover's.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>Type anything, get a color.</b> Hex with or without the hash, three digits or six, <code>rgb()</code>, <code>hsl()</code>, with an alpha or without.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>Opacity appears only where it applies.</b> A slot that cannot be transparent does not show a track that does nothing.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>Escape cancels, outside-click commits.</b> Escape puts back the color you opened on, which is why the before swatch stays visible the whole time.</span></span>
+          <span class="r"><i class="ic xs ic-check"></i><span><b>The eyedropper is always in the same corner.</b> Sampling is part of picking, not a separate tool you have to go find.</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Color picking is a primitive, not a feature of the inspector. One popover, one trigger grammar, one recents list, and a derived shades row so the common edit, slightly lighter or slightly darker, never requires reading a number.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Let the shades row snap to the design system when one is loaded, so the nine steps become <code>brand/100</code> through <code>brand/900</code> and picking a shade picks a token instead of a hex. The picker would then teach the palette rather than compete with it.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the field be HSV, which is what the square really is, or should it show HSL to match what people type? They disagree at the top edge, and pretending otherwise is how a picker starts feeling untrustworthy.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: (a) re-anchor the one picker to whichever swatch opened it and
+     re-seed it with that slot's color, (b) repaint the canvas card from the
+     picker, (c) render the derived-shade specimen. All color math lives in the
+     shared DS; this page only wires it to a card. */
+  (function () {
+    'use strict';
+
+    var picker = document.getElementById('clPicker');
+    var name = document.getElementById('clPickerName');
+    var card = document.getElementById('clCard');
+    var shell = document.getElementById('clShell');
+    if (!picker) return;
+
+    /* ---- a · every trigger re-points the same popover ---- */
+    var slots = [].slice.call(document.querySelectorAll('[data-cl-slot]'));
+    var current = null;
+
+    var dock = document.getElementById('clDock');
+    function anchor(trigger) {
+      if (!shell) return;
+      var host = shell.getBoundingClientRect();
+      var t = trigger.getBoundingClientRect();
+      // Level with the swatch that opened it, clear of the dock so the row
+      // you are editing stays visible, and never running off the shell.
+      var edge = dock ? dock.getBoundingClientRect().left : t.left;
+      var top = Math.max(12, Math.min(t.top - host.top - 8, host.height - picker.offsetHeight - 12));
+      picker.style.top = top + 'px';
+      picker.style.right = (host.right - Math.min(edge, t.left) + 12) + 'px';
+    }
+
+    slots.forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        // Clicking the swatch you are already editing toggles the popover;
+        // clicking a DIFFERENT swatch always moves the picker there rather
+        // than dismissing it, because that is what the click meant.
+        var moved = current !== trigger;
+        current = trigger;
+        if (moved) picker.classList.add('on');
+        if (name) name.textContent = trigger.getAttribute('data-cl-slot');
+        picker.setAttribute('data-cp-fill', trigger.getAttribute('data-cl-fill') || '');
+        picker.setAttribute('data-cp-text', trigger.getAttribute('data-cl-text') || '');
+        picker.dispatchEvent(new CustomEvent('cp:set', {
+          detail: { color: trigger.getAttribute('data-cl-color') }
+        }));
+        // The shared [data-menu] handler toggles the popover on this same
+        // click, so measure after it has been laid out.
+        requestAnimationFrame(function () { anchor(trigger); });
+      });
+    });
+
+    /* ---- b · the picker paints the card, and the card remembers ---- */
+    picker.addEventListener('cp:change', function (e) {
+      var slot = current ? current.getAttribute('data-cl-slot') : 'Fill';
+      var v = current && current.getAttribute('data-cl-var');
+      if (current) current.setAttribute('data-cl-color', e.detail.hex);
+      if (!card) return;
+      if (v === '--cl-stroke') {
+        card.style.borderColor = e.detail.rgba;
+      } else if (v === '--cl-text') {
+        ['clTitle', 'clSub'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.style.color = e.detail.rgba;
+        });
+      } else if (v === '--cl-shadow') {
+        card.style.boxShadow = '0 0 60px -6px ' + e.detail.rgba + ', 0 22px 50px -14px ' + e.detail.rgba;
+      } else if (slot === 'Fill' || slot === 'Foreground') {
+        card.style.background = 'linear-gradient(140deg,' + e.detail.hex + ' 0%, color-mix(in srgb,' +
+          e.detail.hex + ' 58%, #ff5d8f) 100%)';
+      }
+    });
+
+    // Open state on load: the Fill row owns the picker. Re-anchor on resize
+    // too, because the dock rails at narrow widths and the swatch moves.
+    var fill = document.getElementById('clFillBtn');
+    if (fill) {
+      current = fill;
+      requestAnimationFrame(function () { anchor(fill); });
+    }
+    window.addEventListener('resize', function () {
+      if (current) anchor(current);
+    });
+
+    /* ---- c · a Library style is just another way to pick ---- */
+    [].slice.call(document.querySelectorAll('[data-cl-pick]')).forEach(function (row) {
+      row.addEventListener('click', function () {
+        picker.dispatchEvent(new CustomEvent('cp:set', { detail: { color: row.getAttribute('data-cl-pick') } }));
+      });
+    });
+
+    /* ---- d · the anatomy callouts sit against the region they name ---- */
+    function placeCallouts() {
+      var fig = document.querySelector('.cl-anat-fig');
+      var anat = document.getElementById('clAnat');
+      if (!fig || !anat) return;
+      var base = fig.getBoundingClientRect();
+      [].slice.call(fig.querySelectorAll('[data-cl-at]')).forEach(function (num) {
+        var target = anat.querySelector(num.getAttribute('data-cl-at'));
+        if (!target) return;
+        var r = target.getBoundingClientRect();
+        num.style.top = Math.round(r.top - base.top + r.height / 2 - 8) + 'px';
+      });
+    }
+    requestAnimationFrame(placeCallouts);
+    window.addEventListener('resize', placeCallouts);
+    var anatEl = document.getElementById('clAnat');
+    if (anatEl) anatEl.addEventListener('cp:change', function () { requestAnimationFrame(placeCallouts); });
+
+    /* ---- e · the shade-derivation specimen ---- */
+    var LS = [0.94, 0.86, 0.76, 0.65, 0.54, 0.44, 0.34, 0.24, 0.14];
+    function hex2rgb(h) {
+      var x = h.replace('#', '');
+      return [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2, 4), 16), parseInt(x.slice(4, 6), 16)];
+    }
+    function rgb2hsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2, h = 0, s = 0;
+      if (d) {
+        s = d / (1 - Math.abs(2 * l - 1));
+        if (mx === r) h = 60 * (((g - b) / d) % 6);
+        else if (mx === g) h = 60 * ((b - r) / d + 2);
+        else h = 60 * ((r - g) / d + 4);
+      }
+      return [((h % 360) + 360) % 360, s, l];
+    }
+    [].slice.call(document.querySelectorAll('.cl-ramp')).forEach(function (row) {
+      var base = row.getAttribute('data-cl-base');
+      var hsl = rgb2hsl.apply(null, hex2rgb(base));
+      var near = 0, best = 1;
+      LS.forEach(function (l, i) { var d = Math.abs(l - hsl[2]); if (d < best) { best = d; near = i; } });
+      var box = row.querySelector('.cl-steps');
+      box.innerHTML = LS.map(function (l, i) {
+        return '<span class="' + (i === near ? 'cur' : '') + '" style="background:hsl(' +
+          Math.round(hsl[0]) + ' ' + Math.round(hsl[1] * 100) + '% ' + Math.round(l * 100) + '%)"></span>';
+      }).join('');
+    });
+  })();
+</script>
+</body>
+</html>

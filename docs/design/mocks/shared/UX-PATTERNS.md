@@ -404,3 +404,26 @@ the exact same API call an agent would (`run("tool.text")`, `panel.dock("right")
 searches surfaces (jump to Library scope, toggle a dock) and content. The shell
 shows a `⌘K` hint; pages that demonstrate command-running should route it through
 the palette rather than inventing a one-off runner.
+
+### D7 — One color picker, one trigger, every color slot
+
+Color is picked exactly one way. The **trigger is always a swatch** showing the
+current color (`.cpick-btn` in a row, the `.swpair` in the tool bar, a `.gstop` on
+a gradient ramp), and what opens is always the **one shared picker**
+(`.cpick`, styled in `photonz-ds.css`, driven by `initColorPickers()` in
+`photonz-ds.js`). No page authors a second color UI, no slot falls through to the
+system color panel, and no slot uses a labelled "Choose..." button instead of a
+swatch. The picker is a `.popover` but it is **sticky**: clicks inside it do not
+dismiss it, because you operate it rather than pick one item from it.
+
+Its regions, in this order, always: before/after preview + slot name + eyedropper
+· saturation/value field · hue then alpha tracks · HEX / RGB / HSL entry, one
+format at a time · a **derived shades row** (nine steps of the current hue, light
+to dark) · a related-hue row · recents and document colors · contrast readout and
+"Save style". The shades row is the point: the most common color edit is "the same
+color, a bit darker", and it must cost one click and no numbers.
+
+Authoring: `data-cp-color` seeds it, `data-cp-fill` / `data-cp-text` bind live
+outputs, a `cp:change` event carries `{hex, rgba, r,g,b,a, h,s,l}`, and a
+`cp:set` event re-points the same popover at another slot. Canonical page:
+`pages/color.html`.

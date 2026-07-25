@@ -432,7 +432,16 @@
       m.classList.toggle('on', on);
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
     });
-    m.addEventListener('click', function (e) { e.stopPropagation(); m.classList.remove('on'); });
+    // A MENU closes when you pick an item. A popover you OPERATE - the color
+    // picker - must not vanish on the first click inside it, or dragging the
+    // hue track would dismiss the thing you are dragging. `.cpick` and any
+    // [data-sticky] popover stay open until you click outside or hit its
+    // close button.
+    var sticky = m.classList.contains('cpick') || m.hasAttribute('data-sticky');
+    m.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!sticky || e.target.closest('[data-cp-close]')) m.classList.remove('on');
+    });
   });
   document.addEventListener('click', function () {
     all('.popover.pop.on').forEach(function (p) { p.classList.remove('on'); });
@@ -548,6 +557,7 @@
        data-time="on|off"        the document has time: transport + timeline
        data-set="#id=text|#id2=text"     set a readout's text
        data-css="#id=width:26%"  inline geometry (a trimmed clip, a bar)
+       data-class="#id=blk"      add a variant class for this step only
        data-cue / data-cue-label / data-cue-place    the click cue
 
      Rule of thumb for authors: anchor the cue on a control that still
@@ -646,10 +656,17 @@
       // exclusive .on among an element's like-classed siblings (workspace
       // switcher segments, seg buttons, anything that is one-of-N)
       list(s.getAttribute('data-activate')).forEach(function (t) {
-        var cls = (t.getAttribute('class') || '').split(/\s+/)[0];
-        if (!cls || !t.parentNode) return;
+        if (!t.parentNode) return;
+        // siblings are "like-classed" by the target's first REAL class, never
+        // by `on` itself (the currently-selected segment carries it, which
+        // would have matched only itself). A bare <button> in a .seg has no
+        // class at all, so fall back to the tag: that is what one-of-N means.
+        var cls = (t.getAttribute('class') || '').split(/\s+/).filter(function (c) {
+          return c && c !== 'on';
+        })[0];
         [].slice.call(t.parentNode.children).forEach(function (x) {
-          if (x.classList.contains(cls)) x.classList.toggle('on', x === t);
+          var like = cls ? x.classList.contains(cls) : x.tagName === t.tagName;
+          if (like) x.classList.toggle('on', x === t);
         });
       });
 
@@ -668,6 +685,13 @@
       list(s.getAttribute('data-show')).forEach(function (e) { e.classList.remove('wt-off'); });
       list(s.getAttribute('data-hide')).forEach(function (e) { e.classList.add('wt-off'); });
 
+      // a variant class the step turns on (a dip-to-black marker, a frozen
+      // clip). The baseline class snapshot takes it off again on replay, so
+      // this stays declarative like everything else.
+      pairs(s.getAttribute('data-class'), function (el, cls) {
+        cls.split(/\s+/).forEach(function (c) { if (c) el.classList.add(c); });
+      });
+
       list(s.getAttribute('data-sheet-open')).forEach(function (sh) {
         sh.classList.add('on'); sh.setAttribute('aria-hidden', 'false');
       });
@@ -675,6 +699,12 @@
         sh.classList.remove('on'); sh.setAttribute('aria-hidden', 'true');
       });
 
+      /* A menu is transient, so it closes itself. Steps replay cumulatively
+         (0..n), which used to leave a popover opened in step 2 still hanging
+         open in step 8. Every step shuts every .popover.pop in the stage and
+         then opens only the one it declares; a menu that should stay open
+         across two steps declares data-pop on both. */
+      all('.popover.pop', stage).forEach(function (p) { p.classList.remove('on'); });
       list(s.getAttribute('data-pop')).forEach(function (p) { p.classList.add('on'); });
 
       v = s.getAttribute('data-time');
@@ -905,5 +935,353 @@
         setTimeout(function () { if (c.parentNode) c.parentNode.removeChild(c); }, TOAST_OUT);
       }, TOAST_HOLD);
     });
+  });
+
+  /* ---- 11 · THE color picker (one control, every color slot) ----
+     Every `.cpick` in the page becomes a live picker: drag the SV field,
+     drag hue and alpha, type a hex / rgb / hsl value, or click a derived
+     shade. The shades ramp and the related-hue row are computed from the
+     CURRENT color on every change, so "a bit darker" is always one click
+     away and never needs a second dialog.
+
+     Authoring contract, all on the .cpick element:
+       data-cp-color="#7C4DFF"   the color it opens on
+       data-cp-fill="sel,sel"    elements whose background follows the color
+       data-cp-text="sel,sel"    elements whose text becomes the hex
+     It also fires `cp:change` with {hex, rgba, r,g,b,a, h,s,l} so a page can
+     do something bespoke (repaint a canvas layer, move a gradient stop)
+     without re-implementing any color math. */
+  function cpClamp(n, a, b) { return Math.min(b, Math.max(a, n)); }
+
+  function hsv2rgb(h, s, v) {
+    h = ((h % 360) + 360) % 360 / 60;
+    var c = v * s, x = c * (1 - Math.abs(h % 2 - 1)), m = v - c, p;
+    if (h < 1) p = [c, x, 0]; else if (h < 2) p = [x, c, 0]; else if (h < 3) p = [0, c, x];
+    else if (h < 4) p = [0, x, c]; else if (h < 5) p = [x, 0, c]; else p = [c, 0, x];
+    return p.map(function (n) { return Math.round((n + m) * 255); });
+  }
+  function rgb2hsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, h = 0;
+    if (d) {
+      if (mx === r) h = 60 * (((g - b) / d) % 6);
+      else if (mx === g) h = 60 * ((b - r) / d + 2);
+      else h = 60 * ((r - g) / d + 4);
+    }
+    return { h: ((h % 360) + 360) % 360, s: mx ? d / mx : 0, v: mx };
+  }
+  function rgb2hsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2, h = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (mx === r) h = 60 * (((g - b) / d) % 6);
+      else if (mx === g) h = 60 * ((b - r) / d + 2);
+      else h = 60 * ((r - g) / d + 4);
+    }
+    return { h: ((h % 360) + 360) % 360, s: s, l: l };
+  }
+  function hsl2rgb(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, p;
+    if (h < 60) p = [c, x, 0]; else if (h < 120) p = [x, c, 0]; else if (h < 180) p = [0, c, x];
+    else if (h < 240) p = [0, x, c]; else if (h < 300) p = [x, 0, c]; else p = [c, 0, x];
+    return p.map(function (n) { return Math.round((n + m) * 255); });
+  }
+  function rgb2hex(r, g, b) {
+    return '#' + [r, g, b].map(function (n) {
+      return cpClamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
+    }).join('').toUpperCase();
+  }
+  /* Accepts everything a designer actually pastes: #abc, #aabbcc, #aabbccdd,
+     bare hex, rgb()/rgba(), hsl()/hsla(), with commas or spaces. */
+  function cpParse(str) {
+    if (!str) return null;
+    var s = String(str).trim().toLowerCase(), m;
+    m = /^#?([0-9a-f]{3,8})$/.exec(s);
+    if (m) {
+      var x = m[1];
+      if (x.length === 3 || x.length === 4) x = x.split('').map(function (c) { return c + c; }).join('');
+      if (x.length !== 6 && x.length !== 8) return null;
+      return { r: parseInt(x.slice(0, 2), 16), g: parseInt(x.slice(2, 4), 16), b: parseInt(x.slice(4, 6), 16),
+               a: x.length === 8 ? parseInt(x.slice(6, 8), 16) / 255 : 1 };
+    }
+    m = /^rgba?\(([^)]+)\)$/.exec(s);
+    if (m) {
+      var p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+      if (p.length < 3 || p.some(isNaN)) return null;
+      return { r: cpClamp(p[0], 0, 255), g: cpClamp(p[1], 0, 255), b: cpClamp(p[2], 0, 255),
+               a: p.length > 3 ? cpClamp(p[3] > 1 ? p[3] / 100 : p[3], 0, 1) : 1 };
+    }
+    m = /^hsla?\(([^)]+)\)$/.exec(s);
+    if (m) {
+      var q = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+      if (q.length < 3 || q.some(isNaN)) return null;
+      var c = hsl2rgb(q[0], cpClamp(q[1], 0, 100) / 100, cpClamp(q[2], 0, 100) / 100);
+      return { r: c[0], g: c[1], b: c[2], a: q.length > 3 ? cpClamp(q[3] > 1 ? q[3] / 100 : q[3], 0, 1) : 1 };
+    }
+    return null;
+  }
+  function cpLum(r, g, b) {
+    var c = [r, g, b].map(function (n) {
+      n /= 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function cpContrast(l1, l2) { return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); }
+
+  // Nine steps of the SAME hue and saturation, light to dark. This is the
+  // "one shade up / one shade down" row: it is derived, never authored, so
+  // it is right for whatever color you are on.
+  var CP_LS = [0.94, 0.86, 0.76, 0.65, 0.54, 0.44, 0.34, 0.24, 0.14];
+  var CP_HARM = [-60, -30, 30, 60, 120, 180];
+
+  var CP_FIELDS = {
+    hex: { cols: 2, defs: [{ k: 'hex', lb: '#', wide: true }, { k: 'a', lb: '%', suffix: true }] },
+    rgb: { cols: 4, defs: [{ k: 'r', lb: 'R' }, { k: 'g', lb: 'G' }, { k: 'b', lb: 'B' }, { k: 'a', lb: 'A' }] },
+    hsl: { cols: 4, defs: [{ k: 'h', lb: 'H' }, { k: 's', lb: 'S' }, { k: 'l', lb: 'L' }, { k: 'a', lb: 'A' }] }
+  };
+
+  all('.cpick').forEach(function (cp) {
+    var sv = cp.querySelector('[data-cp-sv]');
+    var dot = cp.querySelector('.cp-dot');
+    var hueT = cp.querySelector('[data-cp-hue]');
+    var alphaT = cp.querySelector('[data-cp-alpha]');
+    var ins = cp.querySelector('[data-cp-ins]');
+    var modeBox = cp.querySelector('[data-cp-mode]');
+    var ramp = cp.querySelector('[data-cp-ramp]');
+    var harm = cp.querySelector('[data-cp-harm]');
+    var prevNow = cp.querySelector('.cp-prev .now');
+    var prevWas = cp.querySelector('.cp-prev .was');
+    var ctr = cp.querySelector('[data-cp-ctr]');
+    var mode = 'hex';
+    var st = { h: 258, s: 0.7, v: 1, a: 1 };
+
+    var seed = cpParse(cp.getAttribute('data-cp-color') || '#7C4DFF');
+    if (seed) {
+      var sh = rgb2hsv(seed.r, seed.g, seed.b);
+      st = { h: sh.h, s: sh.s, v: sh.v, a: seed.a };
+    }
+    var opened = rgb2hex.apply(null, hsv2rgb(st.h, st.s, st.v));
+    if (prevWas) prevWas.style.background = opened;
+
+    // An unset binding is normal, and querySelectorAll('') throws, so resolve
+    // the selector list here rather than at every call site.
+    function bound(attr) {
+      var sel = cp.getAttribute(attr);
+      return sel ? all(sel) : [];
+    }
+
+    function rgb() { return hsv2rgb(st.h, st.s, st.v); }
+    function hex() { return rgb2hex.apply(null, rgb()); }
+    function rgba() { var c = rgb(); return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + Math.round(st.a * 100) / 100 + ')'; }
+
+    function setFromRGB(r, g, b, a) {
+      var h = rgb2hsv(r, g, b);
+      // A pure black or pure white has no hue of its own; keep the hue the
+      // user was on so the SV dot does not jump when they drag to a corner.
+      st.h = (h.s === 0 || h.v === 0) ? st.h : h.h;
+      st.s = h.s; st.v = h.v;
+      if (typeof a === 'number') st.a = a;
+      sync();
+    }
+
+    function renderFields() {
+      if (!ins) return;
+      var f = CP_FIELDS[mode];
+      ins.setAttribute('data-cp-cols', f.cols);
+      ins.innerHTML = f.defs.map(function (d) {
+        return '<label class="cp-f">' + (d.suffix ? '' : '<b>' + d.lb + '</b>') +
+          '<input data-cp-i="' + d.k + '" spellcheck="false" aria-label="' + d.k + '">' +
+          (d.suffix ? '<b>' + d.lb + '</b>' : '') + '</label>';
+      }).join('');
+      all('input', ins).forEach(function (inp) {
+        inp.addEventListener('input', function () { readField(inp); });
+        inp.addEventListener('blur', function () { syncFields(); });
+        inp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { readField(inp); syncFields(); inp.select(); }
+          if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+          var k = inp.getAttribute('data-cp-i');
+          if (k === 'hex') return;
+          e.preventDefault();
+          var step = (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? 1 : -1);
+          inp.value = String((parseFloat(inp.value) || 0) + step);
+          readField(inp);
+        });
+      });
+      syncFields();
+    }
+
+    function readField(inp) {
+      var k = inp.getAttribute('data-cp-i'), v = inp.value;
+      if (k === 'hex') {
+        var p = cpParse(v);           // typing rgb(...) or hsl(...) here works too
+        if (p) setFromRGB(p.r, p.g, p.b, p.a);
+        return;
+      }
+      var n = parseFloat(v);
+      if (isNaN(n)) return;
+      if (k === 'a') { st.a = cpClamp(n, 0, 100) / 100; sync(); return; }
+      if (mode === 'rgb') {
+        var c = rgb();
+        c[{ r: 0, g: 1, b: 2 }[k]] = cpClamp(n, 0, 255);
+        setFromRGB(c[0], c[1], c[2]);
+      } else {
+        var cur = rgb2hsl.apply(null, rgb());
+        var h = k === 'h' ? ((n % 360) + 360) % 360 : cur.h;
+        var s = k === 's' ? cpClamp(n, 0, 100) / 100 : cur.s;
+        var l = k === 'l' ? cpClamp(n, 0, 100) / 100 : cur.l;
+        var o = hsl2rgb(h, s, l);
+        st.h = h; var v2 = rgb2hsv(o[0], o[1], o[2]);
+        st.s = v2.s; st.v = v2.v;
+        sync();
+      }
+    }
+
+    function syncFields() {
+      if (!ins) return;
+      var c = rgb(), hsl = rgb2hsl(c[0], c[1], c[2]);
+      var vals = mode === 'hex' ? { hex: hex().slice(1), a: Math.round(st.a * 100) }
+        : mode === 'rgb' ? { r: c[0], g: c[1], b: c[2], a: Math.round(st.a * 100) }
+        : { h: Math.round(hsl.h), s: Math.round(hsl.s * 100), l: Math.round(hsl.l * 100), a: Math.round(st.a * 100) };
+      all('input', ins).forEach(function (inp) {
+        if (inp === document.activeElement) return;   // never fight the typist
+        inp.value = vals[inp.getAttribute('data-cp-i')];
+      });
+    }
+
+    function chips(box, list, current) {
+      if (!box) return;
+      var wrap = box.querySelector('.cp-chips') || box;
+      wrap.innerHTML = list.map(function (h) {
+        return '<button class="cp-chip' + (h === current ? ' on' : '') +
+          '" style="background:' + h + '" title="' + h + '" data-cp-set="' + h + '"></button>';
+      }).join('');
+    }
+
+    function sync(silent) {
+      var c = rgb(), h = hex(), hsl = rgb2hsl(c[0], c[1], c[2]);
+      if (sv) {
+        sv.style.setProperty('--cp-h', Math.round(st.h));
+        if (dot) { dot.style.left = (st.s * 100) + '%'; dot.style.top = ((1 - st.v) * 100) + '%'; }
+      }
+      if (hueT) hueT.querySelector('.cp-knob').style.left = (st.h / 360 * 100) + '%';
+      if (alphaT) {
+        alphaT.style.setProperty('--cp-solid', h);
+        alphaT.querySelector('.cp-knob').style.left = (st.a * 100) + '%';
+      }
+      if (prevNow) prevNow.style.background = rgba();
+
+      var shades = CP_LS.map(function (l) { return rgb2hex.apply(null, hsl2rgb(hsl.h, hsl.s, l)); });
+      chips(ramp, shades, h);
+      chips(harm, CP_HARM.map(function (d) {
+        return rgb2hex.apply(null, hsl2rgb(hsl.h + d, hsl.s, hsl.l));
+      }), h);
+
+      if (ctr) {
+        var L = cpLum(c[0], c[1], c[2]);
+        var onW = cpContrast(L, 1), onB = cpContrast(L, 0);
+        var best = onW >= onB ? onW : onB, over = onW >= onB ? 'white' : 'black';
+        var cls = best >= 4.5 ? '' : (best >= 3 ? ' low' : ' bad');
+        var tag = best >= 7 ? 'AAA' : (best >= 4.5 ? 'AA' : (best >= 3 ? 'AA L' : 'fail'));
+        ctr.innerHTML = '<span class="g' + cls + '">' + tag + '</span> ' +
+          (Math.round(best * 10) / 10) + ':1 on ' + over;
+      }
+
+      syncFields();
+      bound('data-cp-fill').forEach(function (el) { el.style.background = rgba(); });
+      bound('data-cp-text').forEach(function (el) { el.textContent = h; });
+      if (!silent) {
+        cp.dispatchEvent(new CustomEvent('cp:change', {
+          bubbles: true,
+          detail: { hex: h, rgba: rgba(), r: c[0], g: c[1], b: c[2], a: st.a,
+                    h: Math.round(hsl.h), s: hsl.s, l: hsl.l }
+        }));
+      }
+    }
+
+    function drag(el, onMove) {
+      if (!el) return;
+      var live = false;
+      var at = function (e) {
+        var r = el.getBoundingClientRect();
+        onMove(cpClamp((e.clientX - r.left) / r.width, 0, 1), cpClamp((e.clientY - r.top) / r.height, 0, 1));
+      };
+      el.addEventListener('pointerdown', function (e) {
+        live = true; el.setPointerCapture(e.pointerId); el.focus(); at(e); e.preventDefault();
+      });
+      el.addEventListener('pointermove', function (e) { if (live) at(e); });
+      ['pointerup', 'pointercancel'].forEach(function (t) {
+        el.addEventListener(t, function (e) {
+          live = false;
+          if (el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+        });
+      });
+    }
+
+    drag(sv, function (x, y) { st.s = x; st.v = 1 - y; sync(); });
+    drag(hueT, function (x) { st.h = x * 360; sync(); });
+    drag(alphaT, function (x) { st.a = x; sync(); });
+
+    // Keyboard: the field and both tracks are real controls, so they take
+    // focus and move by arrow key (shift = a coarser step).
+    [[sv, 's', 'v'], [hueT, 'h'], [alphaT, 'a']].forEach(function (pair) {
+      var el = pair[0];
+      if (!el) return;
+      el.setAttribute('tabindex', '0');
+      el.addEventListener('keydown', function (e) {
+        var big = e.shiftKey ? 5 : 1, done = true;
+        if (el === hueT) {
+          if (e.key === 'ArrowLeft') st.h -= big * 2; else if (e.key === 'ArrowRight') st.h += big * 2; else done = false;
+          st.h = ((st.h % 360) + 360) % 360;
+        } else if (el === alphaT) {
+          if (e.key === 'ArrowLeft') st.a = cpClamp(st.a - big / 100, 0, 1);
+          else if (e.key === 'ArrowRight') st.a = cpClamp(st.a + big / 100, 0, 1);
+          else done = false;
+        } else {
+          if (e.key === 'ArrowLeft') st.s = cpClamp(st.s - big / 100, 0, 1);
+          else if (e.key === 'ArrowRight') st.s = cpClamp(st.s + big / 100, 0, 1);
+          else if (e.key === 'ArrowUp') st.v = cpClamp(st.v + big / 100, 0, 1);
+          else if (e.key === 'ArrowDown') st.v = cpClamp(st.v - big / 100, 0, 1);
+          else done = false;
+        }
+        if (!done) return;
+        e.preventDefault(); sync();
+      });
+    });
+
+    if (modeBox) {
+      all('button[data-cp-m]', modeBox).forEach(function (b) {
+        b.addEventListener('click', function () {
+          mode = b.getAttribute('data-cp-m');
+          all('button[data-cp-m]', modeBox).forEach(function (x) { x.classList.toggle('on', x === b); });
+          renderFields();
+        });
+      });
+    }
+
+    // One delegated handler covers every swatch in the popover: the derived
+    // shades, the related hues, and the authored recents / document rows.
+    cp.addEventListener('click', function (e) {
+      var chip = e.target.closest('[data-cp-set]');
+      if (!chip || !cp.contains(chip)) return;
+      var p = cpParse(chip.getAttribute('data-cp-set'));
+      if (p) setFromRGB(p.r, p.g, p.b, p.a);
+    });
+
+    // Re-point the SAME picker at another slot. One popover serves the fill,
+    // the stroke, a gradient stop and a shadow, so opening it on a new slot
+    // is a re-seed, never a second picker:
+    //   el.dispatchEvent(new CustomEvent('cp:set', {detail:{color:'#12C2E9'}}))
+    cp.addEventListener('cp:set', function (e) {
+      var p = cpParse((e.detail && e.detail.color) || cp.getAttribute('data-cp-color'));
+      if (!p) return;
+      setFromRGB(p.r, p.g, p.b, p.a);
+      opened = hex();
+      if (prevWas) prevWas.style.background = opened;
+    });
+
+    renderFields();
+    sync(true);
   });
 })();

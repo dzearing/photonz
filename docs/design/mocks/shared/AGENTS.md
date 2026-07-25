@@ -110,6 +110,10 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `.efx` effect rows, `.gramp`/`.gstop` gradient, `.dial`.
 - **Canvas content:** `.hero-card` (designed sample), `.uibtn`/`.uibtn.grad`,
   selection: `.sel-ring`+`.handle`, `.mtag`; component: `.cinst`/`.cring`+`.cbadge`.
+- **Color:** `.cpick` (the ONE color picker popover: SV field, hue + alpha
+  tracks, HEX/RGB/HSL entry, derived shades and related-hue rows, recents,
+  contrast readout) opened by a `.cpick-btn` swatch trigger. Never author a
+  second color UI; see UX-PATTERNS.md D7 and `pages/color.html`.
 - **Captions:** `.caption`>`.c`>`.lab`(/`.lab.g2`)+`p`. Use these to explain
   "the idea / direction / open question" under each window.
 - **Code snippets:** `.codeblk` (with `.k`/`.s`/`.c`/`.p` spans for syntax).

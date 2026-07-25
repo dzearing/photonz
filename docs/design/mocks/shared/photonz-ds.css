@@ -1817,3 +1817,117 @@ button.menuitem{width:100%;border:0;background:transparent;text-align:left;
 .th-morph{background:radial-gradient(70% 120% at 30% 50%,#12c2e9,transparent 60%),radial-gradient(70% 120% at 70% 50%,#ff5d8f,transparent 60%),#5b53ff}
 .th-cut{background:linear-gradient(90deg,#12c2e9 0 50%,#ff5d8f 50% 100%)}
 .th-cut::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:#05060a;transform:translateX(-1px)}
+
+/* ============================================================
+   COLOR PICKER · ONE control, every color slot
+   Authored for pages/color.html and required by every surface that
+   holds a color: a fill, a stroke, a gradient stop, a shadow, a
+   text layer, an annotation, the canvas background, a token.
+   The rule it exists to enforce: a color is ALWAYS picked by
+   clicking a swatch, and the thing that opens is ALWAYS this
+   popover. No page invents a second color UI, and no slot falls
+   back to the system color panel.
+
+   Anatomy, top to bottom:
+     .cp-head   before/after preview, slot name, eyedropper, close
+     .cp-sv     saturation x value field with a draggable dot
+     .cp-track  hue, then alpha over a checkerboard
+     .cp-fields HEX / RGB / HSL entry, one mode at a time
+     .cp-ramp   shades of the CURRENT color, light to dark
+     .cp-harm   related hues off the current color
+     .cp-swrow  recents and colors already used in the document
+     .cp-foot   contrast readout + save as a named style
+   Driven by `initColorPickers()` in photonz-ds.js.
+   ============================================================ */
+.cpick{width:264px;padding:var(--s3);display:flex;flex-direction:column;gap:var(--s3)}
+.cpick .cp-head{display:flex;align-items:center;gap:var(--s2)}
+.cpick .cp-prev{position:relative;width:36px;height:24px;border-radius:var(--r2);overflow:hidden;flex:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);
+  background-image:repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);background-size:8px 8px}
+.cpick .cp-prev i{position:absolute;top:0;bottom:0;width:50%}
+.cpick .cp-prev i.was{left:0}
+.cpick .cp-prev i.now{right:0}
+.cpick .cp-name{font-size:11px;font-weight:620;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpick .cp-head .sp{flex:1}
+
+/* the 2D field: white left to right over the hue, black bottom to top */
+.cpick .cp-sv{position:relative;height:132px;border-radius:var(--r3);cursor:crosshair;touch-action:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent),
+    hsl(var(--cp-h,258) 100% 50%)}
+.cpick .cp-dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;
+  border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45), 0 1px 4px rgba(0,0,0,.4);pointer-events:none}
+.cpick .cp-sv:focus-visible{outline:none;box-shadow:var(--ring)}
+
+.cpick .cp-tracks{display:flex;flex-direction:column;gap:var(--s2)}
+.cpick .cp-track{position:relative;height:12px;border-radius:999px;cursor:pointer;touch-action:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-track.hue{background:linear-gradient(to right,
+  hsl(0 100% 50%),hsl(60 100% 50%),hsl(120 100% 50%),hsl(180 100% 50%),
+  hsl(240 100% 50%),hsl(300 100% 50%),hsl(360 100% 50%))}
+.cpick .cp-track.alpha{background-image:linear-gradient(to right, transparent, var(--cp-solid,#7c4dff)),
+  repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);background-size:auto,8px 8px}
+.cpick .cp-track:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-knob{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+  background:var(--panel);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
+  pointer-events:none}
+
+/* numeric entry: one mode at a time, so the row never gets crowded */
+.cpick .cp-fields{display:flex;flex-direction:column;gap:var(--s2)}
+.cpick .cp-mode{display:inline-flex;align-self:flex-start;gap:2px;padding:2px;border-radius:999px;
+  background:var(--glass-thin);border:1px solid var(--edge-lo)}
+.cpick .cp-mode button{border:0;border-radius:999px;background:transparent;color:var(--dim);
+  font-size:10px;font-weight:640;letter-spacing:.02em;padding:var(--s1) var(--s2);cursor:pointer;transition:var(--ctl-tr)}
+.cpick .cp-mode button.on{background:var(--glass);color:var(--ink);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-mode button:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-ins{display:grid;gap:var(--s1)}
+.cpick .cp-ins[data-cp-cols="2"]{grid-template-columns:1fr 60px}
+.cpick .cp-ins[data-cp-cols="4"]{grid-template-columns:repeat(4,1fr)}
+.cpick .cp-f{display:flex;align-items:center;gap:var(--s1);min-width:0;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r2);padding:var(--s1) var(--s2);transition:var(--ctl-tr)}
+.cpick .cp-f:focus-within{border-color:transparent;box-shadow:var(--ring)}
+.cpick .cp-f b{font-size:9.5px;font-weight:700;color:var(--faint);flex:none}
+.cpick .cp-f input{border:0;background:transparent;outline:none;width:100%;min-width:0;color:var(--ink);
+  font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;padding:0}
+.cpick .cp-f input::-webkit-outer-spin-button,
+.cpick .cp-f input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* derived swatch rows: shades of the current color, then related hues */
+.cpick .cp-lbl{display:flex;align-items:center;gap:var(--s2);font-size:9px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--faint);font-weight:700}
+.cpick .cp-lbl .sp{flex:1}
+.cpick .cp-lbl .hint{text-transform:none;letter-spacing:0;font-weight:520;font-size:9.5px}
+.cpick .cp-row{display:flex;flex-direction:column;gap:var(--s1)}
+.cpick .cp-chips{display:grid;gap:var(--s1)}
+.cpick .cp-ramp .cp-chips{grid-template-columns:repeat(9,1fr)}
+.cpick .cp-harm .cp-chips{grid-template-columns:repeat(6,1fr)}
+.cpick .cp-swrow .cp-chips{grid-template-columns:repeat(9,1fr)}
+.cpick .cp-chip{height:20px;border-radius:6px;border:1px solid var(--edge-lo);cursor:pointer;padding:0;
+  box-shadow:inset 0 1px 0 var(--edge-hi);transition:transform .09s ease, box-shadow .12s ease}
+.cpick .cp-chip:hover{transform:translateY(-1px)}
+.cpick .cp-chip:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-chip.on{box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 2px var(--accent);border-color:transparent}
+.cpick .cp-ramp .cp-chip{height:24px}
+
+.cpick .cp-foot{display:flex;align-items:center;gap:var(--s2);padding-top:var(--s2);
+  border-top:1px solid var(--line-soft)}
+.cpick .cp-ctr{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpick .cp-ctr .g{font-weight:700;font-size:9px;padding:2px 6px;border-radius:6px;
+  background:var(--good);color:#fff}
+.cpick .cp-ctr .g.low{background:var(--warn)}
+.cpick .cp-ctr .g.bad{background:var(--crit)}
+.cpick .cp-foot .sp{flex:1}
+
+/* the trigger grammar: a swatch is the ONLY thing that opens a picker */
+.cpick-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r2);padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--ink);
+  cursor:pointer;transition:var(--ctl-tr);font-variant-numeric:tabular-nums}
+.cpick-btn:hover{border-color:var(--accent-line)}
+.cpick-btn:active{transform:translateY(.5px) scale(.99)}
+.cpick-btn:focus-visible{outline:none;border-color:transparent;box-shadow:var(--ring)}
+.cpick-btn .sw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick-btn.wide{width:100%;justify-content:flex-start}

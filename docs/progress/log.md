@@ -1883,3 +1883,38 @@ border width now equals the caliper stroke's on-screen width (`strokeWidth ×
 pixelScale × zoom`), and the baked pill border matches the caliper `lineWidth`, so
 a "1px" caliper reads as a precise 1px and the chip border matches the strokes at
 every zoom. 750 tests green (+2 chip-hit tests).
+
+## 2026-07-25 — Vision mock: the color picking primitive
+
+WHY: the shipping app picks color inconsistently. `ColorPickerPopover.swift` calls
+itself "the ONE color control used everywhere", but only the tool-bar swatch and
+two annotation paths use it (`EditorView.swift:664/746/963`); the Inspector rows
+(border, shadow, fill, backdrop, text) use SwiftUI's native `ColorPicker`, which
+opens the macOS system color panel (`LayersPanel.swift:604/677/752/768/871/983/1104`).
+So the same task, "set a color", opens two completely different UIs depending on
+where you click. There was also no shades/tints affordance anywhere.
+
+WHAT LANDED (mocks only, no app code yet):
+- **Shared DS primitive** in `docs/design/mocks/shared/`: `.cpick` (the picker)
+  and `.cpick-btn` (the swatch trigger) in `photonz-ds.css`, plus a full driver in
+  `photonz-ds.js` (HSV/HSL/RGB/hex math, paste-anything parsing, pointer drag,
+  arrow-key nudges, derived shades + related hues, WCAG contrast readout).
+  Authoring hooks: `data-cp-color`, `data-cp-fill`, `data-cp-text`, `cp:change`
+  event out, `cp:set` event in (re-point the same popover at another slot).
+- `[data-menu]` popovers gained a **sticky** mode (`.cpick` or `[data-sticky]`) so
+  operating a popover no longer dismisses it on the first inner click. Menus are
+  unchanged.
+- New page `docs/design/mocks/pages/color.html` (nav: Surfaces & primitives >
+  "Color · picking"): live app screen where Fill / Stroke / Text / Shadow / the
+  tool-bar foreground swatch all re-anchor the SAME picker, plus specimens for the
+  anatomy, the eight color slots, shade derivation, and the eight consistency
+  rules.
+- Documented as decision **D7** in `shared/UX-PATTERNS.md` and in the reusable
+  class list in `shared/AGENTS.md`, so no future page invents a second color UI.
+
+NEXT: if the direction holds, port it to the app — one SwiftUI `ColorPickerPopover`
+with the SV field + shades ramp + HEX/RGB/HSL entry, and delete every native
+`ColorPicker` in `LayersPanel.swift` in favor of a swatch trigger.
+
+OPEN QUESTION (also on the page): the 2D field is HSV while people type HSL; they
+disagree at the top edge. Pick one story before porting.
