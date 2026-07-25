@@ -1918,3 +1918,33 @@ with the SV field + shades ramp + HEX/RGB/HSL entry, and delete every native
 
 OPEN QUESTION (also on the page): the 2D field is HSV while people type HSL; they
 disagree at the top edge. Pick one story before porting.
+
+## 2026-07-25 — Release v0.13.0
+
+Shipped v0.13.0. User-visible contents: the 3-point caliper measure redesign
+(2b56df4 — one opinionated caliper, edge snapping, three edit handles, live
+Liquid-Glass label pill that bakes into exports, inspector down to unit /
+thickness / label size / color) and the window close-guard fix (ddf87a1 — edits
+were silently discarded on close, a 0.12.0 regression).
+
+Preflight: 753 tests green; `build-app.sh --dmg` clean locally. Perf unchanged —
+12MP/10-layer interactive edit 6.8ms median (budget 16ms), full composite 41ms.
+
+Pre-release housekeeping: committed the outstanding mock work that was sitting
+in the tree — the D7 shared color-picker primitive (be094ba), the icon-audit
+sheet + video-transition draft (7dcf32e), and `shared/icons.mjs` (3rd commit).
+
+CI note: the tag-triggered Release workflow was green first try. The Deploy site
+run hung 10 minutes in `updating_pages` and timed out (transient Pages issue).
+`gh run rerun --failed` made it WORSE: re-running the job re-uploads the
+`github-pages` artifact, so the run then held 2 artifacts and deploy-pages@v4
+fails with "Multiple artifacts named github-pages". The right recovery is a
+FRESH run — `gh workflow run site.yml --ref main` — which went green. Worth
+remembering for the next release.
+
+Verified: `gh release view v0.13.0` shows Photonz.dmg; the
+releases/latest/download URL returns 200; the site reports 0.13.0.
+
+NEXT: phases 16 and 17 are both still `in_progress` (nothing completed by this
+release). Phase 17 (region selection system) is flagged as the user's next
+priority.
