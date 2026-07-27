@@ -123,6 +123,16 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   inline element would fragment a multi-line snippet across line boxes.
 - **Walkthrough:** `.wt` (see "Usage walkthroughs" below). The old
   `.wsteps`>`.wstep` slideshow is **legacy**; do not author new pages with it.
+- **Selection:** `.selwrap` › `.sel-ring` + `.handle` + `.mtag`. **The frame shows
+  BOUNDS, never the object's shape** — a rectangle with a constant 2px radius,
+  hugging the bounds, on a circle exactly as on a card. Never set `border-radius`
+  or `inset` on a `.sel-ring`: a shape-tracing frame needs a big radius for
+  cards, and below ~52px that radius exceeds half the box so the browser clamps
+  it into a circle. Ten pages had each patched that locally with seven radii and
+  five insets. The frame is constant; the HANDLES adapt, stamped by
+  `selection.js` from the measured box (`md` ≥44px · `sm` shrinks and steps
+  outside · `xs` <16px drops them, since a 7px handle on a 6px object is not
+  grabbable). Lives in `shared/components/selection.{css,js}`.
 - **Tooltip:** `data-tip="Label"` on ANY element (optionally `data-tip="Label|⌘K"`
   for a shortcut, and `data-tip-side="top|bottom|left|right"`). It shows on hover
   AND on keyboard focus, flips when it would clip, and points its beak at the

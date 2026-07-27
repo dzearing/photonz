@@ -2662,3 +2662,53 @@ each, zero console errors.
 **Next:** nothing outstanding from the sweep backlog. Open design question still
 on the table: whether the front door is the right answer for switching workspace,
 or whether the lens deserves a place in the tool bar after all.
+
+### 2026-07-26 — selection: one frame that works at every size
+
+Reported as "sometimes the box has rounded corners, sometimes not". Measured, it
+was worse than that. The DS frame was `border-radius:26px; inset:-9px`, and:
+
+- below about **52px the radius exceeds half the box**, so the browser clamps it
+  into a circle. An 8px square read as a round ring; a 60×6 hairline read as a
+  stadium.
+- at 8px the frame was 26px across — the selection was **three times wider than
+  the thing it selected**, with the corner handles further apart than the object.
+
+It only looked deliberate on a large rounded card, which is why **ten pages had
+each hand-tuned it** to match their own object: seven radii (14, 16, 26, `--r2`,
+`--r3+4`, `--r3+5`, `50%`) and five insets, plus thirteen more inline
+`style="inset:…;border-radius:…"` overrides scattered across eleven pages. Every
+one was the same bug being patched locally.
+
+**THE RULE: the frame shows BOUNDS, never the object's shape.** Bounds are a
+rectangle, so the frame is a rectangle — on a circle, on a rounded card, on a 6px
+hairline. That single sentence removes the reason any page ever overrode it. The
+frame is a constant 2px hairline radius (smaller than half of even a 6px object,
+so it can never clamp) hugging the bounds at `inset:-1px`.
+
+**The frame is constant; the HANDLES adapt.** `selection.js` measures each frame's
+host and stamps a bucket: `md` (≥44px) four corner handles · `sm` handles shrink
+and step outside so they cannot cover the object · `xs` (<16px) no handles at
+all, because a 7px handle on a 6px object is not grabbable and you resize it from
+the Properties fields — the frame alone still says "this is selected". It keys off
+the RING, not off `.selwrap`, because seven pages position a ring inside their own
+wrapper and never use `.selwrap`; keying on the wrapper would have left exactly
+those pages un-adapted. ResizeObserver + MutationObserver so a frame revealed by a
+walkthrough step, or resized, re-buckets itself (verified: video-title-wt's hidden
+art ring stamps `md` at 74×74 when its step reveals it).
+
+Across 64 pages, 61 frames now resolve to **one radius (2px)** and one inset
+(`-1px`, plus the deliberate `-2px` for `xs`), down from seven radii and five
+insets. Zero console errors.
+
+Docs: `lang-selection.html` gained a **size-ladder specimen** (8px → 180px, same
+markup, buckets labelled) and the reasoning; its anatomy legend said the ring was
+"offset from the object", which is no longer true; the do/don't gained the rule.
+The 44px circle in the ladder is the specimen that makes the point — it gets a
+square frame, and it is exactly the instinct that produced `border-radius:50%` as
+a page override.
+
+Selection also had no entry under **Surfaces & primitives** even though it is a
+primitive like paint and colour, so it is listed there now as well as under
+Design language (both nav entries highlight; one page, two doors — no second copy
+of the documentation).

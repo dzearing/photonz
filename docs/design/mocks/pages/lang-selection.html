@@ -23,6 +23,12 @@
   #lang-selection .lx-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
     backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
     box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #lang-selection .lx-ladder{display:flex;align-items:flex-end;gap:var(--s7);flex-wrap:wrap;
+    padding:var(--s6) var(--s5);border-radius:var(--r4);background:var(--artboard);
+    border:1px solid var(--edge-lo)}
+  #lang-selection .lx-lc{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:var(--s5)}
+  #lang-selection .lx-obj{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+  #lang-selection .lx-cap{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap}
   #lang-selection .lx-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
     border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
   #lang-selection .lx-blk-h .lx-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
@@ -313,9 +319,38 @@
       </div>
     </div>
 
+    <!-- 2b · THE SIZE LADDER · the reason the frame is a rectangle -->
+    <div class="lx-blk">
+      <div class="lx-blk-h"><span class="lx-n">02</span><h3>One frame, every size</h3><span class="lx-sub">Specimen · 8px to a whole card, same markup</span></div>
+      <div class="lx-blk-b">
+        <p class="lx-note">The frame shows <b>bounds</b>, never the object's shape. That is what makes one model
+          work everywhere. A frame that traced the shape had to carry a large corner radius for cards, and below
+          about <b>52px</b> that radius exceeds half the box, so the browser clamps it into a <b>circle</b>: an 8px
+          square read as a round ring and a 6px hairline read as a stadium. It also sat 9px outside the object, so
+          an 8px selection was three times wider than the thing it selected. Ten pages had each hand-tuned their way
+          around that, between them inventing <b>seven radii and five insets</b>.</p>
+        <p class="lx-note" style="margin-top:var(--gap-sm)">So the frame is constant — a 2px hairline radius on the
+          bounds — and the <b>handles</b> adapt instead. Under 44px they shrink and step outside the frame so they
+          cannot cover the object. Under 16px they go away: a 7px handle on a 6px object is not grabbable, and you
+          resize it from the Properties fields. The frame alone still says "this is selected".</p>
+        <div class="lx-ladder">
+          <div class="lx-lc"><div class="selwrap" style="width:8px;height:8px"><div class="lx-obj" style="width:8px;height:8px;border-radius:2px"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">8 · xs</span></div>
+          <div class="lx-lc"><div class="selwrap" style="width:60px;height:6px"><div class="lx-obj" style="width:60px;height:6px;border-radius:2px"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">60×6 · xs</span></div>
+          <div class="lx-lc"><div class="selwrap" style="width:24px;height:24px"><div class="lx-obj" style="width:24px;height:24px;border-radius:5px"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">24 · sm</span></div>
+          <div class="lx-lc"><div class="selwrap" style="width:44px;height:44px"><div class="lx-obj" style="width:44px;height:44px;border-radius:50%"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">44 round · md</span></div>
+          <div class="lx-lc"><div class="selwrap" style="width:96px;height:60px"><div class="lx-obj" style="width:96px;height:60px;border-radius:10px"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">96×60 · md</span></div>
+          <div class="lx-lc"><div class="selwrap" style="width:180px;height:104px"><div class="lx-obj" style="width:180px;height:104px;border-radius:14px"></div><div class="sel-ring"></div><span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span></div><span class="lx-cap">180×104 · md</span></div>
+        </div>
+        <p class="lx-note" style="margin-top:var(--gap)">The 44px circle is the point of the rule: it gets a
+          <b>square</b> frame, because what is selected is its bounding box. Tracing the circle would say something
+          about its shape that the frame is not there to say — and it is exactly the instinct that produced
+          <code>border-radius:50%</code> as a page override.</p>
+      </div>
+    </div>
+
     <!-- 3 · ANATOMY -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">02</span><h3>Anatomy · the transform frame</h3><span class="lx-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.selwrap</code></span></div>
+      <div class="lx-blk-h"><span class="lx-n">03</span><h3>Anatomy · the transform frame</h3><span class="lx-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.selwrap</code></span></div>
       <div class="lx-blk-b">
         <div class="lx-anat">
           <div class="lx-spec">
@@ -343,7 +378,7 @@
             </div>
           </div>
           <div class="lx-leg">
-            <div class="lx-li"><span class="lx-pin">1</span><span><b>Selection ring</b> · a hairline accent outline, offset from the object so it never hides the object's own edge. <code>.sel-ring</code></span></div>
+            <div class="lx-li"><span class="lx-pin">1</span><span><b>Selection frame</b> · a hairline accent rectangle on the object's BOUNDS, with a constant 2px radius. It never traces the object's shape, which is what lets one frame work on a 6px hairline and a whole artboard. <code>.sel-ring</code></span></div>
             <div class="lx-li"><span class="lx-pin">2</span><span><b>Corner handle</b> · resizes both axes. Shift keeps the aspect ratio, Option resizes about the centre. <code>.handle.tl</code> and friends</span></div>
             <div class="lx-li"><span class="lx-pin">3</span><span><b>Edge handle</b> · resizes one axis. Eight handles in total, four corners and four edges.</span></div>
             <div class="lx-li"><span class="lx-pin">4</span><span><b>Rotate handle</b> · sits on a short stem above the frame. Drag to spin, Shift for 15° steps.</span></div>
@@ -356,7 +391,7 @@
 
     <!-- 4 · VARIANTS -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">03</span><h3>Variants</h3><span class="lx-sub">Specimens · single · multi · marquee · instance</span></div>
+      <div class="lx-blk-h"><span class="lx-n">04</span><h3>Variants</h3><span class="lx-sub">Specimens · single · multi · marquee · instance</span></div>
       <div class="lx-blk-b">
         <div class="lx-grid">
           <div class="lx-spec">
@@ -435,7 +470,7 @@
 
     <!-- 5 · STATES -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">04</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover · locked</span></div>
+      <div class="lx-blk-h"><span class="lx-n">05</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover · locked</span></div>
       <div class="lx-blk-b">
         <div class="lx-grid three">
           <div class="lx-spec">
@@ -473,7 +508,7 @@
 
     <!-- 6 · SNAPPING -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">05</span><h3>While you drag</h3><span class="lx-sub">Specimen · guides, gaps, and the measure tag</span></div>
+      <div class="lx-blk-h"><span class="lx-n">06</span><h3>While you drag</h3><span class="lx-sub">Specimen · guides, gaps, and the measure tag</span></div>
       <div class="lx-blk-b">
         <div class="lx-anat">
           <div class="lx-spec">
@@ -485,7 +520,7 @@
                   <div style="position:relative;width:230px;height:130px">
                     <div class="selwrap" style="position:absolute;left:14px;top:14px;width:196px">
                       <div style="height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5))"></div>
-                      <div class="sel-ring" style="inset:-6px;border-radius:12px"></div>
+                      <div class="sel-ring"></div>
                       <span class="handle tl" style="left:-11px;top:-11px"></span><span class="handle tr" style="right:-11px;top:-11px"></span>
                       <span class="handle bl" style="left:-11px;bottom:-11px"></span><span class="handle br" style="right:-11px;bottom:-11px"></span>
                       <span class="mtag" style="top:-28px">196 × 26</span>
@@ -515,13 +550,15 @@
 
     <!-- 7 · RULES -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">06</span><h3>Rules</h3><span class="lx-sub">Do / Don't</span></div>
+      <div class="lx-blk-h"><span class="lx-n">07</span><h3>Rules</h3><span class="lx-sub">Do / Don't</span></div>
       <div class="lx-blk-b">
         <div class="lx-dd">
           <span class="lx-do">Mirror the selection across canvas, Layers, and Properties, every time.</span>
           <span class="lx-no">Highlight a row in Layers without ringing the object on the canvas.</span>
-          <span class="lx-do">Keep handles outside the object so they never cover its own content.</span>
-          <span class="lx-no">Draw grab handles on a locked object.</span>
+          <span class="lx-do">Frame the bounds. A rectangle, always, whatever shape the object is.</span>
+          <span class="lx-no">Round the frame to match the object's corners. Below ~52px the radius exceeds half the box and the browser clamps it into a circle.</span>
+          <span class="lx-do">Let the handles adapt to the size, never the frame.</span>
+          <span class="lx-no">Draw grab handles on a locked object, or four handles on something too small to grab.</span>
           <span class="lx-do">Show the measure tag while resizing and hide it at rest.</span>
           <span class="lx-no">Leave guides or gap tags on screen after the drag ends.</span>
           <span class="lx-do">Ring a component instance in purple and everything else in accent.</span>
@@ -534,7 +571,7 @@
 
     <!-- 8 · IN THE API -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">07</span><h3>In the API</h3><span class="lx-sub">A selection is a value</span></div>
+      <div class="lx-blk-h"><span class="lx-n">08</span><h3>In the API</h3><span class="lx-sub">A selection is a value</span></div>
       <div class="lx-blk-b">
         <div class="lx-api">
           <div class="lx-r"><code>select("Hero card")</code><span>Selects by name. All three places update, exactly as if you had clicked.</span></div>
@@ -552,7 +589,7 @@
 
     <!-- 9 · RESPONSIVE -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">08</span><h3>Responsive</h3><span class="lx-sub">App screen · the same selection at 420px</span></div>
+      <div class="lx-blk-h"><span class="lx-n">09</span><h3>Responsive</h3><span class="lx-sub">App screen · the same selection at 420px</span></div>
       <div class="lx-blk-b">
         <div class="lx-narrow">
           <div class="win cq" style="display:flex;flex-direction:column" data-shell="hero-card" data-ws="ui">
