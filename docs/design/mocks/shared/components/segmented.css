@@ -1,0 +1,112 @@
+/* ============================================================
+   SEGMENTED CONTROL — one of a small set, all of them visible
+   ============================================================
+   `.seg` had NO OWNER. It was defined in five files at once —
+   `canvas.css` (the track), `glass.css` (a different track), `inspector.css`
+   (the buttons), `button.css` (the states) and `visual-rules.css` (a wrapping
+   variant) — plus two bespoke copies inside the color picker (`.cp-mode`,
+   `.cp-scope`). Whichever loaded last won, per property, so the same control
+   came out at two different heights on one popover, one of them centred and
+   one not, with a selected segment you could barely see. That is what a
+   component without an owner looks like after a year.
+
+   This file is the owner. Everything about `.seg` is here and nowhere else.
+
+   THE SHAPE. A capsule track holding capsule segments — round inside round,
+   the same geometry as `.btn` and `.pill`. The selected segment is a RAISED
+   PLATE: its own fill, its own hairline, and `--shadow-1`. All three, because
+   in a glass panel a fill alone is not enough contrast to find at a glance,
+   which is exactly how the picker's scope switch ended up unreadable.
+
+   IT NEVER WRAPS. A wrapped segmented control reads as broken — the second
+   row has no left edge to align to and the segments come out ragged widths.
+   So the segments sit on ONE row always: equal columns when it is asked to
+   fill its container, natural widths otherwise, and labels truncate before
+   anything moves. If the labels do not fit, the control is wrong for that
+   space and the answer is a `.select`, not a second row.
+
+   WHEN TO USE IT. 2 to 4 exclusive options, short labels, and room to show
+   them. Above 4 options or below about 44px per segment, use a `.select`.
+
+     <span class="seg"><button class="on">Fill</button><button>Fit</button></span>
+     <span class="seg fill">…</span>     equal columns, fills its container
+     <span class="seg sm">…</span>       24px, for dense panel rows
+   ============================================================ */
+
+.seg{
+  --seg-h:28px;
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  height:var(--seg-h);
+  padding:2px;
+  flex:none;
+  border-radius:999px;
+  background:var(--glass-thin);
+  backdrop-filter:var(--lg-blur-sm); -webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  /* the no-wrap guarantee, stated once */
+  flex-wrap:nowrap;
+  white-space:nowrap;
+  max-width:100%;
+  min-width:0;
+}
+.seg.sm{--seg-h:24px}
+.seg.lg{--seg-h:32px}
+
+/* fill: equal columns across the container. `grid-auto-flow:column` is what
+   makes this a ONE-ROW guarantee rather than a hope — an auto-fit track list
+   is free to add a second row, and that is how the old version wrapped. */
+.seg.fill{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
+
+.seg>button{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  height:100%;min-width:0;
+  padding:0 var(--s3);
+  border:1px solid transparent;
+  border-radius:999px;
+  background:transparent;
+  color:var(--dim);
+  font-family:var(--sans);
+  font-size:11.5px;font-weight:560;line-height:1;
+  letter-spacing:-.003em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  cursor:pointer;
+  transition:var(--ctl-tr);
+  -webkit-user-select:none;user-select:none;
+}
+.seg.sm>button{font-size:11px;padding:0 var(--gap-sm)}
+.seg.lg>button{font-size:12.5px;padding:0 var(--s4)}
+.seg>button>.ic{width:13px;height:13px;flex:none}
+
+/* THE SELECTED SEGMENT: fill + hairline + lift, all three */
+.seg>button.on{
+  background:var(--panel);
+  border-color:var(--edge-lo);
+  color:var(--ink);
+  font-weight:620;
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+}
+.seg>button:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 55%, transparent)}
+.seg>button:active{transform:scale(.97)}
+.seg>button:focus-visible{outline:none;box-shadow:var(--ring)}
+.seg>button[disabled],.seg>button.disabled{opacity:.42;pointer-events:none}
+
+/* icon-only segments are square inside the capsule, so they stay circular */
+.seg.icons>button{padding:0;width:calc(var(--seg-h) - 4px)}
+
+/* Inside a panel body or a dock the control is asked to fill the column, so
+   it takes the equal-column form automatically. It still never wraps: below
+   about 44px a segment the labels ellipsize, and that is the signal to the
+   author that this should have been a `.select`. */
+.pdock .seg,.dgrp-b .seg,.cpick .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
+
+/* `.seg.stack` used to mean "allowed to wrap". Nothing is allowed to wrap, so
+   it is now just the full-width form, kept because five pages ask for it. */
+.seg.stack{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
+
+@media (prefers-reduced-motion:reduce){
+  .seg>button{transition:none}
+  .seg>button:active{transform:none}
+}

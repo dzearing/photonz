@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-toolbars</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-toolbars — layout from docpage, callouts from redline. Local rules
+     only for the canvas stage the floating bar sits on. */
+  #comp-toolbars .cb-stage{position:relative;height:210px;border-radius:var(--r3);overflow:hidden;
+    background:radial-gradient(420px 220px at 50% 20%,#1a1f33,var(--artboard))}
+  #comp-toolbars .cb-stage .hero{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);
+    width:190px;height:92px;border-radius:14px;background:linear-gradient(135deg,#7c4dff,#ff5d8f);
+    box-shadow:0 0 44px -6px rgba(177,77,255,.5)}
+  #comp-toolbars .rl-frame{--rl-gut:96px}
+  #comp-toolbars .rl-co .card{width:216px}
+  #comp-toolbars .cb-win{border-radius:var(--r3);overflow:hidden;border:1px solid var(--edge-lo);
+    background:color-mix(in srgb,var(--panel) 50%,transparent)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-toolbars">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Toolbars</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">Three bars, and each one has a job the other two must not take. The <b>title bar</b> says what the document is. The <b>floating tool strip</b> holds the tools that change what your pointer does. A <b>contextual bar</b> holds actions for what is currently selected. Keeping them separate is what stops the top of the window turning into a junk drawer. The docking and overflow behaviour is on <b data-target="lang-toolbars">Design language · Toolbars</b>; this page is the component.</p>
+
+    <!-- 1 · THE FLOATING TOOL STRIP -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cb-stage" id="cb-canvas">
+            <span class="hero"></span>
+            <div class="cnv" style="position:absolute;inset:0">
+              <div class="tbar">
+                <span class="tstrip">
+                  <button class="tool on" data-tip="Move|V"><i class="ic ic-cursor"></i></button>
+                  <button class="tool" data-tip="Frame|F"><i class="ic ic-frame"></i></button>
+                  <button class="tool" data-tip="Rectangle|R"><i class="ic ic-square"></i></button>
+                  <button class="tool" data-tip="Pen|P"><i class="ic ic-pen"></i></button>
+                  <button class="tool" data-tip="Text|T"><i class="ic ic-text"></i></button>
+                </span>
+                <span class="tsep"></span>
+                <span class="swpair"><span class="fg" style="background:#7C4DFF"></span><span class="bg" style="background:#12C2E9"></span></span>
+                <span class="tsep"></span>
+                <span class="zoomctl"><input class="zslider" type="range" min="25" max="400" value="100" aria-label="Zoom"><span class="zval">100%</span></span>
+              </div>
+            </div>
+          </div>
+          <span class="rl-co" data-rl-for="#cb-canvas .tstrip" data-rl-side="l" data-rl-x="left" data-rl-row="-64"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Tool group</b>The tools that change what the pointer does. Exactly one is on at a time, and it stays on until you pick another.</span></span>
+          <span class="rl-co" data-rl-for="#cb-canvas .swpair" data-rl-side="l" data-rl-row="30"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Paint</b>Foreground and background with a swap. Both open the one color picker.</span></span>
+          <span class="rl-co" data-rl-for="#cb-canvas .zoomctl" data-rl-side="r" data-rl-row="-64"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>View</b>Zoom, and anything else about how you are looking rather than what you are changing. Always the far end, always last.</span></span>
+          <span class="rl-co" data-rl-for="#cb-canvas .tbar" data-rl-side="r" data-rl-x="right" data-rl-row="30"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>The bar itself</b>A capsule of glass floating over the canvas, centred on the bottom edge. It costs zero permanent width, which is why the canvas can stay the whole window.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Hover a tool for its shortcut. Drag the zoom slider. Click a number to read what that group is for.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">The floating tool strip</h3>
+        <p class="docrule">A capsule that <b>floats over the canvas rather than docking above it</b>, so it costs no permanent height and the document stays the whole window. Inside, groups are separated by a hairline and ordered by what they act on: <b>the pointer, then the paint, then the view</b>. That order never changes between workspaces, so muscle memory survives switching from image to video.</p>
+        <div class="docdd">
+          <span class="do">Group by what a control acts on, and keep the order.</span>
+          <span class="no">Put a document action (Export, Share) in the tool strip.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>run("tool.pen")</code> sets the current tool; <code>tool.current</code> reads it. The strip is a view over the tool registry, so adding a tool does not mean editing a toolbar.</p>
+      </div>
+    </div>
+
+    <!-- 2 · THE THREE BARS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n1" style="grid-template-columns:1fr;gap:var(--gap)">
+          <div class="docsp">
+            <span class="cb-win">
+              <span class="titlebar" style="display:flex">
+                <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+                <span class="wtitle"><b>marketing-site</b> <span class="meta">· 1440 × 1024</span></span>
+                <button class="pill ai"><i class="ic ic-sparkle"></i>Ask<span class="kbd">⌘K</span></button>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Title bar</b> .titlebar</span>
+            <p class="docsp-d">Identity only: lights, document name, dimensions, and the one affordance that opens the agent. <b>No actions live here.</b> The moment a Share button lands in the title bar, everything else follows it.</p>
+          </div>
+          <div class="docsp">
+            <span class="cb-win">
+              <span class="toolbar" style="display:flex;align-items:center;gap:var(--s1);padding:var(--s2) var(--s3)">
+                <span class="chip comp">Hero card</span>
+                <span class="tsep"></span>
+                <button class="tool" data-tip="Align left"><i class="ic ic-align-left"></i></button>
+                <button class="tool" data-tip="Align centre"><i class="ic ic-align-center-h"></i></button>
+                <button class="tool" data-tip="Align right"><i class="ic ic-align-right"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" data-tip="Bring forward"><i class="ic ic-bring-forward"></i></button>
+                <button class="tool" data-tip="Send backward"><i class="ic ic-send-backward"></i></button>
+                <span class="tsep"></span>
+                <button class="btn sm secondary"><i class="ic ic-component"></i>Make component</button>
+                <span style="flex:1"></span>
+                <button class="tool" data-tip="More"><i class="ic ic-more"></i></button>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Contextual bar</b> .toolbar</span>
+            <p class="docsp-d">Appears because something is selected, and its contents depend on what. It leads with the selection's name so you always know what the buttons will act on, and ends in an overflow.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Three bars, three jobs</h3>
+        <p class="docrule">The split is about <b>what the controls act on</b>. Title bar: the document, and only its identity. Tool strip: the pointer. Contextual bar: the selection. A control that acts on the selection must never live in a bar that is always there, or it will be disabled most of the time.</p>
+        <div class="docdd">
+          <span class="do">Name the selection at the head of the contextual bar.</span>
+          <span class="no">Keep a permanently disabled button in a permanent bar.</span>
+        </div>
+        <p class="docapi"><b>API</b> the contextual bar is generated from <code>selection.actions</code>, so a new node type brings its own toolbar rather than someone laying one out.</p>
+      </div>
+    </div>
+
+    <!-- 3 · ANATOMY OF A TOOL -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp mid"><span class="docsp-l">rest</span><span class="pad"><button class="tool"><i class="ic ic-brush"></i></button></span></div>
+          <div class="docsp mid"><span class="docsp-l">hover</span><span class="pad"><button class="tool" style="background:var(--glass-thin);border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)"><i class="ic ic-brush"></i></button></span></div>
+          <div class="docsp mid"><span class="docsp-l">current</span><span class="pad"><button class="tool on"><i class="ic ic-brush"></i></button></span></div>
+          <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><button class="tool" style="box-shadow:var(--ctl-gloss),var(--ring)"><i class="ic ic-brush"></i></button></span></div>
+          <div class="docsp mid"><span class="docsp-l">disabled</span><span class="pad"><button class="tool" disabled><i class="ic ic-brush"></i></button></span></div>
+          <div class="docsp mid"><span class="docsp-l">has variants</span><span class="pad"><button class="tool" style="position:relative"><i class="ic ic-brush"></i><span style="position:absolute;right:3px;bottom:3px;width:0;height:0;border-left:4px solid transparent;border-bottom:4px solid var(--dim)"></span></button></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The tool button</h3>
+        <p class="docrule">A tool is a <b>mode, not an action</b>, so its selected state is persistent and loud: an accent fill with a glow in its own colour, not a subtle tint. The corner notch means "press and hold for variants" — the marquee holds ellipse, the pen holds curvature. One extra pixel of language, and it removes a whole row of buttons.</p>
+        <div class="docdd">
+          <span class="do">Give every tool a one-key shortcut and put it in the tooltip.</span>
+          <span class="no">Use a tool button for something that runs and returns.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>run("tool.marquee", {shape:"ellipse"})</code>. The variant is an option on the same command, not a second tool.</p>
+      </div>
+    </div>
+
+    <!-- 4 · RESPONSIVE -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">04</span><h3>Compact behaviour &amp; the API</h3><span class="k">what goes first when the window shrinks</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Width</th><th>Title bar</th><th>Tool strip</th><th>Contextual bar</th></tr></thead>
+          <tbody>
+            <tr><td><b>Wide</b></td><td>Name + dimensions + Ask with its shortcut</td><td>All groups, all separators</td><td>Icons and labelled buttons</td></tr>
+            <tr><td><b>Medium</b></td><td>Dimensions drop before the name</td><td>Unchanged</td><td>Button labels drop; icons keep their tooltips</td></tr>
+            <tr><td><b>Narrow</b></td><td>Ask loses its shortcut cap</td><td>Later groups fold into a "more" menu, tools last</td><td>Everything past the first group folds into overflow</td></tr>
+            <tr><td><b>Very narrow</b></td><td>Name truncates with an ellipsis, never wraps</td><td>Tools only; paint and view move to the menu</td><td>Name plus one overflow button</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">One rule underneath all of it: <b>drop the label before the control, and the control before the group</b>. What never happens is a bar wrapping to a second row, because a two-row toolbar changes the canvas height and every layout below it moves. <b>Everything that folds into an overflow menu keeps its shortcut</b>, so the fast path survives a narrow window even when the button does not.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>The tool strip <b>floats</b>. That one decision is why the canvas can be the entire window: chrome that costs no permanent space can be generous without making the document smaller.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because the strip is a view over the tool registry, it could reorder itself per document type and remember the change, with a reset always one click away. A video document would surface blade and speed where an image document surfaces brush and crop.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>A floating bar over the canvas always covers something. Do we let it fade out during a drag and come back on release, or keep it solid and let people move it to any edge?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+/* ============================================================
+   DIALOG — the modal surfaces, and the rule for when you are allowed one
+   ============================================================
+   A modal stops the user. In an editor that is almost always the wrong trade,
+   so this component exists mostly to make the cheap alternatives obvious:
+
+     a popover      for a choice about ONE thing you can see      (.popover)
+     a toast        for "it happened", with undo                  (.ctoast)
+     a SHEET        for a decision about THIS DOCUMENT            (.dlg.sheet)
+     an ALERT       for something irreversible or app-wide        (.dlg.alert)
+
+   The sheet is the macOS-correct default. It drops out of the window's title
+   bar, is attached to that document, and leaves every other window alive — so
+   "Save changes before closing?" never blocks the rest of the app. The
+   free-floating alert is reserved for the rare case with no owning document.
+
+   Markup:
+     <div class="dlg-scrim on">
+       <div class="dlg sheet">
+         <div class="dlg-h"><i class="ic ic-warning"></i><b>Discard 12 edits?</b></div>
+         <div class="dlg-b">…</div>
+         <div class="dlg-f"><button class="btn ghost">Cancel</button>
+                            <button class="btn danger">Discard</button></div>
+       </div>
+     </div>
+
+   BUTTON ORDER IS PLATFORM LAW: on macOS the confirming button is on the
+   RIGHT, the cancel to its left, and any third "don't save" style option goes
+   far left with a gap. `.dlg-f` lays that out so no page can get it wrong. */
+
+.dlg-scrim{
+  position:absolute;inset:0;z-index:20;
+  display:flex;align-items:flex-start;justify-content:center;
+  background:rgba(10,12,18,.32);
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+}
+.dlg-scrim.on{opacity:1;pointer-events:auto}
+.dlg-scrim.center{align-items:center}
+
+.dlg{
+  width:min(420px, calc(100% - var(--s7)));
+  border:1px solid var(--edge-lo);border-radius:var(--r-lg);
+  background:var(--glass-menu);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.dlg.wide{width:min(600px, calc(100% - var(--s7)))}
+
+/* sheet: hinged to the top edge of the window it belongs to */
+.dlg.sheet{
+  border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);
+  transform:translateY(-101%);opacity:0;
+  transition:transform .3s cubic-bezier(.32,.72,0,1), opacity .18s ease;
+}
+.dlg-scrim.on .dlg.sheet{transform:none;opacity:1}
+
+/* alert: free-floating, and it scales up rather than sliding, because it is
+   not attached to anything to slide out of */
+.dlg.alert{
+  width:min(340px, calc(100% - var(--s7)));text-align:center;
+  transform:scale(.94);opacity:0;transition:transform .22s cubic-bezier(.32,.72,0,1), opacity .16s ease;
+}
+.dlg-scrim.on .dlg.alert{transform:none;opacity:1}
+.dlg.alert .dlg-h{flex-direction:column;gap:var(--gap-sm);padding-top:var(--s5)}
+.dlg.alert .dlg-h>.ic{width:28px;height:28px}
+.dlg.alert .dlg-f{justify-content:center}
+
+.dlg-h{
+  display:flex;align-items:center;gap:var(--s3);
+  padding:var(--s4) var(--s4) var(--gap-sm);
+}
+.dlg-h>.ic{flex:none;width:18px;height:18px;color:var(--dim)}
+.dlg-h.warn>.ic{color:var(--warn)}
+.dlg-h.crit>.ic{color:var(--crit)}
+.dlg-h b{font-size:13.5px;font-weight:640;letter-spacing:-.01em;color:var(--ink)}
+
+.dlg-b{padding:0 var(--s4) var(--s4);font-size:12px;color:var(--dim);line-height:1.5}
+.dlg-b b{color:var(--ink);font-weight:600}
+.dlg-b>*+*{margin-top:var(--s3)}
+
+.dlg-f{
+  display:flex;align-items:center;gap:var(--gap-sm);justify-content:flex-end;
+  padding:var(--s3) var(--s4);
+  border-top:1px solid var(--edge-lo);
+  background:color-mix(in srgb, var(--panel-2) 40%, transparent);
+}
+/* the third option ("Don't Save") sits away from the pair you choose between */
+.dlg-f>.away{margin-right:auto}
+
+@media (prefers-reduced-motion:reduce){
+  .dlg-scrim,.dlg.sheet,.dlg.alert{transition:none}
+  .dlg.alert{transform:none}
+}

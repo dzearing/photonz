@@ -692,11 +692,21 @@
 
     function syncValues() {
       if (!stack) return;
+      /* the knob on a channel track carries the colour that channel's value
+         produces, which is simply the CURRENT colour — so all four knobs
+         repaint together as you drag any one of them. The alpha knob takes
+         the colour at its own alpha, over the track's checkerboard, so a
+         half-transparent colour looks half transparent in the knob too. */
+      var solid = hex();
       all('[data-cp-ch]', stack).forEach(function (row) {
         var k = row.getAttribute('data-cp-ch'), v = chGet(k);
         var tr = row.querySelector('[data-cp-track]');
         tr.style.setProperty('--cp-track', chTrack(k));
-        tr.querySelector('.cp-knob').style.left = (v / CP_CH[k].max * 100) + '%';
+        var knob = tr.querySelector('.cp-knob');
+        knob.style.left = (v / CP_CH[k].max * 100) + '%';
+        knob.style.setProperty('--k-c', k === 'a'
+          ? 'color-mix(in srgb, ' + solid + ' ' + Math.round(v / CP_CH[k].max * 100) + '%, transparent)'
+          : solid);
         tr.setAttribute('aria-valuenow', v);
         var inp = row.querySelector('[data-cp-val]');
         if (inp !== document.activeElement) inp.value = v + CP_CH[k].unit;

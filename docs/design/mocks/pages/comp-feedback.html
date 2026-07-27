@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-feedback</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-feedback — layout from docpage. Local rules only for the toast stack
+     specimen, which needs a dark stage to read against. */
+  #comp-feedback .cf-stage{border-radius:var(--r3);padding:var(--pad);
+    background:radial-gradient(320px 180px at 70% 0%,#1a1f33,var(--artboard));
+    display:flex;flex-direction:column;gap:var(--gap-sm);align-items:flex-end}
+  #comp-feedback .cf-toast{display:flex;align-items:center;gap:var(--s3);width:100%;max-width:320px;
+    padding:var(--gap-sm) var(--s3);border-radius:var(--r-md);
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow)}
+  #comp-feedback .cf-toast .tx{flex:1;min-width:0;font-size:11.5px;color:var(--ink);line-height:1.35}
+  #comp-feedback .cf-toast .tx small{display:block;color:var(--faint);font-size:10px;margin-top:1px}
+  #comp-feedback .cf-toast .th{width:44px;height:30px;border-radius:var(--r1);flex:none;
+    background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-feedback">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Status &amp; feedback</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">How the app says something happened, something is happening, or something is missing. The organising idea: <b>report, do not ask</b>. An editor that stops to confirm every action is slower than one that acts and offers undo, so the toast carries most of the weight and the modal almost none.</p>
+
+    <!-- 1 · PROGRESS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="progrow"><span class="rl">Exporting 12 artboards</span><span class="val">64%</span><span class="prog" style="--pv:.64"><i></i></span></span>
+              <span class="progrow" style="margin-top:var(--gap-sm)"><span class="rl">Uploading</span><span class="val">2 of 3</span><span class="prog good" style="--pv:.66"><i></i></span></span>
+            </span>
+            <span class="docsp-l"><b>Determinate</b> .prog</span>
+            <p class="docsp-d">You know the fraction, so show it. Same 4pt groove as the slider, minus the thumb, which is the whole point: you cannot grab it.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="progrow"><span class="rl">Removing background</span><span class="val">…</span><span class="prog indet"><i></i></span></span>
+              <span class="busyrow" style="margin-top:var(--s3)"><span class="busy"></span>Analysing subject</span>
+              <span class="busyrow" style="margin-top:var(--gap-sm)"><span class="busy sm"></span>Loading library</span>
+            </span>
+            <span class="docsp-l"><b>Indeterminate</b> .prog.indet · .busy</span>
+            <p class="docsp-d">You know it started, not how far. A short pill sweeping the groove, or an inline arc when it is quick. Never a full-width shimmer, which means "skeleton", not "working".</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="setrow"><span class="rl">Memory</span><span class="meter" style="--pv:.42;--lim:.85"><i></i><span class="lim"></span></span></span>
+              <span class="setrow" style="margin-top:var(--gap-sm)"><span class="rl">Document size</span><span class="meter warn" style="--pv:.78;--lim:.85"><i></i><span class="lim"></span></span></span>
+            </span>
+            <span class="docsp-l"><b>Meter</b> .meter</span>
+            <p class="docsp-d">A level you read, not a task you wait for. The threshold you must not cross is drawn <i>on</i> the meter rather than described next to it.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <button class="btn primary block"><span class="busy sm on-fill"></span>Exporting</button>
+              <button class="btn secondary block" style="margin-top:var(--gap-sm)"><i class="ic ic-check"></i>Exported</button>
+            </span>
+            <span class="docsp-l"><b>In a button</b></span>
+            <p class="docsp-d">The spinner takes the icon's place and the button keeps its width, so the row does not jump when work starts or finishes.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Progress</h3>
+        <p class="docrule">Pick by <b>what you know</b>: the fraction, that it started, or a level. Never show an indeterminate bar for something measurable, and never a determinate one parked at 90% because you guessed. Anything running longer than about two seconds gets a label saying what it is doing.</p>
+        <div class="docdd">
+          <span class="do">Say what is happening, not just that something is.</span>
+          <span class="no">Block the canvas while work runs. Progress belongs beside the thing.</span>
+        </div>
+        <p class="docapi"><b>API</b> a long command returns a task: <code>task.progress</code> (0..1 or null) and <code>task.label</code>. The component picks its own shape from whether progress is null.</p>
+      </div>
+    </div>
+
+    <!-- 2 · TOASTS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cf-stage">
+          <div class="cf-toast">
+            <span class="th"></span>
+            <span class="tx">Background removed<small>Hero card · 1 layer added</small></span>
+            <button class="btn ghost sm">Undo</button>
+          </div>
+          <div class="cf-toast">
+            <span class="busy"></span>
+            <span class="tx">Exporting 12 artboards<small>PNG · 2x</small></span>
+            <button class="btn ghost icon sm" data-tip="Cancel"><i class="ic ic-x"></i></button>
+          </div>
+          <div class="cf-toast">
+            <i class="ic ic-warning" style="color:var(--warn)"></i>
+            <span class="tx">3 layers could not be exported<small>Unsupported blend mode</small></span>
+            <button class="btn ghost sm">Details</button>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Toasts</h3>
+        <p class="docrule">The workhorse. <b>A toast reports; it never asks.</b> It carries what happened, a thumbnail when there is one, and the one action that matters — usually <b>Undo</b>, which is what lets the app act first and confirm never. They stack from the bottom of the canvas, newest nearest, and a toast holding a running task stays until the task ends.</p>
+        <div class="docdd">
+          <span class="do">Put Undo in the toast. It replaces a confirmation dialog.</span>
+          <span class="no">Ask a question in a toast. It will time out and answer itself.</span>
+        </div>
+        <p class="docapi"><b>API</b> every command that mutates returns an undo token, so the toast is generated rather than authored: <code>run("image.removeBg")</code> → toast with Undo.</p>
+      </div>
+    </div>
+
+    <!-- 3 · SMALL MARKS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad"><span class="badge">14</span><span class="badge accent">3</span><span class="badge soft comp">Component</span><span class="badge good">Saved</span><span class="badge crit">2 errors</span></span>
+            <span class="docsp-l"><b>Badge</b> .badge</span>
+            <p class="docsp-d">A count or a short state. <b>Never clickable</b> — if it can be pressed it is a chip, and the difference has to stay visible: no border, no hover, 9.5px.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="dot good"></span><span class="dot warn"></span><span class="dot crit live"></span><span class="dot edited"></span><span class="dot comp"></span></span>
+            <span class="docsp-l"><b>Status dot</b> .dot</span>
+            <p class="docsp-d">A state with no number. The pulsing one means it is happening right now: recording, syncing, an agent working. The grey one is the macOS unsaved-changes mark.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="kbds"><span class="kbd">⌘</span><span class="kbd">⇧</span><span class="kbd">E</span></span><span class="kbds" style="margin-left:var(--s3)"><span class="kbd">⌥</span><span class="kbd">Drag</span></span></span>
+            <span class="docsp-l"><b>Key cap</b> .kbd</span>
+            <p class="docsp-d">A run of caps with a hair of space, never a plus sign between them: macOS writes ⌘⇧E, not Cmd + Shift + E.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The small marks</h3>
+        <p class="docrule">Three read-only marks that annotate something else. They are one file in the library because they were the three most-copied snippets in the app, each landing at a different size and weight every time. <b>None of them is interactive</b>, and that has to stay legible.</p>
+        <div class="docdd">
+          <span class="do">Use a filled badge. A 10% tint disappears on a glass panel at 16px.</span>
+          <span class="no">Give a badge a hover state. Then it is a chip, and people will click it.</span>
+        </div>
+        <p class="docapi"><b>API</b> a badge is a view over a count or an enum; a dot over a boolean or a phase; a cap over <code>command.shortcut</code>.</p>
+      </div>
+    </div>
+
+    <!-- 4 · EMPTY & ERROR -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col" style="min-height:132px"><span class="empty"><i class="ic ic-layers lg"></i>No layers yet<span style="font-size:10.5px">Drop an image, or press ⌘N</span></span></span>
+            <span class="docsp-l"><b>Empty</b> the first run</span>
+            <p class="docsp-d">Names the way out. An empty panel with no instruction is the most common dead end in an editor.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col" style="min-height:132px"><span class="empty"><i class="ic ic-search lg"></i>Nothing matches "hero"<button class="btn ghost sm" style="margin-top:var(--s1)">Clear filter</button></span></span>
+            <span class="docsp-l"><b>Empty</b> the filtered result</span>
+            <p class="docsp-d">A different message from "nothing here yet", because the fix is different: there <i>is</i> content, your filter is hiding it.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col" style="min-height:132px"><span class="empty"><i class="ic ic-warning lg" style="color:var(--warn)"></i>Could not read this file<span style="font-size:10.5px">The layer data is damaged past frame 214</span><button class="btn secondary sm" style="margin-top:var(--s1)">Recover what we can</button></span></span>
+            <span class="docsp-l"><b>Error</b> in place</span>
+            <p class="docsp-d">Says what went wrong, where, and what you can still do. An error with no action is a dead end wearing a warning icon.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">Empty &amp; error</h3>
+        <p class="docrule">Three different states people habitually collapse into one grey message. <b>Nothing yet</b>, <b>nothing matching</b> and <b>something broke</b> have three different ways out, so they get three different messages and three different buttons.</p>
+        <div class="docdd">
+          <span class="do">End every one of them with the action that resolves it.</span>
+          <span class="no">Show "No results" for an empty list that was never filtered.</span>
+        </div>
+        <p class="docapi"><b>API</b> a list view takes <code>empty</code>, <code>emptyFiltered</code> and <code>error</code> separately, so the three cannot collapse into one by accident.</p>
+      </div>
+    </div>
+
+    <!-- 5 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">05</span><h3>In the API</h3><span class="k">report, do not ask</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Situation</th><th>Surface</th><th>Why not a dialog</th></tr></thead>
+          <tbody>
+            <tr><td><b>Something happened</b></td><td>Toast with Undo</td><td>The action is already done and reversible, so there was nothing to ask</td></tr>
+            <tr><td><b>Something is running</b></td><td><code>.prog</code> beside the thing, or in a toast</td><td>Work should never block the canvas</td></tr>
+            <tr><td><b>Something is running, briefly</b></td><td><code>.busy</code> in place</td><td>A dialog for two seconds is worse than no feedback</td></tr>
+            <tr><td><b>Something partially failed</b></td><td>Toast with Details</td><td>The work mostly succeeded; the detail can wait for a click</td></tr>
+            <tr><td><b>Something is empty</b></td><td><code>.empty</code> with the way out</td><td>Nothing to confirm, only something to start</td></tr>
+            <tr><td><b>Something is irreversible</b></td><td>Sheet or alert</td><td>This is the one case where asking is right</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">Five of six rows never interrupt. That ratio is the point: <b>because every mutating command returns an undo token, the app can act first and report second</b>, and the confirmation dialog stops being the default answer to "are they sure?". <b>Reduced motion</b> stills the indeterminate sweep and slows the spinner rather than removing it, since a frozen spinner reads as a hang.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p><b>Report, do not ask.</b> Undo in a toast replaces almost every confirmation dialog an editor would otherwise grow, and it is faster for the person even when they did mean to do it.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Toasts already know which command produced them. A stack of them is a readable history, so the toast area could scroll back into the <b data-target="documents">history overlay</b> rather than being a separate surface.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Undo tokens have to survive long enough to be useful and not so long that memory suffers on a 12-megapixel document. Do we keep them by count, by bytes, or drop the pixel-heavy ones first and downgrade those toasts to plain reports?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

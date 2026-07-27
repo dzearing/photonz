@@ -1,0 +1,74 @@
+/* ============================================================
+   BADGE, STATUS DOT, KEY CAP — the three smallest things in the system
+   ============================================================
+   None of them is interactive, which is exactly why they are one file: they
+   are the read-only marks that annotate something else, and they were the
+   three most-copied snippets in the pages (a count pill, a coloured dot, a
+   ⌘K chip) with a different size and weight every time.
+
+     <span class="badge">3</span>              a count or a short state
+     <span class="dot good"></span>            a state with no number
+     <span class="kbd">⌘</span><span class="kbd">K</span>   a key
+
+   A badge is never a button. If it can be clicked it is a `.chip`, and the
+   difference has to stay visible: a badge has no hover, no capsule border, and
+   sits at 9.5px where a chip sits at 11. */
+
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;gap:3px;
+  min-width:16px;height:16px;padding:0 5px;
+  border-radius:999px;
+  background:var(--line-soft);color:var(--dim);
+  font-family:var(--sans);font-size:9.5px;font-weight:660;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;
+  white-space:nowrap;flex:none;
+}
+.badge.sm{min-width:14px;height:14px;font-size:9px;padding:0 4px}
+.badge>.ic{width:9px;height:9px}
+/* semantic fills. Filled (not tinted) because a badge is small enough that a
+   10% tint disappears against a glass panel. */
+.badge.accent{background:var(--accent);color:var(--accent-ink)}
+.badge.comp{background:var(--comp);color:#fff}
+.badge.good{background:var(--good);color:#fff}
+.badge.warn{background:var(--warn);color:#fff}
+.badge.crit{background:var(--crit);color:#fff}
+/* the quiet form: a tint, for a badge that labels rather than alerts */
+.badge.soft{background:var(--accent-soft);color:var(--accent)}
+.badge.soft.comp{background:var(--comp-soft);color:var(--comp)}
+/* anchored to a corner of whatever it marks (a layer row, a panel tab) */
+.badge.pin{position:absolute;top:-6px;right:-6px;box-shadow:0 0 0 2px var(--panel)}
+
+/* ---- status dot: a state with no count ---- */
+.dot{
+  display:inline-block;flex:none;width:6px;height:6px;border-radius:50%;
+  background:var(--faint);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.14);
+}
+.dot.good{background:var(--good)}
+.dot.warn{background:var(--warn)}
+.dot.crit{background:var(--crit)}
+.dot.accent{background:var(--accent)}
+.dot.comp{background:var(--comp)}
+/* live: it is happening right now (recording, syncing, an agent working) */
+.dot.live{animation:dot-pulse 1.6s ease-in-out infinite}
+@keyframes dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+/* an unsaved-changes dot sits where macOS puts it: in the title, before the name */
+.dot.edited{background:var(--dim);width:7px;height:7px}
+
+/* ---- key cap ---- */
+.kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:16px;padding:0 4px;
+  border:1px solid var(--edge-lo);border-bottom-width:1.5px;border-radius:var(--r1);
+  background:var(--glass-thin);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  font-family:var(--mono);font-size:9.5px;font-weight:520;color:var(--dim);
+  line-height:1;flex:none;
+}
+/* a chord is a run of caps with a hair of space, never a "+" between them:
+   macOS writes ⌘⇧E, not Cmd + Shift + E */
+.kbds{display:inline-flex;align-items:center;gap:2px}
+/* inside a filled control the cap has no plate, only the glyph */
+.btn.primary .kbd,.btn.danger .kbd,.pill.solid .kbd,.badge .kbd{
+  border:0;background:transparent;box-shadow:none;color:inherit;opacity:.75;padding:0;min-width:0}
+
+@media (prefers-reduced-motion:reduce){.dot.live{animation:none}}

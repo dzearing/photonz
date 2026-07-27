@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-overlays</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-overlays — layout from docpage. Local rules only for the window
+     specimen the sheet is hinged to. */
+  #comp-overlays .co-win{position:relative;border-radius:var(--r-lg);overflow:hidden;
+    border:1px solid var(--edge-lo);background:var(--glass);
+    box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow);height:264px}
+  #comp-overlays .co-win .cv{position:absolute;inset:42px 0 0;
+    background:radial-gradient(300px 160px at 50% 30%,#1a1f33,var(--artboard))}
+  #comp-overlays .co-win .hero{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+    width:150px;height:76px;border-radius:12px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+  #comp-overlays .co-menu{width:214px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-overlays">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Menus &amp; dialogs</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">Four surfaces that float over live content, ordered by <b>how much they interrupt you</b>: a menu (pick one thing, then it is gone), a popover (work in it, click away to dismiss), a sheet (a decision about this document, attached to its window), an alert (something irreversible). The rule the whole page rests on: <b>reach for the least interrupting one that works</b>, and a modal almost never is.</p>
+
+    <!-- 1 · THE LADDER -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n4">
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="menu co-menu" style="width:100%">
+                <span class="menuitem"><i class="ic ic-duplicate"></i>Duplicate<span class="sc">⌘D</span></span>
+                <span class="menuitem"><i class="ic ic-component"></i>Make component<span class="sc">⌘⌥K</span></span>
+                <span class="menu-sep"></span>
+                <span class="menuitem disabled"><i class="ic ic-merge"></i>Merge</span>
+                <span class="menuitem" style="color:var(--crit)"><i class="ic ic-trash"></i>Delete<span class="sc">⌦</span></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Menu</b> .menu</span>
+            <p class="docsp-d">Pick one thing and it closes. Every item is a command with its icon and shortcut, so it and the toolbar can never disagree.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="popover" style="width:100%;padding:var(--s3);display:flex;flex-direction:column;gap:var(--gap-sm)">
+                <span class="mlabel" style="padding:0">Export as</span>
+                <span class="seg"><button class="on">PNG</button><button>JPG</button><button>SVG</button></span>
+                <span class="setrow"><span class="rl">Scale</span><span class="select" style="min-width:76px"><span class="lead">2x</span><i class="car ic ic-chevron-down"></i></span></span>
+                <button class="btn primary sm block">Export</button>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Popover</b> .popover</span>
+            <p class="docsp-d">You work inside it. Click away and it is gone, changes kept. For a decision about one thing you can still see behind it.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="dlg" style="width:100%;position:relative;transform:none;opacity:1">
+                <span class="dlg-h"><i class="ic ic-warning"></i><b>Save changes?</b></span>
+                <span class="dlg-b">"marketing-site" has 12 unsaved edits.</span>
+                <span class="dlg-f"><button class="btn ghost sm away">Don't Save</button><button class="btn ghost sm">Cancel</button><button class="btn primary sm">Save</button></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Sheet</b> .dlg.sheet</span>
+            <p class="docsp-d">A decision about <i>this document</i>, hinged to its title bar. Every other window stays alive, which is the whole point.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="dlg alert" style="width:100%;position:relative;transform:none;opacity:1">
+                <span class="dlg-h crit"><i class="ic ic-warning"></i><b>Delete 12 captures?</b></span>
+                <span class="dlg-b">This cannot be undone.</span>
+                <span class="dlg-f"><button class="btn ghost sm">Cancel</button><button class="btn danger sm">Delete</button></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Alert</b> .dlg.alert</span>
+            <p class="docsp-d">Irreversible, and not about one document. The only surface allowed to block the whole app, and it should be rare enough to feel like an event.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">The interruption ladder</h3>
+        <p class="docrule">Pick the <b>lowest rung that works</b>. Most things people reach for a modal for are really a popover, and most of the rest are a toast with an undo. A modal is a promise that the answer cannot wait, and in an editor that promise is almost always false.</p>
+        <div class="docdd">
+          <span class="do">Prefer a sheet to an alert. A sheet blocks one document, not the app.</span>
+          <span class="no">Confirm something you could simply undo. Do it and offer undo.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>menu.open()</code> · <code>popover.open(anchor)</code> · <code>sheet.ask(document, …)</code> · <code>alert.ask(…)</code>. The rung is chosen by the call, not by styling.</p>
+      </div>
+    </div>
+
+    <!-- 2 · THE MENU ITEM -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="menu" style="width:100%">
+                <span class="menuitem"><i class="ic ic-copy"></i>Copy<span class="sc">⌘C</span></span>
+                <span class="menuitem on"><i class="ic ic-check"></i>Snap to pixel</span>
+                <span class="menuitem"><i class="ic ic-layers"></i>Arrange<i class="ic ic-chevron-right" style="margin-left:auto"></i></span>
+                <span class="menu-sep"></span>
+                <span class="menuitem disabled"><i class="ic ic-merge"></i>Merge<span class="sc">⌘E</span></span>
+                <span class="menuitem" style="color:var(--crit)"><i class="ic ic-trash"></i>Delete<span class="sc">⌦</span></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>One item, five jobs</b></span>
+            <p class="docsp-d">Action, checked state, submenu, disabled, destructive. Icon left, label, then the shortcut right in monospace so a column of them lines up.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col dark">
+              <span class="menu" style="width:100%">
+                <span class="mlabel" style="padding:var(--gap-sm) var(--s3) var(--s1)">Recent colors</span>
+                <span class="menuitem"><span class="swatch" style="width:14px;height:14px;background:#7C4DFF"></span>#7C4DFF</span>
+                <span class="menuitem"><span class="swatch" style="width:14px;height:14px;background:#12C2E9"></span>#12C2E9</span>
+                <span class="menu-sep"></span>
+                <span class="menuitem"><i class="ic ic-home"></i>Home</span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Sections &amp; the Home item</b></span>
+            <p class="docsp-d">Sections get a 9px uppercase label, not a bold item. Every command menu ends with <b>Home</b>, appended by the shell so no page authors one and none can forget it.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">The menu item</h3>
+        <p class="docrule">A menu is <b>the command API made browsable</b>, so an item is a view over a command and takes everything from it: label, icon, shortcut, enabled state, destructiveness. Nothing about an item is authored twice, which is why the menu can never drift from the toolbar.</p>
+        <div class="docdd">
+          <span class="do">Show the shortcut on every item that has one. This is where people learn them.</span>
+          <span class="no">Hide a command when it is unavailable. Disable it and say why.</span>
+        </div>
+        <p class="docapi"><b>API</b> the item <i>is</i> <code>command</code>. A menu is <code>commands.filter(…)</code>, which is also what the agent's <code>/</code> list shows.</p>
+      </div>
+    </div>
+
+    <!-- 3 · SHEET IN CONTEXT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="co-win">
+          <div class="titlebar" style="display:flex">
+            <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+            <span class="wtitle"><b>marketing-site</b> <span class="meta">· 1440 × 1024</span></span>
+          </div>
+          <div class="cv"><span class="hero"></span></div>
+          <div class="dlg-scrim on">
+            <div class="dlg sheet">
+              <div class="dlg-h warn"><i class="ic ic-warning"></i><b>Save changes to "marketing-site"?</b></div>
+              <div class="dlg-b">Your changes will be lost if you don't save them. <b>12 edits</b> since the last save.</div>
+              <div class="dlg-f">
+                <button class="btn ghost away">Don't Save</button>
+                <button class="btn ghost">Cancel</button>
+                <button class="btn primary">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The sheet, in place</h3>
+        <p class="docrule">Hinged to the title bar of the window it belongs to, over a scrim that dims <b>that window only</b>. <b>Button order is platform law</b>: confirm on the right, cancel to its left, and a third option pushed to the far left with real space. <code>.dlg-f</code> lays that out, so a page cannot get it wrong by accident.</p>
+        <div class="docdd">
+          <span class="do">Name the document in the question. "Save changes?" to what?</span>
+          <span class="no">Put the primary on the left because it reads first in English.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>sheet.ask(doc, {title, options:["Don't Save","Cancel","Save"]})</code>. The order in the array is the order on screen, left to right.</p>
+      </div>
+    </div>
+
+    <!-- 4 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">04</span><h3>In the API</h3><span class="k">picking a rung</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Surface</th><th>Blocks</th><th>Dismiss</th><th>Use for</th><th>Elevation</th></tr></thead>
+          <tbody>
+            <tr><td><b>Tooltip</b></td><td>Nothing</td><td>Move away</td><td>Labelling a control</td><td>2 (opaque plate)</td></tr>
+            <tr><td><b>Menu</b></td><td>Nothing</td><td>Pick, or click away</td><td>Choosing one command</td><td>2 (glass)</td></tr>
+            <tr><td><b>Popover</b></td><td>Nothing</td><td>Click away, changes kept</td><td>Working on one visible thing</td><td>2 (glass)</td></tr>
+            <tr><td><b>Sheet</b></td><td>One document</td><td>Only by answering</td><td>A decision about that document</td><td>2 + scrim</td></tr>
+            <tr><td><b>Alert</b></td><td>The app</td><td>Only by answering</td><td>Irreversible, no owning document</td><td>2 + scrim</td></tr>
+            <tr><td><b>Toast</b></td><td>Nothing</td><td>Itself, after a few seconds</td><td>"It happened", with undo</td><td>2 (glass)</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">Read the <b>Blocks</b> column top to bottom: four of six block nothing at all, and that ratio is the design. <b>Escape closes every rung</b>, and on the two that block, Escape means Cancel, never the destructive option. <b>Compact windows</b>: a popover anchored to a control that no longer has room becomes a sheet from the bottom edge rather than shrinking, because a squeezed popover is worse than a relocated one.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>An editor's job is to stay out of the way, so the library makes the <b>non-blocking surfaces the easy ones to reach for</b> and the blocking ones deliberately awkward. Most confirmations are really an action plus an undo.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because menus are generated from commands, the same list powers the agent's <code>/</code> filter. A menu could show what an agent just ran, in place, so the two ways of driving the app teach each other.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Sheets are correct on macOS and awkward for a menu-bar app with no front window. When a capture finishes and no document is open, does the question become an alert, a notification, or does it just wait?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

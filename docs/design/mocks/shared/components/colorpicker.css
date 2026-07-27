@@ -147,8 +147,11 @@
 .cpick .cp-mini[disabled]{opacity:.42;pointer-events:none}
 
 /* the 2D field: white left to right over the hue, black bottom to top */
+ /* NO BORDER. A 1px edge over a field whose fill runs from white to black to
+    full hue reads as a different colour on each side and appears to change as
+    you pick, which is movement in the one place that has to look still. The
+    field is defined by its own fill; it does not need an outline. */
 .cpick .cp-sv{position:relative;height:104px;border-radius:var(--r3);cursor:crosshair;touch-action:none;
-  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);
   background:
     linear-gradient(to top, #000, transparent),
     linear-gradient(to right, #fff, transparent),
@@ -159,7 +162,9 @@
 
 /* the channel stack: same row grammar as an inspector row, so a
    slider here is the same object as a slider anywhere else */
-.cpick .cp-mode{align-self:center}
+/* both switches in this popover ARE the segmented component — no bespoke
+   copy, so they cannot come out at two heights with two selected styles */
+.cpick .cp-mode{justify-self:center;align-self:center;width:auto}
 .cpick .cp-sliders{display:flex;flex-direction:column;gap:var(--gap-sm)}
 .cpick .cp-sl{display:grid;grid-template-columns:12px 1fr 46px;align-items:center;gap:var(--gap-sm)}
 .cpick .cp-sl>b{font-size:10px;font-weight:700;color:var(--faint);text-align:center;line-height:1}
@@ -169,9 +174,25 @@
   repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);background-size:auto,8px 8px}
 .cpick .cp-tr:not(.alpha){background-image:var(--cp-track)}
 .cpick .cp-tr:focus-visible{outline:none;box-shadow:var(--ring)}
-.cpick .cp-knob{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
-  background:var(--panel);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35), var(--shadow-1);
+/* The channel knob is the slider's capsule, restated here because colorpicker
+   loads after slider. It CARRIES THE COLOUR its channel produces — which is
+   just the current colour — so all four knobs repaint together as you drag any
+   one of them, and the alpha knob shows its own alpha over the track's
+   checkerboard. A neutral knob on a colour track makes you read the result off
+   the ramp behind your own thumb. `--k-c` is written by colorpicker.js. */
+.cpick .cp-knob{position:absolute;top:50%;
+  width:var(--sl-thumb-w);height:var(--sl-thumb-h);
+  margin:calc(var(--sl-thumb-h) / -2) 0 0 calc(var(--sl-thumb-w) / -2);
+  border-radius:999px;
+  background:var(--k-c, var(--panel));
+  border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35), var(--shadow-1);
   pointer-events:none}
+/* alpha: the knob sits on the same checkerboard as its track, so a
+   half-transparent colour looks half transparent in the knob too */
+.cpick .cp-tr.alpha .cp-knob{
+  background-image:linear-gradient(var(--k-c, var(--panel)), var(--k-c, var(--panel))),
+    repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);
+  background-size:auto, 7px 7px}
 /* the value is an input, always: click it to type, and right-clicking
    the track puts you in it, so an exact number is never hidden */
 .cpick .cp-sl input,.cpick .cp-hex input,.cpick .cp-stopcard input{
@@ -194,12 +215,6 @@
    share a row and a scope switch instead of stacking three labelled
    grids, which is where a third of the old height went. */
 .cpick .cp-sw{display:flex;flex-direction:column;gap:var(--gap-sm)}
-.cpick .cp-scope{display:inline-flex;align-self:stretch;gap:2px;padding:2px;border-radius:999px;
-  background:var(--glass-thin);border:1px solid var(--edge-lo)}
-.cpick .cp-scope button{flex:1;border:0;border-radius:999px;background:transparent;color:var(--dim);
-  font-size:10px;font-weight:640;padding:3px 6px;cursor:pointer;transition:var(--ctl-tr);white-space:nowrap}
-.cpick .cp-scope button.on{background:var(--glass);color:var(--ink);box-shadow:inset 0 1px 0 var(--edge-hi)}
-.cpick .cp-scope button:focus-visible{outline:none;box-shadow:var(--ring)}
 .cpick .cp-chips{display:grid;grid-template-columns:repeat(9,1fr);gap:var(--s1)}
 /* same 22px / r1 geometry as the DS `.swatch`, so a swatch is a swatch */
 .cpick .cp-chip{height:22px;border-radius:var(--r1);border:1px solid var(--edge-lo);cursor:pointer;padding:0;

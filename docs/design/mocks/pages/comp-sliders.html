@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-sliders</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-sliders — layout from docpage, callouts from redline. Local rules only
+     for the anatomy stage and the shape comparison. */
+  #comp-sliders .cs-anat{position:relative;display:grid;place-items:center;min-height:250px;
+    border-radius:var(--r3);
+    background:radial-gradient(340px 190px at 50% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 68%)}
+  #comp-sliders .cs-anat .slrow{width:300px}
+  #comp-sliders .rl-frame{--rl-gut:100px}
+  #comp-sliders .rl-co .card{width:214px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-sliders">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Sliders &amp; value controls</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro"><b>One slider: a capsule thumb on a thick groove</b>, the platform's shape at inspector density. On top of that, the variants a photo editor actually needs — a fill that grows from the centre for signed adjustments, a paint track for hue and alpha, a two-value range, and ticks for stepped values. Every one of them keeps the same thumb, so a panel full of different sliders still reads as one control repeated.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cs-anat">
+            <div class="slrow" id="cs-demo" style="--slrow-l:56px"><span class="rl">Opacity</span><span class="slider" data-unit="%"><input type="range" min="0" max="100" value="62" aria-label="Opacity"><span class="sl-bub"></span></span><span class="num">62%</span></div>
+          </div>
+          <span class="rl-co" data-rl-for="#cs-demo .rl" data-rl-side="l" data-rl-row="-95"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Label</b>Fixed 72px column so a run of rows lines up as a column. Truncates rather than wrapping.</span></span>
+          <span class="rl-co" data-rl-for="#cs-demo .sl-track" data-rl-side="l" data-rl-x="left" data-rl-dx="20" data-rl-row="-45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Groove</b>6px, capsule, with an inset shadow so it reads as a channel cut into the surface rather than a line drawn on it.</span></span>
+          <span class="rl-co" data-rl-for="#cs-demo .sl-fill" data-rl-side="l" data-rl-x="right" data-rl-row="45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Fill</b>Accent, and it ends exactly under the centre of the thumb. Fill and thumb are positioned from one expression so they cannot drift apart at the ends.</span></span>
+          <span class="rl-co" data-rl-for="#cs-demo .sl-thumb" data-rl-side="r" data-rl-row="-95"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Thumb</b>A 20 × 14 horizontal capsule, light in both themes. Wide enough to grab in a dense panel, and its round ends leave the fill visible right up to the value.</span></span>
+          <span class="rl-co" data-rl-for="#cs-demo .sl-bub" data-rl-side="r" data-rl-y="top" data-rl-row="-45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Bubble</b>The precise value, shown only while dragging, because your finger is on the thumb and the readout is 200px away.</span></span>
+          <span class="rl-co" data-rl-for="#cs-demo .num" data-rl-side="r" data-rl-row="45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Value</b>Tabular figures, right aligned, and it is a <b>scrub handle</b>: drag it sideways for fine control the track cannot give you.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click a number to read what that part does. Drag the thumb or the value to try it.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">Six parts, and the row is part of the component rather than something each panel re-authors. Under the visual layer there is a <b>real range input</b>, transparent and full-bleed, so arrow keys, page keys, Home/End and VoiceOver all work without a line of extra code, and there is exactly one tab stop.</p>
+        <div class="docdd">
+          <span class="do">Give every slider a numeric readout. A slider alone is not precise.</span>
+          <span class="no">Show the bubble at rest. It covers the row above it.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>layer.opacity = .62</code>. The drag issues one command on release, not sixty during the drag, so undo takes you back to where you started.</p>
+      </div>
+    </div>
+
+    <!-- 2 · THE THUMB, IN THREE JOBS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col"><span class="slider" data-unit="%" style="--p:.62"><input type="range" min="0" max="100" value="62" aria-label="Neutral"><span class="sl-bub"></span></span></span>
+            <span class="docsp-l"><b>Neutral</b> 20 × 14, light in both themes</span>
+            <p class="docsp-d">Sets a number. The thumb stays uncoloured and the <i>fill</i> carries the accent, so the eye reads the amount from the track rather than the knob.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="slider paint hue" style="--p:.72;--sl-c:#b14dff"><input type="range" min="0" max="360" value="259" aria-label="Hue"><span class="sl-bub"></span></span></span>
+            <span class="docsp-l"><b>Carrying a hue</b> .paint.hue</span>
+            <p class="docsp-d">Same capsule, filled with the colour it is currently on, keylined in white so it stays readable anywhere along the ramp. There is no fill, because the groove already <i>is</i> the value.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="slider paint alpha" style="--p:.55;--sl-to:#b14dff;--sl-c:rgba(177,77,255,.55)"><input type="range" min="0" max="100" value="55" aria-label="Alpha"><span class="sl-bub"></span></span></span>
+            <span class="docsp-l"><b>Carrying transparency</b> .paint.alpha</span>
+            <p class="docsp-d">The thumb sits on the same checkerboard as the track, so a half-transparent colour <i>looks</i> half transparent in the knob you are dragging, not only in the ramp behind it.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">One thumb, three jobs</h3>
+        <p class="docrule">The capsule never changes shape; only what is inside it does. When a slider sets a <b>number</b> the thumb stays neutral and the fill carries the meaning. When it sets a <b>colour</b> the thumb carries the meaning and the fill goes away. That swap is what lets a hue ramp and an opacity row sit in the same panel and still read as siblings.</p>
+        <div class="docdd">
+          <span class="do">Show alpha on the thumb, over the same checkerboard as the track.</span>
+          <span class="no">Tint a neutral thumb with the accent. The fill already says it.</span>
+        </div>
+        <p class="docapi"><b>API</b> geometry is tokenised: <code>--sl-thumb-w</code> / <code>--sl-track</code> / <code>--sl-c</code>, so a density or colour change is one edit rather than forty.</p>
+      </div>
+    </div>
+
+    <!-- 3 · VARIANTS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Exposure</span><span class="slider bipolar" data-unit=" EV" data-dp="1" data-sign="1"><input type="range" min="-5" max="5" step=".1" value="1.4" aria-label="Exposure"><span class="sl-bub"></span></span><span class="num">+1.4 EV</span></span>
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Temperature</span><span class="slider bipolar"><input type="range" min="-100" max="100" value="-32" aria-label="Temperature"><span class="sl-bub"></span></span><span class="num">-32</span></span>
+            </span>
+            <span class="docsp-l"><b>Bipolar</b> .bipolar</span>
+            <p class="docsp-d">The fill grows out of the centre. Every signed adjustment is bipolar: a left-origin fill on a -100..100 control shows "half full" at zero, which is a lie.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Hue</span><span class="slider paint hue" style="--p:.72;--sl-c:#b14dff"><input type="range" min="0" max="360" value="259" aria-label="Hue"><span class="sl-bub"></span></span><span class="num">259°</span></span>
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Alpha</span><span class="slider paint alpha" style="--p:.85;--sl-to:#b14dff;--sl-c:#b14dff"><input type="range" min="0" max="100" value="85" aria-label="Alpha"><span class="sl-bub"></span></span><span class="num">85%</span></span>
+            </span>
+            <span class="docsp-l"><b>Paint</b> .paint · .hue · .alpha</span>
+            <p class="docsp-d">The groove <i>is</i> the value, so there is no fill. The thumb carries the current colour with a white keyline, so it stays visible over any part of the ramp.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Levels</span><span class="slider range" data-unit="" style="--p:.18;--p2:.86"><span class="sl-bub"></span></span><span class="num">18–86</span></span>
+            </span>
+            <span class="docsp-l"><b>Range</b> .range</span>
+            <p class="docsp-d">Two thumbs, fill between. Pointer-down grabs the <i>nearer</i> one, which is the only rule that feels right when the two sit close together.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Grid</span><span class="slider ticks" style="--steps:8" data-unit=" px"><input type="range" min="0" max="64" step="8" value="16" aria-label="Grid"><span class="sl-bub"></span></span><span class="num">16 px</span></span>
+              <span class="slrow" style="--slrow-l:64px"><span class="rl">Zoom</span><span class="slider sm" data-unit="%"><input type="range" min="25" max="400" value="100" aria-label="Zoom"><span class="sl-bub"></span></span><span class="num">100%</span></span>
+            </span>
+            <span class="docsp-l"><b>Ticks</b> .ticks · <b>Small</b> .sm</span>
+            <p class="docsp-d">A stepped control shows where it will land. The small size is for toolbars and dense rows; it keeps the same capsule, 16 × 11.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Variants</h3>
+        <p class="docrule">Four, each solving a problem the plain slider gets wrong rather than adding decoration. <b>Bipolar</b> for signed values, <b>paint</b> where the track carries the meaning, <b>range</b> for two ends of one thing, <b>ticks</b> where the value is discrete.</p>
+        <div class="docdd">
+          <span class="do">Use bipolar for anything that can be negative. It is not optional.</span>
+          <span class="no">Put a continuous slider on a value that only takes 4 settings.</span>
+        </div>
+        <p class="docapi"><b>API</b> the variant is derived from the property's schema (<code>range</code>, <code>signed</code>, <code>step</code>, <code>unit</code>), so a new adjustment gets the right slider without anyone choosing.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp"><span class="docsp-l">rest</span><span class="pad"><span class="slider" style="--p:.62"><input type="range" value="62" aria-label="rest"></span></span></div>
+          <div class="docsp"><span class="docsp-l">hover · groove darkens, thumb lifts</span><span class="pad"><span class="slider" style="--p:.62"><input type="range" value="62" aria-label="hover"><span class="sl-track" style="background:color-mix(in srgb,var(--line-strong) 80%,var(--ink) 20%)"><i class="sl-fill"></i></span><span class="sl-thumb" style="box-shadow:inset 0 1px 0 var(--edge-hi),var(--shadow-2);border-color:color-mix(in srgb,var(--accent) 34%,var(--edge-lo))"></span></span></span></div>
+          <div class="docsp"><span class="docsp-l">dragging · grows, bubble shows</span><span class="pad" style="padding-top:var(--s5)"><span class="slider drag" style="--p:.62"><input type="range" value="62" aria-label="drag"><span class="sl-bub">62%</span></span></span></div>
+          <div class="docsp"><span class="docsp-l">focus · ring on the thumb</span><span class="pad"><span class="slider" style="--p:.62"><input type="range" value="62" aria-label="focus"><span class="sl-track"><i class="sl-fill"></i></span><span class="sl-thumb" style="border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi),var(--ring)"></span></span></span></div>
+          <div class="docsp"><span class="docsp-l">at zero · thumb sits inside the groove</span><span class="pad"><span class="slider" style="--p:0"><input type="range" value="0" aria-label="zero"></span></span></div>
+          <div class="docsp"><span class="docsp-l">disabled</span><span class="pad"><span class="slider off" style="--p:.62"><input type="range" value="62" aria-label="disabled" disabled></span></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">States</h3>
+        <p class="docrule">The <b>ends</b> are the state everyone gets wrong. At 0 and at 100 the thumb must sit fully inside the groove, not half off the end, which means the travel is inset by half a thumb and the fill has to use the same inset. Both come from one expression here, so they cannot disagree.</p>
+        <div class="docdd">
+          <span class="do">Ring the thumb on focus, then drive it with arrow keys.</span>
+          <span class="no">Let the thumb overhang the track at 0. It looks broken, and it is.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>--p</code> is the only thing the visual layer reads; keyboard, pointer and a command all move the same value through the same input.</p>
+      </div>
+    </div>
+
+    <!-- 5 · THE FAMILY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad"><span class="dial"></span></span>
+            <span class="docsp-l"><b>Dial</b> .dial</span>
+            <p class="docsp-d">Angle only: rotation, a gradient's direction, a light source. Anything circular by nature, where a straight track would need a wrap-around.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="transport" style="border:0;background:transparent;box-shadow:none;padding:0">
+                <span class="tc">0:14</span>
+                <span class="scrub" data-duration="60" style="flex:1"><i class="fill" style="width:24%"></i><i class="knob" style="left:24%"></i><i class="mark" style="left:62%"></i></span>
+                <span class="tc">1:00</span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Scrubber</b> .scrub</span>
+            <p class="docsp-d">Time, not a value. Same capsule playhead at the large size, plus marks for cuts and keyframes that a slider has no concept of.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="gramp"><span class="gstop" style="left:6%;--stop-c:#7c4dff"><b></b><span class="line"></span></span><span class="gstop" style="left:46%;--stop-c:#b14dff"><b></b><span class="line"></span></span><span class="gstop" style="left:94%;--stop-c:#ff5d8f"><b></b><span class="line"></span></span></span>
+            </span>
+            <span class="docsp-l"><b>Gradient ramp</b> .gramp</span>
+            <p class="docsp-d">Many values on one track. The stops are square, not capsules, because they are objects you can select and delete, not a knob you drag along.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">The rest of the family</h3>
+        <p class="docrule">Three relatives that look like sliders and are not. The rule for telling them apart: a slider has <b>one value on a bounded scale</b>. A dial is angular, a scrubber is a position in time with marks on it, and a ramp holds a list of objects.</p>
+        <div class="docdd">
+          <span class="do">Use a dial only for angles. Everything else is a slider.</span>
+          <span class="no">Add marks to a slider. Marks mean it is a timeline.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node.rotation = 42</code> · <code>player.time = 14.2</code> · <code>paint.stops[1].at = .46</code>. Three shapes of data, three controls.</p>
+      </div>
+    </div>
+
+    <!-- 6 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">06</span><h3>In the API</h3><span class="k">the schema picks the control</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Property shape</th><th>Control</th><th>Why</th><th>Command</th></tr></thead>
+          <tbody>
+            <tr><td>0 to 1, unsigned</td><td><code>.slider</code></td><td>Left-origin fill reads as "how much"</td><td><code>layer.opacity = .62</code></td></tr>
+            <tr><td>-n to +n, signed</td><td><code>.slider.bipolar</code></td><td>Zero has to look like zero</td><td><code>adjust.exposure = 1.4</code></td></tr>
+            <tr><td>A colour channel</td><td><code>.slider.paint</code></td><td>The track shows the result before you commit</td><td><code>paint.hue = 259</code></td></tr>
+            <tr><td>Two ends of one thing</td><td><code>.slider.range</code></td><td>One control for one concept</td><td><code>levels.input = [18, 86]</code></td></tr>
+            <tr><td>Discrete steps</td><td><code>.slider.ticks</code></td><td>Shows where it will land</td><td><code>view.grid = 16</code></td></tr>
+            <tr><td>An angle</td><td><code>.dial</code></td><td>No wrap-around on a straight track</td><td><code>node.rotation = 42</code></td></tr>
+            <tr><td>A position in time</td><td><code>.scrub</code></td><td>Carries marks; not a bounded value</td><td><code>player.time = 14.2</code></td></tr>
+          </tbody>
+        </table>
+        <p class="docnote"><b>Compact windows</b>: the row folds from three columns to two, label and value on one line with the slider full width underneath (<code>.slrow.stack</code>), because a 72px label column plus a 46px value leaves nothing for the track in a 220px dock. <b>Reduced motion</b> drops the thumb's grow and the fill's ease; the value still updates live, since that is information, not decoration.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A slider is <b>coarse by nature</b>, so it never ships alone. The pairing that makes it professional is track for the gesture, number for the precision, and the number is draggable too, so you never have to switch tools to get the last two percent.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Holding a modifier while dragging could shrink the travel to a tenth of its range around the current value, so one gesture goes from coarse to fine without letting go. That is the behaviour people expect from a pro tool and it costs one line of hit-testing.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>SwiftUI's <code>Slider</code> gives us none of this: no bipolar fill, no paint track, no bubble, no scrub label. Do we wrap <code>NSSlider</code> and fight its cell drawing, or draw the whole control ourselves and accept owning the accessibility work?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

@@ -42,21 +42,90 @@
   box-shadow: var(--lg-shadow);
   pointer-events: none;
   opacity: 0;
-  transform: translateY(2px);
-  transition: opacity .1s ease, transform .1s ease;
+  transition: opacity .12s ease, transform .14s cubic-bezier(.32, .72, 0, 1);
 }
-.tip.on { opacity: 1; transform: none; }
+/* THE ENTRANCE COMES FROM THE TRIGGER. A tooltip above the control rises into
+   place, one below drops, one to the left slides right. The direction is the
+   information: it says which thing the label belongs to before you have read a
+   word of it. A single translateY for all four sides gets this backwards half
+   the time. */
+.tip[data-side="top"]    { transform: translateY(5px) }
+.tip[data-side="bottom"] { transform: translateY(-5px) }
+.tip[data-side="left"]   { transform: translateX(5px) }
+.tip[data-side="right"]  { transform: translateX(-5px) }
+.tip.on { opacity: 1; transform: none }
+/* WARM: moving along a toolbar. Once a tooltip is open, the next control's
+   label replaces it INSTANTLY and in place — no fade, no slide. Animating each
+   swap turns a row of icons into a slideshow you have to wait through, and the
+   whole point of sweeping a toolbar is to read it at speed. The animation is
+   for the first one only. */
+.tip.warm { transition: none }
 
-/* the beak: same solid fill, no border, so it cannot seam */
-.tip::after {
+/* THE BEAK. Same solid fill, no border, so it cannot seam — and the same
+   SHAPE as the color picker's gradient-stop callout: shoulders that ease off
+   the plate's edge, and a point that is BLUNTED rather than needle-sharp.
+
+   A CSS border triangle gives you a hard 90-degree shoulder and a mathematical
+   point. Nothing else in this app has either: every corner is rounded, every
+   junction is eased. A sharp beak is the single detail that makes an otherwise
+   native-looking tooltip read as a web tooltip, so the beak is a clipped path
+   instead. One box, one fill, drawn twice, still no junction to leak.
+
+   A WIDE, SHORT nub: shoulders that FLARE outward into the plate's edge, walls
+   that taper, a blunted point. Not a neck — a narrow beak with parallel walls
+   and a rounded end reads as a drip hanging off the card.
+
+   THE SHOULDER FILLET IS THE WHOLE JOB, and it took three tries. The colour
+   picker's callout eases its shoulder over 4.5px horizontally but only 1.5px
+   vertically, which works there because the beak is part of the card's own
+   path and every pixel of it shows. Copied to a tooltip it read as a hard
+   corner, for two compounding reasons: the fillet is so shallow that it is
+   essentially finished within the first pixel of drop, and the beak was hung
+   1px INTO the plate to avoid a seam — which hid exactly that pixel.
+
+   So the shoulder is a cubic that turns over 7px across and 4.2px down, and
+   its exit control point is placed ON the wall's own line so the curve and the
+   straight section share a tangent and cannot kink. The overlap into the plate
+   is half a pixel: enough that no hairline shows between two shapes meant to
+   be one, not enough to eat the corner.
+
+   Box 24 x 9, tip at (12, 8.6). */
+.tip::after,
+.tip-demo::after {
   content: "";
   position: absolute;
-  border: 5px solid transparent;
+  width: 24px;
+  height: 9px;
+  background: var(--ink);
+  clip-path: path("M0 0 C4.5 0 5.96 3 7 4.2 L9.6 7.2 Q12 10 14.4 7.2 L17 4.2 C18.04 3 19.5 0 24 0 Z");
 }
-.tip[data-side="top"]::after    { top: 100%;  left: var(--tip-x, 50%); transform: translateX(-50%); border-top-color: var(--ink) }
-.tip[data-side="bottom"]::after { bottom: 100%; left: var(--tip-x, 50%); transform: translateX(-50%); border-bottom-color: var(--ink) }
-.tip[data-side="left"]::after   { left: 100%; top: 50%; transform: translateY(-50%); border-left-color: var(--ink) }
-.tip[data-side="right"]::after  { right: 100%; top: 50%; transform: translateY(-50%); border-right-color: var(--ink) }
+.tip[data-side="top"]::after    { top: calc(100% - .5px);    left: var(--tip-x, 50%); transform: translateX(-50%) }
+.tip[data-side="bottom"]::after { bottom: calc(100% - .5px); left: var(--tip-x, 50%); transform: translateX(-50%) rotate(180deg) }
+/* SIDED TOOLTIPS GET A SMALLER BEAK, and this is not a taste call. A beak has
+   to seat on the STRAIGHT part of the edge it grows from. Along the top edge
+   there is plenty: a tooltip is 40px+ wide. Along the SIDE there is almost
+   none — a one-line tooltip is 22px tall with a 6px corner radius, so the
+   straight run is 10px, and a 24px base overhangs both rounded corners by 7px.
+   Those overhanging shoulder fillets float free of the plate and read as horns.
+
+   So the side beak is the same path at 58%, a 14px base, and a sided tooltip
+   takes a min-height that guarantees a straight run long enough to seat it. */
+.tip[data-side="left"]::after,
+.tip[data-side="right"]::after {
+  width: 14px;
+  height: 6px;
+  clip-path: path("M0 0 C2.63 0 3.48 1.75 4.08 2.45 L5.6 4.2 Q7 5.83 8.4 4.2 L9.92 2.45 C10.52 1.75 11.38 0 14 0 Z");
+}
+.tip[data-side="left"],
+.tip[data-side="right"] {
+  min-height: 26px;              /* 14 base + 2 x 6 corner radius */
+  display: flex;
+  align-items: center;
+}
+/* rotating the 14 x 6 box about its own centre keeps the centre put, so the
+   flat edge lands 3px to one side of it — hence the offset on each. */
+.tip[data-side="left"]::after   { left: calc(100% + 2.5px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg) }
+.tip[data-side="right"]::after  { left: -2.5px;             top: 50%; transform: translate(-50%, -50%) rotate(90deg) }
 
 /* a shortcut hint reads quieter than the label it belongs to */
 .tip .k {
@@ -80,16 +149,12 @@
   font-weight: 560;
   white-space: nowrap;
 }
-.tip-demo::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--ink);
-}
+.tip-demo::after { top: calc(100% - .5px); left: 50%; transform: translateX(-50%) }
 
 @media (prefers-reduced-motion: reduce) {
-  .tip { transition: none }
+  /* the fade stays — it is what tells you a NEW label appeared — but nothing
+     travels, so the directional entrance collapses to a straight cross-fade */
+  .tip { transition: opacity .12s ease }
+  .tip[data-side="top"],.tip[data-side="bottom"],
+  .tip[data-side="left"],.tip[data-side="right"] { transform: none }
 }

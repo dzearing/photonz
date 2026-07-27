@@ -22,8 +22,18 @@
   if (window.__photonzTip) return;           // idempotent: safe to run twice
   window.__photonzTip = true;
 
-  var DELAY_IN = 380, DELAY_OUT = 60, GAP = 8, EDGE = 6;
-  var node = null, timer = null, current = null;
+  /* GAP is the CLEAR SPACE BETWEEN THE BEAK'S TIP AND THE TRIGGER, not between
+     the plate and the trigger. That distinction is the whole bug it fixes: the
+     beak protrudes ~9px past the plate, so an 8px plate offset put the tip
+     flat against the control and the tooltip read as growing out of it.
+     The offset the plate actually gets is GAP + the beak's protrusion, and the
+     side beak is smaller (see tooltip.css) so it gets its own number. */
+  var DELAY_IN = 380, DELAY_OUT = 60, EDGE = 6;
+  var GAP = 6, BEAK = 9, BEAK_SIDE = 5;
+  var node = null, timer = null, closer = null, current = null;
+  function offsetFor(side) {
+    return GAP + (side === 'left' || side === 'right' ? BEAK_SIDE : BEAK);
+  }
 
   function ensure() {
     if (node) return node;
@@ -54,18 +64,20 @@
     var vw = window.innerWidth, vh = window.innerHeight;
 
     // flip to the opposite side when the preferred one would clip
-    if (side === 'top' && r.top - b.height - GAP < EDGE) side = 'bottom';
-    else if (side === 'bottom' && r.bottom + b.height + GAP > vh - EDGE) side = 'top';
-    else if (side === 'left' && r.left - b.width - GAP < EDGE) side = 'right';
-    else if (side === 'right' && r.right + b.width + GAP > vw - EDGE) side = 'left';
+    var off = offsetFor(side);
+    if (side === 'top' && r.top - b.height - off < EDGE) side = 'bottom';
+    else if (side === 'bottom' && r.bottom + b.height + off > vh - EDGE) side = 'top';
+    else if (side === 'left' && r.left - b.width - off < EDGE) side = 'right';
+    else if (side === 'right' && r.right + b.width + off > vw - EDGE) side = 'left';
     t.setAttribute('data-side', side);
+    off = offsetFor(side);
 
     var x, y;
     if (side === 'top' || side === 'bottom') {
       x = r.left + r.width / 2 - b.width / 2;
-      y = side === 'top' ? r.top - b.height - GAP : r.bottom + GAP;
+      y = side === 'top' ? r.top - b.height - off : r.bottom + off;
     } else {
-      x = side === 'left' ? r.left - b.width - GAP : r.right + GAP;
+      x = side === 'left' ? r.left - b.width - off : r.right + off;
       y = r.top + r.height / 2 - b.height / 2;
     }
     // keep it on screen, then walk the beak back to the trigger's centre so it
@@ -78,37 +90,79 @@
     t.style.top = Math.round(y) + 'px';
   }
 
-  function show(el) {
+  function show(el, warm) {
     var t = ensure();
     t.innerHTML = label(el);
     current = el;
+    if (warm) {
+      /* already open: land the new label in place with no animation at all,
+         then hand the transition back so the eventual exit still fades */
+      t.classList.add('warm');
+      place(el);
+      t.classList.add('on');
+      requestAnimationFrame(function () { t.classList.remove('warm'); });
+      return;
+    }
+    /* cold: the node has to be measurably in its FROM state before `.on` is
+       added, or the browser coalesces both into one style resolution and no
+       transition runs. Reading offsetWidth forces that flush — without it the
+       entrance animation silently never played. */
+    t.classList.remove('on', 'warm');
     place(el);
+    void t.offsetWidth;
     t.classList.add('on');
   }
 
-  function hide() {
+  /* Leaving a control and entering the next one fires pointerout BEFORE
+     pointerover, so hiding immediately on leave meant the tooltip was always
+     closed by the time the neighbour asked for one — and the "instant between
+     neighbours" behaviour could never happen, because the swap path only runs
+     when a tooltip is already open. So a leave SCHEDULES the hide and any new
+     trigger cancels it. Sweeping a toolbar now keeps one tooltip alive the
+     whole way across. Escape, a press or a scroll still hide immediately:
+     those mean "gone", not "moving on". */
+  function hide(immediate) {
     clearTimeout(timer);
-    current = null;
-    if (node) node.classList.remove('on');
+    clearTimeout(closer);
+    if (immediate) {
+      current = null;
+      if (node) node.classList.remove('on');
+      return;
+    }
+    closer = setTimeout(function () {
+      current = null;
+      if (node) node.classList.remove('on');
+    }, DELAY_OUT);
   }
 
   function trigger(e) {
     var el = e.target.closest && e.target.closest('[data-tip]');
-    if (!el || el === current) return;
+    if (!el) return;
+    clearTimeout(closer);                                  // cancel a pending leave
+    if (el === current) return;
     clearTimeout(timer);
     var now = !!(node && node.classList.contains('on'));   // already open: swap
-    timer = setTimeout(function () { show(el); }, now ? DELAY_OUT : DELAY_IN);
+    timer = setTimeout(function () { show(el, now); }, now ? DELAY_OUT : DELAY_IN);
   }
 
   document.addEventListener('pointerover', trigger);
   document.addEventListener('focusin', trigger);
+  /* `pointerout` fires when the pointer crosses onto a CHILD of the trigger —
+     and every icon button has a child, the glyph. Hiding on that made the
+     tooltip flicker off and on as you moved around inside a single button.
+     The pointer has only really left when relatedTarget is outside the
+     trigger, so check that rather than trusting the event's target. */
   document.addEventListener('pointerout', function (e) {
-    if (current && e.target.closest && e.target.closest('[data-tip]') === current) hide();
+    if (!current || !e.target.closest) return;
+    if (e.target.closest('[data-tip]') !== current) return;
+    var to = e.relatedTarget;
+    if (to && to.nodeType === 1 && current.contains(to)) return;   // still inside
+    hide(false);                                                   // grace period
   });
-  document.addEventListener('focusout', hide);
-  document.addEventListener('pointerdown', hide);
-  document.addEventListener('scroll', hide, true);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  document.addEventListener('focusout', function () { hide(false); });
+  document.addEventListener('pointerdown', function () { hide(true); });
+  document.addEventListener('scroll', function () { hide(true); }, true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(true); });
 
   /* Upgrade native title= to the styled tooltip. Runs once now and again
      whenever the shell component adds controls (it sets title= on harvested

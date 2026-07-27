@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-fields</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-fields — layout from docpage. Local rules only for the inspector
+     specimen and the arithmetic strip. */
+  #comp-fields .cf-insp{width:264px;border-radius:var(--r3);border:1px solid var(--edge-lo);
+    background:color-mix(in srgb,var(--panel) 55%,transparent);padding:var(--pad-sm);
+    display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #comp-fields .cf-math{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:10.5px}
+  #comp-fields .cf-math .ln{display:flex;align-items:center;gap:var(--gap-sm);color:var(--dim)}
+  #comp-fields .cf-math .ln .in{min-width:88px;color:var(--ink)}
+  #comp-fields .cf-math .ln .ar{color:var(--faint)}
+  #comp-fields .cf-math .ln .out{color:var(--accent)}
+  #comp-fields .cf-cursor{position:absolute;pointer-events:none;color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-fields">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Fields &amp; choice</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">Everything you type into or pick from. A pro editor is mostly <b>numbers in a narrow panel</b>, so the number field is the most important control in the app and the one the platform gives us the least help with. The text field, the select and the three toggles are the supporting cast, and the rule for choosing between the toggles is written down here rather than left to taste.</p>
+
+    <!-- 1 · THE NUMBER FIELD -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp">
+            <span class="docsp-l"><b>Position &amp; size</b> the 2-up grid</span>
+            <span class="pad col">
+              <span class="numgrid">
+                <span class="stepper"><span class="k">X</span><input value="128"><b class="sp"><button aria-label="up"><i class="ic ic-chevron-up"></i></button><button aria-label="down"><i class="ic ic-chevron-down"></i></button></b></span>
+                <span class="stepper"><span class="k">Y</span><input value="64"><b class="sp"><button aria-label="up"><i class="ic ic-chevron-up"></i></button><button aria-label="down"><i class="ic ic-chevron-down"></i></button></b></span>
+                <span class="stepper"><span class="k">W</span><input value="320"><b class="sp"><button aria-label="up"><i class="ic ic-chevron-up"></i></button><button aria-label="down"><i class="ic ic-chevron-down"></i></button></b></span>
+                <span class="stepper"><span class="k">H</span><input value="180"><b class="sp"><button aria-label="up"><i class="ic ic-chevron-up"></i></button><button aria-label="down"><i class="ic ic-chevron-down"></i></button></b></span>
+              </span>
+            </span>
+          </div>
+          <div class="docsp">
+            <span class="docsp-l"><b>Typed arithmetic</b></span>
+            <span class="pad col">
+              <span class="cf-math">
+                <span class="ln"><span class="in">320/2</span><span class="ar">→</span><span class="out">160</span></span>
+                <span class="ln"><span class="in">+16</span><span class="ar">→</span><span class="out">336</span></span>
+                <span class="ln"><span class="in">2.5in</span><span class="ar">→</span><span class="out">240</span></span>
+                <span class="ln"><span class="in">50%</span><span class="ar">→</span><span class="out">160</span></span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">The number field</h3>
+        <p class="docrule">Four behaviours make it feel professional, and all four have to be there: <b>drag the label</b> sideways to change the value, <b>type arithmetic</b> and units, <b>arrow keys step</b> (with shift for 10x), and <b>spinners appear on hover</b> so forty of these in a panel stay quiet. Right-aligned tabular figures so a column of numbers is readable as a column.</p>
+        <div class="docdd">
+          <span class="do">Ship the scrub gesture. It is what people reach for first.</span>
+          <span class="no">Round the display and keep a different value underneath.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node.frame.w = 320</code>. The field parses the expression, the command takes the number. One undo entry per commit, not per keystroke.</p>
+      </div>
+    </div>
+
+    <!-- 2 · NUMBER STATES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp mid"><span class="docsp-l">rest</span><span class="pad"><span class="stepper sm"><span class="k">R</span><input value="12"></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">hover · spinners</span><span class="pad"><span class="stepper sm" style="border-color:color-mix(in srgb,var(--accent) 26%,var(--edge-lo))"><span class="k">R</span><input value="12"><b class="sp" style="opacity:1"><button aria-label="up"><i class="ic ic-chevron-up"></i></button><button aria-label="down"><i class="ic ic-chevron-down"></i></button></b></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><span class="stepper sm" style="border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi),var(--ring)"><span class="k">R</span><input value="12"></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">mixed selection</span><span class="pad"><span class="stepper sm mixed"><span class="k">R</span><input value="Mixed"></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">bound to a token</span><span class="pad"><span class="stepper sm linked"><span class="k">R</span><input value="radius/md"></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">disabled</span><span class="pad"><span class="stepper sm"><span class="k">R</span><input value="12" disabled></span></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Number states</h3>
+        <p class="docrule">Two states here exist nowhere else in the system and both matter. <b>Mixed</b> is what a multi-selection shows: the word, not a made-up average, and typing replaces it for every selected object. <b>Bound</b> means the value comes from a token or a constraint, so editing it either breaks the link or asks first.</p>
+        <div class="docdd">
+          <span class="do">Show the token name when a value is bound, not the resolved number.</span>
+          <span class="no">Show 0 for a mixed selection. Zero is a value someone might keep.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>selection.frame.w</code> returns <code>mixed</code> for a heterogeneous selection; assigning to it applies to all.</p>
+      </div>
+    </div>
+
+    <!-- 3 · TEXT FIELDS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <label class="input block"><span class="k">Name</span><input value="Hero card"></label>
+              <label class="input block search" style="margin-top:var(--gap-sm)"><i class="ic ic-search"></i><input placeholder="Search layers and components"></label>
+              <label class="input block mono" style="margin-top:var(--gap-sm)"><span class="k">HEX</span><input value="7C4DFF"><span class="u">#</span></label>
+            </span>
+            <span class="docsp-l"><b>Single line</b> .input · .search · .mono</span>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <label class="input area block"><textarea rows="3">Alt text for the exported image, used by screen readers and by search.</textarea></label>
+            </span>
+            <span class="docsp-l"><b>Multiline</b> .input.area</span>
+            <p class="docsp-d">Grows vertically only. Never auto-grows past four lines in a panel; it scrolls instead so the panel below does not move.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Text fields</h3>
+        <p class="docrule">A <b>rounded rectangle, not a capsule</b>, and that is deliberate: a capsule says "press me", a well says "put something here". The round ends would also waste the first and last 8px of a 92px field and stop a column of values from lining up. Monospace whenever the content is compared down a column: hex, sizes, timecode.</p>
+        <div class="docdd">
+          <span class="do">Commit on blur and on Return; Escape reverts.</span>
+          <span class="no">Validate on every keystroke. Validate when they stop typing.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node.name = "Hero card"</code>. Search is <code>find("hero")</code> and returns nodes, so an <b data-target="agent">agent</b> uses the same index the field does.</p>
+      </div>
+    </div>
+
+    <!-- 4 · SELECT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Plain</b></span><span class="pad"><span class="select" style="min-width:148px"><span class="lead">Multiply</span><i class="car ic ic-chevron-down"></i></span></span></div>
+          <div class="docsp"><span class="docsp-l"><b>With a preview</b></span><span class="pad"><span class="select" style="min-width:158px"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Sunset / 3 stops</span><i class="car ic ic-chevron-down"></i></span></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Open</b></span><span class="pad col" style="align-items:stretch">
+            <span class="select" style="border-color:var(--accent)"><span class="lead">Multiply</span><i class="car ic ic-chevron-down"></i></span>
+            <span class="menu" style="margin-top:var(--s1);padding:var(--s1)">
+              <span class="menuitem">Normal</span>
+              <span class="menuitem on"><i class="ic ic-check"></i>Multiply</span>
+              <span class="menuitem">Screen</span>
+              <span class="menu-sep"></span>
+              <span class="menuitem">Overlay</span>
+            </span>
+          </span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">Select</h3>
+        <p class="docrule">For <b>5 or more exclusive options</b>, or fewer when space is tight. Below that use a <code>.seg</code>. The closed state always shows the current value in full, never a placeholder, and the open menu <b>ticks the current item</b> rather than highlighting it, because highlight means "keyboard cursor is here".</p>
+        <div class="docdd">
+          <span class="do">Show a preview swatch when the option has a visual result.</span>
+          <span class="no">Use a select for two options. That is a segmented control.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>layer.blend = "multiply"</code>. The option list is <code>enum("blend")</code>, so the menu and the completion an agent sees are the same list.</p>
+      </div>
+    </div>
+
+    <!-- 5 · SWITCH / CHECK / RADIO -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="setrow"><span class="rl">Snap to pixel</span><label class="switch"><input type="checkbox" checked><i></i></label></span>
+              <span class="setrow"><span class="rl">Show rulers</span><label class="switch"><input type="checkbox"><i></i></label></span>
+              <span class="setrow"><span class="rl">Smart guides</span><label class="switch"><input type="checkbox" checked disabled><i></i></label></span>
+            </span>
+            <span class="docsp-l"><b>Switch</b> takes effect now</span>
+            <p class="docsp-d">A setting with no OK button. Panels, canvas overlays, capture options. It reads as a <i>state</i>.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="choices">
+                <label class="check"><input type="checkbox" checked><i></i><span>Include hidden layers</span></label>
+                <label class="check"><input type="checkbox"><i></i><span>Strip metadata</span></label>
+                <label class="check"><input type="checkbox" id="cf-ind"><i></i><span>All artboards</span></label>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Checkbox</b> a list of options</span>
+            <p class="docsp-d">Independent choices, or something committed later by a button. It reads as a <i>choice you are making</i>. The mixed form is a bar, the Finder convention.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="choices">
+                <label class="radio"><input type="radio" name="cf-fit" checked><i></i><span>Fit</span></label>
+                <label class="radio"><input type="radio" name="cf-fit"><i></i><span>Fill</span></label>
+                <label class="radio"><input type="radio" name="cf-fit"><i></i><span>Stretch</span></label>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Radio</b> one of a small set</span>
+            <p class="docsp-d">2 to 4 exclusive options where you want all of them and their labels visible. More than that, or tight space, use a select.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">Switch, check, radio</h3>
+        <p class="docrule">The choice between them is about <b>when it takes effect and how many there are</b>, never about which looks better in the layout. Geometry follows the round-inside-round rule: the knob in a capsule track is a circle, the checkbox is a rounded square so it cannot be mistaken for a switch at a glance.</p>
+        <div class="docdd">
+          <span class="do">Put the switch on the right of its label, in a <code>.setrow</code>.</span>
+          <span class="no">Use a switch for something that only applies when you press Apply.</span>
+        </div>
+        <p class="docapi"><b>API</b> a switch writes immediately (<code>view.snap = true</code>); a checkbox collects into the command's options (<code>run("file.export", {hidden:true})</code>).</p>
+      </div>
+    </div>
+
+    <!-- 6 · IN CONTEXT -->
+    <div class="docblk">
+      <div class="docspec top">
+        <div class="cf-insp">
+          <div class="mlabel">Frame</div>
+          <div class="numgrid">
+            <span class="stepper sm"><span class="k">X</span><input value="128"></span>
+            <span class="stepper sm"><span class="k">Y</span><input value="64"></span>
+            <span class="stepper sm"><span class="k">W</span><input value="320"></span>
+            <span class="stepper sm"><span class="k">H</span><input value="180"></span>
+          </div>
+          <div class="mlabel">Appearance</div>
+          <div class="setrow"><span class="rl">Blend</span><span class="select" style="min-width:104px"><span class="lead">Multiply</span><i class="car ic ic-chevron-down"></i></span></div>
+          <div class="slrow" style="--slrow-l:56px"><span class="rl">Opacity</span><span class="slider sm" data-unit="%"><input type="range" min="0" max="100" value="62" aria-label="Opacity"><span class="sl-bub"></span></span><span class="num">62%</span></div>
+          <div class="setrow"><span class="rl">Corner</span><span class="stepper sm" style="min-width:74px"><span class="k">R</span><input value="12"></span></div>
+          <div class="setrow"><span class="rl">Clip content</span><label class="switch sm"><input type="checkbox" checked><i></i></label></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">06</div><h3 class="docname">In context</h3>
+        <p class="docrule">A real 264px inspector column. Every row is <b>label left, control right</b>, on the same grid, with a 9px uppercase caption over each run. That rhythm is what lets you scan forty values without reading any of them, and it is why the row containers (<code>.setrow</code>, <code>.slrow</code>, <code>.numgrid</code>) ship with the components rather than being written per panel.</p>
+        <div class="docdd">
+          <span class="do">Let controls fill the right column to a common width.</span>
+          <span class="no">Mix 24px and 32px controls in one panel. Pick the density once.</span>
+        </div>
+        <p class="docapi"><b>API</b> the whole column is generated from the selected node's schema, so a new property gets the right control without anyone laying out a panel.</p>
+      </div>
+    </div>
+
+    <!-- 7 · TABLE -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">07</span><h3>In the API</h3><span class="k">picking the right control</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Control</th><th>Class</th><th>Use when</th><th>Command shape</th></tr></thead>
+          <tbody>
+            <tr><td><b>Number</b></td><td><code>.stepper</code></td><td>Any numeric property. Always, with scrub and arithmetic.</td><td><code>node.frame.w = 320</code></td></tr>
+            <tr><td><b>Text</b></td><td><code>.input</code></td><td>A name, a label, alt text, a search query</td><td><code>node.name = "Hero"</code></td></tr>
+            <tr><td><b>Multiline</b></td><td><code>.input.area</code></td><td>Prose: alt text, notes, a prompt</td><td><code>node.alt = "…"</code></td></tr>
+            <tr><td><b>Select</b></td><td><code>.select</code></td><td>5+ exclusive options, or tight space</td><td><code>layer.blend = "multiply"</code></td></tr>
+            <tr><td><b>Segmented</b></td><td><code>.seg</code></td><td>2 to 4 exclusive options, all visible</td><td><code>node.fit = "cover"</code></td></tr>
+            <tr><td><b>Switch</b></td><td><code>.switch</code></td><td>A setting that applies immediately</td><td><code>view.snap = true</code></td></tr>
+            <tr><td><b>Checkbox</b></td><td><code>.check</code></td><td>Independent options, or committed later</td><td><code>{hidden:true}</code> in a command's options</td></tr>
+            <tr><td><b>Radio</b></td><td><code>.radio</code></td><td>2 to 4 exclusive options that need sentences</td><td><code>export.scale = "2x"</code></td></tr>
+          </tbody>
+        </table>
+        <p class="docnote"><b>Compact windows</b> keep the control and drop the label into a tooltip; a <code>.numgrid</code> falls from 2-up to 1-up before any field shrinks below 60px, because a number field narrower than that cannot show four digits and a unit. <b>Every field commits on blur and on Return, and reverts on Escape</b> — one rule, no per-panel exceptions, so you can always back out of a mistake the same way.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>The number field is the app. Getting scrub, arithmetic, units, stepping and the mixed state right in <b>one</b> control is worth more than any other component on this page, because it appears hundreds of times per session.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because values can be bound to tokens, a field could show its <i>source</i> on hover: the token, the constraint, or the component property driving it, with one click to jump there. The panel becomes a way to navigate the document, not just edit it.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Unit parsing is a rabbit hole. Do we support inches, points and percent everywhere, or only where the document has a physical size? Percent of <i>what</i> is ambiguous the moment a layer is inside a group.</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  // the mixed-state checkbox on this page is a specimen, so set it explicitly
+  (function(){ var c = document.getElementById('cf-ind'); if (c) c.indeterminate = true; })();
+</script>
+</body>
+</html>

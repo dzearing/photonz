@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · layers-pane</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local CSS for the ONE thing this page documents: the Layers pane.
+     The reference LAYOUT is the shared `docpage` component; the pane itself
+     is the real DS (.pdock › .dgrp › .dgrp-h + .dgrp-b, .lrow/.lgroup).
+     Local names are prefixed `lyp-` so they cannot shadow a DS class.
+     ============================================================ */
+
+  /* a bounded frame the size of a real panel, so a lone pane reads as docked */
+  #layers-pane .lyp-dock{width:276px;max-width:100%;height:516px;flex:none;
+    border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden}
+  #layers-pane .lyp-dock.md{height:332px}
+  #layers-pane .lyp-dock.sm{height:264px}
+  #layers-pane .lyp-dock .pdock{height:100%;width:100%;max-width:none;border-left:0}
+
+  /* specimen on the left, its numbered legend on the right */
+  #layers-pane .lyp-anat{display:grid;grid-template-columns:276px 1fr;gap:var(--gap-lg);align-items:start}
+  #layers-pane .lyp-leg{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #layers-pane .lyp-leg .lyp-li{display:flex;gap:var(--gap-sm);align-items:baseline;
+    font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #layers-pane .lyp-leg .lyp-li b{color:var(--ink);font-weight:600}
+  #layers-pane .lyp-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #layers-pane .lyp-pin{flex:none;width:15px;height:15px;border-radius:50%;background:var(--accent);
+    color:var(--accent-ink);font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #layers-pane .lyp-pin.p2{background:var(--comp);color:#fff}
+
+  /* THE ANATOMY OF ONE ROW, blown up and labeled. The row and its tick strip
+     share ONE grid definition, so the labels line up with the slots by
+     construction rather than by hand-tuned percentages. The three trailing
+     slots get wide cells purely so their labels have room: this is a diagram
+     of a row, drawn at diagram spacing. */
+  #layers-pane .lyp-rowzoom{border:1px solid var(--edge-lo);border-radius:var(--r3);
+    background:var(--panel-2);padding:var(--pad-sm) 0 var(--gap-sm);overflow:hidden}
+  #layers-pane .lyp-zgrid{display:grid;grid-template-columns:64px 64px 1fr 92px 92px 92px;
+    gap:var(--gap-sm);align-items:center;padding:0 var(--pad)}
+  #layers-pane .lyp-zrow{min-height:38px;border-left:2px solid var(--accent);
+    background:var(--accent-soft);margin:0 var(--s2);border-radius:0 var(--r-sm) var(--r-sm) 0;
+    padding-left:calc(var(--pad) - var(--s2))}
+  #layers-pane .lyp-zrow>*{justify-self:center}
+  #layers-pane .lyp-zrow .ic{color:var(--faint)}
+  #layers-pane .lyp-zrow .lyp-dim{opacity:.3}
+  #layers-pane .lyp-znm{justify-self:start;font-size:14px;color:var(--ink);font-weight:520}
+  #layers-pane .lyp-zdot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  /* a collapsed group whose subtree holds the selection */
+  #layers-pane .lyp-seldot{display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--accent);box-shadow:var(--glow-sm);margin-left:6px;vertical-align:1px;flex:none}
+  #layers-pane .lyp-zmask{width:20px;height:16px;border-radius:3px;border:1px solid var(--edge-lo)}
+  #layers-pane .lyp-ticks{padding-top:var(--s2)}
+  #layers-pane .lyp-ticks .lyp-t{display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-family:var(--mono);font-size:8.5px;color:var(--faint);text-align:center;line-height:1.3}
+  #layers-pane .lyp-ticks .lyp-t::before{content:"";width:1px;height:10px;background:var(--line-strong)}
+  #layers-pane .lyp-ticks .lyp-t b{color:var(--dim);font-weight:600;font-family:var(--sans);font-size:9.5px}
+
+  /* VISUAL RULE 9 inside a tree row: a group's child count is a badge right
+     after its label, matching the pane header's own count. Scoped refinement
+     of the DS `.lgroup .cnt`, which is otherwise a plain muted annotation. */
+  #layers-pane .lgroup .cnt{font-weight:600;letter-spacing:0;text-transform:none;font-size:9.5px;
+    color:var(--dim);font-family:var(--mono);font-variant-numeric:tabular-nums;
+    padding:0 5px;border-radius:999px;line-height:1.6;margin-left:2px;
+    background:var(--glass-thin);border:1px solid var(--edge-lo)}
+
+  /* the row-type catalogue */
+  #layers-pane .lyp-kinds{display:flex;flex-direction:column;gap:0;
+    border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
+  #layers-pane .lyp-kind{display:grid;grid-template-columns:212px 1fr;gap:var(--gap);align-items:center;
+    padding:var(--gap-sm) var(--pad-sm);border-bottom:1px solid var(--line-soft)}
+  #layers-pane .lyp-kind:last-child{border-bottom:0}
+  #layers-pane .lyp-kind .lyp-k{font-size:11px;color:var(--dim);line-height:1.45;min-width:0}
+  #layers-pane .lyp-kind .lyp-k b{color:var(--ink);font-weight:600}
+  #layers-pane .lyp-kind .lyp-k code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #layers-pane .lyp-kind .lrow{border-radius:var(--r-sm);pointer-events:none}
+
+  /* drag-and-drop illustration: the drop line and its indent */
+  #layers-pane .lyp-drop{position:relative}
+  #layers-pane .lyp-dropline{position:absolute;left:0;right:0;height:2px;background:var(--accent);
+    box-shadow:var(--glow-sm);z-index:6;border-radius:2px}
+  #layers-pane .lyp-dropline::before{content:"";position:absolute;left:0;top:50%;width:7px;height:7px;
+    border-radius:50%;background:var(--accent);transform:translate(-2px,-50%)}
+  #layers-pane .lyp-ghost{opacity:.42}
+  /* the row riding under the cursor while you drag */
+  #layers-pane .lyp-carry{position:absolute;z-index:8;left:var(--s5);width:190px;
+    border-radius:var(--r-sm);background:var(--glass-menu);border:1px solid var(--edge-lo);
+    box-shadow:var(--lg-shadow);transform:rotate(-1.2deg)}
+  #layers-pane .lyp-carry .lrow{border-radius:var(--r-sm)}
+  #layers-pane .lyp-carry .cnt{margin-left:auto}
+
+  /* keyboard tables */
+  #layers-pane .lyp-keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s1) var(--gap-lg)}
+  #layers-pane .lyp-keys .lyp-kr{display:grid;grid-template-columns:104px 1fr;gap:var(--gap-sm);
+    align-items:baseline;font-size:11px;color:var(--dim);line-height:1.6;
+    padding:var(--s1) 0;border-bottom:1px solid var(--line-soft)}
+  #layers-pane .lyp-keys .lyp-kr:last-child{border-bottom:0}
+  #layers-pane .lyp-keys kbd{font-family:var(--mono);font-size:10.5px;color:var(--ink);
+    background:var(--glass-thin);border:1px solid var(--edge-lo);border-bottom-width:2px;
+    border-radius:5px;padding:2px 6px;white-space:nowrap}
+  #layers-pane .lyp-keys .lyp-kr b{color:var(--ink);font-weight:600}
+
+  /* do / don't in the wide two-column form */
+  #layers-pane .lyp-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #layers-pane .lyp-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #layers-pane .lyp-dd .lyp-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #layers-pane .lyp-dd .lyp-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* the three-places-at-once figure */
+  #layers-pane .lyp-three{display:grid;grid-template-columns:1fr 276px;gap:0;
+    border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;height:412px}
+  #layers-pane .lyp-three .canvas{min-height:0;height:100%}
+  #layers-pane .lyp-three .pdock{height:100%;width:100%;max-width:none}
+  /* "one selection, three places" badges. The two that point into the panel are
+     placed from the MEASURED position of the pane they name (see the script at
+     the foot of the page), so they cannot drift when a pane budget changes. */
+  #layers-pane .lyp-badge{position:absolute;z-index:12;font-family:var(--mono);font-size:9px;font-weight:600;
+    padding:2px 6px;border-radius:5px;background:var(--accent);color:var(--accent-ink);
+    box-shadow:var(--shadow-1);white-space:nowrap}
+  #layers-pane .lyp-badge[data-lyp-point]{right:288px}
+
+  /* a stand-in for pane content elsewhere in the panel */
+  #layers-pane .lyp-fill{display:flex;flex-direction:column;gap:5px;padding:var(--s2) var(--s3)}
+  #layers-pane .lyp-fill i{display:block;height:7px;border-radius:3px;background:var(--line);opacity:.8}
+  #layers-pane .lyp-fill i:nth-child(3n){width:72%}
+  #layers-pane .lyp-fill i:nth-child(3n+1){width:88%}
+  #layers-pane .lyp-fill i:nth-child(3n+2){width:60%}
+
+  /* a search field pinned above a long list */
+  #layers-pane .lyp-find{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3);
+    border-bottom:1px solid var(--line-soft)}
+
+  @media (max-width:760px){
+    #layers-pane .lyp-anat,#layers-pane .lyp-three{grid-template-columns:1fr}
+    #layers-pane .lyp-dd,#layers-pane .lyp-kind{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="layers-pane">
+
+  <!-- ── HEAD ───────────────────────────────────────────────────────── -->
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>The Layers pane</h2><span class="k">· surfaces &amp; primitives</span><a class="backchip" data-target="panes-panels"><i class="ic ic-chevron-left"></i> Panes &amp; panels</a></div>
+  <p class="docintro">Everything in a Photonz document is a layer: a photo, a shape, an arrow, a text block, an adjustment,
+    a whole UI component, a video clip. So the Layers pane is not a list of things you drew, it is <b>the document
+    itself, made addressable</b>. It is one pane in the one panel (see <b data-target="panes-panels" style="color:var(--accent);cursor:pointer">Panes &amp; panels</b>),
+    and it does four jobs: <b>select</b>, <b>structure</b>, <b>reorder</b>, and <b>hide</b>. Everything below is one of
+    those four.</p>
+
+  <!-- ── 01 · ANATOMY ───────────────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top lyp-anat">
+      <div class="lyp-dock">
+        <div class="pdock" style="--dock-w:100%">
+          <div class="dgrp grow" data-grp="layers">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">11</span>
+              <button class="btn ghost icon sm" data-tip="Add adjustment layer"><i class="ic ic-sliders"></i></button>
+              <button class="btn ghost icon sm" data-tip="New group|⌘G"><i class="ic ic-group"></i></button>
+              <button class="btn ghost icon sm" data-tip="Pane menu"><i class="ic ic-more"></i></button>
+            </div>
+            <div class="dgrp-b">
+              <div class="lyp-find"><span class="srch" style="flex:1"><i class="ic sm ic-search"></i><input placeholder="Find a layer" aria-label="Find a layer"></span></div>
+
+              <div class="lrow adj"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
+              <div class="lrow child sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+
+              <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Toolbar <i class="ic xs ic-component" style="color:var(--comp);margin-left:4px"></i></div>
+
+              <div class="lrow"><i class="ic ic-square" style="color:#7c4dff"></i><span class="nm">Blur · redaction</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot · 2560 × 1600</span><i class="ic sm ic-lock eye"></i></div>
+              <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye-off eye"></i></div>
+            </div>
+          </div>
+          <div class="splitter h" data-min="120" data-max="300"></div>
+          <div class="dgrp" data-grp="props" style="--gh:96px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Step 1 · box</span></div>
+            <div class="dgrp-b"><div class="lyp-fill"><i></i><i></i><i></i><i></i><i></i></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="lyp-leg">
+        <div class="lyp-li"><span class="lyp-pin">1</span><span><b>Top of the list is top of the document.</b> The stack reads the way it composites, so moving a row up in the pane moves the layer forward on the canvas. There is no second mental model to learn.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">2</span><span><b>An adjustment layer is just a layer.</b> The elbow under Warm grade says it clips to everything below it, and dragging it down the stack changes what it grades.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">3</span><span><b>A group is a real layer</b> with its own opacity, mask and effects. Callouts is expanded, Toolbar is a collapsed component that shows its overrides rather than its internals.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">4</span><span><b>Find is pinned, not floating.</b> Type in it and the tree filters to matches with their parents kept for context, so you never lose your place in the structure.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">5</span><span><b>The trailing glyph is the row's state:</b> visible, hidden, or locked. Same slot on every row, so a column of eyes is scannable at a glance.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+      <p class="docrule">One tree, one column, no tabs. The pane shows the whole document at every level of nesting and
+        never splits itself into "layers" and "objects" and "assets". <b>If it is in the document it is a row here</b>,
+        and if it is a row here you can select it, move it, group it, and hide it.</p>
+      <div class="docdd">
+        <span class="do">Keep one tree that mirrors the composite order.</span>
+        <span class="no">Add a second list for a new kind of content.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>doc.layers</code></p>
+    </div>
+  </div>
+
+  <!-- ── 02 · THE ROW ───────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">02</span><h3>The row</h3><span class="k">Six slots, in the same order, on every row</span></div>
+    <div class="docbody">
+      <div class="lyp-rowzoom">
+        <div class="lyp-zgrid lyp-zrow">
+          <i class="ic sm ic-chevron-right lyp-dim"></i>
+          <i class="ic ic-square" style="color:#4c6fff"></i>
+          <span class="lyp-znm">Step 1 · box</span>
+          <span class="lyp-zmask" style="background:linear-gradient(135deg,#111 45%,#eee)"></span>
+          <span class="lyp-zdot"></span>
+          <i class="ic sm ic-eye"></i>
+        </div>
+        <div class="lyp-zgrid lyp-ticks">
+          <span class="lyp-t"><b>disclosure</b>groups only</span>
+          <span class="lyp-t"><b>type glyph</b>what it is</span>
+          <span class="lyp-t"><b>name</b>click to rename</span>
+          <span class="lyp-t"><b>mask</b>if masked</span>
+          <span class="lyp-t"><b>effects</b>if styled</span>
+          <span class="lyp-t"><b>eye or lock</b>the state</span>
+        </div>
+      </div>
+
+      <div class="docgrid n3" style="margin-top:var(--gap)">
+        <div class="docsp">
+          <div class="docsp-l"><b>Every slot is always there</b></div>
+          <p class="docsp-d">A slot with nothing in it stays empty rather than letting the row reflow. That is what makes a
+            column of forty rows scannable: the eyes line up, the names start at the same x, and the glyphs sit in one
+            column you can read straight down.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>Indent means parent</b></div>
+          <p class="docsp-d">One indent step per level of nesting, and no other meaning is ever encoded in indentation.
+            Depth past four levels keeps indenting but the name truncates from the left, so you always see the end of the
+            name, which is the part that identifies it.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>The name is the label</b></div>
+          <p class="docsp-d">Double-click, or press <kbd style="font-family:var(--mono);font-size:10px">↩</kbd>, to rename in
+            place. A layer you never named shows a derived name in a lighter weight ("Rectangle", "IMG_4021"), so a real
+            name is visibly different from a default one.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 03 · ROW TYPES ─────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">03</span><h3>What a row can be</h3><span class="k">Same shape, same controls, different content</span></div>
+    <div class="docbody">
+      <div class="lyp-kinds">
+        <div class="lyp-kind">
+          <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Pixels.</b> A photo, a capture, a paint layer. The only row type whose content is a bitmap, and even here the layer's blur, shadow, border and radius are applied at render time and never baked in.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Shape or annotation.</b> A rectangle, an arrow, a highlight, a zoom callout. Vector, so it stays crisp and stays editable no matter how far you zoom or how often you re-export.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Type.</b> Named by its own content until you rename it, because the fastest way to find a text layer is to read what it says.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow adj"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Adjustment.</b> A non-destructive effect that clips to the layers below it. The elbow shows the clip. Because it is only a layer, it grades a UI frame exactly as it grades a photo.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lgroup" style="padding:6px 12px"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
+          <div class="lyp-k"><b>Group.</b> A real layer that happens to have children. It takes an opacity, a mask and an effect stack of its own, which is the difference between a group and a folder.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow selc"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Toolbar</span><i class="ic sm ic-component cmark"></i></div>
+          <div class="lyp-k"><b>Component instance.</b> Always one collapsed row with the component glyph. Expanding it shows the <b>overrides</b> you have set, not its full internals, because its internals belong to the component and not to this document.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow"><i class="ic ic-square" style="color:#7c4dff"></i><span class="nm">Blur · redaction</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Masked layer.</b> The mask rides in the row as a small thumbnail next to the layer's own. Click it to edit the mask instead of the layer; the row shows which of the two you are painting.</div>
+        </div>
+        <div class="lyp-kind">
+          <div class="lrow"><i class="ic ic-film"></i><span class="nm">Screen capture · 0:18</span><i class="ic sm ic-eye eye"></i></div>
+          <div class="lyp-k"><b>Clip.</b> A layer with a duration. It is a row here <i>and</i> a bar on the timeline, and it is the same layer either way, which is what makes an annotation on a video the same object as an annotation on a screenshot.</div>
+        </div>
+      </div>
+      <p class="docnote"><b>The point of the sameness:</b> once every kind of content is a row with the same six slots, a
+      person learns the pane once and a new capability costs no new UI. A video clip and a rectangle behave identically here
+      because in the document model they are the same kind of thing.</p>
+    </div>
+  </div>
+
+  <!-- ── 04 · SELECTION ─────────────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top">
+      <div class="lyp-three" style="position:relative">
+        <span class="lyp-badge" style="left:var(--s4);top:var(--s3)">1 · on the canvas</span>
+        <span class="lyp-badge" data-lyp-point="#lypSelLayers">2 · in Layers</span>
+        <span class="lyp-badge" data-lyp-point="#lypSelProps">3 · in Properties</span>
+        <div class="canvas">
+          <div class="selwrap" style="position:absolute;left:26%;top:30%;width:180px;height:104px">
+            <div class="hero-card" style="width:100%;height:100%;box-sizing:border-box">
+              <div style="font-family:var(--serif);font-size:15px;color:#fff">Step 1</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">Tap here to start</div>
+            </div>
+            <div class="sel-ring"></div>
+          </div>
+        </div>
+        <div class="pdock" style="--dock-w:100%">
+          <div class="dgrp" data-grp="layers" id="lypSelLayers" style="--gh:132px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">7</span></div>
+            <div class="dgrp-b">
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
+              <div class="lrow child sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow child"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+          <div class="dgrp grow" data-grp="props" id="lypSelProps">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Step 1 · box</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span><span class="val">100%</span></div>
+                <div class="row"><span class="rl">Radius</span><span class="bar"><i style="width:36%"></i></span><span class="val">14</span></div>
+                <div class="row"><span class="rl">Border</span><span class="bar"><i style="width:22%"></i></span><span class="val">2px</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lyp-keys">
+        <div class="lyp-kr"><kbd>Click</kbd><span>Select one. Replaces the whole selection.</span></div>
+        <div class="lyp-kr"><kbd>⇧ Click</kbd><span>Extend to a <b>range</b> from the last row you clicked.</span></div>
+        <div class="lyp-kr"><kbd>⌘ Click</kbd><span>Add or remove <b>one</b> row, leaving the rest alone.</span></div>
+        <div class="lyp-kr"><kbd>Drag</kbd><span>Marquee down the empty gutter to sweep a run of rows.</span></div>
+        <div class="lyp-kr"><kbd>↑ ↓</kbd><span>Move the selection one visible row, skipping collapsed children.</span></div>
+        <div class="lyp-kr"><kbd>⌘A</kbd><span>Select every layer <b>in the current group</b>, then every layer.</span></div>
+        <div class="lyp-kr"><kbd>⌥ Click</kbd><span>Select the group itself rather than the child under the pointer.</span></div>
+        <div class="lyp-kr"><kbd>⎋</kbd><span>Deselect. Properties falls back to the document.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">04</div><h3 class="docname">Selection</h3>
+      <p class="docrule">One selection, shown in <b>three places at once</b>: the ring on the canvas, the highlighted row
+        here, and the contents of Properties. Select in any of the three and the other two follow, which is what makes the
+        pane a way of <i>reaching</i> a layer rather than a separate inventory of them.</p>
+      <p class="docrule">Multi-select shows a ring around the combined bounds, every matching row highlighted, and
+        <b>only the properties they share</b>. Nothing is hidden that they have in common, and nothing is offered that
+        would silently apply to just one of them.</p>
+      <div class="docdd">
+        <span class="do">Scroll the selected row into view when the canvas selects it.</span>
+        <span class="no">Let a canvas selection leave the pane scrolled somewhere else.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>select(["step-1"])</code></p>
+    </div>
+  </div>
+
+  <!-- ── 05 · GROUPING ──────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">05</span><h3>Grouping</h3><span class="k">A group is a layer, not a folder</span></div>
+    <div class="docbody">
+      <div class="docgrid n3">
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Before</b> · three rows selected</div>
+          <div class="lyp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp grow" data-grp="layers">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow sel"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow sel"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">Three adjacent rows. They do not have to be adjacent: grouping a scattered selection
+            <b>collects them</b> at the topmost one's position and keeps their relative order.</p>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>After ⌘G</b> · named, and ready to rename</div>
+          <div class="lyp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp grow" data-grp="layers">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+                <div class="dgrp-b">
+                  <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
+                  <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">The group lands where the topmost member was, expanded, <b>selected, and with its name
+            already in edit</b>. Naming is the one thing you always want to do next, so it costs no extra click.</p>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>The group row itself</b> · selected</div>
+          <div class="lyp-dock md">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp" data-grp="layers" style="--gh:96px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+                <div class="dgrp-b">
+                  <div class="lgroup sel" style="background:var(--accent-soft);border-left:2px solid var(--accent);color:var(--ink)"><i class="ic sm ic-chevron-right"></i> Callouts <span class="cnt">3</span></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp" data-grp="props" style="--gh:132px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callouts</span></div>
+                <div class="dgrp-b">
+                  <div class="section">
+                    <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:72%"></i></span><span class="val">72%</span></div>
+                    <div class="row"><span class="rl">Blend</span><span class="bar"><i style="width:14%"></i></span><span class="val">Normal</span></div>
+                  </div>
+                  <div class="section">
+                    <div class="efx"><i class="ic sm ic-shadow"></i><span class="nm">Drop shadow</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="efx"><i class="ic sm ic-mask"></i><span class="nm">Mask · subject</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">Select the group and Properties shows <b>the group's own</b> opacity, blend, mask and effects.
+            One shadow on the group beats three shadows on three children, and it is why this is a layer and not a folder.</p>
+        </div>
+
+      </div>
+
+      <div class="lyp-keys" style="margin-top:var(--gap)">
+        <div class="lyp-kr"><kbd>⌘G</kbd><span><b>Group</b> the selection, then rename in place.</span></div>
+        <div class="lyp-kr"><kbd>⇧⌘G</kbd><span><b>Ungroup</b>, leaving the children selected and in order.</span></div>
+        <div class="lyp-kr"><kbd>Drag onto a group row</kbd><span>Move the layer <b>into</b> that group, at the top.</span></div>
+        <div class="lyp-kr"><kbd>⌘⌫</kbd><span>Delete the group and everything in it, as one undo step.</span></div>
+      </div>
+      <p class="docnote"><b>Ungrouping never reflows the document.</b> The children come back at exactly the depth and
+        order they had, and any opacity or effect that lived on the group is <b>pushed down onto the children</b> so the
+        canvas looks identical before and after. A structural command that changes the picture is a bug.</p>
+    </div>
+  </div>
+
+  <!-- ── 06 · REARRANGING ───────────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top lyp-anat">
+      <div class="lyp-dock md lyp-drop" style="position:relative">
+        <div class="pdock" style="--dock-w:100%">
+          <div class="dgrp grow" data-grp="layers">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">7</span></div>
+            <div class="dgrp-b" style="position:relative">
+              <div class="lrow lyp-ghost"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">2</span></div>
+              <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+              <!-- the drop line sits at the CHILD indent, so it shows the parent it lands in -->
+              <div class="lyp-dropline" style="top:104px;left:26px"></div>
+              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="lyp-carry" style="top:92px">
+          <div class="lrow"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span></div>
+        </div>
+      </div>
+      <div class="lyp-leg">
+        <div class="lyp-li"><span class="lyp-pin">1</span><span><b>The row you grabbed dims in place</b> rather than disappearing, so the list never collapses under your pointer and the drop target never moves out from under you mid-drag.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">2</span><span><b>A copy rides the cursor</b>, tilted slightly and lifted with a shadow. Dragging several rows carries one stack with a count, not five separate ghosts.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">3</span><span><b>The drop line is indented to its parent.</b> This is the whole trick: the line's left edge tells you which group you are about to land in, which is the question a flat line can never answer.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">4</span><span><b>Hovering a collapsed group</b> highlights the whole row and drops inside it. Hover a beat longer and it springs open so you can aim at a position within it.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">5</span><span><b>Near an edge the list auto-scrolls</b>, accelerating with how far past the edge you are, so moving a layer across a sixty-row document is one gesture and not a fight.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">6</span><span><b>A multi-row drag keeps relative order</b> and lands the rows contiguously, even if they were scattered before. Reordering is one undo step, not one per row.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">06</div><h3 class="docname">Rearranging</h3>
+      <p class="docrule">Order in the pane <b>is</b> composite order, so a drag here is a real edit to the document and goes
+        through history like any other. The pane must therefore be honest about where a drop will land <i>before</i> you
+        release, which is what the indented drop line is for.</p>
+      <div class="docdd">
+        <span class="do">Indent the drop line to the parent it lands in.</span>
+        <span class="no">Draw one flat line and let people find out on release.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>layer.move(to: "callouts", index: 1)</code></p>
+    </div>
+  </div>
+
+  <!-- ── 07 · COLLAPSE STATE ────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">07</span><h3>Collapse state</h3><span class="k">A group's disclosure belongs to the document</span></div>
+    <div class="docbody">
+      <div class="docgrid n2">
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Collapsed with a selected child</b></div>
+          <div class="lyp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp grow" data-grp="layers">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">9</span></div>
+                <div class="dgrp-b">
+                  <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Callouts <span class="cnt">3</span><span class="lyp-seldot" data-tip="A selected layer is inside"></span></div>
+                  <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Toolbar <span class="cnt">component</span></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">A collapsed group whose subtree contains the selection carries <b>a dot</b>. Without it, a
+            canvas selection can vanish from the pane entirely and the pane starts lying about the current state.</p>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>What collapsing does and does not do</b></div>
+          <div class="lyp-keys">
+            <div class="lyp-kr"><kbd>Click ▸</kbd><span>Toggle one group.</span></div>
+            <div class="lyp-kr"><kbd>⌥ Click ▸</kbd><span>Toggle the group <b>and its whole subtree</b>.</span></div>
+            <div class="lyp-kr"><kbd>← →</kbd><span>Collapse or expand the selected group; <kbd>←</kbd> on a leaf jumps to its parent.</span></div>
+            <div class="lyp-kr"><kbd>⌥ ⌘ ←</kbd><span>Collapse every group in the document to the top level.</span></div>
+          </div>
+          <p class="docsp-d" style="margin-top:var(--gap-sm)"><b>Collapse state saves with the document</b>, not with the
+            app, because it is a note about <i>this drawing</i>: the parts you are done with are folded. Reopen the file a
+            week later and the structure is folded exactly the way you left it, on any machine.</p>
+          <p class="docsp-d"><b>It is never an edit.</b> Collapsing does not change the composite, does not enter history,
+            and cannot be undone with <kbd>⌘Z</kbd>, because an undo that folded a group instead of reverting your last
+            real change would be worse than useless.</p>
+        </div>
+
+      </div>
+      <p class="docnote"><b>Two rules keep the tree from fighting you.</b> The pane <b>auto-expands</b> the path to a layer
+        the moment it becomes selected somewhere else, so selecting on the canvas always reveals the row. And it
+        <b>never auto-collapses</b> anything on its own: the tree only folds when you fold it, so a structure you opened on
+        purpose stays open.</p>
+    </div>
+  </div>
+
+  <!-- ── 08 · VISIBILITY AND LOCK ───────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">08</span><h3>Visibility and lock</h3><span class="k">The two states that are not edits</span></div>
+    <div class="docbody">
+      <div class="docgrid n2">
+        <div class="docsp">
+          <div class="docsp-l"><b>The state column</b></div>
+          <div class="lyp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp grow" data-grp="layers">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow" style="opacity:.5"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye-off eye"></i></div>
+                  <div class="lrow"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-lock eye"></i></div>
+                  <div class="lrow" style="opacity:.5"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye-off eye"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">Hidden rows dim their whole content, not just the glyph, so the state reads from across the
+            room. A locked row keeps full contrast: it is <b>present and composited</b>, just not clickable, and dimming it
+            would say the opposite.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>The gestures</b></div>
+          <div class="lyp-keys">
+            <div class="lyp-kr"><kbd>Click the eye</kbd><span>Hide or show that layer.</span></div>
+            <div class="lyp-kr"><kbd>⌥ Click the eye</kbd><span><b>Solo</b>: hide everything else. Again to restore exactly what was hidden before.</span></div>
+            <div class="lyp-kr"><kbd>Drag down the eyes</kbd><span>Toggle a whole run in one stroke, all rows matching the first one you flipped.</span></div>
+            <div class="lyp-kr"><kbd>⌘⇧,</kbd><span>Hide or show the selection, wherever the pane is scrolled.</span></div>
+            <div class="lyp-kr"><kbd>Click the lock</kbd><span>Lock: unclickable on canvas, still selectable here.</span></div>
+            <div class="lyp-kr"><kbd>⌥ Click the lock</kbd><span>Unlock everything in the document.</span></div>
+          </div>
+          <p class="docsp-d" style="margin-top:var(--gap-sm)"><b>Hiding a group hides its children</b> without changing
+            their own eyes, so unhiding the group brings back exactly the mix you had. A child that was already hidden stays
+            hidden.</p>
+        </div>
+      </div>
+      <p class="docnote"><b>Both are document state and both are undoable</b>, because hiding a layer changes what exports.
+        They are the only two row controls that are not a property edit, which is why they get a permanent slot in the row
+        instead of living in Properties with everything else.</p>
+    </div>
+  </div>
+
+  <!-- ── 09 · WHEN THE LIST GETS LONG ───────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">09</span><h3>When the list gets long</h3><span class="k">Sixty rows in a 180px budget</span></div>
+    <div class="docbody">
+      <div class="docgrid n3">
+        <div class="docsp">
+          <div class="docsp-l"><b>It scrolls, it does not spread</b></div>
+          <p class="docsp-d">The pane has a height budget and its own scroller, so a long document scrolls <b>inside
+            Layers</b> and never pushes Properties or Effects off the screen. Drag the divider below it to trade height
+            with the pane underneath when you genuinely need more.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>Find filters the tree</b></div>
+          <p class="docsp-d">Typing in Find keeps matching rows <b>and their parents</b>, so a result never appears without
+            the structure that explains where it is. Clearing the field restores your previous scroll position and your
+            previous collapse state, both untouched.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>Grouping is the real answer</b></div>
+          <p class="docsp-d">A sixty-row flat list is a structural problem, not a scrolling one. The pane makes grouping
+            cheap on purpose: <kbd>⌘G</kbd>, type a name, done. Every affordance here is designed to make that the path of
+            least resistance.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 10 · RULES ─────────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">10</span><h3>Rules</h3><span class="k">Do and don't</span></div>
+    <div class="docbody">
+      <div class="lyp-dd">
+        <span class="lyp-do">Keep <b>one tree</b> that mirrors composite order.</span>
+        <span class="lyp-no">Add a second list, a tab, or a separate object browser.</span>
+        <span class="lyp-do">Reveal the selected row automatically, from any source.</span>
+        <span class="lyp-no">Let a canvas selection leave the pane scrolled elsewhere.</span>
+        <span class="lyp-do">Indent the drop line to show the parent it lands in.</span>
+        <span class="lyp-no">Draw one flat line and reveal the parent only on release.</span>
+        <span class="lyp-do">Save collapse state with the document.</span>
+        <span class="lyp-no">Put collapse in history, or let ⌘Z unfold a group.</span>
+        <span class="lyp-do">Give every row the same six slots, always in the same order.</span>
+        <span class="lyp-no">Reflow a row because one of its slots happens to be empty.</span>
+        <span class="lyp-do">Make grouping cheap: one shortcut, then the name.</span>
+        <span class="lyp-no">Make a group a folder that cannot carry opacity or effects.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 11 · IN THE API ────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">11</span><h3>In the API</h3><span class="k">Every row, every gesture, one call</span></div>
+    <div class="docbody">
+      <table class="doctbl">
+        <tr><th>Call</th><th>What it does</th></tr>
+        <tr><td><code>doc.layers</code></td><td>The tree itself, in composite order, nested. Reading it is reading the document.</td></tr>
+        <tr><td><code>select(["step-1", "arrow"])</code></td><td>Set the selection. Rings the canvas, highlights the rows, reveals them, and repopulates Properties, all from one call.</td></tr>
+        <tr><td><code>selection.group("Callouts")</code></td><td>What <b>⌘G</b> does, including the name, so an agent never has to leave a group called "Group 4".</td></tr>
+        <tr><td><code>selection.ungroup()</code></td><td>Push the group's own opacity and effects down onto the children, then dissolve it.</td></tr>
+        <tr><td><code>layer.move(to:index:)</code></td><td>Reparent and reorder in one step. The same call a drop makes, and the same single undo entry.</td></tr>
+        <tr><td><code>layer.visible = false</code></td><td>The eye. Undoable, because it changes what exports.</td></tr>
+        <tr><td><code>layer.locked = true</code></td><td>The lock. Unclickable on canvas, still reachable in the pane.</td></tr>
+        <tr><td><code>layer.expanded = true</code></td><td>The disclosure. Saved with the document and deliberately <b>outside</b> history.</td></tr>
+        <tr><td><code>pane("layers").find = "arrow"</code></td><td>The Find field, so "show me every arrow" is the same filter you would have typed.</td></tr>
+      </table>
+      <p class="docnote">"Group all the callouts and drop a shadow on the group" is four of these calls in a row, issued by
+        an agent, and each one lands in history exactly as if you had done it by hand. That is the test for whether the pane
+        is designed properly: <b>every gesture in it has a name</b>.</p>
+    </div>
+  </div>
+
+  <!-- ── CLOSING NOTES ──────────────────────────────────────────────── -->
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>The Layers pane is the document with a handle on it. Because every
+      kind of content is the same kind of row, the pane you learn on a screenshot is the pane you already know on a video
+      or a UI mockup, and a new capability arrives as a new row type rather than a new surface to learn.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Colour tags on rows, set from the row's context menu and
+      filterable from Find. In a long redline document the useful grouping is often "everything I still have to fix", which
+      cuts across the structural groups and has nowhere to live today.</p></div>
+    <div class="c"><div class="lab">Open question</div><p>Should the pane show a thumbnail per row? It helps enormously on
+      a photo composite and is close to noise on forty annotation shapes. The likely answer is a density control on the
+      pane menu rather than a fixed choice, but a setting is also an admission that we did not decide.</p></div>
+  </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  // Place the two "three places at once" badges from the MEASURED top of the
+  // pane each one names, so changing a pane's height budget can never leave a
+  // label pointing at the wrong thing. Scoped to this page's own badges.
+  function place() {
+    document.querySelectorAll('#layers-pane .lyp-badge[data-lyp-point]').forEach(function (b) {
+      var target = document.querySelector(b.getAttribute('data-lyp-point'));
+      if (!target) return;
+      var wrap = b.parentNode.getBoundingClientRect();
+      var t = target.getBoundingClientRect();
+      b.style.top = Math.round(t.top - wrap.top + 10) + 'px';
+    });
+  }
+  place();
+  window.addEventListener('resize', place);
+})();
+</script>
+</body>
+</html>

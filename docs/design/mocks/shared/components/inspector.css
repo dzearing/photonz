@@ -1,31 +1,30 @@
-/* VISUAL RULE 6: a segmented control does not resize down. Left alone in a
-   ~268px dock it wrapped into two ragged rows and read as broken. Inside a
-   panel body it becomes the allowed alternative instead: a full-width chip
-   list with equal chips, so a wrap looks deliberate rather than accidental.
-   Applied by location, so no page has to opt in and none can opt out.
-   A GRID, not a wrapping flex row: with flex, a 6-item scope wrapped 4 + 2 and
-   the two survivors stretched to 115px each, which read as an accident. Equal
-   auto-fit columns keep every chip the same width and line the second row up
-   under the first, so a wrap looks like a chip list on purpose.
-   The column floor is --segmin, which photonz-ds.js measures from the WIDEST
-   label in that control: a fixed floor either truncated "Intersect" or forced
-   a 3-item scope onto two rows. Labels decide the column count; the dock
-   decides how many of those columns fit. */
-.pdock .seg,.dgrp-b .seg{display:grid;width:100%;
-  grid-template-columns:repeat(auto-fit,minmax(var(--segmin,52px),1fr));gap:2px}
-/* width:100% because a <button> does not honour justify-self:stretch the way a
-   div does - without it the chips sized to their own text and came out 5-30px
-   apart inside equal tracks. */
-.pdock .seg>button,.dgrp-b .seg>button{width:100%;min-width:0;padding:5px 6px;
-  justify-content:center;text-align:center;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.seg button{border:0;background:transparent;color:var(--dim);font-size:11px;font-weight:560;padding:5px 11px;border-radius:7px}
-.seg button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow-1)}
+/* VISUAL RULE 6 lived here: a segmented control inside a dock became a
+   wrapping auto-fit grid, so a 6-item scope came out as two ragged rows
+   instead of one. It is SUPERSEDED — `.seg` never wraps at all now, and the
+   full-width equal-column form it needs inside a dock lives with the
+   component in segmented.css, which is the only file that styles `.seg`. */
 
-.gramp{height:34px;border-radius:9px;margin:12px 0 8px;position:relative;background:linear-gradient(90deg,#7c4dff,#b14dff 45%,#ff5d8f);border:1px solid var(--line-strong)}
-.gstop{position:absolute;top:-6px;width:14px;height:46px;transform:translateX(-50%)}
-.gstop b{display:block;width:14px;height:14px;border-radius:4px;border:2px solid #fff;box-shadow:var(--shadow-1);background:inherit}
-.gstop .line{width:2px;height:30px;background:#fff;margin:0 auto;opacity:.7}
+/* GRADIENT RAMP. This predates the color picker and had drifted into a second
+   design: a 34px band with 46px stops whose leader lines hung 10px out the
+   bottom, which read as damage rather than as stops. There is one gradient
+   ramp in the app, and it is the picker's — same 24px band, same 12px rounded
+   key with a white keyline, same 20px line running down INSIDE the band. Any
+   page that uses `.gramp` now matches `.cp-gramp` without touching the page. */
+.gramp{position:relative;height:24px;border-radius:var(--r1);margin:var(--s3) 0 var(--gap-sm);
+  background:linear-gradient(90deg,#7c4dff,#b14dff 45%,#ff5d8f);
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+/* the wrapper is a hit target and NOTHING else. It used to take the stop's
+   colour so the key could `inherit` it, which meant a 12 x 32 coloured block
+   painted behind the key and hung 8px out the bottom of a 24px ramp. The
+   colour goes on the key now, via --stop-c. */
+.gstop{position:absolute;top:-4px;width:12px;height:32px;transform:translateX(-50%);
+  background:transparent!important;border:0;padding:0;cursor:grab}
+.gstop b{display:block;width:12px;height:12px;border-radius:4px;border:2px solid #fff;
+  box-shadow:var(--shadow-1);background:var(--stop-c, currentColor)}
+.gstop .line{display:block;width:2px;height:20px;margin:0 auto;background:#fff;opacity:.7}
+.gstop.sel b{box-shadow:var(--shadow-1), 0 0 0 2px var(--accent)}
+.gstop:focus-visible{outline:none}
+.gstop:focus-visible b{box-shadow:var(--ring)}
 .dial{width:56px;height:56px;border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);position:relative;flex:none}
 .dial::before{content:"";position:absolute;left:50%;top:50%;width:2px;height:22px;background:var(--accent);transform-origin:top center;transform:translate(-50%,0) rotate(135deg)}
 .dial::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%)}

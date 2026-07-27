@@ -1,0 +1,120 @@
+/* ============================================================
+   REDLINE CALLOUT — a numbered marker that points at a part and explains it
+   ============================================================
+   Built for `pages/app-shell.html`, where it labels the eight regions of the
+   shell. It is the right way to annotate ANY specimen, so it lives here now and
+   the doc pages use it instead of each inventing a label style.
+
+   Why it beats a floating caption: the marker sits in a RESERVED GUTTER beside
+   the specimen, never on top of it, so the thing being explained is never
+   covered. A leader line runs from the number to a dot on the exact target, and
+   the prose stays hidden until you click. So the diagram reads as a clean
+   screenshot with numbers, and turns into documentation on demand.
+
+     <div class="rl-frame">
+       …the specimen…
+       <span class="rl-co" data-rl-for=".titlebar" data-rl-x="left" data-rl-dx="8">
+         <button class="n" type="button"></button><span class="l"></span>
+         <span class="card"><b>Title bar</b>Document name and the workspace lens.</span>
+       </span>
+     </div>
+
+   The page writes WHAT it points at, never WHERE the marker goes. redline.js
+   measures the target live and sets the row, the gutter side and the line
+   length, so a callout stays correct when the window resizes, when a panel
+   collapses, or when the specimen reflows. A callout whose target is not
+   currently visible hides itself rather than pointing at empty background.
+   Numbers are filled in by DOM order, so inserting a callout renumbers the set.
+
+   Attributes, all optional except the first:
+     data-rl-for   CSS selector for the target, resolved inside the frame
+     data-rl-x     left | center | right   which edge of the target to touch
+     data-rl-y     top  | center | bottom  where on that edge
+     data-rl-dx/dy pixel nudge from that anchor point
+     data-rl-side  l | r   force a gutter; default is the nearer one */
+
+.rl-frame{--rl-gut:88px;position:relative;padding:0 var(--rl-gut);align-self:stretch}
+.rl-frame>.win{width:100%}
+/* a doc-page specimen is narrower than a full app window, so it gets a
+   narrower gutter — the marker still clears the specimen, the line is shorter */
+.rl-frame.sm{--rl-gut:56px}
+
+.rl-co{position:absolute;display:flex;align-items:center;z-index:20;pointer-events:none;
+  --rl-line:56px}
+.rl-co .n{width:19px;height:19px;flex:none;border:0;padding:0;font-family:inherit;cursor:pointer;pointer-events:auto;
+  border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  font-size:10.5px;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums;
+  box-shadow:var(--shadow-2);transition:transform .1s ease}
+.rl-co .n:hover{transform:scale(1.14)}
+.rl-co .n:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 42%,transparent)}
+/* ---- THE LEADER ----
+   One SVG path, drawn TWICE: a fat halo stroke in the surface colour, then the
+   accent stroke on top of it. Both round-capped and round-joined, so the halo
+   is a single continuous outline that follows the line, turns the elbow with
+   it, and closes around the end dot.
+
+   Why not a gradient bar with a ring on the dot, which is what this was: a
+   leader that fades out is invisible over a busy canvas exactly where it
+   matters most, and an accent dot lands on an accent-filled control (a primary
+   button, a selected tool) and disappears completely. Outlining the whole
+   silhouette in the surface colour means the pointer reads over ANY background
+   including its own colour. `--rl-halo` is the outline colour, overridable per
+   frame when the specimen's background is not the stage.
+
+   A drop-shadow would be the cheap version, but a shadow is offset and blurred
+   and this needs to be a crisp 1px skin. The outline is kept THIN and slightly
+   translucent so the background still tints it and the pointer does not read as
+   a sticker. The translucency is set on the GROUP, not on each stroke, so the
+   line's outline and the dot's ring composite once instead of doubling to a
+   hard edge where they overlap.
+
+   THE ELBOW. Six parts of one 40px button all sit on the same row, so their
+   markers would pile up in the gutter. `data-rl-row` moves a marker off its
+   target's row and the leader turns a rounded corner to reach it. That is what
+   lets a dense specimen carry six callouts instead of two. */
+/* The leader sits ON the specimen, so at rest it is quiet enough to read
+   through — it is an annotation, not part of the design being annotated. It
+   only firms up when you go for its number, which is the moment you actually
+   care which part it points at. */
+.rl-co{--rl-halo:var(--stage);--rl-halo-a:.25;--rl-line-a:.2}
+.rl-co:hover,.rl-co:focus-within{--rl-line-a:.6;--rl-halo-a:.5}
+.rl-co .l{position:relative;flex:none;width:var(--rl-line);height:0}
+.rl-co .l>svg{position:absolute;left:0;top:0;overflow:visible}
+.rl-co.r-side .l>svg{transform:scaleX(-1)}
+.rl-co .l g.halo{opacity:var(--rl-halo-a)}
+.rl-co .l g.halo path{fill:none;stroke:var(--rl-halo);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.rl-co .l g.halo circle{fill:none;stroke:var(--rl-halo);stroke-width:2.4}
+/* line and dot are ONE mark, so they carry one opacity and brighten together.
+   A solid dot on a translucent line reads as two different things. */
+.rl-co .l path.core{fill:none;stroke:var(--accent);stroke-opacity:var(--rl-line-a);
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke-opacity .12s ease}
+.rl-co .l circle.core{fill:var(--accent);fill-opacity:var(--rl-line-a);stroke:none;
+  transition:fill-opacity .12s ease}
+.rl-co .l g.halo{transition:opacity .12s ease}
+.rl-co.l-side{left:0}
+.rl-co.l-side .l{margin-left:5px}
+.rl-co.r-side{right:0;flex-direction:row-reverse}
+.rl-co.r-side .l{margin-right:5px}
+
+/* click-to-open explainer card, positioned by the number's gutter + row */
+.rl-co .card{position:absolute;display:none;width:236px;z-index:40;text-align:left;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:var(--lg-shadow);
+  padding:11px 13px;font-size:12px;line-height:1.45;color:var(--dim);pointer-events:auto}
+.rl-co .card b{display:block;color:var(--ink);font-weight:640;font-size:12.5px;margin-bottom:3px}
+.rl-co .card code{font-family:var(--mono);font-size:10.5px;color:var(--accent)}
+.rl-co.open{z-index:50}
+.rl-co.open .card{display:block;animation:rlpop .13s ease}
+@keyframes rlpop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.rl-co.l-side .card{left:0;top:27px}
+.rl-co.r-side .card{right:0;top:27px}
+.rl-co.up .card{top:auto;bottom:27px}
+
+/* the marker is a pointer at a layout, and a narrow window is a different
+   layout — so below the breakpoint the gutters and the callouts both go */
+@media (max-width:900px){ .rl-frame{padding:0;max-width:none} .rl-co{display:none} }
+@media (prefers-reduced-motion:reduce){
+  .rl-co .n,.rl-co .l path.core,.rl-co .l g.halo{transition:none}
+  .rl-co.open .card{animation:none}
+}

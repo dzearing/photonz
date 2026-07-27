@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · panes-panels</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ============================================================
+     Page-local CSS for the ONE thing this page documents. The reference
+     LAYOUT is the shared `docpage` component (.docintro/.docblk/.doccard/
+     .docgrid/.doctbl); every panel, pane, splitter and rail below is the
+     real DS (.pdock › .dgrp › .dgrp-h + .dgrp-b, .splitter.v/.h, .drail).
+     Local names are prefixed `pp-` so they cannot shadow a DS class.
+     ============================================================ */
+
+  /* a bounded frame the size of a real dock, so a lone panel reads as docked */
+  #panes-panels .pp-dock{width:272px;max-width:100%;height:468px;border:1px solid var(--edge-lo);
+    border-radius:var(--r3);overflow:hidden;flex:none}
+  #panes-panels .pp-dock.sm{height:324px}
+  #panes-panels .pp-dock.xs{height:208px}
+  #panes-panels .pp-dock .pdock{height:100%;width:100%;max-width:none;border-left:0}
+
+  /* specimen on the left, its numbered legend on the right */
+  #panes-panels .pp-anat{display:grid;grid-template-columns:272px 1fr;gap:var(--gap-lg);align-items:start}
+
+  /* naming the two boxes ON the live specimen, measured from the elements
+     themselves rather than from hand-picked pixel offsets */
+  #panes-panels .pp-mark{position:relative}
+  #panes-panels .pp-mark .pdock{outline:1.5px dashed var(--accent);outline-offset:-2px}
+  #panes-panels .pp-mark .pp-hl{position:relative;outline:1.5px dashed var(--comp);outline-offset:-3px}
+  #panes-panels .pp-tag,
+  #panes-panels .pp-mark .pp-hl::after{font-family:var(--mono);font-size:9px;font-weight:600;
+    padding:2px 6px;border-radius:5px;white-space:nowrap;box-shadow:var(--shadow-1);z-index:9}
+  #panes-panels .pp-tag{position:absolute;top:0;left:var(--s3);transform:translateY(-50%);
+    background:var(--accent);color:var(--accent-ink)}
+  #panes-panels .pp-mark .pp-hl::after{content:"pane";position:absolute;top:-1px;right:var(--s2);
+    background:var(--comp);color:#fff}
+
+  /* the two definitions, as facing cards */
+  #panes-panels .pp-def{border:1px solid var(--edge-lo);border-radius:var(--r3);padding:var(--pad);
+    background:color-mix(in srgb,var(--panel-2) 55%, transparent);display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #panes-panels .pp-def.acc{border-color:var(--accent-line);background:var(--accent-soft)}
+  #panes-panels .pp-def.cmp{border-color:var(--comp-line);background:var(--comp-soft)}
+  #panes-panels .pp-def .pp-word{display:flex;align-items:baseline;gap:var(--gap-sm)}
+  #panes-panels .pp-def .pp-word b{font-size:15px;font-weight:660;letter-spacing:-.01em;color:var(--ink)}
+  #panes-panels .pp-def.acc .pp-word b{color:var(--accent)}
+  #panes-panels .pp-def.cmp .pp-word b{color:var(--comp)}
+  #panes-panels .pp-def .pp-word .pp-kind{font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  #panes-panels .pp-def p{margin:0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+  #panes-panels .pp-def p b{color:var(--ink);font-weight:600}
+  #panes-panels .pp-facts{display:flex;flex-direction:column;gap:2px;margin-top:auto;
+    padding-top:var(--gap-sm);border-top:1px solid var(--edge-lo)}
+  #panes-panels .pp-facts .pp-f{display:grid;grid-template-columns:88px 1fr;gap:var(--gap-sm);
+    font-size:10.5px;line-height:1.6;color:var(--dim)}
+  #panes-panels .pp-facts .pp-f span:first-child{color:var(--faint);text-transform:uppercase;
+    letter-spacing:.06em;font-size:9px;font-weight:700;align-self:center}
+  #panes-panels .pp-facts .pp-f b{color:var(--ink);font-weight:600}
+  #panes-panels .pp-facts code{font-family:var(--mono);font-size:10px}
+
+  /* a numbered legend, where a single .docrule would be a paragraph of prose */
+  #panes-panels .pp-leg{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #panes-panels .pp-leg .pp-li{display:flex;gap:var(--gap-sm);align-items:baseline;
+    font-size:11.5px;line-height:1.45;color:var(--dim)}
+  #panes-panels .pp-leg .pp-li b{color:var(--ink);font-weight:600}
+  #panes-panels .pp-leg code{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #panes-panels .pp-pin{flex:none;width:15px;height:15px;border-radius:50%;background:var(--accent);
+    color:var(--accent-ink);font-size:9px;font-weight:700;display:inline-grid;place-items:center;font-family:var(--mono)}
+  #panes-panels .pp-pin.p2{background:var(--comp);color:#fff}
+
+  /* the duration column of the motion ladder */
+  #panes-panels .pp-dur{font-family:var(--mono);font-size:10.5px;color:var(--accent);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  #panes-panels .pp-dur.none{color:var(--crit)}
+
+  /* do / don't, in the wide two-column form the full-width cards use */
+  #panes-panels .pp-dd{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--gap);margin:0}
+  #panes-panels .pp-dd span{font-size:11px;line-height:1.45;color:var(--dim);display:flex;gap:var(--gap-sm);align-items:baseline}
+  #panes-panels .pp-dd .pp-do::before{content:"Do";color:var(--good);font-weight:700;font-size:9px;flex:none;width:30px}
+  #panes-panels .pp-dd .pp-no::before{content:"Don't";color:var(--crit);font-weight:700;font-size:9px;flex:none;width:30px}
+
+  /* a stand-in for pane content, so a specimen reads full without adding noise */
+  #panes-panels .pp-fill{display:flex;flex-direction:column;gap:5px;padding:var(--s2) var(--s3)}
+  #panes-panels .pp-fill i{display:block;height:7px;border-radius:3px;background:var(--line);opacity:.8}
+  #panes-panels .pp-fill i:nth-child(3n){width:72%}
+  #panes-panels .pp-fill i:nth-child(3n+1){width:88%}
+  #panes-panels .pp-fill i:nth-child(3n+2){width:60%}
+
+  /* windows need a definite height so the panel is bounded and the panes scroll */
+  #panes-panels .pp-win{height:376px;min-height:0}
+  #panes-panels .pp-win .canvas{min-height:0}
+
+  /* the splitter state ladder needs a strip to sit in */
+  #panes-panels .pp-seam{height:36px;position:relative;display:flex;align-items:center;
+    background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2)}
+  #panes-panels .pp-seam .splitter{width:100%;height:100%;margin:0}
+  #panes-panels .pp-seam.stopped{opacity:.5}
+
+  @media (max-width:760px){
+    #panes-panels .pp-dd{grid-template-columns:1fr}
+    #panes-panels .pp-anat{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="panes-panels">
+
+  <!-- ── HEAD ───────────────────────────────────────────────────────── -->
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Panes &amp; panels</h2><span class="k">· surfaces &amp; primitives</span><a class="backchip" data-target="app-design"><i class="ic ic-chevron-left"></i> App design</a></div>
+  <p class="docintro">Two words that get used interchangeably everywhere else, and must not be here. A <b>panel</b> is the
+    container: one column on the right, one width, one collapse state. A <b>pane</b> is a section inside it: Layers,
+    Properties, Effects, Library. You resize <b>panes against each other inside a panel</b>, and you resize <b>the panel
+    against the canvas</b>. Those are different gestures with different limits, and once you can name them the shell stops
+    needing new chrome as the app grows: <b>new capability is a new pane</b>, never a new window.</p>
+
+  <!-- ── 01 · ANATOMY ───────────────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top pp-anat">
+      <div class="pp-mark">
+        <span class="pp-tag">panel</span>
+        <div class="pp-dock">
+          <div class="pdock" style="--dock-w:100%">
+            <div class="dgrp" data-grp="layers" style="--gh:112px">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">9</span>
+                <button class="btn ghost icon sm" data-tip="Panel menu"><i class="ic ic-more"></i></button></div>
+              <div class="dgrp-b">
+                <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout · blue</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="nm">Curves</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+            <div class="splitter h" data-min="96" data-max="240"></div>
+            <div class="dgrp pp-hl" data-grp="props" style="--gh:118px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callout</span></div>
+              <div class="dgrp-b">
+                <div class="section">
+                  <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:84%"></i></span><span class="val">84%</span></div>
+                  <div class="row"><span class="rl">Radius</span><span class="bar"><i style="width:30%"></i></span><span class="val">12</span></div>
+                  <div class="row"><span class="rl">Blend</span><span class="bar"><i style="width:12%"></i></span><span class="val">Normal</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="splitter h" data-min="72" data-max="190"></div>
+            <div class="dgrp" data-grp="effects" style="--gh:78px">
+              <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span></div>
+              <div class="dgrp-b">
+                <div class="efx"><i class="ic sm ic-shadow"></i><span class="nm">Drop shadow</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="efx"><i class="ic sm ic-blur"></i><span class="nm">Backdrop blur</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pp-leg">
+        <div class="pp-li"><span class="pp-pin">1</span><span><b>The panel</b> is the whole column. Its left edge is the one boundary the canvas cares about, and the only place a vertical splitter exists.</span></div>
+        <div class="pp-li"><span class="pp-pin p2">2</span><span><b>A pane</b> is a header plus a bounded body. Click the header to fold it. The body scrolls on its own, so a long list is contained rather than infectious.</span></div>
+        <div class="pp-li"><span class="pp-pin p2">3</span><span><b>Between two panes</b> sits a horizontal splitter. Dragging it moves height from one to the other. It never changes the panel width and never touches the canvas.</span></div>
+        <div class="pp-li"><span class="pp-pin">4</span><span><b>At the bottom</b> the panel lists which panes it has, because "is this pane open" and "do I even have this pane" are two different questions and both need an answer.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+      <p class="docrule">One container, many sections. Everything in the shell that is not the canvas, the tool bar or an
+        overlay is <b>a pane in the one panel</b>. Try it: drag either divider, then click a pane header. The panel keeps
+        its width through both, and no pane changes position in the stack. That containment is the whole point of the
+        split.</p>
+      <div class="docdd">
+        <span class="do">Say "the Layers pane, in the panel".</span>
+        <span class="no">Say "the Layers panel" and leave the container unnamed.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>panel.panes</code></p>
+    </div>
+  </div>
+
+  <!-- ── 02 · THE TWO WORDS ─────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">02</span><h3>The two words</h3><span class="k">Different axis, different limits, different collapse</span></div>
+    <div class="docbody">
+      <div class="docgrid n2">
+        <div class="pp-def acc">
+          <div class="pp-word"><b>Panel</b><span class="pp-kind">container · <code>.pdock</code></span></div>
+          <p>The dock. <b>There is exactly one</b>, on the right, and it is the only thing that takes width away from the
+            canvas. It owns a width, an open or closed state, and the vertical splitter that separates it from the canvas.
+            It holds panes and nothing else.</p>
+          <div class="pp-facts">
+            <div class="pp-f"><span>Axis</span><span>Width, against the <b>canvas</b></span></div>
+            <div class="pp-f"><span>Range</span><span><code>180</code> to <code>460</code>, default <b>268</b></span></div>
+            <div class="pp-f"><span>Handle</span><span><code>.splitter.v</code>, one per window</span></div>
+            <div class="pp-f"><span>Collapse</span><span>To the <b>rail</b>, canvas takes the space</span></div>
+            <div class="pp-f"><span>How many</span><span><b>One.</b> No left dock, no tear-off</span></div>
+          </div>
+        </div>
+        <div class="pp-def cmp">
+          <div class="pp-word"><b>Pane</b><span class="pp-kind">section · <code>.dgrp</code></span></div>
+          <p>One scope of work inside the panel: a header you can click, and a body with <b>its own height budget and its
+            own scroller</b>. A sixty-layer document scrolls inside Layers and never pushes Effects off the screen. Panes
+            stack vertically, in a fixed order, in every workspace.</p>
+          <div class="pp-facts">
+            <div class="pp-f"><span>Axis</span><span>Height, against <b>sibling panes</b></span></div>
+            <div class="pp-f"><span>Range</span><span><code>96</code> to <code>340</code>, budget by role</span></div>
+            <div class="pp-f"><span>Handle</span><span><code>.splitter.h</code>, one per pair</span></div>
+            <div class="pp-f"><span>Collapse</span><span>To its <b>header</b>, siblings unmoved</span></div>
+            <div class="pp-f"><span>How many</span><span>As many as the work needs</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="docnote"><b>The test for which word you want:</b> ask what the thing argues with. If it argues with the
+        canvas for width, it is the panel. If it argues with its neighbours for height, it is a pane. Nothing in the shell
+        argues with both.</p>
+    </div>
+  </div>
+
+  <!-- ── 03 · MIN, MAX, THE BUDGET ──────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">03</span><h3>Min, max, and the budget</h3><span class="k">A pane declares what it is; the ladder assigns the size</span></div>
+    <div class="docbody">
+      <div class="docgrid n2">
+        <div class="docsp">
+          <div class="docsp-l"><b>The panel</b> · width, against the canvas</div>
+          <table class="doctbl">
+            <tr><th>Limit</th><th>Value</th><th>What holds it there</th></tr>
+            <tr><td><b>Minimum</b></td><td><code>180px</code></td><td>Two columns of Library tiles still read as cards</td></tr>
+            <tr><td><b>Default</b></td><td><code>268px</code></td><td>A layer name fits without an ellipsis</td></tr>
+            <tr><td><b>Maximum</b></td><td><code>460px</code></td><td>Past this the canvas stops being the subject</td></tr>
+            <tr><td><b>Collapsed</b></td><td><code>34px</code></td><td>The rail; labels drop below a 620px window</td></tr>
+          </table>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>A pane</b> · height, against its siblings</div>
+          <table class="doctbl">
+            <tr><th>Role</th><th>Budget</th><th>Why that one</th></tr>
+            <tr><td><b>Effects</b></td><td><code>sm · 132px</code></td><td>A short list you glance at</td></tr>
+            <tr><td><b>Layers</b></td><td><code>md · 180px</code></td><td>A list you scan and scroll</td></tr>
+            <tr><td><b>Properties</b></td><td><code>lg · 264px</code></td><td>A form you work in</td></tr>
+            <tr><td><b>Library</b></td><td><code>grow · 244+</code></td><td>Takes the leftover, floors at one whole tile row</td></tr>
+          </table>
+        </div>
+      </div>
+      <p class="docnote"><b>Nobody picks a pixel height.</b> Every page used to hand-tune one, so the same pane opened to a
+        different size nearly everywhere: measured across seventeen windows, Layers had <b>eleven</b> distinct heights and
+        Properties <b>thirteen</b>. A pane now declares its role and the ladder gives it one of three budgets. Exactly
+        <b>one</b> pane per panel may grow; everything else is bounded, which is what keeps the stack predictable when you
+        collapse something. If the content overruns its budget the pane <b>scrolls</b>. That is what the budget is for.</p>
+    </div>
+  </div>
+
+  <!-- ── 04 · THE FLOOR IS REAL ─────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top pp-anat">
+      <div class="pp-dock">
+        <div class="pdock" style="--dock-w:100%">
+          <div class="dgrp" data-grp="layers" style="--gh:104px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">12</span></div>
+            <div class="dgrp-b">
+              <div class="lrow"><i class="ic ic-text"></i><span class="nm">Title · New York</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-square" style="color:#7c4dff"></i><span class="nm">Card · surface</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-circle" style="color:#3ecf8e"></i><span class="nm">Status dot</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Hero · 2400 × 1600</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+          <div class="splitter h" data-min="96" data-max="196"></div>
+          <div class="dgrp grow" data-grp="library">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Components</span></div>
+            <div class="dgrp-b">
+              <div class="libgrid">
+                <div class="libtile comp"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#4c6fff)"></span><span class="cap"><span class="nm">Button</span></span></div>
+                <div class="libtile comp"><span class="th" style="background:linear-gradient(135deg,#ff7e5f,#e0a53a)"></span><span class="cap"><span class="nm">Card</span></span></div>
+                <div class="libtile comp"><span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span><span class="cap"><span class="nm">Badge</span></span></div>
+                <div class="libtile comp"><span class="th" style="background:linear-gradient(135deg,#f0685c,#7c4dff)"></span><span class="cap"><span class="nm">Field</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pp-leg">
+        <div class="pp-li"><span class="pp-pin">1</span><span><b>Drag the divider up.</b> Layers shrinks, starts scrolling, and stops at <code>96px</code>. The rows never compress and the names never truncate to make room.</span></div>
+        <div class="pp-li"><span class="pp-pin">2</span><span><b>Drag it down.</b> The height comes out of Library, the growing pane, which floors at one whole tile row so it can never become an unreadable sliver.</span></div>
+        <div class="pp-li"><span class="pp-pin">3</span><span><b>Nobody wins by squeezing.</b> If the budgets overrun the panel, the panel itself scrolls. That is the designed last resort, not an accident.</span></div>
+        <div class="pp-li"><span class="pp-pin">4</span><span><b>Keyboard is equal.</b> Focus a divider and press the arrows: 8px a step, 32px with shift, same limits, same result.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">04</div><h3 class="docname">The floor is real</h3>
+      <p class="docrule">A limit you can feel is worth more than a limit you are told about. At the floor the divider
+        simply <b>stops</b>: no rubber-band, no snap-back, no shake. The pointer keeps moving and the divider does not,
+        which is the clearest way to say "that is as far as this goes".</p>
+      <div class="docdd">
+        <span class="do">Stop dead at min and max.</span>
+        <span class="no">Bounce, or squeeze a neighbour below its own floor.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>pane("layers").height = 96</code></p>
+    </div>
+  </div>
+
+  <!-- ── 05 · SPLITTER STATES ───────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">05</span><h3>The divider, in three states</h3><span class="k">Idle · hover and drag · at the limit</span></div>
+    <div class="docbody">
+      <div class="docgrid n3">
+        <div class="docsp">
+          <div class="docsp-l"><b>Idle</b> · grip visible</div>
+          <div class="pp-seam"><div class="splitter h"></div></div>
+          <p class="docsp-d">A 3px grip at rest, so you can see the seam is draggable without hunting for it. The hit
+            target is <b>8px</b>, wider than the grip you can see.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>Hover and drag</b> · accent</div>
+          <div class="pp-seam"><div class="splitter h dragging"></div></div>
+          <p class="docsp-d">The whole seam lights up and the cursor becomes a resize cursor. Hover and drag paint
+            <b>identically</b>, because a drag that looks different from its own hover reads as a mode you entered.</p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>At the limit</b> · it stops</div>
+          <div class="pp-seam stopped"><div class="splitter h"></div></div>
+          <p class="docsp-d">No new colour, no warning, no motion. The absence of movement is the feedback, and it needs
+            no vocabulary of its own.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 06 · RESIZING PANES IN A PANEL ─────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top pp-anat">
+      <div class="pp-dock">
+        <div class="pdock" style="--dock-w:100%">
+          <div class="dgrp" data-grp="layers" style="--gh:100px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+            <div class="dgrp-b">
+              <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Nav bar</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-text"></i><span class="nm">Section title</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Panel · glass</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+          <div class="splitter h" data-min="96" data-max="216"></div>
+          <div class="dgrp" data-grp="props" style="--gh:112px">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Nav bar</span></div>
+            <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          </div>
+          <div class="splitter h" data-min="80" data-max="196"></div>
+          <div class="dgrp grow" data-grp="effects">
+            <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">3</span></div>
+            <div class="dgrp-b">
+              <div class="efx"><i class="ic sm ic-shadow"></i><span class="nm">Drop shadow</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="efx"><i class="ic sm ic-blur"></i><span class="nm">Backdrop blur</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="efx"><i class="ic sm ic-border"></i><span class="nm">Inner border</span><i class="ic sm ic-eye eye"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pp-leg">
+        <div class="pp-li"><span class="pp-pin">1</span><span><b>A drag is a transfer, not a growth.</b> The panel height is fixed, so height taken from one pane is given to the growing pane. Nothing below jumps, and the window never resizes.</span></div>
+        <div class="pp-li"><span class="pp-pin">2</span><span><b>The divider owns the pane above it.</b> One handle, one target, so you always know which of the two neighbours you are about to change.</span></div>
+        <div class="pp-li"><span class="pp-pin">3</span><span><b>Double-click resets</b> that pane to its role budget. Getting back to the default should never require dragging carefully.</span></div>
+        <div class="pp-li"><span class="pp-pin">4</span><span><b>Sizes belong to you, not the file.</b> They persist for the session and save with the workspace, so your panel is the same shape whichever document you open.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">06</div><h3 class="docname">Resizing panes in a panel</h3>
+      <p class="docrule">Zero sum, two neighbours, never the window. Drag either seam and watch the panel width and the pane
+        order stay exactly where they were. The panel is a <b>fixed budget being divided</b>, which is why a pane can never
+        make the window bigger and a long list can never push a sibling off the screen.</p>
+      <div class="docdd">
+        <span class="do">Take the height from the growing pane.</span>
+        <span class="no">Grow the panel, or push a pane out of the visible stack.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>pane("properties").height = 240</code></p>
+    </div>
+  </div>
+
+  <!-- ── 07 · COLLAPSE, THREE LEVELS ────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">07</span><h3>Collapse has three levels</h3><span class="k">Header · hidden · rail</span></div>
+    <div class="docbody">
+      <div class="docgrid n3">
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Level 1</b> · pane folds to its header</div>
+          <div class="pp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp" data-grp="layers" style="--gh:100px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i><span class="nm">Label</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp collapsed" data-grp="props">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callout</span></div>
+                <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i></div></div>
+              </div>
+              <div class="dgrp" data-grp="effects" style="--gh:74px">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span></div>
+                <div class="dgrp-b">
+                  <div class="efx"><i class="ic sm ic-shadow"></i><span class="nm">Drop shadow</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="efx"><i class="ic sm ic-blur"></i><span class="nm">Backdrop blur</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d"><b>"Not right now."</b> Click the header. The chevron rotates, the body folds, the header
+            stays. The freed height goes to the growing pane, so nothing else changes position.</p>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Level 2</b> · pane hidden entirely</div>
+          <div class="pp-dock sm">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp" data-grp="layers" style="--gh:100px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i><span class="nm">Label</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp hidden" data-grp="effects">
+                <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span></div>
+                <div class="dgrp-b"><div class="pp-fill"><i></i><i></i></div></div>
+              </div>
+              <div class="dgrp" data-grp="props" style="--gh:92px">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callout</span></div>
+                <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d"><b>"Not in this kind of work."</b> Effects is gone, header and all. The <b>Panels</b> footer
+            brings it back. That list is built from the panel's own panes, so it can never drift out of sync.</p>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Level 3</b> · the panel becomes a rail</div>
+          <div class="pp-dock sm" style="width:auto">
+            <div style="display:flex;height:100%">
+              <div style="flex:1;min-width:0;background:var(--artboard)"></div>
+              <div class="drail" style="display:flex">
+                <button class="drailtab on" data-tip="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-tip="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+                <button class="drailtab" data-tip="Effects"><i class="ic sm ic-effects"></i><span class="lb">Effects</span></button>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d"><b>"The canvas is the subject."</b> The panel becomes a 34px labeled strip. Clicking a tab
+            restores the panel <b>and</b> reveals that pane, so one click gets you back to what you wanted.</p>
+        </div>
+
+      </div>
+      <p class="docnote"><b>One rule ties the three together: a restore lands you where you were.</b> Un-folding a pane
+        returns the exact height you dragged it to, not the role default. Un-hiding puts it back in its fixed slot, never
+        at the bottom of the stack. Restoring the panel returns your dragged width. Collapse is a view, not an edit, and a
+        view that forgets is indistinguishable from one that broke.</p>
+    </div>
+  </div>
+
+  <!-- ── 08 · ANIMATION ─────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">08</span><h3>Animation</h3><span class="k">Animate a decision, never a drag</span></div>
+    <div class="docbody">
+      <table class="doctbl">
+        <tr><th>What moves</th><th>Duration</th><th>Why</th></tr>
+        <tr><td><b>Splitter drag</b> · pane height, panel width</td><td><span class="pp-dur none">0ms</span></td><td>Tracks the pointer one to one. Any easing at all makes the divider trail your hand, which reads as the app being slow rather than smooth. A transition here is a bug, not polish.</td></tr>
+        <tr><td><b>Splitter hover and drag paint</b></td><td><span class="pp-dur">120ms</span></td><td>Colour only. The seam lights before you commit to the drag.</td></tr>
+        <tr><td><b>Pane folds and unfolds</b></td><td><span class="pp-dur">180ms</span></td><td>Height and opacity on one ease-out curve. Long enough to read as folding, short enough that collapsing three panes quickly never queues up behind itself.</td></tr>
+        <tr><td><b>Disclosure chevron</b></td><td><span class="pp-dur">150ms</span></td><td>A quarter turn, finishing slightly ahead of the body, so the cause is visible before the effect.</td></tr>
+        <tr><td><b>Pane hidden or restored</b></td><td><span class="pp-dur">200ms</span></td><td>Fades as it folds, and the siblings slide with it. A pane that vanishes instantly leaves you checking whether you deleted something.</td></tr>
+        <tr><td><b>Panel to rail and back</b></td><td><span class="pp-dur">220ms</span></td><td>The panel width and the canvas reflow are one movement on one curve. Two curves on the same gesture read as tearing.</td></tr>
+        <tr><td><b>Panel overlay in a narrow window</b></td><td><span class="pp-dur">240ms</span></td><td>Slides in from the right with its shadow, because it is arriving from off screen rather than growing in place.</td></tr>
+        <tr><td><b>Reduced motion</b></td><td><span class="pp-dur none">0ms</span></td><td>Every duration above becomes an instant state change. The layout ends up identical either way, which is exactly why this is safe to do.</td></tr>
+      </table>
+
+      <div class="docgrid n2" style="margin-top:var(--gap)">
+        <div class="docsp">
+          <div class="docsp-l"><b>Pane folds</b> · 180ms</div>
+          <div class="pp-dock xs" style="width:240px">
+            <div class="pdock" style="--dock-w:100%">
+              <div class="dgrp" data-grp="layers" id="ppDemoPane" style="--gh:88px">
+                <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                <div class="dgrp-b">
+                  <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i><span class="nm">Label</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+                </div>
+              </div>
+              <div class="dgrp grow" data-grp="props">
+                <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callout</span></div>
+                <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i><i></i></div></div>
+              </div>
+            </div>
+          </div>
+          <button class="btn secondary sm" id="ppRunCollapse" style="align-self:flex-start"><i class="ic sm ic-chevron-updown"></i> Fold and unfold</button>
+        </div>
+
+        <div class="docsp">
+          <div class="docsp-l"><b>Panel to rail</b> · 220ms</div>
+          <div class="pp-dock xs" style="width:300px">
+            <div style="display:flex;height:100%" id="ppRailDemo">
+              <div style="flex:1;min-width:0;background:var(--artboard)"></div>
+              <div class="drail" id="ppDemoRail" style="display:none">
+                <button class="drailtab on"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab"><i class="ic sm ic-sliders"></i><span class="lb">Props</span></button>
+              </div>
+              <div class="pdock" id="ppDemoPanel" style="--dock-w:180px;width:180px;min-width:0;transition:width .22s cubic-bezier(.32,.72,0,1), opacity .22s ease">
+                <div class="dgrp grow" data-grp="layers">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout</span></div>
+                    <div class="lrow"><i class="ic ic-text"></i><span class="nm">Label</span></div>
+                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn secondary sm" id="ppRunRail" style="align-self:flex-start"><i class="ic sm ic-sidebar"></i> Collapse to rail</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 09 · WHEN THE WIDTH RUNS OUT ───────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">09</span><h3>When the width runs out</h3><span class="k">Side by side becomes one vertical panel</span></div>
+    <div class="docbody">
+      <div class="docsp">
+        <div class="docsp-l"><b>Wide</b> · the panel sits in the layout and takes width from the canvas</div>
+        <div class="win tall cq pp-win" data-shell="Onboarding · 1440 × 900" data-ws="ui">
+            <div class="edit lean" id="ppWide" data-dock="open">
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="hero-card" style="width:248px">
+                    <div style="font-family:var(--serif);font-size:19px;letter-spacing:-.015em;color:#fff">Welcome back</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.66);margin-top:4px">Pick up where you left off</div>
+                    <div class="uibtn grad" style="margin-top:12px">Continue</div>
+                  </div>
+                </div>
+              </div>
+              <div class="splitter v" data-min="180" data-max="380"></div>
+              <div class="pdock" style="--dock-w:264px">
+                <div class="dgrp" data-grp="layers" style="--gh:104px">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Welcome card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Continue</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp grow" data-grp="props">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Welcome card</span></div>
+                  <div class="dgrp-b">
+                    <div class="section">
+                      <div class="grid2">
+                        <div class="row"><span class="rl">X</span><span class="field">240</span></div>
+                        <div class="row"><span class="rl">Y</span><span class="field">128</span></div>
+                        <div class="row"><span class="rl">W</span><span class="field">360</span></div>
+                        <div class="row"><span class="rl">H</span><span class="field">208</span></div>
+                      </div>
+                      <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span><span class="val">100%</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+              </div>
+            </div>
+          </div>
+        <p class="docsp-d">The panel is part of the layout, the vertical splitter separates it from the canvas, and
+          Properties shows position as a <b>two-column</b> grid because at this width there is room for two columns.</p>
+      </div>
+
+      <div class="docgrid n2" style="margin-top:var(--gap)">
+        <div class="docsp">
+          <div class="docsp-l"><b>Narrow</b> · the same panel, floating over the canvas</div>
+          <div class="win tall cq pp-win" style="max-width:404px" data-shell="Onboarding · 1440 × 900" data-ws="ui">
+            <div class="edit lean" id="ppNarrow" data-dock="overlay">
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="hero-card" style="width:180px">
+                    <div style="font-family:var(--serif);font-size:15px;letter-spacing:-.015em;color:#fff">Welcome back</div>
+                    <div class="uibtn grad" style="margin-top:10px">Continue</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pdock" style="--dock-w:186px">
+                <div class="dgrp" data-grp="layers" style="--gh:96px">
+                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
+                  <div class="dgrp-b">
+                    <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Welcome card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Continue</span><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+                <div class="dgrp grow" data-grp="props">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Welcome card</span></div>
+                  <div class="dgrp-b">
+                    <div class="section">
+                      <div class="row"><span class="rl">X</span><span class="field">240</span></div>
+                      <div class="row"><span class="rl">Y</span><span class="field">128</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="drail">
+                <button class="drailtab"><i class="ic sm ic-layers"></i></button>
+                <button class="drailtab"><i class="ic sm ic-sliders"></i></button>
+              </div>
+            </div>
+          </div>
+          <p class="docsp-d">Same panes, same order, same headers. The two-column grid became one column and the rail
+            dropped its labels. <b>Nothing was moved or removed.</b></p>
+        </div>
+        <div class="docsp">
+          <div class="docsp-l"><b>What the window did</b> · one attribute, three states</div>
+          <div class="pp-leg">
+            <div class="pp-li"><span class="pp-pin">1</span><span><b>The panel left the layout.</b> It floats over the canvas with its own shadow, so a 400px window still gets a full canvas <i>and</i> a full panel, just not both at once.</span></div>
+            <div class="pp-li"><span class="pp-pin">2</span><span><b>It gained a close affordance.</b> A floating surface has to be dismissible from itself; a docked one does not, because its rail is always there.</span></div>
+            <div class="pp-li"><span class="pp-pin">3</span><span><b>The rail lost its labels</b> below 620px and kept its icons and its tooltips, so the tabs stay reachable rather than being dropped.</span></div>
+            <div class="pp-li"><span class="pp-pin">4</span><span><b>Panes reflowed internally.</b> The property grid went from two columns to one. That is a decision inside a pane, not a change to the panel.</span></div>
+            <div class="pp-li"><span class="pp-pin">5</span><span><b>One attribute drives all of it</b> — open, closed, overlay — so the narrow layout cannot drift away from the wide one as either changes.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <table class="doctbl" style="margin-top:var(--gap)">
+        <tr><th>At the panel</th><th>Inside a pane</th><th>Never</th></tr>
+        <tr>
+          <td>Below an <b>880px window</b> the panel leaves the layout and becomes an overlay you summon. Below <b>620px</b>
+            the rail drops its labels to icons. Both are queries on the <b>window</b>, not the screen, so a small window on
+            a large display behaves the same way.</td>
+          <td>Two-column property grids reflow to one. A scope switch becomes a wrapping chip list rather than a segmented
+            control, because segments do not survive a 268px column. A search field and a button stack instead of sharing
+            one skinny row.</td>
+          <td>The pane order, the pane names, the collapse state, or which panes exist. <b>A narrow window is a smaller view
+            of the same panel</b>, not a different app, and never a place to quietly drop a feature.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── 10 · RULES ─────────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">10</span><h3>Rules</h3><span class="k">Do and don't</span></div>
+    <div class="docbody">
+      <div class="pp-dd">
+        <span class="pp-do">Add capability as <b>a new pane</b> in the one panel.</span>
+        <span class="pp-no">Add a second panel, a left dock, or a floating window.</span>
+        <span class="pp-do">Give a pane a <b>role</b> and let the ladder size it.</span>
+        <span class="pp-no">Write a pixel height because it looks right on your page.</span>
+        <span class="pp-do">Let a long list <b>scroll inside its own pane</b>.</span>
+        <span class="pp-no">Let a pane grow the panel, or the panel grow the window.</span>
+        <span class="pp-do">Animate folding, hiding, and the rail transition.</span>
+        <span class="pp-no">Animate anything a pointer is currently dragging.</span>
+        <span class="pp-do">Keep every pane header clickable, with a visible chevron.</span>
+        <span class="pp-no">Ship a pane you cannot fold or a panel you cannot manage.</span>
+        <span class="pp-do">Restore a pane to the size and the slot it had.</span>
+        <span class="pp-no">Reset it to the default, or re-add it at the bottom.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 11 · IN THE API ────────────────────────────────────────────── -->
+  <div class="doccard">
+    <div class="dochead"><span class="docnum">11</span><h3>In the API</h3><span class="k">Every drag and click is a value an agent can set</span></div>
+    <div class="docbody">
+      <table class="doctbl">
+        <tr><th>Call</th><th>What it does</th></tr>
+        <tr><td><code>panel.width = 320</code></td><td>Resize the panel against the canvas. Clamped to <b>180 to 460</b>, exactly like the drag.</td></tr>
+        <tr><td><code>panel.collapsed = true</code></td><td>Collapse the whole panel to the rail. <b>⌥⌘L</b> and the rail tabs call the same thing.</td></tr>
+        <tr><td><code>panel.reveal("layers")</code></td><td>Restore the panel if it was railed, un-hide and unfold that pane, and scroll it into view. What a rail tab does.</td></tr>
+        <tr><td><code>pane("properties").height = 240</code></td><td>Set one pane's height. Clamped to its own min and max; the growing pane absorbs the difference.</td></tr>
+        <tr><td><code>pane("effects").collapsed = true</code></td><td>Fold a pane to its header. The reversible one.</td></tr>
+        <tr><td><code>pane("library").visible = false</code></td><td>Remove the pane from the panel entirely. What the Panels footer checklist toggles.</td></tr>
+        <tr><td><code>pane("layers").reset()</code></td><td>Back to the role budget. What a double-click on the divider does.</td></tr>
+        <tr><td><code>panel.layout</code></td><td>The whole arrangement as one value: width, order, per-pane height, folded and visible. Save it, name it, restore it, hand it to someone else.</td></tr>
+      </table>
+      <p class="docnote">Because the layout is one readable value, a workspace preset is not a feature anyone has to build.
+        "Give me a layout for redlining" is an agent reading <code>panel.layout</code>, writing a new one, and the panel
+        animating into it, using the same calls the mouse makes.</p>
+    </div>
+  </div>
+
+  <!-- ── CLOSING NOTES ──────────────────────────────────────────────── -->
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Naming the two boxes is what stops the shell from sprawling. A panel
+      is the only thing that argues with the canvas; a pane is the only thing that argues with its siblings. Every new
+      capability then has an obvious home and an obvious size, so the app can grow into UI design, components and video
+      without ever needing chrome nobody has seen before.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>Let a pane be pulled out of the panel and parked on a second
+      display, still driven by the same selection. That is the one arrangement a single column genuinely cannot serve, and
+      it stays honest as long as the pane keeps its identity and comes home to its original slot.</p></div>
+    <div class="c"><div class="lab">Open question</div><p>Should the panel layout follow the workspace, the document, or
+      the person? Following the workspace makes Video feel purpose-built. Following the person means your panel never moves
+      under you. Today it follows the person, and the workspace only chooses which panes are visible.</p></div>
+  </div>
+
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  // The two motion demos run the REAL state changes, so the durations in the
+  // table above are the durations you actually see. Scoped to this page's own
+  // ids; nothing here queries the document at large.
+  var pane = document.getElementById('ppDemoPane');
+  var runC = document.getElementById('ppRunCollapse');
+  if (pane && runC) {
+    runC.addEventListener('click', function () {
+      pane.classList.add('collapsed');
+      setTimeout(function () { pane.classList.remove('collapsed'); }, 900);
+    });
+  }
+  var panel = document.getElementById('ppDemoPanel');
+  var rail = document.getElementById('ppDemoRail');
+  var runR = document.getElementById('ppRunRail');
+  if (panel && rail && runR) {
+    var open = true;
+    runR.addEventListener('click', function () {
+      open = !open;
+      panel.style.width = open ? '180px' : '0px';
+      panel.style.opacity = open ? '1' : '0';
+      rail.style.display = open ? 'none' : 'flex';
+      runR.innerHTML = '<i class="ic sm ic-sidebar"></i> ' + (open ? 'Collapse to rail' : 'Restore the panel');
+    });
+  }
+})();
+</script>
+</body>
+</html>

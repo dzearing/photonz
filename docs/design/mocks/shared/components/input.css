@@ -1,0 +1,142 @@
+/* ============================================================
+   INPUTS — text, number, search, multiline
+   ============================================================
+   The system had `.field` (a read-only k/v display box) and `.select` (a
+   dropdown), and nothing you could actually type into. Every page that needed
+   one drew a box. So: one input, one geometry, four shapes.
+
+     <label class="input"><span class="k">Name</span><input value="Hero card"></label>
+     <div class="stepper"><span class="k">W</span><input value="320"><b class="sp"></b></div>
+     <label class="input search"><i class="ic ic-search"></i><input placeholder="Search"></label>
+     <label class="input area"><textarea rows="3"></textarea></label>
+
+   ROUNDED RECTANGLE, NOT A CAPSULE, and this is deliberate. Buttons are
+   capsules because a capsule reads as "press me". A text field is a container
+   you put content into and it should read as a well: capsule sides waste the
+   first and last 8px of a 92px numeric field, and in a 3-up X/Y/W grid the
+   round ends stop the values from lining up as columns. Same radius family as
+   the panels around them (`--r2`), same glass, same 32px control height.
+
+   The NUMERIC field is the one that carries real weight in this app, because a
+   pro tool is mostly numbers. Its label is a scrub handle (drag sideways to
+   change, the Photoshop gesture), it accepts arithmetic (`320/2`, `+16`), it
+   steps with arrow keys and 10x with shift, and it has spinner buttons that
+   only appear on hover so a dense inspector stays quiet. Those four behaviours
+   together are what make it feel native instead of like a web form. */
+
+/* ============================================================
+   TEXT
+   ============================================================ */
+.input{
+  display:inline-flex;align-items:center;gap:var(--gap-sm);
+  height:var(--ctl-h);padding:0 var(--s3);min-width:0;
+  border:1px solid var(--edge-lo);border-radius:var(--r2);
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  transition:var(--ctl-tr);cursor:text;
+}
+.input.sm{height:var(--ctl-h-sm);padding:0 var(--gap-sm);border-radius:var(--r1)}
+.input.lg{height:var(--ctl-h-lg);padding:0 var(--s4);border-radius:var(--r3)}
+.input.block{display:flex;width:100%}
+.input>input,.input>textarea{
+  flex:1;min-width:0;width:100%;
+  border:0;background:transparent;outline:none;padding:0;margin:0;
+  font-family:var(--sans);font-size:12px;font-weight:520;color:var(--ink);
+  line-height:1.4;
+}
+.input.sm>input{font-size:11px}
+.input.lg>input{font-size:13.5px}
+.input>input::placeholder,.input>textarea::placeholder{color:var(--faint);font-weight:480}
+/* a leading key label (the inspector's "X" / "Opacity") and a trailing unit */
+.input>.k{flex:none;font-size:10.5px;color:var(--faint);font-weight:560;letter-spacing:-.005em}
+.input>.u{flex:none;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.input>.ic{flex:none;width:14px;height:14px;color:var(--faint)}
+.input>.kbd{flex:none;font-family:var(--mono);font-size:9.5px;color:var(--faint);
+  border:1px solid var(--edge-lo);border-radius:var(--r1);padding:1px 5px}
+
+.input:hover{border-color:color-mix(in srgb,var(--accent) 26%, var(--edge-lo))}
+.input:focus-within{border-color:var(--accent);background:var(--glass);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.input:focus-within>.ic{color:var(--dim)}
+.input.invalid{border-color:var(--crit);--ring-c:var(--crit)}
+.input.disabled,.input:has(>input:disabled),.input:has(>textarea:disabled){opacity:.42;pointer-events:none}
+
+/* monospace for anything you compare down a column: sizes, hex, timecode */
+.input.mono>input{font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums}
+
+/* search: the icon is inside the well, and a clear button appears once typed */
+.input.search{border-radius:999px}
+.input.search .clr{display:none;flex:none;width:16px;height:16px;border:0;padding:0;border-radius:50%;
+  background:var(--line-strong);color:var(--panel);align-items:center;justify-content:center}
+.input.search.filled .clr{display:inline-flex}
+.input.search .clr>.ic{width:10px;height:10px;color:inherit}
+
+/* multiline: the well grows, the padding stays on the 4pt scale */
+.input.area{height:auto;align-items:flex-start;padding:var(--gap-sm) var(--s3)}
+.input.area>textarea{resize:vertical;min-height:52px;font-size:12px}
+
+/* ============================================================
+   NUMBER — the one that matters
+   ============================================================ */
+.stepper{
+  --st-h:var(--ctl-h);
+  position:relative;display:inline-flex;align-items:center;gap:6px;
+  height:var(--st-h);padding:0 var(--s2) 0 var(--gap-sm);min-width:72px;
+  border:1px solid var(--edge-lo);border-radius:var(--r2);
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  transition:var(--ctl-tr);
+}
+.stepper.sm{--st-h:var(--ctl-h-sm);min-width:60px;padding:0 6px 0 var(--gap-sm);border-radius:var(--r1)}
+.stepper.block{display:flex;width:100%;min-width:0}
+/* the label doubles as the scrub handle — this is why it is not a <span> in
+   the flow but a control with its own cursor and focus ring */
+.stepper>.k{
+  flex:none;font-size:10.5px;font-weight:600;color:var(--faint);letter-spacing:-.005em;
+  cursor:ew-resize;padding:2px 3px;margin-left:-3px;border-radius:var(--r1);
+  -webkit-user-select:none;user-select:none;transition:var(--ctl-tr);
+}
+.stepper>.k:hover{color:var(--accent);background:var(--accent-soft)}
+.stepper>.k:focus-visible{outline:none;box-shadow:var(--ring)}
+.stepper>input{
+  flex:1;min-width:0;width:100%;border:0;background:transparent;outline:none;padding:0;
+  font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;
+  color:var(--ink);font-weight:520;text-align:right;
+  -moz-appearance:textfield;
+}
+.stepper>input::-webkit-outer-spin-button,.stepper>input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stepper>.u{flex:none;font-family:var(--mono);font-size:10px;color:var(--faint)}
+/* spinners: present, but they do not clutter until you are near them */
+.stepper>.sp{
+  flex:none;display:flex;flex-direction:column;width:13px;height:calc(var(--st-h) - 8px);
+  margin-left:2px;border-radius:var(--r1);overflow:hidden;
+  border:1px solid var(--edge-lo);background:var(--glass);
+  opacity:0;transition:opacity .12s ease;
+}
+.stepper:hover>.sp,.stepper:focus-within>.sp{opacity:1}
+.stepper>.sp>button{flex:1;border:0;padding:0;background:transparent;display:grid;place-items:center;
+  color:var(--dim);line-height:0}
+.stepper>.sp>button:hover{background:var(--accent);color:var(--accent-ink)}
+.stepper>.sp>button:active{background:color-mix(in srgb,var(--accent) 80%, black 20%)}
+.stepper>.sp>button>.ic{width:9px;height:9px}
+.stepper>.sp>button+button{border-top:1px solid var(--edge-lo)}
+
+.stepper:hover{border-color:color-mix(in srgb,var(--accent) 26%, var(--edge-lo))}
+.stepper:focus-within{border-color:var(--accent);background:var(--glass);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.stepper.mixed>input{color:var(--faint)}          /* multi-select, differing values */
+.stepper.linked{border-color:var(--accent-line)}  /* driven by a token or constraint */
+.stepper.disabled,.stepper:has(>input:disabled){opacity:.42;pointer-events:none}
+
+/* the 2-up / 3-up numeric grid every transform panel needs, so no panel
+   re-authors the column rhythm */
+.numgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm);padding:var(--s1) 0}
+.numgrid.n3{grid-template-columns:repeat(3,1fr)}
+.numgrid .stepper{min-width:0}
+/* the constraint link that sits between two of them (W/H aspect lock) */
+.numgrid .lk{display:grid;place-items:center;color:var(--faint)}
+.numgrid .lk.on{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){
+  .input,.stepper,.stepper>.k,.stepper>.sp{transition:none}
+}

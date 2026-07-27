@@ -1,0 +1,154 @@
+/* ============================================================
+   TOGGLES — switch, checkbox, radio
+   ============================================================
+   The three binary controls. Every one of them wraps a REAL input, so keyboard,
+   focus order, form semantics and VoiceOver all work with no JS at all:
+
+     <label class="switch"><input type="checkbox" checked><i></i></label>
+     <label class="check"><input type="checkbox"><i></i><span>Snap to pixel</span></label>
+     <label class="radio"><input type="radio" name="fit"><i></i><span>Fill</span></label>
+
+   The `<i>` is the drawn control; the input is visually hidden but focusable,
+   and `:focus-visible` on it rings the `<i>`.
+
+   WHICH ONE, AND WHEN — this is the part that drifts if you leave it to taste:
+
+     switch    a setting that takes effect IMMEDIATELY and has no OK button.
+               Panels, canvas overlays, "snap on/off". Reads as a state.
+     checkbox  an item in a LIST of independent options, or something that is
+               committed later (an export dialog, a batch selection). Reads as
+               a choice you are making.
+     radio     one of a SMALL set (2-4) of mutually exclusive options where you
+               want all of them visible. More than 4, or where space is tight,
+               use `.seg`; more than ~7 use `.select`.
+
+   Geometry follows VISUAL RULE 3: the knob inside a capsule track is a CIRCLE,
+   because round goes inside round. The checkbox is a rounded square because a
+   checkbox is not a capsule and pretending otherwise makes it read as a switch
+   at a glance. The check MARK is drawn in CSS rather than masked from the icon
+   set on purpose: the icon grid is 24x24 with a 1.75 stroke, and stepping that
+   down to a 15px box lands the stroke off-pixel and comes out furry. */
+
+/* ============================================================
+   SWITCH
+   ============================================================ */
+.switch{
+  --sw-w:34px; --sw-h:20px; --sw-k:16px;
+  display:inline-flex;align-items:center;gap:var(--gap-sm);
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+  font-size:11.5px;font-weight:520;color:var(--ink);
+}
+.switch.sm{--sw-w:28px;--sw-h:16px;--sw-k:12px}
+.switch.lg{--sw-w:42px;--sw-h:24px;--sw-k:20px}
+.switch>input{position:absolute;opacity:0;width:0;height:0;margin:0;pointer-events:none}
+.switch>i{
+  position:relative;flex:none;width:var(--sw-w);height:var(--sw-h);border-radius:999px;
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 2px rgba(20,24,40,.14);
+  transition:var(--ctl-tr);
+}
+.switch>i::after{
+  content:"";position:absolute;top:50%;left:2px;transform:translateY(-50%);
+  width:var(--sw-k);height:var(--sw-k);border-radius:50%;
+  background:linear-gradient(180deg, #fff, color-mix(in srgb,#fff 88%, var(--line) 12%));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-1);
+  transition:left .18s cubic-bezier(.32,.72,0,1), width .12s ease;
+}
+.switch>input:checked+i{
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 86%, white 14%), var(--accent));
+  border-color:transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow-sm);
+}
+.switch>input:checked+i::after{left:calc(100% - var(--sw-k) - 2px)}
+.switch:hover>i{border-color:color-mix(in srgb,var(--accent) 30%, var(--edge-lo))}
+/* the squash: pressing the knob stretches it into a capsule and lets go back
+   into a circle. It is the one place a circle is allowed to become a pill. */
+.switch:active>i::after{width:calc(var(--sw-k) + 4px)}
+.switch>input:checked:active+i::after{left:calc(100% - var(--sw-k) - 6px)}
+.switch>input:focus-visible+i{box-shadow:inset 0 1px 2px rgba(20,24,40,.14), var(--ring)}
+.switch>input:checked:focus-visible+i{box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--ring)}
+.switch>input:disabled+i,.switch.disabled{opacity:.42;pointer-events:none}
+
+/* ============================================================
+   CHECKBOX
+   ============================================================ */
+.check{
+  display:inline-flex;align-items:center;gap:var(--gap-sm);
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+  font-size:11.5px;font-weight:520;color:var(--ink);line-height:1.3;
+}
+.check>input{position:absolute;opacity:0;width:0;height:0;margin:0;pointer-events:none}
+.check>i{
+  position:relative;flex:none;width:15px;height:15px;border-radius:5px;
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  transition:var(--ctl-tr);
+}
+.check.sm>i{width:13px;height:13px;border-radius:4px}
+.check>i::after{
+  content:"";position:absolute;left:50%;top:47%;
+  width:3.5px;height:7px;border:1.8px solid #fff;border-top:0;border-left:0;
+  transform:translate(-50%,-55%) rotate(42deg) scale(.5);
+  transform-origin:center;opacity:0;
+  transition:opacity .1s ease, transform .14s cubic-bezier(.32,.72,0,1);
+}
+.check>input:checked+i,.check>input:indeterminate+i{
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 86%, white 14%), var(--accent));
+  border-color:transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow-sm);
+}
+.check>input:checked+i::after{opacity:1;transform:translate(-50%,-55%) rotate(42deg) scale(1)}
+/* mixed: a bar, not a tick — "some of the children", the Finder convention */
+.check>input:indeterminate+i::after{
+  opacity:1;width:7px;height:0;border:0;border-top:1.8px solid #fff;border-radius:1px;
+  transform:translate(-50%,-50%);
+}
+.check:hover>i{border-color:color-mix(in srgb,var(--accent) 30%, var(--edge-lo))}
+.check:active>i{transform:scale(.94)}
+.check>input:focus-visible+i{box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.check>input:disabled+i,.check.disabled{opacity:.42;pointer-events:none}
+
+/* ============================================================
+   RADIO
+   ============================================================ */
+.radio{
+  display:inline-flex;align-items:center;gap:var(--gap-sm);
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+  font-size:11.5px;font-weight:520;color:var(--ink);line-height:1.3;
+}
+.radio>input{position:absolute;opacity:0;width:0;height:0;margin:0;pointer-events:none}
+.radio>i{
+  position:relative;flex:none;width:15px;height:15px;border-radius:50%;
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  transition:var(--ctl-tr);
+}
+.radio>i::after{
+  content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;
+  background:#fff;transform:translate(-50%,-50%) scale(.4);opacity:0;
+  transition:opacity .1s ease, transform .14s cubic-bezier(.32,.72,0,1);
+}
+.radio>input:checked+i{
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 86%, white 14%), var(--accent));
+  border-color:transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow-sm);
+}
+.radio>input:checked+i::after{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.radio:hover>i{border-color:color-mix(in srgb,var(--accent) 30%, var(--edge-lo))}
+.radio:active>i{transform:scale(.94)}
+.radio>input:focus-visible+i{box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.radio>input:disabled+i,.radio.disabled{opacity:.42;pointer-events:none}
+
+/* a vertical run of checkboxes or radios, at the row rhythm the panels use */
+.choices{display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--s1) 0}
+.choices.row{flex-direction:row;flex-wrap:wrap;gap:var(--s3) var(--s4)}
+/* a secondary line under a choice, for the option that needs a sentence */
+.choices .why{margin:-4px 0 0 var(--s5);font-size:10.5px;color:var(--faint);line-height:1.4}
+
+@media (prefers-reduced-motion:reduce){
+  .switch>i,.switch>i::after,.check>i,.check>i::after,.radio>i,.radio>i::after{transition:none}
+  .check:active>i,.radio:active>i{transform:none}
+}

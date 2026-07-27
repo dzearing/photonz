@@ -67,14 +67,14 @@
 .tlgrid .playhead::before{content:none}
 
 /* ---------- Properties helpers ---------- */
-.slider{-webkit-appearance:none;appearance:none;width:100%;min-width:0;height:5px;border-radius:999px;background:var(--line-strong);outline:none;cursor:pointer;transition:opacity .12s ease}
-.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:linear-gradient(180deg,#fff,#e7ebff);border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab;transition:transform .09s ease,box-shadow .12s ease}
-.slider::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab}
-.slider:hover::-webkit-slider-thumb{box-shadow:0 2px 6px rgba(0,0,0,.35),0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
-.slider:active::-webkit-slider-thumb{transform:scale(.9);cursor:grabbing}
-.slider:focus-visible::-webkit-slider-thumb{box-shadow:var(--ring)}
-.slider:disabled{opacity:.38;cursor:not-allowed}
-.slider:disabled::-webkit-slider-thumb{cursor:not-allowed}
+.vc-slider{-webkit-appearance:none;appearance:none;width:100%;min-width:0;height:5px;border-radius:999px;background:var(--line-strong);outline:none;cursor:pointer;transition:opacity .12s ease}
+.vc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:linear-gradient(180deg,#fff,#e7ebff);border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab;transition:transform .09s ease,box-shadow .12s ease}
+.vc-slider::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab}
+.vc-slider:hover::-webkit-slider-thumb{box-shadow:0 2px 6px rgba(0,0,0,.35),0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.vc-slider:active::-webkit-slider-thumb{transform:scale(.9);cursor:grabbing}
+.vc-slider:focus-visible::-webkit-slider-thumb{box-shadow:var(--ring)}
+.vc-slider:disabled{opacity:.38;cursor:not-allowed}
+.vc-slider:disabled::-webkit-slider-thumb{cursor:not-allowed}
 .keyswatch{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
 .keyswatch .sw{width:16px;height:16px;border-radius:5px;border:1px solid var(--edge-lo);background:#00d84a;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}.btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
 
@@ -578,9 +578,9 @@
            '<button class="btn sm '+(st.keyed?"primary":"secondary")+'" id="ckKeyProp" aria-pressed="'+st.keyed+'"><i class="ic '+(st.keyed?"ic-check":"ic-wand")+'"></i> '+(st.keyed?"Keyed":"Key it")+'</button>'+
            '<button class="btn sm ghost" id="ckSample" title="Sample the background colour"><i class="ic ic-eyedropper"></i> Sample</button>'+
          '</div>'+
-         '<div class="irow" style="margin-top:var(--s3)"><span class="rl">Threshold</span><input class="slider" id="ckThresh" type="range" min="0" max="100" value="'+st.thresh+'"'+(st.keyed?"":" disabled")+' aria-label="Key threshold"></div>'+
+         '<div class="irow" style="margin-top:var(--s3)"><span class="rl">Threshold</span><input class="vc-slider" id="ckThresh" type="range" min="0" max="100" value="'+st.thresh+'"'+(st.keyed?"":" disabled")+' aria-label="Key threshold"></div>'+
          '<div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="ckThreshV">'+st.thresh+'%</span></span></div>'+
-         '<div class="irow"><span class="rl">Spill kill</span><input class="slider" id="ckSpill" type="range" min="0" max="100" value="'+st.spill+'"'+(st.keyed?"":" disabled")+' aria-label="Spill suppression"></div>'+
+         '<div class="irow"><span class="rl">Spill kill</span><input class="vc-slider" id="ckSpill" type="range" min="0" max="100" value="'+st.spill+'"'+(st.keyed?"":" disabled")+' aria-label="Spill suppression"></div>'+
          '<div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="ckSpillV">'+st.spill+'%</span></span></div>'+
          '<p class="note" id="ckHint"></p>'+
          '</div>'+

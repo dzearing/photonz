@@ -82,7 +82,7 @@
   .ctl .cl .cv{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   /* .ctl .seg override deleted: the shared DS lays every panel scope control
      out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
-  .stepper{display:flex;align-items:center;gap:var(--gap-sm)}
+  .ug-stepper{display:flex;align-items:center;gap:var(--gap-sm)}
 
   .selname{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:640;
     background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);border-radius:999px;padding:3px 9px}
@@ -371,7 +371,7 @@
 
               <div class="ctl">
                 <div class="cl"><span id="countlb">Columns</span> <span class="cv" id="countv">12</span></div>
-                <div class="stepper">
+                <div class="ug-stepper">
                   <button class="btn icon sm" id="cntdn" aria-label="Fewer"><i class="ic sm ic-minus"></i></button>
                   <span class="bar" style="flex:1"><i id="cntbar" style="width:100%"></i></span>
                   <button class="btn icon sm" id="cntup" aria-label="More"><i class="ic sm ic-plus"></i></button>
@@ -380,7 +380,7 @@
 
               <div class="ctl">
                 <div class="cl">Gutter <span class="cv" id="gutv">16</span></div>
-                <div class="stepper">
+                <div class="ug-stepper">
                   <button class="btn icon sm" id="gutdn" aria-label="Decrease gutter"><i class="ic sm ic-minus"></i></button>
                   <span class="bar" style="flex:1"><i id="gutbar" style="width:66%"></i></span>
                   <button class="btn icon sm" id="gutup" aria-label="Increase gutter"><i class="ic sm ic-plus"></i></button>
@@ -389,7 +389,7 @@
 
               <div class="ctl">
                 <div class="cl">Margin <span class="cv" id="marv">24</span></div>
-                <div class="stepper">
+                <div class="ug-stepper">
                   <button class="btn icon sm" id="mardn" aria-label="Decrease margin"><i class="ic sm ic-minus"></i></button>
                   <span class="bar" style="flex:1"><i id="marbar" style="width:60%"></i></span>
                   <button class="btn icon sm" id="marup" aria-label="Increase margin"><i class="ic sm ic-plus"></i></button>

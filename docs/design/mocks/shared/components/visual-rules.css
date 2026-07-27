@@ -46,7 +46,7 @@
    Promoting them makes the name reserved AND correct in one move.
 
    NEWLY RESERVED BARE NAMES (never shadow these in a page):
-     .pglead  .mlabel  .rl  .setrow  .actstack   (+ .seg.stack)
+     .pglead  .mlabel  .rl  .setrow  .actstack   (.seg.stack moved to segmented.css)
    Scoped REFINEMENT is still fine (`#vector-wt .setrow{...}`).
    ============================================================ */
 
@@ -81,9 +81,10 @@
 /* --- stacked full-width actions (4 pages) ------------------------------ */
 .actstack{display:flex;flex-direction:column;gap:var(--gap-sm);margin-top:var(--s1)}
 
-/* --- .seg.stack: a segmented control allowed to wrap (5 pages) ----------
-   VISUAL RULE 6 says a seg does not resize DOWN. When the option labels
-   genuinely cannot fit one row, wrapping to a second row is the honest
-   answer; shrinking the chips is not. */
-.seg.stack{flex-wrap:wrap;width:100%}
-.seg.stack button{flex:1 1 auto;white-space:nowrap}
+/* --- .seg.stack ---------------------------------------------------------
+   Used to mean "a segmented control allowed to wrap to a second row when the
+   labels do not fit". That is SUPERSEDED: a wrapped segmented control reads
+   as damage, and a control that cannot show its options is the wrong control
+   for that space — the answer is a `.select`. The class survives only as the
+   full-width equal-column form, and it lives with the component in
+   segmented.css, which is the one file that styles `.seg`. */

@@ -1,0 +1,88 @@
+/* ============================================================
+   PROGRESS — determinate bar, indeterminate bar, spinner, meter
+   ============================================================
+   An editor is full of work that takes time (export, background removal, a
+   model run, an upload) and the app had no way to say so except a toast. Four
+   shapes, and the rule for picking one is about WHAT YOU KNOW:
+
+     .prog          you know the fraction        → determinate bar
+     .prog.indet    you know it started          → sliding indeterminate bar
+     .busy          it is short and inline       → 14px spinner in place
+     .meter         it is a level, not a task    → memory, contrast, disk
+
+   Never show an indeterminate bar for something you can measure, and never
+   show a determinate one that sits at 90% because you guessed. A spinner that
+   runs longer than about two seconds needs a label saying what it is doing;
+   the component leaves room for one rather than making each caller invent it.
+
+   The bar shares the slider's groove exactly (4px, capsule, the same inset
+   shadow) so a panel full of sliders and one progress bar reads as one family.
+   The difference is that progress has no thumb, which is the whole point: you
+   cannot grab it. */
+
+.prog{
+  --pv:0;                             /* 0..1 */
+  position:relative;width:100%;height:var(--sl-track,4px);
+  border-radius:999px;overflow:hidden;
+  background:var(--line-strong);
+  box-shadow:inset 0 1px 2px rgba(20,24,40,.16);
+}
+.prog.lg{height:var(--sl-track-lg,6px)}
+.prog>i{
+  position:absolute;left:0;top:0;bottom:0;right:calc(100% - var(--pv) * 100%);
+  border-radius:999px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));
+  transition:right .3s cubic-bezier(.32,.72,0,1);
+}
+.prog.good>i{background:linear-gradient(180deg, color-mix(in srgb,var(--good) 88%, white 12%), var(--good))}
+.prog.crit>i{background:linear-gradient(180deg, color-mix(in srgb,var(--crit) 88%, white 12%), var(--crit))}
+
+/* indeterminate: a short pill sweeping the groove. Not a full-width shimmer —
+   a shimmer reads as a skeleton placeholder, which means something else. */
+.prog.indet>i{right:auto;width:38%;animation:prog-sweep 1.15s cubic-bezier(.5,0,.5,1) infinite}
+@keyframes prog-sweep{
+  0%{left:-38%}
+  100%{left:100%}
+}
+
+/* the row form: label above, percent right, bar under. Matches .slrow.stack so
+   a progress row and a slider row line up in the same panel. */
+.progrow{display:grid;grid-template-columns:1fr auto;gap:2px var(--gap-sm);padding:var(--s1) 0}
+.progrow>.rl{grid-column:1}
+.progrow>.val{grid-column:2;text-align:right}
+.progrow>.prog{grid-column:1 / -1;margin-top:2px}
+
+/* ---- spinner: an arc, not a ring of dots ---- */
+.busy{
+  display:inline-block;flex:none;width:14px;height:14px;border-radius:50%;
+  border:1.75px solid color-mix(in srgb,var(--ink) 16%, transparent);
+  border-top-color:var(--accent);
+  animation:busy-spin .7s linear infinite;
+}
+.busy.sm{width:11px;height:11px;border-width:1.5px}
+.busy.lg{width:20px;height:20px;border-width:2px}
+.busy.on-fill{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+@keyframes busy-spin{to{transform:rotate(360deg)}}
+
+/* the labelled inline form, for "Removing background…" next to the thing */
+.busyrow{display:inline-flex;align-items:center;gap:var(--gap-sm);
+  font-size:11.5px;color:var(--dim);font-weight:520}
+
+/* ---- meter: a LEVEL you read, not a task you wait for ---- */
+.meter{
+  position:relative;width:100%;height:6px;border-radius:999px;overflow:hidden;
+  background:var(--line-soft);border:1px solid var(--edge-lo);
+}
+.meter>i{position:absolute;left:0;top:0;bottom:0;right:calc(100% - var(--pv,0) * 100%);
+  background:var(--good);border-radius:999px}
+.meter.warn>i{background:var(--warn)}
+.meter.crit>i{background:var(--crit)}
+/* the threshold you must not cross, drawn ON the meter rather than described */
+.meter>.lim{position:absolute;top:-2px;bottom:-2px;width:1.5px;border-radius:1px;
+  left:calc(var(--lim, .8) * 100%);background:var(--ink);opacity:.45}
+
+@media (prefers-reduced-motion:reduce){
+  .prog>i{transition:none}
+  .prog.indet>i{animation:none;left:0;width:100%;opacity:.5}
+  .busy{animation-duration:1.6s}
+}

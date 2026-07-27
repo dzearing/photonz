@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-color</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-color — the picker as a COMPONENT spec. The full picking story lives
+     on pages/color.html; this page is anatomy, triggers, states and rules.
+     Local rules only for the specimen stage. */
+  #comp-color .cc-stage{display:grid;place-items:center;min-height:520px;padding:var(--s5) 0;
+    border-radius:var(--r3);
+    background:radial-gradient(360px 240px at 50% 0%,color-mix(in srgb,var(--comp) 15%,transparent),transparent 68%)}
+  /* pin the popover into the page flow WITHOUT touching its display: the
+     picker is a flex column and its 12px gap between blocks lives there.
+     Overriding display to block silently removed every gap in the control. */
+  #comp-color .cc-stage .cpick{position:relative!important;right:auto!important;top:auto!important;margin:0}
+  #comp-color .rl-frame{--rl-gut:118px}
+  #comp-color .rl-co .card{width:224px}
+  #comp-color .cc-slots{display:flex;flex-direction:column;gap:var(--gap-sm);width:236px}
+  #comp-color .cc-slot{display:flex;align-items:center;gap:var(--gap-sm)}
+  #comp-color .cc-slot .sn{font-size:10.5px;color:var(--faint);width:52px;flex:none}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-color">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Color picker</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">The largest custom component in the app, and the one with the strongest rule attached: <b>there is one color picker and every color slot opens it</b>. No second gradient editor, no separate palette window, no "advanced" mode. Fill, stroke, text, shadow, a gradient stop, the foreground swatch in the tool bar: same popover, same state, re-anchored. The full picking scenario is on <b data-target="color">Color · picking</b>; this page is the component spec.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cc-stage">
+            <div class="popover cpick pop on" id="ccPicker" data-cp-color="#7C4DFF"
+                 data-cp-recent="#7C4DFF,#5B3AD9,#12C2E9,#3ECF8E,#FFB36B,#FF5D8F,#F4F6FF,#4A5068,#0C0E14"
+                 aria-label="Color">
+              <div class="cp-head">
+                <span class="cp-prev"><i class="was"></i><i class="now"></i></span>
+                <span class="cp-name">Fill</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon" data-tip="Sample a color from anywhere on screen|I"><i class="ic ic-eyedropper"></i></button>
+                <button class="btn ghost icon" data-cp-close data-tip="Close|esc"><i class="ic ic-x"></i></button>
+              </div>
+              <div class="cp-types" data-cp-types role="group" aria-label="Paint type"></div>
+              <div class="cp-geo wt-off" data-cp-geo></div>
+              <div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>
+              <div class="seg cp-mode" data-cp-mode role="group" aria-label="Color format">
+                <button class="on" data-cp-m="hsl">HSL</button>
+                <button data-cp-m="rgb">RGB</button>
+                <button data-cp-m="hex">HEX</button>
+              </div>
+              <div class="cp-sliders" data-cp-sliders></div>
+              <div class="cp-sw">
+                <span class="seg cp-scope" data-cp-scope role="group" aria-label="Swatch scope">
+                  <button class="on" data-cp-sc="shades">Shades</button>
+                  <button data-cp-sc="related">Related</button>
+                  <button data-cp-sc="document">Document</button>
+                </span>
+                <div class="cp-chips" data-cp-chips></div>
+              </div>
+              <div class="cp-foot">
+                <span class="cp-ctr" data-cp-ctr></span>
+                <span class="sp"></span>
+                <button class="btn secondary sm"><i class="ic ic-swatch"></i> Save style</button>
+              </div>
+            </div>
+          </div>
+          <span class="rl-co" data-rl-for=".cp-head" data-rl-side="l"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Header</b>What you are painting, the before/after chip, and the eyedropper. The name is the slot, so you always know which of four colors you are changing.</span></span>
+          <span class="rl-co" data-rl-for=".cp-types" data-rl-side="l"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Paint type</b>Solid, linear, radial, angular. A gradient is not a different editor, it is a different <i>kind of paint</i> in this one, which is why picking one never feels like leaving.</span></span>
+          <span class="rl-co" data-rl-for=".cp-sv" data-rl-side="l" data-rl-y="top" data-rl-dy="30"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Field</b>Saturation across, brightness down, at the current hue. Drag it, or arrow-key it for one step at a time.</span></span>
+          <span class="rl-co" data-rl-for=".cp-mode" data-rl-side="l"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Format</b>HSL, RGB or HEX. Centred, because it labels the sliders under it rather than belonging to the field above.</span></span>
+          <span class="rl-co" data-rl-for=".cp-sliders" data-rl-side="r" data-rl-y="top" data-rl-dy="16"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Channels</b>One slider per channel with an editable number. The track carries the result, so you see what the value will do before you commit to it.</span></span>
+          <span class="rl-co" data-rl-for=".cp-scope" data-rl-side="r"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Swatch scope</b>Shades of this color · related hues · colors already in the document. Three answers to "nearly this, but".</span></span>
+          <span class="rl-co" data-rl-for=".cp-chips" data-rl-side="r"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Swatches</b>Computed from the current color on every change, so "a bit darker" is one click and never a second dialog.</span></span>
+          <span class="rl-co" data-rl-for=".cp-foot" data-rl-side="r"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Footer</b>Live contrast against the surface behind it, and one button to promote this color into a named style.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Live. Drag the field, drag a channel, switch to HEX and paste. Click a number to read what that region does.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">Eight regions, <b>no modes</b>. Everything the picker can do is on screen at once, which is what makes it feel like a tool rather than a dialog. The vertical order is deliberate: what you are painting, what kind of paint, the coarse pick, the precise pick, then the shortcuts to a neighbouring color.</p>
+        <div class="docdd">
+          <span class="do">Keep the picker one surface. Every "advanced" panel is a failure.</span>
+          <span class="no">Open a second window for gradients. That is the split we exist to avoid.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>layer.fill = color("#7C4DFF")</code> · <code>color.shade(-2)</code> one step darker · <code>color.style("Brand/500")</code> once it has a name.</p>
+      </div>
+    </div>
+
+    <!-- 2 · TRIGGERS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="cc-slots">
+                <span class="cc-slot"><span class="sn">Fill</span><button class="cpick-btn wide"><span class="sw" style="background:#7C4DFF"></span>#7C4DFF</button></span>
+                <span class="cc-slot"><span class="sn">Stroke</span><button class="cpick-btn wide"><span class="sw" style="background:#12C2E9"></span>#12C2E9</button></span>
+                <span class="cc-slot"><span class="sn">Gradient</span><button class="cpick-btn wide"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>Sunset · 3 stops</span></button></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>The swatch trigger</b> .cpick-btn</span>
+            <p class="docsp-d">One trigger shape for every slot: a swatch plus the value. It shows a gradient as a gradient, so the slot tells you what kind of paint it holds before you open anything.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="cnv" style="position:relative;height:104px;border-radius:var(--r2);overflow:hidden">
+                <span class="tbar" style="position:absolute;left:50%;bottom:10px;transform:translateX(-50%)">
+                  <span class="tstrip">
+                    <button class="tool"><i class="ic ic-brush"></i></button>
+                    <button class="tool"><i class="ic ic-fill"></i></button>
+                  </span>
+                  <span class="tsep"></span>
+                  <span class="swpair"><span class="fg" style="background:#7C4DFF"></span><span class="bg" style="background:#12C2E9"></span></span>
+                </span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>The tool-bar pair</b> .swpair</span>
+            <p class="docsp-d">Foreground and background, with a swap. The one place a swatch is not labelled, because the canvas is the label. Both open the same picker.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Triggers</h3>
+        <p class="docrule">Two shapes, and both open the same popover anchored to whatever you clicked. <b>The picker keeps its recents and its shades across slots</b>, so moving from Fill to Stroke does not reset what you were working from. That continuity is most of why the one-picker rule pays off.</p>
+        <div class="docdd">
+          <span class="do">Anchor the popover to the trigger and keep its state.</span>
+          <span class="no">Add a second, smaller picker for "quick" colors. There is one.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>picker.open({slot:"stroke", anchor:el})</code>. The slot name is what the header shows.</p>
+      </div>
+    </div>
+
+    <!-- 3 · GRADIENT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="cp-types" style="display:flex;gap:2px">
+                <button class="chip">Solid</button><button class="chip" style="border-color:var(--accent);color:var(--accent)">Linear</button><button class="chip">Radial</button><button class="chip">Angular</button>
+              </span>
+              <span class="gramp" style="margin-top:var(--gap-sm)">
+                <span class="gstop" style="left:6%;--stop-c:#7c4dff"><b></b><span class="line"></span></span>
+                <span class="gstop" style="left:46%;--stop-c:#b14dff"><b></b><span class="line"></span></span>
+                <span class="gstop" style="left:94%;--stop-c:#ff5d8f"><b></b><span class="line"></span></span>
+              </span>
+            </span>
+            <span class="docsp-l"><b>Same picker, gradient paint</b></span>
+            <p class="docsp-d">Choosing Linear adds the ramp and the stop rows in place. The field, channels and swatches below now edit <i>the selected stop</i>. Nothing moved, nothing opened.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col dark" style="align-items:center;justify-content:center;min-height:104px">
+              <span class="tip-demo" style="background:var(--glass-3);color:var(--ink);box-shadow:var(--lg-shadow-3)"><b style="color:var(--ink)">Stop 1</b> <span style="color:var(--faint);font-size:9.5px;letter-spacing:.06em">POSITION</span> <span style="font-family:var(--mono)">1%</span></span>
+            </span>
+            <span class="docsp-l"><b>The stop callout</b></span>
+            <p class="docsp-d">A card riding the ramp over the selected stop, at <code>.elev-3</code>: the one surface allowed to sit on a popover. Its beak is a single SVG path, because a glass card with a 1px stroke would show a dimple where a box beak met its border.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Gradients are paint, not a mode</h3>
+        <p class="docrule">The type switch changes <b>what kind of paint you are editing</b> and leaves the editor where it was. Every other tool treats a gradient as a separate dialog, and the cost of that is real: you lose the shades, the recents, and the contrast readout the moment you need them most.</p>
+        <div class="docdd">
+          <span class="do">Let the stop rows appear in place under the ramp.</span>
+          <span class="no">Ship a "gradient editor". The word itself is the mistake.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>paint.type = "linear"</code> · <code>paint.stops[1].color = "#B14DFF"</code> · <code>paint.angle = 135</code>.</p>
+      </div>
+    </div>
+
+    <!-- 4 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">04</span><h3>In the API</h3><span class="k">and why none of it is native</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Capability</th><th>System <code>ColorPicker</code></th><th>Ours</th></tr></thead>
+          <tbody>
+            <tr><td><b>Where it lives</b></td><td>A separate window you have to manage</td><td>A popover anchored to the swatch, inside the document window</td></tr>
+            <tr><td><b>Gradients</b></td><td>None</td><td>Linear, radial, angular, with stops, in the same surface</td></tr>
+            <tr><td><b>Shades &amp; related hues</b></td><td>None</td><td>Recomputed from the current color on every change</td></tr>
+            <tr><td><b>Colors in this document</b></td><td>None</td><td>A scope in the swatch row, so reuse beats reinvention</td></tr>
+            <tr><td><b>Contrast readout</b></td><td>None</td><td>Live against the surface behind the thing you are painting</td></tr>
+            <tr><td><b>Promote to a style</b></td><td>Unrelated concept</td><td>One button; the color becomes a named token everything can bind to</td></tr>
+            <tr><td><b>Paste a value</b></td><td>Hex only</td><td><code>#7C4DFF</code>, <code>rgb(124 77 255)</code> or <code>hsl(258 100% 65%)</code>, because paste is how a color usually arrives</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">The system picker is a color <i>chooser</i>; this is a paint <i>editor</i>, and the gap is not closeable by restyling. <b>Compact windows</b>: the popover keeps its width and becomes a sheet anchored to the bottom of the window rather than shrinking, because a 180px SV field is not pickable. <b>Reduced motion</b> removes the open scale and keeps the fade.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p><b>One picker, every slot.</b> The rule sounds like tidiness and is actually a feature: because the surface never changes, its memory never resets, and the shades you were working from are still there when you move to the next thing you are painting.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The "In document" scope already knows every color in the file. It could offer to <b>merge near-duplicates into one style</b> right there, which is the cleanup nobody does because it currently means auditing a document by hand.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>The contrast readout compares against whatever sits behind the painted object. With a gradient behind a gradient there is no single pair to score. Do we sample the worst case, the average, or drop the readout when it cannot be honest?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

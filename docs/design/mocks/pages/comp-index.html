@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-index</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-index — the component library overview. Layout comes from the shared
+     docpage component; only the inventory board and the anatomy diagram are
+     local, because nothing else in the system needs them. */
+  #comp-index .ci-sizes{display:flex;align-items:flex-end;gap:var(--s5)}
+  #comp-index .ci-h{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)}
+  #comp-index .ci-h .m{font-family:var(--mono);font-size:9px;color:var(--faint)}
+
+  /* the anatomy exploded view */
+  #comp-index .ci-anat{display:flex;align-items:center;justify-content:center;gap:var(--s6);
+    min-height:150px;padding:var(--s5) var(--pad);border-radius:var(--r3);
+    background:radial-gradient(320px 180px at 30% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%)}
+  #comp-index .ci-legend{display:flex;flex-direction:column;gap:6px}
+  #comp-index .ci-legend .li{display:flex;gap:var(--gap-sm);align-items:baseline;font-size:10.5px;color:var(--dim);line-height:1.4}
+  #comp-index .ci-legend .li b{color:var(--ink);font-weight:620;flex:none;width:74px}
+  #comp-index .ci-legend .li code{font-family:var(--mono);font-size:9.5px;color:var(--accent)}
+
+  /* the inventory board */
+  #comp-index .ci-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(206px,1fr));gap:var(--gap-sm)}
+  #comp-index .ci-tile{display:flex;flex-direction:column;gap:var(--gap-sm);padding:var(--pad-sm);
+    border:1px solid var(--edge-lo);border-radius:var(--r3);
+    background:color-mix(in srgb,var(--panel) 50%,transparent);
+    box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer;transition:var(--ctl-tr);min-width:0}
+  #comp-index .ci-tile:hover{border-color:var(--accent-line);box-shadow:inset 0 1px 0 var(--edge-hi),var(--shadow-2)}
+  #comp-index .ci-tile .stg{display:flex;align-items:center;justify-content:center;gap:var(--gap-sm);
+    min-height:52px;padding:var(--gap-sm);border-radius:var(--r2);overflow:hidden;
+    background:color-mix(in srgb,var(--panel-2) 60%,transparent)}
+  #comp-index .ci-tile .nm{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:620;color:var(--ink)}
+  #comp-index .ci-tile .cls{font-family:var(--mono);font-size:9.5px;color:var(--faint);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #comp-index .ci-grp{grid-column:1/-1;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--faint);font-weight:700;padding:var(--s3) 0 0}
+  #comp-index .ci-grp:first-child{padding-top:0}
+
+  @media (max-width:760px){
+    #comp-index .ci-anat{flex-direction:column;gap:var(--s4)}
+    #comp-index .ci-sizes{gap:var(--s4)}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-index">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Component library</h2><span class="k">· the spec for what we standardize on</span><a class="backchip" data-target="dsys"><i class="ic ic-chevron-left"></i> Design system</a></div>
+
+    <p class="docintro">Every control in Photonz comes from this library. It is a <b>native macOS kit, not a web kit</b>: capsule Liquid Glass surfaces, a luminous top edge, depth from the elevation ladder, and one 4pt size scale. Where the platform has an answer we take it. Where it does not, or where a photo editor needs something denser than a settings pane, <b>we extend the language rather than borrow from the web</b>. The pages in this section are the spec: anatomy, variants, states, rules, and the command each control maps to.</p>
+
+    <!-- 1 · THE RULES THAT APPLY TO EVERYTHING -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ci-sizes">
+          <div class="ci-h"><button class="btn sm">Small</button><span class="m">.sm · 24</span></div>
+          <div class="ci-h"><button class="btn">Default</button><span class="m">.btn · 32</span></div>
+          <div class="ci-h"><button class="btn lg">Large</button><span class="m">.lg · 40</span></div>
+          <div class="ci-h"><span class="switch"><input type="checkbox" checked><i></i></span><span class="m">switch · 20</span></div>
+          <div class="ci-h"><span class="check"><input type="checkbox" checked><i></i></span><span class="m">check · 15</span></div>
+        </div>
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Rest</b></span><span class="pad"><button class="btn secondary">Export</button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Hover</b></span><span class="pad"><button class="btn secondary" style="background:var(--glass);border-color:color-mix(in srgb,var(--accent) 28%,var(--edge-lo));box-shadow:var(--ctl-gloss),var(--shadow-2)">Export</button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Focus</b></span><span class="pad"><button class="btn secondary" style="box-shadow:var(--ctl-gloss),var(--ring)">Export</button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Pressed</b></span><span class="pad"><button class="btn secondary" style="transform:translateY(.5px) scale(.975);box-shadow:inset 0 1px 3px rgba(20,24,40,.22)">Export</button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Disabled</b></span><span class="pad"><button class="btn secondary" disabled>Export</button></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Five rules, no exceptions</h3>
+        <p class="docrule"><b>One size scale</b> (24 / 32 / 40, off the 4pt tokens). <b>One state quartet</b> on everything interactive: hover, pressed, focus ring, disabled. <b>One elevation ladder</b>, so no component writes its own shadow. <b>One icon set</b>, drawn to a single 24 grid. <b>One accent</b>, recoloured per role rather than per component.</p>
+        <div class="docdd">
+          <span class="do">Compose an existing component and scope your refinement.</span>
+          <span class="no">Ship an inert control. If it can be clicked it shows all four states.</span>
+        </div>
+        <p class="docapi"><b>API</b> every control is a view over one command: <code>run("file.export")</code>. The look is the library's job, the behaviour is the command's.</p>
+      </div>
+    </div>
+
+    <!-- 2 · WHAT WE ADD TO LIQUID GLASS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col">
+              <span class="slrow" style="--slrow-l:52px"><span class="rl">Opacity</span><span class="slider" data-unit="%"><input type="range" min="0" max="100" value="62" aria-label="Opacity"><span class="sl-bub"></span></span><span class="num">62%</span></span>
+            </span>
+            <span class="docsp-l"><b>The capsule thumb</b></span>
+            <p class="docsp-d">The platform shape at inspector density: a horizontal pill on a thick groove. Wide enough to grab, and the round ends keep the fill visible right up to the value it is setting.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="stepper"><span class="k">W</span><input value="320"><b class="sp"><button aria-label="Increase"><i class="ic ic-chevron-up"></i></button><button aria-label="Decrease"><i class="ic ic-chevron-down"></i></button></b></span></span>
+            <span class="docsp-l"><b>The scrub label</b></span>
+            <p class="docsp-d">Drag the label sideways to change the number. Every value in the app carries this, so you rarely have to aim at a slider at all.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Split at playhead <span class="k">⌘⇧E</span></span></span>
+            <span class="docsp-l"><b>The inverted label</b></span>
+            <p class="docsp-d">Tooltips are the one surface that is opaque rather than glass: a 10px label over a busy canvas needs contrast more than it needs vibrancy.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Where we extend the language</h3>
+        <p class="docrule">Liquid Glass was designed for apps with a handful of controls on screen. A photo editor has two hundred. Our extensions all buy <b>density and precision</b> without breaking the material: same capsule geometry, same edges, same glow, applied to problems the platform kit does not have.</p>
+        <div class="docdd">
+          <span class="do">Extend by restating the existing geometry in a new place.</span>
+          <span class="no">Invent a second material because a control felt cramped.</span>
+        </div>
+        <p class="docapi"><b>API</b> the extensions are visual only. <code>layer.opacity = .62</code> is the same command whether you dragged the pill, the label, or typed it.</p>
+      </div>
+    </div>
+
+    <!-- 3 · ANATOMY OF ANY CONTROL -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ci-anat">
+          <button class="btn primary lg"><i class="ic ic-export"></i>Export<span class="kbd">⌘E</span></button>
+          <button class="btn lg"><i class="ic ic-sliders"></i>Adjust</button>
+        </div>
+        <div class="ci-legend">
+          <span class="li"><b>Fill</b><span>a vertical gradient, lighter at the top, so the surface catches light from above. <code>--glass-thin</code> / accent</span></span>
+          <span class="li"><b>Edge</b><span>a 1px hairline in <code>--edge-lo</code>, which is dark in light mode and darker still in dark mode.</span></span>
+          <span class="li"><b>Gloss</b><span>an inset top highlight, <code>--edge-hi</code>. This one line is what makes a flat fill read as glass.</span></span>
+          <span class="li"><b>Glow</b><span>a filled control lifts in its <i>own</i> colour, not a neutral shadow. <code>--glow</code>, recoloured by <code>--glow-c</code>.</span></span>
+          <span class="li"><b>Ring</b><span>focus is a 3px accent ring, never a shadow and never a border colour change alone. <code>--ring</code>.</span></span>
+          <span class="li"><b>Content</b><span>icon and label on one line, icon from the shared set, shortcut in a <code>.kbd</code> cap.</span></span>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Anatomy of a control</h3>
+        <p class="docrule">Six layers, in this order, on every control in the library. A component that skips the gloss looks flat next to its neighbours; one that hand-writes a shadow instead of taking a token drifts a little further every release. <b>The layers are the contract.</b></p>
+        <div class="docdd">
+          <span class="do">Recolour a layer by setting its token on the element.</span>
+          <span class="no">Add a seventh layer. If it needs one it is a different component.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node shared/check-elevation.mjs</code> fails the build on a hand-written chrome shadow, so layer four cannot drift.</p>
+      </div>
+    </div>
+
+    <!-- 4 · THE INVENTORY -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">04</span><h3>The inventory</h3><span class="k">click a tile to open its spec</span></div>
+      <div class="docbody">
+        <div class="ci-board">
+
+          <div class="ci-grp">Actions</div>
+          <div class="ci-tile" data-target="comp-buttons">
+            <span class="stg"><button class="btn primary sm">Export</button><button class="btn sm">Cancel</button></span>
+            <span class="nm">Button<span class="badge soft">4 variants</span></span><span class="cls">.btn · .primary .secondary .ghost .danger</span>
+          </div>
+          <div class="ci-tile" data-target="comp-buttons">
+            <span class="stg"><button class="tool on"><i class="ic ic-cursor"></i></button><button class="tool"><i class="ic ic-brush"></i></button><button class="tool"><i class="ic ic-crop"></i></button></span>
+            <span class="nm">Tool button</span><span class="cls">.tool · .tool.on</span>
+          </div>
+          <div class="ci-tile" data-target="comp-buttons">
+            <span class="stg"><span class="seg"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
+            <span class="nm">Segmented</span><span class="cls">.seg</span>
+          </div>
+          <div class="ci-tile" data-target="comp-buttons">
+            <span class="stg"><span class="chip">Rounded</span><span class="chip style">Title/L</span><span class="chip comp">Card</span></span>
+            <span class="nm">Chip &amp; tag</span><span class="cls">.chip · .style .comp</span>
+          </div>
+
+          <div class="ci-grp">Value &amp; input</div>
+          <div class="ci-tile" data-target="comp-sliders">
+            <span class="stg" style="display:block"><span class="slider" data-unit="%" style="--p:.62"><input type="range" min="0" max="100" value="62" aria-label="Demo"><span class="sl-bub"></span></span></span>
+            <span class="nm">Slider<span class="badge accent">new</span></span><span class="cls">.slider · .bipolar .range .paint</span>
+          </div>
+          <div class="ci-tile" data-target="comp-fields">
+            <span class="stg"><span class="stepper sm"><span class="k">X</span><input value="128"></span><span class="stepper sm"><span class="k">Y</span><input value="64"></span></span>
+            <span class="nm">Number field<span class="badge accent">new</span></span><span class="cls">.stepper</span>
+          </div>
+          <div class="ci-tile" data-target="comp-fields">
+            <span class="stg"><label class="input sm search"><i class="ic ic-search"></i><input placeholder="Search layers"></label></span>
+            <span class="nm">Text field<span class="badge accent">new</span></span><span class="cls">.input · .search .area .mono</span>
+          </div>
+          <div class="ci-tile" data-target="comp-fields">
+            <span class="stg"><span class="select" style="min-width:120px"><span class="lead">Multiply</span><i class="car ic ic-chevron-down"></i></span></span>
+            <span class="nm">Select</span><span class="cls">.select</span>
+          </div>
+          <div class="ci-tile" data-target="comp-fields">
+            <span class="stg"><span class="switch"><input type="checkbox" checked><i></i></span><span class="check"><input type="checkbox" checked><i></i></span><span class="radio"><input type="radio" checked><i></i></span></span>
+            <span class="nm">Toggles<span class="badge accent">new</span></span><span class="cls">.switch · .check · .radio</span>
+          </div>
+          <div class="ci-tile" data-target="comp-color">
+            <span class="stg"><span class="swatch" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="swatch" style="background:#12c2e9"></span><span class="swatch" style="background:#ffb057"></span></span>
+            <span class="nm">Swatch &amp; picker</span><span class="cls">.swatch · .cpick</span>
+          </div>
+
+          <div class="ci-grp">Surfaces</div>
+          <div class="ci-tile" data-target="comp-toolbars">
+            <span class="stg"><span class="pill"><i class="ic ic-layers"></i>3 layers</span><span class="pill ai"><i class="ic ic-sparkle"></i>Ask</span></span>
+            <span class="nm">Toolbar</span><span class="cls">.toolbar · .tbar · .tstrip</span>
+          </div>
+          <div class="ci-tile" data-target="comp-panels">
+            <span class="stg col" style="flex-direction:column;align-items:stretch;gap:2px">
+              <span class="lrow sel"><i class="ic ic-frame"></i>Card</span>
+              <span class="lrow"><i class="ic ic-text"></i>Headline</span>
+            </span>
+            <span class="nm">Panel &amp; rows</span><span class="cls">.dgrp · .pane · .lrow</span>
+          </div>
+          <div class="ci-tile" data-target="comp-overlays">
+            <span class="stg"><span class="menu" style="width:100%;padding:var(--s1)"><span class="menuitem"><i class="ic ic-duplicate"></i>Duplicate<span class="sc">⌘D</span></span><span class="menuitem"><i class="ic ic-component"></i>Component</span></span></span>
+            <span class="nm">Menu &amp; popover</span><span class="cls">.menu · .popover · .dlg</span>
+          </div>
+          <div class="ci-tile" data-target="comp-tooltips">
+            <span class="stg"><span class="tip-demo">Straighten <span class="k">⇧R</span></span></span>
+            <span class="nm">Tooltip</span><span class="cls">data-tip · .tip</span>
+          </div>
+
+          <div class="ci-grp">Status</div>
+          <div class="ci-tile" data-target="comp-feedback">
+            <span class="stg" style="display:block"><span class="prog" style="--pv:.64"><i></i></span></span>
+            <span class="nm">Progress<span class="badge accent">new</span></span><span class="cls">.prog · .indet · .busy · .meter</span>
+          </div>
+          <div class="ci-tile" data-target="comp-feedback">
+            <span class="stg"><span class="badge accent">12</span><span class="badge good">Saved</span><span class="dot live crit"></span><span class="kbd">⌘</span><span class="kbd">K</span></span>
+            <span class="nm">Badge, dot &amp; key<span class="badge accent">new</span></span><span class="cls">.badge · .dot · .kbd</span>
+          </div>
+          <div class="ci-tile" data-target="comp-feedback">
+            <span class="stg"><span class="empty" style="padding:var(--gap-sm);font-size:10.5px"><i class="ic ic-layers lg"></i>No layers yet</span></span>
+            <span class="nm">Empty state</span><span class="cls">.empty</span>
+          </div>
+          <div class="ci-tile" data-target="comp-panels">
+            <span class="stg"><span class="selwrap" style="width:74px;height:38px"><span class="hero-card" style="width:74px;height:38px;border-radius:8px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="sel-ring"></span></span></span>
+            <span class="nm">Selection frame</span><span class="cls">.selwrap · .sel-ring · .handle</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 · STATUS -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">05</span><h3>Where each one stands</h3><span class="k">mock &rarr; SwiftUI</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Component</th><th>In the mock DS</th><th>Native equivalent</th><th>What we have to build</th></tr></thead>
+          <tbody>
+            <tr><td><b>Button</b></td><td>Shipped, four variants</td><td><code>Button</code> + <code>.glassEffect</code></td><td>The danger variant and the icon+shortcut layout are ours; the rest maps.</td></tr>
+            <tr><td><b>Slider</b></td><td>New in this pass</td><td><code>Slider</code></td><td>Everything visible: the pill thumb, the bipolar fill, the drag bubble, the paint track. The native thumb is a circle with no bipolar mode.</td></tr>
+            <tr><td><b>Number field</b></td><td>New in this pass</td><td>None</td><td>All of it. Scrub-drag, arithmetic entry, shift-step, mixed-value state. This is the single most-used control in the app.</td></tr>
+            <tr><td><b>Switch / check / radio</b></td><td>New in this pass</td><td><code>Toggle</code></td><td>Sizing and the knob squash. Semantics map cleanly.</td></tr>
+            <tr><td><b>Tooltip</b></td><td>Shipped</td><td><code>.help()</code></td><td>All of it. The native one has no shortcut slot, no keyboard-focus trigger, and no side control.</td></tr>
+            <tr><td><b>Color picker</b></td><td>Shipped, large</td><td><code>ColorPicker</code></td><td>All of it. The system picker is a separate window and knows nothing about gradients, recents or contrast.</td></tr>
+            <tr><td><b>Toolbar</b></td><td>Shipped</td><td><code>.toolbar</code></td><td>The floating canvas strip and the overflow rules. The window toolbar maps.</td></tr>
+            <tr><td><b>Panel &amp; dock</b></td><td>Shipped</td><td><code>NavigationSplitView</code></td><td>Group collapsing, the panel manager, tear-off. Splits map.</td></tr>
+            <tr><td><b>Menu &amp; popover</b></td><td>Shipped</td><td><code>Menu</code> / <code>.popover</code></td><td>Little. Take the platform ones and restyle.</td></tr>
+            <tr><td><b>Progress</b></td><td>New in this pass</td><td><code>ProgressView</code></td><td>The groove has to match the slider's, and the meter's limit marker is ours.</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">The pattern is consistent: <b>containers map to the platform, value controls do not</b>. Anything that edits a number precisely, in a dense panel, has to be built. That is where the work is, and it is also where the app either feels professional or does not.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A component library is a <b>promise about density</b>. Every control here is designed to survive at 24px in a 268px panel with forty siblings, because that is the real environment. A kit that only looks right in a settings sheet is not a kit for this app.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Each spec page ends with the command its control maps to. If we hold that line, the library doubles as the <b data-target="agent">agent</b> surface: anything a person can reach by clicking, a model can reach by name, with no second API to maintain.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>The number field is the most valuable control we have to write from scratch and the most expensive. Do we build it once as a proper NSTextField subclass with scrub, arithmetic and unit parsing, or ship a simpler SwiftUI version first and accept that the inspector feels a grade less pro until it lands?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

@@ -77,8 +77,8 @@
 #documents .o-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;padding:7px 13px}
 
 /* ---- inspector helpers ---- */
-#documents .stepper{display:inline-flex;align-items:center;gap:var(--s2)}
-#documents .stepper .val{min-width:44px;text-align:center}
+#documents .dc-stepper{display:inline-flex;align-items:center;gap:var(--s2)}
+#documents .dc-stepper .val{min-width:44px;text-align:center}
 #documents .swrow{display:flex;gap:var(--s2);flex-wrap:wrap}
 #documents .swopt{width:26px;height:26px;border-radius:var(--r2);border:1.5px solid transparent;cursor:pointer;transition:var(--ctl-tr);box-shadow:inset 0 1px 0 rgba(255,255,255,.25);padding:0}
 #documents .swopt:hover{transform:scale(1.06)}
@@ -789,8 +789,8 @@
       var radLabel = o.radius>=999 ? "Full" : o.radius+"px";
       body.innerHTML =
         '<div class="section"><div class="sec-h">Shape <span class="mut">re-editable</span></div>'+
-          '<div class="irow"><span class="rl">Corner</span><span class="stepper"><button class="btn secondary icon sm" data-step="radius:-2" title="Smaller corner"><i class="ic sm ic-minus"></i></button><span class="val" id="radVal">'+radLabel+'</span><button class="btn secondary icon sm" data-step="radius:2" title="Larger corner"><i class="ic sm ic-plus"></i></button></span></div>'+
-          '<div class="irow"><span class="rl">Opacity</span><span class="stepper"><button class="btn secondary icon sm" data-step="opacity:-10" title="Less opaque"><i class="ic sm ic-minus"></i></button><span class="val" id="opVal">'+o.opacity+'%</span><button class="btn secondary icon sm" data-step="opacity:10" title="More opaque"><i class="ic sm ic-plus"></i></button></span></div>'+
+          '<div class="irow"><span class="rl">Corner</span><span class="dc-stepper"><button class="btn secondary icon sm" data-step="radius:-2" title="Smaller corner"><i class="ic sm ic-minus"></i></button><span class="val" id="radVal">'+radLabel+'</span><button class="btn secondary icon sm" data-step="radius:2" title="Larger corner"><i class="ic sm ic-plus"></i></button></span></div>'+
+          '<div class="irow"><span class="rl">Opacity</span><span class="dc-stepper"><button class="btn secondary icon sm" data-step="opacity:-10" title="Less opaque"><i class="ic sm ic-minus"></i></button><span class="val" id="opVal">'+o.opacity+'%</span><button class="btn secondary icon sm" data-step="opacity:10" title="More opaque"><i class="ic sm ic-plus"></i></button></span></div>'+
         '</div>'+
         '<div class="section"><div class="sec-h">Fill <span class="mut">Paint</span></div>'+
           '<div class="swrow" id="swrow">'+sw+'</div>'+

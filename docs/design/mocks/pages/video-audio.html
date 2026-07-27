@@ -21,9 +21,9 @@
 .vurow.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .vurow .nm{font-size:9.5px;font-weight:640;color:#fff;width:64px;flex:none;letter-spacing:.02em}
 .vurow .mtagv{font-size:9px;font-family:var(--mono);color:rgba(255,255,255,.8);width:34px;flex:none;text-align:right}
-.meter{position:relative;flex:1;height:8px;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#1a9e6a 0%,#3ecf8e 45%,#e0a53a 78%,#f0685c 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
-.meter .mmask{position:absolute;top:0;right:0;bottom:0;background:rgba(6,8,14,.82);border-left:1px solid rgba(0,0,0,.3)}
-.meter .mpeak{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;transform:translateX(-1px)}
+.va-meter{position:relative;flex:1;height:8px;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#1a9e6a 0%,#3ecf8e 45%,#e0a53a 78%,#f0685c 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.va-meter .mmask{position:absolute;top:0;right:0;bottom:0;background:rgba(6,8,14,.82);border-left:1px solid rgba(0,0,0,.3)}
+.va-meter .mpeak{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;transform:translateX(-1px)}
 
 /* ---------- the timeline dock: audio lanes on the shared time axis ---------- */
 #tlDock{--gutter:58px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
@@ -141,8 +141,8 @@
           <div class="vframe">
             <div class="title">Ship it faster.</div>
             <div class="vumeters" id="vuMeters">
-              <div class="vurow sel" data-vu="music"><span class="nm">Music</span><div class="meter" data-meter="music"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="music">-inf</span></div>
-              <div class="vurow" data-vu="vo"><span class="nm">Voiceover</span><div class="meter" data-meter="vo"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="vo">-inf</span></div>
+              <div class="vurow sel" data-vu="music"><span class="nm">Music</span><div class="va-meter" data-meter="music"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="music">-inf</span></div>
+              <div class="vurow" data-vu="vo"><span class="nm">Voiceover</span><div class="va-meter" data-meter="vo"><i class="mmask" style="width:100%"></i><i class="mpeak" style="left:0%"></i></div><span class="mtagv" data-mtag="vo">-inf</span></div>
             </div>
           </div>
         </div>

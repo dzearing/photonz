@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-panels</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-panels — layout from docpage, callouts from redline. Local rules only
+     for the dock specimen frame. */
+  #comp-panels .cp-dockdemo{width:280px;border-radius:var(--r3);overflow:hidden;
+    border:1px solid var(--edge-lo);background:color-mix(in srgb,var(--panel) 50%,transparent)}
+  /* the dock groups scroll internally in the real app; as a specimen the whole
+     column has to be readable at once, so the body height cap is lifted here */
+  #comp-panels .cp-dockdemo .dgrp-b{max-height:none;overflow:visible}
+  #comp-panels .cp-stage{display:grid;place-items:center;padding:var(--s4) 0;
+    border-radius:var(--r3);
+    background:radial-gradient(360px 220px at 50% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 68%)}
+  #comp-panels .rl-frame{--rl-gut:108px}
+  #comp-panels .rl-co .card{width:220px}
+  #comp-panels .cp-list{border-radius:var(--r2);border:1px solid var(--edge-lo);overflow:hidden;
+    background:color-mix(in srgb,var(--panel) 45%,transparent)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-panels">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Panels, panes &amp; rows</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">Everything that holds content at the side of the canvas. The vocabulary is deliberately small: a <b>dock</b> holds <b>panel groups</b>, a group holds <b>sections</b>, and a section holds <b>rows</b>. Four nouns, and every panel in the app is built from them, which is why a new feature never needs new chrome. The docking, resizing and tear-off behaviour lives on <b data-target="lang-panels">Design language · Panels</b>; this page is the parts.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cp-stage">
+            <div class="cp-dockdemo" id="cp-demo">
+              <div class="dgrp">
+                <div class="dgrp-h"><i class="ic ic-chevron-down chev"></i><span class="t">LAYERS</span><span class="badge">14</span><span class="sp" style="flex:1"></span><button class="tool sm" data-tip="Filter"><i class="ic ic-filter"></i></button><button class="tool sm" data-tip="More"><i class="ic ic-more"></i></button></div>
+                <div class="dgrp-b">
+                  <div class="lrow lgroup"><i class="ic ic-chevron-down"></i><i class="ic ic-frame"></i>Hero section</div>
+                  <div class="lrow sel"><i class="ic ic-frame"></i>Hero card<span class="sp" style="flex:1"></span><i class="ic ic-lock"></i><i class="ic ic-eye"></i></div>
+                  <div class="lrow"><i class="ic ic-image"></i>Card · Brand/grad<span class="sp" style="flex:1"></span><i class="ic ic-eye"></i></div>
+                  <div class="lrow"><i class="ic ic-text"></i>Headline<span class="sp" style="flex:1"></span><i class="ic ic-eye"></i></div>
+                  <div class="lrow selc"><i class="ic ic-component"></i>Button<span class="sp" style="flex:1"></span><i class="ic ic-component"></i></div>
+                </div>
+              </div>
+              <div class="dgrp">
+                <div class="dgrp-h"><i class="ic ic-chevron-down chev"></i><span class="t">PROPERTIES</span><span class="sp" style="flex:1"></span><button class="tool sm" data-tip="More"><i class="ic ic-more"></i></button></div>
+                <div class="dgrp-b">
+                  <div class="section grp">
+                    <div class="sec-h"><i class="ic ic-chevron-down chev"></i>Transform</div>
+                    <div class="numgrid">
+                      <span class="stepper sm"><span class="k">X</span><input value="510"></span>
+                      <span class="stepper sm"><span class="k">Y</span><input value="382"></span>
+                      <span class="stepper sm"><span class="k">W</span><input value="420"></span>
+                      <span class="stepper sm"><span class="k">H</span><input value="260"></span>
+                    </div>
+                  </div>
+                  <div class="section grp">
+                    <div class="sec-h"><i class="ic ic-chevron-down chev"></i>Appearance</div>
+                    <div class="slrow" style="--slrow-l:56px"><span class="rl">Opacity</span><span class="slider sm" data-unit="%"><input type="range" min="0" max="100" value="88" aria-label="Opacity"><span class="sl-bub"></span></span><span class="num">88%</span></div>
+                    <div class="setrow"><span class="rl">Blend</span><span class="select" style="min-width:100px"><span class="lead">Normal</span><i class="car ic ic-chevron-down"></i></span></div>
+                    <div class="setrow"><span class="rl">Clip content</span><label class="switch sm"><input type="checkbox" checked><i></i></label></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="rl-co" data-rl-for="#cp-demo .dgrp-h" data-rl-side="l" data-rl-row="-40"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Group header</b>Always has a collapse chevron and an overflow. A header with no toggle is a dead end, so the chevron is injected rather than authored.</span></span>
+          <span class="rl-co" data-rl-for="#cp-demo .lrow.sel" data-rl-side="l"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Row</b>The unit of a list. 24px tall, icon then name then trailing state. Selection is a fill, not a border, so the row does not change size when you pick it.</span></span>
+          <span class="rl-co" data-rl-for="#cp-demo .lrow.selc" data-rl-side="l" data-rl-row="20"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Component row</b>Same row, purple. Component language is a colour in this app, never a different shape, so a component reads as one at a glance in any list.</span></span>
+          <span class="rl-co" data-rl-for="#cp-demo .section.grp .sec-h" data-rl-side="r" data-rl-row="-30"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Section</b>A collapsible run of rows inside a group. This is where a panel gets its rhythm: a 9px uppercase heading over related controls.</span></span>
+          <span class="rl-co" data-rl-for="#cp-demo .numgrid" data-rl-side="r" data-rl-row="10"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Row containers</b><code>.setrow</code>, <code>.slrow</code>, <code>.numgrid</code>. They ship with the components so no panel re-authors the label column or the control width.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Live. Collapse a group or a section, drag the opacity slider. Click a number to read what that part is.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">Dock &gt; group &gt; section &gt; row, and <b>every level collapses</b>. That is what lets one 280px column hold Layers, Properties and Library at once without becoming a scroll marathon: you close what you are not using and the rest expands into the space.</p>
+        <div class="docdd">
+          <span class="do">Give every collapsible thing a visible affordance in its header.</span>
+          <span class="no">Invent a fifth level. If it needs one, it is a separate group.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>panel.dock("right")</code> · <code>group.collapsed = true</code> · <code>section.collapsed = true</code>. State is per document, so a layout follows the file.</p>
+      </div>
+    </div>
+
+    <!-- 2 · ROWS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="cp-list">
+              <span class="lrow"><i class="ic ic-image"></i>Rest<span class="sp" style="flex:1"></span><i class="ic ic-eye"></i></span>
+              <span class="lrow" style="background:var(--glass-thin)"><i class="ic ic-image"></i>Hover<span class="sp" style="flex:1"></span><i class="ic ic-eye"></i></span>
+              <span class="lrow sel"><i class="ic ic-image"></i>Selected<span class="sp" style="flex:1"></span><i class="ic ic-lock"></i><i class="ic ic-eye"></i></span>
+              <span class="lrow selc"><i class="ic ic-component"></i>Component<span class="sp" style="flex:1"></span><i class="ic ic-component"></i></span>
+              <span class="lrow" style="opacity:.45"><i class="ic ic-eye-off"></i>Hidden<span class="sp" style="flex:1"></span><i class="ic ic-eye-off"></i></span>
+              <span class="lrow" style="opacity:.45"><i class="ic ic-lock"></i>Locked<span class="sp" style="flex:1"></span><i class="ic ic-lock"></i></span>
+            </span>
+            <span class="docsp-l"><b>Row states</b> .lrow</span>
+            <p class="docsp-d">Hidden and locked dim the whole row, including its name, because a dimmed row is the fastest way to read "this is not participating" down a list of forty.</p>
+          </div>
+          <div class="docsp">
+            <span class="cp-list">
+              <span class="lrow lgroup"><i class="ic ic-chevron-down"></i><i class="ic ic-frame"></i>Hero section</span>
+              <span class="lrow" style="padding-left:26px"><i class="ic ic-image"></i>Background</span>
+              <span class="lrow" style="padding-left:26px"><i class="ic ic-text"></i>Headline</span>
+              <span class="lrow lgroup" style="padding-left:26px"><i class="ic ic-chevron-right"></i><i class="ic ic-component"></i>Button</span>
+              <span class="lrow"><i class="ic ic-image"></i>Footer image</span>
+            </span>
+            <span class="docsp-l"><b>Nesting</b> .lrow.lgroup</span>
+            <p class="docsp-d">One indent step per level, and the disclosure chevron sits before the type icon so the tree's structure reads down a single column no matter how deep it goes.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Rows</h3>
+        <p class="docrule">The row is the most repeated element in the app, so it is the one that has to survive density. <b>24px tall, one line, icon then name then trailing state</b>, and the name truncates rather than wrapping. Trailing controls appear on hover except when they are on, because a locked layer must show its lock without being hovered.</p>
+        <div class="docdd">
+          <span class="do">Keep trailing state visible when it is active, hidden when it is not.</span>
+          <span class="no">Let a long name wrap. A two-line row breaks the scan.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node.hidden = true</code> · <code>node.locked = true</code>. The row is a view over the node, so a row and the canvas can never disagree.</p>
+      </div>
+    </div>
+
+    <!-- 3 · PANES & EMPTY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col"><span class="dgrp" style="width:100%"><span class="dgrp-h"><i class="ic ic-chevron-right chev"></i><span class="t">LIBRARY</span><span class="sp" style="flex:1"></span></span></span></span>
+            <span class="docsp-l"><b>Collapsed group</b></span>
+            <p class="docsp-d">The header stays. A collapsed group you cannot see is a group you will not find again.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="empty"><i class="ic ic-layers lg"></i>No layers yet<span style="font-size:10.5px;color:var(--faint)">Drop an image, or press ⌘N</span></span></span>
+            <span class="docsp-l"><b>Empty state</b> .empty</span>
+            <p class="docsp-d">Every list has one, and it names the way out. An empty panel with no instruction is the most common dead end in an editor.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="dockmgr" style="position:relative;width:100%"><button class="btn ghost sm block"><i class="ic ic-sidebar-right"></i>PANELS<i class="ic ic-chevron-down" style="margin-left:auto"></i></button></span></span>
+            <span class="docsp-l"><b>Panel manager</b> .dockmgr</span>
+            <p class="docsp-d">A sticky footer on any dock with two or more groups, built from that dock's own groups so no page authors it and none can drift.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Managing the dock</h3>
+        <p class="docrule">A dock that can hold five groups needs an <b>obvious way to choose which ones are shown</b>, or people close a panel and never find it again. The manager is generated from the dock's contents, so it is always complete and always correct.</p>
+        <div class="docdd">
+          <span class="do">Leave the header when a group collapses.</span>
+          <span class="no">Let a panel disappear with no way back except a menu three levels deep.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>dock.panels</code> lists them; <code>panel.visible = false</code> hides one. The manager is a view over that list.</p>
+      </div>
+    </div>
+
+    <!-- 4 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">04</span><h3>In the API</h3><span class="k">four nouns, and what each one owns</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Noun</th><th>Class</th><th>Owns</th><th>Command</th></tr></thead>
+          <tbody>
+            <tr><td><b>Dock</b></td><td><code>.pdock</code></td><td>A side of the window, its width, and which groups are in it</td><td><code>panel.dock("right")</code></td></tr>
+            <tr><td><b>Group</b></td><td><code>.dgrp</code></td><td>One subject: Layers, Properties, Library. Collapses to its header.</td><td><code>group.collapsed = true</code></td></tr>
+            <tr><td><b>Section</b></td><td><code>.section.grp</code></td><td>A run of related rows inside a group</td><td><code>section.collapsed = true</code></td></tr>
+            <tr><td><b>Row</b></td><td><code>.lrow</code></td><td>One node, or one property. Never two things.</td><td><code>node.hidden = true</code></td></tr>
+            <tr><td><b>Rail</b></td><td><code>.drail</code></td><td>What a dock collapses to: vertical headers you click to reopen</td><td><code>dock.collapsed = true</code></td></tr>
+          </tbody>
+        </table>
+        <p class="docnote"><b>Compact windows</b>: the dock collapses to the rail rather than shrinking, because a 160px inspector cannot show a label and a control on one line. Below that it becomes an overlay over the canvas, which costs zero width and is the only way a phone-width window keeps a usable canvas. <b>The layout is per document</b>, so the panel arrangement you set up for a video file is still there when you reopen it.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Four nouns, and <b>every level collapses</b>. A vocabulary this small means a new feature adds a group, never a new kind of chrome, which is the only way a dock survives fifty releases.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because groups are data, a document could carry a named layout: "Retouch" opens Layers plus Adjustments, "Handoff" opens Measure plus Export. Switching is one command, and the layout travels with the file.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Per-document layout is right for a designer with one big file and wrong for someone opening forty screenshots a day. Do we make it opt-in per document, or infer it from how long the document stays open?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

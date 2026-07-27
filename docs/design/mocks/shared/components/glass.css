@@ -88,9 +88,6 @@
 .tool{border-radius:var(--r-sm)}
 .tool:hover{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
 .tool.on{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-sm)}
-.seg{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:999px}
-.seg button{border-radius:999px}
-.seg button.on{background:var(--glass);box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1)}
 
 /* overlays: proper vibrancy */
 .popover,.cpal{background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow)}

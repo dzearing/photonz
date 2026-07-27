@@ -4,7 +4,7 @@
    controls, sizes off the 4pt scale, four variants, and REAL
    interaction states (hover / active / focus-visible / disabled) on
    every variant. All new buttons use `.btn`. The existing controls
-   (.pill .tool .chip .select .seg) are normalized at the bottom of
+   (.pill .tool .chip .select) are normalized at the bottom of
    this block to share the same state + radius language so the pages
    stop looking mismatched (square / tiny / round / inert).
    ============================================================ */
@@ -87,13 +87,42 @@
 .btn.danger:active{box-shadow:inset 0 2px 5px rgba(0,0,0,.3)}
 .btn.danger:focus-visible{box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--ring)}
 
+/* ---- a button that opens a menu, and a split button ----
+   Two different promises, and they must not look the same:
+
+     .btn + .car      pressing ANYWHERE opens a menu. No default action.
+     .btngrp.split    pressing the label RUNS the default action; pressing the
+                      caret half opens the menu of alternatives.
+
+   The split form is one capsule cut by a hairline, not two buttons sitting
+   next to each other, because the two halves are one idea ("export … but
+   which?"). Concentric radii do the rest: the outer capsule keeps 999px, the
+   inner divider is a straight line, and neither half rounds on the inside. */
+.btn>.car{width:11px;height:11px;margin-left:-2px;margin-right:-4px;opacity:.65;flex:none}
+.btn.sm>.car{width:10px;height:10px}
+
+.btngrp{display:inline-flex;align-items:stretch}
+.btngrp.block{display:flex;width:100%}
+.btngrp>.btn{border-radius:0}
+.btngrp>.btn:first-child{border-top-left-radius:999px;border-bottom-left-radius:999px}
+.btngrp>.btn:last-child{border-top-right-radius:999px;border-bottom-right-radius:999px}
+.btngrp>.btn+.btn{margin-left:0}
+/* the divider: a hairline that belongs to neither half. On a filled variant it
+   is a light scrim rather than a border, so the gradient reads as continuous. */
+.btngrp>.btn+.btn{box-shadow:var(--ctl-gloss), inset 1px 0 0 var(--edge-lo)}
+.btngrp>.btn.primary+.btn.primary,.btngrp>.btn.danger+.btn.danger{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 1px 0 0 rgba(0,0,0,.18), var(--glow)}
+/* the caret half is only as wide as the caret needs */
+.btngrp.split>.btn:last-child{padding:0 var(--s3)}
+.btngrp.split.sm>.btn:last-child{padding:0 var(--gap-sm)}
+
 /* ============================================================
    NORMALIZE EXISTING CONTROLS to the canonical state + radius
    language. Roles/sizes are preserved (kept reasonable so layouts
    don't shift); only the feel is unified — same hover / active /
    focus-visible / disabled response and capsule radii.
    ============================================================ */
-.pill,.tool,.chip,.select,.seg button{transition:var(--ctl-tr)}
+.pill,.tool,.chip,.select{transition:var(--ctl-tr)}
 
 /* .pill — status/action capsule in toolbars. Add the missing states. */
 .pill{cursor:pointer}
@@ -125,16 +154,10 @@
 .select:focus-visible{outline:none;border-color:transparent;box-shadow:var(--ctl-gloss), var(--ring)}
 .select[disabled],.select.disabled{opacity:.42;pointer-events:none}
 
-/* .seg — segmented control. Unify option hover/press/focus. */
-.seg button{cursor:pointer}
-.seg button:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 60%, transparent)}
-.seg button:active{transform:scale(.97)}
-.seg button:focus-visible{outline:none;box-shadow:var(--ring)}
-.seg button[disabled],.seg button.disabled{opacity:.42;pointer-events:none}
 
 @media (prefers-reduced-motion:reduce){
-  .btn,.pill,.tool,.chip,.select,.seg button{transition:none}
-  .btn:active,.pill:active,.tool:active,.chip:active,.select:active,.seg button:active,
+  .btn,.pill,.tool,.chip,.select{transition:none}
+  .btn:active,.pill:active,.tool:active,.chip:active,.select:active,
   .pill.solid:active,.pill.ai:active,.tool.on:active{transform:none}
 }
 

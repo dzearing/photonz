@@ -2712,3 +2712,180 @@ Selection also had no entry under **Surfaces & primitives** even though it is a
 primitive like paint and colour, so it is listed there now as well as under
 Design language (both nav entries highlight; one page, two doors — no second copy
 of the documentation).
+
+### 2026-07-27 — pane vs panel, and the Layers pane gets its own page
+
+Two new pages under **Surfaces & primitives**, both written on the `docpage`
+component rather than hand-rolled reference chrome.
+
+**`pages/panes-panels.html` — Panes & panels.** The vocabulary was ambiguous:
+"panel" was being used for the dock AND for a group inside it, which is why
+"resize the panel" had two meanings. Fixed by naming them. A **panel** is the
+container (`.pdock`): one per window, argues with the CANVAS for width, 180–460,
+collapses to the rail. A **pane** is a section (`.dgrp`): argues with its
+SIBLINGS for height, 96–340, budget by role, collapses to its header. The test
+for which word you want is what the thing argues with, and nothing in the shell
+argues with both. Covers min/max and the role ladder (sm/md/lg/grow), resizing
+panes against each other, the three levels of collapse (header · hidden · rail)
+and the rule that a restore lands you where you were, a motion ladder whose
+dividing line is "animate a decision, never a drag" (splitter drag is 0ms on
+purpose), and the narrow-window reflow at 880/620.
+
+**`pages/layers-pane.html` — The Layers pane.** Selection (click / ⇧ / ⌘ /
+marquee, and the same selection in three places at once), grouping (a group is a
+layer, not a folder — it carries its own opacity, mask and effects, and
+ungrouping pushes those down onto the children so the canvas is identical),
+rearranging (the drop line is **indented to its parent**, which is the question a
+flat line can never answer), collapse state (saved with the document, deliberately
+outside history), visibility and lock, and the row's six fixed slots.
+
+Two things worth reusing:
+
+- **A diagram whose labels cannot drift from what they label.** The blown-up row
+  and its tick strip share ONE grid definition (`.lyp-zgrid`), so the captions
+  line up with the slots by construction instead of by tuned percentages. Same
+  idea for the "three places at once" badges, which are placed from the measured
+  top of the pane each one names.
+- **`.dgrp.grow` has a 244px floor**, so a specimen frame shorter than
+  `header + 244 + footer` silently clips its own content. Three specimens were
+  clipped this way before the frames were sized to fit. In a small specimen,
+  give every pane a fixed `--gh` instead of reaching for `.grow`.
+
+Also: a wide shell placed inside a `.docgrid.n2` measures under 880px and rails
+its own panel, which defeats a "this is what wide looks like" example. The wide
+specimen has to be full-bleed.
+
+`check-elevation.mjs` and `vr6-strip.py` both clean for the new pages. Verified
+in light and dark, no console errors.
+
+## 2026-07-27 — Component library: a real UI kit spec, plus eight new DS components
+
+The nav had "Component library" pointing at `pages/components.html`, which is the
+app's drag-a-component-onto-the-canvas *feature*, not the app's own UI kit. That
+page moved to Surfaces & primitives as **Components on canvas**, and Component
+library is now its own nav group with ten pages.
+
+**The gap it exposed.** Writing the spec surfaced that the design system had no
+slider, no checkbox, no switch, no radio, no text field, no number field, no
+progress, no spinner, no badge, no key cap and no dialog. Panels had been faking
+each one locally. So the pass shipped eight new components:
+
+    slider   toggle   input   progress   badge   dialog   docpage   redline
+
+- **`slider`** — the headline. A **horizontal capsule thumb on a 6px groove**,
+  the platform's shape at inspector density (a first pass stood the pill on end,
+  which is wrong; macOS volume and scrubber controls are wider than they are
+  tall). Variants: `.bipolar` (fill from the centre — every signed adjustment
+  needs it), `.paint` / `.hue` / `.alpha` (the groove *is* the value, and the
+  thumb carries the current colour or the chosen transparency over the same
+  checkerboard as the track), `.range`, `.ticks`. A real `<input type=range>`
+  stays under the visual layer, so keyboard and VoiceOver are free.
+- **`docpage`** — `lang-elevation`, `lang-toolbars`, `lang-panels`, `states`,
+  `typography` and `dsys` had each hand-copied the same ~130 lines of
+  "specimen left, rule right" layout. It is a component now.
+- **`redline`** — the numbered callout with a leader line, lifted out of
+  `app-shell`'s page-local CSS + positioning routine. Pages now declare
+  `data-rl-for` and the component measures, numbers and places everything.
+
+**Three things worth remembering.**
+
+1. **`.track` was already taken.** The slider's groove sat 6px low on every page
+   and it looked like a broken transform. `inspector.css` defines a bare
+   `.track` (the video timeline) with `margin:6px 0`, and an absolutely
+   positioned child inherits it. The slider's internals are `.sl-track` /
+   `.sl-fill` / `.sl-thumb` / `.sl-bub` now. This is the RESERVED CLASS NAMES
+   bug for the eleventh time.
+2. **Scan for the collision instead of waiting for it.** A script compared every
+   bare name the new components define against every page's local rules and
+   found five real shadows: `video-compositing` `.slider`,
+   `ui-autolayout` / `ui-grid` / `documents` `.stepper`, `video-audio` `.meter`.
+   Those pages were prefixed. `.scrim` went the other way and became
+   `.dlg-scrim`, because `lang-elevation` uses `.scrim` as a compound modifier
+   and a bare DS rule would have made that specimen invisible — **when an
+   existing page would break either way, the new component takes the prefix.**
+   All of it is now in the reserved list at the top of `tokens.css`.
+3. **`.docgrid.n3` meant "exactly three".** Inside a `.docspec` that is itself a
+   column, three fixed columns get to ~130px each, which is narrower than any
+   specimen in the library, and a slider row overflowed into its neighbour. It
+   is `repeat(auto-fit, minmax(196px,1fr))` now: *at most* three across.
+
+**Detail work from review.** The tooltip beak was a CSS border triangle — a hard
+90-degree shoulder and a mathematical point, the one detail that reads as web.
+It is now the same clipped path as the color picker's gradient-stop callout,
+using that path's own numbers (`HALF 9 · SH 3 · BH 9 · TIP 2.6`), verified by
+rendering both at 40x side by side. The legacy `.gramp` had drifted into a
+second gradient ramp with stops whose leader lines hung out the bottom; it is
+the picker's ramp now. The redline leader was a fading gradient bar with a solid
+dot, invisible over a busy canvas and completely gone over an accent-filled
+button — it is one SVG path stroked twice, a translucent halo following the
+whole silhouette (line, elbow and dot) under a 20%-opacity accent core that
+lifts to 60% on hover, with line and dot sharing one opacity.
+
+Ten pages: overview & inventory, buttons, fields & choice, sliders, tooltips,
+color picker, toolbars, panels, menus & dialogs, status & feedback. Each ends
+with what still has to be built natively — the pattern is consistent, and worth
+planning around: **containers map to the platform, value controls do not.**
+
+`check-elevation.mjs` and `vr6-strip.py` both clean. Next: the same treatment
+for typography and iconography, which are still prose pages rather than specs.
+
+### Same day, review pass — the segmented control had no owner
+
+Reviewing the color picker against the new spec turned up nine things, and most
+of them traced to two root causes rather than nine.
+
+**`.seg` was defined in five files at once** — `canvas.css` (a track),
+`glass.css` (a different track), `inspector.css` (the buttons), `button.css`
+(the states), `visual-rules.css` (a wrapping variant) — plus two bespoke copies
+inside the color picker. Whichever loaded last won, *per property*, so one
+popover showed the same control at two heights, one centred and one not, with a
+selected segment you could not find. It is now `segmented.css` and nothing else,
+`.cp-mode` and `.cp-scope` are just `.seg`, and there is a spec page.
+
+**VISUAL RULE 6 is reversed.** It used to make a dock's segmented control a
+wrapping auto-fit grid so a 6-item scope did not come out as two ragged rows.
+The rule now: **a segmented control never wraps**, because a control that cannot
+show its options is the wrong control — above 4 options or below ~44px a
+segment it is a `.select`. `.seg.stack` survives as the full-width form only.
+
+**Every missing gap in the color picker was one line of mine.** The comp-color
+page pinned the popover into the page flow with `display:block`, and the picker
+is a flex column whose 12px rhythm lives in that declaration. Overriding
+`display` deleted every gap in the control at once. Also fixed there: the SV
+field's 1px border took the current hue, so it appeared to change colour as you
+picked — it has no border now; the header's eyedropper and close were `sm`
+against 32px controls everywhere else.
+
+**Tooltip, three real bugs, all found by driving it rather than reading it:**
+
+- `GAP` was measured from the PLATE, and the beak protrudes ~9px, so the beak
+  ate the whole gap and the point sat flat on the control. The offset is
+  `GAP + beak` now, and the side beak has its own number.
+- The entrance transition never ran. `.on` was added in the same frame as the
+  placement, so the browser coalesced both into one style resolution. A forced
+  reflow between them fixes it; the entrance is directional (it travels out of
+  the trigger) and swaps stay instant via `.warm`.
+- Moving *within* a button hid the tooltip, because `pointerout` fires when the
+  pointer crosses onto a child and every icon button has one. Worse, leaving A
+  and entering B fires out-before-over, so the tooltip always closed first and
+  the "instant between neighbours" path could never run. A leave now schedules
+  the hide and any new trigger cancels it.
+- The beak's shoulder fillet: the picker eases over 4.5px across but only 1.5px
+  down, so it is finished within the first pixel — and the beak was hung 1px
+  into the plate, hiding exactly that pixel. Two causes, one symptom. Deeper
+  cubic fillet, half-pixel overlap. Sided tooltips get a 58% beak, because a
+  one-line tooltip has 10px of straight vertical edge and a 24px base overhangs
+  both corners as horns.
+
+**Also:** paint slider thumbs recompute their colour on every move (a hue knob
+that stays one colour while you drag it across the spectrum reports position,
+not result); the picker's channel knobs are capsules that repaint together; the
+zoom slider and transport playhead were still circles because `toolbar` and
+`overlays` load AFTER `slider` and their own `border-radius:50%` won — the
+recipe is a token now and each file restates its own geometry; the gradient
+ramp's stops painted a coloured block that hung 8px out the bottom, because the
+key used `background:inherit` and pages set the colour on the wrapper.
+
+Eleven pages in the section now. `check-elevation.mjs` and `vr6-strip.py` clean;
+20 pages spot-checked for wrapped or escaping segments after the `.seg`
+rewrite, all clear.

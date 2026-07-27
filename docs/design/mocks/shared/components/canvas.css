@@ -69,5 +69,3 @@
 .efx .nm{font-weight:560;color:var(--ink)}
 .efx .meta{color:var(--faint);margin-left:auto;font-family:var(--mono);font-size:10px}
 .efx.click{cursor:pointer}.efx.click:hover{border-color:var(--accent-line)}
-
-.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px;flex-wrap:wrap}

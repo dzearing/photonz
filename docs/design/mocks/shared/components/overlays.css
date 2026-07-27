@@ -48,9 +48,13 @@
 .scrub{flex:1 1 auto;min-width:56px;height:6px;border-radius:999px;background:var(--line-strong);
   position:relative;cursor:pointer;touch-action:none}
 .scrub .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--accent)}
-.scrub .knob{position:absolute;top:50%;width:13px;height:13px;margin-left:-6.5px;
-  transform:translateY(-50%);border-radius:50%;background:var(--panel);
-  border:1.5px solid var(--accent);box-shadow:var(--shadow-1)}
+/* the playhead is the slider's capsule at the large size, restated here
+   because overlays loads after slider and its own radius would win */
+.scrub .knob{position:absolute;top:50%;
+  width:var(--sl-thumb-w-lg);height:var(--sl-thumb-h-lg);
+  margin-left:calc(var(--sl-thumb-w-lg) / -2);
+  transform:translateY(-50%);border-radius:999px;
+  background:var(--sl-knob);border:1px solid var(--edge-lo);box-shadow:var(--sl-knob-shadow)}
 .scrub .mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--good)}
 
 /* ---- generic toggled popover (tool-bar overflow, group menus) ---- */

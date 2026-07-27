@@ -1,0 +1,246 @@
+/* ============================================================
+   SLIDER — the canonical continuous-value control
+   ============================================================
+   Before this file the app had no slider. It had two half-controls that each
+   pretended to be one:
+
+     · `.bar > i`   a static fill with no grab affordance at all (inspector)
+     · `.zslider`   a raw <input type=range> with the browser's 13px CIRCLE
+                    thumb (toolbar zoom), and `.scrub .knob` repeating it
+
+   A round thumb is a web default, not a macOS one. The platform slider (volume,
+   the media scrubber, every Liquid Glass control panel) uses a HORIZONTAL
+   CAPSULE on a chunky track: wider than it is tall, fully rounded ends, sitting
+   proud of a groove that is thick enough to read as a physical channel. That is
+   the same capsule geometry as `.btn`, `.pill` and `.seg`, at control-knob
+   scale — which is exactly why it belongs here rather than a circle.
+
+   The shape also earns its keep: a 20px-wide thumb gives you a real grab target
+   in a 268px inspector row, and because the ends are round you can still see
+   the fill meet the thumb at the value, which a circle covers.
+
+     ┌──────────────────────────────────────────┐
+     │  Opacity            ▓▓▓▓▓▓▓( )─────  62 % │
+     └──────────────────────────────────────────┘
+                                  ^ 20 x 14 capsule, glass, one gloss line
+
+   Anatomy:  .slider > input[type=range] (the real control, invisible)
+                     + .track > .fill  (the groove and the filled part)
+                     + .thumb          (the pill)
+                     + .bub            (value bubble, only while dragging)
+
+   The native input stays in the DOM and keeps every keyboard and
+   accessibility behaviour (arrows, page, home/end, VoiceOver). It is
+   transparent; the three spans are the look, positioned from `--p` (0..1),
+   which slider.js writes on input. Nothing about the visual layer is
+   focusable, so there is exactly one tab stop.
+
+   Registered in order.json AFTER button so it inherits --ctl-tr / --ring, and
+   BEFORE colorpicker, which reuses .slider for its channel rows. */
+
+:root{
+  /* geometry. The track is thick on purpose — a 4px hairline groove is a web
+     slider; the platform's is a channel you could put a marble in. */
+  --sl-track:6px;   --sl-track-sm:4px;  --sl-track-lg:8px;
+  --sl-thumb-w:20px; --sl-thumb-h:14px;
+  --sl-thumb-w-sm:16px; --sl-thumb-h-sm:11px;
+  --sl-thumb-w-lg:26px; --sl-thumb-h-lg:18px;
+}
+
+.slider{
+  --p:0;                       /* normalized value, 0..1 — slider.js writes it */
+  --sl-tw:var(--sl-thumb-w);   /* this size's thumb width */
+  /* The centre of the thumb, in px along the track. The travel is inset by half
+     a thumb at each end so the pill never overhangs the groove, and BOTH the
+     thumb and the end of the fill are positioned from this one expression —
+     which is the fix for the classic slider bug where the fill and the thumb
+     disagree by a few pixels at the ends. */
+  --sl-x:calc(var(--sl-tw) / 2 + var(--p) * (100% - var(--sl-tw)));
+  position:relative;
+  flex:1 1 auto;
+  min-width:72px;
+  height:var(--sl-thumb-h);    /* the row's height is the THUMB, not the track */
+  display:flex;
+  align-items:center;
+  touch-action:none;
+  -webkit-user-select:none;user-select:none;
+}
+.slider.sm{height:var(--sl-thumb-h-sm);--sl-tw:var(--sl-thumb-w-sm)}
+.slider.lg{height:var(--sl-thumb-h-lg);--sl-tw:var(--sl-thumb-w-lg)}
+
+/* ---- the real control: full-bleed, invisible, still the only tab stop ---- */
+.slider>input[type=range]{
+  position:absolute;inset:0;width:100%;height:100%;margin:0;
+  -webkit-appearance:none;appearance:none;background:transparent;
+  cursor:pointer;opacity:0;z-index:2;
+}
+.slider>input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:var(--sl-thumb-w);height:100%}
+.slider>input[type=range]::-moz-range-thumb{width:var(--sl-thumb-w);height:100%;border:0;opacity:0}
+
+/* ---- the groove ---- */
+.slider .sl-track{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  height:var(--sl-track);border-radius:999px;overflow:hidden;
+  background:var(--line-strong);
+  box-shadow:inset 0 1px 2px rgba(20,24,40,.16);
+  pointer-events:none;
+}
+.slider.sm .sl-track{height:var(--sl-track-sm)}
+.slider.lg .sl-track{height:var(--sl-track-lg)}
+
+/* ---- the filled part: left origin by default ---- */
+.slider .sl-fill{
+  position:absolute;top:0;bottom:0;left:0;
+  right:calc(100% - var(--sl-x));
+  border-radius:999px;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));
+  transition:right .12s ease, left .12s ease;
+}
+.slider.drag .sl-fill{transition:none}
+
+/* ---- the pill ---- */
+.slider .sl-thumb{
+  position:absolute;top:50%;left:var(--sl-x);
+  width:var(--sl-tw);height:var(--sl-thumb-h);
+  transform:translate(-50%,-50%);
+  border-radius:999px;
+  background:linear-gradient(180deg, #fff, color-mix(in srgb,#fff 88%, var(--line) 12%));
+  border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+  pointer-events:none;
+  transition:left .12s ease, box-shadow .12s ease, border-color .12s ease, transform .09s ease;
+}
+.slider.sm .sl-thumb{height:var(--sl-thumb-h-sm)}
+.slider.lg .sl-thumb{height:var(--sl-thumb-h-lg)}
+.slider.drag .sl-thumb{transition:box-shadow .12s ease, transform .09s ease}
+
+/* ---- states ---- */
+.slider:hover .sl-thumb{box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-2);
+  border-color:color-mix(in srgb,var(--accent) 34%, var(--edge-lo))}
+.slider:hover .sl-track{background:color-mix(in srgb,var(--line-strong) 80%, var(--ink) 20%)}
+/* pressing grows the knob a hair, the way the platform's does — the thumb comes
+   toward you rather than lighting up */
+.slider.drag .sl-thumb{transform:translate(-50%,-50%) scale(1.08);
+  border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi), var(--glow-sm)}
+.slider:focus-within .sl-thumb{border-color:var(--accent);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+.slider.off,.slider[disabled],.slider.disabled{opacity:.42;pointer-events:none}
+
+/* ---- value bubble, only while dragging ---- */
+.slider .sl-bub{
+  position:absolute;bottom:calc(100% + var(--s1));left:var(--sl-x);
+  transform:translateX(-50%) translateY(3px);
+  padding:2px var(--gap-sm);border-radius:var(--r1);
+  background:var(--ink);color:var(--panel);
+  font-family:var(--mono);font-size:9.5px;font-variant-numeric:tabular-nums;
+  white-space:nowrap;pointer-events:none;z-index:3;
+  opacity:0;transition:opacity .1s ease, transform .1s ease;
+}
+.slider.drag .sl-bub{opacity:1;transform:translateX(-50%)}
+
+/* ============================================================
+   VARIANTS
+   ============================================================ */
+
+/* bipolar — the fill grows OUT OF THE CENTRE. Every signed adjustment
+   (exposure, temperature, rotation, tracking) is bipolar: a left-origin fill
+   on a -100..100 control lies, because it shows "half full" at zero. */
+.slider.bipolar .sl-fill{
+  left:min(50%, var(--sl-x));
+  right:calc(100% - max(50%, var(--sl-x)));
+}
+.slider.bipolar .sl-track::after{
+  content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;
+  transform:translateX(-.5px);background:var(--panel);opacity:.7;
+}
+
+/* ticks — a stepped control shows where it will land. --steps = interval count */
+.slider.ticks .sl-track{overflow:visible}
+.slider.ticks .sl-track::before{
+  content:"";position:absolute;left:0;right:0;top:calc(100% + 3px);height:4px;
+  background:repeating-linear-gradient(90deg,
+    var(--line-strong) 0 1px, transparent 1px calc(100% / var(--steps, 4)));
+  opacity:.9;
+}
+
+/* range — two values, fill BETWEEN them. No native input (a range input has
+   one value); slider.js drives the nearer thumb on pointerdown. */
+.slider.range{--p2:1;--sl-x2:calc(var(--sl-tw) / 2 + var(--p2) * (100% - var(--sl-tw)))}
+.slider.range .sl-fill{left:var(--sl-x);right:calc(100% - var(--sl-x2))}
+.slider.range .sl-thumb.hi{left:var(--sl-x2)}
+
+/* paint tracks — the groove IS the value. Used by the color picker for hue,
+   alpha and channel ramps, and by any gradient stop editor. The pill goes
+   clear-cored so you read the colour THROUGH the thumb instead of beside it. */
+.slider.paint .sl-track{background:var(--sl-ramp, var(--line-strong));box-shadow:none;
+  border:1px solid var(--edge-lo)}
+.slider.paint .sl-fill{display:none}
+.slider.paint{--sl-track:12px;--sl-track-sm:10px}
+/* SAME capsule as every other thumb — it just carries the value instead of
+   pointing at it. `--sl-c` fills it with the hue you are on, or with the
+   colour at the alpha you have chosen (over a checkerboard, so a half-
+   transparent thumb LOOKS half transparent). The white keyline is what keeps
+   it readable at any point along the ramp, including over its own colour. */
+.slider.paint .sl-thumb{
+  background:var(--sl-c, var(--panel));
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px var(--edge-lo), var(--shadow-1);
+}
+.slider.alpha .sl-thumb{
+  background:
+    linear-gradient(var(--sl-c, #4c6fff), var(--sl-c, #4c6fff)),
+    repeating-conic-gradient(#cfd3dc 0% 25%, #fff 0% 50%) 0 0/7px 7px;
+}
+.slider.paint .sl-thumb::after{display:none}
+.slider.hue{--sl-ramp:linear-gradient(90deg,#f00,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00)}
+.slider.alpha{--sl-ramp:linear-gradient(90deg,transparent,var(--sl-to,#4c6fff)),
+  repeating-conic-gradient(#cfd3dc 0% 25%, #fff 0% 50%) 0 0/8px 8px}
+
+/* ============================================================
+   THE ROW — label, slider, value. This is how a slider appears in 90% of
+   the app, so it is part of the component rather than something each panel
+   re-authors. The number is a scrub field: drag it and the slider follows.
+   ============================================================ */
+/* minmax(44px, 1fr), NOT 1fr: a grid track's implicit min is min-content, and
+   the slider's own min-width would then refuse to shrink, so in a narrow cell
+   the whole row overflowed and the value ran out over its neighbour. The track
+   is allowed to get small; nothing is allowed to escape the row. */
+.slrow{display:grid;grid-template-columns:var(--slrow-l, 72px) minmax(44px, 1fr) auto;
+  align-items:center;gap:var(--gap-sm);padding:var(--s1) 0;min-width:0}
+.slrow>.rl{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slrow>.slider{min-width:0}
+.slrow .num{
+  min-width:46px;text-align:right;
+  font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;
+  color:var(--dim);cursor:ew-resize;padding:2px var(--s1);border-radius:var(--r1);
+  border:1px solid transparent;transition:var(--ctl-tr);
+}
+.slrow .num:hover{color:var(--ink);border-color:var(--edge-lo);background:var(--glass-thin)}
+.slrow .num:focus-visible{outline:none;color:var(--ink);box-shadow:var(--ring)}
+.slrow.stack{grid-template-columns:1fr auto;grid-template-areas:"l v" "s s";row-gap:2px}
+.slrow.stack>.rl{grid-area:l}
+.slrow.stack .num{grid-area:v}
+.slrow.stack .slider{grid-area:s}
+
+/* ============================================================
+   THE THUMB, FOR COMPONENTS THAT ARE NOT THIS ONE
+   ============================================================
+   The zoom slider (toolbar), the transport playhead (overlays) and the color
+   picker's channel knobs all predate this component and each drew their own
+   round knob. They speak the capsule now — but the rules live in THEIR files,
+   not here. Reaching across from slider.css looked like it worked and did not:
+   `toolbar`, `overlays` and `colorpicker` all load after `slider`, so their own
+   `border-radius:50%` won and every one of them stayed a circle.
+
+   `--sl-knob` is the recipe, so those three files restate the geometry they
+   need and nothing else. Same lesson as elevation.css: a component owns its
+   whole surface, and a rule for someone else's element belongs to them. */
+:root{
+  --sl-knob:linear-gradient(180deg, #fff, color-mix(in srgb,#fff 88%, var(--line) 12%));
+  --sl-knob-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .slider .sl-fill,.slider .sl-thumb,.slider .sl-bub,.slrow .num{transition:none}
+  .slider.drag .sl-thumb{transform:translateY(-50%)}
+}

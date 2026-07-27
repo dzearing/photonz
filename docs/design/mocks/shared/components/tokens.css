@@ -18,6 +18,29 @@
    class that appears in this list. Scoped REFINEMENT of a DS class
    (`#dsys .win.shell{height:740px}`) is fine and encouraged; SHADOWING
    one with a different meaning is the bug.
+
+   ---- ADDED BY THE COMPONENT LIBRARY PASS ----
+   These are now DS components and their bare names are reserved. Four
+   pages already shadowed one and were prefixed as part of the change
+   (`video-compositing` .slider, `ui-autolayout`/`ui-grid`/`documents`
+   .stepper, `video-audio` .meter) — the exact bug this list exists for,
+   found by scanning rather than by someone hitting it later:
+
+     slider  slrow  sl-track  sl-fill  sl-thumb  sl-bub      (slider.css)
+     switch  check  radio  choices                           (toggle.css)
+     input  stepper  numgrid                                 (input.css)
+     prog  progrow  busy  busyrow  meter                     (progress.css)
+     badge  dot  kbd  kbds                                   (badge.css)
+     dlg  dlg-scrim  dlg-h  dlg-b  dlg-f                     (dialog.css)
+     docblk docspec docmeta docnum docname docrule docdd
+     docapi doccard dochead docbody docrow docgrid docsp
+     doctbl docintro docnote                                 (docpage.css)
+     rl-frame  rl-co                                         (redline.css)
+
+   Note `.dlg-scrim` rather than `.scrim`: `lang-elevation` uses `.scrim`
+   as a compound modifier (`.vstage.scrim`) and a bare DS rule would have
+   made that specimen `position:absolute` and invisible. When an existing
+   page would break either way, the NEW component takes the prefix.
    ============================================================ */
 :root{
   --stage:#e9ebf0; --stage-2:#dfe2e9;

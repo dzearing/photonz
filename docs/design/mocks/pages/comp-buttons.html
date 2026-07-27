@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-buttons</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-buttons — layout from the shared docpage component. Local rules only
+     for the callout diagram, which nothing else needs. */
+  #comp-buttons .cb-anat{position:relative;display:grid;place-items:center;min-height:250px;
+    border-radius:var(--r3);
+    background:radial-gradient(340px 180px at 50% 0%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 68%)}
+  #comp-buttons .cb-bar{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm);
+    border-radius:var(--r3);border:1px solid var(--edge-lo);
+    background:color-mix(in srgb,var(--panel-2) 55%,transparent)}
+  #comp-buttons .cb-bar .sp{flex:1}
+  /* the anatomy specimen is only ~150px wide, so its callouts need the whole
+     gutter and a shorter card than the app-shell default */
+  #comp-buttons .rl-frame{--rl-gut:104px}
+  #comp-buttons .rl-co .card{width:210px}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-buttons">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Buttons &amp; actions</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">There is <b>one button system</b>, <code>.btn</code>, and four other action controls that exist because a toolbar, a tag and a segment are not buttons even though they can all be pressed. The rule that keeps this from sprawling: if it performs an action and lives in prose, a dialog, a panel body or an empty state, it is a <code>.btn</code>. Everything else has an established slot, and you reach for it only in that slot.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cb-anat">
+            <button class="btn primary lg" id="cb-demo"><i class="ic ic-export"></i><span class="cb-lb">Export</span><span class="kbd">⌘E</span></button>
+          </div>
+          <span class="rl-co" data-rl-for="#cb-demo .ic" data-rl-side="l" data-rl-row="-95"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Icon</b>17px at this size, from the one shared set. It leads, always, and it is the part that survives when the window gets narrow.</span></span>
+          <span class="rl-co" data-rl-for="#cb-demo .cb-lb" data-rl-side="l" data-rl-row="-45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Label</b>14px, weight 580, one line, never wrapped. If it does not fit, shorten the words rather than the button.</span></span>
+          <span class="rl-co" data-rl-for="#cb-demo .kbd" data-rl-side="r" data-rl-row="-95"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Shortcut</b>A <code>.kbd</code> cap at 75% opacity. It comes from the command, so the button and the menu item can never disagree about it.</span></span>
+          <span class="rl-co" data-rl-for="#cb-demo" data-rl-side="l" data-rl-x="left" data-rl-row="45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Capsule</b>999px radius at every size, 40px tall here, 16px of side padding from <code>--s4</code>. The shape is what says "press me".</span></span>
+          <span class="rl-co" data-rl-for="#cb-demo" data-rl-side="r" data-rl-x="right" data-rl-y="top" data-rl-row="-45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Gloss</b>One inset highlight along the top edge, <code>--edge-hi</code>. This single line is what makes the fill read as glass instead of paint.</span></span>
+          <span class="rl-co" data-rl-for="#cb-demo" data-rl-side="r" data-rl-x="right" data-rl-y="bottom" data-rl-row="45"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Glow</b>A filled control lifts in its own colour rather than casting a neutral shadow. <code>--glow</code>, recoloured by setting <code>--glow-c</code>.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click a number to read what that part does.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">Icon, label and shortcut sit on <b>one line that never wraps</b>. A button is a capsule because a capsule says "press me" at any size; the fill is a vertical gradient so it catches light from above, and one inset highlight along the top edge is what makes it read as glass instead of paint.</p>
+        <div class="docdd">
+          <span class="do">Lead with the icon, then the label, then the shortcut.</span>
+          <span class="no">Wrap a label to two lines. Shorten the label instead.</span>
+        </div>
+        <p class="docapi"><b>API</b> a button is a view over a command: <code>run("file.export")</code>. Its label, icon, shortcut and enabled state all come from the command, so a menu item and a button never disagree.</p>
+      </div>
+    </div>
+
+    <!-- 2 · VARIANTS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n4">
+          <div class="docsp">
+            <span class="pad"><button class="btn primary">Export</button></span>
+            <span class="docsp-l"><b>Primary</b> .primary</span>
+            <p class="docsp-d">The one thing this surface is for. <b>Never two on screen at once</b>. Glossy accent glass, lifts in its own colour.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><button class="btn secondary">Adjust</button></span>
+            <span class="docsp-l"><b>Secondary</b> .secondary</span>
+            <p class="docsp-d">The default. Neutral glass. Everything that is a real action but not <i>the</i> action.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><button class="btn ghost">Cancel</button></span>
+            <span class="docsp-l"><b>Ghost</b> .ghost</span>
+            <p class="docsp-d">Transparent until hovered. For dismissal, and for dense rows where a bordered button would be visual noise.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><button class="btn danger">Delete</button></span>
+            <span class="docsp-l"><b>Danger</b> .danger</span>
+            <p class="docsp-d">Destructive and hard to undo. Recolours the glow <i>and</i> the focus ring, so even keyboard-only use reads red.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Variants</h3>
+        <p class="docrule">Four, and the choice is about <b>consequence, not emphasis</b>. Ask what happens if the user presses it by accident: nothing → ghost; something ordinary → secondary; the thing they came for → primary; something they will regret → danger.</p>
+        <div class="docdd">
+          <span class="do">Exactly one primary per surface, on the right of a footer.</span>
+          <span class="no">Use danger for "Remove from list". Danger means data is gone.</span>
+        </div>
+        <p class="docapi"><b>API</b> destructiveness is a property of the command (<code>command.destructive</code>), not a styling choice, so the danger look cannot be forgotten on one of the three places the command appears.</p>
+      </div>
+    </div>
+
+    <!-- 3 · SIZES & SHAPES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Small</b> 24px</span><span class="pad"><button class="btn sm"><i class="ic ic-plus"></i>Add</button><button class="btn sm icon"><i class="ic ic-more"></i></button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Default</b> 32px</span><span class="pad"><button class="btn"><i class="ic ic-plus"></i>Add layer</button><button class="btn icon"><i class="ic ic-more"></i></button></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Large</b> 40px</span><span class="pad"><button class="btn lg"><i class="ic ic-plus"></i>Add layer</button><button class="btn lg icon"><i class="ic ic-more"></i></button></span></div>
+        </div>
+        <div class="docgrid n3">
+          <div class="docsp"><span class="pad col"><button class="btn secondary block">Replace image</button></span><span class="docsp-l"><b>Block</b> .block</span><p class="docsp-d">Full width, for panel footers and empty states where the action owns the row.</p></div>
+          <div class="docsp"><span class="pad"><span class="btngrp split"><button class="btn secondary"><i class="ic ic-export"></i>Export PNG</button><button class="btn secondary" aria-label="Export options"><i class="ic ic-chevron-down"></i></button></span></span><span class="docsp-l"><b>Split</b> .btngrp.split</span><p class="docsp-d">Runs the last-used option; the caret half offers the rest. One capsule, one hairline.</p></div>
+          <div class="docsp"><span class="pad"><button class="btn secondary">Blend<i class="car ic ic-chevron-down"></i></button></span><span class="docsp-l"><b>Menu</b> .btn + .car</span><p class="docsp-d">No default action at all. Pressing anywhere opens the menu.</p></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">Sizes &amp; shapes</h3>
+        <p class="docrule">Three heights off the 4pt scale, and the size is chosen by <b>where it sits, not how important it is</b>: 24 in a dense panel row, 32 everywhere by default, 40 in a dialog footer or an empty state. Importance is the variant's job.</p>
+        <div class="docdd">
+          <span class="do">Keep one size per row. Mixed heights read as a mistake.</span>
+          <span class="no">Shrink a button below 24px to make it fit. Cut the label.</span>
+        </div>
+        <p class="docapi"><b>API</b> a split button remembers per document: <code>command.lastVariant("file.export")</code> is what the left half runs.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp mid"><span class="docsp-l">rest</span><span class="pad"><button class="btn primary">Export</button></span></div>
+          <div class="docsp mid"><span class="docsp-l">hover</span><span class="pad"><button class="btn primary" style="background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 92%,white 22%),color-mix(in srgb,var(--accent) 92%,white 4%));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),var(--glow-hi)">Export</button></span></div>
+          <div class="docsp mid"><span class="docsp-l">pressed</span><span class="pad"><button class="btn primary" style="transform:translateY(.5px) scale(.975);box-shadow:inset 0 2px 5px rgba(0,0,0,.28)">Export</button></span></div>
+          <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><button class="btn primary" style="box-shadow:inset 0 1px 0 rgba(255,255,255,.45),var(--ring)">Export</button></span></div>
+          <div class="docsp mid"><span class="docsp-l">working</span><span class="pad"><button class="btn primary"><span class="busy sm on-fill"></span>Exporting</button></span></div>
+          <div class="docsp mid"><span class="docsp-l">disabled</span><span class="pad"><button class="btn primary" disabled>Export</button></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">States</h3>
+        <p class="docrule">Hover brightens the fill and widens the glow. Pressed <b>insets</b> rather than darkens, so the control feels physical. Focus is a ring, never a border change. Working swaps the icon for a spinner and keeps the button the same width so the row does not jump.</p>
+        <div class="docdd">
+          <span class="do">Disable a button only when you can say why in a tooltip.</span>
+          <span class="no">Grey out with no explanation. A disabled control with no reason is a dead end.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>command.enabled</code> and <code>command.disabledReason</code> come as a pair. The reason is what the tooltip shows.</p>
+      </div>
+    </div>
+
+    <!-- 5 · THE OTHER FOUR -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n4">
+          <div class="docsp">
+            <span class="pad"><button class="tool on"><i class="ic ic-cursor"></i></button><button class="tool"><i class="ic ic-marquee-rect"></i></button><button class="tool"><i class="ic ic-brush"></i></button></span>
+            <span class="docsp-l"><b>.tool</b> toolbar icon</span>
+            <p class="docsp-d">A mode, not an action. It stays on until you pick another. Only inside a toolbar or tool strip.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="pill"><i class="ic ic-layers"></i>3 layers</span><span class="pill ai"><i class="ic ic-sparkle"></i>Ask</span></span>
+            <span class="docsp-l"><b>.pill</b> status capsule</span>
+            <p class="docsp-d">Shows state and can be pressed to act on it. Toolbar only, where a bordered button would crowd.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="chip">Rounded</span><span class="chip style">Title/L</span><span class="chip comp">Card</span></span>
+            <span class="docsp-l"><b>.chip</b> tag / filter</span>
+            <p class="docsp-d">Names a thing (a style, a component, a filter). Pressing selects or applies it, never "does" something.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="seg"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
+            <span class="docsp-l"><b>.seg</b> segmented</span>
+            <p class="docsp-d">One of 2 to 4 exclusive options, all visible. Above 4, or where space is tight, use a <code>.select</code>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">The four that are not buttons</h3>
+        <p class="docrule">They are pressable, so they take the <b>same hover, press, focus and disabled response</b> as <code>.btn</code> and the same capsule radii. What differs is the promise: a tool sets a mode, a pill reports state, a chip names a thing, a segment picks one of a set. None of them performs a one-shot action.</p>
+        <div class="docdd">
+          <span class="do">Use the established control for its established slot.</span>
+          <span class="no">Put a <code>.chip</code> in a dialog footer because it is smaller.</span>
+        </div>
+        <p class="docapi"><b>API</b> a tool is <code>run("tool.brush")</code> and stays current; a button's command runs and returns. The difference is in the command, not the pixels.</p>
+      </div>
+    </div>
+
+    <!-- 6 · GROUPING & ORDER -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cb-bar">
+          <button class="btn ghost">Don't Save</button>
+          <span class="sp"></span>
+          <button class="btn ghost">Cancel</button>
+          <button class="btn primary">Save</button>
+        </div>
+        <div class="cb-bar">
+          <button class="btn ghost icon" data-tip="Undo|⌘Z"><i class="ic ic-undo"></i></button>
+          <button class="btn ghost icon" data-tip="Redo|⌘⇧Z"><i class="ic ic-redo"></i></button>
+          <span class="tsep"></span>
+          <button class="btn sm secondary"><i class="ic ic-align-left"></i></button>
+          <button class="btn sm secondary"><i class="ic ic-align-center-h"></i></button>
+          <button class="btn sm secondary"><i class="ic ic-align-right"></i></button>
+          <span class="sp"></span>
+          <span class="btngrp split sm"><button class="btn sm secondary"><i class="ic ic-share"></i>Share</button><button class="btn sm secondary" aria-label="Share options"><i class="ic ic-chevron-down"></i></button></span>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">06</div><h3 class="docname">Grouping &amp; order</h3>
+        <p class="docrule"><b>macOS order, always</b>: the confirming action is furthest right, cancel to its left, and a third choice like "Don't Save" is pushed to the far left with real space between. Related icon actions sit in a tight run with no gap; unrelated ones get a separator.</p>
+        <div class="docdd">
+          <span class="do">Let the layout do the ordering so a page cannot get it wrong.</span>
+          <span class="no">Put the primary on the left because it reads first in English.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.dlg-f</code> lays out the footer; a third option takes <code>.away</code> and the rule follows automatically. See <b data-target="comp-overlays">Menus &amp; dialogs</b>.</p>
+      </div>
+    </div>
+
+    <!-- 7 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">07</span><h3>In the API</h3><span class="k">every action is a named command</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Control</th><th>Class</th><th>Slot</th><th>Command shape</th></tr></thead>
+          <tbody>
+            <tr><td><b>Button</b></td><td><code>.btn</code></td><td>Dialogs, panel bodies, empty states, prose</td><td><code>run("file.export")</code></td></tr>
+            <tr><td><b>Icon button</b></td><td><code>.btn.icon</code></td><td>Row actions, compact bars. Always needs a tooltip.</td><td><code>run("edit.undo")</code></td></tr>
+            <tr><td><b>Split button</b></td><td><code>.btngrp.split</code></td><td>One action with remembered variants</td><td><code>run("file.export", {as:"png"})</code></td></tr>
+            <tr><td><b>Tool</b></td><td><code>.tool</code></td><td>Toolbar, canvas tool strip</td><td><code>run("tool.brush")</code>, stays current</td></tr>
+            <tr><td><b>Pill</b></td><td><code>.pill</code></td><td>Toolbar status that can be acted on</td><td><code>run("panel.open", {id:"layers"})</code></td></tr>
+            <tr><td><b>Chip</b></td><td><code>.chip</code></td><td>Styles, components, filters, tags</td><td><code>style.apply("title/l")</code></td></tr>
+            <tr><td><b>Segmented</b></td><td><code>.seg</code></td><td>2 to 4 exclusive options in a panel</td><td><code>node.fit = "cover"</code></td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">Every one of these is <b>the same command surfaced differently</b>. That is the whole reason the library is worth holding to: a command knows its label, icon, shortcut, enabled state and destructiveness, so the button in the toolbar, the item in the menu and the line an <b data-target="agent">agent</b> issues can never drift apart. <b>Compact windows</b> drop labels before they drop buttons: a <code>.btn</code> becomes a <code>.btn.icon</code> with the label moved into its tooltip, and only then does the overflow menu take the rest.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Four variants chosen by <b>consequence</b> and three sizes chosen by <b>location</b>. Two independent axes, neither of them "how much do I want this noticed", which is the decision that makes button systems rot.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The split button remembers per document. We could take that further and let the whole toolbar reorder itself around what you actually use in a given document type, with a "reset to standard" always one click away.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>SwiftUI's <code>.glassEffect</code> gives us the material for free but not the four variants, and overriding it costs us the platform's future refinements. Do we accept the divergence for danger and ghost, or restyle only within what the modifier exposes?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

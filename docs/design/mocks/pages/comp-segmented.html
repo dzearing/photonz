@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-segmented</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-segmented — layout from docpage, callouts from redline. Local rules
+     only for the anatomy stage and the too-narrow demonstration. */
+  #comp-segmented .cg-anat{position:relative;display:grid;place-items:center;min-height:200px;
+    border-radius:var(--r3);
+    background:radial-gradient(320px 180px at 50% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 66%)}
+  #comp-segmented .rl-frame{--rl-gut:104px}
+  #comp-segmented .rl-co .card{width:214px}
+  #comp-segmented .cg-col{width:216px;padding:var(--pad-sm);border-radius:var(--r3);
+    border:1px solid var(--edge-lo);background:color-mix(in srgb,var(--panel) 45%,transparent);
+    display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #comp-segmented .cg-bad{border-color:color-mix(in srgb,var(--crit) 34%,var(--edge-lo))}
+  /* the wrap that used to happen, drawn on purpose so the rule has a picture */
+  #comp-segmented .cg-wrapped{display:flex;flex-wrap:wrap;gap:2px;padding:2px;width:100%;
+    border-radius:999px;background:var(--glass-thin);border:1px solid var(--edge-lo)}
+  #comp-segmented .cg-wrapped span{flex:1 1 auto;text-align:center;padding:4px 8px;border-radius:999px;
+    font-size:11.5px;font-weight:560;color:var(--dim);white-space:nowrap}
+  #comp-segmented .cg-wrapped span.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow-1)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-segmented">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Segmented control</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">One of a small set of exclusive options, with <b>all of them visible at once</b>. That last part is the entire reason it exists rather than being a <code>.select</code>: you can compare the options and hit one directly, without opening anything. It costs horizontal space to do that, which is why the rules below are mostly about <b>when not to use it</b>.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="rl-frame">
+          <div class="cg-anat">
+            <span class="seg" id="cg-demo">
+              <button class="on">Fill</button><button>Fit</button><button>Stretch</button>
+            </span>
+          </div>
+          <span class="rl-co" data-rl-for="#cg-demo" data-rl-side="l" data-rl-x="left" data-rl-row="-60"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Track</b>A capsule of the same glass as every other control, 28px tall, with 2px of padding so the selected plate never touches the edge.</span></span>
+          <span class="rl-co" data-rl-for="#cg-demo>button.on" data-rl-side="l" data-rl-row="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Selected</b>A raised plate: its own fill, its own hairline, and <code>--shadow-1</code>. All three, because on a glass panel a fill alone is not enough contrast to find at a glance.</span></span>
+          <span class="rl-co" data-rl-for="#cg-demo>button:last-child" data-rl-side="r" data-rl-row="-60"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Segment</b>A capsule inside a capsule, so round stays inside round. 11.5px, one line, never wrapped.</span></span>
+          <span class="rl-co" data-rl-for="#cg-demo" data-rl-side="r" data-rl-x="right" data-rl-row="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>One row, always</b>The control is <code>flex-wrap:nowrap</code> and, when told to fill, a single-row grid. A wrapped segmented control reads as broken.</span></span>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click a number to read what that part does.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">A capsule track holding capsule segments, and one of them raised. <b>The selected plate carries fill, hairline and lift together</b> — dropping any one of the three is how it ends up invisible on a glass panel, which is exactly what happened to the color picker's scope switch before this component existed.</p>
+        <div class="docdd">
+          <span class="do">Give the selected segment all three: fill, edge and lift.</span>
+          <span class="no">Mark selection with colour alone. On glass it disappears.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>node.fit = "cover"</code>. The options are <code>enum("fit")</code>, so the same list feeds the control, a menu, and an agent's completion.</p>
+      </div>
+    </div>
+
+    <!-- 2 · SIZES & FORMS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Small</b> .sm · 24px</span><span class="pad"><span class="seg sm"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Default</b> 28px</span><span class="pad"><span class="seg"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
+          <div class="docsp"><span class="docsp-l"><b>Large</b> .lg · 32px</span><span class="pad"><span class="seg lg"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
+        </div>
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col"><span class="seg fill"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
+            <span class="docsp-l"><b>Fill</b> .fill</span>
+            <p class="docsp-d">Equal columns across the container. This is the automatic form inside a panel or a popover, so a column of controls lines up.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="seg icons"><button class="on" data-tip="Align left"><i class="ic ic-align-left"></i></button><button data-tip="Align centre"><i class="ic ic-align-center-h"></i></button><button data-tip="Align right"><i class="ic ic-align-right"></i></button></span></span>
+            <span class="docsp-l"><b>Icons</b> .icons</span>
+            <p class="docsp-d">Square segments, so they stay circular inside the capsule. Every one needs a tooltip, because an icon with no label is unlabelled.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="seg"><button class="on"><i class="ic ic-eye"></i>Show</button><button><i class="ic ic-eye-off"></i>Hide</button></span></span>
+            <span class="docsp-l"><b>Icon plus label</b></span>
+            <p class="docsp-d">Only when the icon adds something the word does not. Two decorations in one segment is just a wider segment.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Sizes &amp; forms</h3>
+        <p class="docrule">Three heights, chosen by <b>where it sits</b> rather than how important it is: 24 in a dense panel row, 28 by default, 32 in a dialog or a toolbar. Two layout forms: natural widths when it sits in a row of other controls, equal columns when it owns the width.</p>
+        <div class="docdd">
+          <span class="do">Let it fill the column inside a panel, so a stack of rows aligns.</span>
+          <span class="no">Mix sizes in one panel. Pick the density once.</span>
+        </div>
+        <p class="docapi"><b>API</b> the form is decided by location, not by an author: <code>.pdock .seg</code> and <code>.cpick .seg</code> take the equal-column grid automatically.</p>
+      </div>
+    </div>
+
+    <!-- 3 · IT NEVER WRAPS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="cg-col cg-bad">
+            <span class="docsp-l"><b>What used to happen</b></span>
+            <span class="cg-wrapped">
+              <span class="on">Union</span><span>Subtract</span><span>Intersect</span><span>Exclude</span><span>Flatten</span><span>Outline</span>
+            </span>
+            <p class="docsp-d">Six options in a 216px column. The second row has no left edge to align to and the two survivors stretch to fill it, so the wrap reads as damage rather than as a choice.</p>
+          </div>
+          <div class="cg-col">
+            <span class="docsp-l"><b>What happens now</b></span>
+            <span class="setrow"><span class="rl">Boolean</span><span class="select" style="min-width:112px"><span class="lead">Union</span><i class="car ic ic-chevron-down"></i></span></span>
+            <p class="docsp-d">Six options never fit six visible segments in a dock, so it was the wrong control from the start. Above four options, or below about 44px a segment, it is a <code>.select</code>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">It never wraps</h3>
+        <p class="docrule">A wrapped segmented control is broken, not compact. The old rule tried to make the wrap look deliberate with equal auto-fit columns; the honest answer is that <b>a control which cannot show its options is the wrong control</b>. So the component is <code>nowrap</code> and single-row by construction, labels truncate before anything moves, and truncation is the signal to switch to a select.</p>
+        <div class="docdd">
+          <span class="do">Reserve it for 2 to 4 short labels with room to show them.</span>
+          <span class="no">Reach for a second row. Reach for a <code>.select</code>.</span>
+        </div>
+        <p class="docapi"><b>API</b> both render <code>enum("boolean")</code>; only the presentation differs, so switching one for the other changes no behaviour and no command.</p>
+      </div>
+    </div>
+
+    <!-- 4 · STATES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docrow mid">
+          <div class="docsp mid"><span class="docsp-l">rest</span><span class="pad"><span class="seg"><button class="on">Fill</button><button>Fit</button></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">hover an unselected one</span><span class="pad"><span class="seg"><button class="on">Fill</button><button style="color:var(--ink);background:color-mix(in srgb,var(--glass) 55%,transparent)">Fit</button></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><span class="seg"><button class="on">Fill</button><button style="box-shadow:var(--ring)">Fit</button></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">one option unavailable</span><span class="pad"><span class="seg"><button class="on">Fill</button><button disabled data-tip="Stretch needs a fixed frame">Stretch</button></span></span></div>
+          <div class="docsp mid"><span class="docsp-l">whole control disabled</span><span class="pad"><span class="seg" style="opacity:.42"><button class="on">Fill</button><button>Fit</button></span></span></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">States</h3>
+        <p class="docrule">The selected segment does not have a hover state, because it is already the answer; hovering the others previews where the plate would move. <b>A single disabled segment keeps its place in the row</b> rather than disappearing, so the set does not resize under the pointer, and it explains itself in a tooltip.</p>
+        <div class="docdd">
+          <span class="do">Keep an unavailable option visible and say why in its tooltip.</span>
+          <span class="no">Remove a segment when it is unavailable. The row jumps.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>enum("fit")</code> returns each option with its own <code>enabled</code> and <code>disabledReason</code>, so the control never decides this on its own.</p>
+      </div>
+    </div>
+
+    <!-- 5 · WHERE IT LIVES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad col"><span class="cg-col" style="width:100%;border:0;background:transparent;padding:0">
+              <span class="setrow"><span class="rl">Fit</span><span class="seg sm"><button class="on">Fill</button><button>Fit</button></span></span>
+              <span class="setrow"><span class="rl">Scale</span><span class="seg sm"><button>1x</button><button class="on">2x</button><button>3x</button></span></span>
+            </span></span>
+            <span class="docsp-l"><b>A panel row</b></span>
+            <p class="docsp-d">The most common home. Small size, right column, and the options are two or three short words.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="seg fill"><button class="on">Shades</button><button>Related</button><button>Document</button></span></span>
+            <span class="docsp-l"><b>A popover</b></span>
+            <p class="docsp-d">Equal columns, filling the width. The color picker's scope switch: three answers to one question, all worth seeing.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad"><span class="seg lg"><button class="on">Image</button><button>UI</button><button>Video</button></span></span>
+            <span class="docsp-l"><b>A toolbar</b></span>
+            <p class="docsp-d">Large size, for a switch that changes what the whole surface is showing. Rare, and never more than three.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">Where it lives</h3>
+        <p class="docrule">Three homes, and the size follows the home. What all three have in common: <b>the options are peers</b>. A segmented control implies the choices are the same kind of thing at the same level, which is why it is wrong for a list that mixes a default with three exceptions.</p>
+        <div class="docdd">
+          <span class="do">Use it when the options are genuinely parallel.</span>
+          <span class="no">Use it as a two-state toggle. That is a <code>.switch</code>.</span>
+        </div>
+        <p class="docapi"><b>API</b> selection writes straight through: <code>view.workspace = "video"</code>.</p>
+      </div>
+    </div>
+
+    <!-- 6 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">06</span><h3>In the API</h3><span class="k">and when to use something else</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Situation</th><th>Control</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><b>2 to 4 exclusive options, short labels, room to show them</b></td><td><code>.seg</code></td><td>All the options visible, one click to any of them</td></tr>
+            <tr><td>5 or more options</td><td><code>.select</code></td><td>Five segments are unreadable at panel width</td></tr>
+            <tr><td>Any number, but the labels are long</td><td><code>.select</code></td><td>Truncated segments are worse than a closed menu</td></tr>
+            <tr><td>Exactly two, and one is "off"</td><td><code>.switch</code></td><td>On/off is a state, not a choice between peers</td></tr>
+            <tr><td>2 to 4, but each needs a sentence</td><td><code>.radio</code></td><td>A segment has room for a word, not an explanation</td></tr>
+            <tr><td>Independent options, more than one at a time</td><td><code>.check</code></td><td>A segmented control is exclusive by definition</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">This component had <b>no owner</b> before this page: it was styled in five different files at once, plus two bespoke copies inside the color picker, so the same control came out at two heights on one popover with a selected segment you could barely see. Everything about <code>.seg</code> is now in <code>segmented.css</code> and nowhere else. <b>Compact windows</b>: it takes the equal-column form and labels truncate; it never gains a row, and if truncation bites, the panel should have used a select.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>A segmented control <b>spends width to save a click</b>. That trade is good when there are three short options and bad when there are six, so most of the spec is a boundary rather than a style.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>Because a segmented control and a select render the same <code>enum</code>, a panel could pick between them from the measured width at build time. Authors would choose the property, not the widget, and no panel could ever be wrong about it.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Truncation is the signal that the control is wrong for its space, but nobody sees it until the window is narrow. Do we fail the build when a segment's label cannot fit its minimum, or accept the ellipsis and rely on review?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

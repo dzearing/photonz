@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-tooltips</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-tooltips — layout from docpage. Local rules only for the beak
+     magnifier and the four-sides diagram. */
+  #comp-tooltips .ct-zoom{display:flex;align-items:center;gap:var(--s6);justify-content:center;
+    min-height:150px;padding:var(--s5) var(--pad);border-radius:var(--r3);
+    background:radial-gradient(300px 170px at 50% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 66%)}
+  #comp-tooltips .ct-big{transform:scale(3.4);transform-origin:center;flex:none}
+  #comp-tooltips .ct-sides{position:relative;display:grid;place-items:center;min-height:186px;
+    border-radius:var(--r3);border:1px solid var(--edge-lo);
+    background:color-mix(in srgb,var(--panel-2) 45%,transparent)}
+  #comp-tooltips .ct-sides .anchor{width:88px;height:32px;border-radius:999px;
+    border:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);display:grid;place-items:center;
+    font-family:var(--mono);font-size:9.5px;color:var(--faint)}
+  /* the live .tip is position:fixed so it can escape any scroller; inside this
+     diagram it is a specimen, so it is pinned to the frame instead. */
+  #comp-tooltips .ct-sides .tip{position:absolute;transition:none}
+  /* the little "6" between the beak tip and the control in the gap diagram */
+  #comp-tooltips .ct-dim{position:absolute;transform:translateX(-50%);
+    font-family:var(--mono);font-size:9px;color:var(--accent);
+    padding:0 3px;border-radius:3px;background:color-mix(in srgb,var(--accent) 18%,transparent)}
+  /* the flow specimen puts a real tooltip in the page instead of on hover */
+  #comp-tooltips .ct-strip{display:flex;align-items:center;gap:var(--s1);padding:var(--s1) var(--gap-sm);
+    border-radius:999px;border:1px solid var(--edge-lo);background:var(--glass-chrome);
+    box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-tooltips">
+    <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Tooltips &amp; inline help</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">A pro editor has a hundred icon-only controls, so the tooltip is not a nicety, it is <b>how the toolbar is labelled</b>. Ours is custom for three reasons the native one cannot cover: it carries the <b>keyboard shortcut</b>, it appears on <b>keyboard focus</b> as well as hover, and it can say <b>why a control is disabled</b>. Add <code>data-tip</code> to anything and you get all three.</p>
+
+    <!-- 1 · ANATOMY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ct-zoom">
+          <span class="ct-big"><span class="tip-demo">Straighten <span class="k">⇧R</span></span></span>
+        </div>
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Plate</b></span><p class="docsp-d">Opaque <code>--ink</code>, not glass. A 10px label over a busy canvas needs contrast more than it needs vibrancy, and that is exactly when you are reading it.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Label</b></span><p class="docsp-d">10.5px, weight 560, up to 260px then it wraps. Sentence case, no period, and it says what the control <i>does</i>, not what it is called.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Shortcut</b></span><p class="docsp-d">Monospace at 70% opacity, in macOS notation (⇧R, not Shift+R). Comes from the command, so it can never go stale.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Beak</b></span><p class="docsp-d">Eased shoulders and a blunted tip, the same shape as the color picker's stop callout. One fill, no stroke, so there is no junction to leak.</p></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
+        <p class="docrule">Four parts, and only the shortcut is optional. <b>The beak follows the same rule as every other corner in the app</b>: eased shoulders, a blunted tip, no hard angles anywhere. It is drawn as one clipped path so the plate and the point are a single fill with nothing to seam.</p>
+        <div class="docdd">
+          <span class="do">Point the beak at the trigger, and move it when the tip flips.</span>
+          <span class="no">Sharpen the tip to a point. Nothing else in the app has one.</span>
+        </div>
+        <p class="docapi"><b>API</b> the text is <code>command.tooltip</code> and the cap is <code>command.shortcut</code>. A page never types either one twice.</p>
+      </div>
+    </div>
+
+    <!-- 2 · PLACEMENT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ct-sides">
+          <span class="anchor">trigger</span>
+          <span class="tip on" data-side="top" style="top:26px;left:50%;transform:translateX(-50%)">above · default</span>
+          <span class="tip on" data-side="bottom" style="bottom:22px;left:50%;transform:translateX(-50%)">below · when it would clip</span>
+          <span class="tip on" data-side="left" style="left:16px;top:50%;transform:translateY(-50%)">left</span>
+          <span class="tip on" data-side="right" style="right:16px;top:50%;transform:translateY(-50%)">right</span>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">Placement</h3>
+        <p class="docrule">Above by default, because that is where your pointer is not. It <b>flips when it would clip</b> the window, and the beak follows: the plate can slide sideways to stay on screen while the beak stays pinned to the trigger's centre, which is the difference between a tooltip that points and one that floats near.</p>
+        <div class="docdd">
+          <span class="do">Let it flip. A clipped tooltip is worse than none.</span>
+          <span class="no">Recentre the beak with the plate. Then it points at nothing.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>data-tip-side="left"</code> overrides the default when a control sits at the edge of a rail and above is always wrong.</p>
+      </div>
+    </div>
+
+    <!-- 2b · GAP -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ct-sides" style="min-height:150px">
+          <button class="tool on" data-tip="Move|V" id="ct-gap"><i class="ic ic-cursor"></i></button>
+          <span class="tip on" data-side="top" style="left:50%;bottom:74px;transform:translateX(-50%)">Move <span class="k">V</span></span>
+          <span class="ct-dim" style="left:50%;bottom:56px">6</span>
+        </div>
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>Gap</b> 6px</span><p class="docsp-d">Measured from the <b>beak's tip</b>, not the plate. The beak protrudes 9px, so a plate offset of 8 puts the point flat against the control.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Plate offset</b> 15px</span><p class="docsp-d">Gap plus the beak. On the left and right sides the beak is smaller, so the offset is 11.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Screen edge</b> 6px</span><p class="docsp-d">The plate never comes closer than this to the window edge. It slides along the trigger's edge rather than being clipped.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Beak</b> trigger centre</span><p class="docsp-d">When the plate slides, the beak walks back so it still points at the control.</p></div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The gap</h3>
+        <p class="docrule">The one number people get wrong, because the obvious way to write it is wrong. <b>The gap belongs between the beak's TIP and the control</b>, and the beak sticks out about 9px past the plate. Offset the plate by the gap alone and the point lands on the control, the tooltip reads as growing out of it, and the beak stops looking like it is pointing at anything.</p>
+        <div class="docdd">
+          <span class="do">Offset by gap + beak, and measure the gap from the tip.</span>
+          <span class="no">Offset the plate by the gap. The beak eats all of it.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>GAP</code> · <code>BEAK</code> · <code>BEAK_SIDE</code> in <code>tooltip.js</code>. One place, so the four sides cannot drift apart.</p>
+      </div>
+    </div>
+
+    <!-- 2c · MOTION -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ct-strip" style="margin:0 auto">
+          <button class="tool on" data-tip="Move|V"><i class="ic ic-cursor"></i></button>
+          <button class="tool" data-tip="Rectangle marquee|M"><i class="ic ic-marquee-rect"></i></button>
+          <button class="tool" data-tip="Lasso|L"><i class="ic ic-lasso"></i></button>
+          <button class="tool" data-tip="Brush|B"><i class="ic ic-brush"></i></button>
+          <button class="tool" data-tip="Eraser|E"><i class="ic ic-eraser"></i></button>
+          <button class="tool" data-tip="Crop|C"><i class="ic ic-crop"></i></button>
+        </div>
+        <div class="docrow mid">
+          <div class="docsp"><span class="docsp-l"><b>First</b> 380ms, then it animates</span><p class="docsp-d">A short wait so a pointer crossing the toolbar on its way somewhere else never triggers anything, then a 120ms fade with a 5px rise <i>out of the control</i>.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Next</b> 60ms, no animation</span><p class="docsp-d">Once one is open the label swaps instantly and in place. Animating each one turns a row of icons into a slideshow you wait through.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>Direction</b> is the message</span><p class="docsp-d">The entrance travels away from the trigger, so a tooltip above rises and one below drops. It says what it belongs to before you read it.</p></div>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Hover the first tool and wait, then sweep across the rest. The first one animates; the rest arrive instantly.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">Motion</h3>
+        <p class="docrule">Two behaviours that look like one setting and are not. <b>Cold</b> is a real entrance: it earns the delay and the movement because you may not have been expecting a tooltip at all. <b>Warm</b> has neither, because you are already reading tooltips and every frame of animation is a frame you are waiting.</p>
+        <div class="docdd">
+          <span class="do">Keep the fade on exit even when the entrance was warm.</span>
+          <span class="no">Animate the swap. Sweeping a toolbar becomes a slideshow.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>DELAY_IN</code> 380 · <code>DELAY_OUT</code> 60. <b>Reduced motion</b> keeps the fade and drops the travel: the fade is what tells you a new label appeared, so removing it would remove information rather than decoration.</p>
+      </div>
+    </div>
+
+    <!-- 3 · WHAT IT SAYS -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n2">
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Split at playhead <span class="k">⌘⇧E</span></span></span>
+            <span class="docsp-l"><b>Action</b></span>
+            <p class="docsp-d">A verb phrase for what pressing it does, plus the shortcut. This is 90% of them.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Merge needs two or more layers</span></span>
+            <span class="docsp-l"><b>Why it is disabled</b></span>
+            <p class="docsp-d">A disabled control with no explanation is a dead end. The tooltip is where the reason lives, and it is the reason a disabled control still shows one.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Opacity 62% · drag to change, ⌥ for fine</span></span>
+            <span class="docsp-l"><b>Value plus gesture</b></span>
+            <p class="docsp-d">On a control whose value is already visible, the tooltip earns its place by teaching the modifier rather than repeating the number.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Brush</span></span>
+            <span class="docsp-l"><b>Just the name</b></span>
+            <p class="docsp-d">For a tool whose behaviour is obvious. Short is fine. What is <i>not</i> fine is a tooltip that repeats a label already on screen.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">What it says</h3>
+        <p class="docrule">The test: <b>would a person who already sees the control learn something?</b> If not, the tooltip should not exist. A tooltip on a button that already reads "Export" is noise; a tooltip that says why Export is greyed out is the most useful thing on the screen.</p>
+        <div class="docdd">
+          <span class="do">Explain a disabled state. Always.</span>
+          <span class="no">Repeat a visible label word for word.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>command.enabled</code> and <code>command.disabledReason</code> ship together; the tooltip shows the reason automatically when the first is false.</p>
+      </div>
+    </div>
+
+    <!-- 4 · TIMING & STATES -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="ct-strip">
+          <button class="tool on" data-tip="Move|V"><i class="ic ic-cursor"></i></button>
+          <button class="tool" data-tip="Rectangle marquee|M"><i class="ic ic-marquee-rect"></i></button>
+          <button class="tool" data-tip="Brush|B"><i class="ic ic-brush"></i></button>
+          <button class="tool" data-tip="Crop|C"><i class="ic ic-crop"></i></button>
+          <span class="tsep"></span>
+          <button class="tool" data-tip="Merge needs two or more layers" disabled><i class="ic ic-merge"></i></button>
+          <button class="tool" data-tip="Straighten|⇧R" data-tip-side="bottom"><i class="ic ic-straighten"></i></button>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Hover any tool, then press Tab to walk them with the keyboard. The disabled one still explains itself; the last one is forced below.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">06</div><h3 class="docname">Behaviour</h3>
+        <p class="docrule">Timing is on the previous block; this is everything else. It shows on <b>keyboard focus as well as hover</b>, so tabbing a toolbar names every tool. It <b>vanishes on press</b>, because you have committed and the label is now in the way. It never survives a scroll or a drag: a label that outlives the thing it labels is pointing at whatever moved into that spot.</p>
+        <div class="docdd">
+          <span class="do">Show on keyboard focus too. Tab is how a lot of people explore.</span>
+          <span class="no">Keep it up during a drag. It follows the pointer into the canvas.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>data-tip="Label|⌘K"</code> on any element. A stray <code>title</code> is upgraded to one automatically, so no control can accidentally end up with a label that keyboard users never see.</p>
+      </div>
+    </div>
+
+    <!-- 5 · THE FAMILY -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="docgrid n3">
+          <div class="docsp">
+            <span class="pad dark"><span class="tip-demo">Straighten <span class="k">⇧R</span></span></span>
+            <span class="docsp-l"><b>Tooltip</b> data-tip</span>
+            <p class="docsp-d">Transient, uninvited, one line. Appears on hover or focus, goes away on its own.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col"><span class="rl-co l-side open" style="position:relative;display:block"><span class="card" style="position:relative;display:block;width:auto;top:0">
+              <b>Right dock</b>Stacked panel groups. Drag a header to reorder, drop one on another to merge them into tabs.</span></span></span>
+            <span class="docsp-l"><b>Redline callout</b> .rl-co</span>
+            <p class="docsp-d">Asked for, and it stays. A numbered marker in the gutter with a leader line to the exact part, and a card you open by clicking. For teaching a layout, not a control.</p>
+          </div>
+          <div class="docsp">
+            <span class="pad col">
+              <span class="setrow"><span class="rl">Preserve transparency</span><label class="switch sm"><input type="checkbox" checked><i></i></label></span>
+              <span class="choices" style="padding:0"><span class="why">Locks the alpha channel so painting only affects pixels that are already opaque.</span></span>
+            </span>
+            <span class="docsp-l"><b>Inline help</b> .choices .why</span>
+            <p class="docsp-d">Permanent, under the control it explains. For a setting whose consequence is not guessable and which you will meet once.</p>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">07</div><h3 class="docname">Three ways to explain something</h3>
+        <p class="docrule">Pick by <b>how long the explanation needs to live</b>. A tooltip is a whisper you did not ask for and must not block anything. A callout is documentation you opened on purpose. Inline help is part of the layout because the setting is genuinely obscure and always will be.</p>
+        <div class="docdd">
+          <span class="do">Promote to inline help when people keep hovering the same control.</span>
+          <span class="no">Put a paragraph in a tooltip. If it needs a paragraph it is not a tooltip.</span>
+        </div>
+        <p class="docapi"><b>API</b> all three read the same <code>command.help</code> string; the surface decides how much of it to show.</p>
+      </div>
+    </div>
+
+    <!-- 6 · IN THE API -->
+    <div class="doccard">
+      <div class="dochead"><span class="docnum">08</span><h3>In the API</h3><span class="k">and what the platform does not give us</span></div>
+      <div class="docbody">
+        <table class="doctbl">
+          <thead><tr><th>Need</th><th>Native <code>.help()</code></th><th>Ours</th></tr></thead>
+          <tbody>
+            <tr><td><b>Show on hover</b></td><td>Yes</td><td>Yes: 380ms cold with a directional entrance, 60ms and instant between neighbours</td></tr>
+            <tr><td><b>Show on keyboard focus</b></td><td>No</td><td>Yes. Tab through a toolbar and every tool names itself.</td></tr>
+            <tr><td><b>Carry the shortcut</b></td><td>No</td><td>Yes, in a <code>.kbd</code> cap, taken from the command</td></tr>
+            <tr><td><b>Explain a disabled control</b></td><td>No, disabled views swallow the hover</td><td>Yes. This is the single biggest reason we build our own.</td></tr>
+            <tr><td><b>Choose a side / flip on clip</b></td><td>Not controllable</td><td><code>data-tip-side</code>, and it flips automatically</td></tr>
+            <tr><td><b>Beak that points</b></td><td>None</td><td>Eased shoulders, blunt tip, tracks the trigger when the plate slides</td></tr>
+          </tbody>
+        </table>
+        <p class="docnote">Six rows, five of them "no". That is why this is a custom component rather than a restyle. <b>Compact windows</b> change nothing: the tooltip is already the smallest surface in the system and it flips rather than shrinks. <b>Reduced motion</b> drops the 5px travel and keeps the fade, since the fade is what tells you a new one appeared.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">The idea</div><p>Tooltips are the app's <b>keyboard-shortcut teacher</b>. Every one carries its command's shortcut, so the way you discover the fast path is by using the slow one, and nobody has to read a shortcuts sheet.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The tooltip could show a tiny live preview for tools with a visual result: the brush's actual tip at its actual size, the transition's first frames. It is the same surface, with the label demoted to a caption.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Disabled controls do not receive mouse events on macOS, so showing a reason means keeping the control enabled and failing loudly, or overlaying a transparent hit target. Both have costs. Which one do we take?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

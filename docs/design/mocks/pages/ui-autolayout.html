@@ -63,7 +63,7 @@
   .ctl .cl .cv{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   /* .ctl .seg override deleted: the shared DS lays every panel scope control
      out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
-  .stepper{display:flex;align-items:center;gap:var(--gap-sm)}
+  .ua-stepper{display:flex;align-items:center;gap:var(--gap-sm)}
 
   .selname{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:640;
     background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);border-radius:999px;padding:3px 9px}
@@ -275,7 +275,7 @@
 
               <div class="ctl">
                 <div class="cl">Gap <span class="cv" id="gapv">12</span></div>
-                <div class="stepper">
+                <div class="ua-stepper">
                   <button class="btn icon sm" id="gapdn" aria-label="Decrease gap"><i class="ic sm ic-minus"></i></button>
                   <span class="bar" style="flex:1"><i id="gapbar" style="width:30%"></i></span>
                   <button class="btn icon sm" id="gapup" aria-label="Increase gap"><i class="ic sm ic-plus"></i></button>
@@ -284,7 +284,7 @@
 
               <div class="ctl">
                 <div class="cl">Padding <span class="cv" id="padv">16</span></div>
-                <div class="stepper">
+                <div class="ua-stepper">
                   <button class="btn icon sm" id="paddn" aria-label="Decrease padding"><i class="ic sm ic-minus"></i></button>
                   <span class="bar" style="flex:1"><i id="padbar" style="width:40%"></i></span>
                   <button class="btn icon sm" id="padup" aria-label="Increase padding"><i class="ic sm ic-plus"></i></button>
@@ -341,7 +341,7 @@
 
               <div class="ctl" style="margin-top:var(--pad-sm)">
                 <div class="cl">Children <span class="cv" id="cnt">3</span></div>
-                <div class="stepper">
+                <div class="ua-stepper">
                   <button class="btn sm block" id="add"><i class="ic sm ic-plus"></i> Add item</button>
                   <button class="btn sm block secondary" id="del"><i class="ic sm ic-minus"></i> Remove</button>
                 </div>
