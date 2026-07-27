@@ -38,34 +38,20 @@
   <div class="wt" id="wtDs">
 
     <div class="wt-stage">
-      <div class="win tall cq shell">
+      <div class="win tall cq shell" data-shell="brand-system · 1200 × 630" data-ws="ui"
+           data-status='<span class="chip style"><span class="sw"></span><span id="chipSys">No system</span></span>'>
 
         <!-- TITLE BAR · document identity only. The lesson title lives in
              .scen-head above, never here. -->
-        <div class="titlebar">
-          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>brand-system</b> · 1200 × 630</div>
-          <div class="wsw" role="tablist" aria-label="Workspace">
-            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
-            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
-            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
-          </div>
-          <div class="tbtns">
-            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-          </div>
-        </div>
 
         <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-        <div class="toolbar">
-          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-          <span class="tsep"></span>
-          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-          <span class="tspacer"></span>
-          <span class="chip style"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span id="chipSys">No system</span> <i class="ic xs ic-chevron-down"></i></span>
-          <div style="position:relative">
-            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:216px;z-index:12">
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…`
+             button that opens it is built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
               <div class="mlabel">Layer</div>
               <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
               <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
@@ -74,11 +60,7 @@
               <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
               <div class="menuitem"><i class="ic ic-export"></i> Publish system</div>
             </div>
-          </div>
-        </div>
 
-        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
-        <div class="edit lean" id="shell" data-dock="open">
 
           <div class="cnv">
             <div class="canvas">

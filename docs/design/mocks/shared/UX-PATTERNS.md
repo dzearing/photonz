@@ -57,8 +57,8 @@ frame exactly as it grades a photo.
    surface** in the shipping app (File, Edit, Select, Layer, Type, Effect, View,
    Window, Help), and it is the literal expression of "everything the UI does is
    one API call". The mock never draws a fake one (D3); it shows a compact
-   command button (`.tool` + `ic-more`) plus the **⌘K palette** (`.cmdk`, D6) as
-   the secondary path, along with the **History** entry.
+   command button (`.tool` + `ic-more`) plus the **Ask launcher** (`.askbtn`, D6
+   revised) as the secondary path, along with the **History** entry.
 3. **Canvas** (`.cnv` > `.canvas`) — the document, and the dominant region. It is
    the only region that grows when everything else collapses. Selection lives
    here. Everything that floats, floats over this: the tool bar, the canvas
@@ -143,7 +143,8 @@ Every editor page should be able to answer, on screen: *what document am I in
 (title bar), what tool is active (the floating tool bar), what is selected (canvas
 + the Properties group), where is my content library (the Library group in the
 right dock), where do my captures live (the ⌘⇧H history overlay), how do I run a
-command (the native menu bar, plus the compact command surface and ⌘K)*.
+command (the native menu bar, plus the compact command surface and the Ask
+chat at ⌘K)*.
 
 ---
 
@@ -248,12 +249,14 @@ the dock, or a `.sheet.down` overlay.
 - Every command maps to one API call (`run("tool.text")`, `panel.dock("right")`,
   `layer.group()`). There are FOUR ways to reach the same call, all equal: the
   toolbar/tool strip, a right-click context menu, the **command surface** (D3),
-  and the **command palette ⌘K** (D6). An agent drives the identical calls.
+  and the **agent chat** (D6 revised) — reached by the Ask button or ⌘K, where a
+  `/` command and a plain-language request issue the same call. An agent drives
+  the identical calls.
 - In the mock shell we express the menu as a **compact command surface** in the
-  toolbar (a menu/command button) plus the **⌘K palette**, NOT a faked full macOS
-  menu bar (see D3). The shipping app additionally has the native menu bar; the
-  mock does not render it. Keep the command surface + ⌘K present on every editor
-  page so the "UI == API == agent" story is always visible.
+  toolbar (a menu/command button) plus the **Ask launcher** (`.askbtn`), NOT a
+  faked full macOS menu bar (see D3). The shipping app additionally has the native
+  menu bar; the mock does not render it. Keep the command surface + Ask present on
+  every editor page so the "UI == API == agent" story is always visible.
 
 ---
 
@@ -329,7 +332,7 @@ dock with its scope switch set to **Media**. Locked rules for every video/media
 page:
 
 - **Open path:** the canvas **panel toggle**, the **Library rail tab**, `⌥⌘L`,
-  `Window > Library` in the menu model, or `⌘K → "Library"`. It is a persistent
+  `Window > Library` in the menu model, or Ask (⌘K) `→ "/library"`. It is a persistent
   group in the dock, so the normal state is "already there".
 - **Add media (three ways, always all present):** the panel's **+ Import** button
   (file picker), **drag-drop** a file onto the panel or the canvas, and **Capture**
@@ -354,18 +357,27 @@ competing panels and keeps the mental model flat. Each scope has the same shape
 tile drives the Properties group. Do NOT promote a scope to its own dock or
 window.
 
-### D3 — No fake menu bar. Compact command surface + ⌘K (still holds)
+### D3 — No fake menu bar. Compact command surface + Ask (still holds)
+
+> **Enforced (2026-07-26).** The title bar, the Ask launcher and the `…` command
+> surface button are now BUILT by the shell component in `photonz-ds.js` from
+> `data-shell` / `data-ws` / `data-status` on the `.win`. Pages had each retyped
+> that chrome and drifted: Share/Export/Done in the header, a `.toolbar` command
+> strip `app-shell.html` had already deleted, 56 copies of the `.cmdk` well. The
+> component deletes any `.titlebar`/`.toolbar` found inside `[data-shell]`, so it
+> cannot drift again. A page authors its own `.cmdpop` menu ITEMS (content); the
+> button that opens them is chrome. See AGENTS.md, "The shell is a COMPONENT".
 
 The **shipping app's real command surface is the native macOS menu bar** (File,
 Edit, Select, Layer, Type, Effect, View, Window, Help), and that is the primary
 story. But the mock `.win` frames live inside an iframe shell, so drawing a full
-menu bar would read as fake chrome. Decision, unchanged: the mock expresses the
-command system as a **compact command surface** (a `.tool` `ic-more` button that
-opens a grouped `.popover.menu`) plus the **⌘K command palette** (`.cmdk`, D6),
-and it says in copy that the native menu bar is the real one. ⌘K is the
-**secondary** path, not the headline. No page draws a full horizontal menu bar,
-and no page adds a permanent options-bar row of tools: tools live in the floating
-bottom tool bar.
+menu bar would read as fake chrome. Decision, unchanged in substance: the mock
+expresses the command system as a **compact command surface** (a `.tool`
+`ic-more` button that opens a grouped `.popover.menu`) plus the **Ask launcher**
+(`.askbtn`, D6 revised), and it says in copy that the native menu bar is the real
+one. Ask is the **secondary** path, not the headline. No page draws a full
+horizontal menu bar, and no page adds a permanent options-bar row of tools: tools
+live in the floating bottom tool bar.
 
 ### D4 — Canonical tool-strip inventory per app
 
@@ -400,15 +412,40 @@ the bottom for video. A step MAY hide docks irrelevant to what it teaches
 one belongs, or use non-canonical chrome. The stepper frame (`.wsteps`/`.wbar`) is
 the only walkthrough-specific UI; everything inside a step is the real shell.
 
-### D6 — Yes: ⌘K command palette is the fourth, equal way to reach any command
+### D6 (revised) — The agent chat IS the command palette. One entry point, not two
 
-Adopt a global **command palette (`⌘K`)** as a first-class entry point alongside
-the tool strip, context menus, and the command surface (D3). Typing a command runs
-the exact same API call an agent would (`run("tool.text")`, `panel.dock("right")`)
-— so ⌘K is the most direct on-screen proof of "UI == API == agent". It also
-searches surfaces (jump to Library scope, toggle a dock) and content. The shell
-shows a `⌘K` hint; pages that demonstrate command-running should route it through
-the palette rather than inventing a one-off runner.
+> **Revised.** D6 used to adopt a separate ⌘K command palette, shown in the title
+> bar as a `.cmdk` search well. That is superseded: the title bar's right slot now
+> holds **one launcher** and it opens the **agent chat**.
+
+There is a global fourth entry point alongside the tool strip, context menus, and
+the command surface (D3), and it is the **agent chat**. It is reached exactly two
+ways, both landing on the same surface:
+
+- **`.askbtn`** — the Ask button in the title bar's right slot. A raised `.btn`
+  variant (sparkle glyph + "Ask" + a `⌘K` hint), because it opens a surface. The
+  old `.cmdk` was an inset well because you typed into it in place; nothing in the
+  title bar is a well any more.
+- **`⌘K`** — opens the same overlay and focuses its composer.
+
+What opens is **`.askpal`**: a centred overlay at elevation 2 (glass + blur +
+shadow + scrim, per the ladder on `pages/lang-elevation.html`), living inside
+`.edit.lean` so it dims the canvas and the dock but leaves the title bar lit. It
+does not restate the conversation UI, it **hosts the shared `.chat` component**, so
+the overlay and the Agent panel group in the dock are the same conversation in two
+places.
+
+**One field, two modes.** The composer takes plain language ("make the headline
+bigger") or, when it starts with `/`, becomes the command palette: a filtered
+`.cplist` of `.cpx` rows appears inline above the composer, each showing its real
+API name (`image.removeBackground`, `panel.dock`). Same field, same Enter key. A
+sentence you ask and a command you run issue the identical call, which is the most
+direct on-screen proof of "UI == API == agent" — stronger than the old palette,
+because the proof and the agent are now literally the same box.
+
+Pages that demonstrate command-running route it through this surface rather than
+inventing a one-off runner. Do NOT add a `.cmdk` to any page; it is deprecated and
+survives only until the sweep finishes.
 
 ### D7 — One color picker, one trigger, every color slot
 

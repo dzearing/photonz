@@ -155,33 +155,18 @@
   <div class="wt" id="wtTrans">
 
     <div class="wt-stage">
-      <div class="win tall cq shell">
+      <div class="win tall cq shell" data-shell='promo-cut · 1920 × 1080 · <span id="docLen">0:18</span>' data-ws="video" data-status="1080p · 30 fps">
 
         <!-- TITLE BAR · document identity only -->
-        <div class="titlebar">
-          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>promo-cut</b> · 1920 × 1080 · <span id="docLen">0:18</span></div>
-          <div class="wsw" role="tablist" aria-label="Workspace">
-            <button class="wsw-seg" role="tab" data-target="image"><i class="ic sm ic-image"></i> Image</button>
-            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
-            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
-          </div>
-          <div class="tbtns">
-            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-          </div>
-        </div>
 
         <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-        <div class="toolbar">
-          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-          <span class="tsep"></span>
-          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-          <span class="tspacer"></span>
-          <span class="chip"><i class="ic xs ic-play"></i> 1080p · 30 fps</span>
-          <div style="position:relative">
-            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:248px;z-index:12">
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…`
+             button that opens it is built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
               <div class="mlabel">Edit point</div>
               <div class="menuitem"><i class="ic ic-transition"></i> Add transition</div>
               <div class="menuitem"><i class="ic ic-swap"></i> Expand the cut <span class="sc">⌥E</span></div>
@@ -190,11 +175,7 @@
               <div class="mlabel">Window</div>
               <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
             </div>
-          </div>
-        </div>
 
-        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
-        <div class="edit lean" id="shell" data-dock="open">
 
           <div class="cnv">
             <div class="canvas">

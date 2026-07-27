@@ -1,0 +1,30 @@
+/* ---- the floating bottom tool bar (scoped to .cnv so it never collides
+       with a page-local .tbar) ---- */
+.cnv .tbar{position:absolute;left:50%;bottom:var(--s4);transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:var(--s1);padding:var(--s1) var(--s2);
+  max-width:calc(100% - var(--s5));
+  border:1px solid var(--edge-lo);border-radius:999px;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow)}
+.cnv .tbar .tstrip{display:flex;align-items:center;gap:2px;min-width:0}
+.cnv .tbar .tsep{margin:0 var(--s1)}
+.cnv .tbar .tbar-more{display:none}
+
+/* foreground / background swatch pair with a swap affordance */
+.swpair{position:relative;width:30px;height:26px;flex:none}
+.swpair .fg,.swpair .bg{position:absolute;width:17px;height:17px;border-radius:var(--r1);
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer}
+.swpair .bg{right:0;bottom:0}
+.swpair .fg{left:0;top:0;z-index:1}
+.swpair .fg:hover,.swpair .bg:hover{border-color:var(--accent)}
+
+/* zoom cluster: slider + a static percent readout */
+.zoomctl{display:inline-flex;align-items:center;gap:var(--s2);flex:none}
+.zslider{-webkit-appearance:none;appearance:none;width:92px;height:4px;border-radius:999px;
+  background:var(--line-strong);outline:none;cursor:pointer;flex:none}
+.zslider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--panel);border:1.5px solid var(--accent);box-shadow:var(--shadow-1)}
+.zslider::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--panel);
+  border:1.5px solid var(--accent);box-shadow:var(--shadow-1)}
+.zslider:focus-visible{box-shadow:var(--ring)}
+.zoomctl .zval{min-width:34px;text-align:right}

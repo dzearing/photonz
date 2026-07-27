@@ -1,0 +1,89 @@
+/* ============================================================
+   VISUAL RULES (design review) — geometry + chrome.
+   See AGENTS.md "VISUAL RULES". These come last so they win.
+   ============================================================ */
+
+/* RULE 11 · MENUS AND POPOVERS ARE OPAQUE.
+   .popover was being repainted with --glass-chrome (rgba(30,34,45,.6)) by the
+   liquid-glass pass, i.e. 60% opaque, so menu text was unreadable over light
+   content. A menu is a READING surface, not a decorative one: it gets a nearly
+   opaque background, a stronger blur, and saturation so it still reads as glass. */
+.popover,.menu,.mbmenu{
+  background:var(--glass-menu);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow);
+}
+
+/* RULE 3 · ROUND INSIDE ROUND.
+   An icon-only control inside a capsule container must be a CIRCLE, not a
+   rounded rectangle. The floating tool bar and the canvas action cluster are
+   both pills (border-radius:999px), so their .tool children are circular and
+   square-sized rather than 30x28 with a 9px radius. */
+.cnv .tbar .tool,
+.cnv-act .tool{
+  width:30px;height:30px;min-width:30px;padding:0;
+  border-radius:999px;
+}
+.cnv .tbar .tool .ic,
+.cnv-act .tool .ic{flex:none}
+
+/* RULE 2 · CONCENTRIC RADII.
+   When a rounded box sits inside another, the gap between their edges must stay
+   CONSTANT around the corner, so the inner radius is SMALLER by that gap:
+       inner = outer - gap
+   Use --r-in wherever you nest a rounded child inside a padded rounded parent.
+   An inner radius equal to or larger than its parent's reads as broken. */
+.r-nest{--r-in:calc(var(--r-out, var(--r4)) - var(--pad-in, var(--s2)))}
+.r-nest > *{border-radius:max(0px, var(--r-in))}
+
+/* ============================================================
+   VR6 · PROMOTED PRIMITIVES
+   Every rule below was copy-pasted BYTE-IDENTICAL into 4-37 pages
+   before it lived here. That is the divergence this study exists to
+   kill: N copies drift, and each copy is an unprefixed bare class,
+   which is the collision class documented at the top of this file.
+   Promoting them makes the name reserved AND correct in one move.
+
+   NEWLY RESERVED BARE NAMES (never shadow these in a page):
+     .pglead  .mlabel  .rl  .setrow  .actstack   (+ .seg.stack)
+   Scoped REFINEMENT is still fine (`#vector-wt .setrow{...}`).
+   ============================================================ */
+
+/* --- the shell canvas has no height floor -------------------------------
+   `.canvas` carries min-height:340px so a STANDALONE specimen canvas has a
+   body. Inside a full app shell the canvas is a flex/grid child of a fixed-
+   height window, so that floor makes it refuse to shrink and it pushes the
+   window's own chrome out of the box. 37 pages had discovered this one at a
+   time and each written `#page .win.shell .canvas{min-height:0}` locally.
+   `.cnv>.canvas` (video column) already carries the same fix. */
+.win.shell .canvas{min-height:0}
+
+/* --- page lead paragraph (32 pages) ------------------------------------
+   The sentence under a page's <h2> that says what the surface is for. */
+.pglead{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0 0 var(--gap)}
+.pglead b{color:var(--ink);font-weight:600}
+
+/* --- micro section label (35 pages) ------------------------------------
+   The 9px uppercase caption above a group of rows inside a panel or menu.
+   Smaller and quieter than .dgrp-h; it labels a run of rows, not a group. */
+.mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 10px 3px}
+
+/* --- inspector row label (8 pages) -------------------------------------
+   `.rl` was already defined twice here, but only as `.row .rl` and
+   `.irow>.rl`, so every page that put a label in any OTHER row container
+   re-declared the identical two properties. It is the label, not the row. */
+.rl{color:var(--faint);font-size:10.5px}
+
+/* --- setting row: label left, control right (5 pages) ------------------ */
+.setrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:var(--s2);padding:4px 0}
+
+/* --- stacked full-width actions (4 pages) ------------------------------ */
+.actstack{display:flex;flex-direction:column;gap:var(--gap-sm);margin-top:var(--s1)}
+
+/* --- .seg.stack: a segmented control allowed to wrap (5 pages) ----------
+   VISUAL RULE 6 says a seg does not resize DOWN. When the option labels
+   genuinely cannot fit one row, wrapping to a second row is the honest
+   answer; shrinking the chips is not. */
+.seg.stack{flex-wrap:wrap;width:100%}
+.seg.stack button{flex:1 1 auto;white-space:nowrap}

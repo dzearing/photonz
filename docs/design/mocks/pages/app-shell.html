@@ -111,29 +111,15 @@
          .win.cq makes the window the container query root, so everything below
          responds to the WINDOW width, not the browser viewport. -->
     <div class="rl-frame">
-    <div class="win tall cq shell">
-
-      <!-- 1 · TITLE BAR -->
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>marketing-site</b> · 1440 × 1024</div>
-        <!-- WORKSPACE SWITCHER (lens selector) - Image · UI · Video are workspaces
-             over ONE document; switching swaps the tool strip and the timeline dock. -->
-        <div class="wsw" id="wsw" role="tablist" aria-label="Workspace">
-          <button class="wsw-seg" data-ws="image" role="tab"><i class="ic sm ic-image"></i> Image</button>
-          <button class="wsw-seg on" data-ws="ui" role="tab" aria-selected="true"><i class="ic sm ic-frame"></i> UI</button>
-          <button class="wsw-seg" data-ws="video" role="tab"><i class="ic sm ic-play"></i> Video</button>
-        </div>
-        <!-- The ⌘K palette lives at the title bar's right (the single command
-             affordance); the native menu bar remains the real command surface.
-             No Share/Export/Done — those live in the menu bar. -->
-        <span class="cmdk" style="flex:none;min-width:230px"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      </div>
-
-      <!-- No command strip: the dock carries its own affordances. Expanded, the
-           panel shows an "×" to collapse it; collapsed, it becomes the vertical
-           rail of headers. The ⌘K palette lives in the title bar; the native
-           macOS menu bar is the real command surface. -->
+    <!-- 1 · TITLE BAR + the Ask overlay are built by the SHELL COMPONENT in
+         photonz-ds.js. The page says what it is (document name, which lens);
+         it does not draw chrome. That is the whole point: this page is the
+         spec, and it must not be a hand-authored copy of its own spec, or the
+         other pages have nothing to conform to. What the component emits:
+         lights · title · the .wsw lens · Ask. What it refuses to emit: any
+         Share/Export/Done, any command strip, any ⌘K search well.
+         Everything below is real page content, not chrome. -->
+    <div class="win tall cq shell" data-shell="marketing-site · 1440 × 1024" data-ws="ui">
 
       <!-- EDITOR ROW: canvas dominant, one dock on the right.
            data-dock = open | closed (railed) | overlay (narrow) -->
@@ -396,6 +382,11 @@
           <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
           <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
         </div>
+
+        <!-- The agent chat overlay (.askpal) and its scrim are built by the
+             shell component in photonz-ds.js, so every page gets the same
+             conversation and the same command list. A page only authors its
+             own .askpal if it needs a bespoke transcript. -->
       </div>
 
       <!-- BOTTOM DOCK - the timeline, shown only when the document has time
@@ -412,7 +403,7 @@
          by positionCallouts() so each dot lands on its target, and a callout
          hides when its region isn't currently shown (e.g. the dock vs the rail). -->
     <span class="rl-co l-side" style="top:13px"><button class="n" type="button" aria-label="Region 1: Title bar">1</button><span class="l"></span><span class="card"><b>Title bar</b>Document name + the workspace lens (Image / UI / Video). No actions live here.</span></span>
-    <span class="rl-co r-side" style="top:13px"><button class="n" type="button" aria-label="Region 2: Command palette">2</button><span class="l"></span><span class="card"><b>Command palette</b>⌘K runs any command. The native macOS menu bar is the real command surface.</span></span>
+    <span class="rl-co r-side" style="top:13px"><button class="n" type="button" aria-label="Region 2: Ask">2</button><span class="l"></span><span class="card"><b>Ask</b>Opens the agent chat over the canvas. ⌘K opens the same surface, and typing "/" in it filters commands, so there is one entry point, not two. The native macOS menu bar is still the real command surface.</span></span>
     <span class="rl-co l-side" style="top:600px"><button class="n" type="button" aria-label="Region 3: Floating tool bar">3</button><span class="l"></span><span class="card"><b>Floating tool bar</b>Tools · color · zoom. Overflow tools collapse into a "more" menu.</span></span>
     <span class="rl-co r-side" style="top:150px"><button class="n" type="button" aria-label="Region 4: Right dock">4</button><span class="l"></span><span class="card"><b>Right dock</b>Stacked panel groups (Layers, Properties, Library).</span></span>
     <span class="rl-co l-side" style="top:340px"><button class="n" type="button" aria-label="Region 5: Canvas">5</button><span class="l"></span><span class="card"><b>Canvas</b>Selection lives here, and it dominates the shell.</span></span>
@@ -422,7 +413,17 @@
     </div><!-- /.rl-frame -->
 
     <!-- region legend now lives in the callouts: click a number to read it -->
-    <p class="pglead" style="margin-top:var(--s3);color:var(--faint);font-size:12px">Click any numbered marker to read what that region does.</p>
+    <p class="pglead" style="margin-top:var(--s3);color:var(--faint);font-size:12px">Click any numbered marker to read what that region does. Press <b>⌘K</b> or hit <b>Ask</b> to open the agent chat, and type <b>/</b> in it to see it become the command palette.</p>
+
+    <!-- the one-entry-point decision, stated where you can see it -->
+    <p class="pglead" style="margin-top:var(--s2)">The title bar's right slot holds <b>one</b> affordance, not two. It used to be a
+      search well that opened a ⌘K command palette; it is now <b>Ask</b>, and what opens is the <b>agent chat</b>. The chat
+      absorbed the palette rather than sitting beside it: ⌘K opens the same overlay, and typing <b>/</b> in its composer
+      filters the same command list, each row labelled with the API call it makes. So a sentence you ask and a command you
+      run land in the same box and issue the same call, which is a stronger proof of <b>UI == API == agent</b> than a
+      palette on its own. The overlay is a normal <b>elevation 2</b> surface (glass, blur, shadow, scrim) and it hosts the
+      same <b data-target="agent">chat component</b> the Agent panel group uses, so it is one conversation in two places.
+      The native macOS menu bar is still the real command surface.</p>
 
     <!-- the four shell surfaces, and the loop they form -->
     <p class="pglead" style="margin-top:var(--s2)">The window above is only one of <b>four shell surfaces</b>. Photonz is a
@@ -946,7 +947,9 @@
       // number -> [target selector, gutter side, anchor point within the target]
       var MAP = {
         '1': ['.titlebar', 'l', function (r) { return { x: r.left + 8, y: (r.top + r.bottom) / 2 }; }],
-        '2': ['.cmdk', 'r', function (r) { return { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 }; }],
+        // stop at the button's right border, not mid-label: the Ask button is
+        // small enough that a centred dot would sit on top of its own text.
+        '2': ['.askbtn', 'r', function (r) { return { x: r.right, y: (r.top + r.bottom) / 2 }; }],
         '3': ['.tbar', 'l', function (r) { return { x: r.left, y: (r.top + r.bottom) / 2 }; }],
         '4': ['.pdock', 'r', function (r) { return { x: r.left + 44, y: r.top + 34 }; }],
         '5': ['.canvas', 'l', function (r) { return { x: r.left + 48, y: (r.top + r.bottom) / 2 }; }],

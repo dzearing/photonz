@@ -1,0 +1,86 @@
+/* ============================================================
+   ELEVATION — the ladder, and the only shadows allowed on chrome
+   ============================================================
+   `pages/lang-elevation.html` documents this: stage < window < panel <
+   popover < menu < callout, and "depth is a role, not a number you pick".
+   The code did not hold to it. Splitting the megafile made it visible:
+
+     · `.elev-1` and `.elev-2` were each defined TWICE, in two different
+       components, with different shadows. Whichever loaded last won.
+     · `.seg button.on` was defined three times with three shadows
+       (.08, .14, .2 alpha), so the same selected segment sat at three
+       different heights depending on which page you were looking at.
+     · The two rungs people actually needed most had no token at all — "raised
+       a hair" and "lifts on hover" — so 20+ rules hand-rolled them and every
+       one landed slightly differently.
+
+   So the ladder lives here, once, and the missing rungs are tokens:
+
+     --shadow-1   raised a hair. A handle, a knob, a selected segment, a
+                  gradient stop: still ON the surface, just not flush with it.
+     --shadow-2   the hover lift. A row or tile you are about to click.
+     --shadow     the window itself (tokens.css).
+     --lg-shadow  level 2 — a float over live content: popover, menu, palette,
+                  toast, tooltip.
+     --lg-shadow-3 level 3 — the one surface allowed to sit ON a float.
+     --ring       focus. Not elevation; never use a shadow for focus.
+
+   Chrome uses those and nothing else. Canvas ARTWORK (a hero card's glow, a
+   photo's sun, a device mockup) is content, not chrome, and is exempt —
+   `Scripts/check-elevation.mjs` knows the difference. */
+
+:root {
+  --shadow-1: 0 1px 3px rgba(20, 24, 40, .16);
+  --shadow-2: 0 6px 16px -8px rgba(20, 24, 40, .40);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-1: 0 1px 3px rgba(0, 0, 0, .45);
+    --shadow-2: 0 6px 16px -8px rgba(0, 0, 0, .65);
+  }
+}
+:root[data-theme="light"] {
+  --shadow-1: 0 1px 3px rgba(20, 24, 40, .16);
+  --shadow-2: 0 6px 16px -8px rgba(20, 24, 40, .40);
+}
+:root[data-theme="dark"] {
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, .45);
+  --shadow-2: 0 6px 16px -8px rgba(0, 0, 0, .65);
+}
+
+/* ---- the ladder, in one place ---- */
+.elev { border-radius: var(--r4); border: 1px solid var(--line) }
+.elev-0 { background: var(--stage) }
+.elev-1 { background: var(--panel); box-shadow: inset 0 1px 0 var(--edge-hi), var(--shadow-1) }
+.elev-2 {
+  background: var(--glass);
+  backdrop-filter: var(--lg-blur); -webkit-backdrop-filter: var(--lg-blur);
+  border-color: var(--edge-lo);
+  box-shadow: inset 0 1px 0 var(--edge-hi), var(--lg-shadow);
+}
+/* elev 3 · the only surface allowed to sit ON an elev-2 popover: a callout
+   anchored to something inside it. It must not reuse the popover's own tokens
+   or it reads as level 1 on level 1. Opaque on purpose — glass over glass
+   doubles the blur and muddies both. */
+.elev-3 {
+  background: var(--glass-3);
+  border: 1px solid var(--edge-lo);
+  box-shadow: inset 0 1px 0 var(--edge-hi), var(--lg-shadow-3);
+}
+
+/* ---- the accent glow ----
+   A filled or selected control (primary button, .tool.on, a solid pill) lifts
+   with a glow in ITS OWN colour, not a neutral shadow. Six rules were writing
+   that formula out by hand in three sizes and three colours. One formula now,
+   recoloured by setting --glow-c on the element, because custom properties
+   cascade: `.btn.danger{--glow-c:var(--crit)}` and the rest follows. */
+:root {
+  --glow-c: var(--accent);
+  --glow-sm: 0 4px 12px -4px color-mix(in srgb, var(--glow-c) 55%, transparent);
+  --glow:    0 6px 16px -6px color-mix(in srgb, var(--glow-c) 60%, transparent);
+  --glow-hi: 0 8px 22px -6px color-mix(in srgb, var(--glow-c) 66%, transparent);
+}
+
+/* Each component sets its own shadow FROM these tokens — elevation.css does not
+   reach across and style other components' selectors. Two rules for one element
+   in two files is the exact problem this file exists to end. */

@@ -1,0 +1,230 @@
+/* ============================================================
+   COLOR PICKER · ONE control, every color slot
+   Authored for pages/color.html and required by every surface that
+   holds a color: a fill, a stroke, a gradient stop, a shadow, a
+   text layer, an annotation, the canvas background, a token.
+   The rule it exists to enforce: a color is ALWAYS picked by
+   clicking a swatch, and the thing that opens is ALWAYS this
+   popover. No page invents a second color UI, no slot falls back
+   to the system color panel, and there is no separate gradient
+   editor.
+
+   Anatomy, top to bottom:
+     .cp-head     before/after preview, slot name, eyedropper, close
+     .cp-types    what KIND of paint, as four live thumbnails
+     .cp-geo      (gradients only) the aim pad + the ramp + the stop
+     .cp-sv       saturation x value field with a draggable dot
+     .cp-mode     HSL / RGB / HEX, centered
+     .cp-sliders  one labelled slider per channel, value editable on
+                  the right; right-clicking a track jumps into it
+     .cp-sw       ONE swatch row with a scope switch: shades of this
+                  color, related hues, or what the document uses
+     .cp-foot     contrast readout + save as a named style
+   Driven by the color-picker block in photonz-ds.js.
+
+   HEIGHT IS A FEATURE. A popover that runs off the window is
+   broken, so nothing here stacks a second copy of anything: the
+   type is thumbnails rather than a list plus a preview, the angle
+   is the aim pad rather than a pad plus a number row, and the
+   three swatch families share one row instead of three.
+
+   SPACING: 12 between blocks, 8 inside a block, 4 between swatches
+   in a grid. Nothing else.
+   ============================================================ */
+/* `.popover.pop.on{display:block}` is three classes, so the layout
+   declaration has to out-specify it or every gap below dies silently. */
+.cpick,
+.popover.pop.on.cpick{display:flex;flex-direction:column;gap:var(--pad-sm)}
+.cpick{width:264px;padding:var(--pad-sm)}
+.cpick .cp-head{display:flex;align-items:center;gap:var(--gap-sm)}
+.cpick .cp-prev{position:relative;width:36px;height:24px;border-radius:var(--r2);overflow:hidden;flex:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);
+  background-image:repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);background-size:8px 8px}
+.cpick .cp-prev i{position:absolute;top:0;bottom:0;width:50%}
+.cpick .cp-prev i.was{left:0}
+.cpick .cp-prev i.now{right:0}
+.cpick .cp-name{font-size:11.5px;font-weight:620;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpick .cp-head .sp{flex:1}
+
+/* ---- paint type, as pictures ----
+   Each thumbnail renders YOUR stops at YOUR angle, so the choice is
+   made by looking at four outcomes rather than by reading four words
+   and imagining them. */
+.cpick .cp-types{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s1)}
+.cpick .cp-tt{display:flex;flex-direction:column;gap:3px;align-items:stretch;background:transparent;
+  border:0;padding:0;cursor:pointer}
+.cpick .cp-tt .th{height:28px;border-radius:var(--r1);border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi);transition:var(--ctl-tr)}
+.cpick .cp-tt .tn{font-size:9px;letter-spacing:.02em;color:var(--faint);font-weight:600;text-align:center}
+.cpick .cp-tt:hover .th{border-color:color-mix(in srgb,var(--accent) 40%,var(--edge-lo))}
+.cpick .cp-tt.on .th{border-color:transparent;box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 2px var(--accent)}
+.cpick .cp-tt.on .tn{color:var(--ink)}
+.cpick .cp-tt:focus-visible{outline:none}
+.cpick .cp-tt:focus-visible .th{box-shadow:var(--ring)}
+
+/* ---- gradient geometry: aim it, do not type it ----
+   The pad shows the paint on a square with a handle you drag. A
+   direction is a thing you point at; 135 degrees is a thing you have
+   to decode, so the number is a readout and the pad is the control. */
+.cpick .cp-geo{display:grid;grid-template-columns:64px 1fr;gap:var(--gap-sm);align-items:start}
+/* grab, not crosshair: the handle is a thing you take hold of, and a
+   crosshair promises "click to place" instead. */
+.cpick .cp-pad{position:relative;width:64px;height:64px;border-radius:var(--r2);cursor:grab;
+  touch-action:none;border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+.cpick .cp-pad.drag{cursor:grabbing}
+.cpick .cp-pad:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-padline{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.cpick .cp-padline line{stroke:#fff;stroke-width:1.5;opacity:.85}
+/* One handle family, two sizes: the small one is the origin, the big one is the
+   direction. Both are grabbable, so both look the same - nothing in the pad is
+   drawn like a handle unless the pointer can actually pick it up. */
+.cpick .cp-padline .grip,.cpick .cp-padline .pivot{fill:#fff;stroke:rgba(0,0,0,.45);
+  stroke-width:1;transition:stroke-width .12s ease, filter .12s ease}
+/* the handles answer the pointer even though the svg cannot take events */
+.cpick .cp-pad:hover .cp-padline .grip,.cpick .cp-pad:hover .cp-padline .pivot,
+.cpick .cp-pad.drag .cp-padline .grip,.cpick .cp-pad.drag .cp-padline .pivot{
+  stroke-width:2;filter:drop-shadow(0 0 3px rgba(0,0,0,.5))}
+.cpick .cp-padval{position:absolute;left:3px;bottom:3px;font-family:var(--mono);font-size:9px;
+  color:#fff;background:rgba(6,8,14,.55);border-radius:4px;padding:1px 4px;pointer-events:none;
+  font-variant-numeric:tabular-nums}
+.cpick .cp-gside{display:flex;flex-direction:column;gap:var(--gap-sm);min-width:0}
+.cpick .cp-gramp{position:relative;height:24px;border-radius:var(--r1);cursor:copy;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-gstop{position:absolute;top:-4px;width:12px;height:32px;transform:translateX(-50%);
+  background:transparent;border:0;padding:0;cursor:grab}
+.cpick .cp-gstop .k{display:block;width:12px;height:12px;border-radius:4px;border:2px solid #fff;
+  box-shadow:var(--shadow-1)}
+.cpick .cp-gstop .ln{display:block;width:2px;height:20px;margin:0 auto;background:#fff;opacity:.7}
+.cpick .cp-gstop.sel .k{box-shadow:var(--shadow-1), 0 0 0 2px var(--accent)}
+.cpick .cp-gstop:focus-visible{outline:none}
+.cpick .cp-gstop:focus-visible .k{box-shadow:var(--ring)}
+/* the selected stop, and only the selected stop: the rest are on the ramp */
+.cpick .cp-stopbar{display:flex;align-items:center;gap:var(--s1);min-width:0}
+.cpick .cp-stopbar .sp{flex:1}
+
+/* ---- the selected stop names itself, where it is ----
+   A row that says "Stop 2 of 2 · 45%" is a label parked away from the thing it
+   labels, and it competes for a width the row does not have. The same three
+   facts ride the ramp instead: a beaked callout over the selected key holding
+   its color, which stop it is, and a labelled Position field. It is an overlay,
+   so it costs no layout height, and the label is never far from its subject.
+
+   THE BUBBLE IS ONE PATH. Every box-based beak leaks. Overlap a rotated square
+   and you can see its other two edges through the fill. Clip it to a V and the
+   beak's 1px border still meets the card's 1px border at an acute angle, and
+   because the edge colour is semi-transparent that junction darkens into a
+   dimple on each shoulder. So the card draws NO background and NO border of its
+   own: an SVG behind its content paints one path - rounded rect, eased
+   shoulders, rounded tip - filled once and stroked once. One fill, one stroke,
+   no junction left to go wrong. `drop-shadow` on that SVG also makes the
+   elevation follow the beak instead of stopping at a rectangle. */
+.cpick .cp-gwrap{position:relative}
+.cpick .cp-stopcard{position:absolute;bottom:calc(100% + 7px);z-index:6;width:max-content;
+  display:flex;align-items:center;gap:var(--gap-sm);white-space:nowrap;
+  padding:4px var(--gap-sm);
+  opacity:0;pointer-events:none;transform:translateY(2px);
+  transition:opacity .12s ease, transform .12s ease}
+.cpick .cp-stopcard.on{opacity:1;pointer-events:auto;transform:none}
+.cpick .cp-cardbg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;z-index:-1;
+  filter:var(--cp-card-shadow)}
+.cpick .cp-cardbg path{fill:var(--glass-3);stroke:var(--edge-lo);stroke-width:1}
+.cpick .cp-stopcard .sw{width:14px;height:14px;border-radius:var(--r1);flex:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-stopcard .nm{font-size:10.5px;font-weight:620;color:var(--ink)}
+.cpick .cp-stopcard .pl{font-size:9px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--faint);font-weight:700}
+/* the shared value-input rule sets width:100% and is declared later, so this
+   needs the attribute to out-specify it rather than to out-order it */
+.cpick .cp-stopcard input[data-cp-cardpos]{width:44px;flex:none;text-align:right}
+@media (prefers-reduced-motion:reduce){.cpick .cp-stopcard{transition:none}}
+.cpick .cp-gstop.drag{cursor:grabbing}
+.cpick .cp-mini{width:22px;height:22px;border-radius:var(--r1);border:1px solid var(--edge-lo);
+  background:var(--glass-thin);color:var(--dim);display:grid;place-items:center;cursor:pointer;
+  padding:0;transition:var(--ctl-tr)}
+.cpick .cp-mini:hover{color:var(--ink);border-color:var(--accent-line)}
+.cpick .cp-mini:active{transform:scale(.94)}
+.cpick .cp-mini:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-mini[disabled]{opacity:.42;pointer-events:none}
+
+/* the 2D field: white left to right over the hue, black bottom to top */
+.cpick .cp-sv{position:relative;height:104px;border-radius:var(--r3);cursor:crosshair;touch-action:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent),
+    hsl(var(--cp-h,258) 100% 50%)}
+.cpick .cp-dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;
+  border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45), var(--shadow-1);pointer-events:none}
+.cpick .cp-sv:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* the channel stack: same row grammar as an inspector row, so a
+   slider here is the same object as a slider anywhere else */
+.cpick .cp-mode{align-self:center}
+.cpick .cp-sliders{display:flex;flex-direction:column;gap:var(--gap-sm)}
+.cpick .cp-sl{display:grid;grid-template-columns:12px 1fr 46px;align-items:center;gap:var(--gap-sm)}
+.cpick .cp-sl>b{font-size:10px;font-weight:700;color:var(--faint);text-align:center;line-height:1}
+.cpick .cp-tr{position:relative;height:12px;border-radius:999px;cursor:pointer;touch-action:none;
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-tr.alpha{background-image:var(--cp-track),
+  repeating-conic-gradient(var(--line-soft) 0% 25%, var(--panel) 0% 50%);background-size:auto,8px 8px}
+.cpick .cp-tr:not(.alpha){background-image:var(--cp-track)}
+.cpick .cp-tr:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-knob{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
+  background:var(--panel);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35), var(--shadow-1);
+  pointer-events:none}
+/* the value is an input, always: click it to type, and right-clicking
+   the track puts you in it, so an exact number is never hidden */
+.cpick .cp-sl input,.cpick .cp-hex input,.cpick .cp-stopcard input{
+  border:1px solid transparent;background:transparent;border-radius:var(--r1);
+  color:var(--ink);font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;
+  padding:4px 6px;width:100%;min-width:0;text-align:right;transition:var(--ctl-tr)}
+.cpick .cp-sl input:hover,.cpick .cp-hex input:hover,.cpick .cp-stopcard input:hover{border-color:var(--line)}
+.cpick .cp-sl input:focus,.cpick .cp-hex input:focus,.cpick .cp-stopcard input:focus{
+  outline:none;background:var(--panel);border-color:transparent;box-shadow:var(--ring);text-align:left}
+.cpick .cp-sl input::-webkit-outer-spin-button,
+.cpick .cp-sl input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* hex is a string, not a channel, so it gets a field instead of a track */
+.cpick .cp-hex{display:grid;grid-template-columns:12px 1fr;align-items:center;gap:var(--gap-sm)}
+.cpick .cp-hex>b{font-size:10px;font-weight:700;color:var(--faint);text-align:center;line-height:1}
+.cpick .cp-hex input{text-align:left;border-color:var(--line);background:var(--panel)}
+
+/* ---- ONE swatch row, three scopes ----
+   Shades of this color, its relatives, and what the document already
+   uses are three answers to "give me a colour near this one". They
+   share a row and a scope switch instead of stacking three labelled
+   grids, which is where a third of the old height went. */
+.cpick .cp-sw{display:flex;flex-direction:column;gap:var(--gap-sm)}
+.cpick .cp-scope{display:inline-flex;align-self:stretch;gap:2px;padding:2px;border-radius:999px;
+  background:var(--glass-thin);border:1px solid var(--edge-lo)}
+.cpick .cp-scope button{flex:1;border:0;border-radius:999px;background:transparent;color:var(--dim);
+  font-size:10px;font-weight:640;padding:3px 6px;cursor:pointer;transition:var(--ctl-tr);white-space:nowrap}
+.cpick .cp-scope button.on{background:var(--glass);color:var(--ink);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick .cp-scope button:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-chips{display:grid;grid-template-columns:repeat(9,1fr);gap:var(--s1)}
+/* same 22px / r1 geometry as the DS `.swatch`, so a swatch is a swatch */
+.cpick .cp-chip{height:22px;border-radius:var(--r1);border:1px solid var(--edge-lo);cursor:pointer;padding:0;
+  box-shadow:inset 0 1px 0 var(--edge-hi);transition:transform .09s ease, box-shadow .12s ease}
+.cpick .cp-chip:hover{transform:translateY(-1px)}
+.cpick .cp-chip:focus-visible{outline:none;box-shadow:var(--ring)}
+.cpick .cp-chip.on{box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 2px var(--accent);border-color:transparent}
+
+.cpick .cp-foot{display:flex;align-items:center;gap:var(--gap-sm);padding-top:var(--pad-sm);
+  border-top:1px solid var(--line-soft)}
+.cpick .cp-ctr{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpick .cp-ctr .g{font-weight:700;font-size:9px;padding:2px 6px;border-radius:var(--r1);
+  background:var(--good);color:#fff}
+.cpick .cp-ctr .g.low{background:var(--warn)}
+.cpick .cp-ctr .g.bad{background:var(--crit)}
+.cpick .cp-foot .sp{flex:1}
+
+/* the trigger grammar: a swatch is the ONLY thing that opens a picker */
+.cpick-btn{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r2);padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--ink);
+  cursor:pointer;transition:var(--ctl-tr);font-variant-numeric:tabular-nums}
+.cpick-btn:hover{border-color:var(--accent-line)}
+.cpick-btn:active{transform:translateY(.5px) scale(.99)}
+.cpick-btn:focus-visible{outline:none;border-color:transparent;box-shadow:var(--ring)}
+.cpick-btn .sw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi)}
+.cpick-btn.wide{width:100%;justify-content:flex-start}

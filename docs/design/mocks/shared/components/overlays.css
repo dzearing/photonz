@@ -1,0 +1,58 @@
+/* ---- slide-down overlay: overlays cost zero permanent width ----
+   Only `.sheet.down` is styled here, so page-local `.sheet` blocks are
+   untouched. */
+.sheet.down{position:absolute;left:0;right:0;top:0;z-index:9;
+  border:1px solid var(--edge-lo);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow);
+  transform:translateY(-101%);opacity:0;pointer-events:none;
+  transition:transform .26s cubic-bezier(.32,.72,0,1), opacity .18s ease}
+.sheet.down.on{transform:none;opacity:1;pointer-events:auto}
+.sheet-h{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4) var(--s2)}
+.sheet-h .ttl{display:flex;align-items:center;gap:var(--s2);font-size:11px;font-weight:660;color:var(--ink);
+  white-space:nowrap}
+.sheet-h .sp{flex:1}
+.sheet-b{padding:0 var(--s4) var(--s3)}
+@media (prefers-reduced-motion:reduce){.sheet.down{transition:none}}
+
+/* ---- capture filmstrip (the history front door) ---- */
+.filmstrip{display:flex;gap:var(--s3);overflow-x:auto;overscroll-behavior-x:contain;
+  padding:var(--s1) 0 var(--s3);scrollbar-width:thin}
+.filmcard{flex:none;width:152px;border-radius:var(--r3);overflow:hidden;cursor:pointer;
+  border:1px solid var(--edge-lo);background:var(--glass-thin);
+  box-shadow:inset 0 1px 0 var(--edge-hi);transition:var(--ctl-tr);text-align:left}
+.filmcard:hover{border-color:color-mix(in srgb,var(--accent) 32%, var(--edge-lo));transform:translateY(-1px)}
+.filmcard:active{transform:translateY(0) scale(.99)}
+.filmcard:focus-visible{outline:none;box-shadow:var(--ring)}
+.filmcard.sel{border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 1px var(--accent)}
+.filmcard .th{display:block;height:82px;position:relative}
+.filmcard .th .dur{position:absolute;right:5px;bottom:5px;display:inline-flex;align-items:center;gap:4px;
+  padding:2px 6px;border-radius:999px;background:rgba(6,8,14,.62);color:#fff;
+  font-family:var(--mono);font-size:9px;font-variant-numeric:tabular-nums}
+.filmcard .cap{padding:var(--s2) var(--s3);display:flex;flex-direction:column;gap:2px}
+.filmcard .nm{font-size:11px;font-weight:560;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filmcard .ago{font-size:9.5px;color:var(--faint);font-family:var(--mono)}
+/* the action row exists only on the selected card */
+.filmcard .acts{display:none}
+.filmcard.sel .acts{display:flex;align-items:center;gap:2px;
+  padding:var(--s1) var(--s2) var(--s2);border-top:1px solid var(--edge-lo)}
+
+/* ---- video transport bar ---- */
+.transport{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s4);
+  border-top:1px solid var(--edge-lo);background:var(--glass-chrome);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi)}
+.transport .grp{display:inline-flex;align-items:center;gap:var(--s1);flex:none}
+.transport .tc{flex:none;font-family:var(--mono);font-size:10.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.scrub{flex:1 1 auto;min-width:56px;height:6px;border-radius:999px;background:var(--line-strong);
+  position:relative;cursor:pointer;touch-action:none}
+.scrub .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--accent)}
+.scrub .knob{position:absolute;top:50%;width:13px;height:13px;margin-left:-6.5px;
+  transform:translateY(-50%);border-radius:50%;background:var(--panel);
+  border:1.5px solid var(--accent);box-shadow:var(--shadow-1)}
+.scrub .mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--good)}
+
+/* ---- generic toggled popover (tool-bar overflow, group menus) ---- */
+.popover.pop{display:none}
+.popover.pop.on{display:block}

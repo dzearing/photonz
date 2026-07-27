@@ -2,7 +2,7 @@
    Run:  node shared/build-icons.mjs      (from docs/design/mocks)
 
    Writes three GENERATED regions, each fenced by BEGIN/END markers:
-     shared/photonz-ds.css   the .ic-* mask rules
+     shared/components/icons.css   the .ic-* mask rules
      pages/iconography.html  the searchable grid
      shared/AGENTS.md        the available-names list
 
@@ -62,7 +62,7 @@ for (const [from, to] of Object.entries(ALIASES)) {
   if (!target) throw new Error(`alias ${from} points at unknown icon ${to}`);
   cssLines.push(`.ic-${from}{--i:${dataUri(target.svg)}}`);
 }
-splice('shared/photonz-ds.css', '/* ICONS', cssLines.join('\n'));
+splice('shared/components/icons.css', '/* ICONS', cssLines.join('\n'));
 
 /* ---- 2 · the searchable grid on the iconography page --------------- */
 

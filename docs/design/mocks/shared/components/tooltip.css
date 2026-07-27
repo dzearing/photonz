@@ -1,0 +1,95 @@
+/* ============================================================
+   TOOLTIP — the one small label that explains a control
+   ============================================================
+   Replaces: the old `.tooltip` specimen in photonz-ds.css, plus the page-local
+   variants that each re-invented it (`.dhint`, `.deskhint`, `.poptag`,
+   `.hint-badge`) and roughly a dozen hand-rolled CSS-triangle beaks.
+
+   Two ways in, one component:
+
+     <button data-tip="Split at playhead" data-tip-side="bottom">   ← live
+     <span class="tip-demo">Tooltip</span>                          ← specimen
+
+   `data-tip` is the real one: it shows on hover AND on keyboard focus, after a
+   short delay, and it replaces the native `title` (which cannot be styled,
+   cannot be positioned, and never appears for keyboard users).
+
+   WHY A CSS BEAK IS SAFE HERE, when the color-picker's stop callout needed a
+   single SVG path: that callout is GLASS with a 1px semi-transparent stroke, so
+   the beak's border met the card's border at an acute angle and the overlap
+   darkened into a dimple on each shoulder. A tooltip is opaque and has no
+   stroke, so there is no junction to leak. One fill, drawn twice, no seam.
+
+   Elevation: it floats over live content, so it is level 2 on the ladder in
+   pages/lang-elevation.html — but it is a LABEL, not a surface you read at
+   length, so it takes the inverted plate rather than glass. Glass would make a
+   12px label sit on whatever is behind it and lose contrast exactly when it is
+   over a busy canvas, which is when you needed it. */
+
+.tip {
+  position: fixed;
+  z-index: 60;
+  max-width: 260px;
+  padding: var(--s1) var(--gap-sm);
+  border-radius: var(--r1);
+  background: var(--ink);
+  color: var(--panel);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 560;
+  line-height: 1.35;
+  letter-spacing: -.002em;
+  box-shadow: var(--lg-shadow);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity .1s ease, transform .1s ease;
+}
+.tip.on { opacity: 1; transform: none; }
+
+/* the beak: same solid fill, no border, so it cannot seam */
+.tip::after {
+  content: "";
+  position: absolute;
+  border: 5px solid transparent;
+}
+.tip[data-side="top"]::after    { top: 100%;  left: var(--tip-x, 50%); transform: translateX(-50%); border-top-color: var(--ink) }
+.tip[data-side="bottom"]::after { bottom: 100%; left: var(--tip-x, 50%); transform: translateX(-50%); border-bottom-color: var(--ink) }
+.tip[data-side="left"]::after   { left: 100%; top: 50%; transform: translateY(-50%); border-left-color: var(--ink) }
+.tip[data-side="right"]::after  { right: 100%; top: 50%; transform: translateY(-50%); border-right-color: var(--ink) }
+
+/* a shortcut hint reads quieter than the label it belongs to */
+.tip .k {
+  margin-left: var(--gap-sm);
+  font-family: var(--mono);
+  font-size: 9px;
+  opacity: .7;
+}
+
+/* The specimen form, for the pages that DOCUMENT the tooltip (lang-overlays,
+   lang-keyboard, language). Same plate, same beak, but it sits in the flow so a
+   spec sheet can show it without hovering anything. */
+.tip-demo {
+  position: relative;
+  display: inline-block;
+  padding: var(--s1) var(--gap-sm);
+  border-radius: var(--r1);
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 10.5px;
+  font-weight: 560;
+  white-space: nowrap;
+}
+.tip-demo::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip { transition: none }
+}

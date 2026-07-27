@@ -123,12 +123,39 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   inline element would fragment a multi-line snippet across line boxes.
 - **Walkthrough:** `.wt` (see "Usage walkthroughs" below). The old
   `.wsteps`>`.wstep` slideshow is **legacy**; do not author new pages with it.
-- **Elevation:** `.elev-0/1/2` and now `.elev-3`, the only surface allowed to sit
+- **Tooltip:** `data-tip="Label"` on ANY element (optionally `data-tip="Label|⌘K"`
+  for a shortcut, and `data-tip-side="top|bottom|left|right"`). It shows on hover
+  AND on keyboard focus, flips when it would clip, and points its beak at the
+  trigger. Do NOT use the native `title` and do NOT hand-roll a hint bubble: any
+  `title` is upgraded to `data-tip` automatically, and the old `.tooltip` class
+  is gone. For a doc page that needs one sitting in the flow, use `.tip-demo`.
+  Lives in `shared/components/tooltip.{css,js}`.
+- **Elevation:** depth comes from a TOKEN, never a hand-written shadow.
+  `--shadow-1` raised a hair (handle, knob, selected segment) · `--shadow-2` the
+  hover lift · `--shadow` the window · `--lg-shadow` a float over live content
+  (popover, menu, toast, tooltip) · `--lg-shadow-3` a surface ON a float ·
+  `--glow`/`--glow-sm`/`--glow-hi` a filled or selected control, recoloured by
+  setting `--glow-c` on it · `--ring` focus, recoloured with `--ring-c`. Canvas
+  ARTWORK is exempt. `node shared/check-elevation.mjs` fails the build on a
+  hand-written one. Ladder + tokens live in `shared/components/elevation.css`.
+- **Home:** every `.cmdpop` gets a trailing **Home** item automatically (the
+  shell component appends it). Do not author one per page.
+- **`.elev-0/1/2` and `.elev-3`**, the only surface allowed to sit
   ON a popover (a callout anchored to something inside it). It must not reuse the
   popover's tokens: dark lifts by getting lighter (`--glass-3`), light lifts by
   casting further (`--lg-shadow-3`). See `pages/lang-elevation.html`.
 - **Scenario accent pips:** UI/components `var(--comp)`, image `#ff7e5f`,
   video `#12c2e9`, automation gradient `linear-gradient(120deg,#6E8BFF,#c56cff)`.
+
+## Where the design system lives
+
+`shared/photonz-ds.css` and `.js` are **empty on purpose**. Every component is
+its own file under `shared/components/` (23 CSS, 12 JS), assembled into those two
+URLs by `dev-server.mjs`. Pages are unaffected: same two `<link>`/`<script>`
+tags, same order. To change a component, edit its file. To add one, add the file
+and register it in `shared/components/order.json` at the cascade position it
+needs. Never add rules to the two base files. See
+`shared/components/README.md`.
 
 ## App shell (compose this, don't reinvent)
 
@@ -152,19 +179,77 @@ tool bar, ONE right dock of stacked panel groups, and overlays. It **scales by
 collapsing, resizing, and scrolling, never by inventing new chrome per feature**
 (PRODUCT-MODEL.md §4b, UX-PATTERNS.md §1/§3). Do NOT hand-roll chrome.
 
-Canonical composition:
+### The shell is a COMPONENT. Do not hand-author chrome.
+
+`photonz-ds.js` builds the title bar, the Ask launcher, the agent-chat overlay
+and the `…` command-surface button. A page declares what it **is**:
+
+```html
+<div class="win tall cq shell"
+     data-shell="promo-cut · 1920 × 1080 · <span id='docLen'>0:18</span>"
+     data-ws="video"                        <!-- image | ui | video | none -->
+     data-status="1080p · 30 fps">          <!-- optional readout, may hold ids -->
+  <div class="edit lean" id="shell" data-dock="open">
+    <div class="popover menu pop cmdpop" id="cmdMenu"> … this page's commands … </div>
+    <div class="cnv"> … </div>
+    <div class="pdock"> … </div>
+  </div>
+</div>
+```
+
+Text before the first `·` in `data-shell` is bolded. `data-shell`/`data-status`
+may contain markup, so a walkthrough can drive a live readout by id.
+
+**The title bar holds lights · document · status · Ask, and nothing else.** No
+Share/Export/Done (the native menu bar owns those) and **no segmented control**:
+three workspace tabs up there read as app-level navigation, which is the opposite
+of what "one document, surfaces are lenses" is trying to say. `data-ws` still
+records which lens the page is in, for the tool strip. The component deletes any
+`.wsw` it finds inside `[data-shell]`.
+
+**Panel-group height is a role, not a number.** Every page used to hand-pick
+`--gh`, so the same panel expanded to a different height nearly everywhere:
+measured across 17 shells, Layers had **11** distinct budgets (76–186px) and
+Properties **13** (150–398px). Now a group declares what it is —
+`data-grp="layers|props|effects|library|agent"` — and the ladder assigns one of
+three sizes (`--gh-sm/md/lg`). A group needing a different budget names it
+(`data-gh="lg"`); it never writes a pixel value. Anything that overflows scrolls
+in its own `.dgrp-b`, which is what the budget is for.
+
+**The component harvests before it deletes.** The old header rows mixed chrome
+with content (this page's own command popover, a live status readout, a real
+control like Reset or Play). On conversion the component moves popovers into
+`.cnv`, status into `.wstatus`, and any remaining control into `.cnv-act` as an
+icon `.tool` with its old label as the tooltip — then drops the empty rows. So
+converting a page is just adding `data-shell`/`data-ws`; nothing is lost.
+
+**This is the rule, not a convenience.** 57 pages each retyped the title bar, and
+they drifted: Share/Export/Done buttons the canonical shell says the native menu
+bar owns, a `.toolbar` command strip `app-shell.html` had already deleted, and 56
+copies of the `.cmdk` search well that D6 replaced. The component **deletes** any
+`.titlebar` or `.toolbar` it finds inside `[data-shell]`, so that drift cannot
+come back. If chrome needs to change, change it in `photonz-ds.js` once.
+
+What stays page-authored is **content**: the `.cmpop` menu items for this
+scenario, the canvas, the dock groups, the tool strip. The `…` button that opens
+the command menu is chrome and is built into `.cnv-act` automatically.
+
+Canonical composition (chrome marked ⚙ is built, not written):
 
 ```
-.win.tall.cq                     ← .cq = container-query root (responsive)
- ├─ .titlebar        (lights · wtitle · .wsw lens · tbtns: Share/Export/Done)
- ├─ .toolbar         (compact command surface + .cmdk ⌘K + History ⌘⇧H)
+.win.tall.cq[data-shell]         ← .cq = container-query root (responsive)
+ ├─ .titlebar ⚙      (lights · wtitle · .wstatus · .askbtn Ask ⌘K — nothing else)
+ │                   secondary surfaces (specimens) may still author .tbtns
  ├─ .edit.lean  [data-dock="open|closed|overlay"]
  │   ├─ .cnv                       ← the canvas column, and it dominates
  │   │   ├─ .canvas                → document + selection (.sel-ring/.handle/.mtag)
  │   │   │                          grid scales with --zoom; .canvas.mini = specimen
- │   │   ├─ .cnv-act               → panel toggle + history, canvas top-right
+ │   │   ├─ .cnv-act ⚙            → the `…` command surface (D3) + page actions
  │   │   ├─ .tbar                  → floating tool bar: .tstrip · .swpair · .zoomctl
  │   │   └─ .sheet.down            → slide-down overlay (history)
+ │   ├─ .cmdpop                    → THIS PAGE'S command menu (content)
+ │   ├─ .askscrim ⚙                → the overlay scrim
+ │   ├─ .askpal › .chat ⚙          → the agent chat / command palette (D6)
  │   ├─ .splitter.v                → drag to resize the dock
  │   ├─ .pdock                     → stacked panel groups
  │   │   ├─ .dgrp  (Layers)   › .dgrp-h + .dgrp-b   ← own bound + own scroller
@@ -299,11 +384,21 @@ and the specimen stays honest (PRODUCT-MODEL §4c: a specimen wears no app chrom
 - **`.libgrid` › `.libtile`** — grid of draggable-looking thumbnail tiles
   (`.libtile .th` / `.cap` / `.nm` / `.mt`; `.libtile.sel`, `.libtile.comp`).
   Selecting a tile drives Properties, same selection model as a canvas layer.
-- **`.cmdk`** — the ⌘K command-launcher affordance (D6), the **secondary**
-  command path. Pair it with a `.tool` `ic-more` **command surface** button (D3)
-  opening a grouped `.popover`/`.menu`/`.menuitem`/`.menu-sep`. The **native macOS
-  menu bar is the real command surface**; NEVER draw a fake one in the mock, and
-  never add a permanent options-bar row of tools (tools live in `.tbar`).
+- **`.askbtn` › `.askpal`** — the **Ask launcher** in the title bar's right slot
+  and the agent chat it opens (D6 revised), the **secondary** command path.
+  `.askbtn` is a raised `.btn` variant (sparkle + "Ask" + `⌘K` hint), wired with
+  `data-ask="#askPal"`; `⌘K` opens the same overlay. `.askpal` is a centred
+  elevation-2 overlay (glass + blur + shadow + an auto-created `.askscrim`) that
+  **hosts the shared `.chat` component**, so it and the Agent panel group in the
+  dock are one conversation in two places. Typing `/` in its composer turns it
+  into the command palette: a filtered `.cplist` of `.cpx` rows inline above the
+  composer, each labelled with its real API name. One field, two modes, one call.
+  Pair it with a `.tool` `ic-more` **command surface** button (D3) opening a
+  grouped `.popover`/`.menu`/`.menuitem`/`.menu-sep`. The **native macOS menu bar
+  is the real command surface**; NEVER draw a fake one in the mock, and never add
+  a permanent options-bar row of tools (tools live in `.tbar`).
+- **`.cmdk`** — DEPRECATED. The old ⌘K search well. Do not add it to a page; it
+  survives only until every page is swept onto `.askbtn`.
 - **`.wsw` › `.wsw-seg`** — the **workspace switcher** (lens selector) in the title
   bar: Image · UI · Video over ONE document (PRODUCT-MODEL.md §1). Switching swaps
   the tool strip to that workspace's D4 inventory and shows the transport +
@@ -589,7 +684,7 @@ The full searchable library, with the grid and the drawing rules, is
 
 **Core actions** — plus minus x check check-circle x-circle search trash copy duplicate undo redo save export import share link unlink refresh settings info help filter
 
-**Documents & library** — document document-new folder folder-open library grid list tag image star history pin archive
+**Documents & library** — home document document-new folder folder-open library grid list tag image star history pin archive
 
 **View & canvas** — zoom-in zoom-out zoom-fit zoom-actual hand maximize minimize sidebar-left sidebar-right panel-bottom canvas-grid rulers snap
 

@@ -1,0 +1,40 @@
+/* ============================================================
+   RESPONSIVE — one container query, every shell obeys it.
+   NARROW (<=880px window): the dock stops consuming width and becomes
+   a rail + overlay; the tool bar overflows into a "more" menu.
+   TIGHT  (<=620px window): the rail drops its labels, the zoom slider
+   and the transport's edit labels drop out.
+   Keep these numbers in sync with NARROW/TIGHT in photonz-ds.js.
+   ============================================================ */
+@container shell (max-width:880px){
+  /* dock: never inline, only an overlay you summon from the rail. Opening it
+     covers the rail and slides/fades in OVER the canvas. The rail keeps its
+     layout space (hidden with visibility, not removed) so toggling never shifts
+     the canvas. Opaque glass so nothing reads through. */
+  .edit.lean>.pdock{position:absolute;right:0;top:0;bottom:0;z-index:8;
+    width:min(272px,78%);max-width:none;
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    box-shadow:var(--lg-shadow);
+    opacity:0;visibility:hidden;transform:translateX(14px);pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
+  .edit.lean[data-dock="overlay"]>.pdock{opacity:1;visibility:visible;transform:none;pointer-events:auto;
+    transition:opacity .2s ease,transform .2s ease}
+  .edit.lean[data-dock="overlay"]>.drail{visibility:hidden}
+  .edit.lean>.splitter.v{display:none}
+  .edit.lean>.drail{display:flex}
+  /* tool bar: overflow tools collapse into the "more" affordance */
+  .cnv .tbar .ovf{display:none}
+  .cnv .tbar .tbar-more{display:grid}
+  /* video transport: keep transport + scrubber, shed the labels */
+  .transport .lb{display:none}
+  .transport .btn{padding:0;width:var(--ctl-h-sm)}
+}
+@container shell (max-width:620px){
+  .edit.lean{--rail-w:28px}
+  .drailtab .lb{display:none}
+  .cnv .tbar .zslider{display:none}
+  .cnv .tbar{bottom:var(--s3);gap:0}
+  .transport{gap:var(--s2);padding:var(--s2) var(--s3)}
+  .transport .vol{display:none}
+  .sheet-h{flex-wrap:wrap}
+}

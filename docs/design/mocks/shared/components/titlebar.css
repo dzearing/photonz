@@ -1,0 +1,60 @@
+/* THE TITLE BAR'S RESPONSIVE CONTRACT.
+   The dock, rail and tool bar already respond at these breakpoints; the title bar
+   used to just clip (measured: editor 504>370, app-shell 566>370, ui-nested
+   536>370 at a 420px page). Now it degrades in a defined order: the lens and the
+   size drop first, then the buttons compact, and the name ellipses last. */
+@container shell (max-width:880px){
+  .win.cq .titlebar .wsw{display:none}
+  .win.cq .titlebar .wtitle .meta{display:none}
+}
+@container shell (max-width:620px){
+  .win.cq .titlebar .tbtns .btn{padding:0 var(--s2)}
+  .win.cq .titlebar .wtitle{font-size:11px}
+  /* Ask degrades to its glyph: the shortcut hint goes first, then the label.
+     The button itself never drops — it is the only command affordance up here. */
+  .win.cq .titlebar .askbtn>.kbd{display:none}
+}
+@container shell (max-width:480px){
+  .win.cq .titlebar .askbtn{width:28px;padding:0;font-size:0;gap:0}
+}
+.tbtns{display:flex;gap:6px;align-items:center;min-width:150px;justify-content:flex-end}
+
+.toolbar{display:flex;align-items:center;gap:4px;height:var(--rail-w);padding:0 12px;background:var(--panel-2);border-bottom:1px solid var(--line);position:relative;z-index:2}
+/* the panel-dock toggle is a plain .tool icon button — NO bespoke visual styling,
+   highlighted (via the shared .tool.on state) only while the dock is open. It is
+   a small square the height of the search box, centered horizontally over the
+   collapsed rail below it. The negative right margin cancels the command bar's
+   12px right padding so the square can center on the rail column. */
+.toolbar .dock-corner{margin-left:auto;width:24px;height:24px;min-width:24px;padding:0;
+  margin-right:calc((var(--rail-w) - 24px) / 2 - 12px)}
+.tool{min-width:30px;height:28px;padding:0 6px;border-radius:7px;border:1px solid transparent;background:transparent;display:grid;place-items:center;color:var(--dim);transition:.12s;font-size:13px}
+.tool:hover{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.tool.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.tsep{width:1px;height:18px;background:var(--line);margin:0 5px}
+.tspacer{flex:1}
+.pill{height:28px;border-radius:8px;border:1px solid var(--line);background:var(--panel);padding:0 11px;font-size:11.5px;font-weight:560;color:var(--dim);display:inline-flex;align-items:center;gap:7px}
+.pill.ai{background:linear-gradient(120deg,#6E8BFF,#c56cff);color:#fff;border:0;font-weight:600}
+.pill.solid{background:var(--accent);color:var(--accent-ink);border:0;font-weight:600}
+.pill .kbd{font-family:var(--mono);font-size:9.5px;opacity:.7}
+
+.edit{display:grid;grid-template-columns:190px 1fr 272px;flex:1;min-height:0}
+.pane{background:var(--panel);min-height:0;overflow-y:auto}
+.pane.layers{border-right:1px solid var(--line)}
+.pane.insp{border-left:1px solid var(--line);background:var(--panel-2)}
+.pane-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--pad-sm) var(--pad) var(--s2);display:flex;align-items:center;justify-content:space-between}
+.pane-h .add{color:var(--dim);font-size:14px;line-height:1}
+.ptabs{display:flex;gap:2px;padding:8px 10px 4px}
+.ptab{font-size:11px;font-weight:560;color:var(--faint);padding:4px 9px;border-radius:7px}
+.ptab.on{background:var(--panel-2);color:var(--ink)}
+
+.lrow{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;color:var(--dim);border-left:2px solid transparent}
+.lrow:hover{background:var(--panel-2)}
+.lrow.sel{background:var(--accent-soft);color:var(--ink);border-left-color:var(--accent)}
+.lrow.selc{background:var(--comp-soft);color:var(--ink);border-left-color:var(--comp)}
+.lrow .ic{width:15px;height:15px;color:var(--faint);flex:none;font-size:12px}
+.lrow.selc .ic{color:var(--comp)}
+.lrow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .eye{color:var(--faint);font-size:11px}
+.lrow.child{padding-left:26px}
+.lgroup{font-size:11px;color:var(--faint);padding:6px 12px 3px;font-weight:560}
+.cmark{color:var(--comp);font-size:11px}

@@ -1,0 +1,93 @@
+/* ============================================================
+   RESTORED: app-shell primitives that the icon generator's splice
+   removed along with the old inline icon block (.dnav .srch .libtools
+   .libgrid .libtile .cmdk .wsw .lrow.adj .clipmark). They live below
+   the generated fence now, so a re-run cannot take them again.
+   ============================================================ */
+/* ============================================================
+   APP SHELL — canonical composition pieces (UX-PATTERNS D1–D6).
+   These EXTEND the existing .win/.edit/.toolbar/.timeline system;
+   they are the small, reusable bits pages kept reinventing. Styled
+   to the Liquid-Glass look, 4pt spacing, and tokens. Compose, do
+   not fork the shell. See AGENTS.md "App shell (compose this)".
+   ============================================================ */
+
+/* D2 — left-dock top-level tab header (Layers | Library). Sits at the
+   top of .pane.layers; switching a tab swaps the pane body. */
+.dnav{display:flex;gap:2px;padding:var(--gap-sm) var(--gap-sm) 0;border-bottom:1px solid var(--edge-lo)}
+.dtab{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-size:11.5px;font-weight:560;color:var(--faint);
+  padding:var(--gap-sm) var(--pad-sm);border:1px solid transparent;border-bottom:0;
+  border-radius:var(--r2) var(--r2) 0 0;background:transparent;
+  white-space:nowrap;transition:var(--ctl-tr)}
+.dtab .ic{color:var(--faint)}
+.dtab:hover{color:var(--ink);background:var(--glass-thin)}
+.dtab:active{transform:translateY(.5px)}
+.dtab:focus-visible{outline:none;box-shadow:var(--ring)}
+.dtab.on{color:var(--ink);background:var(--glass);border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.dtab.on .ic{color:var(--accent)}
+
+/* Library panel toolbar row: search + Import affordance (D1/D2).
+   VISUAL RULE 7: never an input and a button on one skinny row. In a 268px
+   dock the field truncated to "Search cor". The flex BASES do the deciding:
+   160 + 120 + gap does not fit a dock, so the row wraps and each control
+   takes a full line; in a wide window they sit side by side. No breakpoint,
+   no container query, and it reflows while the splitter is dragged. */
+.libtools{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm)}
+.libtools>.srch{flex:1 1 160px}
+.libtools>.btn{flex:1 1 120px;justify-content:center}
+
+/* reusable search field (icon + input), capsule glass. */
+.srch{flex:1;min-width:0;display:flex;align-items:center;gap:7px;height:var(--ctl-h-sm);
+  padding:0 var(--pad-sm);border:1px solid var(--edge-lo);border-radius:999px;
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi);transition:var(--ctl-tr)}
+.srch .ic{color:var(--faint);flex:none}
+.srch input{border:0;background:transparent;outline:none;color:var(--ink);font-family:inherit;
+  font-size:11.5px;width:100%;min-width:0;padding:0}
+.srch input::placeholder{color:var(--faint)}
+.srch:focus-within{border-color:color-mix(in srgb,var(--accent) 40%, var(--edge-lo));
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
+
+/* Library tile grid + draggable-looking thumbnail tiles (every scope
+   shares this shape: Media · Components · Styles · Assets). */
+/* VISUAL RULE 8: a tile has to still read as a CARD. repeat(3,1fr) was a
+   fixed column count, so in a 268px dock the tiles came out 76px wide - a
+   sliver with a 46px thumb and an ellipsised name. auto-fill with a 96px
+   floor lets the DOCK decide how many cards fit (2 at rest, 4 in a widened
+   dock) instead of forcing three no matter what. */
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+  gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm) var(--pad)}
+.libtile{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;
+  background:var(--glass-thin);box-shadow:inset 0 1px 0 var(--edge-hi);cursor:grab;transition:var(--ctl-tr)}
+.libtile:hover{border-color:color-mix(in srgb,var(--accent) 32%, var(--edge-lo));
+  transform:translateY(-1px);box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-2)}
+.libtile:active{cursor:grabbing;transform:translateY(0) scale(.98)}
+.libtile:focus-visible{outline:none;box-shadow:var(--ring)}
+.libtile.sel{border-color:var(--accent);box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 1px var(--accent)}
+.libtile.comp.sel{border-color:var(--comp);box-shadow:inset 0 1px 0 var(--edge-hi), 0 0 0 1px var(--comp)}
+/* the thumbnail scales WITH the tile: a fixed 46px strip on a wider tile
+   reads as a list row, not a card. */
+.libtile .th{display:block;aspect-ratio:16/10;height:auto;min-height:40px}
+.libtile .cap{padding:5px 7px 6px;display:flex;flex-direction:column;gap:1px}
+.libtile .nm{font-size:10.5px;font-weight:560;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.libtile .mt{font-size:9px;color:var(--faint);font-family:var(--mono);letter-spacing:.02em;white-space:nowrap}
+
+/* DEPRECATED (D6 revised) — the old ⌘K *search well* in the title bar. It is
+   replaced by .askbtn + .askpal below: one launcher that opens the agent chat,
+   which subsumes the command palette. Kept only until every page is swept.
+   Do NOT add a new .cmdk to any page. */
+/* search field: an INSET well etched into the glass, not a raised button. A
+   recessed dark fill + an inner top shadow + a dark inner hairline read as
+   "carved in"; no --edge-hi top highlight (that reads as raised). */
+.cmdk{display:inline-flex;align-items:center;gap:var(--gap-sm);height:28px;
+  padding:0 var(--s3);border:0;border-radius:999px;
+  background:color-mix(in srgb, var(--stage) 58%, transparent);
+  box-shadow:inset 0 1.5px 2px rgba(0,0,0,.42), inset 0 0 0 1px color-mix(in srgb, black 34%, var(--edge-lo));
+  color:var(--faint);font-size:12px;font-weight:520;
+  white-space:nowrap;cursor:text;transition:var(--ctl-tr)}
+.cmdk .ic{color:var(--faint);flex:none}
+.cmdk .kbd{font-family:var(--mono);font-size:9.5px;opacity:.8;margin-left:var(--s1)}
+.cmdk:hover{background:color-mix(in srgb, var(--stage) 68%, transparent);color:var(--dim)}
+.cmdk:focus-within,.cmdk:focus-visible{outline:none;
+  box-shadow:inset 0 1.5px 2px rgba(0,0,0,.42), var(--ring)}

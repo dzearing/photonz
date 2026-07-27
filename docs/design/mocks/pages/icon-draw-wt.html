@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · icon-draw-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-draw-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app screen,
+     rendered once, driven by the steps below. ONE scenario, and the whole point
+     of it is that ICON WORK IS ARITHMETIC.
+
+     A glyph that joins a set has to agree with the set: same 24 unit box, same
+     20 x 20 live area, same keylines, same 1.75 stroke. Every one of those is a
+     number, and a drawing tool that makes you nudge toward a number by eye is
+     the wrong tool. So the grid is not decoration here, it is the thing the
+     cursor is attracted to: drag a rectangle and it lands on 8, 11, 8, 3 with
+     no arrow keys afterwards.
+
+     Rules this page holds to:
+       · every coordinate a step reports is a whole unit, because snapping put
+         it there. No step ever says "about".
+       · the grid, the live area and the keylines are DOCUMENT overlays drawn on
+         the artboard, not canvas chrome, so they are things you turn on.
+       · symmetry is a command (mirror across the center line), never two
+         drags that happen to match.
+
+     Everything below the artboard is DS. The artboard itself is page-local
+     artwork, the same way video-transition-wt draws its own program monitor. */
+  #icon-draw-wt .win.shell{height:960px;min-height:0}
+  #icon-draw-wt .canvas{--artboard-glow:520px 360px}
+
+  /* ---------- THE ARTBOARD · a 24 unit icon template ---------- */
+  /* sized off the canvas HEIGHT, because a square artboard in a wide short
+     canvas is bounded by the short side and nothing else */
+  #icon-draw-wt .ig-board{position:relative;height:min(410px,74%);width:auto;aspect-ratio:1;border-radius:var(--r4);
+    background:var(--panel);border:1px solid var(--line-strong);
+    box-shadow:0 26px 56px -20px rgba(0,0,0,.5);color:var(--ink)}
+  #icon-draw-wt .ig-board svg.art{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+
+  /* grid + guides, all drawn in USER UNITS so 1 unit on screen is 1 unit in the
+     exported SVG. Patterns rather than 441 hand-written dots. */
+  /* pattern CONTENT inherits from the <pattern> element, not from the rect that
+     references it, so the colours have to be set on the pattern's own children */
+  #icon-draw-wt #igMinorPat path{stroke:var(--line)}
+  #icon-draw-wt #igMajorPat path{stroke:var(--line-strong)}
+  #icon-draw-wt #igDotPat circle{fill:var(--accent)}
+  #icon-draw-wt .ig-dots{opacity:.34}
+  #icon-draw-wt .ig-live{fill:none;stroke:var(--accent);stroke-width:.05;stroke-dasharray:.42 .3;opacity:.6}
+  #icon-draw-wt .ig-key{fill:none;stroke:var(--comp);stroke-width:.05;stroke-dasharray:.3 .26;opacity:.5}
+
+  /* construction shapes · what you drew, before the boolean makes them one */
+  #icon-draw-wt .ig-cons{fill:color-mix(in srgb,var(--accent) 14%,transparent);
+    stroke:var(--accent);stroke-width:.12}
+  /* the finished glyph · the set's own drawing rules, at the set's own weight */
+  #icon-draw-wt .ig-glyph{fill:none;stroke:currentColor;stroke-width:1.75;
+    stroke-linecap:round;stroke-linejoin:round}
+  #icon-draw-wt .ig-glyph.hair{stroke-width:.16}
+
+  /* the snap readout that follows the cursor while a shape is being placed */
+  #icon-draw-wt .ig-snap{position:absolute;width:0;height:0;pointer-events:none;z-index:4}
+  #icon-draw-wt .ig-snap::before,#icon-draw-wt .ig-snap::after{content:"";position:absolute;background:var(--accent)}
+  #icon-draw-wt .ig-snap::before{left:-11px;width:22px;top:-1px;height:2px;border-radius:2px}
+  #icon-draw-wt .ig-snap::after{top:-11px;height:22px;left:-1px;width:2px;border-radius:2px}
+  #icon-draw-wt .ig-snap .lb{position:absolute;left:14px;top:-26px;white-space:nowrap;font-family:var(--mono);
+    font-size:10px;font-weight:640;color:var(--accent-ink);background:var(--accent);
+    padding:2px 7px;border-radius:6px}
+
+  /* selection · the DS ring, positioned over the artboard in % of 24 units */
+  #icon-draw-wt .ig-selbox{position:absolute;pointer-events:none;z-index:5}
+  #icon-draw-wt .sel-ring{border-radius:var(--r2);inset:-7px}
+  #icon-draw-wt .handle.tl{top:-11px;left:-11px}
+  #icon-draw-wt .handle.tr{top:-11px;right:-11px}
+  #icon-draw-wt .handle.bl{bottom:-11px;left:-11px}
+  #icon-draw-wt .handle.br{bottom:-11px;right:-11px}
+
+  /* the optical margin measurement, for the fit check */
+  #icon-draw-wt .ig-mez{position:absolute;pointer-events:none;z-index:3;
+    border:1px dashed color-mix(in srgb,var(--good) 44%,transparent);
+    background:color-mix(in srgb,var(--good) 7%,transparent)}
+  #icon-draw-wt .ig-mez .lb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;
+    font-family:var(--mono);font-size:9.5px;font-weight:660;color:var(--good);white-space:nowrap}
+  /* the top and bottom bands sit where the selection tag does, so their number
+     moves to the end of the band instead of the middle of it */
+  #icon-draw-wt .ig-mez.igh .lb{left:auto;right:6px;transform:translateY(-50%)}
+
+  /* ---------- REAL SIZE · the only review that matters for an icon ---------- */
+  #icon-draw-wt .ig-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
+    display:flex;align-items:flex-end;gap:var(--pad-sm);padding:var(--gap-sm) var(--pad-sm);
+    border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  #icon-draw-wt .ig-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-draw-wt .ig-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--ink)}
+  #icon-draw-wt .ig-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-draw-wt .ig-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+
+  /* ---------- Grid & snap panel group · every number is a control ---------- */
+  #icon-draw-wt .seg.ig-multi button.on{background:var(--accent-soft);color:var(--accent);
+    box-shadow:inset 0 0 0 1px var(--accent-line)}
+  #icon-draw-wt .ig-ok{color:var(--good);font-weight:640}
+  #icon-draw-wt .ig-boolrow{display:flex;gap:var(--s1)}
+  #icon-draw-wt .ig-boolrow .btn{flex:1}
+
+  /* the library tile that shows the set this glyph is joining */
+  #icon-draw-wt .libtile .th.glyphth{display:grid;place-items:center;background:var(--panel-2);
+    color:var(--ink);aspect-ratio:16/10}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-draw-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Draw an icon on the grid</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: draw a new <b>cloud upload</b> glyph that belongs in a set of 199 others, which means it has to agree
+    with them about everything measurable. Same 24 unit box, same 20 x 20 live area, same keylines, same 1.75 stroke.
+    The interesting part is that <b>you never type a coordinate and you never nudge one</b>. Snapping puts every edge, every
+    center and every pen point on a whole unit as you draw, symmetry is a command rather than a second careful drag, and a
+    boolean turns four construction shapes into the one path that gets exported. Eleven real clicks on ONE screen, which
+    never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtIcon">
+
+    <div class="wt-stage">
+      <!-- The title bar, the Ask launcher and the `…` command surface are all
+           built by the SHELL COMPONENT (photonz-ds.js). This page declares what
+           it is: the document, the lens, and a live status readout the
+           walkthrough steps drive (#chipGrid / #chipSnap). -->
+      <div class="win tall cq shell" data-shell="cloud-upload · 24 × 24 · SVG" data-ws="ui"
+           data-status='<span id="chipGrid">24 grid</span> · <span id="chipSnap">snap off</span>'>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` button that
+             opens it is built by the shell component, into .cnv-act. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Shape</div>
+          <div class="menuitem"><i class="ic ic-node"></i> Union selection <span class="sc">⌘⌥U</span></div>
+          <div class="menuitem"><i class="ic ic-frame"></i> Mirror about center <span class="sc">⇧M</span></div>
+          <div class="menuitem"><i class="ic ic-pen"></i> Outline stroke <span class="sc">⇧⌘O</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Grid</div>
+          <div class="menuitem"><i class="ic ic-ruler"></i> Snap to grid <span class="sc">⇧;</span></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+
+              <!-- ===== THE ARTBOARD · page-local artwork, 24 user units ===== -->
+              <div class="ig-board" id="igBoard">
+                <svg class="art" viewBox="0 0 24 24" aria-label="Icon artboard, 24 by 24 units">
+                  <defs>
+                    <pattern id="igMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                      <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                    </pattern>
+                    <pattern id="igMajorPat" width="4" height="4" patternUnits="userSpaceOnUse">
+                      <path d="M0 0H4M0 0V4" fill="none" stroke="currentColor" stroke-width=".055"/>
+                    </pattern>
+                    <pattern id="igDotPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                      <circle cx="0" cy="0" r=".07" fill="currentColor"/>
+                      <circle cx="1" cy="0" r=".07" fill="currentColor"/>
+                      <circle cx="0" cy="1" r=".07" fill="currentColor"/>
+                      <circle cx="1" cy="1" r=".07" fill="currentColor"/>
+                    </pattern>
+                  </defs>
+
+                  <!-- the 24 unit grid -->
+                  <g id="igGrid" class="wt-off">
+                    <rect class="ig-minor" x="0" y="0" width="24" height="24" fill="url(#igMinorPat)"/>
+                    <rect class="ig-major" x="0" y="0" width="24" height="24" fill="url(#igMajorPat)"/>
+                  </g>
+                  <!-- the 20 x 20 live area every glyph in the set lives inside -->
+                  <rect id="igLive" class="ig-live wt-off" x="2" y="2" width="20" height="20" rx=".4"/>
+                  <!-- the two keylines the set is drawn to -->
+                  <g id="igKeys" class="wt-off">
+                    <rect class="ig-key" x="3" y="3" width="18" height="18" rx="3"/>
+                    <circle class="ig-key" cx="12" cy="12" r="8.6"/>
+                  </g>
+                  <!-- the snap targets: every intersection on the grid -->
+                  <rect id="igDots" class="ig-dots wt-off" x="2" y="2" width="20" height="20" fill="url(#igDotPat)"/>
+
+                  <!-- ===== what you draw ===== -->
+                  <rect id="igRect" class="ig-cons wt-off" x="9" y="10" width="6" height="3"/>
+                  <circle id="igBig" class="ig-cons wt-off" cx="12" cy="8" r="4"/>
+                  <circle id="igLeft" class="ig-cons wt-off" cx="9" cy="10" r="3"/>
+                  <circle id="igRight" class="ig-cons wt-off" cx="15" cy="10" r="3"/>
+
+                  <!-- ===== what the boolean makes of them: ONE path ===== -->
+                  <path id="igCloud" class="ig-glyph hair wt-off"
+                        d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/>
+                  <path id="igArrow" class="ig-glyph wt-off" d="M12 20V16M10 18l2-2 2 2"/>
+                </svg>
+
+                <!-- the snap readout, moved by each step -->
+                <span class="ig-snap wt-off" id="igSnapCue" style="left:37.5%;top:41.667%"><span class="lb" id="igSnapLb">9, 10</span></span>
+
+                <!-- ONE selection, moved and relabelled by each step -->
+                <div class="ig-selbox wt-off" id="igSel" style="left:37.5%;top:41.667%;width:25%;height:12.5%">
+                  <div class="sel-ring"></div>
+                  <i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i>
+                  <span class="mtag" id="igTag">9, 10 · 6 × 3</span>
+                </div>
+
+                <!-- the optical margin check -->
+                <div class="ig-mez wt-off" id="igMezL" style="left:8.333%;top:16.667%;width:16.667%;height:66.667%"><span class="lb">4</span></div>
+                <div class="ig-mez wt-off" id="igMezR" style="right:8.333%;top:16.667%;width:16.667%;height:66.667%"><span class="lb">4</span></div>
+                <div class="ig-mez igh wt-off" id="igMezT" style="left:25%;top:8.333%;width:50%;height:8.333%"><span class="lb">2</span></div>
+                <div class="ig-mez igh wt-off" id="igMezB" style="left:25%;bottom:8.333%;width:50%;height:8.333%"><span class="lb">2</span></div>
+              </div>
+
+              <!-- REAL SIZE · the review that decides whether a glyph works -->
+              <div class="ig-sizes wt-off" id="igSizes">
+                <span class="ig-sz">
+                  <span class="px" style="width:26px;height:26px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
+                    </svg>
+                  </span><span class="n">16</span>
+                </span>
+                <span class="ig-sz">
+                  <span class="px" style="width:34px;height:34px">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
+                    </svg>
+                  </span><span class="n">24</span>
+                </span>
+                <span class="ig-sz">
+                  <span class="px inv" style="width:42px;height:42px">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
+                    </svg>
+                  </span><span class="n">32</span>
+                </span>
+                <span class="ig-sz">
+                  <span class="px" style="width:58px;height:58px">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
+                    </svg>
+                  </span><span class="n">48</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 UI / vector inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool ovf" id="tNode" title="Edit nodes (A)"><i class="ic sm ic-node"></i></button>
+                <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background color">
+                <span class="fg" style="background:#0c0e14"></span>
+                <span class="bg" style="background:#ffffff"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="100" max="1600" value="1600" aria-label="Zoom">
+                <span class="val zval">1600%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:196px;z-index:12">
+                <div class="menuitem"><i class="ic ic-node"></i> Edit nodes <span class="sc">A</span></div>
+                <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th"><span class="wshot"><span class="w"><span class="tb"><i></i><i></i><i></i></span><span class="bd"><span class="sd"></span><span class="mn"><span class="ln"></span><span class="ln s"></span><span class="ln a"></span></span></span></span></span></span>
+                    <span class="cap"><span class="nm">set-sheet</span><span class="ago">6 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">reference-glyphs</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- the agent chat / command palette (D6) -->
+            <!-- The agent chat overlay is built by the shell component, so this page
+                 does not carry a copy of it. -->
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <!-- THE RIGHT DOCK -->
+          <div class="pdock" id="dock">
+
+            <!-- GRID & SNAP · the group this whole scenario lives in -->
+            <div class="dgrp" id="gGrid" data-grp="tools" data-gh="lg">
+              <div class="dgrp-h"><span class="ttl">Grid &amp; snap</span><span class="cnt" id="gridCnt">off</span></div>
+              <div class="dgrp-b">
+                <div class="section">
+                  <div class="irow"><span class="rl">Grid</span>
+                    <span class="select" id="selGrid" tabindex="0" role="button"><span class="lead" id="gridKind">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <div class="irow" style="grid-template-columns:1fr"><span class="rl">Show</span>
+                    <span class="seg ig-multi" id="segShow" role="group" aria-label="Overlays to show">
+                      <button id="shGrid">Grid</button>
+                      <button id="shLive">Live area</button>
+                      <button id="shKeys">Keylines</button>
+                    </span>
+                  </div>
+                </div>
+                <div class="section">
+                  <div class="irow" style="grid-template-columns:1fr"><span class="rl">Snap to</span>
+                    <span class="seg ig-multi" id="segSnap" role="group" aria-label="Snap targets">
+                      <button id="snGrid">Grid</button>
+                      <button id="snKeys">Keylines</button>
+                      <button id="snGeo">Geometry</button>
+                    </span>
+                  </div>
+                  <div class="irow"><span class="rl">Step</span><span class="field"><span class="k">unit</span><span class="v" id="snapStep">1</span></span></div>
+                  <div class="irow" style="grid-template-columns:1fr"><span class="rl">Fit</span>
+                    <button class="btn secondary sm block" id="btnFit"><i class="ic sm ic-ruler"></i> Check against the set</button>
+                  </div>
+                  <p class="note" id="gridNote">A grid you can only look at is decoration. This one is what the cursor is attracted to, so a shape lands on a whole unit instead of near one.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <!-- LAYERS -->
+            <div class="dgrp" id="gLayers" style="--gh:146px">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCnt">0</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="empty" id="layersEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-square"></i></span>Nothing drawn yet</div>
+                <div class="lrow wt-off" id="lrArrow"><i class="ic ic-pen"></i><span class="nm">Arrow</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrCloud"><i class="ic ic-bezier"></i><span class="nm">Cloud</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrRight"><i class="ic ic-circle"></i><span class="nm">Shoulder right</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrLeft"><i class="ic ic-circle"></i><span class="nm">Shoulder left</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrBig"><i class="ic ic-circle"></i><span class="nm">Crown</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow wt-off" id="lrRect"><i class="ic ic-square"></i><span class="nm">Base</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="420"></div>
+
+            <!-- PROPERTIES · geometry in units, because that is the unit of work -->
+            <div class="dgrp" id="gProps" style="--gh:344px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+              <div class="dgrp-b">
+                <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Draw or select a shape</div>
+
+                <div id="propsShape" class="wt-off">
+                  <div class="section">
+                    <div class="sec-h">Geometry <span class="mut">units</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">X</span><span class="v" id="pX">9</span></div>
+                      <div class="field"><span class="k">Y</span><span class="v" id="pY">10</span></div>
+                    </div>
+                    <div class="grid2" style="margin-top:7px">
+                      <div class="field"><span class="k">W</span><span class="v" id="pW">6</span></div>
+                      <div class="field"><span class="k">H</span><span class="v" id="pH">3</span></div>
+                    </div>
+                    <p class="note" id="pGeoNote">Whole numbers, and nobody typed them. Snapping decided where the drag could stop, so the shape arrived on the grid rather than being pushed onto it afterwards.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secBool">
+                    <div class="sec-h">Path <span class="mut" id="pBoolMut">4 shapes</span></div>
+                    <div class="ig-boolrow">
+                      <button class="btn secondary sm" id="btnUnion" title="Union (⌘⌥U)"><i class="ic sm ic-boolean-union"></i></button>
+                      <button class="btn ghost sm" title="Subtract"><i class="ic sm ic-boolean-subtract"></i></button>
+                      <button class="btn ghost sm" title="Intersect"><i class="ic sm ic-boolean-intersect"></i></button>
+                      <button class="btn ghost sm" title="Exclude"><i class="ic sm ic-boolean-exclude"></i></button>
+                    </div>
+                    <p class="note">Union keeps the outer boundary and throws the seams away. It stays live: the four shapes are still there underneath and still editable, so this is a decision you can walk back.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secStroke">
+                    <div class="sec-h">Stroke <span class="mut" id="pStrokeMut">none</span></div>
+                    <div class="irow"><span class="rl">Width</span>
+                      <span class="select" id="selWidth" tabindex="0" role="button"><span class="lead" id="pWidth">1.75</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <div class="irow" style="grid-template-columns:1fr"><span class="rl">Caps</span>
+                      <span class="seg pseg" role="group" aria-label="Line caps">
+                        <button>Butt</button><button class="on" id="capRound">Round</button><button>Square</button>
+                      </span>
+                    </div>
+                    <div class="irow"><span class="rl">Align</span>
+                      <span class="select"><span class="lead">Center</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
+                    <p class="note" id="pStrokeNote">1.75 with round caps and round joins is the set's weight. It is saved as a style, so this is one click rather than three fields, and if the set ever changes weight every glyph follows.</p>
+                  </div>
+
+                  <div class="section wt-off" id="secFit">
+                    <div class="sec-h">Fit <span class="mut" id="pFitMut">checked</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">Live area</span><span class="v ig-ok" id="pFitLive">20 × 20</span></div>
+                      <div class="field"><span class="k">Bounds</span><span class="v" id="pFitBounds">12 × 16</span></div>
+                    </div>
+                    <div class="irow" style="margin-top:7px"><span class="rl">Margins</span><span class="field" style="width:100%"><span class="v" id="pFitMargins">4 · 2 · 4 · 2</span></span></div>
+                    <p class="note" id="pFitNote">Every glyph in the set is measured the same way, so a new one either agrees with the others or it says by how much it does not.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow collapsed" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Assets</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button class="on" data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
+                </div>
+                <div data-scope-body="media" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media in this document</div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Glyph frame</span><span class="mt">24 × 24</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles" class="wt-off">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">199 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#4a5068"></span><span class="nm">Glyph / muted</span><span class="use">12 uses</span></div>
+                  </div>
+                </div>
+                <div data-scope-body="assets">
+                  <div class="libgrid">
+                    <div class="libtile wt-off" id="tileNew" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg></span><span class="cap"><span class="nm">cloud-upload</span><span class="mt">new</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 16.2a4.2 4.2 0 0 1 1.3-8.1 5.6 5.6 0 0 1 10.7-1.1 4.6 4.6 0 0 1 .9 9.2z"/></svg></span><span class="cap"><span class="nm">cloud</span><span class="mt">24 × 24</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.4V5.2M6.4 10.8 12 5.2l5.6 5.6"/></svg></span><span class="cap"><span class="nm">upload</span><span class="mt">24 × 24</span></span></div>
+                    <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.4V5.2M6.4 14.8 12 20.4l5.6-5.6"/></svg></span><span class="cap"><span class="nm">download</span><span class="mt">24 × 24</span></span></div>
+                  </div>
+                  <p class="note" style="padding:0 var(--pad-sm)">199 glyphs, one grid, one weight. A new one joins by matching numbers, not by looking about right.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gGrid" title="Grid and snap"><i class="ic sm ic-snap"></i><span class="lb">Grid</span></button>
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:236px;width:238px;z-index:11">
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem" id="miMirror"><i class="ic ic-flip-horizontal"></i> Mirror across center <span class="sc">⇧⌘M</span></div>
+            <div class="menuitem"><i class="ic ic-align-center-h"></i> Center on the artboard <span class="sc">⌥⌘C</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem"><i class="ic ic-boolean-union"></i> Union <span class="sc">⌘⌥U</span></div>
+            <div class="menuitem"><i class="ic ic-flatten"></i> Outline stroke <span class="sc">⇧⌘O</span></div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:236px;z-index:11">
+            <div class="menuitem" id="miAddSet"><i class="ic ic-plus"></i> Add drawing to the set <span class="sc">⇧⌘A</span></div>
+            <div class="menuitem"><i class="ic ic-export"></i> Export as template SVG</div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import glyphs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Turn the icon grid on"
+          data-cue="#selGrid" data-cue-label="Click Grid, pick Icon · 24 units" data-cue-place="left"
+          data-open="#gGrid" data-collapse="#gLibrary"
+          data-show="#igGrid,#igLive"
+          data-class="#shGrid=on|#shLive=on"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=24 units|#chipGrid=24 grid">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Grid</b> row, and choose <b>Icon · 24 units</b></p>
+          <p class="wt-where">the <b>Grid &amp; snap</b> group, at the top of the dock</p>
+          <p class="wt-res">the artboard rules itself into 24 units and the dashed <b>20 × 20 live area</b> appears inside it. That inset is the set's contract: every one of the 199 glyphs already in the library keeps its drawing inside it, so the whole set sits at one optical size.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Show the keylines"
+          data-cue="#shKeys" data-cue-label="Click Keylines" data-cue-place="left"
+          data-open="#gGrid" data-collapse="#gLibrary"
+          data-show="#igGrid,#igLive,#igKeys"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=24 units|#chipGrid=24 grid|#gridNote=The keylines are how a set stays consistent across shapes that are not the same shape. A square glyph fills the 18 × 18 square; a round one fills the 17.2 circle. Both then read as the same size, which is what a person actually notices.">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Keylines</b></p>
+          <p class="wt-where">the <b>Show</b> row, in Grid &amp; snap</p>
+          <p class="wt-res">two more guides land on the artboard: the <b>18 × 18 square keyline</b> and the <b>17.2 circle keyline</b>. A square glyph fills the square, a round one fills the circle, and the two then look the same size even though they are not the same size. That is the trick the whole set is built on.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Turn snapping on"
+          data-cue="#snGrid" data-cue-label="Click Grid under Snap to" data-cue-place="left"
+          data-open="#gGrid" data-collapse="#gLibrary"
+          data-show="#igGrid,#igLive,#igKeys,#igDots"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=snap 1 unit|#chipGrid=24 grid|#chipSnap=snap 1u|#gridNote=Three targets, all live at once: grid intersections, the two keylines, and the edges and centers of what is already drawn. Nearest wins, and ⌃ suspends all three.">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Grid</b> under <b>Snap to</b></p>
+          <p class="wt-where">Grid &amp; snap, second section</p>
+          <p class="wt-res">every intersection lights up as a target, and <b>Keylines</b> and <b>Geometry</b> come on with it. From here the cursor is attracted to whole units, to the two keylines, and to the edges and centers of anything already on the artboard. Nothing is forced: holding <code>⌃</code> suspends snapping for one drag.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drag the base"
+          data-cue="#tRect" data-cue-label="Pick Rectangle, then drag on the artboard" data-cue-place="top"
+          data-open="#gGrid,#gProps" data-collapse="#gLibrary" data-tool="#tRect"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igRect,#igSel,#igSnapCue,#lrRect,#propsShape" data-hide="#layersEmpty,#propsEmpty"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-select="#lrRect"
+          data-css="#igSel=left:37.5%;top:41.667%;width:25%;height:12.5%|#igSnapCue=left:62.5%;top:54.167%"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=snap 1 unit|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=1|#propKind=Rectangle|#pX=9|#pY=10|#pW=6|#pH=3|#igTag=9, 10 · 6 × 3|#igSnapLb=15, 13">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do" data-verb="Drag">the <b>Rectangle</b> tool across the middle of the artboard</p>
+          <p class="wt-where">the floating tool bar, under the canvas</p>
+          <p class="wt-res">the drag lands on <code>9, 10</code> and stops at <code>15, 13</code>, and Properties reads <b>6 × 3</b>. Not 6.04 by 2.97, and no arrow keys afterwards: the pointer could not stop anywhere else, because the grid is what it is attracted to. The readout beside the cursor is the target it is currently locked to.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop the crown on a whole unit"
+          data-cue="#tEllipse" data-cue-label="Pick Ellipse, then drag from 12, 8" data-cue-place="top"
+          data-open="#gGrid,#gProps" data-collapse="#gLibrary" data-tool="#tEllipse"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igRect,#igBig,#igSel,#igSnapCue,#lrRect,#lrBig,#propsShape" data-hide="#layersEmpty,#propsEmpty"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-select="#lrBig"
+          data-css="#igSel=left:33.333%;top:16.667%;width:33.333%;height:33.333%|#igSnapCue=left:50%;top:33.333%"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=snap 1 unit|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=2|#propKind=Ellipse|#pX=8|#pY=4|#pW=8|#pH=8|#igTag=center 12, 8 · d 8|#igSnapLb=center 12, 8|#pGeoNote=An ellipse snaps by its center and by its diameter, not only by its bounding box, because that is what you actually care about when you are drawing a circle. Center 12, 8 and diameter 8, both whole units, and x = 12 is the artboard center line.">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do" data-verb="Drag">the <b>Ellipse</b> tool out from the intersection at <code>12, 8</code></p>
+          <p class="wt-where">the tool bar, next to Rectangle</p>
+          <p class="wt-res">a circle of <b>diameter 8</b> centered on <code>12, 8</code>. An ellipse snaps by its <b>center and its diameter</b>, not just by the corners of its box, so a circle you meant to be even is even. The center also caught the artboard's vertical center line, which is why it is on <code>x = 12</code> rather than near it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="One shoulder"
+          data-cue="#igSel" data-cue-label="Drag a second circle from 9, 10" data-cue-place="left"
+          data-open="#gGrid,#gProps" data-collapse="#gLibrary" data-tool="#tEllipse"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igRect,#igBig,#igLeft,#igSel,#igSnapCue,#lrRect,#lrBig,#lrLeft,#propsShape" data-hide="#layersEmpty,#propsEmpty"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-select="#lrLeft"
+          data-css="#igSel=left:25%;top:29.167%;width:25%;height:25%|#igSnapCue=left:37.5%;top:41.667%"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=snap 1 unit|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=3|#propKind=Ellipse|#pX=6|#pY=7|#pW=6|#pH=6|#igTag=center 9, 10 · d 6|#igSnapLb=center 9, 10|#pGeoNote=Its center landed on the base rectangle's top-left corner, which is a Geometry snap rather than a grid one. Drawing against what you have already drawn is usually more useful than drawing against an abstract grid.">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do" data-verb="Drag">one more circle, starting from the base's <b>top-left corner</b> at <code>9, 10</code></p>
+          <p class="wt-where">the artboard</p>
+          <p class="wt-res">diameter 6, centered exactly on the corner of the rectangle. That was a <b>Geometry</b> snap, not a grid one: the shapes you have already drawn are targets too. Draw only this one, because the other shoulder is not going to be a second careful drag.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Mirror it instead of redrawing it"
+          data-cue="#miMirror" data-cue-label="Click Mirror across center" data-cue-place="left"
+          data-open="#gGrid,#gProps" data-collapse="#gLibrary" data-tool="#tEllipse"
+          data-pop="#layerMenu"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igRect,#igBig,#igLeft,#igRight,#igSel,#lrRect,#lrBig,#lrLeft,#lrRight,#propsShape" data-hide="#layersEmpty,#propsEmpty,#igSnapCue"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-select="#lrRight"
+          data-css="#igSel=left:50%;top:29.167%;width:25%;height:25%"
+          data-set="#gridKind=Icon · 24 units|#gridCnt=snap 1 unit|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=4|#propKind=Ellipse|#pX=12|#pY=7|#pW=6|#pH=6|#igTag=center 15, 10 · d 6|#pGeoNote=Center 15, 10, which is 9 reflected about x = 12, so it is exact by construction. Symmetry that comes from a command cannot drift; symmetry that comes from a careful second drag always eventually does.">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do"><b>Mirror across center</b>, or press <code>⇧⌘M</code></p>
+          <p class="wt-where">the <b>Layers</b> panel menu</p>
+          <p class="wt-res">the shoulder is copied to <code>15, 10</code>, reflected about the artboard's center line. That is <b>exact by construction</b> rather than by aim, which matters because a set of icons is looked at side by side and a half unit of asymmetry is exactly the sort of thing a person sees without being able to say why.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Make four shapes one path"
+          data-cue="#btnUnion" data-cue-label="Click Union" data-cue-place="left"
+          data-open="#gProps,#gLayers" data-collapse="#gLibrary,#gGrid" data-tool="#tSelect"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igCloud,#igSel,#lrCloud,#propsShape,#secBool" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#igSnapCue"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on"
+          data-select="#lrCloud"
+          data-css="#igSel=left:25%;top:16.667%;width:50%;height:37.5%"
+          data-set="#gridKind=Icon · 24 units|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=1|#propKind=Path|#pX=6|#pY=4|#pW=12|#pH=9|#igTag=6, 4 · 12 × 9|#pBoolMut=1 path · 4 inputs|#pGeoNote=One path, and its bounds are still whole units: 6, 4 through 18, 13. The union inherited the arithmetic because every input to it was already on the grid.">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do"><b>Union</b>, with all four shapes selected</p>
+          <p class="wt-where">Properties, in the <b>Path</b> section</p>
+          <p class="wt-res">the seams disappear and the four rows in Layers collapse into one path called <b>Cloud</b>, bounded by <code>6, 4</code> to <code>18, 13</code>. Whole units again, because the union inherited them from its inputs. It stays live too: the four shapes are still in there, so you can push a shoulder later and the outline follows.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give it the set's weight"
+          data-cue="#selWidth" data-cue-label="Set Width to 1.75" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary,#gGrid" data-tool="#tSelect"
+          data-show="#igGrid,#igLive,#igKeys,#igCloud,#igSel,#lrCloud,#propsShape,#secBool,#secStroke" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#igDots,#igSnapCue"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on|#igCloud=-hair"
+          data-select="#lrCloud"
+          data-css="#igSel=left:25%;top:16.667%;width:50%;height:37.5%"
+          data-set="#gridKind=Icon · 24 units|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=1|#propKind=Path|#pStrokeMut=1.75 · round|#pWidth=1.75|#igTag=6, 4 · 12 × 9">
+        <div class="wt-cap comp">
+          <span class="wt-n">9</span>
+          <p class="wt-do">the <b>Width</b> row, and pick <b>1.75</b> with round caps</p>
+          <p class="wt-where">Properties, in the <b>Stroke</b> section</p>
+          <p class="wt-res">the hairline becomes the drawing. 1.75, round caps, round joins, aligned to the center of the path: the same four values the other 199 glyphs use, saved as the style <b>Glyph / stroke 1.75</b>. Pick the style instead and it is one click, and if the set is ever redrawn heavier every glyph moves together.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pen the arrow down the center line"
+          data-cue="#tPen" data-cue-label="Pick the Pen, then click 12,20 · 12,16 · 10,18 · 14,18" data-cue-place="top"
+          data-open="#gProps,#gGrid" data-collapse="#gLibrary" data-tool="#tPen"
+          data-show="#igGrid,#igLive,#igKeys,#igDots,#igCloud,#igArrow,#igSel,#igSnapCue,#lrCloud,#lrArrow,#propsShape,#secStroke" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#secBool"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on|#igCloud=-hair"
+          data-select="#lrArrow"
+          data-css="#igSel=left:41.667%;top:66.667%;width:16.667%;height:16.667%|#igSnapCue=left:50%;top:66.667%"
+          data-set="#gridKind=Icon · 24 units|#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=2|#propKind=Path|#pX=10|#pY=16|#pW=4|#pH=4|#igTag=10, 16 · 4 × 4|#igSnapLb=12, 16 · center|#pStrokeMut=1.75 · round|#pWidth=1.75|#pGeoNote=Four clicks, four whole units, and the shaft is on x = 12 because the artboard's own center line is a snap target. An arrow that is half a unit off center is the single most common way a hand-drawn glyph gives itself away.">
+        <div class="wt-cap comp">
+          <span class="wt-n">10</span>
+          <p class="wt-do">the <b>Pen</b>, then click <code>12, 20</code> · <code>12, 16</code> · <code>10, 18</code> · <code>14, 18</code></p>
+          <p class="wt-where">the tool bar, then the artboard</p>
+          <p class="wt-res">four clicks, four whole units, and the shaft sits on <b>x = 12</b> because the artboard's center line is itself a snap target. The head's two arms are symmetric for the same reason the shoulders were. This is the point of the whole exercise: an arrow that is half a unit off center is what makes a hand-drawn glyph look hand-drawn.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Check it against the set"
+          data-cue="#btnFit" data-cue-label="Click Check against the set" data-cue-place="left"
+          data-open="#gProps,#gGrid" data-collapse="#gLibrary" data-tool="#tSelect"
+          data-show="#igLive,#igKeys,#igCloud,#igArrow,#igSel,#lrCloud,#lrArrow,#propsShape,#secStroke,#secFit,#igMezL,#igMezR,#igMezT,#igMezB,#igSizes" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#secBool,#igGrid,#igDots,#igSnapCue"
+          data-class="#shGrid=on|#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on|#igCloud=-hair"
+          data-select="#lrCloud"
+          data-css="#igSel=left:25%;top:16.667%;width:50%;height:66.667%"
+          data-set="#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=2|#propKind=Glyph|#igTag=6, 4 · 12 × 16|#pX=6|#pY=4|#pW=12|#pH=16|#pFitBounds=12 × 16|#pFitMargins=4 · 2 · 4 · 2">
+        <div class="wt-cap comp">
+          <span class="wt-n">11</span>
+          <p class="wt-do"><b>Check against the set</b></p>
+          <p class="wt-where">Grid &amp; snap, on the <b>Fit</b> row, with the whole glyph selected</p>
+          <p class="wt-res">the drawing measures <b>12 × 16</b> inside the 20 × 20 live area, with margins of <code>4 · 2 · 4 · 2</code>, and the strip at the bottom of the canvas shows it at the sizes it will actually be used: 16, 24, 32, 48, on both a light and a dark ground. Everything the panel says is a number, so "does this match the set" has an answer instead of an opinion.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Add it to the set"
+          data-cue="#miAddSet" data-cue-label="Click Add drawing to the set" data-cue-place="left"
+          data-open="#gLibrary" data-collapse="#gGrid,#gProps" data-tool="#tSelect"
+          data-pop="#libMenu" data-scope="assets"
+          data-show="#igLive,#igKeys,#igCloud,#igArrow,#lrCloud,#lrArrow,#propsShape,#secStroke,#secFit,#igSizes,#tileNew" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#secBool,#igGrid,#igDots,#igSel,#igSnapCue,#igMezL,#igMezR,#igMezT,#igMezB"
+          data-class="#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on|#igCloud=-hair"
+          data-set="#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=2|#propKind=Glyph|#pFitBounds=12 × 16|#pFitMargins=4 · 2 · 4 · 2">
+        <div class="wt-cap comp">
+          <span class="wt-n">12</span>
+          <p class="wt-do"><b>Add drawing to the set</b>, or press <code>⇧⌘A</code></p>
+          <p class="wt-where">the <b>Library</b> group header, on the <code>+</code> menu</p>
+          <p class="wt-res"><b>cloud-upload</b> joins the Assets scope beside cloud, upload and download, and exports as a 24 × 24 template SVG with the stroke left as a stroke rather than outlined, so whoever consumes it can still restyle it. The set is 200 glyphs and every one of them still agrees about the grid.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the empty artboard"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Icon work is <b>arithmetic wearing a drawing tool</b>. Every question a glyph has to answer to join a set is a number: which box, which live area, which keylines, which stroke. So the grid is not a backdrop, it is what the cursor is attracted to, symmetry is a command rather than a careful second drag, and every readout in Properties is a whole unit because snapping put it there. Nobody typed a coordinate on this page.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The fit report could <b>grade the glyph against the set rather than against the template</b>: compare its ink coverage and its optical center to the 199 that already exist, and say "this reads about 8% heavier than the set average" instead of only "it fits". That is the check a person actually does by squinting at a contact sheet, and it is the sort of thing a machine is better at.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Where should snapping <b>stop</b>? Grid, keylines and geometry cover almost everything, but real sets also want tangency, equal spacing between siblings, and matching a neighbouring glyph's optical weight. Turn all of those on at once and the cursor starts guessing. Is the answer a priority order, or one modifier key that promotes a target while you drag?</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: the Library scope switch, the segmented controls, and the
+     multi-toggle overlay/snap rows stay live when a person clicks them
+     directly. The walkthrough drives the same state declaratively. */
+  (function () {
+    var root = document.getElementById('icon-draw-wt');
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+    // single-choice segmented controls (line caps)
+    [].slice.call(root.querySelectorAll('.pseg')).forEach(function (g) {
+      var bs = [].slice.call(g.querySelectorAll('button'));
+      bs.forEach(function (b) {
+        b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
+      });
+    });
+    // multi-choice rows: Show, and Snap to. Each button is its own toggle.
+    [].slice.call(root.querySelectorAll('.ig-multi button')).forEach(function (b) {
+      b.setAttribute('aria-pressed', b.classList.contains('on') ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        b.classList.toggle('on');
+        b.setAttribute('aria-pressed', b.classList.contains('on') ? 'true' : 'false');
+      });
+    });
+  })();
+</script>
+</body>
+</html>

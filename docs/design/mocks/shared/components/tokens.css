@@ -1,0 +1,137 @@
+
+/* ============ tokens ============ */
+/* ============================================================
+   RESERVED CLASS NAMES  (read before adding page-local CSS)
+
+   Every bare class name below is defined in THIS file. A page that
+   reuses one for its own purpose silently inherits the DS rule, and
+   the result looks like a mystery layout bug rather than a collision.
+   This has already caused real breakage ten times: `.bar` and `.btn`
+   swallowed a selection ring (ui-grid), `.ghost` turned a control
+   into a 300px absolutely-positioned dashed box (ui-nested), `.shot`
+   blew up a toast, `.meta` overrode an effect row (language), and
+   `.sheet` `.rail` `.timeline` `.panel` `.ramp` `.val` `.body`
+   `.dsub` each hit a different page.
+
+   RULE: prefix every page-local class with a page tag (`#video-motion
+   .mg-tag`, `#export-share .ex-body`). Never introduce a bare local
+   class that appears in this list. Scoped REFINEMENT of a DS class
+   (`#dsys .win.shell{height:740px}`) is fine and encouraged; SHADOWING
+   one with a different meaning is the bug.
+   ============================================================ */
+:root{
+  --stage:#e9ebf0; --stage-2:#dfe2e9;
+  --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
+  --panel:#fbfcfe; --panel-2:#f1f3f7;
+  --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
+  --accent:#4c6fff; --accent-ink:#ffffff; --accent-soft:#e9edff; --accent-line:#c4cffe;
+  --comp:#9a5cff; --comp-soft:#efe7ff; --comp-line:#d8c4ff;
+  --good:#1a9e6a; --warn:#b7791f; --crit:#d0453b;
+  --artboard:#0c0e14; --artboard-grid:rgba(255,255,255,.045); --artboard-grid-major:rgba(255,255,255,.085);
+  --shadow:0 18px 50px -12px rgba(20,24,40,.28), 0 4px 14px -6px rgba(20,24,40,.18);
+  --glass-blur:saturate(180%) blur(20px);
+  --sans:-apple-system,"SF Pro Text","SF Pro Display",system-ui,sans-serif;
+  --serif:"New York",ui-serif,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  /* === SPACING STANDARD (4pt scale) — the mock obeys its own thesis ===
+     Only these values are allowed for padding / gap / margin.
+     s1 4 · s2 8 · s3 12 · s4 16 · s5 24 · s6 32 · s7 40
+     Card/pane padding = s4(16). Compact rows = s3(12). Window content inset = s5(24).
+     Sibling gap = s4(16); tight = s2(8); loose = s5(24).
+     Top-level blocks are full-bleed (no side margins) so every edge lines up.
+     Radii: r1 6 · r2 8 · r3 10 · r4 12 (cards) · r5 14. */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:40px;
+  --pad:16px; --pad-sm:12px; --gap:16px; --gap-sm:8px; --gap-lg:24px; --inset:24px;
+  --r1:6px; --r2:8px; --r3:10px; --r4:12px; --r5:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --stage:#08090d; --stage-2:#0d0f15;
+    --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
+    --panel:#14161d; --panel-2:#181b22;
+    --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
+    --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
+    --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
+    --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
+    --good:#3ecf8e; --warn:#e0a53a; --crit:#f0685c;
+    --artboard:#0a0c11; --artboard-grid:rgba(255,255,255,.05); --artboard-grid-major:rgba(255,255,255,.095);
+    --shadow:0 24px 60px -14px rgba(0,0,0,.6), 0 6px 18px -8px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="light"]{
+  --stage:#e9ebf0; --stage-2:#dfe2e9; --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
+  --panel:#fbfcfe; --panel-2:#f1f3f7; --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
+  --accent:#4c6fff; --accent-ink:#fff; --accent-soft:#e9edff; --accent-line:#c4cffe;
+  --comp:#9a5cff; --comp-soft:#efe7ff; --comp-line:#d8c4ff;
+  --good:#1a9e6a; --warn:#b7791f; --crit:#d0453b; --artboard:#0c0e14; --artboard-grid:rgba(255,255,255,.045); --artboard-grid-major:rgba(255,255,255,.085);
+  --shadow:0 18px 50px -12px rgba(20,24,40,.28), 0 4px 14px -6px rgba(20,24,40,.18);
+}
+:root[data-theme="dark"]{
+  --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
+  --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
+  --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
+  --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
+  --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;
+  --good:#3ecf8e; --warn:#e0a53a; --crit:#f0685c; --artboard:#0a0c11; --artboard-grid:rgba(255,255,255,.05); --artboard-grid-major:rgba(255,255,255,.095);
+  --shadow:0 24px 60px -14px rgba(0,0,0,.6), 0 6px 18px -8px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--sans);color:var(--ink);background:var(--stage);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font-family:inherit;color:inherit;cursor:pointer}
+::selection{background:var(--accent-soft)}
+
+.proto{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.pbar{display:flex;align-items:center;gap:14px;padding:11px 18px;background:var(--chrome-solid);border-bottom:1px solid var(--line)}
+.pbar .mark{width:20px;height:20px;border-radius:6px;background:conic-gradient(from 210deg,#7f9bff,#c56cff,#ff7a9c,#ffb057,#7f9bff);box-shadow:0 0 0 1px rgba(0,0,0,.06) inset}
+.pbar h1{font-size:13px;font-weight:640;margin:0;letter-spacing:-.01em}
+.pbar .tag{font-size:11px;color:var(--dim);font-weight:520}
+.pbar .spacer{flex:1}
+.pbar .hint{font-size:11px;color:var(--faint)}
+.pbar .hint b{color:var(--dim);font-weight:600}
+
+.body{display:grid;grid-template-columns:220px 1fr;min-height:0}
+.rail{background:var(--panel);border-right:1px solid var(--line);padding:12px 10px;overflow-y:auto}
+.rail .grp{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;margin:15px 8px 5px;display:flex;align-items:center;gap:7px}
+.rail .grp:first-child{margin-top:2px}
+.rail .grp .dot{width:6px;height:6px;border-radius:50%}
+.nav{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px 9px 7px 20px;border-radius:8px;font-size:12.5px;font-weight:520;color:var(--dim);line-height:1.2}
+.nav:hover{background:var(--panel-2);color:var(--ink)}
+.nav.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+.stage{position:relative;overflow:auto;min-height:0;background:radial-gradient(1100px 620px at 30% -10%,var(--stage-2),transparent 60%),radial-gradient(900px 500px at 100% 120%,var(--stage-2),transparent 55%),var(--stage);display:flex;flex-direction:column;align-items:center;padding:var(--inset) var(--inset) var(--s7)}
+.screen{display:none;width:100%;max-width:1060px;flex-direction:column;gap:var(--gap);animation:fade .28s ease}
+.screen.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.on{animation:none}.spin{animation:none}}
+
+.scen-head{display:flex;align-items:center;gap:var(--gap-sm);padding:0}
+.scen-head .pip{width:9px;height:9px;border-radius:50%}
+.scen-head h2{font-size:15px;margin:0;letter-spacing:-.01em}
+.scen-head .k{font-size:11.5px;color:var(--faint);font-weight:520}
+
+.caption{display:flex;gap:var(--gap-lg);flex-wrap:wrap;padding:var(--s1) 0 0}
+.caption .c{flex:1 1 240px;max-width:none}
+.caption .lab{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:660;color:var(--accent);margin-bottom:3px}
+.caption .lab.g2{color:var(--faint)}
+.caption p{margin:0;font-size:12.5px;color:var(--dim);line-height:1.5}
+.caption b{color:var(--ink);font-weight:600}
+.caption code{font-family:var(--mono);font-size:11px}
+
+/* window */
+.win{background:var(--panel);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;width:100%}
+.win.tall{min-height:560px;display:flex;flex-direction:column}
+.titlebar{display:flex;align-items:center;gap:12px;height:42px;padding:0 14px;background:var(--chrome);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-bottom:1px solid var(--line);position:relative;z-index:3}
+.lights{display:flex;gap:8px}
+.lights i{width:12px;height:12px;border-radius:50%;display:block}
+.lights .r{background:#ff5f57}.lights .y{background:#febc2e}.lights .g{background:#28c840}
+.lights i{box-shadow:0 0 0 .5px rgba(0,0,0,.12) inset}
+/* Document identity. It must ELLIPSE, never wrap: without min-width:0 a flex
+   child refuses to shrink, so a long name wrapped the title bar to three lines
+   at tight widths. Wrap the context part (dimensions, duration) in .meta so the
+   responsive contract below can drop it before the name. */
+.wtitle{font-size:12.5px;font-weight:560;color:var(--dim);flex:1;text-align:center;
+  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wtitle b{color:var(--ink);font-weight:640}

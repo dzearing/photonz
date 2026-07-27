@@ -1,0 +1,77 @@
+/* ---- THE CANVAS (VISUAL RULE 5) --------------------------------------------
+   ONE canvas treatment for image, UI and video: a minor + major grid over a
+   soft radial artboard. The grid SCALES WITH ZOOM. `--zoom` (1 = 100%) is set
+   by photonz-ds.js from any `.zslider` in the same canvas column, so grid
+   density reads as the zoom level and dragging zoom visibly changes it.
+   NEVER hand-roll a canvas background on a page: use `.canvas`, or
+   `.canvas.mini` for an inline specimen inside a doc/spec card. */
+.canvas{
+  --zoom:1; --grid-cell:22px;
+  --grid-1:calc(var(--grid-cell) * var(--zoom));
+  --grid-5:calc(var(--grid-1) * 5);
+  /* the three knobs a page may retune (never re-declare the background):
+     --artboard-glow  size of the centre glow · --artboard-ink / --artboard-bg
+     its two colours. Set ink == bg for a flat artboard. */
+  --artboard-glow:700px 420px; --artboard-ink:#141826; --artboard-bg:var(--artboard);
+  background:
+    linear-gradient(var(--artboard-grid-major) 1px,transparent 1px) 50% 50%/var(--grid-5) var(--grid-5),
+    linear-gradient(90deg,var(--artboard-grid-major) 1px,transparent 1px) 50% 50%/var(--grid-5) var(--grid-5),
+    linear-gradient(var(--artboard-grid) 1px,transparent 1px) 50% 50%/var(--grid-1) var(--grid-1),
+    linear-gradient(90deg,var(--artboard-grid) 1px,transparent 1px) 50% 50%/var(--grid-1) var(--grid-1),
+    radial-gradient(var(--artboard-glow) at 50% 30%,var(--artboard-ink),var(--artboard-bg));
+  transition:background-size .16s ease-out;
+  position:relative;overflow:hidden;display:grid;place-items:center;min-height:340px}
+/* inline specimen canvas: same treatment, doc-card scale, no editor min-height */
+.canvas.mini{--grid-cell:18px; --artboard-glow:300px 180px;
+  min-height:0;border-radius:var(--r3)}
+@media (prefers-reduced-motion:reduce){ .canvas{transition:none} }
+.artboard-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);letter-spacing:.04em}
+
+.hero-card{width:400px;border-radius:22px;padding:30px 30px 26px;position:relative;overflow:hidden;background:linear-gradient(135deg,#7c4dff 0%,#b14dff 42%,#ff5d8f 100%);box-shadow:0 0 60px -6px rgba(177,77,255,.55),0 22px 50px -14px rgba(0,0,0,.55)}
+.hero-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 85% -10%,rgba(255,255,255,.35),transparent 45%);mix-blend-mode:soft-light;pointer-events:none}
+.hc-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 9px;border-radius:999px}
+.hc-h{font-family:var(--serif);font-size:36px;line-height:1.02;font-weight:700;color:#fff;margin:16px 0 8px;letter-spacing:-.02em}
+.hc-sub{font-size:14px;line-height:1.45;color:rgba(255,255,255,.9);margin:0 0 22px;max-width:280px}
+.hc-cta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:640;color:#3a1d6e;background:linear-gradient(180deg,#fff,#f0eaff);padding:10px 18px;border-radius:12px;box-shadow:0 8px 20px -6px rgba(255,255,255,.5),0 0 0 1px rgba(255,255,255,.6) inset;position:relative}
+
+.selwrap{position:relative}
+.sel-ring{position:absolute;inset:-9px;border:1.5px solid var(--accent);border-radius:26px;pointer-events:none}
+.handle{position:absolute;width:9px;height:9px;background:var(--panel);border:1.5px solid var(--accent);border-radius:2px}
+.handle.tl{top:-13px;left:-13px}.handle.tr{top:-13px;right:-13px}.handle.bl{bottom:-13px;left:-13px}.handle.br{bottom:-13px;right:-13px}
+.mtag{position:absolute;top:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:640;padding:3px 8px;border-radius:6px;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+/* component instance outline */
+.cinst{position:absolute;inset:-6px;border:1.5px solid var(--comp);border-radius:15px;pointer-events:none}
+.cbadge{position:absolute;top:-24px;left:0;background:var(--comp);color:#fff;font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:5px}
+
+.section{border-bottom:1px solid var(--line-soft);padding:var(--pad-sm) var(--pad)}
+.sec-h{display:flex;align-items:center;gap:var(--s2);font-size:11px;font-weight:660;color:var(--ink);margin-bottom:var(--pad-sm)}
+.sec-h .mut{color:var(--faint);font-weight:520;font-size:10.5px;margin-left:auto}
+.sec-h.comp{color:var(--comp)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.field{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;display:flex;align-items:center;gap:6px;font-size:11.5px;font-variant-numeric:tabular-nums}
+.field .k{color:var(--faint);font-size:10px}
+.field .v{color:var(--ink);margin-left:auto;font-weight:520}
+.row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);margin:7px 0}
+.row .rl{width:70px;color:var(--faint);font-size:10.5px}
+.swatch{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex:none}
+.swatch.grad{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.swatch.paint-btn{cursor:pointer}
+.swatch.paint-btn:hover{outline:2px solid var(--accent-line);outline-offset:1px}
+.bar{flex:1;height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:4px}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:6px;background:var(--panel);border:1px solid var(--line);color:var(--dim)}
+.chip.style{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.chip.style .sw{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
+.chip.comp{background:var(--comp-soft);border-color:var(--comp-line);color:var(--comp);font-weight:600}
+
+.efx{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:7px;font-size:11.5px}
+.efx .drag{color:var(--faint);cursor:grab}
+.efx .en{width:26px;height:15px;border-radius:999px;background:var(--accent);position:relative;flex:none}
+.efx .en::after{content:"";position:absolute;top:1.5px;right:1.5px;width:12px;height:12px;border-radius:50%;background:#fff}
+.efx .en.off{background:var(--line-strong)}
+.efx .en.off::after{left:1.5px;right:auto}
+.efx .nm{font-weight:560;color:var(--ink)}
+.efx .meta{color:var(--faint);margin-left:auto;font-family:var(--mono);font-size:10px}
+.efx.click{cursor:pointer}.efx.click:hover{border-color:var(--accent-line)}
+
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px;flex-wrap:wrap}

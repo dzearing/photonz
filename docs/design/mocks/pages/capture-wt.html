@@ -160,34 +160,19 @@
             history is right behind it.</p>
 
           <!-- SHELL SURFACE 4 · THE EDITOR WINDOW · what a capture opens into -->
-          <div class="win tall cq shell wt-off" id="editorWin">
+          <div class="win tall cq shell wt-off" id="editorWin" data-shell="settings-capture · 2560 × 1440" data-ws="image" data-status="&lt;span id=&quot;markCount&quot;&gt;no marks yet&lt;/span&gt;">
 
             <!-- TITLE BAR · document identity only. The lesson title lives in
                  .scen-head above, never here. -->
-            <div class="titlebar">
-              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-              <div class="wtitle"><b>settings-capture</b><span class="meta"> · 2560 × 1440</span></div>
-              <div class="wsw" role="tablist" aria-label="Workspace">
-                <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-                <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
-                <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
-              </div>
-              <div class="tbtns">
-                <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-                <button class="btn primary sm" id="btnCopy"><i class="ic ic-copy"></i> Copy <span class="kbd">⌘C</span></button>
-              </div>
-            </div>
 
             <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-            <div class="toolbar">
-              <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-              <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-              <span class="tsep"></span>
-              <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history · the same global overlay"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-              <span class="tspacer"></span>
-              <span class="chip"><i class="ic xs ic-layers"></i> <span id="markCount">no marks yet</span></span>
-              <div style="position:relative">
-                <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
+
+            <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+            <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…`
+             button that opens it is built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
                   <div class="mlabel">Mark up</div>
                   <div class="menuitem"><i class="ic ic-square"></i> Box <span class="sc">R</span></div>
                   <div class="menuitem"><i class="ic ic-eye-off"></i> Redact <span class="sc">⇧R</span></div>
@@ -197,11 +182,7 @@
                   <div class="menuitem"><i class="ic ic-copy"></i> Copy image <span class="sc">⌘C</span></div>
                   <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
                 </div>
-              </div>
-            </div>
 
-            <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
-            <div class="edit lean" id="shell" data-dock="open">
 
               <div class="cnv">
                 <div class="canvas">

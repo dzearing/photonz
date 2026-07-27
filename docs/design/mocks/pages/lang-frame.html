@@ -122,8 +122,8 @@
 
     <!-- 1 · BREADCRUMB + INTRO -->
     <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>The window frame</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
-    <p class="lf-lead">The frame is the glass boundary around one document: traffic lights, the <b>document identity</b>, the
-      <b>workspace switcher</b>, and the document actions. Photonz is one document per window, so the window <i>is</i> the document.
+    <p class="lf-lead">The frame is the glass boundary around one document: traffic lights, the <b>document identity</b>, a quiet
+      <b>status readout</b>, and <b>Ask</b>. Photonz is one document per window, so the window <i>is</i> the document.
       The title bar is the only chrome that is always on screen, which is exactly why it carries <b>nothing but the document</b>.
       Tools live in the floating tool bar, panels live in the dock, and commands live in the menu bar and ⌘K. On this page the
       complete windows are real app screens; the cut strips are labeled title-bar specimens.</p>
@@ -132,24 +132,11 @@
     <div class="lf-blk">
       <div class="lf-blk-h"><span class="lf-n">01</span><h3>Anatomy</h3><span class="lf-sub">App screen · the frame in its real shell</span></div>
       <div class="lf-blk-b">
-        <div class="win tall cq lf-app">
-          <div class="titlebar">
-            <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-            <span class="lf-pin">1</span>
-            <div class="wtitle lf-id"><span class="lf-pin">2</span><span class="lf-dot" title="Unsaved changes"></span><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
-            <span class="lf-pin">3</span>
-            <div class="wsw" role="tablist" aria-label="Workspace">
-              <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-              <button class="wsw-seg" data-ws="ui" role="tab" aria-selected="false" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
-              <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false" data-target="video"><i class="ic sm ic-play"></i> Video</button>
-            </div>
-            <div class="tbtns">
-              <span class="lf-pin">4</span>
-              <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-              <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-              <button class="btn primary sm">Done</button>
-            </div>
-          </div>
+        <div class="win tall cq lf-app" data-shell="settings-capture · 2560 × 1440" data-status="RAW · 16-bit" data-ws="image">
+          <!-- The title bar itself is built by the shell component; this page's job
+               is to ANNOTATE it, so the pins are placed onto the built parts by the
+               script at the bottom rather than hand-written into chrome that no
+               longer lives in the page. -->
 
           <div class="toolbar">
             <button class="tool" title="Commands" data-menu="#lfCmd"><i class="ic sm ic-more"></i></button>
@@ -295,8 +282,8 @@
         <div class="lf-leg">
           <div class="lf-li"><span class="lf-pin">1</span><span><b>Traffic lights</b> · close, minimize, zoom. macOS-standard, left-aligned. <code>.lights</code></span></div>
           <div class="lf-li"><span class="lf-pin">2</span><span><b>Document identity</b> · the name, an edited dot, and the document's context (<code>2560 × 1440</code>, or <code>0:18</code> for a timed document). Nothing else. <code>.wtitle</code></span></div>
-          <div class="lf-li"><span class="lf-pin">3</span><span><b>Workspace switcher</b> · Image · UI · Video are lenses over the SAME document, so the lens belongs to the document, not to a toolbar. <code>.wsw</code></span></div>
-          <div class="lf-li"><span class="lf-pin">4</span><span><b>Document actions</b> · right-aligned and document-scoped: Share, Export, Done. Rare ones overflow to a menu. <code>.tbtns</code></span></div>
+          <div class="lf-li"><span class="lf-pin">3</span><span><b>Document status</b> · one quiet readout of what this document IS right now (<code>RAW · 16-bit</code>, <code>1080p · 30 fps</code>, <code>24 grid</code>). It sits with the identity because it is context, not a command. <code>.wstatus</code></span></div>
+          <div class="lf-li"><span class="lf-pin">4</span><span><b>Ask</b> · the single affordance on the right. It opens the agent chat, which is also the command palette (⌘K). There is no Share / Export / Done up here: the native macOS menu bar owns document actions. <code>.askbtn</code></span></div>
           <div class="lf-li"><span class="lf-pin">5</span><span><b>Canvas</b> · the only region that grows when everything else collapses. The frame exists to hold it. <code>.cnv &gt; .canvas</code></span></div>
           <div class="lf-li"><span class="lf-pin">6</span><span><b>Floating tool bar</b> · where zoom actually lives, next to the tools and the color pair. It is never in the title bar. <code>.tbar</code></span></div>
         </div>
@@ -324,15 +311,8 @@
                 <div class="titlebar">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                   <div class="wtitle lf-id"><span class="lf-dot"></span><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
-                  <div class="wsw" role="tablist" aria-label="Workspace">
-                    <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
-                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
-                  </div>
-                  <div class="tbtns">
-                    <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-                  </div>
+                  
+                  <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
                 </div>
               </div>
               <div class="lf-tear"></div>
@@ -347,15 +327,8 @@
                 <div class="titlebar">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                   <div class="wtitle lf-id"><b>onboarding-run</b><span class="lf-meta meta">· 1920 × 1080 · 0:18</span></div>
-                  <div class="wsw" role="tablist" aria-label="Workspace">
-                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-image"></i> Image</button>
-                    <button class="wsw-seg" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
-                    <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-play"></i> Video</button>
-                  </div>
-                  <div class="tbtns">
-                    <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-                  </div>
+                  
+                  <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
                 </div>
               </div>
               <div class="lf-tear"></div>
@@ -371,10 +344,7 @@
                 <div class="titlebar" style="height:36px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                   <div class="wtitle lf-id" style="font-size:11.5px"><span class="lf-dot"></span><b>settings-capture</b></div>
-                  <div class="tbtns" style="min-width:0">
-                    <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-                    <button class="btn ghost icon sm" title="More document actions" data-menu="#lfMoreA"><i class="ic ic-more"></i></button>
-                  </div>
+                  <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
                 </div>
               </div>
               <div class="lf-tear"></div>
@@ -385,7 +355,7 @@
                   <div class="menuitem"><i class="ic ic-check"></i> Done</div>
                 </div>
               </div>
-              <p class="lf-cap">The size drops out of the identity, the workspace switcher and the secondary actions fold into one overflow menu. The primary action survives longest.</p>
+              <p class="lf-cap">The size drops out of the identity and the status readout drops next. Ask survives longest, and last of all becomes its glyph alone: it is the only command affordance up here.</p>
             </div>
           </div>
 
@@ -396,10 +366,7 @@
                 <div class="titlebar" style="height:32px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                   <div class="wtitle lf-id" style="font-size:11px"><span class="lf-dot"></span><b>settings-capture</b></div>
-                  <div class="tbtns" style="min-width:0">
-                    <button class="btn primary icon sm" title="Export"><i class="ic ic-export"></i></button>
-                    <button class="btn ghost icon sm" title="More document actions"><i class="ic ic-more"></i></button>
-                  </div>
+                  <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
                 </div>
               </div>
               <div class="lf-tear"></div>
@@ -421,7 +388,7 @@
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
-                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+                <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
               </div></div>
               <div class="lf-tear"></div>
               <p class="lf-cap">Full-colour lights, ink title, actions live.</p>
@@ -433,7 +400,7 @@
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
-                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+                <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
               </div></div>
               <div class="lf-tear"></div>
               <p class="lf-cap">Lights desaturate, the identity and the actions dim together. Nothing moves.</p>
@@ -445,7 +412,7 @@
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><span class="lf-dot"></span><b>settings-capture</b><span class="lf-meta meta">· edited</span></div>
-                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+                <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
               </div></div>
               <div class="lf-tear"></div>
               <p class="lf-cap">The accent dot leads the name the instant a change lands. Closing prompts to save.</p>
@@ -457,7 +424,7 @@
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-tick"><i class="ic xs ic-check"></i></span><span class="lf-meta meta">· 2560 × 1440</span></div>
-                <div class="tbtns"><button class="btn primary sm"><i class="ic ic-export"></i> Export</button></div>
+                <button class="btn sm askbtn" data-tip="Ask the agent, or run a command|⌘K"><i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>
               </div></div>
               <div class="lf-tear"></div>
               <p class="lf-cap">No dot, a brief tick, then quiet. The bar never shouts.</p>
@@ -472,7 +439,7 @@
       <div class="lf-blk-h"><span class="lf-n">04</span><h3>Live example</h3><span class="lf-sub">App screen · the same markup at 430px</span></div>
       <div class="lf-blk-b">
         <div class="lf-narrow">
-          <div class="win cq" style="display:flex;flex-direction:column">
+          <div class="win cq" style="display:flex;flex-direction:column" data-shell="settings-capture" data-ws="ui">
             <div class="titlebar" style="height:34px">
               <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
               <div class="wtitle lf-id" style="font-size:11.5px"><span class="lf-dot"></span><b>settings-capture</b></div>
@@ -583,8 +550,8 @@
         <div class="lf-dd">
           <span class="lf-do">Carry document identity and nothing else: name, edited dot, context.</span>
           <span class="lf-no">Put a lesson title or a feature name in the title bar.</span>
-          <span class="lf-do">Keep the lens switcher centre-right and the document actions hard right.</span>
-          <span class="lf-no">Put zoom, a tool, or a panel toggle up here. Those live in the tool bar and on the canvas.</span>
+          <span class="lf-do">Keep Ask hard right, alone. It is the one affordance the title bar carries.</span>
+          <span class="lf-no">Put Share, Export, Done, a lens switcher, zoom, a tool, or a panel toggle up here. Document actions belong to the native menu bar; the rest live in the tool bar and on the canvas.</span>
           <span class="lf-do">Show the edited dot the instant a change lands, and clear it on save.</span>
           <span class="lf-no">Close destructively without a save prompt.</span>
           <span class="lf-do">Fold actions into one overflow menu before the name truncates.</span>
@@ -618,8 +585,8 @@
       <div class="lf-blk-b">
         <p class="lf-note">The window is the container-query root (<code>.win.cq</code>), so the frame answers to the <b>window</b> width, not
           the screen. At <b>880px</b> the dock rails and becomes an overlay, the tool bar's overflow tools fold into <b>more</b>, and the title
-          bar drops the document size and the workspace switcher into an overflow menu. At <b>620px</b> the rail drops its labels, the zoom
-          slider drops out, and the title-bar actions become glyphs. Verify by narrowing the window, never by drawing a separate small mock.</p>
+          bar drops the document size and then the status readout. At <b>620px</b> the rail drops its labels, the zoom
+          slider drops out, and Ask drops its ⌘K hint, then its label. Verify by narrowing the window, never by drawing a separate small mock.</p>
       </div>
     </div>
 
@@ -632,5 +599,26 @@
   </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
+<script>
+  // Anatomy pins 1-4 annotate the title bar, which the shell component BUILDS.
+  // So they are placed onto the built parts here rather than hand-written into
+  // the page — that is the whole point of the component: this page documents
+  // the real title bar instead of keeping its own copy of one that could drift.
+  (function () {
+    var tb = document.querySelector('#lang-frame .lf-app .titlebar');
+    if (!tb) return;
+    function pin(n, target, where) {
+      if (!target) return;
+      var s = document.createElement('span');
+      s.className = 'lf-pin';
+      s.textContent = n;
+      target.parentNode.insertBefore(s, where === 'after' ? target.nextSibling : target);
+    }
+    pin(1, tb.querySelector('.lights'));
+    pin(2, tb.querySelector('.wtitle'));
+    pin(3, tb.querySelector('.wstatus'));
+    pin(4, tb.querySelector('.askbtn'));
+  })();
+</script>
 </body>
 </html>

@@ -1,0 +1,96 @@
+/* ============================================================
+   LIQUID GLASS material pass (macOS 26). Appended last so it wins
+   over the base component styles. Translucent materials, luminous
+   inner edges, continuous rounding, soft diffuse depth. Replaces
+   web-isms (flat fills, hard 1px borders, tight corners, boxy controls).
+   ============================================================ */
+:root{
+  --glass:rgba(255,255,255,.74); --glass-thin:rgba(255,255,255,.58); --glass-chrome:rgba(250,251,253,.88); --glass-menu:rgba(252,253,255,.96);
+  --edge-hi:rgba(255,255,255,.9); --edge-lo:rgba(22,26,42,.10);
+  --lg-shadow:0 14px 44px -14px rgba(22,26,42,.30), 0 2px 8px -4px rgba(22,26,42,.14);
+  /* elev 3 · a surface ON a popover. In light the plate is already near-white,
+     so it lifts by casting FURTHER; in dark it lifts by getting LIGHTER.
+     One signal per step, per the ladder on pages/lang-elevation.html. */
+  --glass-3:#ffffff;
+  --lg-shadow-3:0 26px 68px -16px rgba(20,24,40,.36), 0 8px 22px -8px rgba(20,24,40,.24);
+  --cp-card-shadow:drop-shadow(0 6px 14px rgba(20,24,40,.22)) drop-shadow(0 16px 34px rgba(20,24,40,.20));
+  --lg-blur:saturate(185%) blur(22px); --lg-blur-sm:saturate(180%) blur(12px);
+  --r-lg:18px; --r-md:13px; --r-sm:9px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --glass:rgba(26,29,39,.72); --glass-thin:rgba(30,34,45,.6); --glass-chrome:rgba(22,25,34,.78); --glass-menu:rgba(22,25,33,.96);
+  --edge-hi:rgba(255,255,255,.11); --edge-lo:rgba(0,0,0,.45);
+  --lg-shadow:0 20px 54px -16px rgba(0,0,0,.66), 0 3px 10px -5px rgba(0,0,0,.5);
+  --glass-3:#2e3342;
+  --lg-shadow-3:0 30px 74px -18px rgba(0,0,0,.74), 0 10px 26px -10px rgba(0,0,0,.62);
+  --cp-card-shadow:drop-shadow(0 6px 14px rgba(0,0,0,.55)) drop-shadow(0 16px 34px rgba(0,0,0,.45));
+}}
+:root[data-theme="light"]{
+  --glass:rgba(255,255,255,.74); --glass-thin:rgba(255,255,255,.58); --glass-chrome:rgba(250,251,253,.88); --glass-menu:rgba(252,253,255,.96);
+  --edge-hi:rgba(255,255,255,.9); --edge-lo:rgba(22,26,42,.10);
+  --lg-shadow:0 14px 44px -14px rgba(22,26,42,.30), 0 2px 8px -4px rgba(22,26,42,.14);
+  /* elev 3 · a surface ON a popover. In light the plate is already near-white,
+     so it lifts by casting FURTHER; in dark it lifts by getting LIGHTER.
+     One signal per step, per the ladder on pages/lang-elevation.html. */
+  --glass-3:#ffffff;
+  --lg-shadow-3:0 26px 68px -16px rgba(20,24,40,.36), 0 8px 22px -8px rgba(20,24,40,.24);
+  --cp-card-shadow:drop-shadow(0 6px 14px rgba(20,24,40,.22)) drop-shadow(0 16px 34px rgba(20,24,40,.20));
+}
+:root[data-theme="dark"]{
+  --glass:rgba(26,29,39,.72); --glass-thin:rgba(30,34,45,.6); --glass-chrome:rgba(22,25,34,.78); --glass-menu:rgba(22,25,33,.96);
+  --edge-hi:rgba(255,255,255,.11); --edge-lo:rgba(0,0,0,.45);
+  --lg-shadow:0 20px 54px -16px rgba(0,0,0,.66), 0 3px 10px -5px rgba(0,0,0,.5);
+  --glass-3:#2e3342;
+  --lg-shadow-3:0 30px 74px -18px rgba(0,0,0,.74), 0 10px 26px -10px rgba(0,0,0,.62);
+  --cp-card-shadow:drop-shadow(0 6px 14px rgba(0,0,0,.55)) drop-shadow(0 16px 34px rgba(0,0,0,.45));
+}
+
+/* ambient light behind glass so translucency actually refracts color */
+.stage, body.page .stage{
+  background:
+    radial-gradient(880px 520px at 10% -10%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 60%),
+    radial-gradient(820px 520px at 104% 6%, color-mix(in srgb, var(--comp) 22%, transparent), transparent 58%),
+    radial-gradient(760px 640px at 62% 122%, color-mix(in srgb, #12c2e9 16%, transparent), transparent 60%),
+    var(--stage);
+}
+
+/* windows + chrome: rich glass with a luminous top edge */
+.win{
+  background:var(--glass); backdrop-filter:var(--lg-blur); -webkit-backdrop-filter:var(--lg-blur);
+  border:1px solid var(--edge-lo); border-radius:var(--r-lg);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow);
+}
+.titlebar{background:var(--glass-chrome);border-bottom:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.toolbar{background:transparent;border-bottom:1px solid var(--edge-lo)}
+.pane{background:transparent}
+.pane.layers{border-right:1px solid var(--edge-lo)}
+.pane.insp{background:color-mix(in srgb, var(--panel-2) 45%, transparent);border-left:1px solid var(--edge-lo)}
+.section{border-bottom-color:var(--edge-lo)}
+.pane-h{border-color:var(--edge-lo)}
+
+/* rail + top bar (shell) as glass too */
+.pbar{background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border-bottom:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.rail{background:color-mix(in srgb, var(--panel) 55%, transparent);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border-right:1px solid var(--edge-lo)}
+.nav.on{background:color-mix(in srgb, var(--accent) 18%, transparent);box-shadow:inset 0 1px 0 var(--edge-hi)}
+
+/* soft glass cards (kills the flat-card-with-1px-border web look) */
+.fcol,.dtile,.tile,.aibar,.comp,.styrow,.efx,.field,.select,.thesis,.dtile,.dsub,.masklist,.histogram,.curve,.miniinsp{
+  border-color:var(--edge-lo);
+}
+.fcol,.dtile,.tile,.aibar{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi);border-radius:var(--r-md)}
+.efx,.styrow,.field,.select{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
+
+/* controls: glass capsules + glossy accents */
+.pill{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:999px;box-shadow:inset 0 1px 0 var(--edge-hi)}
+.pill.solid{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 84%, white 16%), var(--accent));border:0;color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow)}
+.pill.ai{--glow-c:#9d6cff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow)}
+.chip{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.tool{border-radius:var(--r-sm)}
+.tool:hover{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.tool.on{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-sm)}
+.seg{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:999px}
+.seg button{border-radius:999px}
+.seg button.on{background:var(--glass);box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1)}
+
+/* overlays: proper vibrancy */
+.popover,.cpal{background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow)}

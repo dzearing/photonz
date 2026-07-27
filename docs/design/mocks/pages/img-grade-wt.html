@@ -108,33 +108,18 @@
   <div class="wt" id="wtGrade">
 
     <div class="wt-stage">
-      <div class="win tall cq shell">
+      <div class="win tall cq shell" data-shell="golden-hour · 6000 × 4000" data-ws="image" data-status="32-bit float · Display P3">
 
         <!-- TITLE BAR · document identity only -->
-        <div class="titlebar">
-          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>golden-hour</b> · 6000 × 4000</div>
-          <div class="wsw" role="tablist" aria-label="Workspace">
-            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
-            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
-          </div>
-          <div class="tbtns">
-            <button class="btn ghost sm" id="compareBtn" title="Hold to see the untouched RAW"><i class="ic ic-eye"></i> Hold to compare</button>
-            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-          </div>
-        </div>
 
         <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-        <div class="toolbar">
-          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-          <span class="tsep"></span>
-          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-          <span class="tspacer"></span>
-          <span class="val">32-bit float · Display P3</span>
-          <div style="position:relative">
-            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…`
+             button that opens it is built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
               <div class="mlabel">Layer</div>
               <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
               <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
@@ -144,11 +129,7 @@
               <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
               <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
             </div>
-          </div>
-        </div>
 
-        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
-        <div class="edit lean" id="shell" data-dock="open">
 
           <div class="cnv">
             <div class="canvas">
@@ -173,6 +154,12 @@
             </div>
 
             <div class="cnv-act">
+              <!-- "Hold to compare" is a CANVAS action (it changes what you see
+                   in the document), so it belongs in the canvas action cluster.
+                   It used to sit in the title bar next to Export, which is why
+                   it read as a document action. The `…` command surface button
+                   is prepended here by the shell component. -->
+              <button class="tool" id="compareBtn" title="Hold to see the untouched RAW"><i class="ic sm ic-eye"></i></button>
               <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
             </div>
 

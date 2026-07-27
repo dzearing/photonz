@@ -1,0 +1,146 @@
+/* ============================================================
+   CANONICAL CONTROLS — the single source of truth for buttons.
+   Appended last so it wins. ONE control system: capsule Liquid-Glass
+   controls, sizes off the 4pt scale, four variants, and REAL
+   interaction states (hover / active / focus-visible / disabled) on
+   every variant. All new buttons use `.btn`. The existing controls
+   (.pill .tool .chip .select .seg) are normalized at the bottom of
+   this block to share the same state + radius language so the pages
+   stop looking mismatched (square / tiny / round / inert).
+   ============================================================ */
+:root{
+  /* control heights on the 4pt scale — md is the default */
+  --ctl-h:32px; --ctl-h-sm:24px; --ctl-h-lg:40px;
+  /* collapsed panel-dock rail width — the command bar matches this as its
+     height so a square toggle corner sits directly above the rail */
+  --rail-w:34px;
+  /* accent focus ring (identical across every control) */
+  /* recoloured by setting --ring-c on the control, the same way --glow-c
+     recolours the glow. A danger button focuses in crit, not accent. */
+  --ring:0 0 0 3px color-mix(in srgb, var(--ring-c, var(--accent)) 38%, transparent);
+  /* luminous inner top-edge shared by all glass controls */
+  --ctl-gloss:inset 0 1px 0 var(--edge-hi);
+  --ctl-tr:transform .09s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease, color .12s ease;
+}
+
+/* ---- base: a capsule glass control, icon + label on one line ---- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
+  height:var(--ctl-h); padding:0 var(--s4);
+  font-family:var(--sans); font-size:12.5px; font-weight:580; line-height:1;
+  white-space:nowrap; letter-spacing:-.005em;
+  color:var(--ink); text-decoration:none; cursor:pointer;
+  border:1px solid var(--edge-lo); border-radius:999px;
+  background:var(--glass-thin); backdrop-filter:var(--lg-blur-sm); -webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:var(--ctl-gloss);
+  transition:var(--ctl-tr); -webkit-user-select:none; user-select:none;
+}
+.btn>svg,.btn>.ic{flex:none;width:15px;height:15px}
+.btn>.kbd{font-family:var(--mono);font-size:9.5px;opacity:.7;font-weight:500}
+
+/* sizes (heights/padding/type off the 4pt scale) */
+.btn.sm{height:var(--ctl-h-sm);padding:0 var(--s3);font-size:11.5px;gap:6px}
+.btn.lg{height:var(--ctl-h-lg);padding:0 var(--s5);font-size:14px;gap:var(--s3)}
+.btn.sm>svg,.btn.sm>.ic{width:13px;height:13px}
+.btn.lg>svg,.btn.lg>.ic{width:17px;height:17px}
+
+/* icon-only (square footprint = circle at capsule radius) + full width */
+.btn.icon{width:var(--ctl-h);padding:0}
+.btn.icon.sm{width:var(--ctl-h-sm)}
+.btn.icon.lg{width:var(--ctl-h-lg)}
+.btn.block{display:flex;width:100%}
+
+/* ---- shared interaction states (apply to ALL variants) ---- */
+.btn:hover{background:var(--glass);border-color:color-mix(in srgb,var(--accent) 28%, var(--edge-lo));box-shadow:var(--ctl-gloss), var(--shadow-2)}
+.btn:active{transform:translateY(.5px) scale(.975);box-shadow:inset 0 1px 3px rgba(20,24,40,.22)}
+.btn:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
+.btn[disabled],.btn.disabled,.btn:disabled{opacity:.42;pointer-events:none;box-shadow:var(--ctl-gloss)}
+
+/* ---- variants ---- */
+/* primary: glossy accent glass */
+.btn.primary{
+  color:var(--accent-ink); border:0;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 84%, white 16%), var(--accent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow);
+}
+.btn.primary:hover{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 92%, white 22%), color-mix(in srgb,var(--accent) 92%, white 4%));box-shadow:inset 0 1px 0 rgba(255,255,255,.5), var(--glow-hi)}
+.btn.primary:active{box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
+.btn.primary:focus-visible{box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--ring)}
+
+/* secondary: neutral glass (the default look, named for clarity) */
+.btn.secondary{background:var(--glass);border-color:var(--edge-lo)}
+
+/* ghost: transparent until hover, then fills with glass */
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--dim)}
+.btn.ghost:hover{background:var(--glass-thin);border-color:var(--edge-lo);color:var(--ink);box-shadow:var(--ctl-gloss)}
+.btn.ghost:active{background:var(--glass-thin);box-shadow:inset 0 1px 3px rgba(20,24,40,.2)}
+.btn.ghost:focus-visible{box-shadow:var(--ring)}
+
+/* danger: glossy crit glass */
+.btn.danger{
+  color:#fff; border:0;
+  background:linear-gradient(180deg, color-mix(in srgb,var(--crit) 82%, white 18%), var(--crit));
+  --glow-c:var(--crit); --ring-c:var(--crit);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow);
+}
+.btn.danger:hover{background:linear-gradient(180deg, color-mix(in srgb,var(--crit) 90%, white 22%), color-mix(in srgb,var(--crit) 94%, white 4%));box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-hi)}
+.btn.danger:active{box-shadow:inset 0 2px 5px rgba(0,0,0,.3)}
+.btn.danger:focus-visible{box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--ring)}
+
+/* ============================================================
+   NORMALIZE EXISTING CONTROLS to the canonical state + radius
+   language. Roles/sizes are preserved (kept reasonable so layouts
+   don't shift); only the feel is unified — same hover / active /
+   focus-visible / disabled response and capsule radii.
+   ============================================================ */
+.pill,.tool,.chip,.select,.seg button{transition:var(--ctl-tr)}
+
+/* .pill — status/action capsule in toolbars. Add the missing states. */
+.pill{cursor:pointer}
+.pill:hover{border-color:color-mix(in srgb,var(--accent) 28%, var(--edge-lo));background:var(--glass);box-shadow:var(--ctl-gloss), var(--shadow-2)}
+.pill:active{transform:translateY(.5px) scale(.975)}
+.pill:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
+.pill.solid:hover{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 92%, white 22%), color-mix(in srgb,var(--accent) 92%, white 4%))}
+.pill.ai:hover{filter:brightness(1.06)}
+.pill.solid:active,.pill.ai:active{transform:translateY(.5px) scale(.975)}
+.pill.solid:focus-visible,.pill.ai:focus-visible{outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--ring)}
+.pill[disabled],.pill.disabled{opacity:.42;pointer-events:none}
+
+/* .tool — toolbar icon button. Give it press + focus + disabled. */
+.tool:active{transform:scale(.94)}
+.tool:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
+.tool.on:active{transform:scale(.96)}
+.tool[disabled],.tool.disabled{opacity:.4;pointer-events:none}
+
+/* .chip — small tag/toggle. Consistent capsule + interactive states. */
+.chip{cursor:pointer;border-radius:999px}
+.chip:hover{border-color:color-mix(in srgb,var(--accent) 26%, var(--edge-lo));color:var(--ink)}
+.chip:active{transform:scale(.97)}
+.chip:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
+.chip[disabled],.chip.disabled{opacity:.42;pointer-events:none}
+
+/* .select — inspector dropdown. Add press + focus to match. */
+.select{cursor:pointer}
+.select:active{transform:translateY(.5px) scale(.99)}
+.select:focus-visible{outline:none;border-color:transparent;box-shadow:var(--ctl-gloss), var(--ring)}
+.select[disabled],.select.disabled{opacity:.42;pointer-events:none}
+
+/* .seg — segmented control. Unify option hover/press/focus. */
+.seg button{cursor:pointer}
+.seg button:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 60%, transparent)}
+.seg button:active{transform:scale(.97)}
+.seg button:focus-visible{outline:none;box-shadow:var(--ring)}
+.seg button[disabled],.seg button.disabled{opacity:.42;pointer-events:none}
+
+@media (prefers-reduced-motion:reduce){
+  .btn,.pill,.tool,.chip,.select,.seg button{transition:none}
+  .btn:active,.pill:active,.tool:active,.chip:active,.select:active,.seg button:active,
+  .pill.solid:active,.pill.ai:active,.tool.on:active{transform:none}
+}
+
+/* FIX: canonical .btn.ghost collided with the standalone .ghost drag-preview
+   (which sets position:absolute;width:300px). Higher-specificity reset so ghost
+   buttons lay out normally everywhere. */
+/* redundant since the agent preview was renamed .aghost, kept as a guard */
+.btn.ghost{position:relative;width:auto}
+.btn.ghost.block{width:100%}

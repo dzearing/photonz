@@ -2257,3 +2257,408 @@ it visibly missed. Both circles are painted after the line, so the line now runs
 between the two CENTRES and the dots cap it exactly. Starting a connector clear
 of its endpoint is a gap that has to be tuned by eye and breaks the moment either
 radius changes.
+
+### 2026-07-25, later — the title bar's search box becomes Ask (D6 revised)
+
+The shell's top-right `.cmdk` search well is gone. In its place is one launcher,
+**Ask** (`.askbtn`, a raised `.btn` variant), and what it opens is the **agent
+chat** (`.askpal`) as a centred overlay over the canvas.
+
+The decision that mattered was not "add a chat button", it was **what happens to
+⌘K**. Keeping both would have put two command affordances in the same slot doing
+the same job. So the chat **subsumes** the palette: ⌘K opens the same overlay and
+focuses its composer, and typing `/` there filters the same command list inline,
+each row labelled with the API call it makes (`image.removeBackground`,
+`panel.dock`). One field, two modes. A sentence you ask and a command you run now
+land in the same box and issue the same call, which is a stronger on-screen proof
+of "UI == API == agent" than a palette standing next to a chat.
+
+Two reuse choices keep this cheap:
+
+- `.askbtn` is a `.btn` variant, so hover/active/focus/disabled all come from the
+  DS. It only adds the title-bar height and the accent glyph. The old well was
+  inset because you typed into it in place; this one is raised because it opens a
+  surface.
+- `.askpal` does not restate the conversation UI, it **hosts the shared `.chat`
+  component**. The overlay and the Agent panel group in the dock are literally one
+  conversation in two places. It sits at elevation 2 per
+  `pages/lang-elevation.html` (glass + blur + shadow + an auto-created
+  `.askscrim`), inside `.edit.lean`, so it dims the canvas and the dock but leaves
+  the title bar lit and the launcher visibly open.
+
+Also: redline callouts fade while the overlay is up (their leader lines used to
+cross it), callout 2 re-anchors to `.askbtn`'s right border rather than its
+centre (the button is small enough that a centred dot sat on its own label), and
+the launcher degrades ⌘K-hint-first then label at the narrow breakpoints.
+
+Docs updated: **D6 rewritten** in `UX-PATTERNS.md` (plus D3 and §1/§3 references),
+`.askbtn`/`.askpal` added to `AGENTS.md` with `.cmdk` marked DEPRECATED.
+
+**Next: the full sweep.** Only `app-shell.html` is on the new pattern; `.cmdk`
+still sits in the title bar of the other 57 pages. The sweep is deliberately not
+just the chat button, it aligns everything that has drifted since these landed:
+
+- [ ] `.cmdk` → `.askbtn` + `.askpal` in every remaining page.
+- [ ] The **collapsible side pane** behavior, applied consistently.
+- [ ] The stray **Share / Export / Done** buttons removed where the canonical
+      shell says the menu bar owns them.
+- [ ] **Standardize the tooltip** as one DS component. The color picker (D7) grew
+      its own; there must be exactly one.
+- [ ] **Elevation consistency**: every raised surface follows the ladder (higher
+      background + larger shadow per rung), one signal per step, no page-local
+      shadow values. `.did` inside `.askpal` is a known case to settle.
+
+---
+
+## 2026-07-25 — Icon creation clickthroughs (vector artwork)
+
+Two new usage clickthroughs under **Usage clickthroughs › Icons** in the mock
+study, both on the operated `.wt` format (ONE app screen, rendered once, then
+driven by steps). They split the icon-creation story down the middle:
+precision first, colour second.
+
+**`pages/icon-draw-wt.html` — "Draw an icon on the grid"** (12 steps, monochrome)
+
+Draws a new `cloud-upload` glyph that has to join a set of 199 others, so every
+question it has to answer is a number. The scenario is built entirely around
+**snap to grid**: turn on the 24 unit grid and the 20 × 20 live area, add the
+18 × 18 square and d17.2 circle keylines, turn on snapping, then draw. Every
+readout in Properties is a whole unit because snapping put it there — no
+coordinate is ever typed and nothing is nudged afterwards.
+
+Beats worth keeping: an ellipse snaps by **center and diameter**, not just its
+bounding box; a **Geometry** snap catches the base rectangle's corner, so you
+draw against what you already drew; **Mirror across center** makes the second
+shoulder exact by construction rather than by aim; **Union** collapses four
+construction shapes into one path whose bounds are still whole units; the pen's
+shaft lands on `x = 12` because the artboard center line is itself a snap
+target; and a **Fit** check reports `12 × 16` inside the live area with margins
+`4 · 2 · 4 · 2`.
+
+New page-local surface: a **Grid & snap** panel group (`#gGrid`) with Grid,
+Show, Snap to, Step and Fit rows. It is composed from DS classes only — the
+multi-toggle rows are `.seg` with a scoped `.on` tint, since `.seg` inside a
+`.pdock` is already the wrapping chip grid.
+
+**`pages/icon-gradient-wt.html` — "Paint an icon with a gradient"** (11 steps, colour)
+
+Picks the same glyph up and makes the colour app icon out of it. The argument is
+that **a gradient is a set of values, not a mood**: type, origin, angle, and a
+list of stops each with a colour and a position. So the same precision applies to
+the paint — the angle snaps to 15° steps, a stop snaps to the midpoint and to its
+neighbours' spacing, and a position is typed as `58`.
+
+It uses the **one** paint control (`.cpick`, D7) and shows it *moving* between the
+plate slot and the glyph slot rather than each slot growing a dialog. Then the
+paint gets a name (`Brand / plate`), and dropping that style on `cloud-download`
+gives the family one definition instead of two copies. Ends on export, where every
+size is rendered from the paint rather than downscaled from the 1024.
+
+### Two techniques the next page can reuse
+
+- **Artboards as HTML + CSS mask.** The plate is a plain element carrying
+  `background`, and the glyph is the exported SVG path used as a `mask-image`
+  over it. That means a gradient is genuinely the element's own background, so
+  `data-css` can drive it per step AND the shared `.cpick` can paint it for real
+  via `data-cp-fill`. An inline `<linearGradient>` cannot be driven this way:
+  `stop-color` is settable from CSS but `offset` is not.
+- **Keeping a shared component honest during a walkthrough.** A step owns the
+  artwork but cannot reach inside `.cpick`'s generated controls, so a step would
+  narrate "switch it to Radial" while the popover still read Solid. Each step now
+  declares `data-gx-type` / `data-gx-color`, and a page-local `MutationObserver`
+  on `.wt-step.on` drives the picker's own type button — the same code path a
+  real click takes. It un-points `data-cp-fill` while stepping so the picker does
+  not repaint the artboard underneath the walkthrough; clicking a swatch
+  re-points it and hands control back.
+
+Both pages verified in light and dark, at 1500px and at the ≤880px narrow
+breakpoint (dock → rail + overlay, tool bar overflow), stepped end to end and
+reset, with zero console errors and no unresolved step selectors.
+
+`index.html` gains an **Icons** group under Usage clickthroughs.
+
+**Open:** a third scenario ("build the whole set / contact sheet") is the obvious
+next one if these land well, but it was deliberately left out — one scenario per
+page, and these two already answer the two questions people arrive with.
+
+### 2026-07-26 — the shell stops being 57 copies and becomes a component
+
+Started as "the new icon clickthroughs don't match the shell". The audit said the
+icon pages were not the problem, the absence of a component was:
+
+| hand-authored in each page | pages |
+| --- | --- |
+| `.titlebar` + `.tbtns` with Share / Export / Done | 57 |
+| `.toolbar` command strip | 56 |
+| `.cmdk` search well (deprecated by D6) | 55 |
+
+`app-shell.html` says "No Share/Export/Done, those live in the menu bar" and "No
+command strip" — and then 56 pages did both anyway, because nothing enforced it.
+Sweeping the copies would have held only until the next page was written.
+
+So `photonz-ds.js` now BUILDS the chrome and a page declares what it is:
+
+```html
+<div class="win tall cq shell"
+     data-shell="promo-cut · 1920 × 1080 · <span id='docLen'>0:18</span>"
+     data-ws="video" data-status="1080p · 30 fps">
+```
+
+It emits app-shell's title bar exactly (lights · title · status · `.wsw` lens ·
+Ask), injects the agent-chat overlay and its scrim, and builds the D3 `…` button
+into `.cnv-act`. It **deletes** any `.titlebar`/`.toolbar` inside `[data-shell]`,
+so the drift cannot return. `app-shell.html` was converted first and on purpose:
+the spec must not be a hand-authored copy of its own spec.
+
+Converted: all **16 usage clickthroughs** + `app-shell.html`. 42 pages still
+hand-author chrome (`lang-frame` alone has 10 title bars, though most are
+deliberate specimens — that page is *about* frames, so it needs judgement, not
+the script).
+
+**What the first pass of this got wrong, and how it was caught.** The toolbar was
+not pure chrome: it also held each page's own `#cmdMenu` (real scenario commands
+like "Split at playhead") and a live status readout. Deleting the block deleted
+those too, and the obvious check missed it because the `data-menu="#cmdMenu"`
+that referenced the popover was deleted in the same breath — nothing dangled, so
+nothing complained. Caught by diffing every removed `<button>`/`<span>` label
+against HEAD rather than trusting the reference check. The converter was rewritten
+to keep the popover (re-homed into `.cnv` with a shared `.cmdpop` class, replacing
+56 hand-tuned `right:0;top:26px` inline positions) and to lift the status readout
+into `data-status`. Tracked pages were reverted and redone.
+
+Casualties worth naming: `img-grade-wt`'s "Hold to compare" was a real canvas
+action sitting in the title bar next to Export, which is why it read as a document
+action; it now lives in `.cnv-act` where it belongs. The two icon pages were
+untracked when the first pass ran, so their originals were unrecoverable and their
+command menus were **rebuilt from the scenario**, not restored.
+
+Verified by loading all 17 in iframes: shell built, title/lens/status correct,
+Ask + overlay present, command surface present, zero surviving `.toolbar`/`.cmdk`/
+`.tbtns`, and every id a walkthrough step drives still resolves.
+
+**Next:** the 42 remaining pages, and the rest of the sweep backlog from
+yesterday (one tooltip component, elevation ladder consistency).
+
+### 2026-07-26, later — 51 pages on the component, and two more things it now owns
+
+Finished the mechanical conversion (34 pages) and, on the way, the component
+absorbed two more sources of drift.
+
+**The lens switcher left the title bar.** Three workspace tabs in the header read
+as app-level navigation, which is the opposite of what "one document, surfaces
+are lenses" is meant to say. Because the header is a component, removing it was
+one line and it left all 51 pages at once. `data-ws` still records the lens for
+the tool strip; the component now also deletes any `.wsw` it finds. **Open: the
+lens selector currently has no on-screen home.** The obvious spot is the left end
+of the floating tool bar, but that is a design call, not a cleanup.
+
+**Panel height became a role instead of a number.** The reported symptom was "the
+layer panel expands and contracts inconsistently". Measured: across 17 shells,
+Layers had **11** distinct `--gh` budgets (76–186px) and Properties **13**
+(150–398px). Nothing was wrong on any one page; the set was never designed
+together. There is now a three-rung ladder (`--gh-sm/md/lg`) and a group declares
+its role (`data-grp="layers|props|…"`); page-specific groups get their authored
+value snapped to the nearest rung. Across all 51 pages every panel now resolves
+to one of **three** heights, and no page carries an inline `--gh`.
+
+**The converter was the wrong tool and I kept it too long.** Three rewrites in,
+it still broke on things a text transform cannot see: nested `<span>`s inside a
+status chip, and page-local ids (`#aeCmd`, `#aeHist`) where I had hardcoded
+`#cmdMenu`/`#histSheet`. It also had an overlapping-span bug — `.tbtns` lives
+INSIDE `.titlebar`, so deleting both shifted the indices and ate the `.edit` row
+on 31 of 34 pages. The fix was to stop transforming files and let the component
+do it at runtime with real DOM APIs: it **harvests** popovers into `.cnv`, status
+into `.wstatus`, and leftover controls into `.cnv-act` as icon tools (label kept
+as the tooltip), then deletes the empty rows. Per-page work dropped to adding two
+attributes, and harvested controls keep their ids so page JS still drives them
+(verified: ui-prototype's Play still runs the flow).
+
+Verified across all 51: Ask present, zero `.wsw`, zero surviving
+`.toolbar`/`.cmdk`/`.tbtns`, command surface present, every `data-menu`/
+`data-sheet`/`data-group` target resolves, three distinct panel heights.
+
+**Next:** the 8 multi-title-bar pages (`lang-frame` has 10, most deliberate
+specimens — needs judgement, not a script), then the older backlog: one tooltip
+component, elevation-ladder consistency.
+
+### 2026-07-26, later still — one file per component, starting with the tooltip
+
+**The megafile problem, named.** `photonz-ds.css` was 2,246 lines and
+`photonz-ds.js` ~1,900. At that size you cannot find a component, let alone
+change one confidently — which is a large part of how the shell ended up with 57
+hand-authored copies. A component now lives in its own pair of files under
+`shared/components/`, with `order.json` fixing the cascade order.
+
+**Pages did not change**, and that was the constraint that picked the mechanism.
+They still link `/shared/photonz-ds.css` and `/shared/photonz-ds.js`;
+`dev-server.mjs` now assembles those two URLs per request from the base file plus
+each component. That keeps the runtime contract identical — one classic script,
+one stylesheet, same execution order — so every page's own inline `<script>`
+still runs after the DS. Native ESM would have been less machinery but turns the
+DS into a deferred module, which would run it AFTER page inline scripts and break
+the 51 pages that measure or query chrome the shell component builds. For static
+hosting, `node shared/build-ds.mjs` writes the same bundles to `shared/dist/`.
+
+The base file is now explicitly "the not-yet-split remainder". Extracting a
+component means DELETING its rules from the base, never copying them.
+
+**First component out: the tooltip.** There were a `.tooltip` class used by three
+doc pages as a static specimen, five page-local re-inventions (`.dhint`,
+`.deskhint`, `.poptag`, `.hint-badge`, `.pop`), ~14 hand-rolled CSS-triangle
+beaks, and ~2,400 native `title=` attributes — which cannot be styled, cannot be
+positioned, and never appear for keyboard users.
+
+One component replaces all of it. `data-tip="Label"` (optionally `"Label|⌘K"`,
+plus `data-tip-side`) on any element: shows on hover AND focus, flips when it
+would clip the viewport, clamps to the screen and then walks its beak back to the
+trigger's centre so it still points at what it labels. One floating node for the
+document, not one per trigger. Any element with a `title` is upgraded
+automatically and the `title` removed, so ~2,371 existing controls got the styled
+tooltip without editing a page; a MutationObserver catches controls that appear
+later (walkthrough steps, shell-built chrome) rather than depending on timing.
+
+One thing worth recording, because it looks like an inconsistency and is not: the
+tooltip uses a **CSS beak** while the color picker's stop callout needs a single
+SVG path. That callout is glass with a semi-transparent 1px stroke, so a
+box-based beak's border met the card's border at an acute angle and darkened into
+a dimple on each shoulder. A tooltip is opaque and unstroked, so there is no
+junction to leak. The rule is "no seam", not "always SVG".
+
+**Next:** the 8 multi-title-bar specimen pages (still not done — `lang-frame` has
+10 title bars and most are deliberate), and elevation-ladder consistency. More
+components to split out of the base: `.btn`, `.dgrp`/dock, `.cpick`, `.chat`.
+
+### 2026-07-26 — the last 8 pages, and the documentation catches up
+
+The 8 multi-title-bar pages are done. The work was deciding what each `.win`
+actually is, which a script cannot: **16 real shells** converted, **14 title bars
+deliberately left alone**.
+
+Left alone, and why:
+- **lang-frame** (8) — bare `.titlebar`s that are not inside a `.win` at all.
+  This page documents the frame, so those cut strips ARE its subject.
+- **components** (2) — gesture and placement illustrations, no `.edit`, no dock.
+- **app-shell** (3) — the other three shell surfaces (menu-bar menu, video
+  window, settings window). They legitimately carry `.tbtns`, because they are
+  different surfaces, not the editor shell.
+
+**The documentation had gone stale, which is its own kind of drift.**
+`lang-frame` still taught the old title bar: a `.wsw` lens selector and
+Share/Export/Done, annotated by numbered pins with a matching legend. That now
+contradicted all 67 shells. So: the 8 specimens lost the lens and their `.tbtns`
+became the Ask launcher; pin 3 was rewritten from "Workspace switcher" to
+"Document status" and pin 4 from "Document actions" to "Ask"; and five prose
+passages (the lead, a responsive caption, two do/don't lines, the breakpoint
+note) were rewritten to describe what the shell now does. The anatomy shell's
+pins are no longer hand-written into chrome — the page places them onto the parts
+the component BUILT, which is the point: the page documents the real title bar
+instead of keeping a copy that can drift again.
+
+Two bugs found and fixed on the way:
+- My declaration script matched `class="wtitle"` exactly, so `class="wtitle lf-id"`
+  yielded `data-shell=""` on both lang-frame shells, and a second pass scraped a
+  redline pin number into the title (`2settings-capture· 2560 × 1440`). Both set
+  by hand.
+- `icon-draw-wt` and `icon-gradient-wt` hand-authored their own `.askpal` nested
+  in `.cnv`; the component only checked direct children of `.edit`, missed them,
+  and built a **second overlay with the same id**. The component now looks
+  anywhere in the shell, and those two copies were deleted from the pages.
+
+**Where the mock set now stands:** 61 pages, **67 shells** all built by the
+component, 14 intentional specimens, **zero** surviving `.toolbar`/`.cmdk`/
+`.tbtns`/`.wsw` inside a shell, zero duplicate ids, zero dangling
+`data-menu`/`data-sheet`/`data-group` targets, **three** distinct panel-group
+heights, and 2,765 controls on the shared tooltip.
+
+**Next:** elevation-ladder consistency, and splitting more components out of the
+base file (`.btn`, the dock, `.cpick`, `.chat` are the big ones).
+
+### 2026-07-26 — the megafiles are gone
+
+`photonz-ds.css` (2,379 lines) and `photonz-ds.js` (2,161) are now **empty on
+purpose**. The design system is **23 CSS components and 12 JS components** under
+`shared/components/`, assembled into the same two URLs by `dev-server.mjs`.
+Pages did not change: same `<link>`, same `<script>`, same order.
+
+**The CSS split is provably safe.** Cascade order is the thing a careless split
+breaks silently, so cuts were snapped to lines at brace depth 0 and outside a
+comment, the pieces were re-assembled in file order, and the result was compared
+**byte-for-byte with the original 220,639 bytes**. Identical, or the split would
+have been rejected by the script rather than by a reviewer.
+
+**The JS split needed a real change**, because the file was one IIFE. The only
+cross-section dependencies turned out to be four helpers (`all`, `winOf`,
+`isNarrow`, `NARROW`) — everything else was already section-local. So `core.js`
+keeps the preamble and publishes those on `window.PZ`, and each of the other ten
+sections became its own guarded IIFE that pulls them back in. That is now the
+entire shared surface: a component cannot reach into another component.
+
+Byte-equality proves nothing about JS, so it was verified by driving the real
+components across 72 pages: 67 shells built, walkthroughs stepping with correct
+cue placement and labels on 5 pages, the color picker propagating a hue change
+(256 → 296) through its channel stack, dock collapse, the Ask overlay, 2,978
+tooltip triggers, three panel heights, zero console errors.
+
+Sizes now: `icons` 77 KB (generated glyphs), `colorpicker` 41 KB JS / 15 KB CSS,
+`inspector` 24 KB, `walkthrough` 19 KB, `dock` 18 KB. Everything else is small;
+most components are under 150 lines.
+
+Two footnotes worth keeping. `shared/build-ds.mjs` writes the same bundles to
+`shared/dist/` for static hosting — the dev server is not required. And native
+ESM was rejected on purpose: it would make the DS a deferred module running
+AFTER each page's inline `<script>`, which breaks the pages that measure or query
+chrome the shell component builds.
+
+**Next:** elevation-ladder consistency, and the workspace lens still has no
+on-screen home since it left the title bar.
+
+### 2026-07-26 — Home in the command surface, and the elevation ladder made true
+
+**Home.** The workspace lens has had no on-screen home since it left the title
+bar. It does not need one: Photonz is one document per window, so you do not
+change lens mid-document, you open a different document — and that is what the
+front door (`pages/home.html`) is for, with its four start scenarios. So every
+command menu now ends with a separator and a **Home** item, appended by the shell
+component so all 67 shells get it in the same place instead of 67 pages
+remembering. It is also in the Ask palette as `app.home`. A proper `home` glyph
+went into `shared/icons.mjs` and through the generator, not inlined.
+
+That regeneration surfaced a bug the split had introduced: `build-icons.mjs`
+still spliced into `shared/photonz-ds.css`, which is now empty. Retargeted at
+`shared/components/icons.css`.
+
+**Elevation.** `pages/lang-elevation.html` has always said "depth is a role, not
+a number you pick". The code did not hold to it, and splitting the megafile is
+what made that visible:
+
+- `.elev-1` and `.elev-2` were each defined **twice**, in two different
+  components, with different shadows. Whichever loaded last won.
+- `.seg button.on` was defined **three times** with three alphas (.08 / .14 /
+  .2), so the same selected segment sat at three heights depending on the page.
+- The two rungs people needed most had **no token at all** — "raised a hair" and
+  "lifts on hover" — so 20+ rules hand-rolled them, each landing differently.
+
+The ladder now lives once in `shared/components/elevation.css`, with the missing
+rungs as tokens: `--shadow-1` (raised), `--shadow-2` (hover lift), and a
+recolourable `--glow`/`--glow-sm`/`--glow-hi` for filled and selected controls —
+six rules were writing that formula out in three sizes and three colours, and
+because custom properties cascade, `.btn.danger{--glow-c:var(--crit)}` now
+recolours the whole thing. `--ring` got the same treatment via `--ring-c`.
+
+Hand-written chrome shadows went **35 → 0**. Canvas artwork (a hero card's glow,
+a photo's sun) is deliberately exempt: it is content, not chrome, and is allowed
+to invent its own light. `node shared/check-elevation.mjs` knows the difference
+and fails on a new hand-rolled one.
+
+One rule I had to correct mid-way: my first `elevation.css` styled other
+components' selectors from a central file, which is the same "two rules for one
+element in two files" problem it exists to end. It now owns only the tokens and
+the `.elev-*` ladder; each component sets its own shadow from those tokens.
+
+Verified across 72 pages: 67 shells, 65 Home items (the two shells without a
+command menu have none), 2,979 tooltip triggers, tokens resolving to one value
+each, zero console errors.
+
+**Next:** nothing outstanding from the sweep backlog. Open design question still
+on the table: whether the front door is the right answer for switching workspace,
+or whether the lens deserves a place in the tool bar after all.

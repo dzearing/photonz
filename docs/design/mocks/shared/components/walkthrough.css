@@ -1,0 +1,105 @@
+/* ============================================================
+   OPERATED WALKTHROUGHS (PRODUCT-MODEL.md §4d)
+   ONE app screen, rendered once, that is DRIVEN. A step never swaps
+   in a different window: it changes the state of the screen already on
+   the page, anchors a click cue to the REAL control in its REAL place,
+   and reads out one fixed caption grammar.
+
+     .wt                       the walkthrough root (cue positioning context)
+      ├─ .wt-stage             holds the ONE .win.tall.cq shell. Never re-rendered.
+      ├─ .wt-cue               injected by ds.js, positioned over the target
+      ├─ .wt-steps > .wt-step  declarative state + the caption for that state
+      │    └─ .wt-cap › .wt-n · .wt-do · .wt-where · .wt-res
+      └─ .wbar                 prev · dots · label · reset · next
+
+   The three caption lines get their labels from CSS, so every
+   walkthrough in the study reads identically:
+     Click <control> · in <where it lives> · Result: <what changed>
+   Override the verb with data-verb="Drag" when the gesture is a drag.
+   ============================================================ */
+
+.wt{position:relative}
+.wt-stage{position:relative}
+
+/* the one state class steps use to reveal or hide document content */
+.wt-off{display:none !important}
+
+.wt-steps{list-style:none;margin:var(--gap) 0 0;padding:0}
+.wt-step{display:none}
+.wt-step.on{display:block;animation:fade .2s ease}
+
+.wt-cap{display:grid;grid-template-columns:auto 1fr;column-gap:var(--pad-sm);row-gap:var(--s1);
+  align-items:start;padding:var(--pad);border:1px solid var(--line);border-radius:var(--r4);
+  background:var(--panel-2)}
+.wt-cap .wt-n{grid-column:1;grid-row:1 / span 3;width:24px;height:24px;border-radius:50%;
+  display:grid;place-items:center;flex:none;font-size:12px;font-weight:700;
+  background:var(--accent);color:var(--accent-ink)}
+.wt-cap.comp .wt-n{background:var(--comp)}
+.wt-cap.img .wt-n{background:#ff7e5f;color:#2a0f08}
+.wt-cap.vid .wt-n{background:#12c2e9;color:#04202a}
+
+/* Each line keeps NORMAL inline flow (so <b> and <code> sit in the sentence);
+   the grammar label is absolutely positioned in its own gutter. */
+.wt-do,.wt-where,.wt-res{grid-column:2;margin:0;position:relative;padding-left:60px;
+  font-size:12.5px;line-height:1.5;color:var(--dim)}
+.wt-do b,.wt-where b,.wt-res b{color:var(--ink);font-weight:640}
+.wt-do code,.wt-where code,.wt-res code{font-family:var(--mono);font-size:11px;background:var(--panel);
+  border:1px solid var(--line);padding:1px 5px;border-radius:5px}
+.wt-do::before,.wt-where::before,.wt-res::before{position:absolute;left:0;top:0;width:50px;
+  text-align:right;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  color:var(--faint);line-height:2}
+.wt-do::before{content:"Click";color:var(--accent)}
+.wt-do[data-verb]::before{content:attr(data-verb)}
+.wt-where::before{content:"in"}
+.wt-res::before{content:"Result"}
+.wt-res{color:var(--ink)}
+
+/* ---- the click cue: it sits ON the real control, wherever that is ---- */
+.wt-cue{position:absolute;z-index:30;pointer-events:none;opacity:0;
+  transition:opacity .16s ease, left .22s cubic-bezier(.32,.72,0,1),
+             top .22s cubic-bezier(.32,.72,0,1), width .22s ease, height .22s ease}
+.wt-cue.on{opacity:1}
+.wt-cue .ring{position:absolute;inset:0;border:2px solid var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent),
+             0 10px 26px -10px rgba(0,0,0,.55)}
+.wt-cue .pulse{position:absolute;inset:0;border:2px solid var(--accent);
+  animation:wtpulse 1.9s cubic-bezier(.32,.72,0,1) infinite}
+.wt-cue .lb{position:absolute;white-space:nowrap;padding:4px 10px;border-radius:999px;
+  background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:640;
+  box-shadow:var(--lg-shadow);max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.wt-cue.p-top .lb{bottom:100%;left:50%;transform:translate(calc(-50% + var(--lbx,0px)),-8px)}
+.wt-cue.p-bottom .lb{top:100%;left:50%;transform:translate(calc(-50% + var(--lbx,0px)),8px)}
+.wt-cue.p-left .lb{right:100%;top:50%;transform:translate(-8px,-50%)}
+.wt-cue.p-right .lb{left:100%;top:50%;transform:translate(8px,-50%)}
+@keyframes wtpulse{
+  0%{transform:scale(1);opacity:.75}
+  70%{transform:scale(1.35);opacity:0}
+  100%{transform:scale(1.35);opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .wt-cue,.wt-step.on{transition:none;animation:none}
+  .wt-cue .pulse{animation:none;opacity:.4}
+}
+
+/* ---- step nav: ONE box, controls together at the right (VISUAL RULE 10) ----
+   The caption card and the nav bar used to be two separate surfaces stacked
+   on top of each other, and `.wt-reset{margin-left:auto}` split the pair up
+   further - Back stranded at the far left, Next at the far right, with the
+   whole width of the page between two controls you alternate between.
+   ds.js wraps the steps and the bar into .wt-panel and puts the bar's
+   children in the order dots · label · Reset · Back · Next; the border now
+   lives on the panel so the two read as one box, and the trio sits together
+   at the right.
+   The bar is the panel's FIRST row, above the caption: the controls are what
+   you drive the walkthrough with, so they hold one fixed position instead of
+   sliding down the page whenever a step's caption runs longer. */
+.wt-panel{margin:var(--gap) 0 0;border:1px solid var(--line);border-radius:var(--r4);
+  background:var(--panel-2);overflow:hidden}
+.wt-panel .wt-steps{margin:0}
+/* the card chrome moved up to the panel, so the caption is just content now */
+.wt-panel .wt-cap{border:0;border-radius:0;background:transparent}
+.wt-panel .wbar{border-bottom:1px solid var(--line);padding:var(--gap-sm) var(--pad);
+  gap:var(--gap-sm);flex-wrap:wrap;justify-content:flex-end}
+.wt-panel .wdots{flex:0 0 auto}
+.wt-panel .wlabel{margin-right:auto}
+.wbar .wdots i:focus-visible{outline:none;box-shadow:var(--ring)}

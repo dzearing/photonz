@@ -143,6 +143,7 @@ export const CATEGORIES = [
     name: 'Documents & library',
     note: 'Everything that holds work: files, folders, collections, the asset library.',
     icons: [
+      ['home', P('M3.4 10.3L12 3.6l8.6 6.7') + P('M5.7 8.9v9.5a2.2 2.2 0 0 0 2.2 2.2h8.2a2.2 2.2 0 0 0 2.2-2.2V8.9') + P('M9.7 20.6v-5.3h4.6v5.3'), 'The front door: New, Open, Recent', 'launcher start front door house'],
       ['document', P('M14 3.4H6.8A2.4 2.4 0 0 0 4.4 5.8v12.4a2.4 2.4 0 0 0 2.4 2.4h10.4a2.4 2.4 0 0 0 2.4-2.4V8.8z') + P('M14 3.4v5.4h5.6'), 'A Photonz document', 'file page doc'],
       ['document-new', P('M14 3.4H6.8A2.4 2.4 0 0 0 4.4 5.8v12.4a2.4 2.4 0 0 0 2.4 2.4h4.6') + P('M14 3.4v5.4h5.6') + P('M17.4 14v6M14.4 17h6'), 'Start a new document', 'new blank create'],
       ['folder', P('M20.6 18.2a2.4 2.4 0 0 1-2.4 2.4H5.8a2.4 2.4 0 0 1-2.4-2.4V5.8a2.4 2.4 0 0 1 2.4-2.4h4.1l2.1 3.2h6.2a2.4 2.4 0 0 1 2.4 2.4z'), 'A folder of documents', 'directory group'],

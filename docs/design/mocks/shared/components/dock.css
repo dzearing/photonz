@@ -1,0 +1,297 @@
+/* ============================================================
+   PANEL GROUP SIZE — a role, not a number
+   ============================================================
+   Every page used to hand-pick `--gh` on each .dgrp, so the SAME panel
+   expanded and contracted to a different height on nearly every page:
+   measured across 17 shells, Layers had 11 distinct budgets (76px–186px)
+   and Properties had 13 (150px–398px). Nothing was wrong on any single
+   page; the set was simply never designed together.
+
+   A group now declares WHAT IT IS and the ladder assigns the budget:
+
+     <div class="dgrp" data-grp="layers">        ← role default
+     <div class="dgrp" data-grp="props" data-gh="lg">   ← named override
+
+   Three sizes only. A group that needs more room than its budget scrolls
+   inside its own .dgrp-b, which is what the budget is for. `.grow` still
+   means "take the leftover space" and ignores all of this. */
+.pdock{--gh-sm:132px; --gh-md:180px; --gh-lg:264px}
+.dgrp[data-gh="sm"]{--gh:var(--gh-sm)}
+.dgrp[data-gh="md"]{--gh:var(--gh-md)}
+.dgrp[data-gh="lg"]{--gh:var(--gh-lg)}
+
+/* role defaults: Layers is a list you scan, Properties is a form you work in,
+   so Properties gets the taller budget. */
+.dgrp[data-grp="layers"]{--gh:var(--gh-md)}
+.dgrp[data-grp="props"]{--gh:var(--gh-lg)}
+.dgrp[data-grp="effects"]{--gh:var(--gh-sm)}
+.dgrp[data-grp="agent"]{--gh:var(--gh-lg)}
+.dgrp[data-grp="tools"]{--gh:var(--gh-lg)}
+
+/* D3 · the command surface popover. The `…` button that opens it is built into
+   .cnv-act by the shell component, so this anchors under that button rather
+   than being positioned by hand on every page (which is how 56 pages ended up
+   with 56 slightly different inline `right:0;top:26px` values). */
+.cnv>.popover.cmdpop{position:absolute;z-index:12;width:236px;
+  top:calc(var(--s3) + var(--ctl-h-sm) + var(--s1));right:var(--s3)}
+
+/* Document status readout in the title bar (bit depth, fps, grid size). It is
+   document CONTEXT, so it sits with the document name, not in a command strip.
+   Built from data-status on the shell. */
+.titlebar>.wstatus{font-family:var(--mono);font-size:10px;color:var(--faint);
+  white-space:nowrap;flex:none}
+@container shell (max-width:880px){ .win.cq .titlebar>.wstatus{display:none} }
+
+/* Redline callouts point at the resting shell, so their leader lines would
+   cross the open overlay. Fade them while it is up; they come back on close. */
+.rl-frame:has(.askpal.on) .rl-co{opacity:0;pointer-events:none;transition:opacity .16s ease}
+
+/* opening state: no conversation yet, so the body offers a few starts
+   instead of a blank box. Reuses .chips > .x. */
+.askseed{padding:var(--pad);display:flex;flex-direction:column;gap:var(--pad-sm)}
+.askseed .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:660;color:var(--faint)}
+
+/* Workspace switcher (the lens selector). Image · UI · Video are workspaces
+   over ONE document (see PRODUCT-MODEL.md §1). Switching a workspace re-arranges
+   the chrome — the tool strip contents and whether the timeline dock is shown —
+   around the same layer stack; it is the visible proof that surfaces are lenses.
+   Capsule Liquid-Glass segmented, 4pt spacing. Compose .wsw > .wsw-seg. */
+.wsw{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:999px;
+  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
+.wsw-seg{display:inline-flex;align-items:center;gap:6px;height:var(--ctl-h-sm);padding:0 var(--pad-sm);
+  border:0;background:transparent;color:var(--dim);font-family:inherit;font-size:11.5px;font-weight:560;
+  border-radius:999px;white-space:nowrap;cursor:pointer;transition:var(--ctl-tr)}
+.wsw-seg .ic{color:var(--faint);flex:none}
+.wsw-seg:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 60%, transparent)}
+.wsw-seg:active{transform:scale(.97)}
+.wsw-seg:focus-visible{outline:none;box-shadow:var(--ring)}
+.wsw-seg.on{color:var(--accent-ink);
+  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-sm)}
+.wsw-seg.on .ic{color:var(--accent-ink)}
+
+/* Adjustment / filter layer — a first-class layer type (PRODUCT-MODEL.md §1).
+   A non-destructive effect (hue, grade, blur, curves) that clips to the layers
+   BELOW it. Because it is just a layer, it applies to a UI frame exactly as to a
+   photo. Renders in the Layers panel as .lrow.adj (sliders glyph, accent tint)
+   with a .clipmark showing it clips to the row beneath. Its properties open in
+   the right-dock Inspector as a normal .section of .row/.bar/.val sliders. */
+.lrow.adj{color:var(--ink)}
+.lrow.adj .ic{color:var(--accent)}
+.lrow.adj.sel{background:var(--accent-soft);border-left-color:var(--accent)}
+/* "clips to layer below" affordance: a small down-elbow hugging the row beneath. */
+.clipmark{flex:none;width:10px;height:12px;margin:0 1px 3px 3px;
+  border-left:1.5px solid var(--accent);border-bottom:1.5px solid var(--accent);
+  border-bottom-left-radius:2px}
+
+/* ============================================================
+   THE SCALABLE DOCK SYSTEM  (PRODUCT-MODEL.md §4b · UX-PATTERNS §1/§3)
+
+   The shipping app is lean and canvas-first: a floating bottom tool
+   bar, one collapsible right panel, the native macOS menu bar, and a
+   slide-down history overlay. As scope grows we must add capability
+   WITHOUT adding new chrome, so there is exactly one vocabulary:
+
+     dock  ·  panel group  ·  collapse  ·  resize  ·  scroll  ·
+     overflow  ·  overlay
+
+   Learn it once and it applies everywhere. The pieces:
+
+     .edit.lean            canvas-dominant editor row (flex, not the
+                           fixed 3-column .edit grid)
+     .cnv                  the canvas column; hosts the floating tool
+                           bar, the canvas action cluster, and overlays
+     .tbar                 floating bottom tool bar (capsule glass)
+     .cnv-act              canvas top-right action cluster (panel
+                           toggle, history)
+     .pdock                the right dock: a column of stacked groups
+     .dgrp/.dgrp-h/.dgrp-b a collapsible, independently SCROLLING panel
+                           group with its own bounded max height
+     .splitter.v/.h        draggable resize handle (dock width, group
+                           height)
+     .drail/.drailtab      the dock collapsed to a slim labeled rail
+     .sheet.down           slide-down overlay (the history front door)
+     .filmstrip/.filmcard  the capture filmstrip inside that overlay
+     .transport            the video bottom transport bar
+
+   Responsiveness is driven by ONE container query. Put `.cq` on the
+   `.win` to make it the query container; every rule below then adapts
+   to the WINDOW width, not the viewport, so a shell shown small on a
+   reference page behaves exactly like a narrowed real window.
+   ============================================================ */
+
+.win.cq{container:shell / inline-size}
+
+/* ---- editor row: canvas-dominant, dock on the right ---- */
+.edit.lean{display:flex;grid-template-columns:none;position:relative;min-height:0}
+.cnv{flex:1 1 auto;min-width:0;min-height:0;position:relative;display:flex;flex-direction:column}
+.cnv>.canvas{flex:1 1 auto;min-height:0}
+
+/* canvas top-right action cluster: the panel toggle lives HERE (not in a
+   toolbar) so showing/hiding the dock is where the canvas is. */
+.cnv-act{position:absolute;top:var(--s3);right:var(--s3);z-index:6;display:flex;gap:var(--s1);
+  padding:var(--s1);border-radius:999px;background:var(--glass-chrome);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow)}
+
+/* ---- the right dock ---- */
+/* The dock scrolls as a LAST RESORT. Without this, when the sum of the group
+   height budgets exceeds the dock, overflow:hidden silently clipped the last
+   group to nothing (it made group budgeting fragile: authors were hand-tuning
+   --gh and window heights per page to avoid a collapsed Library). */
+.pdock{flex:0 0 auto;width:var(--dock-w,268px);min-width:180px;max-width:460px;
+  display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;
+  scrollbar-gutter:stable;overscroll-behavior:contain;
+  border-left:1px solid var(--edge-lo);
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur)}
+/* The SCROLLER reserves its OWN scrollbar column: scrollbar-gutter:stable
+   reserves 0 with macOS overlay scrollbars, so give it a slim classic scrollbar
+   that actually takes space. The gutter is always reserved, so collapsing panels
+   never changes the panel width, and the panel scrollbar can't overlap a pane's.
+   Old (command-strip) pages scroll .pdock directly; the new pattern scrolls the
+   inner .dock-body instead (fixed header + scrolling body + fixed footer). */
+.pdock::-webkit-scrollbar,.dock-body::-webkit-scrollbar{width:11px}
+.pdock::-webkit-scrollbar-track,.dock-body::-webkit-scrollbar-track{background:transparent}
+.pdock::-webkit-scrollbar-thumb,.dock-body::-webkit-scrollbar-thumb{min-height:32px;border:3px solid transparent;border-radius:999px;
+  background:color-mix(in srgb, var(--ink) 20%, transparent);background-clip:content-box}
+.pdock::-webkit-scrollbar-thumb:hover,.dock-body::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb, var(--ink) 32%, transparent);background-clip:content-box}
+/* new pattern: the dock itself does not scroll — its .dock-body does */
+.pdock:has(>.dock-body){overflow:hidden;scrollbar-gutter:auto}
+.dock-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable;overscroll-behavior:contain}
+
+/* the panel's own HEADER ROW (no-command-strip pattern): holds the × collapse
+   button on its own row, above the scrolling body, so it never interferes with a
+   group header. A fixed row (the body below it scrolls, the footer stays put). */
+.dock-head{flex:none;display:flex;align-items:center;justify-content:flex-end;
+  min-height:32px;padding:4px 6px;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  border-bottom:1px solid var(--edge-lo)}
+.dock-head .dock-close{width:24px;height:24px;padding:0;border:0;border-radius:7px;cursor:pointer;
+  display:grid;place-items:center;color:var(--dim);background:transparent;transition:.12s}
+.dock-head .dock-close:hover{background:var(--glass-thin);color:var(--ink)}
+.dock-head .dock-close:active{transform:scale(.94)}
+.dock-head .dock-close:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* dock states: open (inline) · closed (railed) · overlay (narrow, floats) */
+.edit.lean[data-dock="closed"]>.pdock,
+.edit.lean[data-dock="closed"]>.splitter.v{display:none}
+.edit.lean[data-dock="closed"]>.drail{display:flex}
+
+/* ---- a collapsible + scroll-constrained panel group ---- */
+.dgrp{flex:0 0 auto;display:flex;flex-direction:column;min-height:0;
+  border-bottom:1px solid var(--edge-lo)}
+.dgrp:last-child{border-bottom:0}
+.dgrp-h{display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s3) var(--s3) var(--s2);
+  font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:660;color:var(--faint);
+  cursor:pointer;-webkit-user-select:none;user-select:none;white-space:nowrap}
+.dgrp-h:hover{color:var(--ink)}
+.dgrp-h:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r-sm)}
+.dgrp-h .chev{color:var(--faint);flex:none;transition:transform .15s ease}
+/* VISUAL RULE 9: the count is a BADGE immediately after the label, not a
+   number stranded at the far right of the header. The label therefore does
+   NOT take the free space any more - the first element after the label (or
+   after its badge) takes it, so trailing buttons still sit at the right edge
+   and nothing else had to change on any page. */
+.dgrp-h .ttl{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dgrp-h .ttl+*:not(.cnt),.dgrp-h .cnt+*{margin-left:auto}
+.dgrp-h .cnt{flex:none;font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;
+  color:var(--dim);font-family:var(--mono);font-variant-numeric:tabular-nums;
+  padding:1px 6px;border-radius:999px;line-height:1.5;
+  background:var(--glass-thin);border:1px solid var(--edge-lo)}
+.dgrp.collapsed>.dgrp-h .chev{transform:rotate(-90deg)}
+.dgrp.collapsed>.dgrp-b{display:none}
+.dgrp.collapsed{flex:0 0 auto}
+
+/* Per-pane scroll: each group body has its OWN bounded height and its own
+   scroller, so a long list scrolls inside its group instead of stretching the
+   dock or bleeding into the next group. The dock reserves a stable scrollbar
+   gutter (see .pdock) so the panel's own scrollbar sits in its own column and
+   never overlaps a pane's. Override the bound per group with --gh. */
+.dgrp-b{max-height:var(--gh,200px);overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;padding-bottom:var(--s2)}
+/* one group per dock may take the leftover space instead of a fixed bound.
+   min-height:0 on both is what keeps a long list from stretching the window
+   instead of scrolling inside its own group. */
+/* .grow takes the leftover space, but it must never be squeezed to nothing.
+   min-height:0 let it collapse to ~8px once four groups were stacked, so the
+   Library rendered as an invisible sliver. The floor keeps it usable and the
+   dock scrolls instead. */
+/* The floor has to sit on the GROUP as well as its body: sibling --gh budgets
+   that overrun the dock could still squeeze the group itself toward zero (a
+   Library group was measured at 267x0), and a body floor cannot rescue a
+   collapsed parent. The dock's own overflow-y:auto is the last-resort escape. */
+/* The floor also has to clear the group's OWN chrome. At 124/88 the Library
+   showed its scope chips and toolbar and then half a card row, cut off at the
+   dock edge - a sliver by a different route than VISUAL RULE 8's narrow one.
+   The floor now fits chrome + one WHOLE tile row; if that overruns the dock,
+   the dock's own scroller is the designed last resort. */
+.dgrp.grow{flex:1 1 auto;min-height:244px}
+.dgrp.grow>.dgrp-b{max-height:none;flex:1 1 auto;min-height:200px}
+.dgrp.grow.collapsed{flex:0 0 auto;min-height:0}
+
+/* ---- dock pane manager (VISUAL RULE 4) ----
+   Collapsing a group and CHOOSING WHICH GROUPS EXIST are different decisions,
+   and only the first had a control. Every dock now ends in one sticky footer
+   that lists its own groups with a check. photonz-ds.js builds it from the
+   groups themselves, so no page authors it and none can drift. */
+/* NO backdrop-filter here, deliberately: a blurred ancestor becomes a backdrop
+   root, and the .dockmenu nested inside it then had nothing left to blur - it
+   rendered see-through over the Library, breaking VISUAL RULE 11. The bar is
+   opaque instead, and the menu keeps its own blur. */
+.dockmgr{position:sticky;bottom:0;z-index:6;margin-top:auto;flex:none;
+  padding:var(--s2);border-top:1px solid var(--edge-lo);
+  background:var(--chrome-solid)}
+.dockmgr-b{display:flex;align-items:center;gap:var(--s2);width:100%;
+  padding:5px var(--s3);border:1px solid transparent;border-radius:var(--r-sm);
+  background:transparent;color:var(--faint);font-family:inherit;font-size:10px;
+  letter-spacing:.09em;text-transform:uppercase;font-weight:660;cursor:pointer;
+  transition:var(--ctl-tr)}
+.dockmgr-b:hover{color:var(--ink);background:var(--glass-thin);border-color:var(--edge-lo)}
+.dockmgr-b:focus-visible{outline:none;box-shadow:var(--ring)}
+.dockmgr-b .sp{margin-left:auto}
+.dockmenu{position:absolute;left:var(--s2);right:var(--s2);bottom:calc(100% + 6px);z-index:20}
+.dockmenu .menuitem{cursor:pointer}
+.dockmenu .menuitem .ck{margin-left:auto;color:var(--accent);flex:none;visibility:hidden}
+.dockmenu .menuitem.on .ck{visibility:visible}
+.dgrp.hidden{display:none}
+
+/* ---- splitters (Photoshop-like drag to resize) ---- */
+.splitter{flex:none;position:relative;background:transparent;border:0;padding:0;
+  touch-action:none;z-index:5}
+.splitter.v{width:8px;margin:0 -4px;cursor:col-resize}
+.splitter.h{height:8px;margin:-4px 0;cursor:row-resize}
+.splitter::after{content:"";position:absolute;background:transparent;transition:background .12s ease}
+.splitter.v::after{left:50%;top:0;bottom:0;width:2px;transform:translateX(-1px)}
+.splitter.h::after{top:50%;left:0;right:0;height:2px;transform:translateY(-1px)}
+/* visible grip at rest so the affordance is discoverable, accent on hover/drag */
+.splitter::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:var(--line-strong);border-radius:999px;opacity:.6;transition:var(--ctl-tr)}
+.splitter.v::before{width:3px;height:26px}
+.splitter.h::before{height:3px;width:26px}
+.splitter:hover::after,.splitter.dragging::after{background:var(--accent)}
+.splitter:hover::before,.splitter.dragging::before{background:var(--accent);opacity:1}
+.splitter:focus-visible{outline:none}
+.splitter:focus-visible::before{background:var(--accent);opacity:1;box-shadow:var(--ring)}
+
+/* ---- the dock collapsed to a slim rail (canvas dominates) ---- */
+.drail{display:none;flex:none;width:var(--rail-w,34px);flex-direction:column;align-items:center;
+  position:relative;z-index:9;
+  gap:var(--s2);padding:var(--s2) 0;border-left:1px solid var(--edge-lo);
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur)}
+.drailtab{display:flex;flex-direction:column;align-items:center;gap:var(--s2);
+  width:26px;padding:var(--s2) 0;border:1px solid transparent;border-radius:var(--r-sm);
+  background:transparent;color:var(--dim);font-family:inherit;font-size:10px;font-weight:600;
+  cursor:pointer;transition:var(--ctl-tr)}
+.drailtab .ic{color:var(--faint);flex:none}
+.drailtab .lb{writing-mode:vertical-rl;white-space:nowrap;letter-spacing:.03em}
+.drailtab:hover{color:var(--ink);background:var(--glass-thin);border-color:var(--edge-lo);
+  box-shadow:inset 0 1px 0 var(--edge-hi)}
+.drailtab:hover .ic{color:var(--ink)}
+.drailtab:active{transform:scale(.96)}
+.drailtab:focus-visible{outline:none;box-shadow:var(--ring)}
+.drailtab.on{color:var(--accent)}
+.drailtab.on .ic{color:var(--accent)}

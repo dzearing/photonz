@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · icon-gradient-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* icon-gradient-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
+     screen, rendered once, driven by the steps below. ONE scenario, and it
+     picks up exactly where `icon-draw-wt` stopped: the monochrome glyph exists
+     and now the colour version has to be made from it.
+
+     The argument here is that a GRADIENT IS A VALUE, not a vibe. Every part of
+     one is a number you can name: the type, the angle, each stop's colour, each
+     stop's position. So the same precision that put the glyph on whole units
+     applies to the paint: the angle snaps to 15 degrees, a stop snaps to the
+     midpoint and to its neighbours' spacing, and a position is typed as 58
+     rather than dragged to about-there. Then the whole paint gets a name and
+     the rest of the family follows it.
+
+     Rules this page holds to:
+       · there is ONE paint control (`.cpick`, UX-PATTERNS D7). Solid and the
+         three gradient types are the same popover, and it MOVES between slots
+         rather than being duplicated per slot.
+       · nothing here is a preset. Every gradient on this page was made out of
+         the colour that was already in the slot.
+       · a paint that is used twice is a Style. Copying a gradient by hand is
+         the bug the Library exists to prevent.
+
+     The artboards are page-local artwork: an HTML plate carrying the paint, and
+     the glyph as a CSS mask over it, so a gradient really is the element's own
+     background and the shared picker can paint it for real. */
+  #icon-gradient-wt .win.shell{height:960px;min-height:0}
+  /* the paint popover parks on the right, so the artboards start from the left
+     rather than from the middle. Scoped refinement of .canvas, not a new canvas. */
+  #icon-gradient-wt .canvas{--artboard-glow:560px 380px;justify-items:start;padding-left:var(--s7)}
+
+  /* ---------- the family: one big artboard and its sibling ---------- */
+  #icon-gradient-wt .gx-family{display:flex;align-items:flex-end;gap:var(--s6)}
+  #icon-gradient-wt .gx-art{display:flex;flex-direction:column;align-items:center;gap:var(--gap-sm)}
+  #icon-gradient-wt .gx-nm{font-family:var(--mono);font-size:10px;color:var(--faint)}
+
+  /* THE PLATE · the macOS app-icon squircle, and the element the paint lands on */
+  #icon-gradient-wt .gx-plate{position:relative;border-radius:22.4%;overflow:hidden;
+    box-shadow:0 30px 60px -22px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.16)}
+  #icon-gradient-wt .gx-plate.big{width:320px;height:320px}
+  #icon-gradient-wt .gx-plate.sib{width:132px;height:132px}
+  /* THE GLYPH · the same path icon-draw-wt exported, as a mask, so its paint is
+     a real background and the shared picker can drive it */
+  #icon-gradient-wt .gx-glyph{position:absolute;inset:6%;
+    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z'/%3E%3Cpath d='M12 20V16M10 18l2-2 2 2'/%3E%3C/svg%3E");
+    -webkit-mask:var(--m) center/100% 100% no-repeat;mask:var(--m) center/100% 100% no-repeat}
+  #icon-gradient-wt .gx-glyph.down{
+    --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z'/%3E%3Cpath d='M12 16V20M10 18l2 2 2-2'/%3E%3C/svg%3E")}
+
+  /* the quiet 24 unit grid, carried over from the glyph document */
+  #icon-gradient-wt .gx-grid{position:absolute;inset:0;pointer-events:none;opacity:.5}
+  #icon-gradient-wt .gx-grid svg{width:100%;height:100%;display:block}
+  #icon-gradient-wt #gxMinorPat path{stroke:rgba(255,255,255,.16)}
+  #icon-gradient-wt .gx-axis{stroke:rgba(255,255,255,.42);stroke-width:.06;stroke-dasharray:.4 .34}
+
+  /* THE GRADIENT HANDLE · the paint's geometry, on the canvas where the paint is */
+  #icon-gradient-wt .gx-handle{position:absolute;inset:0;pointer-events:none;z-index:3}
+  #icon-gradient-wt .gx-handle .ln{position:absolute;height:2px;background:#fff;opacity:.85;
+    transform-origin:0 50%;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+  #icon-gradient-wt .gx-handle .kn{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;
+    border-radius:50%;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.5)}
+  #icon-gradient-wt .gx-handle .pv{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;
+    border-radius:50%;border:2px solid #fff;background:transparent;box-shadow:0 1px 5px rgba(0,0,0,.5)}
+  #icon-gradient-wt .gx-handle .rd{position:absolute;font-family:var(--mono);font-size:10px;font-weight:640;
+    color:var(--accent-ink);background:var(--accent);padding:2px 7px;border-radius:6px;white-space:nowrap;
+    transform:translate(-50%,-140%)}
+
+  /* ---------- real size · an app icon lives or dies at 32px ---------- */
+  #icon-gradient-wt .gx-sizes{position:absolute;right:300px;top:var(--s4);z-index:6;
+    display:flex;align-items:flex-end;gap:var(--pad-sm);padding:var(--gap-sm) var(--pad-sm);
+    border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
+    backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+  #icon-gradient-wt .gx-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
+  #icon-gradient-wt .gx-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  #icon-gradient-wt .gx-sz .gx-plate{box-shadow:0 2px 6px -2px rgba(0,0,0,.5)}
+
+  /* ---------- the paint slot rows in Properties ---------- */
+  #icon-gradient-wt .cpick-btn .sw{background-size:cover}
+  #icon-gradient-wt .gx-ok{color:var(--good);font-weight:640}
+  #icon-gradient-wt .styrow .sw.grad{background-size:cover}
+  #icon-gradient-wt .libtile .th.plate{display:grid;place-items:center;aspect-ratio:16/10}
+  #icon-gradient-wt .libtile .th.plate .p{width:34px;height:34px;border-radius:22.4%}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="icon-gradient-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Paint an icon with a gradient</h2><span class="k">· usage clickthrough · one scenario</span></div>
+
+  <p class="pglead">One job: take the <b>cloud upload</b> glyph off the grid and make the colour version of it, the one that ships as an
+    app icon. The interesting part is that <b>a gradient here is a set of numbers, not a mood</b>. Its type, its angle, each stop's
+    colour and each stop's position are all values you can name, so the angle snaps to 15 degrees the way the drawing snapped to
+    whole units, a stop snaps to the midpoint and to its neighbours' spacing, and a position is typed as <code>58</code> rather
+    than dragged to about there. Then the whole paint gets a name and the rest of the family follows it. There is one paint
+    control on this page and it <b>moves</b> between slots. Eleven real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE shell, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtGrad">
+
+    <div class="wt-stage">
+      <!-- The title bar, the Ask launcher and the `…` command surface are all
+           built by the SHELL COMPONENT (photonz-ds.js). This page declares what
+           it is: the document, the lens, and a live status readout the
+           walkthrough steps drive (#chipPaint). -->
+      <div class="win tall cq shell" data-shell="brand-icons · app icon · 1024 × 1024" data-ws="ui"
+           data-status='paint · <span id="chipPaint">solid</span>'>
+
+        <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+        <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` button that
+             opens it is built by the shell component, into .cnv-act. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Paint</div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as a style</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Convert to radial</div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy paint <span class="sc">⌘⌥C</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Export</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export icon set</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+
+          <div class="cnv">
+            <div class="canvas">
+
+              <!-- ===== THE FAMILY · two artboards in one document ===== -->
+              <div class="gx-family">
+                <div class="gx-art">
+                  <div class="gx-plate big" id="gxPlate" style="background:#5B3AD9">
+                    <span class="gx-grid wt-off" id="gxGrid">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <defs>
+                          <pattern id="gxMinorPat" width="1" height="1" patternUnits="userSpaceOnUse">
+                            <path d="M0 0H1M0 0V1" fill="none" stroke="currentColor" stroke-width=".03"/>
+                          </pattern>
+                        </defs>
+                        <rect x="0" y="0" width="24" height="24" fill="url(#gxMinorPat)"/>
+                        <path class="gx-axis" d="M12 0V24M0 12H24"/>
+                      </svg>
+                    </span>
+                    <span class="gx-glyph" id="gxGlyph" style="background:#ffffff"></span>
+                    <!-- the paint's geometry, drawn where the paint is -->
+                    <span class="gx-handle wt-off" id="gxHandle">
+                      <i class="ln" id="gxHandleLn" style="left:50%;top:50%;width:150px;transform:rotate(45deg)"></i>
+                      <i class="pv" id="gxHandlePv" style="left:50%;top:50%"></i>
+                      <i class="kn" id="gxHandleKn" style="left:83%;top:83%;background:#A78BFF"></i>
+                      <b class="rd" id="gxHandleRd" style="left:50%;top:50%">50% · 50%</b>
+                    </span>
+                  </div>
+                  <span class="gx-nm" id="gxNm">cloud-upload · 1024</span>
+                </div>
+
+                <div class="gx-art">
+                  <div class="gx-plate sib" id="gxSib" style="background:#3A3F52">
+                    <span class="gx-glyph down" id="gxSibGlyph" style="background:#E7EBFF"></span>
+                  </div>
+                  <span class="gx-nm">cloud-download · 1024</span>
+                </div>
+              </div>
+
+              <!-- REAL SIZE · where an app icon is actually judged -->
+              <div class="gx-sizes wt-off" id="gxSizes">
+                <span class="gx-sz">
+                  <span class="gx-plate" style="width:16px;height:16px;background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"><span class="gx-glyph" style="background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"></span></span>
+                  <span class="n">16</span>
+                </span>
+                <span class="gx-sz">
+                  <span class="gx-plate" style="width:32px;height:32px;background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"><span class="gx-glyph" style="background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"></span></span>
+                  <span class="n">32</span>
+                </span>
+                <span class="gx-sz">
+                  <span class="gx-plate" style="width:56px;height:56px;background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"><span class="gx-glyph" style="background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"></span></span>
+                  <span class="n">64</span>
+                </span>
+                <span class="gx-sz">
+                  <span class="gx-plate" style="width:88px;height:88px;background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"><span class="gx-glyph" style="background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"></span></span>
+                  <span class="n">128</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="cnv-act">
+              <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- FLOATING TOOL BAR · D4 UI / vector inventory -->
+            <div class="tbar">
+              <span class="tstrip" data-radio=".tool">
+                <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tRect" title="Rectangle (R)"><i class="ic sm ic-square"></i></button>
+                <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
+                <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                <button class="tool" id="tGrad" title="Gradient (G)"><i class="ic sm ic-gradient"></i></button>
+                <button class="tool ovf" id="tEyedrop" title="Sample a colour (I)"><i class="ic sm ic-eyedropper"></i></button>
+                <span class="tsep ovf"></span>
+                <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                <span class="tsep"></span>
+                <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+              </span>
+              <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+              <span class="tsep"></span>
+              <span class="swpair" title="Foreground and background paint">
+                <span class="fg" id="gxFgSw" data-menu="#gxPicker" data-cl-slot="Foreground" data-cl-paint="1"
+                      data-cl-color="#5B3AD9" data-cl-fill="#gxFgSw" style="background:#5B3AD9"></span>
+                <span class="bg" style="background:#ffffff"></span>
+              </span>
+              <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+              <span class="tsep"></span>
+              <span class="zoomctl">
+                <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                <span class="val zval">100%</span>
+              </span>
+              <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:206px;z-index:12">
+                <div class="menuitem"><i class="ic ic-eyedropper"></i> Sample a colour <span class="sc">I</span></div>
+                <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+              </div>
+            </div>
+
+            <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H or the menu-bar icon) -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+              <div class="sheet-b">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#6E8BFF,#1B1140)"></span>
+                    <span class="cap"><span class="nm">brand-board</span><span class="ago">11 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ECF8E,#12C2E9)"></span>
+                    <span class="cap"><span class="nm">competitor-icons</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- the agent chat / command palette (D6) -->
+            <!-- The agent chat overlay is built by the shell component, so this page
+                 does not carry a copy of it. -->
+
+            <!-- ============================================================
+                 THE ONE PAINT CONTROL (UX-PATTERNS D7). Solid and the three
+                 gradient types are the same popover, and it MOVES between
+                 slots. It lives outside .pdock so the dock's scroller cannot
+                 clip it.
+                 ============================================================ -->
+            <div class="popover cpick pop" id="gxPicker" data-cp-color="#5B3AD9"
+                 data-cp-recent="#5B3AD9,#6E8BFF,#A78BFF,#1B1140,#4A3AE0,#C7D2FF,#FFFFFF,#3ECF8E,#0C0E14"
+                 style="position:absolute;right:var(--s4);top:56px;z-index:14" aria-label="Paint">
+              <div class="cp-head">
+                <span class="cp-prev"><i class="was"></i><i class="now"></i></span>
+                <span class="cp-name" id="gxPickName">Plate fill</span>
+                <span class="sp"></span>
+                <button class="btn ghost icon sm" title="Sample a colour from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>
+                <button class="btn ghost icon sm" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>
+              </div>
+              <div class="cp-types" data-cp-types role="group" aria-label="Paint type"></div>
+              <div class="cp-geo wt-off" data-cp-geo></div>
+              <div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>
+              <div class="seg cp-mode" data-cp-mode role="group" aria-label="Colour format">
+                <button class="on" data-cp-m="hsl">HSL</button>
+                <button data-cp-m="rgb">RGB</button>
+                <button data-cp-m="hex">HEX</button>
+              </div>
+              <div class="cp-sliders" data-cp-sliders></div>
+              <div class="cp-sw">
+                <span class="cp-scope" data-cp-scope role="group" aria-label="Swatch scope">
+                  <button class="on" data-cp-sc="shades">Shades</button>
+                  <button data-cp-sc="related">Related</button>
+                  <button data-cp-sc="document">In document</button>
+                </span>
+                <div class="cp-chips" data-cp-chips></div>
+              </div>
+              <div class="cp-foot">
+                <span class="cp-ctr" data-cp-ctr></span>
+                <span class="sp"></span>
+                <button class="btn secondary sm" id="btnSaveStyle"><i class="ic ic-swatch"></i> Save style</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="splitter v" data-min="240" data-max="440"></div>
+
+          <!-- THE RIGHT DOCK -->
+          <div class="pdock" id="dock">
+
+            <div class="dgrp" id="gLayers" style="--gh:186px">
+              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2 icons</span>
+                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div class="lgroup">cloud-upload</div>
+                <div class="lrow" id="lrGlyph"><i class="ic ic-bezier"></i><span class="nm">Glyph</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrPlate"><i class="ic ic-square"></i><span class="nm">Plate</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lgroup">cloud-download</div>
+                <div class="lrow" id="lrSibGlyph"><i class="ic ic-bezier"></i><span class="nm">Glyph</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow" id="lrSibPlate"><i class="ic ic-square"></i><span class="nm">Plate</span><i class="ic sm ic-eye eye"></i></div>
+              </div>
+            </div>
+
+            <div class="splitter h" data-min="120" data-max="360"></div>
+
+            <!-- PROPERTIES · a paint slot is a swatch, and every swatch opens
+                 the SAME picker -->
+            <div class="dgrp" id="gProps" style="--gh:360px">
+              <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Plate</span></div>
+              <div class="dgrp-b">
+                <div class="section">
+                  <div class="sec-h">Paint <span class="mut" id="pPaintKind">Solid</span></div>
+                  <div class="irow"><span class="rl">Fill</span>
+                    <button class="cpick-btn wide" id="btnPlateFill" data-menu="#gxPicker" data-cl-slot="Plate fill" data-cl-paint="1"
+                            data-cl-color="#5B3AD9" data-cl-fill="#gxPlate,#pFillSw" data-cl-text="#pFillLbl">
+                      <span class="sw" id="pFillSw" style="background:#5B3AD9"></span><span id="pFillLbl">#5B3AD9</span>
+                    </button>
+                  </div>
+                  <div class="irow"><span class="rl">Glyph</span>
+                    <button class="cpick-btn wide" id="btnGlyphFill" data-menu="#gxPicker" data-cl-slot="Glyph fill" data-cl-paint="1"
+                            data-cl-color="#FFFFFF" data-cl-fill="#gxGlyph,#pGlyphSw" data-cl-text="#pGlyphLbl">
+                      <span class="sw" id="pGlyphSw" style="background:#ffffff"></span><span id="pGlyphLbl">#FFFFFF</span>
+                    </button>
+                  </div>
+                  <p class="note">Two slots, one control. The picker moves to whichever swatch you clicked and keeps its recents and its shades on the way, so matching the glyph to the plate is two clicks rather than two dialogs.</p>
+                </div>
+
+                <div class="section wt-off" id="secGeo">
+                  <div class="sec-h">Gradient <span class="mut" id="pGradKind">Radial</span></div>
+                  <div class="grid2">
+                    <div class="field"><span class="k">Origin</span><span class="v" id="pOrigin">50, 50</span></div>
+                    <div class="field"><span class="k">Angle</span><span class="v" id="pAngle">—</span></div>
+                  </div>
+                  <div class="irow" style="margin-top:7px"><span class="rl">Stops</span><span class="field" style="width:100%"><span class="v" id="pStops">2 · 0, 100</span></span></div>
+                  <p class="note" id="pGradNote">Every part of this is a value with a name, which is why the same paint can be applied twice and stay identical both times.</p>
+                </div>
+
+                <div class="section wt-off" id="secStyle">
+                  <div class="sec-h">Style <span class="mut" id="pStyleMut">Brand / plate</span></div>
+                  <div class="irow"><span class="rl">Linked</span>
+                    <span class="chip style" id="chipStyle"><span class="sw" style="background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"></span> Brand / plate</span>
+                  </div>
+                  <p class="note" id="pStyleNote">The paint has a name now, so it is one definition rather than a value copied around. Edit it once and everything pointing at the name follows.</p>
+                </div>
+
+                <div class="section wt-off" id="secCheck">
+                  <div class="sec-h">Check <span class="mut" id="pCheckMut">at real size</span></div>
+                  <div class="grid2">
+                    <div class="field"><span class="k">Worst point</span><span class="v gx-ok" id="pContrast">4.9:1</span></div>
+                    <div class="field"><span class="k">At 16px</span><span class="v gx-ok" id="pSmall">reads</span></div>
+                  </div>
+                  <p class="note" id="pCheckNote">A gradient can pass on the light end of the plate and fail on the dark end, so the readout takes the worst point under the glyph rather than an average.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+            <div class="dgrp grow" id="gLibrary">
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Styles</span>
+                <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+              </div>
+              <div class="dgrp-b">
+                <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                  <div class="seg scopeseg">
+                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button data-scope="components" data-scope-name="Components">Comp</button>
+                    <button class="on" data-scope="styles" data-scope-name="Styles">Styles</button>
+                    <button data-scope="assets" data-scope-name="Assets">Assets</button>
+                  </div>
+                </div>
+                <div class="libtools">
+                  <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search styles" aria-label="Search styles"></span>
+                </div>
+                <div data-scope-body="media" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media in this document</div>
+                </div>
+                <div data-scope-body="components" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile comp" tabindex="0"><span class="th plate"><span class="p" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span></span><span class="cap"><span class="nm">App icon</span><span class="mt">plate + glyph</span></span></div>
+                  </div>
+                </div>
+                <div data-scope-body="styles">
+                  <div style="padding:0 var(--pad-sm)">
+                    <div class="styrow wt-off" id="styPlate" data-sel-class="sel"><span class="sw grad" style="background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)"></span><span class="nm">Brand / plate</span><span class="use" id="styPlateUse">1 use</span></div>
+                    <div class="styrow wt-off" id="styGlyph"><span class="sw grad" style="background:linear-gradient(135deg,#ffffff,#C7D2FF)"></span><span class="nm">Brand / glyph</span><span class="use">1 use</span></div>
+                    <div class="styrow"><span class="sw" style="background:#0c0e14"></span><span class="nm">Glyph / stroke 1.75</span><span class="use">200 uses</span></div>
+                    <div class="styrow"><span class="sw" style="background:#3ECF8E"></span><span class="nm">Status / good</span><span class="use">6 uses</span></div>
+                  </div>
+                  <p class="note" style="padding:0 var(--pad-sm)">A style is a paint with a name. Solid or gradient makes no difference to it, which is the whole reason the picker treats them as one thing.</p>
+                </div>
+                <div data-scope-body="assets" class="wt-off">
+                  <div class="libgrid">
+                    <div class="libtile" tabindex="0"><span class="th plate"><span class="p" style="background:#0c0e14"></span></span><span class="cap"><span class="nm">cloud-upload</span><span class="mt">24 × 24</span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="drail">
+            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+            <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+            <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+          </div>
+
+          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:230px;z-index:11">
+            <div class="menuitem"><i class="ic ic-copy"></i> Copy paint <span class="sc">⌥⌘C</span></div>
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save paint as a style</div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+          </div>
+          <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:224px;z-index:11">
+            <div class="menuitem"><i class="ic ic-swatch"></i> Save current paint as a style</div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import a palette</div>
+            <div class="menuitem"><i class="ic ic-history"></i> Sample from capture history</div>
+          </div>
+          <div class="popover menu pop" id="exportPop" style="position:absolute;right:var(--s4);top:var(--s4);width:250px;z-index:13">
+            <div class="mlabel">App icon set</div>
+            <div class="menuitem" id="miExportSet"><i class="ic ic-export"></i> All sizes · 16 to 1024 <span class="sc">⇧⌘E</span></div>
+            <div class="menuitem"><i class="ic ic-document"></i> Single PNG at 1024</div>
+            <div class="menuitem"><i class="ic ic-bezier"></i> SVG with live gradients</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Both icons</div>
+            <div class="menuitem"><i class="ic ic-layers"></i> Export the family</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The window above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Open the paint on the plate"
+          data-gx-type="solid" data-gx-color="#5B3AD9"
+          data-cue="#btnPlateFill" data-cue-label="Click the Fill swatch" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid"
+          data-css="#gxPlate=background:#5B3AD9|#pFillSw=background:#5B3AD9"
+          data-set="#propKind=Plate|#pPaintKind=Solid|#pFillLbl=#5B3AD9|#gxPickName=Plate fill|#chipPaint=solid">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Fill</b> swatch on the plate</p>
+          <p class="wt-where">Properties, in the <b>Paint</b> section</p>
+          <p class="wt-res">the paint editor opens on <code>#5B3AD9</code>, the flat colour the plate starts on. This is the <b>only</b> colour control in Photonz: the same popover handles a solid and all three gradient types, and it moves to whichever swatch you click rather than each slot growing a dialog of its own. The quiet 24 unit grid is still on the artboard, carried over from the glyph document.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Turn the solid into a radial"
+          data-gx-type="radial" data-gx-color="#6E8BFF"
+          data-cue="#gxPicker [data-cp-types]" data-cue-label="Click Radial in the type switch" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid,#secGeo,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 50% 50%,#6E8BFF 0%,#A78BFF 100%)|#pFillSw=background:radial-gradient(circle at 50% 50%,#6E8BFF 0%,#A78BFF 100%)|#gxHandlePv=left:50%;top:50%|#gxHandleKn=left:83%;top:83%;background:#A78BFF|#gxHandleLn=left:50%;top:50%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:50%;top:44%"
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 2 stops|#gxPickName=Plate fill|#chipPaint=radial|#pOrigin=50, 50|#pAngle=—|#pStops=2 · 0, 100|#gxHandleRd=50% · 50%">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Radial</b>, in the four-way type switch</p>
+          <p class="wt-where">the paint editor, along its top</p>
+          <p class="wt-res">the ramp and the direction pad appear, and the plate becomes a gradient <b>seeded from the colour it already had</b> rather than from a stock preset. That matters: you never lose the colour you were working from. The four thumbnails are outcomes, not words, so each one shows what your paint would look like as that type.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Put the light where the light is"
+          data-gx-type="radial" data-gx-color="#6E8BFF"
+          data-cue="#gxPicker [data-cp-geo]" data-cue-label="Drag the pad's pivot up and left" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid,#secGeo,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#A78BFF 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#A78BFF 100%)|#gxHandlePv=left:32%;top:22%|#gxHandleKn=left:65%;top:55%;background:#A78BFF|#gxHandleLn=left:32%;top:22%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:32%;top:16%"
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 2 stops|#chipPaint=radial|#pOrigin=32, 22|#pAngle=—|#pStops=2 · 0, 100|#gxHandleRd=32% · 22%|#pGradNote=The origin is a pair of percentages of the plate, so it survives every size the icon exports at. Drag it, or type 32 and 22, and both are the same call.">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do" data-verb="Drag">the <b>pivot</b> on the direction pad up and to the left</p>
+          <p class="wt-where">the paint editor, in the gradient row</p>
+          <p class="wt-res">the highlight moves to <code>32%, 22%</code> and the plate reads as lit from above, the way a physical object would be. The handle on the artboard moves with it, because the gradient's geometry belongs on the canvas as much as in the panel. The origin is stored as <b>percentages of the plate</b>, so it holds at 1024 and at 16.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Type the dark end exactly"
+          data-gx-type="radial" data-gx-color="#1B1140"
+          data-cue="#gxPicker [data-cp-mode]" data-cue-label="Switch to HEX and paste #1B1140" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid,#secGeo,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#1B1140 100%)|#gxHandlePv=left:32%;top:22%|#gxHandleKn=left:65%;top:55%;background:#1B1140|#gxHandleLn=left:32%;top:22%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:65%;top:49%"
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 2 stops|#chipPaint=radial|#pOrigin=32, 22|#pStops=2 · 0, 100|#gxHandleRd=#1B1140 · 100%|#pGradNote=A stop is a colour and a position, and both are typed as often as they are dragged. The HEX field takes #1B1140, rgb(27, 17, 64) or hsl(255 58% 16%), because a brand colour usually arrives as text from somewhere else.">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do">the outer stop, then <b>HEX</b>, and paste <code>#1B1140</code></p>
+          <p class="wt-where">the paint editor, on the format switch under the field</p>
+          <p class="wt-res">the far end of the ramp becomes the exact brand ink rather than something dragged close to it. That field also takes <code>rgb(27, 17, 64)</code> and <code>hsl(255 58% 16%)</code>, because a brand colour usually arrives as text pasted from a spec, and retyping it by eye is how a family drifts apart.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Add a stop, and put it on a number"
+          data-gx-type="radial" data-gx-color="#4A3AE0"
+          data-cue="#gxPicker [data-cp-geo]" data-cue-label="Click +, then set the stop to 58%" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid,#secGeo,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxHandlePv=left:32%;top:22%|#gxHandleKn=left:59%;top:49%;background:#4A3AE0|#gxHandleLn=left:32%;top:22%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:59%;top:43%"
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 3 stops|#chipPaint=radial · 3 stops|#pOrigin=32, 22|#pStops=3 · 0, 58, 100|#gxHandleRd=#4A3AE0 · 58%|#pGradNote=Dragging a stop snaps it to the midpoint, to the other stops, and to even spacing between them, and the card above the ramp takes the number directly. 58 is 58, not somewhere in the high fifties.">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do"><b>+</b> on the ramp, then set the new stop to <code>58%</code></p>
+          <p class="wt-where">the paint editor, on the stop row under the ramp</p>
+          <p class="wt-res">a third stop lands and the falloff stops looking like a lens flare. Dragging it <b>snaps to the midpoint, to the other stops, and to even spacing between them</b>, the same idea as the drawing grid one page over, and the card above the ramp takes the position as a typed number. So this stop is at 58, not somewhere in the high fifties.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Give the paint a name"
+          data-gx-type="radial" data-gx-color="#4A3AE0"
+          data-cue="#btnSaveStyle" data-cue-label="Click Save style" data-cue-place="top"
+          data-open="#gProps,#gLibrary"
+          data-select="#lrPlate" data-pop="#gxPicker" data-scope="styles"
+          data-show="#gxGrid,#secGeo,#gxHandle,#secStyle,#styPlate"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxHandlePv=left:32%;top:22%|#gxHandleKn=left:59%;top:49%;background:#4A3AE0|#gxHandleLn=left:32%;top:22%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:59%;top:43%"
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Brand / plate|#chipPaint=Brand / plate|#pOrigin=32, 22|#pStops=3 · 0, 58, 100|#styPlateUse=1 use|#gxHandleRd=#4A3AE0 · 58%">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do"><b>Save style</b>, and call it <b>Brand / plate</b></p>
+          <p class="wt-where">the paint editor's footer</p>
+          <p class="wt-res">the whole paint, three stops and an origin and all, becomes <b>one named thing</b> in Library › Styles, and the Fill row now shows the name instead of a value. A style does not care whether it holds a solid or a gradient, which is exactly why the picker refuses to treat those as two different features.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Move the same control to the glyph"
+          data-gx-type="solid" data-gx-color="#FFFFFF"
+          data-cue="#btnGlyphFill" data-cue-label="Click the Glyph swatch" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrGlyph" data-pop="#gxPicker"
+          data-show="#gxGrid,#secStyle,#styPlate"
+          data-hide="#secGeo,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxGlyph=background:#ffffff|#pGlyphSw=background:#ffffff"
+          data-set="#propKind=Glyph|#pPaintKind=Solid|#pFillLbl=Brand / plate|#pGlyphLbl=#FFFFFF|#gxPickName=Glyph fill|#chipPaint=solid">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do">the <b>Glyph</b> swatch</p>
+          <p class="wt-where">Properties, one row below Fill</p>
+          <p class="wt-res">the picker <b>slides to the glyph slot</b> and comes back to Solid, because that is what the glyph is painted with. It brought its recents and its shades with it, so the plate colours you were just working from are one click away. This is the same popover, not a second one: there is exactly one colour surface in the app.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Linear, at an angle you can name"
+          data-gx-type="linear" data-gx-color="#FFFFFF"
+          data-cue="#gxPicker [data-cp-geo]" data-cue-label="Pick Linear, then shift-drag the pad to 135°" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrGlyph" data-pop="#gxPicker"
+          data-show="#gxGrid,#secGeo,#secStyle,#styPlate,#styGlyph,#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#pGlyphSw=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#gxHandleLn=left:28%;top:20%;width:186px;transform:rotate(45deg)|#gxHandlePv=left:28%;top:20%|#gxHandleKn=left:69%;top:61%;background:#C7D2FF|#gxHandleRd=left:49%;top:35%"
+          data-set="#propKind=Glyph|#pPaintKind=Linear|#pGradKind=Linear|#pGlyphLbl=Linear · 135°|#chipPaint=linear 135°|#pOrigin=32, 24|#pAngle=135°|#pStops=2 · 0, 100|#gxHandleRd=135° · snapped|#pGradNote=Hold shift and the angle snaps to 15 degree steps, so 135 is 135 rather than 133.7. An icon family whose gradients all run at the same angle looks deliberate, and one where they nearly do looks careless.">
+        <div class="wt-cap comp">
+          <span class="wt-n">8</span>
+          <p class="wt-do" data-verb="Drag">the <b>Linear</b> type, then hold <code>⇧</code> and drag the pad round to <b>135°</b></p>
+          <p class="wt-where">the paint editor, in the gradient row</p>
+          <p class="wt-res">the glyph gets a soft top-left to bottom-right ramp, and the angle lands on <b>exactly 135</b> because shift snaps it to 15 degree steps. That is the same idea as the drawing grid: a family whose gradients all run at one angle looks deliberate, and one where they nearly do looks careless. The handle on the artboard shows the axis the ramp actually runs along.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Judge it at the size it ships at"
+          data-gx-type="linear" data-gx-color="#FFFFFF"
+          data-cue="#secCheck" data-cue-label="Read the Check section" data-cue-place="left"
+          data-open="#gProps" data-collapse="#gLibrary"
+          data-select="#lrGlyph" data-pop="#gxPicker"
+          data-show="#gxGrid,#secGeo,#secStyle,#secCheck,#styPlate,#styGlyph,#gxSizes"
+          data-hide="#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#pGlyphSw=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"
+          data-set="#propKind=Glyph|#pPaintKind=Linear|#pGradKind=Linear|#pGlyphLbl=Linear · 135°|#chipPaint=linear 135°|#pOrigin=32, 24|#pAngle=135°|#pContrast=4.9:1|#pSmall=reads">
+        <div class="wt-cap comp">
+          <span class="wt-n">9</span>
+          <p class="wt-do">the <b>Check</b> section, and the size strip at the top of the canvas</p>
+          <p class="wt-where">Properties, under Style</p>
+          <p class="wt-res">two gradients meeting each other is the one place an icon quietly fails, so the check takes the <b>worst point</b> under the glyph rather than an average: <code>4.9:1</code>, out where the plate is lightest and the glyph is at its palest. The picker's own readout answers a simpler question, contrast against white, and both are worth having. The strip shows the icon at 16, 32, 64 and 128, and the 16 is the one that decides whether the gradient was worth having at all.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Hand the paint to the rest of the family"
+          data-gx-type="radial" data-gx-color="#6E8BFF"
+          data-cue="#styPlate" data-cue-label="Drop Brand / plate onto cloud-download" data-cue-place="left"
+          data-open="#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrSibPlate"
+          data-show="#gxGrid,#secGeo,#secStyle,#secCheck,#styPlate,#styGlyph,#gxSizes"
+          data-hide="#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxSib=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxSibGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pGlyphSw=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#gxGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"
+          data-set="#propKind=cloud-download|#pPaintKind=Brand / plate|#pFillLbl=Brand / plate|#chipPaint=Brand / plate|#styPlateUse=2 uses|#pStyleMut=Brand / plate|#pStyleNote=Both plates point at one definition now. Move the origin or retype a stop and both icons change together, which is the difference between a family and two files that happen to look similar.">
+        <div class="wt-cap comp">
+          <span class="wt-n">10</span>
+          <p class="wt-do" data-verb="Drag"><b>Brand / plate</b> onto the second artboard</p>
+          <p class="wt-where">Library › Styles, onto <b>cloud-download</b> on the canvas</p>
+          <p class="wt-res">the sibling takes the whole paint at once, origin and stops together, and the style now reads <b>2 uses</b>. Nothing was copied: both plates point at one definition, so moving the light or retyping a stop moves both icons. That is the difference between a family and two files that happen to look similar.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Export the set"
+          data-gx-type="radial" data-gx-color="#6E8BFF"
+          data-cue="#miExportSet" data-cue-label="Click All sizes · 16 to 1024" data-cue-place="left"
+          data-open="#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrSibPlate" data-pop="#exportPop"
+          data-show="#gxGrid,#secGeo,#secStyle,#secCheck,#styPlate,#styGlyph,#gxSizes"
+          data-hide="#gxHandle"
+          data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxSib=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#gxSibGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#gxGlyph=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#4A3AE0 58%,#1B1140 100%)|#pGlyphSw=background:linear-gradient(135deg,#ffffff 0%,#C7D2FF 100%)"
+          data-set="#propKind=cloud-download|#pPaintKind=Brand / plate|#chipPaint=Brand / plate|#styPlateUse=2 uses|#pCheckMut=every size|#pCheckNote=Every size is rendered from the same vector paint rather than downscaled from the 1024, so the 16 gets its own honest gradient instead of a blurred version of a big one.">
+        <div class="wt-cap comp">
+          <span class="wt-n">11</span>
+          <p class="wt-do"><b>All sizes · 16 to 1024</b></p>
+          <p class="wt-where">the <b>Export</b> button in the title bar</p>
+          <p class="wt-res">every size is rendered <b>from the paint</b> rather than downscaled from the 1024, so the 16 gets its own honest gradient instead of a blurred copy of a big one. The SVG option keeps the gradients live, which means whoever consumes the icon can still point it at a different style. Two icons, one paint, one definition.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the flat plate"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>A gradient is <b>a set of values, not a mood</b>: a type, an origin, an angle, and a list of stops that each have a colour and a position. Once it is values, the same precision the drawing grid gave the glyph applies to the paint. The angle snaps to 15 degrees, a stop snaps to the midpoint and to its neighbours, and a position is typed. And because it is values, it can have a name, which is the only reason a family of icons stays a family.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The gradient could be <b>edited entirely on the canvas</b>, with the ramp drawn along the axis handle and the stops draggable in place, so the panel becomes the numeric view rather than the only view. Photoshop and Figma both make you look away from the artwork to move a stop. The risk is a handle that covers the thing it is painting, which is why here the handle shows geometry and the ramp stays in the panel.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should a style be able to hold <b>a paint per appearance</b>, so <code>Brand / plate</code> carries a light-mode and a dark-mode ramp under one name? It would make one style do what two nearly-identical ones do today, and it is how tokens already work. The catch is that an app icon does not switch with the system, so the same style would mean different things in different places.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local wiring. The walkthrough drives all of this declaratively; this
+     is what makes the SAME controls work when a person clicks them directly.
+
+     a · the Library scope switch
+     b · the one paint control, re-anchored to whichever swatch was clicked
+         (the D7 rule: the picker MOVES, it is never duplicated) */
+  (function () {
+    var root = document.getElementById('icon-gradient-wt');
+
+    /* ---- a · library scope ---- */
+    var seg = root.querySelector('.scopeseg');
+    if (seg) {
+      var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+      var label = root.querySelector('#gLibrary [data-scope-label]');
+      var bodies = [].slice.call(root.querySelectorAll('#gLibrary [data-scope-body]'));
+      btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+          if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+        });
+      });
+    }
+
+    /* ---- b · one picker, many slots ---- */
+    var picker = document.getElementById('gxPicker');
+    var name = document.getElementById('gxPickName');
+    var slots = [].slice.call(root.querySelectorAll('[data-cl-slot]'));
+    var current = null;
+    slots.forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        // Clicking the swatch you are already editing toggles the popover;
+        // clicking a DIFFERENT one always moves the picker there, because
+        // that is what the click meant.
+        if (current !== trigger) picker.classList.add('on');
+        current = trigger;
+        if (name) name.textContent = trigger.getAttribute('data-cl-slot');
+        picker.setAttribute('data-cp-fill', trigger.getAttribute('data-cl-fill') || '');
+        picker.setAttribute('data-cp-text', trigger.getAttribute('data-cl-text') || '');
+        picker.dispatchEvent(new CustomEvent('cp:set', {
+          detail: { color: trigger.getAttribute('data-cl-color') }
+        }));
+      });
+    });
+    // remember what the picker last produced for a slot, so coming back to it
+    // does not reset the work
+    picker.addEventListener('cp:change', function (e) {
+      if (current) current.setAttribute('data-cl-color', e.detail.hex);
+    });
+
+    /* ---- c · keep the popover honest during the walkthrough ----
+       The steps own the ARTWORK (data-css paints the plate and the glyph).
+       They cannot reach inside the shared picker, so a step would otherwise
+       narrate "switch it to Radial" while the popover still reads Solid.
+       Each step declares the state the popover should be in and this drives
+       the picker's OWN controls to get there, which is the same code path a
+       real click takes.
+
+       It deliberately un-points data-cp-fill first: while a step is driving,
+       the picker must not repaint the artboard underneath the walkthrough.
+       Clicking a swatch above re-points it and hands control back. */
+    var wt = root.querySelector('.wt');
+    var stepsBox = wt && wt.querySelector('.wt-steps');
+    function syncPicker() {
+      var step = wt && wt.querySelector('.wt-step.on');
+      if (!step) return;
+      var type = step.getAttribute('data-gx-type');
+      if (!type) return;
+      picker.removeAttribute('data-cp-fill');
+      picker.removeAttribute('data-cp-text');
+      current = null;
+      var color = step.getAttribute('data-gx-color');
+      if (color) picker.dispatchEvent(new CustomEvent('cp:set', { detail: { color: color } }));
+      var tab = picker.querySelector('[data-cp-t="' + type + '"]');
+      if (tab && !tab.classList.contains('on')) tab.click();
+    }
+    function watch() {
+      if (!stepsBox) return;
+      new MutationObserver(syncPicker).observe(stepsBox,
+        { subtree: true, attributes: true, attributeFilter: ['class'] });
+      syncPicker();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(watch, 0); });
+    else setTimeout(watch, 0);
+  })();
+</script>
+</body>
+</html>

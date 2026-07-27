@@ -1,0 +1,45 @@
+/* ============ app-shell patterns (documented by the Design language page) ============ */
+/* pane resizer handle (between docked panels) */
+.resizer{flex:none;position:relative;display:flex;align-items:center;justify-content:center;background:transparent}
+.resizer.v{width:7px;margin:0 -3px;cursor:col-resize}
+.resizer.h{height:7px;margin:-3px 0;cursor:row-resize;flex-direction:column}
+.resizer .ln{background:var(--line)}
+.resizer.v .ln{width:1px;height:100%}
+.resizer.h .ln{height:1px;width:100%}
+.resizer:hover .ln{background:var(--accent)}
+.resizer .grip{position:absolute;color:var(--faint);font-size:10px;line-height:0;letter-spacing:-1px}
+
+/* dockable panel tab strip (when panels stack) */
+.dock-tabs{display:flex;gap:2px;padding:var(--s2) var(--s2) 0;background:var(--panel);border-bottom:1px solid var(--line)}
+.dock-tab{font-size:11px;font-weight:560;color:var(--faint);padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2) var(--r2) 0 0;white-space:nowrap}
+.dock-tab.on{color:var(--ink);background:var(--panel-2)}
+.dock-tab:hover{color:var(--ink)}
+.dock-handle{color:var(--faint);cursor:grab;font-size:11px}
+
+/* popover / context menu */
+.popover{background:var(--chrome-solid);border:1px solid var(--line-strong);border-radius:var(--r4);box-shadow:var(--shadow);padding:var(--s1);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur)}
+.menu{min-width:184px}
+.menuitem{display:flex;align-items:center;gap:var(--pad-sm);padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2);font-size:12px;color:var(--ink);white-space:nowrap}
+.menuitem:hover{background:var(--accent-soft)}
+.menuitem .ic{color:var(--faint);width:14px;flex:none}
+.menuitem .sc{margin-left:auto;color:var(--faint);font-family:var(--mono);font-size:10px}
+.menu-sep{height:1px;background:var(--line-soft);margin:var(--s1) 0}
+
+/* tooltip -> MOVED to shared/components/tooltip.css (one file per component).
+   `.tooltip` is gone: use data-tip="..." for a real one, or .tip-demo for the
+   in-flow specimen that the doc pages show. */
+
+/* elevation ladder -> shared/components/elevation.css (it was defined here
+   AND in glass.css, with different shadows). */
+
+/* canonical STATIC readout: display-only values (5200K, 100%, "3 variants") must
+   NOT look like interactive controls. Flat, mono, faint, no hover/pointer. */
+.val{font-family:var(--mono);font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;background:transparent;border:0;padding:0;cursor:default;white-space:nowrap}
+
+/* back-chip (breadcrumb link used by design-language sub-pages) */
+.backchip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:560;color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:5px 10px;white-space:nowrap;cursor:pointer}
+.backchip:hover{border-color:var(--accent-line);color:var(--ink)}
+
+/* empty state */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--gap-sm);color:var(--faint);font-size:12px;padding:var(--s6);text-align:center}
+.empty .g{font-size:26px;opacity:.5}
