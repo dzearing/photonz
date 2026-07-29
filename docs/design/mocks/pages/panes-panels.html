@@ -17,8 +17,8 @@
   /* a bounded frame the size of a real dock, so a lone panel reads as docked */
   #panes-panels .pp-dock{width:272px;max-width:100%;height:468px;border:1px solid var(--edge-lo);
     border-radius:var(--r3);overflow:hidden;flex:none}
-  #panes-panels .pp-dock.sm{height:324px}
-  #panes-panels .pp-dock.xs{height:208px}
+  #panes-panels .pp-dock.sm{height:332px}
+  #panes-panels .pp-dock.xs{height:272px}
   #panes-panels .pp-dock .pdock{height:100%;width:100%;max-width:none;border-left:0}
 
   /* specimen on the left, its numbered legend on the right */
@@ -89,6 +89,11 @@
   /* windows need a definite height so the panel is bounded and the panes scroll */
   #panes-panels .pp-win{height:376px;min-height:0}
   #panes-panels .pp-win .canvas{min-height:0}
+
+  /* .canvas is a centred grid, so a bare .selwrap would stretch to the column
+     and the frame would hug the WRAPPER instead of the object. Size the wrapper
+     to the object and centre it; the frame itself is never touched. */
+  #panes-panels .pp-sel{justify-self:center}
 
   /* the splitter state ladder needs a strip to sit in */
   #panes-panels .pp-seam{height:36px;position:relative;display:flex;align-items:center;
@@ -238,6 +243,15 @@
           </table>
         </div>
       </div>
+      <p class="docnote"><b>The growing pane is the LAST one, and that is a rule, not a habit.</b> Whichever pane absorbs
+        the leftover space also absorbs whatever a fold or a hide gives back, so it decides where everything else ends up.
+        Put it last and folding a pane leaves every pane above it exactly where it was. Put it first and folding Properties
+        makes Layers swallow the gap and shove the folded header <b>to the bottom of the panel</b>, which reads as the pane
+        having been moved rather than closed. That is why Library sits at the bottom: it is the browse surface, so it is
+        the one that can afford to change size.</p>
+      <p class="docnote"><b>The corollary: Layers is never the growing pane.</b> It gets a bounded budget and its own
+        scroller, so a sixty-layer document scrolls inside it, the divider under it decides how much of the panel it
+        consumes, and it keeps scrolling at every size you drag it to.</p>
       <p class="docnote"><b>Nobody picks a pixel height.</b> Every page used to hand-tune one, so the same pane opened to a
         different size nearly everywhere: measured across seventeen windows, Layers had <b>eleven</b> distinct heights and
         Properties <b>thirteen</b>. A pane now declares its role and the ladder gives it one of three budgets. Exactly
@@ -330,7 +344,7 @@
           <div class="dgrp" data-grp="layers" style="--gh:100px">
             <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
             <div class="dgrp-b">
-              <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Nav bar</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow selc"><i class="ic ic-component"></i><span class="nm">Nav bar</span><i class="ic sm ic-component cmark"></i></div>
               <div class="lrow"><i class="ic ic-text"></i><span class="nm">Section title</span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Panel · glass</span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
@@ -342,7 +356,7 @@
             <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
           </div>
           <div class="splitter h" data-min="80" data-max="196"></div>
-          <div class="dgrp grow" data-grp="effects">
+          <div class="dgrp" data-grp="effects" style="--gh:92px">
             <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">3</span></div>
             <div class="dgrp-b">
               <div class="efx"><i class="ic sm ic-shadow"></i><span class="nm">Drop shadow</span><i class="ic sm ic-eye eye"></i></div>
@@ -404,7 +418,8 @@
             </div>
           </div>
           <p class="docsp-d"><b>"Not right now."</b> Click the header. The chevron rotates, the body folds, the header
-            stays. The freed height goes to the growing pane, so nothing else changes position.</p>
+            stays. The freed height goes <b>down</b> to the growing pane, so no pane above it moves and the folded header
+            stays exactly where it was.</p>
         </div>
 
         <div class="docsp">
@@ -486,7 +501,7 @@
                   <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
                 </div>
               </div>
-              <div class="dgrp grow" data-grp="props">
+              <div class="dgrp" data-grp="props" style="--gh:60px">
                 <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callout</span></div>
                 <div class="dgrp-b"><div class="pp-fill"><i></i><i></i><i></i><i></i><i></i></div></div>
               </div>
@@ -505,7 +520,7 @@
                 <button class="drailtab"><i class="ic sm ic-sliders"></i><span class="lb">Props</span></button>
               </div>
               <div class="pdock" id="ppDemoPanel" style="--dock-w:180px;width:180px;min-width:0;transition:width .22s cubic-bezier(.32,.72,0,1), opacity .22s ease">
-                <div class="dgrp grow" data-grp="layers">
+                <div class="dgrp" data-grp="layers" style="--gh:204px">
                   <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
                   <div class="dgrp-b">
                     <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Callout</span></div>
@@ -532,10 +547,19 @@
             <div class="edit lean" id="ppWide" data-dock="open">
               <div class="cnv">
                 <div class="canvas">
-                  <div class="hero-card" style="width:248px">
-                    <div style="font-family:var(--serif);font-size:19px;letter-spacing:-.015em;color:#fff">Welcome back</div>
-                    <div style="font-size:11px;color:rgba(255,255,255,.66);margin-top:4px">Pick up where you left off</div>
-                    <div class="uibtn grad" style="margin-top:12px">Continue</div>
+                  <!-- the selected layer, shown on the canvas too: the same
+                       selection is a ring here, a .lrow.selc in Layers, and the
+                       contents of Properties. Canonical frame, no overrides. -->
+                  <div class="selwrap pp-sel" style="width:248px">
+                    <div class="hero-card" style="width:100%">
+                      <div style="font-family:var(--serif);font-size:19px;letter-spacing:-.015em;color:#fff">Welcome back</div>
+                      <div style="font-size:11px;color:rgba(255,255,255,.66);margin-top:4px">Pick up where you left off</div>
+                      <div class="uibtn grad" style="margin-top:12px">Continue</div>
+                    </div>
+                    <div class="sel-ring"></div>
+                    <span class="handle tl"></span><span class="handle tr"></span>
+                    <span class="handle bl"></span><span class="handle br"></span>
+                    <span class="mtag">Welcome card · 360 × 208</span>
                   </div>
                 </div>
               </div>
@@ -544,7 +568,7 @@
                 <div class="dgrp" data-grp="layers" style="--gh:104px">
                   <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
                   <div class="dgrp-b">
-                    <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Welcome card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow selc"><i class="ic ic-component"></i><span class="nm">Welcome card</span><i class="ic sm ic-component cmark"></i></div>
                     <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
                     <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Continue</span><i class="ic sm ic-eye eye"></i></div>
                   </div>
@@ -581,9 +605,14 @@
             <div class="edit lean" id="ppNarrow" data-dock="overlay">
               <div class="cnv">
                 <div class="canvas">
-                  <div class="hero-card" style="width:180px">
-                    <div style="font-family:var(--serif);font-size:15px;letter-spacing:-.015em;color:#fff">Welcome back</div>
-                    <div class="uibtn grad" style="margin-top:10px">Continue</div>
+                  <div class="selwrap pp-sel" style="width:180px">
+                    <div class="hero-card" style="width:100%">
+                      <div style="font-family:var(--serif);font-size:15px;letter-spacing:-.015em;color:#fff">Welcome back</div>
+                      <div class="uibtn grad" style="margin-top:10px">Continue</div>
+                    </div>
+                    <div class="sel-ring"></div>
+                    <span class="handle tl"></span><span class="handle tr"></span>
+                    <span class="handle bl"></span><span class="handle br"></span>
                   </div>
                 </div>
               </div>
@@ -591,7 +620,7 @@
                 <div class="dgrp" data-grp="layers" style="--gh:96px">
                   <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
                   <div class="dgrp-b">
-                    <div class="lrow sel"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Welcome card</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow selc"><i class="ic ic-component"></i><span class="nm">Welcome card</span><i class="ic sm ic-component cmark"></i></div>
                     <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
                     <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Continue</span><i class="ic sm ic-eye eye"></i></div>
                   </div>
@@ -654,6 +683,8 @@
         <span class="pp-no">Write a pixel height because it looks right on your page.</span>
         <span class="pp-do">Let a long list <b>scroll inside its own pane</b>.</span>
         <span class="pp-no">Let a pane grow the panel, or the panel grow the window.</span>
+        <span class="pp-do">Put the <b>growing pane last</b>, and give the rest a budget.</span>
+        <span class="pp-no">Let a pane above swallow the gap and push a folded header down.</span>
         <span class="pp-do">Animate folding, hiding, and the rail transition.</span>
         <span class="pp-no">Animate anything a pointer is currently dragging.</span>
         <span class="pp-do">Keep every pane header clickable, with a visible chevron.</span>

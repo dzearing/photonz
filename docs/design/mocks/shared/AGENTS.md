@@ -110,6 +110,12 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `.efx` effect rows, `.gramp`/`.gstop` gradient, `.dial`.
 - **Canvas content:** `.hero-card` (designed sample), `.uibtn`/`.uibtn.grad`,
   selection: `.sel-ring`+`.handle`, `.mtag`; component: `.cinst`/`.cring`+`.cbadge`.
+- **Bounds rings are one family, all in `selection.css`:** `.sel-ring` (selected),
+  `.cinst`/`.cring` (component instance), `.marq` (marquee), `.hover-ring`,
+  `.lock-ring`. Every one of them hugs the bounds with a **2px** radius and never
+  traces the object's shape — only the STROKE changes, because only the meaning
+  changes. Never re-round one on a page: a card-sized radius makes the ring read
+  as an object of its own, so you cannot tell it from the thing it is ringing.
 - **Color:** `.cpick` (the ONE paint popover: a Solid/Linear/Radial/Angular type
   switch, the gradient ramp + stop rows when a gradient is chosen, an SV field, a
   centered HSL/RGB/HEX switch, one slider per channel with an editable value,
@@ -133,6 +139,15 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `selection.js` from the measured box (`md` ≥44px · `sm` shrinks and steps
   outside · `xs` <16px drops them, since a 7px handle on a 6px object is not
   grabbable). Lives in `shared/components/selection.{css,js}`.
+- **Tooltip timing is REST, not dwell.** The open clock (`DELAY_IN` 1000ms)
+  restarts on every pointermove, so a tooltip is owed to a pointer that has
+  *stopped* — sweeping a toolbar is silent at any value. Opening, swapping and
+  closing are three separate constants and must stay that way: `DELAY_IN` 1000 ·
+  `DELAY_FOCUS` 120 (keyboard has no pointer to still) · `DELAY_SWAP` 60 (one
+  open, walking to a neighbour) · `DELAY_HIDE` 450 (grace, so slipping onto the
+  gap between two buttons is travel not dismissal). Escape / press / scroll
+  bypass all four. Never collapse them into one number. Canonical page:
+  `pages/comp-tooltips.html`.
 - **Tooltip:** `data-tip="Label"` on ANY element (optionally `data-tip="Label|⌘K"`
   for a shortcut, and `data-tip-side="top|bottom|left|right"`). It shows on hover
   AND on keyboard focus, flips when it would clip, and points its beak at the
@@ -326,10 +341,14 @@ Canonical composition (chrome marked ⚙ is built, not written):
   `data-radio=".filmcard" data-radio-class="sel"` for single selection, and ship
   the pane with **one card already selected** so the action row is visible. Show
   enough cards to read as a strip (the real pane shows about eight).
-- **`.transport`** — the video bottom bar: a `.grp` for volume, a `.grp` for skip
-  back / play / skip forward, `.tc.cur`, a `.scrub` (`.fill`, `.mark` in/out,
-  `.knob`, `data-duration`), `.tc`, then edit actions whose `.lb` labels drop when
-  narrow.
+- **`.transport`** — the video bottom bar, in this order and with nothing else in
+  it: a `.grp` for volume, a `.grp` for skip back / play / skip forward (and loop,
+  if the page has one), `.tc.cur`, a `.scrub` (`.fill`, `.mark` in/out, `.knob`,
+  `data-duration`), `.tc`. **Time controls only — see UX-PATTERNS D8.** The
+  scrubber is the only flexible child and it needs every pixel: an edit action
+  parked beside it is stealing from the one control here you have to aim. Put the
+  action in the title bar, the tool strip, next to the selection it acts on, or on
+  the timeline dock's own `.tlbar`, in that order of preference.
 - **`.popover.pop`** — any menu toggled by `[data-menu="#id"]`. Outside-click and
   Esc dismiss it. Use it for the command surface, panel menus, tool overflow.
 - **`[data-radio="<sel>"]`** — exclusive selection inside a container

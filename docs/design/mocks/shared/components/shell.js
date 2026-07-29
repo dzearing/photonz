@@ -51,6 +51,46 @@
     ['ic-home', 'Home', 'app.home']
   ];
 
+  /* The receipt for a finished run, in the `.run` card from agent.css. Grouped
+     by the layer each command touched rather than by the order they ran, so
+     what you read back is what happened to the document. It is here, next to
+     the overlay it goes in, because the docked conversation is the SAME node
+     moved — not a second copy to keep in step. */
+  function runHTML() {
+    return '<div class="run" data-state="done">' +
+      '<div class="run-h"><span class="run-st"><i class="ic ic-check-circle"></i></span>' +
+      '<b class="run-t">Bigger headline, card glow</b>' +
+      '<span class="run-m">4 changes · 2 layers</span></div>' +
+      '<div class="run-b">' +
+      '<div class="run-grp">' +
+      '<button class="run-tgt" data-layer="headline"><i class="ic ic-text"></i>' +
+      '<span class="nm">Headline</span><span class="cnt">2</span></button>' +
+      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="headline">' +
+      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span>' +
+      '<span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span>' +
+      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
+      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="headline">' +
+      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Line height</span>' +
+      '<span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span>' +
+      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
+      '</div>' +
+      '<div class="run-grp">' +
+      '<button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i>' +
+      '<span class="nm">Card</span><span class="cnt">2</span></button>' +
+      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="card">' +
+      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Style</span>' +
+      '<span class="sv"><b>Card glow</b></span>' +
+      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
+      '<div class="step" role="button" tabindex="0" data-state="skip" data-layer="card">' +
+      '<span class="st"><i class="ic ic-x"></i></span><span class="sl">Corner radius</span>' +
+      '<span class="sv"><span>already 14</span></span>' +
+      '<button class="step-x" title="Apply anyway"><i class="ic ic-undo"></i></button></div>' +
+      '</div></div>' +
+      '<div class="run-f"><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo all</button>' +
+      '<button class="btn secondary sm"><i class="ic ic-sparkle"></i> Refine</button>' +
+      '<span class="sp"></span><span class="cost">1.4s · on-device</span></div></div>';
+  }
+
   function askPalHTML(id) {
     var rows = ASK_CMDS.map(function (c) {
       return '<div class="cpx"><i class="ic sm ' + c[0] + '"></i> ' + c[1] +
@@ -61,13 +101,12 @@
       '<div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span>' +
       '<span class="val">on-device</span>' +
       '<button class="btn ghost icon sm" title="New conversation"><i class="ic ic-plus"></i></button>' +
+      '<button class="btn ghost icon sm" data-ask-dock aria-pressed="false"' +
+      ' title="Dock the conversation"><i class="ic ic-sidebar-right"></i></button>' +
       '<button class="btn ghost icon sm" data-ask-close title="Close (Esc)"><i class="ic ic-x"></i></button>' +
       '</div>' +
       '<div class="chat-b"><div class="msg u">make the headline bigger and add our card glow</div>' +
-      '<div class="msg a">Done. Here is what changed:<div class="did">' +
-      '<div class="step"><span class="t"><i class="ic ic-check xs"></i></span> Headline · Display 36 <i class="ic xs ic-chevron-right"></i> <b style="color:var(--ink)">44</b></div>' +
-      '<div class="step"><span class="t"><i class="ic ic-check xs"></i></span> Card · added <b style="color:var(--ink)">Card glow</b> style</div>' +
-      '</div><p class="note" style="margin:var(--gap-sm) 0 0">Click a change to select that layer. Both landed as one undoable step.</p></div></div>' +
+      '<div class="msg a">Done — two layers changed.' + runHTML() + '</div></div>' +
       '<div class="askcmd"><div class="lbl">Commands</div><div class="cplist">' + rows +
       '<div class="empty" style="display:none">No command matches.</div></div></div>' +
       '<div class="chat-in"><input class="box" type="text" placeholder="Ask for a change, or type / for a command" aria-label="Ask the agent">' +
@@ -253,7 +292,7 @@
     var h = '<div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>' +
       '<div class="wtitle">' + docTitle(win.getAttribute('data-shell') || '') + '</div>' +
       (status ? '<span class="wstatus">' + status + '</span>' : '');
-    h += '<button class="btn sm askbtn" data-ask="#' + pal.id + '" aria-expanded="false"' +
+    h += '<button class="btn sm hero askbtn" data-ask="#' + pal.id + '" aria-expanded="false"' +
       ' aria-haspopup="dialog" title="Ask the agent, or run a command (⌘K)">' +
       '<i class="ic ic-sparkle"></i> Ask <span class="kbd">⌘K</span></button>';
     var tb = document.createElement('div');

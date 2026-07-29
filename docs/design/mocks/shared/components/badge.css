@@ -68,7 +68,7 @@
    macOS writes ⌘⇧E, not Cmd + Shift + E */
 .kbds{display:inline-flex;align-items:center;gap:2px}
 /* inside a filled control the cap has no plate, only the glyph */
-.btn.primary .kbd,.btn.danger .kbd,.pill.solid .kbd,.badge .kbd{
+.btn.primary .kbd,.btn.danger .kbd,.btn.hero .kbd,.pill.solid .kbd,.pill.ai .kbd,.badge .kbd{
   border:0;background:transparent;box-shadow:none;color:inherit;opacity:.75;padding:0;min-width:0}
 
 @media (prefers-reduced-motion:reduce){.dot.live{animation:none}}

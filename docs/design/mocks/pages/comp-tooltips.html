@@ -122,20 +122,23 @@
           <button class="tool" data-tip="Crop|C"><i class="ic ic-crop"></i></button>
         </div>
         <div class="docrow mid">
-          <div class="docsp"><span class="docsp-l"><b>First</b> 380ms, then it animates</span><p class="docsp-d">A short wait so a pointer crossing the toolbar on its way somewhere else never triggers anything, then a 120ms fade with a 5px rise <i>out of the control</i>.</p></div>
-          <div class="docsp"><span class="docsp-l"><b>Next</b> 60ms, no animation</span><p class="docsp-d">Once one is open the label swaps instantly and in place. Animating each one turns a row of icons into a slideshow you wait through.</p></div>
-          <div class="docsp"><span class="docsp-l"><b>Direction</b> is the message</span><p class="docsp-d">The entrance travels away from the trigger, so a tooltip above rises and one below drops. It says what it belongs to before you read it.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>To open</b> 1s of a <i>still</i> pointer</span><p class="docsp-d">The clock restarts on every mouse move, so it measures a <b>pause</b>, not time spent inside the control. Crossing a toolbar to reach the far end never pops anything, because you never stopped.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>To swap</b> 60ms, no animation</span><p class="docsp-d">Once one is open the label swaps in place. You already asked for tooltips by resting once; re-earning it at every neighbour would make walking a toolbar feel broken.</p></div>
+          <div class="docsp"><span class="docsp-l"><b>To close</b> 450ms of grace</span><p class="docsp-d">Slipping off the glyph, or onto the 4px gap between two buttons, is travel rather than dismissal. Without the grace you had to hold dead still to finish reading a shortcut.</p></div>
         </div>
-        <p class="docsp-d" style="text-align:center;color:var(--faint)">Hover the first tool and wait, then sweep across the rest. The first one animates; the rest arrive instantly.</p>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Sweep across these tools without stopping: nothing appears. Now stop on one and wait a beat. Once it is up, walk the row and the labels follow you.</p>
       </div>
       <div class="docmeta">
-        <div class="docnum">04</div><h3 class="docname">Motion</h3>
-        <p class="docrule">Two behaviours that look like one setting and are not. <b>Cold</b> is a real entrance: it earns the delay and the movement because you may not have been expecting a tooltip at all. <b>Warm</b> has neither, because you are already reading tooltips and every frame of animation is a frame you are waiting.</p>
+        <div class="docnum">04</div><h3 class="docname">Timing &amp; motion</h3>
+        <p class="docrule"><b>Rest, not dwell.</b> A plain dwell timer cannot be tuned: raise it and deliberate hovers feel sluggish, lower it and every sweep flashes labels you did not ask for. Gating on <i>stillness</i> removes the trade, because a sweep is silent at any value — so the number only has to answer "how long is a pause that means I want help".</p>
+        <p class="docrule">Opening, swapping and closing are three different events and take three different numbers. They are easy to collapse into one and it is always wrong: the same 60ms that makes a swap feel instant makes a close feel like the label was snatched away.</p>
         <div class="docdd">
           <span class="do">Keep the fade on exit even when the entrance was warm.</span>
+          <span class="do">Let a tooltip survive a brief trip off its control.</span>
           <span class="no">Animate the swap. Sweeping a toolbar becomes a slideshow.</span>
+          <span class="no">Make the keyboard wait out the rest timer. There is no pointer to hold still.</span>
         </div>
-        <p class="docapi"><b>API</b> <code>DELAY_IN</code> 380 · <code>DELAY_OUT</code> 60. <b>Reduced motion</b> keeps the fade and drops the travel: the fade is what tells you a new label appeared, so removing it would remove information rather than decoration.</p>
+        <p class="docapi"><b>API</b> <code>DELAY_IN</code> 1000 (rest) · <code>DELAY_FOCUS</code> 120 · <code>DELAY_SWAP</code> 60 · <code>DELAY_HIDE</code> 450. Escape, a press or a scroll bypass all four and hide at once: those mean <i>gone</i>, not <i>moving on</i>. <b>Reduced motion</b> keeps the fade and drops the travel: the fade is what tells you a new label appeared, so removing it would remove information rather than decoration.</p>
       </div>
     </div>
 
@@ -244,7 +247,7 @@
         <table class="doctbl">
           <thead><tr><th>Need</th><th>Native <code>.help()</code></th><th>Ours</th></tr></thead>
           <tbody>
-            <tr><td><b>Show on hover</b></td><td>Yes</td><td>Yes: 380ms cold with a directional entrance, 60ms and instant between neighbours</td></tr>
+            <tr><td><b>Show on hover</b></td><td>Yes, on a fixed dwell you cannot change</td><td>Yes, after 1s of a <i>still</i> pointer, with a directional entrance; then 60ms and instant between neighbours</td></tr>
             <tr><td><b>Show on keyboard focus</b></td><td>No</td><td>Yes. Tab through a toolbar and every tool names itself.</td></tr>
             <tr><td><b>Carry the shortcut</b></td><td>No</td><td>Yes, in a <code>.kbd</code> cap, taken from the command</td></tr>
             <tr><td><b>Explain a disabled control</b></td><td>No, disabled views swallow the hover</td><td>Yes. This is the single biggest reason we build our own.</td></tr>

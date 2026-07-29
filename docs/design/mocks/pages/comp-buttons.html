@@ -79,14 +79,20 @@
             <span class="docsp-l"><b>Danger</b> .danger</span>
             <p class="docsp-d">Destructive and hard to undo. Recolours the glow <i>and</i> the focus ring, so even keyboard-only use reads red.</p>
           </div>
+          <div class="docsp">
+            <span class="pad"><button class="btn hero"><i class="ic ic-sparkle"></i> Ask</button></span>
+            <span class="docsp-l"><b>Hero</b> .hero</span>
+            <p class="docsp-d">The agent's own surface, and the only control that does not wear the app's accent. Hover <i>opens</i> the spectrum rather than tinting it.</p>
+          </div>
         </div>
       </div>
       <div class="docmeta">
         <div class="docnum">02</div><h3 class="docname">Variants</h3>
-        <p class="docrule">Four, and the choice is about <b>consequence, not emphasis</b>. Ask what happens if the user presses it by accident: nothing → ghost; something ordinary → secondary; the thing they came for → primary; something they will regret → danger.</p>
+        <p class="docrule">Five. Four are graded by <b>consequence, not emphasis</b> — ask what happens if the user presses it by accident: nothing → ghost; something ordinary → secondary; the thing they came for → primary; something they will regret → danger. <b>Hero is not on that scale.</b> It marks the one control per surface that is not a command at all, but the way into the agent, so it is the only one that answers "what kind of thing is this" rather than "how much will it cost me".</p>
         <div class="docdd">
           <span class="do">Exactly one primary per surface, on the right of a footer.</span>
           <span class="no">Use danger for "Remove from list". Danger means data is gone.</span>
+          <span class="no">Reach for hero to make an ordinary button louder. A second hero makes both ordinary.</span>
         </div>
         <p class="docapi"><b>API</b> destructiveness is a property of the command (<code>command.destructive</code>), not a styling choice, so the danger look cannot be forgotten on one of the three places the command appears.</p>
       </div>
@@ -229,7 +235,7 @@
     </div>
 
     <div class="caption">
-      <div class="c"><div class="lab">The idea</div><p>Four variants chosen by <b>consequence</b> and three sizes chosen by <b>location</b>. Two independent axes, neither of them "how much do I want this noticed", which is the decision that makes button systems rot.</p></div>
+      <div class="c"><div class="lab">The idea</div><p>Four variants chosen by <b>consequence</b> and three sizes chosen by <b>location</b>. Two independent axes, neither of them "how much do I want this noticed", which is the decision that makes button systems rot. Hero sits outside both, and stays legible precisely because it is spent on one thing.</p></div>
       <div class="c"><div class="lab g2">A direction</div><p>The split button remembers per document. We could take that further and let the whole toolbar reorder itself around what you actually use in a given document type, with a "reset to standard" always one click away.</p></div>
       <div class="c"><div class="lab g2">Open question</div><p>SwiftUI's <code>.glassEffect</code> gives us the material for free but not the four variants, and overriding it costs us the platform's future refinements. Do we accept the divergence for danger and ghost, or restyle only within what the modifier exposes?</p></div>
     </div>

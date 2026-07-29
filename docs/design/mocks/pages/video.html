@@ -12,8 +12,15 @@
    Only the things the shared DS does not cover live here: the aligned timeline
    grid and the keyframe plot, both scoped to #video, all on the 4pt scale. */
 
-/* definite window height, so the dock is bounded and each group scrolls */
-#video .win.shell{height:1160px;min-height:0}
+/* DEFINITE WINDOW HEIGHT, AND IT HAS TO BE ONE A LAPTOP ACTUALLY HAS.
+   This was 1160px, which is taller than a maximised MacBook viewport — the mock
+   of the app did not fit on the machine the app is for, so the one thing the
+   page exists to show could never be seen at once. 820px is the budget:
+
+     titlebar 42 · toolbar 34 · canvas ~370 · transport 49 · dock ~320
+
+   The dock got there by no longer stacking two editors. See .proprow below. */
+#video .win.shell{height:820px;min-height:0}
 #video .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}/* ---------- blank-slate on-ramp (how a video project begins) ---------- */
 .onramp{padding:var(--pad)}
 .onhead{display:flex;align-items:center;gap:var(--gap-sm);margin-bottom:var(--pad-sm)}
@@ -46,11 +53,26 @@
    --gutter is the track-label column. The timeline grid AND the keyframe plot
    both use it, so a key sits exactly under the frame it belongs to. It matches
    the shared .track .tl width so nothing drifts. */
-#tlDock{--gutter:58px}
-#tlDock{flex:0 0 auto;max-height:600px;overflow:auto;padding:0;display:flex;flex-direction:column}
+/* The gutter is wider than a plain track label needs because it is now shared
+   with the PROPERTY ROWS, which carry the key toggle, the property name and its
+   value at the playhead. It has to stay one number for every row in the grid —
+   that identity is what makes a key sit under the frame it belongs to — so the
+   widest row sets it. Track names stopped truncating ("Voiceov") as a bonus. */
+#tlDock{--gutter:112px}
+/* The dock takes its NATURAL height and the canvas takes the rest. Letting the
+   dock flex-grow instead squeezed the video preview to 199px — the timeline is
+   the supporting cast here, not the subject. max-height is the backstop for a
+   document with many tracks: past that the dock scrolls rather than eating the
+   canvas it is supposed to be describing. */
+#tlDock{flex:0 0 auto;max-height:58%;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s1);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .tstrip{display:inline-flex;align-items:center;gap:2px}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+/* the live readout moved up here from the deleted Keyframes header: it answers
+   "what is the value under the playhead right now", which is a property of the
+   timeline as a whole, not of a panel that no longer exists */
+.kfread{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kfread b{color:var(--comp)}
 .tlz{padding:var(--s2) var(--s3) var(--s3);position:relative}
 .tlgrid{position:relative}
 .tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
@@ -87,44 +109,120 @@
 .tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit);pointer-events:auto;cursor:ew-resize}
 .drophint{outline:2px dashed var(--comp);outline-offset:-2px}
 
-/* ---------- keyframe editor (lives in the timeline dock, same time axis) ---------- */
-.kfhdr{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3);border-top:1px solid var(--edge-lo);flex-wrap:wrap}
-.kfhdr h4{margin:0;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
-.kfhdr .who{font-size:10px;color:var(--comp);font-weight:600;display:inline-flex;align-items:center;gap:4px}
-.kfread{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.kfread b{color:var(--comp)}
-.kfbody{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:8px;padding:var(--s2) var(--s3) var(--s3);align-items:stretch}
-.kflanes{grid-column:1 / -1;display:flex;flex-direction:column;gap:2px;margin-bottom:var(--gap-sm)}
-.kflane{display:grid;grid-template-columns:var(--gutter) 1fr auto;column-gap:8px;align-items:center;padding:2px 0;border-radius:var(--r1)}
-.kflane .nm{white-space:nowrap;font-size:10.5px;color:var(--dim);font-weight:560;display:flex;align-items:center;gap:5px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;min-width:0}
-.kflane .nm:hover{color:var(--ink)}
-.kflane .nm:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
-.kflane.sel .nm{color:var(--comp);font-weight:640}
-.kflane .ktrack{position:relative;height:14px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r1)}
-.kflane.sel .ktrack{border-color:var(--comp-line)}
-.kflane .ktrack .kd{position:absolute;top:50%;width:7px;height:7px;background:var(--dim);transform:translate(-50%,-50%) rotate(45deg);border:1px solid var(--panel)}
-.kflane.sel .ktrack .kd{background:var(--comp)}
-.kflane .cur{font-family:var(--mono);font-size:10px;color:var(--faint);width:52px;text-align:right;font-variant-numeric:tabular-nums}
-.kfsw{width:20px;height:20px;border-radius:var(--r1);display:grid;place-items:center;color:var(--faint);border:1px solid transparent;background:transparent;cursor:pointer;flex:none}
-.kfsw:hover{background:var(--panel-2);color:var(--ink)}
-.kfsw.on{color:var(--comp)}
-.kfaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 16px}
-.kfplot{grid-column:2;position:relative;height:88px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none}
+/* ============================================================
+   PROPERTY ROWS · the keyframe editor, folded into the track grid
+   ============================================================
+   This used to be a SECOND editor stacked under the first: its own header, its
+   own gutter, its own lane strip, its own axis and plot, 230px of it, below a
+   222px track grid. Two editors of the same thing, on the same time axis, one
+   above the other — and together they forced a 1160px window that does not fit
+   on a laptop.
+
+   The giveaway was that the whole reason the keyframe editor lived down in the
+   dock was ALIGNMENT: keys had to sit under the frames they belong to. But a
+   second grid can only ever *imitate* the first one's axis, which is why both
+   had to be handed the same --gutter and kept in sync by hand. Rows in the SAME
+   grid get that for free and cannot drift.
+
+   So a property is a row of the timeline, indented under the clip it animates,
+   exactly as a layer's properties twirl down in After Effects. The lane is the
+   same lane, so the same pixel is the same instant on every row, and the whole
+   second editor — header, axis, duplicate gutter — stops existing.
+
+   The value PLOT is the one part that genuinely needs its own vertical space,
+   because it is the only view here with a Y axis. It became a toggle (Graph)
+   rather than a permanent tenant: it is how you inspect an interpolation, not
+   how you read a timeline. */
+.tlgrid .track.proprow{margin:1px 0}
+/* the indent is not decoration: it is the only thing saying these rows BELONG to
+   the clip above rather than sitting beside it. It matches the twirl's width, so
+   a property lines up under its parent's name and not under its disclosure. */
+.tlgrid .track.proprow .tl{display:flex;align-items:center;gap:5px;width:var(--gutter);
+  padding-left:19px;box-sizing:border-box;
+  font-size:10.5px;color:var(--dim);font-weight:560;text-transform:none;letter-spacing:.02em}
+.tlgrid .track.proprow .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  background:transparent;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;text-align:left}
+.tlgrid .track.proprow .pn:hover{color:var(--ink)}
+.tlgrid .track.proprow .pn:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
+.tlgrid .track.proprow.sel .tl{color:var(--comp);font-weight:640}
+/* the value at the playhead, pushed to the gutter's right edge so the numbers
+   form a column instead of drifting with each property's name length */
+.tlgrid .track.proprow .pv{margin-left:auto;font-family:var(--mono);font-size:9.5px;
+  color:var(--faint);font-variant-numeric:tabular-nums;flex:none}
+/* a property lane is shorter than a clip lane on purpose: a clip is an object
+   you grab, a property row is a readout you scan. */
+.tlgrid .track.proprow .lane{height:18px;background:var(--panel-2);
+  border:1px solid var(--edge-lo);border-radius:var(--r1)}
+.tlgrid .track.proprow.sel .lane{border-color:var(--comp-line)}
+.tlgrid .track.proprow .lane .kd{position:absolute;top:50%;width:7px;height:7px;
+  background:var(--dim);transform:translate(-50%,-50%) rotate(45deg);border:1px solid var(--panel)}
+.tlgrid .track.proprow.sel .lane .kd{background:var(--comp)}
+/* the twirl on the clip's own track: properties are its children, so the
+   disclosure belongs to the parent row, not to a separate panel header */
+.tlgrid .track .tw{width:14px;height:14px;flex:none;padding:0;border:0;background:transparent;
+  color:var(--faint);display:grid;place-items:center;cursor:pointer;border-radius:3px;
+  transition:transform .12s ease}
+.tlgrid .track .tw:hover{color:var(--ink);background:var(--panel-2)}
+.tlgrid .track .tw:focus-visible{outline:none;box-shadow:var(--ring)}
+.tlgrid .track .tw:not(.open){transform:rotate(-90deg)}
+/* the "nothing is animated yet" row — same shape as a property row, so the
+   empty state is where the filled state will be rather than somewhere else */
+.tlgrid .track.proprow.add .lane{background:transparent;border-style:dashed}
+.propadd{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:10px;
+  color:var(--faint);background:transparent;border:0;cursor:pointer;padding:0;display:flex;
+  align-items:center;gap:5px}
+.propadd:hover{color:var(--comp)}
+.propadd:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
+
+/* THE KEY TOGGLE · this is where "Add key" and "Delete key" went.
+   Those two lived on the transport bar as full labelled buttons, which was
+   wrong twice over: they ate the scrubber's width, and they were phrased as
+   document-level commands when a keyframe is never document-level — it is one
+   value, on one property, at one time. So the control is one diamond on the
+   property's own lane, and it reads its own state:
+
+     hollow  no key on this property at the playhead -> click sets one
+     filled  a key is here right now                 -> click removes it
+
+   Which is the After Effects / Final Cut idiom, and it means you never have to
+   aim: the row tells you which property you are keying and the playhead
+   answers "when". Deleting some OTHER key is a different gesture (grab it on
+   the plot), because that one does need aim. */
+.kfkey{width:16px;height:16px;padding:0;border:1px solid transparent;background:transparent;
+  border-radius:var(--r1);display:grid;place-items:center;cursor:pointer;flex:none}
+.kfkey::before{content:"";width:8px;height:8px;border-radius:1px;transform:rotate(45deg);
+  border:1.5px solid var(--faint);background:transparent;
+  transition:background .12s ease,border-color .12s ease}
+.kfkey:hover{background:var(--panel-2)}
+.kfkey:hover::before{border-color:var(--ink)}
+.kfkey.on::before{background:var(--comp);border-color:var(--comp)}
+.kfkey:focus-visible{outline:none;box-shadow:var(--ring)}
+/* two states, one colour, no third variable: hollow is always the same grey and
+   filled is always the component purple, on the selected lane and off it.
+   Tinting the hollow diamond by lane made the ACTIVE lane's EMPTY slot read
+   louder than an inactive lane's filled one, which inverts what it means. */
+/* THE GRAPH · the only view here with a Y axis, so the only one that earns its
+   own vertical space — and only when asked for. Same two columns as a track row
+   (gutter + lane) and the same 8px gap, so the curve is plotted on the timeline's
+   axis rather than on a lookalike of it. */
+.kfgraph{display:none;grid-template-columns:var(--gutter) 1fr;column-gap:8px;
+  padding:0 var(--s3) var(--s3);align-items:stretch}
+#tlDock[data-graph="on"] .kfgraph{display:grid}
+.kfaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 2px}
+.kfplot{grid-column:2;position:relative;height:76px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none}
 .kfplot svg{position:absolute;inset:0;width:100%;height:100%}
 .kfpt{position:absolute;width:11px;height:11px;background:var(--comp);transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid var(--panel);border-radius:2px;cursor:grab;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .kfpt:hover{background:color-mix(in srgb,var(--comp) 80%,white)}
 .kfpt.act{background:var(--warn);width:13px;height:13px}
 .kfpt:active{cursor:grabbing}
 .kfhead{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--crit);border:1.5px solid var(--panel);transform:translate(-50%,-50%);z-index:4;pointer-events:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--crit) 22%,transparent)}
-.kfempty{grid-column:1 / -1;font-size:11px;color:var(--faint);line-height:1.5;padding:var(--s3);border:1px dashed var(--edge-lo);border-radius:var(--r2);background:var(--panel-2)}
-.kfempty b{color:var(--ink);font-weight:600}
 
 /* ---------- canvas preview overlays ---------- */
 #video .vframe{width:440px;height:248px}
 .lower3{position:absolute;left:16px;bottom:44px;padding:var(--s2) var(--pad-sm);border-radius:var(--r2);background:linear-gradient(120deg,rgba(154,92,255,.92),rgba(197,108,255,.85));box-shadow:0 8px 22px -8px rgba(0,0,0,.5);color:#fff}
 .lower3 .n{font-family:var(--serif);font-size:15px;font-weight:700;line-height:1.1}
 .lower3 .r{font-size:10px;opacity:.9;letter-spacing:.02em}
-.l3ring{position:absolute;inset:-6px;border:1.5px solid var(--comp);border-radius:14px;pointer-events:none;display:none}
+.l3ring{position:absolute;inset:-6px;border:1.5px solid var(--comp);border-radius:2px;pointer-events:none;display:none}
 .l3badge{position:absolute;top:-22px;left:-6px;background:var(--comp);color:#fff;font-size:9px;font-weight:640;padding:2px 7px;border-radius:6px;display:none;align-items:center;gap:5px;white-space:nowrap}
 #l3.sel .l3ring{display:block}
 #l3.sel .l3badge{display:flex}
@@ -147,17 +245,26 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  /* The gutter now carries the property rows, so it cannot go back to 52px —
+     that was a width for a track label alone. What sheds instead is the per-row
+     VALUE, because the Playhead readout in the bar above already states the
+     active property's value: dropping it loses a duplicate, not information. */
+  #tlDock{--gutter:74px}
+  .tlgrid .track.proprow .pv{display:none}
+  .tlgrid .track.proprow .tl{padding-left:12px}
   .tlgrid .track .tl .trk-auto{font-size:9px}
-  #tlDock{max-height:520px}
-  .kfplot{height:78px}
+  .kfplot{height:68px}
   #video .vframe{width:300px;height:169px}
   #video .vframe .title{font-size:20px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
-  .kflane .cur{width:40px}
+  /* 68px clipped "Opacity" by 6px. A property row that cannot say which
+     property it is has lost the only thing distinguishing it from its
+     neighbours, so the indent gives way before the name does. */
+  #tlDock{--gutter:76px}
+  .tlgrid .track.proprow .tl{padding-left:8px}
   .tlbar .lbl{display:none}
+  .tlbar .kfread{display:none}
   #video .vframe{width:216px;height:122px}
   #video .vframe .title{font-size:14px;left:12px;top:10px}
   #l3.sel .l3badge{display:none}
@@ -177,7 +284,7 @@
 
   <p class="pglead">The <b>Video workspace</b> is a lens over the same document. Nothing about the engine changes: the same
     layers, the same dock, the same Library. Time is the only thing that is new, so the <b>transport bar</b> and the
-    <b>timeline dock</b> appear. The crux of the page is a real <b>keyframe editor</b> plotted on the timeline's own axis.</p>
+    <b>timeline dock</b> appear. The crux of the page is a real <b>keyframe editor</b> - and it is not a second panel, it is <b>rows of the timeline itself</b>, so a key sits under the frame it belongs to by construction.</p>
 
   <!-- ========== BLANK SLATE: how a video project begins ========== -->
   <div class="win">
@@ -457,7 +564,14 @@
       </div>
     </div>
 
-    <!-- TRANSPORT BAR · shown because the document has time -->
+    <!-- TRANSPORT BAR · shown because the document has time.
+         TIME CONTROLS ONLY. The scrubber is the only thing here whose value is
+         measured in pixels, so it gets the whole row and every sibling is
+         flex:none. What used to sit on the right went where it belongs:
+           Export     -> the title bar, which already has it as the primary action
+           Cut        -> the Blade tool, already in the canvas AND timeline strips
+           Add key    -> a diamond on the property's own lane in the keyframe
+           Delete key    editor, because a key belongs to a property at a time -->
     <div class="transport">
       <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
       <span class="grp">
@@ -473,16 +587,12 @@
         <span class="knob" style="left:27%"></span>
       </span>
       <span class="tc">0:15</span>
-      <span class="grp">
-        <button class="btn ghost sm" id="actCut" title="Split at playhead"><i class="ic ic-blade"></i><span class="lb">Cut</span></button>
-        <button class="btn ghost sm" id="addKey" title="Add a key at the playhead (K)"><i class="ic ic-keyframe"></i><span class="lb">Add key</span></button>
-        <button class="btn ghost sm" id="delKey" title="Delete the key nearest the playhead"><i class="ic ic-trash"></i><span class="lb">Delete key</span></button>
-        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export</span></button>
-      </span>
     </div>
 
-    <!-- TIMELINE DOCK · tracks and the keyframe editor share one time axis -->
-    <div class="timeline" id="tlDock">
+    <!-- TIMELINE DOCK · ONE grid. Clips and the properties they animate are rows
+         of the same timeline, so they share the axis instead of imitating it.
+         The graph is a toggle because it is the only view with a Y axis. -->
+    <div class="timeline" id="tlDock" data-graph="off">
       <div class="tlbar">
         <span class="tstrip" id="tlTools" data-radio=".tool">
           <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
@@ -490,22 +600,20 @@
         </span>
         <span class="tsep"></span>
         <div class="seg" id="zoomSeg"><button>Fit</button><button class="on">1x</button><button>2x</button><button>4x</button></div>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" id="graphBtn" aria-pressed="false" title="Show the value graph for the selected property"><i class="ic ic-sliders"></i><span class="lb">Graph</span></button>
         <span class="tspacer"></span>
+        <span class="kfread">Playhead <b id="kfReadV">Opacity 100%</b> @ <span id="kfReadT">4.12s</span></span>
+        <span class="tsep"></span>
         <span class="lbl">Easing</span>
         <div class="seg" id="easeSeg"><button>Linear</button><button class="on">Ease in-out</button><button>Spring</button></div>
       </div>
 
       <div class="tlz">
-        <div class="tlgrid" id="tlGrid"><!-- ruler + tracks + playstrip injected --></div>
+        <div class="tlgrid" id="tlGrid"><!-- ruler + tracks + property rows + playstrip injected --></div>
       </div>
 
-      <div class="kfhdr">
-        <h4>Keyframes</h4>
-        <span class="who" id="kfWho"><i class="ic ic-component xs"></i> Lower-third</span>
-        <span class="kfread">Playhead <b id="kfReadV">Opacity 100%</b> @ <span id="kfReadT">4.12s</span></span>
-      </div>
-      <div class="kfbody" id="kfBody">
-        <div class="kflanes" id="kfLanes"><!-- property lanes injected --></div>
+      <div class="kfgraph">
         <div class="kfaxis" id="kfAxis"><span>100</span><span>50</span><span>0</span></div>
         <div class="kfplot" id="kfPlot"><svg id="kfSvg" preserveAspectRatio="none" viewBox="0 0 1000 100"></svg></div>
       </div>
@@ -513,10 +621,10 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>Video is not another app. It is the same document with a time dimension, so the shell is unchanged and only two regions are added: the <b>transport bar</b> and the <b>timeline dock</b>. The crux is a real keyframe editor plotted on the timeline's own axis, with draggable keys, visible easing, and a live value readout.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>Video is not another app. It is the same document with a time dimension, so the shell is unchanged and only two regions are added: the <b>transport bar</b> and the <b>timeline dock</b>. Keyframes are not a third region: a property is a <b>row of the timeline</b>, twirled down under the clip it animates, with draggable keys, visible easing and a live value readout.</p></div>
     <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a clip on the timeline and the ring on the canvas, the row in <b>Layers</b>, and the <b>Properties</b> group all follow. The media pool is not its own widget: it is <b>Library, scope Media</b>, the same group that holds components and styles everywhere else.</p></div>
     <div class="c"><div class="lab g2">Scope call · deferred</div><p>Basic video already ships (trim, crop, export). This timeline is its own later chapter, walled off so it never gates image and UI creation.</p></div>
-    <div class="c"><div class="lab g2">Open question</div><p>The keyframe editor sits inside the timeline dock so keys line up with frames. Should it instead be a panel group in the right dock, trading alignment for a taller canvas?</p></div>
+    <div class="c"><div class="lab g2">Resolved - one grid, not two</div><p>This was an open question: keep the keyframe editor in the dock for alignment, or move it to the right dock for a taller canvas? Both were wrong, because both kept it as a <b>separate editor of the same time axis</b>. Stacked, it forced a <b>1160px window that does not fit a laptop</b>. Folded into the track grid it costs <b>329px instead of 497px</b>, the canvas gets its height back, and alignment stops being something two grids have to be kept in sync about. The <b>graph</b> is the one part with its own Y axis, so it is the one part that is a toggle.</p></div>
   </div>
 </section>
 </main>
@@ -646,7 +754,13 @@
     tracks.forEach(function(tr){
       var row=document.createElement("div"); row.className="track";
       var lab=document.createElement("span"); lab.className="tl";
-      lab.innerHTML = tr.auto ? '<span class="trk-auto"><i class="ic xs ic-sparkle"></i>Caption</span>' : tr.name;
+      /* the twirl belongs to the track that OWNS the selected clip: its
+         properties are its children, so the disclosure is on the parent row */
+      var ownsSel = tr.clips.some(function(c){ return c.id===selClip; });
+      var tw = ownsSel ? '<button class="tw'+(propsOpen?" open":"")+'" aria-expanded="'+propsOpen+'" '+
+                         'title="'+(propsOpen?"Hide":"Show")+' the properties of '+(clipById(selClip)||{c:{label:""}}).c.label+'">'+
+                         '<i class="ic xs ic-chevron-down"></i></button>' : '';
+      lab.innerHTML = tw + (tr.auto ? '<span class="trk-auto"><i class="ic xs ic-sparkle"></i>Caption</span>' : tr.name);
       var lane=document.createElement("div"); lane.className="lane"; lane.setAttribute("data-track",tr.kind);
       TICKS.forEach(function(t){ var g=document.createElement("i"); g.className="gl"; g.style.left=pct(t)+"%"; lane.appendChild(g); });
       (tr.trans||[]).forEach(function(x){
@@ -678,6 +792,9 @@
         lane.appendChild(el);
       });
       row.appendChild(lab); row.appendChild(lane); grid.appendChild(row);
+      // the selected clip's properties twirl down as rows of THIS grid, right
+      // under the clip they animate — same lane, so the same x is the same time
+      if(ownsSel && propsOpen) appendPropRows(grid);
     });
     // playhead overlay spanning every row
     playstrip=document.createElement("div"); playstrip.className="playstrip";
@@ -753,7 +870,7 @@
            clamp(((valueAt(p,playT)-p.min)/((p.max-p.min)||1))*100,0,100).toFixed(0)+'%"></i></span></div>';
       });
     } else {
-      h+='<p class="note">No animated properties. Press <b>K</b> or use Add key on the transport bar to start one.</p>';
+      h+='<p class="note">No animated properties. Press <b>K</b>, or use <b>Animate</b> in the Keyframes editor, to start one.</p>';
     }
     h+='</div>';
     propBody.innerHTML=h;
@@ -908,13 +1025,17 @@
     }
   };
   var activeProp="opacity";
+  /* the twirl state for the selected clip's properties. Open by default because
+     this page's whole subject is keyframing — the disclosure exists so the rows
+     can get out of the way, not so they have to be found. */
+  var propsOpen=true;
   var dragKey=-1;
 
   var svg=document.getElementById("kfSvg");
   var plot=document.getElementById("kfPlot");
-  var lanes=document.getElementById("kfLanes");
+  var dock=document.getElementById("tlDock");
+  var graphBtn=document.getElementById("graphBtn");
   var axis=document.getElementById("kfAxis");
-  var kfBody=document.getElementById("kfBody");
 
   function keyTimes(id){
     var ps=propSets[id]; if(!ps) return [];
@@ -937,6 +1058,13 @@
     }
     return k[k.length-1].v;
   }
+  /* "is there a key on THIS property at the playhead" — the tolerance is the
+     same 0.08s the adder snaps with, so setting a key and then reading the
+     lane back can never disagree about whether one is there. */
+  function keyAt(p,t){
+    for(var i=0;i<p.keys.length;i++){ if(Math.abs(p.keys[i].t-t)<0.08) return i; }
+    return -1;
+  }
   function xOf(t){ return t/DURATION*1000; }
   function yOf(p,v){ return 100-((v-p.min)/((p.max-p.min)||1))*100; }
   function curProp(){
@@ -946,29 +1074,21 @@
     return ps[activeProp];
   }
 
+  /* Only the GRAPH now. The lanes, the header and the "who is selected" line
+     all became rows of the timeline grid, so this draws one curve and nothing
+     else. With no property to plot there is nothing to draw and no empty panel
+     to explain it either — the grid's own "Animate a property" row does that,
+     in the place the property will appear. */
   function renderKf(){
-    if(!svg||!plot||!kfBody) return;
-    var who=document.getElementById("kfWho");
-    var hit=clipById(selClip);
-    if(who && hit) who.innerHTML='<i class="ic xs ic-'+(hit.tr.kind==="comp"?"component":hit.tr.kind==="cap"?"text":hit.tr.kind==="aud"?"audio":"image")+'"></i> '+hit.c.label;
+    if(!svg||!plot) return;
     var p=curProp();
-    var empty=kfBody.querySelector(".kfempty");
     if(!p){
-      if(lanes) lanes.innerHTML="";
-      plot.style.display="none";
-      if(axis) axis.style.display="none";
-      if(!empty){
-        empty=document.createElement("div"); empty.className="kfempty";
-        kfBody.appendChild(empty);
-      }
-      empty.innerHTML='<b>No animated properties on this clip.</b> Press <b>K</b>, or use <b>Add key</b> on the transport bar, and the property starts animating from the playhead. Every key is one API call, so an agent can place them too.';
       svg.innerHTML="";
       [].forEach.call(plot.querySelectorAll(".kfpt,.kfhead"), function(n){ n.remove(); });
+      if(dock) dock.setAttribute("data-graph","off");
+      if(graphBtn) graphBtn.setAttribute("aria-pressed","false");
       return;
     }
-    if(empty) empty.remove();
-    plot.style.display="";
-    if(axis) axis.style.display="";
     var s="";
     for(var g=0; g<=4; g++){ var y=g*25; s+='<line x1="0" y1="'+y+'" x2="1000" y2="'+y+'" stroke="rgba(128,128,128,.18)" stroke-width="1" vector-effect="non-scaling-stroke"/>'; }
     TICKS.forEach(function(t){ var x=xOf(t); s+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="100" stroke="rgba(128,128,128,.16)" stroke-width="1" vector-effect="non-scaling-stroke"/>'; });
@@ -1000,25 +1120,61 @@
     head.style.top=yOf(p,valueAt(p,playT))+"%";
     plot.appendChild(head);
     if(axis) axis.innerHTML='<span>'+p.max+'</span><span>'+Math.round((p.min+p.max)/2)+'</span><span>'+p.min+'</span>';
-    renderLanes();
+    syncPropRows();
   }
 
-  function renderLanes(){
-    if(!lanes) return;
+  /* STRUCTURE: one row per animated property, appended into the timeline grid
+     itself. Called from renderTimeline only, because adding a row changes the
+     grid's shape and that is the expensive, rare case. */
+  function appendPropRows(g){
     var ps=propSets[selClip];
-    if(!ps){ lanes.innerHTML=""; return; }
-    var h="";
+    if(!ps){
+      // the empty state lives where the filled state will be, not elsewhere
+      var er=document.createElement("div"); er.className="track proprow add";
+      er.innerHTML='<span class="tl"></span>'+
+        '<div class="lane"><button class="propadd" id="kfAnimate">'+
+        '<i class="ic xs ic-keyframe"></i> Animate a property <span class="kbd">K</span></button></div>';
+      g.appendChild(er);
+      return;
+    }
     Object.keys(ps).forEach(function(key){
       var p=ps[key];
-      var kd=p.keys.map(function(kk){ return '<span class="kd" style="left:'+(kk.t/DURATION*100)+'%"></span>'; }).join("");
-      h+='<div class="kflane'+(key===activeProp?" sel":"")+'">'+
-           '<button class="nm" data-sel="'+key+'" title="Show '+p.label+' on the plot">'+
-             '<span class="kfsw on" title="Animation enabled"><i class="ic sm ic-keyframe"></i></span>'+p.label+'</button>'+
-           '<div class="ktrack">'+kd+'</div>'+
-           '<div class="cur">'+Math.round(valueAt(p,playT))+p.unit+'</div>'+
-         '</div>';
+      var row=document.createElement("div");
+      row.className="track proprow"+(key===activeProp?" sel":"");
+      row.setAttribute("data-prop",key);
+      row.innerHTML=
+        '<span class="tl">'+
+          '<button class="kfkey" data-key="'+key+'"></button>'+
+          '<button class="pn" data-sel="'+key+'" title="Plot '+p.label+' on the graph">'+p.label+'</button>'+
+          '<span class="pv"></span>'+
+        '</span>'+
+        '<div class="lane"></div>';
+      g.appendChild(row);
     });
-    lanes.innerHTML=h;
+    syncPropRows();
+  }
+
+  /* STATE: everything that changes as the playhead moves — the value readout,
+     the diamond's fill, the key marks. Updated IN PLACE rather than re-rendered,
+     because this runs on every frame of a scrub and rebuilding the grid there
+     would destroy the node you are currently dragging. */
+  function syncPropRows(){
+    if(!grid) return;
+    var ps=propSets[selClip]; if(!ps) return;
+    [].forEach.call(grid.querySelectorAll(".proprow[data-prop]"), function(row){
+      var key=row.getAttribute("data-prop"), p=ps[key];
+      if(!p){ row.remove(); return; }
+      row.classList.toggle("sel", key===activeProp);
+      var here=keyAt(p,playT)>=0;
+      var kb=row.querySelector(".kfkey");
+      kb.classList.toggle("on", here);
+      kb.setAttribute("aria-pressed", here);
+      kb.setAttribute("title", (here?"Remove the "+p.label+" key at ":"Set a key on "+p.label+" at ")+playT.toFixed(2)+"s");
+      row.querySelector(".pv").textContent=Math.round(valueAt(p,playT))+p.unit;
+      row.querySelector(".lane").innerHTML=p.keys.map(function(kk){
+        return '<span class="kd" style="left:'+(kk.t/DURATION*100)+'%"></span>';
+      }).join("");
+    });
   }
 
   function updateReadouts(){
@@ -1031,7 +1187,7 @@
       var head=plot && plot.querySelector(".kfhead");
       if(head){ head.style.left=(playT/DURATION*100)+"%"; head.style.top=yOf(p,valueAt(p,playT))+"%"; }
     }
-    renderLanes();
+    syncPropRows();
     syncCaptionWords();
     // live preview: the lower-third really follows its own keyframes
     if(l3 && propSets.c1){
@@ -1045,45 +1201,72 @@
     if(cap){ cap.style.opacity=(playT>=1.2 && playT<=11.7)?"1":".25"; }
   }
 
-  lanes && lanes.addEventListener("click", function(e){
+  /* The property rows live in the timeline grid now, so their controls are
+     delegated off the grid alongside the clips. Bound in the capture phase-free
+     bubble path but BEFORE the grid's own pointerdown selection logic can treat
+     a diamond click as "select the clip underneath". */
+  grid && grid.addEventListener("click", function(e){
+    var kb=e.target.closest(".kfkey");
+    if(kb){ toggleKeyAtPlayhead(kb.getAttribute("data-key")); return; }
+    if(e.target.closest("#kfAnimate")){ animateFromScratch(); return; }
+    var tw=e.target.closest(".tw");
+    if(tw){ propsOpen=!propsOpen; renderTimeline(); return; }
     var sel=e.target.closest("[data-sel]");
-    if(sel){ activeProp=sel.getAttribute("data-sel"); renderKf(); updateReadouts(); }
+    if(sel){ activeProp=sel.getAttribute("data-sel"); renderKf(); updateReadouts(); syncPropRows(); }
   });
 
-  function addKeyAtPlayhead(){
+  /* THE GRAPH TOGGLE. It is a view of the ACTIVE property, so turning it on
+     with nothing animated would show an empty box — the button reports that
+     rather than pretending. */
+  graphBtn && graphBtn.addEventListener("click", function(){
+    if(!curProp()) return;
+    var on=dock.getAttribute("data-graph")!=="on";
+    dock.setAttribute("data-graph", on?"on":"off");
+    graphBtn.setAttribute("aria-pressed", String(on));
+    if(on) renderKf();
+  });
+
+  /* The one keyframe verb. It takes the property it acts on as an argument
+     rather than reading the "active" one, because the lane diamond is the
+     control now and each lane names its own property — the old pair of
+     transport buttons had to guess. Toggling a lane also makes it active, so
+     the plot shows you what you just changed. */
+  function toggleKeyAtPlayhead(propKey){
     var ps=propSets[selClip];
-    if(!ps){
-      ps=propSets[selClip]={opacity:{label:"Opacity",unit:"%",min:0,max:100,color:C.comp,keys:[{t:+playT.toFixed(2),v:100}]}};
-      activeProp="opacity";
-      markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
-      return;
+    if(!ps){ animateFromScratch(); return; }
+    var p=ps[propKey] || curProp(); if(!p) return;
+    if(propKey && ps[propKey]) activeProp=propKey;
+    var i=keyAt(p,playT);
+    if(i>=0){
+      // never strand a property with a single key: one key is a constant, not
+      // an animation, so removing the last-but-one removes the lane instead.
+      if(p.keys.length<=1){ delete ps[propKey]; if(!Object.keys(ps).length) delete propSets[selClip]; }
+      else p.keys.splice(i,1);
+    } else {
+      p.keys.push({t:+playT.toFixed(2),v:valueAt(p,playT)});
+      p.keys.sort(function(a,b){ return a.t-b.t; });
     }
-    var p=curProp(); if(!p) return;
-    var v=valueAt(p,playT);
-    var existing=p.keys.find(function(k){ return Math.abs(k.t-playT)<0.08; });
-    if(existing){ existing.v=v; }
-    else { p.keys.push({t:+playT.toFixed(2),v:v}); p.keys.sort(function(a,b){ return a.t-b.t; }); }
     markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
   }
-  var addBtn=document.getElementById("addKey");
-  if(addBtn) addBtn.addEventListener("click", addKeyAtPlayhead);
-  var delBtn=document.getElementById("delKey");
-  if(delBtn) delBtn.addEventListener("click", function(){
-    var p=curProp(); if(!p) return;
-    if(dragKey>=0){ p.keys.splice(dragKey,1); dragKey=-1; }
-    else {
-      var idx=-1, best=0.4;
-      p.keys.forEach(function(k,i){ if(Math.abs(k.t-playT)<best){ best=Math.abs(k.t-playT); idx=i; } });
-      if(idx>=0) p.keys.splice(idx,1);
-    }
+  /* the empty-state action: the clip has nothing animated yet, so there is no
+     row to click and the first key has to come from somewhere. Opening the
+     twirl is part of it — creating a property and then hiding it would be a
+     no-op as far as the user can see. */
+  function animateFromScratch(){
+    propSets[selClip]={opacity:{label:"Opacity",unit:"%",min:0,max:100,color:C.comp,keys:[{t:+playT.toFixed(2),v:100}]}};
+    activeProp="opacity";
+    propsOpen=true;
     markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
-  });
-  var cutBtn=document.getElementById("actCut");
-  if(cutBtn) cutBtn.addEventListener("click", function(){
-    var hit=clipById(selClip); if(!hit) return;
-    splitClip(hit.tr,hit.c,playT);
-  });
-
+  }
+  function addKeyAtPlayhead(){
+    var ps=propSets[selClip];
+    if(!ps){ animateFromScratch(); return; }
+    var p=curProp(); if(!p) return;
+    var i=keyAt(p,playT);
+    if(i>=0) p.keys[i].v=valueAt(p,playT);
+    else { p.keys.push({t:+playT.toFixed(2),v:valueAt(p,playT)}); p.keys.sort(function(a,b){ return a.t-b.t; }); }
+    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
+  }
   plot && plot.addEventListener("pointerdown", function(e){
     var p=curProp(); if(!p) return;
     var rect=plot.getBoundingClientRect();
@@ -1132,11 +1315,18 @@
     [].forEach.call(zoomSeg.children,function(x){ x.classList.toggle("on",x===b); });
   });
 
-  /* keyboard: K add key, B blade, V select, space play */
+  /* keyboard: K key the active property, Delete clear it, B blade, V select,
+     space play. K and Delete are the two halves of the lane diamond, so the
+     shortcut and the control can never drift apart. */
   document.addEventListener("keydown", function(e){
     if(e.target && /input|textarea/i.test(e.target.tagName)) return;
     var k=e.key.toLowerCase();
     if(k==="k"){ addKeyAtPlayhead(); }
+    else if(k==="delete" || k==="backspace"){
+      var p=curProp(); if(!p) return;
+      if(keyAt(p,playT)<0) return;      // nothing here to clear; let the key fall through
+      e.preventDefault(); toggleKeyAtPlayhead(activeProp);
+    }
     else if(k==="b"){ setTool("blade"); }
     else if(k==="v"){ setTool("select"); }
     else if(k===" " && playBtn){ e.preventDefault(); playBtn.click(); }

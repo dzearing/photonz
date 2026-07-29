@@ -7,10 +7,35 @@ import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = dirname(fileURLToPath(import.meta.url)); // docs/design/mocks
 const TYPES = { '.html': 'text/html;charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json' };
-// dev livereload: inject an SSE client that reloads the page on any file change
-const LR = `<script>(function(){try{var e=new EventSource('/__reload');e.onmessage=function(){location.reload();};e.onerror=function(){setTimeout(function(){location.reload();},1500);};}catch(_){}})();</script>`;
-const clients = new Set();
-watch(ROOT, { recursive: true }, () => { for (const res of clients) { try { res.write('data: change\n\n'); } catch (_) {} } });
+// dev livereload: poll a change counter and reload when it moves.
+//
+// This used to be an SSE stream, and that is what made mock pages "hang on
+// load" with no error anywhere. An SSE stream never ends, and a browser allows
+// only ~6 concurrent HTTP/1.1 connections per origin. One permanent stream per
+// open page meant that at about five tabs — and index.html costs two by itself,
+// one for the shell and one for its iframe — the next request to this origin
+// never got a connection. It was queued, not failing, so there was nothing in
+// the console and the page just sat there. The long-standing "lang-resize.html
+// hangs the tab" note was this; it was never about that page.
+//
+// Gating the stream on document.hidden was the first fix and it was not enough:
+// background tabs kept the connection anyway. A 1s poll cannot starve the pool
+// at all, because each request is short-lived — which matters more here than
+// the elegance of a push, on localhost, for a mock server.
+const LR = `<script>(function(){
+var rev=null;
+function tick(){
+  if(document.hidden)return;
+  fetch('/__rev',{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
+    if(rev!==null&&t!==rev){location.reload();return;}
+    rev=t;
+  }).catch(function(){});
+}
+tick();setInterval(tick,1000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)tick();});
+})();</script>`;
+let rev = 0;
+watch(ROOT, { recursive: true }, () => { rev++; });
 // The two shared bundles are ASSEMBLED per request from the base file plus one
 // file per component (shared/components/, ordered by order.json). Components get
 // their own small files; pages keep the same two URLs and the same execution
@@ -41,9 +66,9 @@ const server = http.createServer(async (req, res) => {
       return res.end(out);
     } catch (e) { res.writeHead(500); return res.end(String(e)); }
   }
-  if (url === '/__reload') {
-    res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', 'connection': 'keep-alive' });
-    res.write(':ok\n\n'); clients.add(res); req.on('close', () => clients.delete(res)); return;
+  if (url === '/__rev') {
+    res.writeHead(200, { 'content-type': 'text/plain', 'cache-control': 'no-store' });
+    return res.end(String(rev));
   }
   try {
     let p = decodeURIComponent(url); if (p === '/') p = '/index.html';

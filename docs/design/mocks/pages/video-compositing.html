@@ -43,7 +43,7 @@
 .cbadge2 .dt{width:7px;height:7px;border-radius:50%}
 .cbadge2 .dt.off{background:#ff8f8f}.cbadge2 .dt.on{background:#3ecf8e}
 /* SELECTION, place 1 of 3: the selected layer is outlined on the canvas */
-.selring{position:absolute;inset:0;border:1.5px solid var(--accent);border-radius:var(--r-md);pointer-events:none;z-index:7}
+.selring{position:absolute;inset:0;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none;z-index:7}
 .seltag{position:absolute;right:var(--s2);top:var(--s2);z-index:7;font-size:9.5px;font-weight:640;color:var(--accent-ink);background:var(--accent);padding:3px 8px;border-radius:999px;white-space:nowrap}
 
 /* ---------- the timeline dock ---------- */
@@ -379,17 +379,14 @@
         <span class="knob" style="left:0%"></span>
       </span>
       <span class="tc">0:08</span>
-      <span class="grp">
-        <button class="btn ghost sm" id="ckKey" aria-pressed="false" title="Key the green out of the foreground"><i class="ic ic-wand"></i><span class="lb">Key it</span></button>
-        <button class="btn ghost sm" id="ckReset" title="Reset this demo"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
-        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export</span></button>
-      </span>
     </div>
 
     <!-- TIMELINE DOCK -->
     <div class="timeline" id="tlDock">
       <div class="tlbar">
         <span class="lbl">Composite</span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" id="ckReset" title="Reset this demo"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
         <span class="tspacer"></span>
         <span class="now" id="tlNow">Top to bottom, the stack is the composite order</span>
       </div>
@@ -674,7 +671,7 @@
     renderStage();
     if(st.sel==="fg") renderProps(); else syncKeyControls();
   }
-  ["ckKey","mAutoKey"].forEach(function(id){
+  ["mAutoKey"].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.addEventListener("click", function(){ setKeyed(id==="mAutoKey" ? true : !st.keyed); });
   });

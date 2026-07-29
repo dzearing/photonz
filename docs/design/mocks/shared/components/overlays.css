@@ -37,7 +37,33 @@
 .filmcard.sel .acts{display:flex;align-items:center;gap:2px;
   padding:var(--s1) var(--s2) var(--s2);border-top:1px solid var(--edge-lo)}
 
-/* ---- video transport bar ---- */
+/* ============================================================
+   VIDEO TRANSPORT BAR · the scrub bar owns this row
+   ============================================================
+   THE RULE: the transport holds TIME CONTROLS ONLY — volume, skip, play,
+   the two timecodes, and the scrubber. Nothing else may live here.
+
+   That is not tidiness, it is precision. The scrubber is the one control on
+   the row whose usefulness is measured in pixels: at a 15-second duration a
+   323px track gives you 21px per second, so "put the playhead on 6.40s" is a
+   two-pixel gesture and you cannot land it. Every button parked beside it is
+   taken directly out of that budget. The video page had four (Cut, Add key,
+   Delete key, Export) totalling 353px — a wider block than the scrubber it
+   was starving — and every one of them already existed somewhere better:
+
+     Export      · the title bar already has it, as the primary action
+     Cut         · the Blade tool, in the canvas tool strip AND the timeline's
+     Add key     · belongs to a PROPERTY at the playhead, not to the document,
+     Delete key    so it is a per-lane control in the keyframe editor
+
+   The pattern that replaces "park it on the transport": an action that only
+   makes sense for the current selection goes NEXT TO THAT SELECTION. A global
+   action goes in the title bar or the command menu. The transport is neither.
+
+   So the only flexible child here is .scrub, and every sibling is flex:none —
+   which means the scrubber grows to whatever the window gives it instead of
+   being the thing that gets squeezed.
+   ============================================================ */
 .transport{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s4);
   border-top:1px solid var(--edge-lo);background:var(--glass-chrome);
   backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
@@ -45,8 +71,22 @@
 .transport .grp{display:inline-flex;align-items:center;gap:var(--s1);flex:none}
 .transport .tc{flex:none;font-family:var(--mono);font-size:10.5px;color:var(--faint);
   font-variant-numeric:tabular-nums;white-space:nowrap}
-.scrub{flex:1 1 auto;min-width:56px;height:6px;border-radius:999px;background:var(--line-strong);
-  position:relative;cursor:pointer;touch-action:none}
+
+/* min-width is a floor, not a suggestion: below ~180px a scrubber stops being
+   a seek control and becomes a progress bar you cannot aim. */
+.scrub{flex:1 1 auto;min-width:180px;height:6px;border-radius:999px;background:var(--line-strong);
+  position:relative;cursor:pointer;touch-action:none;
+  transition:height .12s ease,background .12s ease}
+/* THE HIT TARGET. The track is 6px because 6px is what should be *drawn*; it
+   is not what should be *grabbable*. A 6px-tall pointer target on the one
+   control that demands precision is the second half of the same bug, so the
+   bar carries an invisible 24px band and you can start a scrub anywhere in it. */
+.scrub::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px}
+/* two flags, because two things drive a scrubber: slider.js stamps
+   data-seeking on any .scrub it adopts, and a page running its own transport
+   (video.html) stamps data-on. Both mean "a drag is in progress". */
+.scrub:hover,.scrub[data-seeking],.scrub[data-on="1"]{height:8px;background:var(--line-strong)}
+.scrub:focus-visible{outline:none;box-shadow:var(--ring)}
 .scrub .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--accent)}
 /* the playhead is the slider's capsule at the large size, restated here
    because overlays loads after slider and its own radius would win */
@@ -54,7 +94,9 @@
   width:var(--sl-thumb-w-lg);height:var(--sl-thumb-h-lg);
   margin-left:calc(var(--sl-thumb-w-lg) / -2);
   transform:translateY(-50%);border-radius:999px;
-  background:var(--sl-knob);border:1px solid var(--edge-lo);box-shadow:var(--sl-knob-shadow)}
+  background:var(--sl-knob);border:1px solid var(--edge-lo);box-shadow:var(--sl-knob-shadow);
+  transition:transform .12s ease}
+.scrub:hover .knob,.scrub[data-seeking] .knob,.scrub[data-on="1"] .knob{transform:translateY(-50%) scale(1.12)}
 .scrub .mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--good)}
 
 /* ---- generic toggled popover (tool-bar overflow, group menus) ---- */

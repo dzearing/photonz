@@ -28,9 +28,48 @@
      flat against the control and the tooltip read as growing out of it.
      The offset the plate actually gets is GAP + the beak's protrusion, and the
      side beak is smaller (see tooltip.css) so it gets its own number. */
-  var DELAY_IN = 380, DELAY_OUT = 60, EDGE = 6;
+  /* DELAY_IN IS REST TIME, NOT DWELL TIME. The clock restarts on every
+     pointermove over the trigger, so a tooltip appears once the pointer has
+     been STILL for this long — not once it has merely been inside the control
+     for this long. Those two read completely differently in use:
+
+       dwell  · crossing a toolbar to reach the far end pops a label on
+                whichever button you happened to be over when the clock ran out
+       rest   · crossing pops nothing at all, because you never stopped
+
+     A plain dwell timer cannot be tuned out of that problem. Raise it and
+     deliberate hovers get sluggish; lower it and sweeps flash labels. Gating on
+     stillness removes the trade: sweeping is silent at ANY value, so the number
+     only has to answer "how long is a pause that means I want help", and 1s of
+     dead-still pointer is comfortably past accidental while still feeling like
+     an answer rather than a wait.
+
+     Keyboard focus does not go through this at all (DELAY_FOCUS): there is no
+     pointer to hold still, and a tab-stop that waits over a second to explain
+     itself is just broken. */
+  /* LEAVING AND SWAPPING ARE DIFFERENT EVENTS AND NEED DIFFERENT NUMBERS. They
+     had been sharing one 60ms constant, which made "move off the button" and
+     "move to the next button" behave identically — and 60ms is right for only
+     one of them:
+
+       DELAY_SWAP · open -> neighbour. Stays fast. Walking a toolbar to read the
+                    shortcuts should feel like one label tracking the pointer.
+       DELAY_HIDE · open -> nothing. Was also 60ms, so the label evaporated the
+                    instant you slipped off, including onto the 4px gap BETWEEN
+                    two buttons. Reading a shortcut meant holding the pointer
+                    perfectly still on the glyph. A grace period fixes both: a
+                    brief excursion is treated as travel, not as dismissal.
+
+     Anything that means "gone" rather than "moving on" — Escape, a click, a
+     scroll — still hides immediately and ignores both. */
+  var DELAY_IN = 1000, DELAY_FOCUS = 120, DELAY_SWAP = 60, DELAY_HIDE = 450, EDGE = 6;
   var GAP = 6, BEAK = 9, BEAK_SIDE = 5;
-  var node = null, timer = null, closer = null, current = null;
+  /* `pending` is the trigger a scheduled show is aimed at, and it is tracked
+     SEPARATELY from `current` (the one actually on screen) because there is a
+     long window where a tooltip is owed to a control the pointer may already
+     have left. Collapsing the two is what stranded them: see the pointerout
+     handler below. */
+  var node = null, timer = null, closer = null, current = null, pending = null;
   function offsetFor(side) {
     return GAP + (side === 'left' || side === 'right' ? BEAK_SIDE : BEAK);
   }
@@ -94,6 +133,7 @@
     var t = ensure();
     t.innerHTML = label(el);
     current = el;
+    pending = null;
     if (warm) {
       /* already open: land the new label in place with no animation at all,
          then hand the transition back so the eventual exit still fades */
@@ -124,6 +164,7 @@
   function hide(immediate) {
     clearTimeout(timer);
     clearTimeout(closer);
+    pending = null;
     if (immediate) {
       current = null;
       if (node) node.classList.remove('on');
@@ -132,31 +173,56 @@
     closer = setTimeout(function () {
       current = null;
       if (node) node.classList.remove('on');
-    }, DELAY_OUT);
+    }, DELAY_HIDE);
   }
 
-  function trigger(e) {
+  function trigger(e, wait) {
     var el = e.target.closest && e.target.closest('[data-tip]');
     if (!el) return;
     clearTimeout(closer);                                  // cancel a pending leave
     if (el === current) return;
     clearTimeout(timer);
+    pending = el;
     var now = !!(node && node.classList.contains('on'));   // already open: swap
-    timer = setTimeout(function () { show(el, now); }, now ? DELAY_OUT : DELAY_IN);
+    timer = setTimeout(function () { show(el, now); }, now ? DELAY_SWAP : wait);
   }
 
-  document.addEventListener('pointerover', trigger);
-  document.addEventListener('focusin', trigger);
+  document.addEventListener('pointerover', function (e) { trigger(e, DELAY_IN); });
+  document.addEventListener('focusin', function (e) { trigger(e, DELAY_FOCUS); });
+
+  /* THE REST CLOCK. Every move over the queued trigger pushes the show back, so
+     the tooltip is owed only to a pointer that has come to a stop. Once one is
+     already open the swap path owns the timing instead — you have demonstrated
+     intent by resting once, and re-earning it at every neighbour would make a
+     deliberate walk along a toolbar feel broken. */
+  document.addEventListener('pointermove', function (e) {
+    if (!pending || current || !e.target.closest) return;
+    if (e.target.closest('[data-tip]') !== pending) return;
+    var el = pending;
+    clearTimeout(timer);
+    timer = setTimeout(function () { show(el, false); }, DELAY_IN);
+  });
   /* `pointerout` fires when the pointer crosses onto a CHILD of the trigger —
      and every icon button has a child, the glyph. Hiding on that made the
      tooltip flicker off and on as you moved around inside a single button.
      The pointer has only really left when relatedTarget is outside the
      trigger, so check that rather than trusting the event's target. */
   document.addEventListener('pointerout', function (e) {
-    if (!current || !e.target.closest) return;
-    if (e.target.closest('[data-tip]') !== current) return;
+    if (!e.target.closest) return;
+    /* Check the SCHEDULED tooltip too, not just the visible one. Guarding on
+       `current` alone stranded every quick pass over a control: the pointer
+       entered, a show was queued for 380ms out, the pointer left at 100ms, and
+       this handler bailed because nothing was on screen yet — so the timer was
+       never cleared. It fired into an empty room 280ms later, and since the
+       pointer was long gone no further pointerout would ever arrive for that
+       element. The label hung there until you hovered something else, pressed
+       Escape, clicked or scrolled. That is the stuck "Volume" tooltip. */
+    var active = current || pending;
+    if (!active) return;
+    if (e.target.closest('[data-tip]') !== active) return;
     var to = e.relatedTarget;
-    if (to && to.nodeType === 1 && current.contains(to)) return;   // still inside
+    if (to && to.nodeType === 1 && active.contains(to)) return;    // still inside
+    if (!current) { clearTimeout(timer); pending = null; return; } // never opened: just cancel
     hide(false);                                                   // grace period
   });
   document.addEventListener('focusout', function () { hide(false); });
@@ -188,10 +254,18 @@
   // component builds chrome). Watch rather than guess at timing: a control that
   // appears in step 6 gets the same tooltip as one that was there at load.
   if (window.MutationObserver) {
-    var pending = null;
+    var queued = null;
     new MutationObserver(function () {
-      clearTimeout(pending);
-      pending = setTimeout(function () { upgrade(); }, 50);
+      /* A label must never outlive the thing it labels — including when that
+         thing is REPLACED rather than left. Pages here re-render whole rows on
+         every playhead move (the keyframe lanes, the timeline clips), so the
+         element a tooltip is anchored to is routinely detached while the
+         tooltip is still on screen, pointing at coordinates nothing occupies.
+         No pointer event will ever arrive for a node that is no longer in the
+         document, so the DOM change itself has to be the signal. */
+      if (current && !document.contains(current)) hide(true);
+      clearTimeout(queued);
+      queued = setTimeout(function () { upgrade(); }, 50);
     }).observe(document.documentElement, {
       childList: true, subtree: true, attributeFilter: ['title']
     });

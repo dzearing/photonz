@@ -83,7 +83,9 @@
 /* controls: glass capsules + glossy accents */
 .pill{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:999px;box-shadow:inset 0 1px 0 var(--edge-hi)}
 .pill.solid{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 84%, white 16%), var(--accent));border:0;color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow)}
-.pill.ai{--glow-c:#9d6cff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow)}
+/* .pill.ai deliberately absent: it is the hero variant, and button.css owns its
+   fill, glow and states. A --glow-c set here never worked anyway — see the note
+   on `.btn.hero,.pill.ai` for why. */
 .chip{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
 .tool{border-radius:var(--r-sm)}
 .tool:hover{background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border-color:var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}

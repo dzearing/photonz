@@ -9,15 +9,40 @@
    call, which is the most direct proof that UI == API == agent.
 
    Why a raised button, not the old inset well: the well said "type here".
-   This opens a surface, so it wears the standard raised .btn glass. It is a
-   .btn variant on purpose — the DS already owns the hover/active/focus/
-   disabled states, and .askbtn only adds the title-bar height and the
-   accent glyph. */
+   This opens a surface, so it is a raised .btn.
+
+   And it is the HERO variant of that button, not neutral glass. It was neutral
+   for a while, on the argument that the DS already owned the states and the
+   launcher only needed a title-bar height and an accent glyph. That was right
+   about the states and wrong about the identity: it left the title bar with no
+   sign that one of its controls is different in kind. Every other thing up here
+   runs a command. This one opens the agent — the surface that IS the API — and
+   the spectrum is how the app says so. It also settles a split: the spectrum
+   already existed as `.pill.ai` but only survived on the component spec pages,
+   because shell.js deletes the authored `.toolbar` strips those pills lived in.
+   Two Ask affordances, and the one users actually saw was the plain one.
+
+   So .askbtn adds only what is local to the title bar: the 28px height, the
+   kbd's spacing, and an open state. Everything else — fill, bloom, hover,
+   press, focus — comes from `.btn.hero` in button.css. */
 .askbtn{height:28px}
-.askbtn>.ic{color:var(--accent)}
 .askbtn>.kbd{margin-left:var(--s1)}
-.askbtn[aria-expanded="true"]{background:var(--accent-soft);
-  border-color:var(--accent-line);color:var(--ink)}
+/* Open: the launcher stays lit (the title bar is outside the scrim, so it is the
+   one thing still at full brightness) but reads as pressed rather than raised —
+   the spectrum held wide open, the bloom tucked under, the gloss down. It is the
+   same shape as :active because it means the same thing: this control is
+   currently doing something.
+
+   Open beats hover, hence the second selector. Without it .btn.hero:hover ties on
+   specificity and an open launcher springs back to raised the moment you point at
+   it, which reads as "off". Pointing at it still has to answer, though, so hover
+   while open lifts the bloom one rung and eases the press — a response, not a
+   different state. */
+.askbtn[aria-expanded="true"]{
+  box-shadow:inset 0 1px 3px rgba(38,16,72,.34), var(--glow-sm)}
+.askbtn[aria-expanded="true"]:hover{
+  box-shadow:inset 0 1px 3px rgba(38,16,72,.26), var(--glow)}
+.askbtn[aria-expanded="true"]::before{opacity:1}
 
 /* The overlay is elevation 2 on the ladder in pages/lang-elevation.html:
    glass + blur + the big shadow + a scrim, because it covers live content.

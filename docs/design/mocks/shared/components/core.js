@@ -40,12 +40,12 @@
     });
   });
 
-  // Subtabs (e.g. agent A/B/C): .subtab[data-alt] toggles matching .alt.
+  // Subtabs (e.g. agent A/B/C): .subtab[data-alt] toggles matching .altpane.
   var subtabs = [].slice.call(document.querySelectorAll('.subtab'));
   subtabs.forEach(function (t) {
     t.addEventListener('click', function () {
       subtabs.forEach(function (x) { x.classList.toggle('on', x === t); });
-      document.querySelectorAll('.alt').forEach(function (a) {
+      document.querySelectorAll('.altpane').forEach(function (a) {
         a.classList.toggle('on', a.id === t.getAttribute('data-alt'));
       });
     });

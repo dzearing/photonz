@@ -168,8 +168,7 @@
 .uibtn{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:660;color:#fff;background:#3550c8;padding:11px 20px;border-radius:12px;box-shadow:0 8px 20px -8px rgba(53,80,200,.6)}
 .uibtn.grad{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
 .uibtn.round{border-radius:22px}
-.marq{position:absolute;inset:-11px;border:1.5px dashed var(--accent);border-radius:16px;pointer-events:none}
-.cring{position:absolute;inset:-7px;border:1.5px solid var(--comp);border-radius:17px;pointer-events:none}
+/* .marq / .cring -> shared/components/selection.css (bounds-ring family) */
 .sublbl{position:absolute;left:0;bottom:-22px;display:flex;gap:6px}
 .sublbl span{font-size:9px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 6px;border-radius:5px}
 .libchip{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:7px;background:var(--comp-soft);border:1px solid var(--comp-line);color:var(--comp);font-size:11px;font-weight:600;padding:7px 11px;border-radius:9px}
@@ -206,7 +205,7 @@
 .subtabs{display:inline-flex;gap:6px;padding:2px 4px}
 .subtab{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 13px;font-size:12px;font-weight:560;color:var(--dim)}
 .subtab.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-.alt{display:none}.alt.on{display:block}
+.altpane{display:none}.altpane.on{display:block}
 .cpwrap{position:relative}
 .cpdim{position:absolute;inset:0;background:rgba(6,8,14,.42);backdrop-filter:blur(2px);z-index:4}
 .cpal{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:min(560px,86%);z-index:5;background:var(--chrome-solid);border:1px solid var(--line-strong);border-radius:14px;box-shadow:var(--lg-shadow);overflow:hidden}
@@ -227,9 +226,9 @@
 .msg{font-size:12px;line-height:1.5}
 .msg.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);padding:8px 12px;border-radius:12px 12px 3px 12px;max-width:80%}
 .msg.a{color:var(--dim)}
-.msg.a .did{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-top:7px}
-.msg.a .did .step{display:flex;gap:8px;align-items:center;font-size:11px;margin:3px 0}
-.msg.a .did .step .t{color:var(--good)}
+/* what the agent DID used to be a `.did` box of one-line strings here. It is
+   now the `.run` card in agent.css: the same information, grouped by the layer
+   it changed and selectable, and shared with the docked conversation. */
 .chat-in{padding:11px 13px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
 .chat-in .box{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12px;color:var(--faint)}
 .aghost{position:absolute;width:300px;background:rgba(20,24,40,.7);backdrop-filter:blur(10px);border:1.5px dashed var(--accent);border-radius:12px;padding:14px;color:#fff}

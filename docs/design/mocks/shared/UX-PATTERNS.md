@@ -308,6 +308,8 @@ Every editor/scenario page must satisfy:
 - [ ] Every glyph is an `.ic-*` from the one library; zero ascii/emoji/mixed
       styles.
 - [ ] Controls are canonical `.btn`/`.seg`/etc. with real states.
+- [ ] **Transport bar holds time controls only** (D8): nothing but volume,
+      skip, play/pause, loop, the two timecodes and the scrubber shares that row.
 - [ ] Copy: plain, no em dashes, "agent" not "Claude".
 
 ---
@@ -552,3 +554,43 @@ Authoring: `data-cp-color` seeds it, `data-cp-fill` / `data-cp-text` bind live
 outputs, a `cp:change` event carries `{hex, rgba, r,g,b,a, h,s,l}`, and a
 `cp:set` event re-points the same popover at another slot. Canonical page:
 `pages/color.html`.
+
+---
+
+### D8 — The transport bar holds time controls only
+
+The scrubber is the one control in the app whose usefulness is measured in
+pixels. At a 15-second document a 323px track gives you 21px per second, so
+"put the playhead on 6.40s" is a two-pixel gesture and you cannot land it.
+Anything parked on that row is taken directly out of that budget.
+
+So the transport row is **volume · skip · play/pause · loop · timecode ·
+scrubber · timecode**, and nothing else. The scrubber is the only flexible
+child; every sibling is `flex:none`. It carries an invisible 24px pointer band
+(`.scrub::before`), because 6px is what a track should be *drawn* at and has
+never been what it should be *grabbed* at.
+
+Fourteen pages had violated this identically, because they were copied from
+each other: `video.html` carried Cut · Add key · Delete key · Export, a 353px
+block that was **wider than the 323px scrubber it was starving**. Every one of
+those buttons already existed somewhere better, which is the tell — a control
+lands on the transport when nobody decided where it belonged.
+
+Where an evicted action goes, in order of preference:
+
+| The action is… | It belongs… | Example |
+| --- | --- | --- |
+| about the whole document | the title bar (`.tbtns`) or the command menu | Export — already the primary button up there on all 14 pages |
+| a mode you enter | the tool strip (D4) | Cut → the Blade tool, already in the canvas strip *and* the timeline's |
+| about the current selection | next to that selection | Key it → the button already in Properties; Apply / Hard cut → the timeline bar that names the cut |
+| about one property at one time | on that property's own row | Add key / Delete key → one diamond per lane in the keyframe editor |
+| scoped to the timeline dock | the dock's local bar (`.tlbar`) | Duck, Clear, Reset |
+
+The last row of that table is the one worth internalising. **A keyframe is
+never document-level** — it is one value, on one property, at one time — so
+"Add key" phrased as a global command had to guess all three. As a diamond on
+the property's lane it guesses nothing: the lane says which property, the
+playhead says when, and the diamond's own fill says whether a key is already
+there (hollow = click to set, filled = click to clear). That is the After
+Effects / Final Cut idiom, and it replaces two labelled buttons with one
+control that also reads as state. Canonical page: `pages/video.html`.

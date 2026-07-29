@@ -25,9 +25,13 @@
   /* tool bar: overflow tools collapse into the "more" affordance */
   .cnv .tbar .ovf{display:none}
   .cnv .tbar .tbar-more{display:grid}
-  /* video transport: keep transport + scrubber, shed the labels */
-  .transport .lb{display:none}
-  .transport .btn{padding:0;width:var(--ctl-h-sm)}
+  /* The transport used to shed button labels here, because it carried labelled
+     edit actions. Since D8 it carries none — time controls only — so both rules
+     were dead, and the width one was actively harmful: it forced EVERY transport
+     button to the small width, including the primary play button, which keeps
+     the regular height. That is a 24x32 egg on all 13 video pages at any window
+     under this breakpoint. Removed rather than patched: there is nothing left
+     here to shed. See UX-PATTERNS D8. */
 }
 @container shell (max-width:620px){
   .edit.lean{--rail-w:28px}

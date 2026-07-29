@@ -6,7 +6,7 @@ around it — which is how the shell ended up with 57 hand-authored copies in th
 first place.
 
 Both files are now **empty on purpose**. The whole design system lives here:
-**23 CSS components** and **12 JS components**, largest first —
+**35 CSS components** and **16 JS components**, largest first —
 `icons` (77 KB of generated glyphs), `colorpicker`, `inspector`, `dock`,
 `walkthrough`. Nothing is over ~900 lines and most are under 150.
 

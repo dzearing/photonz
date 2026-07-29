@@ -13,8 +13,26 @@
      Local names are prefixed `lyp-` so they cannot shadow a DS class.
      ============================================================ */
 
+  /* NESTING DEPTH. The DS ships one level (`.lrow.child`, 26px) because most
+     documents are one level deep. A group is a layer, so a group can hold
+     groups to any depth; these carry the same 14px step past that. The step
+     STOPS at level 6 (see .lyp-d6) — past that the tree would spend more width
+     on indentation than on names, so depth keeps nesting and the indent does
+     not keep growing. */
+  #layers-pane .lgroup.lyp-d1{padding-left:26px}
+  #layers-pane .lrow.lyp-d2,#layers-pane .lgroup.lyp-d2{padding-left:40px}
+  #layers-pane .lrow.lyp-d3,#layers-pane .lgroup.lyp-d3{padding-left:54px}
+  #layers-pane .lrow.lyp-d4,#layers-pane .lgroup.lyp-d4{padding-left:68px}
+  #layers-pane .lrow.lyp-d5,#layers-pane .lgroup.lyp-d5{padding-left:82px}
+  #layers-pane .lrow.lyp-d6,#layers-pane .lgroup.lyp-d6{padding-left:96px}
+  /* past the cap the rows stay at the level-6 indent and the depth is spelled out */
+  #layers-pane .lrow.lyp-dcap{padding-left:96px}
+  #layers-pane .lyp-depth{font-family:var(--mono);font-size:9px;color:var(--faint);
+    padding:1px 5px;border-radius:999px;background:var(--glass-thin);
+    border:1px solid var(--edge-lo);flex:none;margin-left:auto}
+
   /* a bounded frame the size of a real panel, so a lone pane reads as docked */
-  #layers-pane .lyp-dock{width:276px;max-width:100%;height:516px;flex:none;
+  #layers-pane .lyp-dock{width:276px;max-width:100%;height:452px;flex:none;
     border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden}
   #layers-pane .lyp-dock.md{height:332px}
   #layers-pane .lyp-dock.sm{height:264px}
@@ -110,7 +128,7 @@
 
   /* the three-places-at-once figure */
   #layers-pane .lyp-three{display:grid;grid-template-columns:1fr 276px;gap:0;
-    border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;height:412px}
+    border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;height:366px}
   #layers-pane .lyp-three .canvas{min-height:0;height:100%}
   #layers-pane .lyp-three .pdock{height:100%;width:100%;max-width:none}
   /* "one selection, three places" badges. The two that point into the panel are
@@ -155,8 +173,12 @@
     <div class="docspec top lyp-anat">
       <div class="lyp-dock">
         <div class="pdock" style="--dock-w:100%">
-          <div class="dgrp grow" data-grp="layers">
-            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">11</span>
+          <!-- Layers is BOUNDED, never .grow: it scrolls inside its own budget, the
+               splitter below it decides how much of the panel it consumes, and the
+               growing pane is the LAST one so collapsing anything can never push a
+               pane above it down the panel. -->
+          <div class="dgrp" data-grp="layers" style="--gh:232px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">13</span>
               <button class="btn ghost icon sm" data-tip="Add adjustment layer"><i class="ic ic-sliders"></i></button>
               <button class="btn ghost icon sm" data-tip="New group|⌘G"><i class="ic ic-group"></i></button>
               <button class="btn ghost icon sm" data-tip="Pane menu"><i class="ic ic-more"></i></button>
@@ -166,12 +188,14 @@
 
               <div class="lrow adj"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
 
-              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
-              <div class="lrow child sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
-              <div class="lrow child"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">4</span></div>
+              <div class="lgroup lyp-d1"><i class="ic sm ic-chevron-down"></i> Step 1 <span class="cnt">2</span></div>
+              <div class="lrow lyp-d2 sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Box</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow lyp-d2"><i class="ic ic-text"></i><span class="nm">"Tap here to start"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup lyp-d1"><i class="ic sm ic-chevron-right"></i> Step 2 <span class="cnt">2</span></div>
               <div class="lrow child"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
 
-              <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Toolbar <i class="ic xs ic-component" style="color:var(--comp);margin-left:4px"></i></div>
+              <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Toolbar <i class="ic xs ic-component cmark" style="margin-left:4px"></i></div>
 
               <div class="lrow"><i class="ic ic-square" style="color:#7c4dff"></i><span class="nm">Blur · redaction</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot · 2560 × 1600</span><i class="ic sm ic-lock eye"></i></div>
@@ -188,9 +212,12 @@
       <div class="lyp-leg">
         <div class="lyp-li"><span class="lyp-pin">1</span><span><b>Top of the list is top of the document.</b> The stack reads the way it composites, so moving a row up in the pane moves the layer forward on the canvas. There is no second mental model to learn.</span></div>
         <div class="lyp-li"><span class="lyp-pin">2</span><span><b>An adjustment layer is just a layer.</b> The elbow under Warm grade says it clips to everything below it, and dragging it down the stack changes what it grades.</span></div>
-        <div class="lyp-li"><span class="lyp-pin">3</span><span><b>A group is a real layer</b> with its own opacity, mask and effects. Callouts is expanded, Toolbar is a collapsed component that shows its overrides rather than its internals.</span></div>
-        <div class="lyp-li"><span class="lyp-pin">4</span><span><b>Find is pinned, not floating.</b> Type in it and the tree filters to matches with their parents kept for context, so you never lose your place in the structure.</span></div>
-        <div class="lyp-li"><span class="lyp-pin">5</span><span><b>The trailing glyph is the row's state:</b> visible, hidden, or locked. Same slot on every row, so a column of eyes is scannable at a glance.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">3</span><span><b>A group is a real layer</b> with its own opacity, mask and effects, so <b>groups nest</b>: Step 1 is a group inside Callouts. Toolbar is a collapsed component that shows its overrides rather than its internals.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">4</span><span><b>The pane scrolls inside itself.</b> Layers has a bounded height and its own scroller, so a long document never spills into Properties and never stretches the panel.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">5</span><span><b>You decide how much of the panel it takes.</b> Drag the divider under it, or use the arrows: Layers grows and shrinks between 120 and 300, and it keeps scrolling at every size.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">6</span><span><b>Collapsing Properties leaves it where it is.</b> It folds to its header directly under Layers rather than sliding to the bottom of the panel, because Layers is bounded and cannot swallow the freed space.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">7</span><span><b>Find is pinned, not floating.</b> Type in it and the tree filters to matches with their parents kept for context, so you never lose your place in the structure.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">8</span><span><b>The trailing glyph is the row's state:</b> visible, hidden, or locked. Same slot on every row, so a column of eyes is scannable at a glance.</span></div>
       </div>
     </div>
     <div class="docmeta">
@@ -239,8 +266,8 @@
         <div class="docsp">
           <div class="docsp-l"><b>Indent means parent</b></div>
           <p class="docsp-d">One indent step per level of nesting, and no other meaning is ever encoded in indentation.
-            Depth past four levels keeps indenting but the name truncates from the left, so you always see the end of the
-            name, which is the part that identifies it.</p>
+            Groups nest without limit, so the <b>step stops at six levels</b> and deeper rows say their own depth instead.
+            The nesting is unbounded; only the whitespace is capped.</p>
         </div>
         <div class="docsp">
           <div class="docsp-l"><b>The name is the label</b></div>
@@ -278,7 +305,7 @@
           <div class="lyp-k"><b>Group.</b> A real layer that happens to have children. It takes an opacity, a mask and an effect stack of its own, which is the difference between a group and a folder.</div>
         </div>
         <div class="lyp-kind">
-          <div class="lrow selc"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Toolbar</span><i class="ic sm ic-component cmark"></i></div>
+          <div class="lrow"><i class="ic ic-component"></i><span class="nm">Toolbar</span><i class="ic sm ic-component cmark"></i></div>
           <div class="lyp-k"><b>Component instance.</b> Always one collapsed row with the component glyph. Expanding it shows the <b>overrides</b> you have set, not its full internals, because its internals belong to the component and not to this document.</div>
         </div>
         <div class="lyp-kind">
@@ -304,12 +331,19 @@
         <span class="lyp-badge" data-lyp-point="#lypSelLayers">2 · in Layers</span>
         <span class="lyp-badge" data-lyp-point="#lypSelProps">3 · in Properties</span>
         <div class="canvas">
+          <!-- PLACE 1 OF 3 · the canvas. The canonical frame from
+               shared/components/selection.{css,js}: .selwrap › .sel-ring +
+               four corner .handles + .mtag. No radius, no inset, no page
+               overrides — selection.js stamps the size bucket. -->
           <div class="selwrap" style="position:absolute;left:26%;top:30%;width:180px;height:104px">
             <div class="hero-card" style="width:100%;height:100%;box-sizing:border-box">
               <div style="font-family:var(--serif);font-size:15px;color:#fff">Step 1</div>
               <div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">Tap here to start</div>
             </div>
             <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span>
+            <span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag">Step 1 · box · 180 × 104</span>
           </div>
         </div>
         <div class="pdock" style="--dock-w:100%">
@@ -323,7 +357,7 @@
               <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
             </div>
           </div>
-          <div class="dgrp grow" data-grp="props" id="lypSelProps">
+          <div class="dgrp" data-grp="props" id="lypSelProps" style="--gh:120px">
             <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Step 1 · box</span></div>
             <div class="dgrp-b">
               <div class="section">
@@ -372,7 +406,7 @@
           <div class="docsp-l"><b>Before</b> · three rows selected</div>
           <div class="lyp-dock sm">
             <div class="pdock" style="--dock-w:100%">
-              <div class="dgrp grow" data-grp="layers">
+              <div class="dgrp" data-grp="layers" style="--gh:226px">
                 <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
                 <div class="dgrp-b">
                   <div class="lrow sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
@@ -392,7 +426,7 @@
           <div class="docsp-l"><b>After ⌘G</b> · named, and ready to rename</div>
           <div class="lyp-dock sm">
             <div class="pdock" style="--dock-w:100%">
-              <div class="dgrp grow" data-grp="layers">
+              <div class="dgrp" data-grp="layers" style="--gh:226px">
                 <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span></div>
                 <div class="dgrp-b">
                   <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">3</span></div>
@@ -421,7 +455,7 @@
                   <div class="lrow"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
                 </div>
               </div>
-              <div class="dgrp" data-grp="props" style="--gh:132px">
+              <div class="dgrp" data-grp="props" style="--gh:120px">
                 <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Callouts</span></div>
                 <div class="dgrp-b">
                   <div class="section">
@@ -454,12 +488,70 @@
     </div>
   </div>
 
-  <!-- ── 06 · REARRANGING ───────────────────────────────────────────── -->
+  <!-- ── 06 · NESTING ───────────────────────────────────────────────── -->
+  <div class="docblk">
+    <div class="docspec top lyp-anat">
+      <div class="lyp-dock md">
+        <div class="pdock" style="--dock-w:100%">
+          <!-- a genuine chain, level 1 through 9, so the indent cap is shown
+               happening rather than described -->
+          <div class="dgrp" data-grp="layers" style="--gh:236px">
+            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">15</span></div>
+            <div class="dgrp-b">
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Onboarding <span class="cnt">3</span></div>
+              <div class="lgroup lyp-d1"><i class="ic sm ic-chevron-down"></i> Screen 2 <span class="cnt">3</span></div>
+              <div class="lgroup lyp-d2"><i class="ic sm ic-chevron-down"></i> Callouts <span class="cnt">2</span></div>
+              <div class="lgroup lyp-d3"><i class="ic sm ic-chevron-down"></i> Step 1 <span class="cnt">2</span></div>
+              <div class="lrow lyp-d4 sel"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Box</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow lyp-d4"><i class="ic ic-text"></i><span class="nm">"Tap here"</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup lyp-d3"><i class="ic sm ic-chevron-right"></i> Step 2 <span class="cnt">2</span></div>
+              <div class="lrow lyp-d2"><i class="ic ic-image"></i><span class="nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lgroup lyp-d1"><i class="ic sm ic-chevron-right"></i> Screen 3 <span class="cnt">5</span></div>
+              <div class="lrow child"><i class="ic ic-square"></i><span class="nm">Backdrop</span><i class="ic sm ic-eye eye"></i></div>
+
+              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Kit <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d1"><i class="ic sm ic-chevron-down"></i> Chrome <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d2"><i class="ic sm ic-chevron-down"></i> Bar <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d3"><i class="ic sm ic-chevron-down"></i> Left <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d4"><i class="ic sm ic-chevron-down"></i> Cluster <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d5"><i class="ic sm ic-chevron-down"></i> Button <span class="cnt">1</span></div>
+              <div class="lgroup lyp-d6"><i class="ic sm ic-chevron-down"></i> Icon <span class="cnt">2</span></div>
+              <!-- the cap: level 8 and 9 hold the level-6 indent and say their depth -->
+              <div class="lrow lyp-dcap"><i class="ic ic-circle" style="color:#3ecf8e"></i><span class="nm">Ring</span><span class="lyp-depth">L8</span></div>
+              <div class="lrow lyp-dcap"><i class="ic ic-pen" style="color:#e0a53a"></i><span class="nm">Glyph</span><span class="lyp-depth">L9</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lyp-leg">
+        <div class="lyp-li"><span class="lyp-pin">1</span><span><b>Yes, and there is no limit.</b> A group is a layer and a group holds layers, so a group holds groups, all the way down. Nothing in the model counts levels, so nothing in the model can run out of them.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">2</span><span><b>⌘G on a selection that already contains a group</b> nests it. Grouping is the same command at every level, which is what keeps deep structure cheap to build rather than something you plan in advance.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">3</span><span><b>Effects compose down the chain.</b> Opacity on Onboarding multiplies opacity on Screen 2 multiplies opacity on Callouts. A mask on any level clips everything under it. That is the reason to nest at all.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">4</span><span><b>The indent step stops, the nesting does not.</b> Past <b>six levels</b> the rows stop moving right and the depth is spelled out on the row instead, because a tree that spends more width on indentation than on names has stopped being readable.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">5</span><span><b>Every command is depth-blind.</b> Select, drag, hide, lock and ungroup take a layer, and a group at level nine is a layer. There is no separate vocabulary for deep structure.</span></div>
+        <div class="lyp-li"><span class="lyp-pin">6</span><span><b>The one honest limit is human.</b> Nine levels is almost always a sign the document wants components instead, which is why the Library exists: a nested tree you reuse is a component, not a deeper group.</span></div>
+      </div>
+    </div>
+    <div class="docmeta">
+      <div class="docnum">06</div><h3 class="docname">Groups inside groups</h3>
+      <p class="docrule">Nesting is <b>unbounded</b>, and it costs nothing to support because it is not a feature: it falls
+        out of "a group is a layer". The pane renders depth, the commands ignore it, and the composite walks it.</p>
+      <p class="docrule">What is bounded is the <b>indent</b>, which is presentation. It caps so that a deep tree keeps
+        showing names rather than whitespace, and the row says its own depth once the indent stops saying it.</p>
+      <div class="docdd">
+        <span class="do">Let a group hold groups, to any depth.</span>
+        <span class="no">Cap the model to keep the indentation tidy.</span>
+      </div>
+      <p class="docapi"><b>API</b> <code>layer.children</code> · <code>layer.depth</code></p>
+    </div>
+  </div>
+
+  <!-- ── 08 · REARRANGING ───────────────────────────────────────────── -->
   <div class="docblk">
     <div class="docspec top lyp-anat">
       <div class="lyp-dock md lyp-drop" style="position:relative">
         <div class="pdock" style="--dock-w:100%">
-          <div class="dgrp grow" data-grp="layers">
+          <div class="dgrp" data-grp="layers" style="--gh:294px">
             <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">7</span></div>
             <div class="dgrp-b" style="position:relative">
               <div class="lrow lyp-ghost"><i class="ic ic-pen" style="color:#f0685c"></i><span class="nm">Arrow · curved</span><i class="ic sm ic-eye eye"></i></div>
@@ -487,7 +579,7 @@
       </div>
     </div>
     <div class="docmeta">
-      <div class="docnum">06</div><h3 class="docname">Rearranging</h3>
+      <div class="docnum">07</div><h3 class="docname">Rearranging</h3>
       <p class="docrule">Order in the pane <b>is</b> composite order, so a drag here is a real edit to the document and goes
         through history like any other. The pane must therefore be honest about where a drop will land <i>before</i> you
         release, which is what the indented drop line is for.</p>
@@ -499,9 +591,9 @@
     </div>
   </div>
 
-  <!-- ── 07 · COLLAPSE STATE ────────────────────────────────────────── -->
+  <!-- ── 08 · COLLAPSE STATE ────────────────────────────────────────── -->
   <div class="doccard">
-    <div class="dochead"><span class="docnum">07</span><h3>Collapse state</h3><span class="k">A group's disclosure belongs to the document</span></div>
+    <div class="dochead"><span class="docnum">08</span><h3>Collapse state</h3><span class="k">A group's disclosure belongs to the document</span></div>
     <div class="docbody">
       <div class="docgrid n2">
 
@@ -509,7 +601,7 @@
           <div class="docsp-l"><b>Collapsed with a selected child</b></div>
           <div class="lyp-dock sm">
             <div class="pdock" style="--dock-w:100%">
-              <div class="dgrp grow" data-grp="layers">
+              <div class="dgrp" data-grp="layers" style="--gh:226px">
                 <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">9</span></div>
                 <div class="dgrp-b">
                   <div class="lgroup"><i class="ic sm ic-chevron-right"></i> Callouts <span class="cnt">3</span><span class="lyp-seldot" data-tip="A selected layer is inside"></span></div>
@@ -548,16 +640,16 @@
     </div>
   </div>
 
-  <!-- ── 08 · VISIBILITY AND LOCK ───────────────────────────────────── -->
+  <!-- ── 09 · VISIBILITY AND LOCK ───────────────────────────────────── -->
   <div class="doccard">
-    <div class="dochead"><span class="docnum">08</span><h3>Visibility and lock</h3><span class="k">The two states that are not edits</span></div>
+    <div class="dochead"><span class="docnum">09</span><h3>Visibility and lock</h3><span class="k">The two states that are not edits</span></div>
     <div class="docbody">
       <div class="docgrid n2">
         <div class="docsp">
           <div class="docsp-l"><b>The state column</b></div>
           <div class="lyp-dock sm">
             <div class="pdock" style="--dock-w:100%">
-              <div class="dgrp grow" data-grp="layers">
+              <div class="dgrp" data-grp="layers" style="--gh:226px">
                 <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
                 <div class="dgrp-b">
                   <div class="lrow"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Step 1 · box</span><i class="ic sm ic-eye eye"></i></div>
@@ -594,9 +686,9 @@
     </div>
   </div>
 
-  <!-- ── 09 · WHEN THE LIST GETS LONG ───────────────────────────────── -->
+  <!-- ── 10 · WHEN THE LIST GETS LONG ───────────────────────────────── -->
   <div class="doccard">
-    <div class="dochead"><span class="docnum">09</span><h3>When the list gets long</h3><span class="k">Sixty rows in a 180px budget</span></div>
+    <div class="dochead"><span class="docnum">10</span><h3>When the list gets long</h3><span class="k">Sixty rows in a 180px budget</span></div>
     <div class="docbody">
       <div class="docgrid n3">
         <div class="docsp">
@@ -621,9 +713,9 @@
     </div>
   </div>
 
-  <!-- ── 10 · RULES ─────────────────────────────────────────────────── -->
+  <!-- ── 11 · RULES ─────────────────────────────────────────────────── -->
   <div class="doccard">
-    <div class="dochead"><span class="docnum">10</span><h3>Rules</h3><span class="k">Do and don't</span></div>
+    <div class="dochead"><span class="docnum">11</span><h3>Rules</h3><span class="k">Do and don't</span></div>
     <div class="docbody">
       <div class="lyp-dd">
         <span class="lyp-do">Keep <b>one tree</b> that mirrors composite order.</span>
@@ -642,9 +734,9 @@
     </div>
   </div>
 
-  <!-- ── 11 · IN THE API ────────────────────────────────────────────── -->
+  <!-- ── 12 · IN THE API ────────────────────────────────────────────── -->
   <div class="doccard">
-    <div class="dochead"><span class="docnum">11</span><h3>In the API</h3><span class="k">Every row, every gesture, one call</span></div>
+    <div class="dochead"><span class="docnum">12</span><h3>In the API</h3><span class="k">Every row, every gesture, one call</span></div>
     <div class="docbody">
       <table class="doctbl">
         <tr><th>Call</th><th>What it does</th></tr>

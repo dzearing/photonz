@@ -212,6 +212,15 @@
             <span class="stg"><span class="tip-demo">Straighten <span class="k">⇧R</span></span></span>
             <span class="nm">Tooltip</span><span class="cls">data-tip · .tip</span>
           </div>
+          <div class="ci-tile" data-target="comp-agent">
+            <span class="stg" style="display:block;padding:var(--s1)">
+              <span class="run" data-state="done" style="display:flex">
+                <span class="run-h" style="display:flex"><span class="run-st"><i class="ic ic-check-circle"></i></span><b class="run-t">Card glow</b></span>
+                <span class="run-b" style="display:flex"><span class="step" data-state="done" style="display:flex"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span><span class="sv"><b>44</b></span></span></span>
+              </span>
+            </span>
+            <span class="nm">Agent run<span class="badge accent">new</span></span><span class="cls">.run · .step · .ask-idle</span>
+          </div>
 
           <div class="ci-grp">Status</div>
           <div class="ci-tile" data-target="comp-feedback">
@@ -241,6 +250,7 @@
         <table class="doctbl">
           <thead><tr><th>Component</th><th>In the mock DS</th><th>Native equivalent</th><th>What we have to build</th></tr></thead>
           <tbody>
+            <tr><td><b>Agent run</b></td><td>Shipped, four states</td><td>None</td><td>All of it. The run card, its grouping, and the dock/float move are ours — see <a class="backchip" data-target="comp-agent" style="padding:1px 6px">Agent surface</a>.</td></tr>
             <tr><td><b>Button</b></td><td>Shipped, four variants</td><td><code>Button</code> + <code>.glassEffect</code></td><td>The danger variant and the icon+shortcut layout are ours; the rest maps.</td></tr>
             <tr><td><b>Slider</b></td><td>New in this pass</td><td><code>Slider</code></td><td>Everything visible: the pill thumb, the bipolar fill, the drag bubble, the paint track. The native thumb is a circle with no bipolar mode.</td></tr>
             <tr><td><b>Number field</b></td><td>New in this pass</td><td>None</td><td>All of it. Scrub-drag, arithmetic entry, shift-step, mixed-value state. This is the single most-used control in the app.</td></tr>

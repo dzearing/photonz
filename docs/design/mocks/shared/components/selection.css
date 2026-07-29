@@ -97,3 +97,74 @@
    handles: you transform the group, not one member of it. */
 .selwrap.multi .handle { display: none }
 .selwrap.multi .sel-ring { border-style: dashed }
+
+/* ============================================================
+   THE REST OF THE BOUNDS-RING FAMILY
+   ============================================================
+   .sel-ring is not the only rectangle drawn around an object, and every other
+   one had kept the radius the frame just lost — 15, 16, 17, 18px, each hand-set
+   on a different page. At those radii the ring reads as a rounded card in its
+   own right, so on a rounded object you cannot tell the ring from the object,
+   and on a small one you cannot tell what is selected at all.
+
+   So they all obey the frame rule: hug the bounds, 2px hairline radius, never
+   trace the object's shape. Only the STROKE changes, because only the meaning
+   changes — that is the whole vocabulary, and it is readable at a glance:
+
+     .sel-ring     accent, solid 1.5px    committed selection
+     .cinst/.cring component, solid       linked to a main component
+     .marq         accent, dashed         the band you are dragging right now
+     .hover-ring   accent, hairline 1px   what a click would grab
+     .lock-ring    muted, dashed          inspectable, not transformable
+*/
+
+/* COMPONENT INSTANCE. Same geometry as the selection frame, in the component
+   colour: an instance's frame IS the selection frame, purple instead of blue.
+   Two colours, one shape — never a second frame style. */
+.cinst,
+.cring {
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--comp);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* THE MARQUEE. The one ring that does not hug: it is the rectangle your drag is
+   describing, so it overshoots whatever it has swept over. Square corners,
+   because a rubber band is the drag, not an object. */
+.marq {
+  position: absolute;
+  inset: -11px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* HOVER. Not a state of the selection — it is what a click would grab BEFORE
+   there is one. An object that is already selected does not draw it: the frame
+   has answered the question, and two rings on one object is just noise.
+
+   Same accent, because it is the same question being answered; 1px instead of
+   1.5px and no handles, because it has not been answered yet. A washed-out
+   accent-line stroke was tried first and vanished on a bright object, which
+   made the one thing this ring exists to say unreadable. */
+.hover-ring {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.selwrap .hover-ring,
+.sel-ring ~ .hover-ring { display: none }
+
+/* LOCKED. Still selectable, so it still gets a frame; dashed and muted because
+   the handles are gone and nothing here will move. */
+.lock-ring {
+  position: absolute;
+  inset: -1px;
+  border: 1.5px dashed var(--faint);
+  border-radius: 2px;
+  pointer-events: none;
+}

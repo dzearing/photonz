@@ -2889,3 +2889,292 @@ key used `background:inherit` and pages set the colour on the wrapper.
 Eleven pages in the section now. `check-elevation.mjs` and `vr6-strip.py` clean;
 20 pages spot-checked for wrapped or escaping segments after the `.seg`
 rewrite, all clear.
+
+### 2026-07-27, later — three corrections from review
+
+**1. Layers must not be the growing pane.** The Layers pane was authored as
+`.dgrp.grow` in the anatomy specimen, which produced two wrong behaviours at
+once: Layers never scrolled (it just took whatever space it wanted), and folding
+Properties made Layers swallow the freed height and shove the folded header
+**down to the bottom of the panel** — measured: Properties' top went 513 → 592 on
+a single collapse. It reads as the pane having been moved rather than closed.
+
+Fixed by bounding Layers (`--gh`, its own scroller, the divider under it moving
+it between 120 and 300) and stating the rule that makes it hold:
+**the growing pane is the LAST one in the panel.** Whichever pane absorbs
+leftover space also absorbs what a fold gives back, so it decides where
+everything else lands. That is why Library sits at the bottom. Both pages now
+carry the rule, and `panes-panels` gained it as a do/don't.
+
+That rule is checkable, so it was checked. A DOM audit over both pages folds
+every non-last pane in every panel and asserts no pane at or above it moves:
+clean on 9 + 9 panels. It also caught **six specimens whose panel overflowed its
+own frame**, all the same trap noted last session — `.dgrp.grow` floors at 244px,
+so any frame shorter than `header + 244 + footer` silently overflows and then
+scroll position, not layout, decides what you see. In a specimen, give every pane
+a fixed `--gh` and reach for `.grow` only when the frame is genuinely tall enough.
+
+**2. Selection was hand-rolled instead of composed.** The on-canvas selection in
+the "three places at once" figure had `.selwrap` + `.sel-ring` and **no handles
+and no `.mtag`**, so a page documenting the selection model was contradicting
+`lang-selection` in its own headline figure. The canonical anatomy is
+`.selwrap` › `.sel-ring` + four corner `.handle`s + `.mtag`; `selection.js`
+stamps the size bucket. Restored, plus the same frame added to the two shells on
+`panes-panels`, which showed a selected row and a bound Properties with nothing
+on the canvas.
+
+Two more of the same kind: `.lrow.selc` was used decoratively on a component row
+in the row-type catalogue (that catalogue shows TYPES, nothing in it is
+selected), and five rows carried an inline `color:var(--comp)` on the component
+glyph. The DS already says this: an unselected component row keeps a `--faint`
+type glyph and marks itself with the trailing `.cmark`; a **selected** one is
+`.lrow.selc`, which colours the glyph itself. Both are now composed, not painted.
+
+The audit asserts these too: every ring outside the `xs` bucket has four handles,
+no ring carries a page override, and no component glyph carries an inline colour.
+
+**3. Groups nest, without limit** — new section on `layers-pane`. It falls out of
+"a group is a layer", so it is not a feature: the pane renders depth, every
+command ignores it, the composite walks it, and `⌘G` on a selection containing a
+group just nests it. What *is* bounded is the indent, which is presentation: the
+14px step stops at **six levels** and deeper rows state their own depth, so a
+deep tree keeps spending width on names instead of whitespace. The specimen walks
+a real chain from level 1 to level 9 so the cap is shown happening rather than
+described.
+
+## 2026-07-28 · One radius for every bounds ring, and hover stops pretending to be a selection state
+
+**1. The frame rule had only ever been applied to the frame.** `.sel-ring` was
+fixed to hug the bounds at a 2px hairline radius, but every *other* rectangle
+drawn around an object kept the old card-sized rounding: `.marq` at 16px,
+`.cinst` at 15px, `.cring` at 17px, plus `lang-selection`'s own hover (18px),
+lock (18px), group (`--r2`) and per-object (10px) rings, and five pages that had
+each re-rounded `.cring`/`.cinst` locally (12, 14, 16, 18px). At those radii the
+ring reads as a rounded card in its own right, so on a rounded object you cannot
+tell the ring from the object — which is exactly what a selection has to answer.
+
+They are now one family, all defined in `selection.css` with the same geometry:
+hug the bounds, 2px radius, never trace the shape. Only the STROKE changes,
+because only the meaning changes — accent solid (selected), component purple
+(instance), accent dashed (marquee), 1px accent (hover), muted dashed (locked).
+`.cinst`/`.cring` moved out of `canvas.css`/`inspector.css`, the five page-level
+radius overrides are gone, and the same squaring was applied to the remaining
+canvas bounds rings on `capture-wt`, `walk`, `video`, `video-captions` and
+`video-compositing`. The rule is written into `AGENTS.md` and the page's Do/Don't.
+
+**2. Hover was filed as a state of the selection**, next to Selected and Locked,
+which reads as "the selection goes lighter when you hover it" — a thing that does
+not happen. Hover is what a click would grab *next*, and it is mutually exclusive
+with the frame. The specimen now shows both objects at once: the selected one
+keeps its frame and handles, the other one under the pointer takes a 1px outline
+and none. `.hover-ring` refuses to draw inside a `.selwrap` or after a
+`.sel-ring`, so the two can never stack on one object.
+
+**3. Two bugs found while verifying, both from over-generic shared selectors.**
+`.alt{display:none}` in `inspector.css` (agent.html's A/B/C panel switcher) was
+also matching `.lx-obj.alt` and `.pn.alt`, so the second object in the
+multi-select and marquee specimens and *both* canvas panes of `lang-resize`'s
+split demos were invisible. Renamed to `.altpane` (with `core.js`). And
+`lang-selection`'s ladder caption rule was unscoped, so its `white-space:nowrap`
+hit every spec-card caption on the page and `overflow:hidden` truncated all of
+them mid-sentence; scoped to `.lx-lc .lx-cap`.
+
+**Open:** `pages/lang-resize.html` hangs the browser tab on load. Confirmed
+pre-existing — it reproduces with all of the above reverted to HEAD — so it is
+untouched here and needs its own pass.
+
+---
+
+## 2026-07-29 — design(mocks): give the scrubber its row back
+
+**Feedback:** the video workspace scrub bar is too cramped to aim, because it
+shares its row with buttons — and why is Export there at all, or full ghost
+buttons for add/delete key, or a "Cut" that does not say what it cuts?
+
+**Reproduced and measured first.** On `#video` at a 1200px window the scrubber
+was 323px, 35% of the transport row, against a 353px block of edit actions —
+the buttons were *wider than the scrubber they were starving*. At a 15s
+document that is 21px per second, so landing on 6.40s is a two-pixel gesture.
+
+**Every one of those four buttons already existed somewhere better**, which is
+the tell: a control lands on the transport when nobody decided where it belongs.
+
+- **Export** — the title bar already has it, as the *primary* button, on all 14
+  pages. The transport copy was a secondary-styled duplicate two rows below it.
+- **Cut** — the Blade tool, already in the canvas tool strip *and* the timeline's
+  own strip *and* the command menu. Three existing homes.
+- **Add key / Delete key** — a keyframe is never document-level. It is one value,
+  on one property, at one time, and those buttons had to guess all three. They
+  are now **one diamond per lane in the keyframe editor**: hollow = click to set
+  a key at the playhead, filled = click to clear it. The lane says which
+  property, the playhead says when, the fill says whether one is already there.
+  After Effects / Final Cut idiom; two labelled buttons become one control that
+  also reads as state. `K` and `Delete` are the same two halves, so shortcut and
+  control cannot drift.
+
+Result: the scrubber went 323px -> 815px (35% -> 77%), and 21px/s -> 54px/s. Even
+at a 460px window it now gets 227px, more than it had at 1200px before.
+
+**Made it a DS rule, not a page fix** (`UX-PATTERNS.md` D8 + `AGENTS.md`):
+the transport holds **time controls only** — volume, skip, play/pause, loop, the
+two timecodes, the scrubber. The scrubber is the only flexible child; everything
+else is `flex:none`. It also gained a floor (`min-width:180px`) and an invisible
+24px pointer band, because 6px is what a track should be *drawn* at and was never
+what it should be *grabbed* at. D8 carries the table of where an evicted action
+goes: title bar -> tool strip -> next to its selection -> the dock's `.tlbar`.
+
+**Swept all 14 pages** that had copied the violation from each other. Page
+demo controls moved to the timeline dock's own `.tlbar` (Duck/Reset, Clear/Reset,
+Apply/Hard cut, Reset); `video-motion`'s Loop moved into the transport *cluster*
+since looping is genuinely a time control; the rest were deletions of duplicates
+(`addStop2`/`scReset2`, `ckKey`, Cut/Crop/Duplicate on the six walkthroughs).
+Dead ids unwired from the JS id lists rather than left dangling.
+
+**Verified**, not assumed: all 14 transports now read
+`grp vol · grp · tc cur · scrub · tc` with zero console errors; every relocated
+control was clicked in-page and still mutates the document; no overflow at 1200 /
+900 / 700 / 560 / 460px; and the keyframe flow was driven end to end — scrub to
+2.40s fills all three lane diamonds (all three properties do have a key there),
+click clears it, click restores it, and an unanimated clip shows the empty state
+whose **Animate Opacity** button creates a lane with a filled diamond.
+
+**Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing,
+noted 2026-07-28, still untouched).
+
+## 2026-07-29 — The agent dialog gets a surface spec and a primitive of its own
+
+`Ask` opened a conversation whose only content was a two-line `.did` box of
+strings. It had **one** state (finished), no way to tell what the agent was
+doing while it did it, no way to talk to it mid-run, and it covered the document
+it was editing. This adds the primitive that was missing and the spec page that
+argues for it: **`shared/components/agent.{css,js}`** and
+**`pages/comp-agent.html`** ("Agent surface", in the Component library).
+
+**The unit is the run, not the message.** A transcript of prose is the wrong
+receipt for an editor — nobody re-reads a paragraph to learn the headline went
+36 → 44. So `.msg.a` keeps the one sentence the agent says, and everything it
+*did* goes in a `.run` card: `.run-h` (state glyph in a fixed slot, title,
+meter) → `.run-b` of `.run-grp`s → `.run-f` (Undo all / Refine / what it cost).
+
+- **Grouped by target, in layer-tree order**, not chronologically. Eleven edits
+  across three layers is three things, not eleven, and only the grouped form is
+  answerable ("leave the headline alone"). The page shows both side by side.
+- **A step is a value change, not a sentence.** `.step[data-state]` is
+  pending · running · done · skip · fail, laid out like an inspector row —
+  label left, `36 → 44` right. Skipped and failed steps stay in the list; a
+  change that silently did not happen is the fastest way to lose trust.
+- **Transcript selection IS document selection.** `.run-tgt` and `.step` are
+  buttons; clicking one selects that layer, ⌘/⇧ extends. No second highlight
+  that means something subtly different. Wired against real `.lrow[data-layer]`
+  rows so the link is demonstrated, not asserted.
+- **Four states**, and the fourth is the one everybody forgets: **steering**.
+  The composer never disables while busy — that is the exact moment you most
+  want to talk. What changes is the send button's meaning: Enter queues
+  (`.ask-queue`, pinned to the composer), ⇧Enter interrupts and keeps every step
+  that landed. `.ask-idle`/`.ask-sug` replace the blank box with three real
+  sentences about the layers you have.
+
+**Docking.** The overlay covers the document it edits, which is right for one
+sentence and wrong for a run you want to supervise. The chat header gained a
+dock toggle: the same `.chat` **moves** into a `.dgrp[data-grp="agent"]` — one
+node, two hosts, so there is no second transcript to keep in step. Compact form
+is driven by `@container convo` on `.chat` itself, **not** `@container shell`
+(the window is the same width either way, so it measures the wrong box) and not
+a `.docked` variant class (a variant lets the two drift). At ≤340px it drops
+ornament — meter, count, cost — and the label truncates before the value.
+
+**Two things this got wrong first, both caught in the browser, not reasoned
+about:**
+1. The agent group was *appended* to the dock. On a full dock there is no
+   leftover height, so it landed below the fold — docked in name, invisible in
+   fact. It now goes **first**, and the dock's other groups auto-collapse to pay
+   for the height (`.auto-collapsed`, undone when the conversation leaves, never
+   overriding a collapse the user made). Layers additionally gets a reason in
+   its header, since the run card genuinely replaces it.
+2. Undocking no-op'd — the chat lookup only searched the overlay, which by then
+   was empty. It now searches both hosts, and reopens the overlay on the way
+   out, or the conversation vanishes from the user's point of view.
+
+**Retired `.did`** from `inspector.css` rather than leaving two ways to report a
+run; `shell.js`'s shared overlay and `pages/agent.html` both build `.run` now,
+so all 57 shells got the new card for free. `.step-x` had to become a `<button>`
+inside a `div[role=button]` — a button inside a button is hoisted out by the
+parser, which would have silently detached every per-step revert.
+
+Scoped one regression on the way: `.dgrp-b > .chat > .chat-h {display:none}`
+swallowed the authored header on `pages/agent.html` (it names the local model).
+The hide is now scoped to `.agent-docked`, the group the DS itself builds.
+
+**Verified in Chrome**, not assumed: run card renders in the real `.askpal` on
+`app-shell`; dock → first in dock, fully visible, 256px wide, composer live,
+3 groups folded; undock → group removed, overlay reopened, every fold and its
+`.why` note undone; re-dock works (not one-shot). Step and target clicks drive
+`.lrow` selection; per-step revert toggles done ↔ skip. No console errors on
+`comp-agent`, `app-shell`, `agent`, `walk`.
+
+**Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing,
+noted 2026-07-28, still untouched).
+
+---
+
+## 2026-07-29 (later) — three review findings, all reproduced before fixing
+
+**1. Stuck tooltips.** Reproduced exactly, and it was the "Volume" one from the
+screenshot. `pointerout` guarded on `current` (the visible tooltip) only, so a
+quick pass over a control bailed out while the show was still *scheduled* — the
+timer was never cleared, it fired 280ms after the pointer had gone, and since no
+further pointerout would ever arrive for that element the label hung there until
+you hovered something else, pressed Escape, clicked or scrolled. Now tracked as
+`pending` separately from `current`, and a leave cancels a scheduled show as well
+as a visible one. Added a second net: the MutationObserver hides any tooltip
+whose trigger has left the DOM, which matters here because these pages re-render
+whole rows on every playhead move.
+
+**2. Tooltip timing, per follow-up feedback.** Entrance is now **rest, not dwell**
+— the clock restarts on every pointermove, so a tooltip is owed to a pointer that
+has *stopped*, and sweeping a toolbar is silent at any value. Opening, swapping
+and closing were sharing one 60ms constant; they are three different events and
+now have three numbers: `DELAY_IN` 1000 (rest) · `DELAY_FOCUS` 120 (keyboard has
+no pointer to still) · `DELAY_SWAP` 60 · `DELAY_HIDE` 450 (grace, so slipping
+onto the gap between two buttons is travel, not dismissal). Escape / press /
+scroll still bypass all four. Documented in `comp-tooltips.html` and `AGENTS.md`.
+
+**3. Squished circular buttons.** Reproduced: below the 880px container
+breakpoint the primary play button rendered **24x32** — a vertical egg at 999px
+radius — on **all 13 video pages**. Cause was `responsive.css` forcing
+`.transport .btn{width:var(--ctl-h-sm)}` to shed labels the transport no longer
+has (D8). Rule deleted. Then fixed the *class* of bug rather than the instance:
+`.btn.icon` now carries `min-width` and `flex:none`, so a stray width override
+makes the circle SMALLER (a resize) instead of OVAL (a different shape), and flex
+compression cannot squash it either. An audit across 17 pages x 2 widths found
+19 non-square icon buttons before and **0** after.
+
+**4. The window did not fit a laptop.** The mock of the app was **1160px tall**,
+taller than a maximised MacBook viewport, so the one thing the page exists to
+show could never be seen at once. Root cause was structural, not a number: the
+dock stacked **two editors of the same time axis** — the track grid, and a
+separate keyframe editor with its own header, gutter, axis and plot.
+
+The giveaway was that the keyframe editor lived in the dock *for alignment*, yet
+a second grid can only imitate the first one's axis, which is why both had to be
+handed the same `--gutter` and kept in sync by hand. So it folded in: **a
+property is now a row of the timeline**, twirled down under the clip it animates,
+in the same grid and the same lane. Alignment is now structural (verified: clip
+lane and property lane are pixel-identical, left 301 / width 914). The **graph**
+is the one view with its own Y axis, so it is the one part that stayed — as a
+toggle, not a permanent tenant.
+
+Result: window **1160 -> 820px**, dock **497 -> 329px**, and the canvas got its
+height back (**199 -> 398px** after also fixing the dock's flex, which had been
+letting it eat the preview). This answers the page's own "Open question", which
+is rewritten as a resolved decision.
+
+**Verified end to end:** 820px at 1512/1200/900/700/560/460 with no dock scroll,
+no transport overflow, no JS errors; twirl closes and reopens; the key diamond
+adds (4->5 keys) and removes (5->4); the Graph toggle plots on the lanes' exact
+x-origin with 4 draggable points; switching the active property re-plots and
+updates the readout; an unanimated clip shows an "Animate a property" row under
+its own track that creates a lane with a filled diamond. Property-name clipping
+checked at every breakpoint (68px clipped "Opacity" by 6px; gutter raised).
+
+**Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing).

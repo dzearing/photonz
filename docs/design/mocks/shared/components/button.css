@@ -1,7 +1,7 @@
 /* ============================================================
    CANONICAL CONTROLS — the single source of truth for buttons.
    Appended last so it wins. ONE control system: capsule Liquid-Glass
-   controls, sizes off the 4pt scale, four variants, and REAL
+   controls, sizes off the 4pt scale, five variants, and REAL
    interaction states (hover / active / focus-visible / disabled) on
    every variant. All new buttons use `.btn`. The existing controls
    (.pill .tool .chip .select) are normalized at the bottom of
@@ -44,10 +44,27 @@
 .btn.sm>svg,.btn.sm>.ic{width:13px;height:13px}
 .btn.lg>svg,.btn.lg>.ic{width:17px;height:17px}
 
-/* icon-only (square footprint = circle at capsule radius) + full width */
-.btn.icon{width:var(--ctl-h);padding:0}
-.btn.icon.sm{width:var(--ctl-h-sm)}
-.btn.icon.lg{width:var(--ctl-h-lg)}
+/* ---- icon-only: a square footprint, which at capsule radius is a CIRCLE ----
+   An icon button is square or it is broken. The radius is 999px, so the moment
+   width and height disagree the control stops being a circle and becomes a
+   pill or an egg — and it reads as a different component, not as the same one
+   resized. Two separate things kept doing that:
+
+     · a WIDTH OVERRIDE that did not also move the height. `responsive.css` set
+       `.transport .btn{width:var(--ctl-h-sm)}` to shrink labelled buttons when
+       narrow, which also hit the primary play button and left it 24x32 — a
+       vertical egg — on all 13 video pages below the 880px breakpoint.
+     · FLEX COMPRESSION. In a tight header row the button is just another flex
+       item, so it gets shrunk on one axis only (image.html's panel menus were
+       rendering 22x24).
+
+   So the square is enforced structurally rather than trusted: min-width holds
+   the floor against any override, and flex:none takes it out of the shrink
+   pool. A stray `width` now makes the circle SMALLER, which is a resize; it can
+   no longer make it OVAL, which is a different shape. */
+.btn.icon{width:var(--ctl-h);min-width:var(--ctl-h);flex:none;padding:0}
+.btn.icon.sm{width:var(--ctl-h-sm);min-width:var(--ctl-h-sm)}
+.btn.icon.lg{width:var(--ctl-h-lg);min-width:var(--ctl-h-lg)}
 .btn.block{display:flex;width:100%}
 
 /* ---- shared interaction states (apply to ALL variants) ---- */
@@ -86,6 +103,86 @@
 .btn.danger:hover{background:linear-gradient(180deg, color-mix(in srgb,var(--crit) 90%, white 22%), color-mix(in srgb,var(--crit) 94%, white 4%));box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-hi)}
 .btn.danger:active{box-shadow:inset 0 2px 5px rgba(0,0,0,.3)}
 .btn.danger:focus-visible{box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--ring)}
+
+/* hero: the agent's own surface, and the fifth variant. The other four are
+   graded by CONSEQUENCE (ghost → secondary → primary → danger); hero is not on
+   that scale at all. It marks the one control per surface that opens the agent,
+   which is the only thing in the app that is not a normal command — so it is the
+   only control that does not wear the app's accent. It wears a spectrum.
+
+   Use it once per surface, and only for Ask. A second hero on screen makes both
+   of them ordinary, which is the whole reason the variant exists.
+
+   THE STATES. The spectrum is the identity, so no state is allowed to take it
+   away — the bug this replaced did exactly that: the generic .pill:hover paints
+   `background:var(--glass)`, and the `background` shorthand wipes background-image,
+   so hovering the Ask pill dropped the gradient for dark grey glass and swapped its
+   violet bloom for a neutral shadow. The lone `filter:brightness(1.06)` was
+   brightening that grey. Hover read as "it turned off".
+
+   Instead, hover OPENS the spectrum: at rest it runs blue→violet; on hover a
+   wider blue→violet→pink gradient cross-fades over it, the bloom underneath
+   grows, the top gloss lights, and a single specular sheen sweeps across. Press
+   keeps the spectrum open and tucks the bloom back under. Nothing goes dark.
+
+   Both hover layers are pseudo-elements driven by opacity/transform rather than a
+   repainted background, so the state change composites on the GPU. They sit at
+   z-index:-1 inside the control's own stacking context (isolation:isolate), which
+   paints them above its background and below its label — no wrapper element, so
+   `<button class="btn hero">` is all the markup a page writes.
+
+   The bloom walks the ladder's own rungs — --glow at rest, --glow-hi on hover,
+   --glow-sm pressed — the same progression .btn.primary uses, so "this control is
+   lit" means one thing system-wide and only the hue differs. The rungs are
+   RE-DECLARED here rather than just setting --glow-c, because --glow-c alone does
+   nothing: elevation.css defines --glow on :root, and a var() inside a custom
+   property resolves on the element that DECLARES it, so every consumer inherits
+   the already-resolved accent-blue. (.btn.danger sets --glow-c:var(--crit) and
+   still glows blue for exactly this reason — worth fixing at the source, but that
+   is elevation.css, not this rule.) Restating the rungs here makes them resolve
+   HERE, in violet.
+
+   .pill.ai is the older spelling of the same idea and is carried along so the
+   spec pages that still use it get one treatment, not a lookalike. */
+.btn.hero,.pill.ai{
+  --hero-1:#6E8BFF; --hero-2:#c56cff; --hero-3:#ff7ab8;
+  --glow-c:var(--hero-2); --ring-c:var(--hero-2);
+  --glow-sm:0 4px 12px -4px color-mix(in srgb, var(--glow-c) 55%, transparent);
+  --glow:   0 6px 16px -6px color-mix(in srgb, var(--glow-c) 60%, transparent);
+  --glow-hi:0 8px 22px -6px color-mix(in srgb, var(--glow-c) 66%, transparent);
+  color:#fff; border:0; font-weight:600;
+  position:relative; isolation:isolate; overflow:hidden;
+  background:linear-gradient(120deg,var(--hero-1),var(--hero-2));
+  /* an opaque fill has no backdrop to blur; .btn sets one, so take it back */
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--glow);
+}
+/* the wider spectrum, revealed on hover */
+.btn.hero::before,.pill.ai::before{content:"";position:absolute;inset:0;z-index:-1;
+  border-radius:inherit;
+  background:linear-gradient(120deg,var(--hero-1) -12%,var(--hero-2) 46%,var(--hero-3) 112%);
+  opacity:0;transition:opacity .2s ease}
+/* the sheen: parked off the left edge, swept once per hover */
+.btn.hero::after,.pill.ai::after{content:"";position:absolute;top:0;bottom:0;left:-40%;
+  width:55%;z-index:-1;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.5) 50%,transparent);
+  opacity:0;transform:translateX(0)}
+.btn.hero:hover,.pill.ai:hover{
+  background:linear-gradient(120deg,var(--hero-1),var(--hero-2));
+  filter:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.58), var(--glow-hi);
+}
+.btn.hero:hover::before,.pill.ai:hover::before{opacity:1}
+.btn.hero:hover::after,.pill.ai:hover::after{animation:hero-sheen .66s cubic-bezier(.32,.72,.3,1)}
+/* pressed: the spectrum stays open, the bloom tucks back underneath */
+.btn.hero:active,.pill.ai:active{box-shadow:inset 0 1px 3px rgba(38,16,72,.34), var(--glow-sm)}
+.btn.hero:focus-visible,.pill.ai:focus-visible{outline:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--ring)}
+@keyframes hero-sheen{
+  from{opacity:0;transform:translateX(0)}
+  22%{opacity:1}
+  to{opacity:0;transform:translateX(260%)}
+}
 
 /* ---- a button that opens a menu, and a split button ----
    Two different promises, and they must not look the same:
@@ -130,9 +227,9 @@
 .pill:active{transform:translateY(.5px) scale(.975)}
 .pill:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
 .pill.solid:hover{background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 92%, white 22%), color-mix(in srgb,var(--accent) 92%, white 4%))}
-.pill.ai:hover{filter:brightness(1.06)}
 .pill.solid:active,.pill.ai:active{transform:translateY(.5px) scale(.975)}
-.pill.solid:focus-visible,.pill.ai:focus-visible{outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--ring)}
+.pill.solid:focus-visible{outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--ring)}
+
 .pill[disabled],.pill.disabled{opacity:.42;pointer-events:none}
 
 /* .tool — toolbar icon button. Give it press + focus + disabled. */
@@ -158,7 +255,11 @@
 @media (prefers-reduced-motion:reduce){
   .btn,.pill,.tool,.chip,.select{transition:none}
   .btn:active,.pill:active,.tool:active,.chip:active,.select:active,
-  .pill.solid:active,.pill.ai:active,.tool.on:active{transform:none}
+  .pill.solid:active,.pill.ai:active,.btn.hero:active,.tool.on:active{transform:none}
+  /* the Ask pill keeps the colour half of its hover (wider spectrum + bloom)
+     and drops the moving half (the sheen sweep). */
+  .btn.hero::before,.pill.ai::before{transition:none}
+  .btn.hero:hover::after,.pill.ai:hover::after{animation:none}
 }
 
 /* FIX: canonical .btn.ghost collided with the standalone .ghost drag-preview

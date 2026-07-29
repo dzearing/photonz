@@ -35,7 +35,7 @@
 .cw{transition:color .12s ease,transform .12s ease}
 .cw.active{transform:translateY(-1px)}
 /* SELECTION, place 1 of 3: the selected cue's line is ringed on the canvas */
-.capline .capring{position:absolute;inset:-6px;border:1.5px solid var(--accent);border-radius:var(--r3);pointer-events:none}
+.capline .capring{position:absolute;inset:-6px;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
 .l3badge{position:absolute;top:-11px;left:0;background:var(--comp);color:#fff;font-size:8.5px;font-weight:640;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;z-index:3}
 .capline:not(.ll) .l3badge{display:none}
 .autoflag{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;z-index:3;box-shadow:0 6px 16px -6px rgba(157,108,255,.6)}
@@ -393,11 +393,6 @@
         <span class="knob" style="left:22%"></span>
       </span>
       <span class="tc">0:06</span>
-      <span class="grp">
-        <button class="btn ghost sm" id="clearBtn" title="Clear the caption track"><i class="ic ic-x"></i><span class="lb">Clear</span></button>
-        <button class="btn ghost sm" id="resetBtn" title="Reset this demo"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
-        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Export SRT</span></button>
-      </span>
     </div>
 
     <!-- TIMELINE DOCK · the caption track, on shared timeline primitives -->
@@ -405,6 +400,9 @@
       <div class="tlbar">
         <span class="lbl">Caption track</span>
         <span class="trk-auto"><i class="ic xs ic-sparkle"></i> auto · word level</span>
+        <span class="tsep"></span>
+        <button class="btn ghost sm" id="clearBtn" title="Clear the caption track"><i class="ic ic-x"></i><span class="lb">Clear</span></button>
+        <button class="btn ghost sm" id="resetBtn" title="Reset this demo"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
         <span class="tspacer"></span>
         <span class="now">Active word <b id="wordRead">·</b></span>
         <span class="now" id="timeRead">1.30s / 6.00s</span>

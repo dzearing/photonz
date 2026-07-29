@@ -33,7 +33,8 @@
 .tsep{width:1px;height:18px;background:var(--line);margin:0 5px}
 .tspacer{flex:1}
 .pill{height:28px;border-radius:8px;border:1px solid var(--line);background:var(--panel);padding:0 11px;font-size:11.5px;font-weight:560;color:var(--dim);display:inline-flex;align-items:center;gap:7px}
-.pill.ai{background:linear-gradient(120deg,#6E8BFF,#c56cff);color:#fff;border:0;font-weight:600}
+/* .pill.ai is the hero variant in pill clothing — fill, states and glow all come
+   from `.btn.hero,.pill.ai` in button.css. Nothing to restate here. */
 .pill.solid{background:var(--accent);color:var(--accent-ink);border:0;font-weight:600}
 .pill .kbd{font-family:var(--mono);font-size:9.5px;opacity:.7}
 

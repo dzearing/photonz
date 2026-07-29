@@ -18,6 +18,19 @@
    in a glass panel a fill alone is not enough contrast to find at a glance,
    which is exactly how the picker's scope switch ended up unreadable.
 
+   THE PLATE MOVES, IT DOES NOT BLINK. Selection styling used to live on each
+   button, so changing the value cross-faded one plate out while another faded
+   in — and for ~60ms in the middle, BOTH segments were half-lit and neither
+   read as selected. A segmented control changing value is the Move case in
+   `lang-motion` (reposition · spring · 240ms), the same thing the native macOS
+   control does. So the plate is now ONE element that travels between slots.
+
+   It is drawn two ways on purpose. Without JS the per-button `.on` styling
+   still paints the plate, so static markup renders correctly — a mock page
+   with a broken script must not lose its selected segment. When `segmented.js`
+   attaches it adds `.has-plate`, which hands the fill/edge/lift over to the
+   single travelling `.seg-plate` and leaves the button with only its ink.
+
    IT NEVER WRAPS. A wrapped segmented control reads as broken — the second
    row has no left edge to align to and the segments come out ragged widths.
    So the segments sit on ONE row always: equal columns when it is asked to
@@ -35,6 +48,7 @@
 
 .seg{
   --seg-h:28px;
+  position:relative;          /* the travelling plate positions against this */
   display:inline-flex;
   align-items:center;
   gap:2px;
@@ -61,6 +75,7 @@
 .seg.fill{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
 
 .seg>button{
+  position:relative;z-index:1;  /* ink sits above the plate */
   display:flex;align-items:center;justify-content:center;gap:5px;
   height:100%;min-width:0;
   padding:0 var(--s3);
@@ -80,10 +95,12 @@
 .seg.lg>button{font-size:12.5px;padding:0 var(--s4)}
 .seg>button>.ic{width:13px;height:13px;flex:none}
 
-/* THE SELECTED SEGMENT: fill + hairline + lift, all three */
+/* THE SELECTED SEGMENT: fill + hairline + lift, all three.
+   (The no-JS fallback. With `segmented.js` attached the travelling plate
+   below takes these over — but it uses the same tokens, so both look alike.) */
 .seg>button.on{
-  background:var(--panel);
-  border-color:var(--edge-lo);
+  background:var(--raised);
+  border-color:var(--raised-edge);
   color:var(--ink);
   font-weight:620;
   box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
@@ -92,6 +109,75 @@
 .seg>button:active{transform:scale(.97)}
 .seg>button:focus-visible{outline:none;box-shadow:var(--ring)}
 .seg>button[disabled],.seg>button.disabled{opacity:.42;pointer-events:none}
+
+/* ---- THE TRAVELLING PLATE ----------------------------------------------
+   Injected by `segmented.js`, positioned with `translate` + `width` measured
+   from the selected button's own box. Measured rather than computed because
+   the segments are not equal widths in the natural-width form, and in the
+   grid form they change width with the container.
+
+   `transform` is the animated property so the move is on the compositor.
+   Width animates too — a spring on width alone would be jelly, but paired
+   with the translate it reads as one plate stretching into its new slot. */
+.seg>.seg-plate{
+  position:absolute;left:0;top:0;z-index:0;
+  border-radius:999px;
+  background:var(--raised);
+  border:1px solid var(--raised-edge);
+  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+  pointer-events:none;
+  transition:transform var(--dur-3) var(--ease-spring),
+             width var(--dur-3) var(--ease-spring);
+}
+/* Not yet placed against a real box, or nothing selected: there is no plate to
+   draw. `segmented.js` suppresses the transition for first paint and relayout
+   with an inline style instead of a class, so that state cannot outlive the
+   placement that set it. */
+.seg>.seg-plate.off{opacity:0}
+
+/* Once JS owns the plate, the button keeps only its ink. Without `.has-plate`
+   the rules above this still apply, so a page whose script failed to load
+   shows a normal selected segment instead of no selection at all. */
+.seg.has-plate>button.on{
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+}
+/* the focus ring outranks the plate hand-off, whichever segment has focus */
+.seg.has-plate>button.on:focus-visible{box-shadow:var(--ring)}
+
+/* ---- TOO NARROW: THE CONTROL BECOMES A MENU ---------------------------
+   The spec's own boundary ("below about 44px a segment, use a `.select`") used
+   to be advice to the page author, which meant it was only ever followed by
+   accident — a four-option control at 120px truncated every label to 27px and
+   rendered as `U… S… I… E…`. `segmented.js` now measures it: when a label
+   would have to ellipsize, the segments hide and this trigger takes over.
+
+   The track KEEPS ITS BOX (visibility, not display) so it can still measure
+   the space it was given — see the long note in segmented.js for why removing
+   it from the flow makes the decision oscillate. The trigger is laid over the
+   track at `inset:-1px`, i.e. exactly the border box, so the collapsed control
+   is the same 28px tall as the expanded one and nothing shifts. */
+.seg.collapsed{background:transparent;border-color:transparent;box-shadow:none;
+  backdrop-filter:none;-webkit-backdrop-filter:none}
+.seg.collapsed>button,.seg.collapsed>.seg-plate{visibility:hidden}
+.seg>.seg-alt{display:none}
+.seg.collapsed>.seg-alt{
+  display:flex;position:absolute;inset:-1px;z-index:2;
+  font-size:11.5px;cursor:pointer;
+}
+.seg.collapsed>.seg-alt:focus-visible{outline:none;box-shadow:var(--ring)}
+.seg.sm.collapsed>.seg-alt{font-size:11px}
+.seg.lg.collapsed>.seg-alt{font-size:12.5px}
+/* the menu it opens. Fixed-positioned by the script on open, because
+   `.popover` deliberately carries no position of its own. */
+.seg-menu{position:fixed;z-index:900;display:none}
+.seg-menu.on{display:block}
+.seg-menu .menuitem{width:100%;border:0;background:transparent;text-align:left;cursor:pointer}
+.seg-menu .menuitem.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.seg-menu .menuitem:hover:not([disabled]){background:var(--accent);color:var(--accent-ink)}
+.seg-menu .menuitem[disabled]{opacity:.42;pointer-events:none}
+.seg-menu .menuitem:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* icon-only segments are square inside the capsule, so they stay circular */
 .seg.icons>button{padding:0;width:calc(var(--seg-h) - 4px)}
@@ -109,4 +195,7 @@
 @media (prefers-reduced-motion:reduce){
   .seg>button{transition:none}
   .seg>button:active{transform:none}
+  /* the plate still MOVES — it just arrives instantly. Hiding it or fading it
+     instead would take away the thing that says which option is selected. */
+  .seg>.seg-plate{transition:none}
 }

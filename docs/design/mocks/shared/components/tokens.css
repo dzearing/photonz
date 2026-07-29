@@ -67,6 +67,18 @@
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:40px;
   --pad:16px; --pad-sm:12px; --gap:16px; --gap-sm:8px; --gap-lg:24px; --inset:24px;
   --r1:6px; --r2:8px; --r3:10px; --r4:12px; --r5:14px;
+  /* === MOTION === these are the values `lang-motion` documents. They lived
+     only inside that page as page-local vars, which meant the motion language
+     was a picture no component could actually reference — every component
+     hard-coded its own easing instead. They are tokens now, so the page and
+     the components are the same six values.
+     dur-1 120 hover/state · dur-2 180 exit/disclosure · dur-3 240 enter/move
+     standard = state change · decel = something arriving · spring = something
+     MOVING between two places it could legitimately sit. */
+  --dur-1:120ms; --dur-2:180ms; --dur-3:240ms;
+  --ease-standard:cubic-bezier(.4,0,.2,1);
+  --ease-decel:cubic-bezier(0,0,.2,1);
+  --ease-spring:cubic-bezier(.34,1.4,.5,1);
 }
 @media (prefers-color-scheme:dark){
   :root{

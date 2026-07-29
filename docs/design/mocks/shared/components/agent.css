@@ -1,0 +1,280 @@
+/* ============================================================
+   AGENT — the conversation's primitives: the run card
+   ============================================================
+   `ask.css` owns the SURFACE (the launcher, the overlay, the scrim). This file
+   owns what lives inside it, and the reason it is a separate component is that
+   the inside appears in two places: the centred `.askpal` overlay and an Agent
+   group in the right dock. Same markup, same classes, two hosts. If the run
+   card lived in ask.css the docked copy would be a second implementation of it,
+   which is how the shell ended up with 57 hand-authored title bars.
+
+   The unit is the RUN, not the message. A chat transcript is the wrong model
+   for an editor: you do not want to re-read a paragraph of prose to find out
+   that the headline went from 36 to 44. You want the list of changes, grouped
+   by the thing that changed, each one selectable. So `.msg.a` prose stays for
+   the sentence the agent says, and everything it DID goes in a `.run`:
+
+     .run[data-state]          idle · busy · done · fail
+       .run-h                  state glyph, title, meter, stop/disclosure
+       .run-b
+         .run-grp              one target — a layer, a frame, the document
+           .run-tgt            the target chip. Clicking it SELECTS that layer.
+           .step[data-state]   one command. pending · running · done · skip · fail
+       .run-f                  Undo · Refine · what it cost
+
+   Four states, and the fourth is the one everybody forgets: STEERING. You are
+   allowed to type while it works. See `.ask-queue` at the bottom. */
+
+/* ---- the conversation sizes to ITSELF, not to the window ----
+   The overlay is 560px and the dock is 268–300px, and the same run card has to
+   work in both. A `@container shell` query would measure the WINDOW, which is
+   the same width in both cases and therefore tells us nothing. So the chat
+   declares its own container and the compact rules key off that. This is the
+   whole reason one component can be docked. */
+.chat{container:convo / inline-size}
+
+/* ============================================================
+   1 · THE RUN CARD
+   ============================================================ */
+.run{
+  display:flex;flex-direction:column;
+  border:1px solid var(--edge-lo);border-radius:var(--r3);
+  background:color-mix(in srgb, var(--panel-2) 62%, transparent);
+  box-shadow:inset 0 1px 0 var(--edge-hi);
+  overflow:hidden}
+/* Sitting under the sentence that introduced it, so the prose and the receipt
+   read as one answer rather than two. */
+.msg.a>.run{margin-top:var(--gap-sm)}
+
+/* ---- header ---- */
+.run-h{display:flex;align-items:center;gap:var(--gap-sm);
+  padding:var(--gap-sm) var(--pad-sm);min-height:32px}
+.run-h .run-t{flex:1 1 auto;min-width:0;font-size:11.5px;font-weight:620;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the meter: "4 of 7" while busy, "7 changes · 3 layers" when done. Mono so the
+   number does not reflow the header on every step. */
+.run-h .run-m{flex:none;font-family:var(--mono);font-size:9.5px;color:var(--faint);
+  white-space:nowrap}
+.run-h>.busy{flex:none}
+
+/* the state glyph. One 14px slot, so the title starts at the same x in all
+   four states and the card does not jump when the run finishes. */
+.run-st{flex:none;width:14px;height:14px;display:grid;place-items:center;color:var(--faint)}
+.run-st>.ic{width:13px;height:13px}
+.run[data-state="done"] .run-st{color:var(--good)}
+.run[data-state="fail"] .run-st{color:var(--crit)}
+
+/* ---- body ---- */
+.run-b{display:flex;flex-direction:column;
+  border-top:1px solid var(--line-soft);
+  padding:var(--s1) var(--s1) var(--s1)}
+.run.collapsed>.run-b,.run.collapsed>.run-f{display:none}
+.run.collapsed>.run-h{padding-top:var(--s2);padding-bottom:var(--s2)}
+
+/* ---- footer: what you can do about it ---- */
+.run-f{display:flex;align-items:center;gap:6px;
+  padding:var(--gap-sm) var(--pad-sm);
+  border-top:1px solid var(--line-soft);
+  background:color-mix(in srgb, var(--panel) 40%, transparent)}
+.run-f .sp{flex:1 1 auto}
+.run-f .cost{font-family:var(--mono);font-size:9px;color:var(--faint);white-space:nowrap}
+
+/* ============================================================
+   2 · GROUPING — by target, in canvas order, never by time
+   ============================================================
+   A run of eleven edits across three layers is THREE things, not eleven. The
+   chronological list is what the agent did; the grouped list is what happened
+   to your document, and only the second one is answerable ("no, leave the
+   headline alone"). Order matches the layer tree, so the transcript and the
+   Layers panel read top-to-bottom the same way. */
+.run-grp{display:flex;flex-direction:column;padding:2px 0}
+.run-grp+.run-grp{border-top:1px solid var(--line-soft);margin-top:2px;padding-top:4px}
+
+/* The target chip is a real button: it selects that layer on the canvas. That
+   is the entire selection story — the transcript does not have a selection of
+   its own, it drives the document's. */
+.run-tgt{display:flex;align-items:center;gap:6px;width:100%;
+  padding:4px var(--gap-sm);border:0;border-radius:var(--r1);
+  background:transparent;font:inherit;font-size:10.5px;font-weight:620;
+  color:var(--dim);text-align:left;cursor:pointer;transition:var(--ctl-tr)}
+.run-tgt>.ic{width:12px;height:12px;flex:none;color:var(--faint)}
+.run-tgt>.nm{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.run-tgt>.cnt{flex:none;margin-left:auto;font-family:var(--mono);font-weight:500;
+  font-size:9px;color:var(--faint)}
+.run-tgt:hover{background:var(--glass-thin);color:var(--ink)}
+.run-tgt:focus-visible{outline:none;box-shadow:var(--ring)}
+/* selected == this layer is the canvas selection. Same accent, same soft fill
+   as .lrow.sel in the Layers panel, because it means the same thing. */
+.run-tgt[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.run-tgt[aria-pressed="true"]>.ic{color:var(--accent)}
+
+/* ============================================================
+   3 · THE STEP — one command, one before → after
+   ============================================================
+   Presented as a property delta, not a sentence, and deliberately the same
+   shape as an inspector row: label left, value right. So "what the agent did"
+   and "what I would have done by hand" are legible as the same edit. */
+.step{display:flex;align-items:center;gap:var(--gap-sm);width:100%;
+  padding:4px var(--gap-sm) 4px var(--s5);
+  border:0;border-radius:var(--r1);background:transparent;
+  font:inherit;font-size:11px;color:var(--dim);text-align:left;
+  cursor:pointer;transition:background .12s ease, color .12s ease}
+.step>.sl{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step>.sv{flex:none;margin-left:auto;display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap}
+.step>.sv b{color:var(--ink);font-weight:600}
+.step>.sv .ic{width:9px;height:9px;color:var(--faint)}
+.step:hover{background:var(--glass-thin);color:var(--ink)}
+.step:focus-visible{outline:none;box-shadow:var(--ring)}
+.step[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+
+/* the tick column. Every step has one, at every state, so the rows align and
+   the run reads as a checklist filling in rather than a list being rewritten. */
+.step>.st{flex:none;width:13px;height:13px;display:grid;place-items:center;
+  color:var(--faint);margin-left:calc(var(--s5) * -1 + var(--gap-sm))}
+.step>.st>.ic{width:11px;height:11px}
+/* pending: the outline of a tick that has not happened. Not a spinner — only
+   ONE row is running, and a column of spinners says everything is happening. */
+.step[data-state="pending"]{color:var(--faint)}
+.step[data-state="pending"]>.st::before{content:"";width:7px;height:7px;border-radius:50%;
+  border:1.5px solid currentColor;opacity:.45}
+.step[data-state="pending"]>.sv{opacity:.5}
+.step[data-state="running"]{color:var(--ink)}
+.step[data-state="running"]>.st{color:var(--accent)}
+.step[data-state="done"]>.st{color:var(--good)}
+.step[data-state="skip"]{color:var(--faint)}
+.step[data-state="skip"]>.sl{text-decoration:line-through;text-decoration-color:var(--edge-lo)}
+.step[data-state="fail"]>.st{color:var(--crit)}
+.step[data-state="fail"]>.sv b{color:var(--crit)}
+
+/* the running row keeps a faint accent wash so you can find it in a long list
+   without hunting for the one spinner */
+.step[data-state="running"]{background:color-mix(in srgb, var(--accent) 8%, transparent)}
+
+/* per-step revert, revealed on hover. The run footer's Undo takes the whole
+   thing back; this takes back one line of it, which is the correction people
+   actually want ("all of that, but not the shadow"). */
+.step>.step-x{flex:none;width:18px;height:18px;margin:-3px -4px -3px 2px;
+  display:grid;place-items:center;border:0;border-radius:var(--r1);
+  background:transparent;color:var(--faint);cursor:pointer;
+  opacity:0;transition:opacity .12s ease, color .12s ease, background .12s ease}
+.step>.step-x>.ic{width:10px;height:10px}
+.step:hover>.step-x,.step>.step-x:focus-visible{opacity:1}
+.step>.step-x:hover{background:var(--glass-thin);color:var(--crit)}
+
+/* ============================================================
+   4 · IDLE — there is no run yet
+   ============================================================
+   Not a blank box with a cursor in it. The one thing a new user needs is proof
+   that a sentence is a legal input, so the idle state is three real sentences
+   about the layers they actually have selected. */
+.ask-idle{display:flex;flex-direction:column;gap:var(--gap-sm);
+  padding:var(--s5) var(--pad) var(--pad);align-items:center;text-align:center;margin:auto 0}
+.ask-idle>.ic{width:22px;height:22px;color:var(--accent);opacity:.85}
+.ask-idle .t{font-size:12px;font-weight:600;color:var(--ink)}
+.ask-idle .d{font-size:10.5px;line-height:1.5;color:var(--faint);max-width:280px}
+.ask-sug{display:flex;flex-direction:column;gap:4px;width:100%;margin-top:var(--s2)}
+.ask-sug>button{display:flex;align-items:center;gap:var(--gap-sm);width:100%;
+  padding:6px var(--gap-sm);border:1px solid var(--edge-lo);border-radius:var(--r2);
+  background:color-mix(in srgb, var(--panel) 45%, transparent);
+  font:inherit;font-size:11px;color:var(--dim);text-align:left;cursor:pointer;
+  transition:var(--ctl-tr)}
+.ask-sug>button>.ic{width:12px;height:12px;flex:none;color:var(--faint)}
+.ask-sug>button:hover{border-color:var(--accent-line);color:var(--ink);
+  background:var(--glass-thin)}
+.ask-sug>button:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* ============================================================
+   5 · STEERING — you may type while it works
+   ============================================================
+   The composer NEVER disables. Locking the input while the agent runs is the
+   most common mistake in this whole class of UI, and it is the exact moment a
+   user most wants to talk: they can see it heading the wrong way. So what
+   changes while busy is the SEND BUTTON's meaning, not the field's availability.
+
+   Two ways to steer, and the surface offers both rather than guessing:
+     Queue      (default, Enter)  — applies after the current step finishes
+     Interrupt  (⇧Enter)          — stops now, keeps every step that landed */
+.ask-queue{display:flex;align-items:flex-start;gap:var(--gap-sm);
+  margin:var(--gap-sm) 0 0;padding:var(--gap-sm) var(--pad-sm);
+  border:1px dashed var(--accent-line);border-radius:var(--r3);
+  background:color-mix(in srgb, var(--accent) 7%, transparent)}
+.ask-queue>.ic{flex:none;width:12px;height:12px;color:var(--accent);margin-top:1px}
+.ask-queue .q{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ask-queue .q .txt{font-size:11.5px;line-height:1.45;color:var(--ink)}
+.ask-queue .q .when{font-size:9.5px;color:var(--accent);font-weight:600}
+.ask-queue .q .when em{font-style:normal;color:var(--faint);font-weight:500}
+.ask-queue>.btn{flex:none}
+
+/* While a run is busy, its queued follow-up is pinned to the composer rather
+   than lost at the top of a scrolling transcript. */
+.chat-in .ask-steer{display:flex;align-items:center;gap:6px;
+  font-size:9.5px;color:var(--faint)}
+.chat-in .ask-steer b{color:var(--dim);font-weight:600}
+
+/* ============================================================
+   6 · DOCKED — the same conversation, 268px wide
+   ============================================================
+   Docking is the answer to the one thing the overlay cannot do: watch the
+   canvas change while you steer. The overlay covers the document it is
+   editing, which is fine for one sentence and wrong for a run you want to
+   supervise. So the header carries a dock toggle, and everything below adapts
+   by container width — no `.docked` variant class, because a variant class
+   would let the two drift.
+
+   At <=340px the run card drops its ornament, not its content: the meter goes,
+   the target chip's count goes, the footer's cost goes, and the value column is
+   allowed to win the row (the label truncates, never the number — you can guess
+   "Corner ra…" but not "4" vs "14"). */
+@container convo (max-width:340px){
+  .run-h{padding:6px var(--gap-sm)}
+  .run-h .run-m{display:none}
+  .run-b{padding:2px}
+  .run-f{padding:6px var(--gap-sm)}
+  .run-f .cost{display:none}
+  .run-tgt>.cnt{display:none}
+  .step{padding-left:var(--pad);font-size:10.5px}
+  .step>.st{margin-left:calc(var(--pad) * -1 + var(--gap-sm))}
+  .step>.sl{flex:1 1 auto}
+  .step>.sv{max-width:52%;overflow:hidden}
+  .ask-idle{padding:var(--pad) var(--gap-sm)}
+}
+/* narrower still (a hand-dragged splitter) — the run keeps only its spine */
+@container convo (max-width:250px){
+  .step>.sv .ic,.step>.sv>span:first-child{display:none}
+  .run-f>.btn>.ic+*{display:none}
+}
+
+/* The dock host. `.dgrp[data-grp="agent"]` already has the tall budget; this
+   just strips the panel chrome the chat brings with it from the overlay. */
+.dgrp-b>.chat{border-left:0;background:transparent;min-height:0}
+.dgrp-b>.chat>.chat-b{padding:var(--gap-sm)}
+.dgrp-b>.chat>.chat-in{padding:var(--gap-sm);border-top:1px solid var(--line-soft)}
+/* Two headers stacked is the obvious thing to fix here, but only for the group
+   the DS builds when you dock the overlay — there the group header and the chat
+   header say the same word. A page that AUTHORS a docked conversation put its
+   own header there on purpose (pages/agent.html names the local model in it),
+   so `.agent-docked` scopes the hide instead of `.dgrp-b > .chat` swallowing
+   real content on 57 pages. */
+.dgrp.agent-docked>.dgrp-b>.chat>.chat-h{display:none}
+
+/* ---- auto-collapse: one expanded group per intent ----
+   With the conversation docked, the dock is holding two answers to the same
+   question — the run card lists the layers that changed, and the Layers panel
+   lists the layers. So Layers folds to its header while a run is live. It is
+   marked as collapsed BY THE APP, not by the user: it re-expands when the run
+   ends, and it keeps a summary in the header so nothing is silently hidden.
+   A user's own collapse always wins and is never overridden. */
+.dgrp.auto-collapsed>.dgrp-h .ttl{color:var(--faint);flex:none}
+.dgrp.auto-collapsed>.dgrp-h .cnt{background:var(--accent-soft);color:var(--accent)}
+/* The reason it folded, and it is the FIRST thing to go when the dock is
+   narrow: the title and the count are the information, this is the courtesy.
+   Without flex:none on .ttl above, the title shrinks to "L…" and the courtesy
+   survives — exactly backwards. */
+.dgrp.auto-collapsed>.dgrp-h .why{font-size:9px;color:var(--faint);font-weight:500;
+  letter-spacing:0;text-transform:none;margin-left:auto;white-space:nowrap;
+  min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+@media (prefers-reduced-motion:reduce){
+  .step,.run-tgt,.step>.step-x{transition:none}
+}

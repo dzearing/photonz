@@ -35,8 +35,9 @@
 .hc-cta{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:640;color:#3a1d6e;background:linear-gradient(180deg,#fff,#f0eaff);padding:10px 18px;border-radius:12px;box-shadow:0 8px 20px -6px rgba(255,255,255,.5),0 0 0 1px rgba(255,255,255,.6) inset;position:relative}
 
 /* selection (.selwrap / .sel-ring / .handle / .mtag) -> shared/components/selection.css */
-/* component instance outline */
-.cinst{position:absolute;inset:-6px;border:1.5px solid var(--comp);border-radius:15px;pointer-events:none}
+/* component instance outline (.cinst / .cring) -> shared/components/selection.css:
+   it is a bounds ring, so it lives with the rest of the family and obeys the
+   same frame rule. Only the badge is canvas chrome. */
 .cbadge{position:absolute;top:-24px;left:0;background:var(--comp);color:#fff;font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:5px}
 
 .section{border-bottom:1px solid var(--line-soft);padding:var(--pad-sm) var(--pad)}

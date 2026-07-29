@@ -7,3 +7,4 @@ dist/
 *.app
 .claude/settings.local.json
 temp/
+.tmp-shots/

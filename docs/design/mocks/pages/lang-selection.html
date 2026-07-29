@@ -28,7 +28,11 @@
     border:1px solid var(--edge-lo)}
   #lang-selection .lx-lc{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:var(--s5)}
   #lang-selection .lx-obj{background:linear-gradient(135deg,#7c4dff,#ff5d8f)}
-  #lang-selection .lx-cap{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap}
+  /* the ladder's own caption ("8 · xs"): mono and on one line, because it is a
+     size label under a specimen, not prose. It must stay SCOPED to .lx-lc —
+     unscoped it also hit every spec-card caption below, and with the cards on
+     overflow:hidden that silently truncated every sentence on the page. */
+  #lang-selection .lx-lc .lx-cap{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap}
   #lang-selection .lx-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
     border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
   #lang-selection .lx-blk-h .lx-n{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
@@ -73,8 +77,8 @@
     background:var(--panel);border:1.5px solid var(--accent);transform:translateX(-50%)}
 
   /* multi-select frames */
-  #lang-selection .lx-group{position:absolute;border:1.5px solid var(--accent);border-radius:var(--r2);pointer-events:none}
-  #lang-selection .lx-thin{position:absolute;border:1px solid var(--accent);border-radius:10px;pointer-events:none;opacity:.7}
+  #lang-selection .lx-group{position:absolute;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
+  #lang-selection .lx-thin{position:absolute;border:1px solid var(--accent);border-radius:2px;pointer-events:none;opacity:.7}
   #lang-selection .lx-count{position:absolute;top:-24px;right:0;background:var(--accent);color:var(--accent-ink);
     font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px}
 
@@ -86,9 +90,7 @@
     font-weight:640;padding:1px 5px;border-radius:5px;font-family:var(--mono);white-space:nowrap;z-index:5}
   #lang-selection .lx-gapline{position:absolute;width:1px;background:var(--accent);z-index:4}
 
-  /* hover + lock */
-  #lang-selection .lx-hoverring{position:absolute;inset:-7px;border:1.5px solid var(--accent-line);border-radius:18px;pointer-events:none}
-  #lang-selection .lx-lockring{position:absolute;inset:-7px;border:1.5px dashed var(--faint);border-radius:18px;pointer-events:none}
+  /* hover + lock rings -> shared .hover-ring / .lock-ring (selection.css) */
   #lang-selection .lx-lockbadge{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--faint);
     color:#fff;font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;white-space:nowrap}
 
@@ -470,7 +472,7 @@
 
     <!-- 5 · STATES -->
     <div class="lx-blk">
-      <div class="lx-blk-h"><span class="lx-n">05</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover · locked</span></div>
+      <div class="lx-blk-h"><span class="lx-n">05</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover (not selected) · locked</span></div>
       <div class="lx-blk-b">
         <div class="lx-grid three">
           <div class="lx-spec">
@@ -484,20 +486,28 @@
             </div></div><p class="lx-cap">Committed. Handles are live, arrow keys nudge, Properties follows.</p></div>
           </div>
           <div class="lx-spec">
-            <div class="lx-spec-h">Hover<span class="lx-tag">preview, no handles</span></div>
+            <div class="lx-spec-h">Hover<span class="lx-tag">what a click would grab next</span></div>
             <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
-              <div style="position:relative;width:118px;height:70px">
-                <div class="lx-obj" style="width:118px;height:70px"></div>
-                <div class="lx-hoverring"></div>
+              <div style="position:relative;width:198px;height:64px">
+                <div class="selwrap" style="position:absolute;left:0;top:0;width:88px">
+                  <div class="lx-obj" style="width:88px;height:64px"></div>
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                </div>
+                <div style="position:absolute;right:0;top:0;width:88px;height:64px">
+                  <div class="lx-obj alt" style="width:88px;height:64px"></div>
+                  <div class="hover-ring"></div>
+                </div>
+                <i class="ic sm ic-cursor" style="position:absolute;right:26px;top:34px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7))"></i>
               </div>
-            </div></div><p class="lx-cap">A lighter ring showing what a click would grab. No handles, because nothing is committed yet.</p></div>
+            </div></div><p class="lx-cap">Not a state the selection can be in. The selected object keeps its frame; the <b>other</b> one, under the pointer, gets a 1px outline and no handles — that is what a click would grab instead. Hovering the selected object changes nothing, because its frame has already said so.</p></div>
           </div>
           <div class="lx-spec">
             <div class="lx-spec-h">Locked<span class="lx-tag">inspect, do not move</span></div>
             <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
               <div style="position:relative;width:118px;height:70px">
                 <div class="lx-obj" style="width:118px;height:70px;filter:saturate(.6) brightness(.85)"></div>
-                <div class="lx-lockring"></div>
+                <div class="lock-ring"></div>
                 <span class="lx-lockbadge"><i class="ic xs ic-lock"></i> Locked</span>
               </div>
             </div></div><p class="lx-cap">Muted dashed outline, a lock tag, no handles. It still answers selection for inspection, just not for transform.</p></div>
@@ -516,7 +526,6 @@
             <div class="lx-spec-b">
               <div class="cnv lx-plinth">
                 <div class="canvas">
-                  <div class="artboard-label">gap snapping · edges align</div>
                   <div style="position:relative;width:230px;height:130px">
                     <div class="selwrap" style="position:absolute;left:14px;top:14px;width:196px">
                       <div style="height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5))"></div>
@@ -557,6 +566,10 @@
           <span class="lx-no">Highlight a row in Layers without ringing the object on the canvas.</span>
           <span class="lx-do">Frame the bounds. A rectangle, always, whatever shape the object is.</span>
           <span class="lx-no">Round the frame to match the object's corners. Below ~52px the radius exceeds half the box and the browser clamps it into a circle.</span>
+          <span class="lx-do">Give every bounds ring the same 2px hairline radius — selection, instance, marquee, hover, lock.</span>
+          <span class="lx-no">Let one of them keep a card-sized radius. A 16px ring reads as an object of its own, so you cannot tell the ring from the thing it is ringing.</span>
+          <span class="lx-do">Show the hover outline on the object a click would grab next.</span>
+          <span class="lx-no">Draw a hover outline on something already selected. Its frame has answered the question; a second ring is noise.</span>
           <span class="lx-do">Let the handles adapt to the size, never the frame.</span>
           <span class="lx-no">Draw grab handles on a locked object, or four handles on something too small to grab.</span>
           <span class="lx-do">Show the measure tag while resizing and hide it at rest.</span>

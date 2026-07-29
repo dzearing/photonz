@@ -397,11 +397,6 @@
         <span class="knob" style="left:0%"></span>
       </span>
       <span class="tc" id="tcEnd">0:04</span>
-      <span class="grp">
-        <button class="btn ghost sm" id="addStop2" title="Add a speed stop at the playhead (A)"><i class="ic ic-keyframe"></i><span class="lb">Add stop</span></button>
-        <button class="btn ghost sm" id="scReset2" title="Reset the ramp"><i class="ic ic-undo"></i><span class="lb">Reset</span></button>
-        <button class="btn secondary sm"><i class="ic ic-export"></i><span class="lb">Render</span></button>
-      </span>
     </div>
 
     <!-- TIMELINE DOCK -->
@@ -718,7 +713,7 @@
     stops.splice(i,1); sel=clamp(i,1,stops.length-2);
     markDirty(); syncPresetSeg(); syncAll();
   }
-  ["addStop","addStop2","mAdd"].forEach(function(id){
+  ["addStop","mAdd"].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.addEventListener("click", addStopAtPlayhead);
   });
@@ -745,7 +740,7 @@
     var d=document.getElementById("scDirty"); if(d){ d.textContent="· live"; d.style.color="var(--faint)"; }
     dirty=false; syncPresetSeg(); syncAll();
   }
-  ["scReset","scReset2","mReset"].forEach(function(id){
+  ["scReset","mReset"].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.addEventListener("click", resetAll);
   });

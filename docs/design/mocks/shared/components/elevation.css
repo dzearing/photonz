@@ -29,10 +29,26 @@
    photo's sun, a device mockup) is content, not chrome, and is exempt —
    `Scripts/check-elevation.mjs` knows the difference. */
 
+/* THE FILL THAT GOES WITH --shadow-1.
+   `--shadow-1` gave "raised a hair" a shadow but never a surface colour, so
+   everything that needed one reached for `--panel`. In light that works by
+   luck: the panel is near-white and the glass track it sits on is darker, so
+   the plate reads as lifted. In dark it INVERTS — `--glass-thin` over a panel
+   computes to ~rgb(26,29,39) and `--panel` is rgb(20,22,29), so the raised
+   thing was DARKER than the surface under it. A surface nearer the viewer
+   catches more light; it never catches less. Hence a real token, in both
+   directions, so "raised" means the same thing in both themes. */
 :root {
   --shadow-1: 0 1px 3px rgba(20, 24, 40, .16);
   --shadow-2: 0 6px 16px -8px rgba(20, 24, 40, .40);
+  --raised: #ffffff;
+  --raised-edge: var(--edge-lo);
 }
+@media (prefers-color-scheme: dark) {
+  :root { --raised: #252a36; --raised-edge: rgba(255, 255, 255, .07) }
+}
+:root[data-theme="light"] { --raised: #ffffff; --raised-edge: var(--edge-lo) }
+:root[data-theme="dark"] { --raised: #252a36; --raised-edge: rgba(255, 255, 255, .07) }
 @media (prefers-color-scheme: dark) {
   :root {
     --shadow-1: 0 1px 3px rgba(0, 0, 0, .45);
