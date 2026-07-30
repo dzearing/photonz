@@ -78,9 +78,10 @@
 
 /* real composer field (the .chat-in .box specimen is a static span; this is
    the typable one, so "/" filtering can be demonstrated for real) */
-.chat-in input.box{font-family:inherit;color:var(--ink);outline:none;min-width:0}
-.chat-in input.box::placeholder{color:var(--faint)}
-.chat-in input.box:focus{border-color:var(--accent-line);box-shadow:var(--ring)}
+/* The typable field is a TEXTAREA now, styled by `.composer` in agent.css — a
+   design change is routinely a sentence, and one clipped line makes you edit
+   blind. The focus ring moved to `.composer:focus-within` with it, because the
+   ring belongs to the box you can see, not to the bare text node inside it. */
 
 /* command mode: the palette list, inline, directly above the composer where
    you are already looking. Reuses .cplist/.cpx from the old palette. */

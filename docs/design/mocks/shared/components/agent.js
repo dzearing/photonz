@@ -1,25 +1,22 @@
-/* Photonz mock · the agent conversation's behaviour — run cards, transcript
-   selection, and docking the conversation into the panel dock.
+/* Photonz mock · the agent conversation's behaviour — work cards, the composer,
+   and the left conversation dock.
    Look lives in agent.css; the surface that hosts it lives in ask.{css,js}. */
 (function () {
   var PZ = window.PZ || {};
-  var all = PZ.all;
+  var all = PZ.all, isNarrow = PZ.isNarrow;
 
-  /* ---- 1 · TRANSCRIPT SELECTION IS DOCUMENT SELECTION ----
-     A `.run-tgt` or a `.step` is a view onto a layer, so clicking one selects
-     that layer rather than highlighting a line of chat. There is therefore ONE
-     pressed item per conversation, not a second selection model living in the
-     transcript; ⌘/⇧ extends, exactly as it does in the Layers panel.
-
-     The mock reflects it back onto any `.lrow[data-layer]` in the same window,
-     so the link is visible rather than merely asserted. */
-  function selectables(chat) {
-    return all('.run-tgt, .step', chat);
-  }
+  /* ============================================================
+     1 · A STEP IS A VIEW ONTO A LAYER
+     ============================================================
+     Clicking one selects that layer rather than highlighting a line of chat, so
+     there is ONE selection in the app rather than a second one living in the
+     transcript. That is the only interaction a step has — the list is readonly,
+     and the way to change your mind is the composer. */
+  function steps(chat) { return all('.step', chat); }
 
   function applySel(chat) {
     var win = chat.closest('.win') || document;
-    var keys = selectables(chat)
+    var keys = steps(chat)
       .filter(function (n) { return n.getAttribute('aria-pressed') === 'true'; })
       .map(function (n) { return n.getAttribute('data-layer'); })
       .filter(Boolean);
@@ -28,165 +25,242 @@
     });
   }
 
-  /* The host is the CONVERSATION, which is normally a `.chat` — but a spec page
-     shows a run card on its own, with no composer around it, and those rows have
-     to select too. `[data-convo]` marks any other element that scopes one
-     transcript's selection. */
+  /* ============================================================
+     2 · BEFORE / AFTER, per card
+     ============================================================
+     A view switch, not an edit: the whole card flips at once, the values in
+     every row swap emphasis, and the card says out loud that you are looking at
+     the original. Card-level rather than per-row precisely so a stray click
+     cannot quietly revert one property and leave the canvas disagreeing with
+     the report. */
+  function setView(work, before) {
+    work.classList.toggle('before', before);
+    var n = all('.step[data-state="done"]', work).length;
+    var t = work.querySelector('.work-note .t');
+    if (t) {
+      t.innerHTML = '<b>Showing the before.</b> The canvas has ' + n +
+        (n === 1 ? ' change' : ' changes') + ' switched off.';
+    }
+    all('.work-view button', work).forEach(function (b) {
+      var isBefore = /before/i.test(b.textContent);
+      b.classList.toggle('on', isBefore === before);
+    });
+  }
+
+  /* ============================================================
+     3 · THE COMPOSER
+     ============================================================ */
+  function grow(box) {
+    box.style.height = 'auto';
+    box.style.height = Math.min(box.scrollHeight, 96) + 'px';
+  }
+
+  function addAtt(chat, name) {
+    var atts = chat.querySelector('.ask-atts');
+    if (!atts) return;
+    var chip = document.createElement('span');
+    chip.className = 'ask-att';
+    chip.innerHTML = '<span class="th"></span><span class="nm"></span>' +
+      '<button class="x" type="button" title="Remove"><i class="ic ic-x"></i></button>';
+    chip.querySelector('.nm').textContent = name;
+    atts.appendChild(chip);
+  }
+
+  function wireComposer(chat) {
+    var composer = chat.querySelector('.composer');
+    var box = composer && composer.querySelector('textarea.box');
+    if (!box) return;
+    grow(box);
+    box.addEventListener('input', function () { grow(box); });
+    // Enter sends, Shift+Enter is a newline — the ordinary convention, and how
+    // the field can be multi-line without losing a one-key send.
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) e.preventDefault();
+    });
+    // an image on the clipboard becomes an attachment, not pasted text
+    box.addEventListener('paste', function (e) {
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf('image') === 0) {
+          e.preventDefault(); addAtt(chat, 'Pasted image'); return;
+        }
+      }
+    });
+    ['dragenter', 'dragover'].forEach(function (t) {
+      composer.addEventListener(t, function (e) { e.preventDefault(); composer.classList.add('drop'); });
+    });
+    ['dragleave', 'drop'].forEach(function (t) {
+      composer.addEventListener(t, function (e) { e.preventDefault(); composer.classList.remove('drop'); });
+    });
+    composer.addEventListener('drop', function (e) {
+      var name = 'Screenshot';
+      try {
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) name = f.name;
+        else { var t = e.dataTransfer && e.dataTransfer.getData('text/plain'); if (t) name = t; }
+      } catch (_) {}
+      addAtt(chat, name);
+    });
+    composer.addEventListener('click', function (e) {
+      var x = e.target.closest('.ask-att>.x');
+      if (x) x.parentNode.remove();
+    });
+  }
+
+  /* ============================================================
+     4 · WIRING ONE CONVERSATION
+     ============================================================
+     The host is normally a `.chat`, but a spec page shows a work card on its
+     own with no composer around it. `[data-convo]` marks any other element
+     that scopes one conversation. */
   all('.chat, [data-convo]').forEach(function (chat) {
     if (chat.hasAttribute('data-agent-wired')) return;
     chat.setAttribute('data-agent-wired', '');
 
     chat.addEventListener('click', function (e) {
-      // per-step revert first: it is inside the step, and it is not a selection
-      var x = e.target.closest('.step-x');
-      if (x) {
+      // a · the After/Before switch, before anything reads the click otherwise
+      var v = e.target.closest('.work-view button');
+      if (v) {
         e.stopPropagation();
-        var st = x.closest('.step');
-        if (st) st.setAttribute('data-state', st.getAttribute('data-state') === 'skip' ? 'done' : 'skip');
+        setView(v.closest('.work'), /before/i.test(v.textContent));
         return;
       }
-      var hit = e.target.closest('.run-tgt, .step');
-      if (hit && chat.contains(hit)) {
+      // b · the header opens and closes the card
+      var h = e.target.closest('.work-h');
+      if (h && chat.contains(h)) {
+        if (e.target.closest('.btn')) return;   // Stop is not disclosure
+        var work = h.closest('.work');
+        var open = !work.classList.toggle('collapsed');
+        h.setAttribute('aria-expanded', open ? 'true' : 'false');
+        return;
+      }
+      // c · a step selects the layer it touched
+      var s = e.target.closest('.step');
+      if (s && chat.contains(s)) {
         var add = e.metaKey || e.ctrlKey || e.shiftKey;
-        var on = hit.getAttribute('aria-pressed') === 'true';
-        if (!add) selectables(chat).forEach(function (n) { n.setAttribute('aria-pressed', 'false'); });
-        hit.setAttribute('aria-pressed', (add && on) ? 'false' : 'true');
+        var on = s.getAttribute('aria-pressed') === 'true';
+        if (!add) steps(chat).forEach(function (n) { n.setAttribute('aria-pressed', 'false'); });
+        s.setAttribute('aria-pressed', (add && on) ? 'false' : 'true');
         applySel(chat);
-        return;
-      }
-      // a run header collapses its own card, so a long transcript stays readable
-      var h = e.target.closest('.run-h');
-      if (h && h.parentNode.classList.contains('run') && h.parentNode.querySelector('.run-b')) {
-        if (e.target.closest('.btn')) return;   // Stop / Undo are not disclosure
-        h.parentNode.classList.toggle('collapsed');
       }
     });
 
-    selectables(chat).forEach(function (n) {
+    steps(chat).forEach(function (n) {
       if (!n.hasAttribute('aria-pressed')) n.setAttribute('aria-pressed', 'false');
     });
+    all('.work', chat).forEach(function (w) { setView(w, w.classList.contains('before')); });
+    wireComposer(chat);
   });
 
-  /* ---- 2 · DOCKING THE CONVERSATION ----
-     The overlay covers the document it is editing. That is the right trade for
-     one sentence and the wrong one for a run you want to supervise, so the same
-     `.chat` can move into an Agent group in the right dock and stay there. It
-     MOVES rather than being duplicated — one conversation, two hosts — which is
-     the reason the run card was split out of ask.css in the first place. */
-  function dockOf(pal) {
-    var edit = pal.closest('.edit') || pal.parentNode;
-    return edit && edit.querySelector('.pdock');
-  }
+  /* ============================================================
+     5 · DOCKING THE CONVERSATION — to the LEFT
+     ============================================================
+     The chat MOVES rather than being duplicated: one conversation, two hosts.
+     Space comes from the right dock, which rails itself, so the canvas keeps
+     its width. On a constrained shell the left dock floats over the canvas and
+     soft-dismisses instead of eating layout width. */
+  function editOf(pal) { return pal.closest('.edit') || pal.parentNode; }
 
-  /* FIRST in the dock, not appended. A dock already holding Layers, Properties,
-     Effects and Library has no leftover height to give a new group at the
-     bottom, so an appended conversation lands below the fold — docked in name
-     and invisible in fact. The thing you are steering with goes where you are
-     looking. */
-  function ensureGroup(dock) {
-    var g = dock.querySelector('.dgrp[data-grp="agent"]');
-    if (g) return g;
-    g = document.createElement('div');
-    g.className = 'dgrp grow agent-docked';
-    g.setAttribute('data-grp', 'agent');
-    g.innerHTML =
-      '<div class="dgrp-h" role="button" tabindex="0"><i class="chev ic xs ic-chevron-down"></i>' +
-      '<span class="ttl">Agent</span><span class="cnt">live</span>' +
+  function ensureCdock(edit) {
+    var c = edit.querySelector('.cdock');
+    if (c) return c;
+    c = document.createElement('div');
+    c.className = 'cdock';
+    c.innerHTML =
+      '<div class="cdock-h"><i class="ic ic-sparkle"></i><span>Agent</span><span class="sp"></span>' +
       '<button class="btn ghost icon sm" data-ask-undock title="Float the conversation">' +
-      '<i class="ic ic-maximize"></i></button></div>' +
-      '<div class="dgrp-b"></div>';
-    var host = dock.querySelector('.dock-body') || dock;
-    host.insertBefore(g, host.firstElementChild);
-    return g;
-  }
-
-  /* ONE EXPANDED GROUP PER INTENT. While you are steering a run, that is the
-     intent, and the dock's other groups fold to their headers to pay for the
-     height — otherwise the conversation gets whatever is left over, which on a
-     full dock is nothing.
-
-     Layers is the pointed case and gets a reason in its header, because the run
-     card genuinely replaces it: it already lists every layer that changed. The
-     rest simply fold, keeping their title and count, so nothing is hidden
-     without a label. All of it is marked `.auto-collapsed` — collapsed BY THE
-     APP, undone when the conversation leaves, and never overriding a collapse
-     the user made themselves. */
-  function autoCollapse(dock, on) {
-    all('.dgrp', dock).forEach(function (g) {
-      if (g.getAttribute('data-grp') === 'agent') return;
-      if (on) {
-        if (g.classList.contains('collapsed')) return;    // the user's call wins
-        g.classList.add('collapsed', 'auto-collapsed');
-        var h = g.querySelector('.dgrp-h');
-        if (h && g.getAttribute('data-grp') === 'layers' && !h.querySelector('.why')) {
-          h.insertAdjacentHTML('beforeend', '<span class="why">the run lists what changed</span>');
-        }
-      } else if (g.classList.contains('auto-collapsed')) {
-        g.classList.remove('collapsed', 'auto-collapsed');
-        var w = g.querySelector('.dgrp-h .why');
-        if (w) w.remove();
-      }
-    });
+      '<i class="ic ic-maximize"></i></button></div>';
+    edit.insertBefore(c, edit.firstElementChild);
+    if (!edit.querySelector('.cdock-scrim')) {
+      var scrim = document.createElement('div');
+      scrim.className = 'cdock-scrim';
+      edit.insertBefore(scrim, c);
+      scrim.addEventListener('click', function () {   // soft dismiss
+        var pal = edit.querySelector('.askpal');
+        if (pal) setDocked(pal, false);
+      });
+    }
+    return c;
   }
 
   function setDocked(pal, on) {
-    var dock = dockOf(pal);
-    // The conversation is a single node that lives in one of two hosts, so look
-    // in both. (Looking only in the overlay is why undocking used to no-op: once
-    // docked, the pal has no `.chat` left to find.)
-    var chat = pal.querySelector('.chat') ||
-      (dock && dock.querySelector('.dgrp[data-grp="agent"] .chat'));
-    if (!chat || !dock) return;
+    var edit = editOf(pal);
+    var chat = pal.querySelector('.chat') || (edit && edit.querySelector('.cdock .chat'));
+    if (!chat || !edit) return;
     if (on) {
-      ensureGroup(dock).querySelector('.dgrp-b').appendChild(chat);
+      ensureCdock(edit).appendChild(chat);
+      // Space comes from the inspector, not the canvas. Remember what the dock
+      // was doing so undocking can put it back exactly.
+      if (!edit.hasAttribute('data-dock-prev')) {
+        edit.setAttribute('data-dock-prev', edit.getAttribute('data-dock') || 'open');
+      }
+      edit.setAttribute('data-dock', 'closed');
+      // too tight to be a panel? then be an overlay, not a narrower panel.
+      edit.querySelector('.cdock').classList.toggle('as-overlay', isNarrow ? isNarrow(edit) : false);
       pal.classList.remove('on');
-      var scrim = pal.parentNode && pal.parentNode.querySelector('.askscrim');
-      if (scrim) scrim.classList.remove('on');
+      pal.setAttribute('aria-hidden', 'true');
+      var s1 = pal.parentNode && pal.parentNode.querySelector('.askscrim');
+      if (s1) s1.classList.remove('on');
     } else {
       pal.appendChild(chat);
-      var g = dock.querySelector('.dgrp[data-grp="agent"]');
-      if (g && !g.querySelector('.chat')) g.remove();
-      // Undocking has to REOPEN the overlay. Otherwise the conversation leaves
-      // the dock and lands in a hidden pal, and from the user's side it is gone.
+      var cd = edit.querySelector('.cdock'); if (cd) cd.remove();
+      var sc = edit.querySelector('.cdock-scrim'); if (sc) sc.remove();
+      if (edit.hasAttribute('data-dock-prev')) {
+        edit.setAttribute('data-dock', edit.getAttribute('data-dock-prev'));
+        edit.removeAttribute('data-dock-prev');
+      }
+      // Undocking has to REOPEN the overlay, or the conversation leaves the dock
+      // into a hidden pal and from the user's side it has simply gone.
       pal.classList.add('on');
       pal.setAttribute('aria-hidden', 'false');
-      var sc = pal.parentNode && pal.parentNode.querySelector('.askscrim');
-      if (sc) sc.classList.add('on');
-      all('[data-ask]').forEach(function (b) {
-        if (document.querySelector(b.getAttribute('data-ask')) === pal) {
-          b.setAttribute('aria-expanded', 'true');
-        }
-      });
+      var s2 = pal.parentNode && pal.parentNode.querySelector('.askscrim');
+      if (s2) s2.classList.add('on');
     }
-    autoCollapse(dock, on);
+    all('[data-ask]').forEach(function (b) {
+      if (document.querySelector(b.getAttribute('data-ask')) === pal) {
+        b.setAttribute('aria-expanded', on ? 'false' : 'true');
+      }
+    });
     all('[data-ask-dock]', chat).forEach(function (b) {
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
       b.title = on ? 'Float the conversation' : 'Dock the conversation';
     });
   }
 
+  function isDocked(edit) { return !!(edit && edit.querySelector('.cdock .chat')); }
+
   document.addEventListener('click', function (e) {
+    // Ask, while the conversation is docked, FLOATS IT BACK. It used to open the
+    // empty overlay the chat had been moved out of, so the screen just dimmed
+    // behind a blank panel with no way to tell what had happened.
+    var ask = e.target.closest('[data-ask]');
+    if (ask) {
+      var pal0 = document.querySelector(ask.getAttribute('data-ask'));
+      if (pal0 && isDocked(editOf(pal0))) { e.stopPropagation(); setDocked(pal0, false); }
+      return;
+    }
     var d = e.target.closest('[data-ask-dock]');
     if (d) {
-      var pal = d.closest('.askpal');
-      if (!pal) {
-        // already docked: the button rode along inside the chat
-        var win = d.closest('.win') || document;
-        pal = win.querySelector('.askpal');
-      }
-      if (pal) { e.stopPropagation(); setDocked(pal, !d.closest('.dgrp')); }
+      var pal = d.closest('.askpal') || (d.closest('.win') || document).querySelector('.askpal');
+      if (pal) { e.stopPropagation(); setDocked(pal, !d.closest('.cdock')); }
       return;
     }
     var u = e.target.closest('[data-ask-undock]');
     if (u) {
-      var w2 = u.closest('.win') || document;
-      var p2 = w2.querySelector('.askpal');
+      var p2 = (u.closest('.win') || document).querySelector('.askpal');
       if (p2) setDocked(p2, false);
     }
+  }, true);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    all('.cdock.as-overlay').forEach(function (c) {
+      var pal = (c.closest('.edit') || document).querySelector('.askpal');
+      if (pal) setDocked(pal, false);
+    });
   });
 
-  // A page can author `data-ask-docked` on a shell to start in the docked
-  // arrangement, which is how the spec page shows both without a click.
+  // A page can author `data-ask-docked` on a shell to start docked.
   all('[data-ask-docked]').forEach(function (win) {
     var pal = win.querySelector('.askpal');
     if (pal) setDocked(pal, true);

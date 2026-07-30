@@ -7,14 +7,10 @@
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
   /* comp-agent — the surface behind Ask, and the primitives inside it.
-     Layout from docpage, callouts from redline, every specimen built out of
-     the real .run / .step / .ask-* classes in agent.css. Local rules only for
-     the specimen frames: a chat has no height of its own, so this page has to
-     give each one a box to live in. All `cg-` prefixed. */
-
-  /* a conversation specimen: a bounded, panel-coloured box so .chat's
-     flex column has something to fill, plus its own container so the
-     compact rules in agent.css can be demonstrated at real widths */
+     Layout from docpage, callouts from redline, every specimen built out of the
+     real .work / .step / .composer / .cdock classes in agent.css. Local rules
+     only for the specimen frames: a chat has no height of its own, so this page
+     has to give each one a box to live in. All `cg-` prefixed. */
   #comp-agent .cg-convo{display:flex;flex-direction:column;min-height:0;
     border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;
     background:color-mix(in srgb,var(--panel) 62%,transparent);
@@ -25,47 +21,50 @@
   #comp-agent .cg-convo>.chat>.chat-b{padding:var(--pad-sm);gap:var(--pad-sm)}
   #comp-agent .cg-convo>.chat>.chat-in{padding:var(--gap-sm);gap:var(--gap-sm);
     border-top:1px solid var(--line-soft)}
-  #comp-agent .cg-st{height:326px}
+  #comp-agent .cg-st{height:340px}
+  #comp-agent .cg-tall{height:470px}
   #comp-agent .cg-anat{position:relative;display:grid;place-items:center;padding:var(--s5) 0;
     border-radius:var(--r3);
     background:radial-gradient(360px 200px at 50% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 68%)}
-  #comp-agent .cg-anat .run{width:min(360px,92%)}
+  #comp-agent .cg-anat .work{width:min(380px,92%)}
   #comp-agent .rl-frame{--rl-gut:112px}
   #comp-agent .rl-co .card{width:206px}
+  #comp-agent .cg-states{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:var(--gap)}
 
-  /* the four-up state board */
-  #comp-agent .cg-states{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:var(--gap)}
-  #comp-agent .cg-states>.docsp{min-width:0}
-
-  /* the dock-vs-overlay comparison needs two real shells side by side */
-  #comp-agent .cg-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:var(--gap)}
+  /* the three-up placement comparison needs small real shells */
+  #comp-agent .cg-three{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:var(--gap)}
   #comp-agent .cg-mini{border:1px solid var(--line-strong);border-radius:var(--r3);overflow:hidden;
-    background:var(--panel);box-shadow:var(--shadow-2);height:300px;display:flex;flex-direction:column}
-  #comp-agent .cg-mini .mh{height:26px;flex:none;display:flex;align-items:center;gap:5px;padding:0 var(--gap-sm);
-    background:var(--chrome-solid);border-bottom:1px solid var(--line);font-size:9.5px;color:var(--faint)}
-  #comp-agent .cg-mini .mh i{width:7px;height:7px;border-radius:50%;background:var(--line-strong)}
+    background:var(--panel);box-shadow:var(--shadow-2);height:276px;display:flex;flex-direction:column}
+  #comp-agent .cg-mini .mh{height:24px;flex:none;display:flex;align-items:center;gap:5px;padding:0 var(--gap-sm);
+    background:var(--chrome-solid);border-bottom:1px solid var(--line);font-size:9px;color:var(--faint)}
+  #comp-agent .cg-mini .mh i{width:6px;height:6px;border-radius:50%;background:var(--line-strong)}
   #comp-agent .cg-mini .mb{flex:1;display:flex;min-height:0;position:relative}
   #comp-agent .cg-art{flex:1;min-width:0;background:radial-gradient(220px 140px at 50% 30%,#171b28,var(--artboard));
     display:grid;place-items:center;padding:var(--gap-sm)}
-  #comp-agent .cg-card{width:min(150px,80%);aspect-ratio:16/9;border-radius:10px;
+  #comp-agent .cg-card{width:min(140px,84%);aspect-ratio:16/9;border-radius:9px;
     background:linear-gradient(135deg,#7c4dff,#ff5d8f);box-shadow:0 10px 26px -10px rgba(0,0,0,.7);
-    display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;letter-spacing:-.01em}
-  #comp-agent .cg-side{flex:0 0 210px;min-width:0;border-left:1px solid var(--line);
-    background:var(--panel);display:flex;flex-direction:column}
-  /* the overlay case: the conversation sits ON the canvas and covers it */
-  #comp-agent .cg-over{position:absolute;z-index:2;top:var(--s4);left:50%;transform:translateX(-50%);
-    width:74%;
-    border-radius:var(--r3);border:1px solid var(--edge-lo);overflow:hidden;
+    display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+  #comp-agent .cg-left{flex:0 0 136px;min-width:0;border-right:1px solid var(--line);
+    background:var(--panel);display:flex;flex-direction:column;padding:var(--s1);gap:3px}
+  #comp-agent .cg-right{flex:0 0 92px;min-width:0;border-left:1px solid var(--line);
+    background:var(--panel);display:flex;flex-direction:column;padding:var(--s1);gap:3px}
+  #comp-agent .cg-rail{flex:0 0 22px;border-left:1px solid var(--line);background:var(--panel);
+    display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0}
+  #comp-agent .cg-rail i{width:11px;height:11px;color:var(--faint)}
+  #comp-agent .cg-lbl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);font-weight:700;padding:2px 3px}
+  #comp-agent .cg-bar{height:7px;border-radius:3px;background:var(--panel-2);margin:0 3px}
+  #comp-agent .cg-bar.a{background:color-mix(in srgb,var(--accent) 26%,var(--panel-2))}
+  #comp-agent .cg-float{position:absolute;top:6px;left:6px;bottom:6px;width:58%;z-index:3;
+    border-radius:var(--r3);border:1px solid var(--edge-lo);padding:var(--s1);
     background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
-    box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow);max-height:calc(100% - var(--s4))}
-  #comp-agent .cg-scrim{position:absolute;inset:0;z-index:1;
+    box-shadow:var(--lg-shadow);display:flex;flex-direction:column;gap:3px}
+  #comp-agent .cg-over{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:76%;z-index:3;
+    border-radius:var(--r3);border:1px solid var(--edge-lo);padding:var(--s1);
+    background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+    box-shadow:var(--lg-shadow);display:flex;flex-direction:column;gap:3px}
+  #comp-agent .cg-scrim{position:absolute;inset:0;z-index:2;
     background:color-mix(in srgb,#0a0c11 46%,transparent);backdrop-filter:blur(2px)}
-  #comp-agent .cg-mini .dgrp-b{max-height:none}
-
-  /* the width ruler under the docked case */
-  #comp-agent .cg-w{display:flex;align-items:center;gap:6px;font-family:var(--mono);
-    font-size:9px;color:var(--faint);padding-top:var(--s1)}
-  #comp-agent .cg-w .bar{flex:1;height:1px;background:var(--line-strong)}
 </style>
 </head>
 <body class="page">
@@ -73,48 +72,43 @@
   <section class="screen on" id="comp-agent">
     <div class="scen-head"><span class="pip" style="background:linear-gradient(120deg,#6E8BFF,#c56cff)"></span><h2>Ask · the agent surface</h2><span class="k">· Surfaces &amp; primitives</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
 
-    <p class="docintro">The surface behind <b>Ask</b>, and the primitives inside it. One launcher opens one conversation, and that conversation is also the ⌘K command palette — so the sentence you type and the command you run land in the same place. This page specs what is <b>in</b> that surface: the <code>.run</code> card that reports what the agent did, its four states, how the changes are grouped and selected, and what happens when you move the whole thing into the dock so you can watch the canvas while you steer.</p>
+    <p class="docintro">A <b>box you type into, and changes you watch happen</b>. That is the whole promise, and everything here protects it. The conversation is made of exactly two things: short lines the agent <b>says</b>, and <b>work cards</b> that say what it is <b>doing</b>. Ask is also the ⌘K command palette, so a sentence and a command land in the same place.</p>
 
-    <p class="thesis" style="margin:0">The unit is the <b>run</b>, not the message. A transcript of prose is the wrong receipt for an editor: nobody wants to re-read a paragraph to learn that the headline went 36 → 44. What you want is the list of changes, grouped by the layer that changed, each one clickable.</p>
+    <p class="thesis" style="margin:0">It is called a <b>work card</b> because that is what it tells you. "Plan card" would promise a plan agreed up front, and the list changes as it goes. "Tool step" is the row <i>inside</i> it. So: one card per stretch of work, <code>.step</code> rows within — <b>collapsed by default</b>, because while it runs you want one line that keeps telling you what is happening, not a list to watch.</p>
 
     <!-- 1 · ANATOMY -->
     <div class="docblk">
       <div class="docspec">
         <div class="rl-frame">
           <div class="cg-anat" data-convo>
-            <div class="run" data-state="done" id="cg-run">
-              <div class="run-h"><span class="run-st"><i class="ic ic-check-circle"></i></span><b class="run-t">Bigger headline, card glow</b><span class="run-m">4 changes · 2 layers</span></div>
-              <div class="run-b">
-                <div class="run-grp">
-                  <button class="run-tgt" data-layer="headline" id="cg-tgt"><i class="ic ic-text"></i><span class="nm">Headline</span><span class="cnt">2</span></button>
-                  <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline" id="cg-step"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span><span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                  <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Line height</span><span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                </div>
-                <div class="run-grp">
-                  <button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">2</span></button>
-                  <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Style</span><span class="sv"><b>Card glow</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                  <div class="step" role="button" tabindex="0" data-state="skip" data-layer="card" id="cg-skip"><span class="st"><i class="ic ic-x"></i></span><span class="sl">Corner radius</span><span class="sv"><span>already 14</span></span><button class="step-x" title="Apply anyway"><i class="ic ic-undo"></i></button></div>
-                </div>
+            <div class="work" data-state="done" id="cg-work">
+              <button class="work-h" type="button" aria-expanded="true" id="cg-head"><i class="chev ic xs ic-chevron-down"></i><span class="work-st"><i class="ic ic-check-circle"></i></span><span class="work-t">Made the headline bigger and added the card glow</span><span class="work-m">4 changes</span></button>
+              <div class="work-b">
+                <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline" id="cg-step"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Headline · Size</span><span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span></div>
+                <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Headline · Line height</span><span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span></div>
+                <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Style</span><span class="sv"><b>Card glow</b></span></div>
+                <div class="step" role="button" tabindex="0" data-state="skip" data-layer="card" id="cg-skip"><span class="st"><i class="ic ic-x"></i></span><span class="sl">Card · Corner radius</span><span class="sv"><span>already 14</span></span></div>
               </div>
-              <div class="run-f" id="cg-foot"><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo all</button><button class="btn secondary sm"><i class="ic ic-sparkle"></i> Refine</button><span class="sp"></span><span class="cost">1.4s · on-device</span></div>
+              <div class="work-note"><i class="ic ic-warning"></i><span class="t"></span></div>
+              <div class="work-f" id="cg-foot"><span class="seg sm work-view" id="cg-view"><button class="on">After</button><button>Before</button></span><span class="sp"></span><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo</button><span class="cost">1.4s</span></div>
             </div>
           </div>
-          <span class="rl-co" data-rl-for="#cg-run .run-h" data-rl-side="l" data-rl-x="left" data-rl-row="-52"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Header</b>State glyph in a fixed 14px slot, the run's own title, and a meter. The slot is fixed so the title starts at the same x in all four states and nothing jumps when the run finishes.</span></span>
-          <span class="rl-co" data-rl-for="#cg-tgt" data-rl-side="l" data-rl-row="26"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Target</b>The layer this group of changes touched. It is a button: clicking it <b>selects that layer on the canvas</b>.</span></span>
-          <span class="rl-co" data-rl-for="#cg-step" data-rl-side="r" data-rl-x="right" data-rl-row="-52"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Step</b>One command, shown as a property delta with before → after. Deliberately the shape of an inspector row, so an agent edit and a hand edit read the same.</span></span>
-          <span class="rl-co" data-rl-for="#cg-skip" data-rl-side="r" data-rl-row="10"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Skipped</b>What it chose <i>not</i> to do, and why, kept in the list. A change that silently did not happen is the fastest way to lose trust.</span></span>
-          <span class="rl-co" data-rl-for="#cg-foot" data-rl-side="l" data-rl-x="left" data-rl-row="62"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Footer</b>What you can do about it — undo the whole run, or keep talking — plus what it cost. Never a bare "OK".</span></span>
+          <span class="rl-co" data-rl-for="#cg-head" data-rl-side="l" data-rl-x="left" data-rl-row="-56"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>The live line</b>The whole card when collapsed. While it runs this is a sentence about the step happening <i>now</i>, replaced as each one lands — one line to watch, never a list that reflows.</span></span>
+          <span class="rl-co" data-rl-for="#cg-step" data-rl-side="l" data-rl-row="24"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Step</b>Readonly. A property delta shaped like an inspector row, so an agent edit and a hand edit read the same. Clicking it selects that layer — navigation, not editing.</span></span>
+          <span class="rl-co" data-rl-for="#cg-skip" data-rl-side="r" data-rl-x="right" data-rl-row="-56"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Skipped</b>What it chose <i>not</i> to do, and why, kept in the list. A change that silently did not happen is the fastest way to lose trust.</span></span>
+          <span class="rl-co" data-rl-for="#cg-view" data-rl-side="r" data-rl-row="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>After / Before</b>One switch for the whole card. Flip it and every value in the card swaps emphasis — the before is what the canvas shows, so it goes bold.</span></span>
+          <span class="rl-co" data-rl-for="#cg-work .work-note" data-rl-side="l" data-rl-x="left" data-rl-row="62"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>The loud line</b>Only while you are looking at the before. The switch is small and the canvas is big, so it must never look like the work undid itself.</span></span>
         </div>
-        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click a step to select its layer. Hover one for the per-step revert.</p>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click the header to collapse it. Hit <b>Before</b> and watch the values swap.</p>
       </div>
       <div class="docmeta">
-        <div class="docnum">01</div><h3 class="docname">Anatomy of a run</h3>
-        <p class="docrule">A card per turn of work: <code>.run</code> → <code>.run-h</code>, <code>.run-b</code> of <code>.run-grp</code>s, <code>.run-f</code>. The rule that makes it useful is that <b>a step is a value change, not a sentence</b>. "Made the headline bigger" is unverifiable; <code>36 → 44</code> is a number you can disagree with.</p>
+        <div class="docnum">01</div><h3 class="docname">Anatomy of a work card</h3>
+        <p class="docrule">A card per stretch of work. <b>Collapsed by default</b>, and its header is a live sentence rather than a label — that single line is how you follow a run without reading anything. Open it and you get the receipt, <b>readonly</b>: the way to change your mind is to say so in the composer, which is right underneath.</p>
         <div class="docdd">
-          <span class="do">Show before → after for every step, including the skipped ones.</span>
-          <span class="no">Summarise a run in prose and hide the changes behind a disclosure.</span>
+          <span class="do">Keep the collapsed line current. It is the only thing most people read.</span>
+          <span class="no">Let the title reflow to two lines. A card that twitches on every step is unwatchable.</span>
         </div>
-        <p class="docapi"><b>API</b> a run is a list of the same commands the UI issues: <code>layer.set("headline","fontSize",44)</code>. There is no agent-only command, which is why the receipt can be rendered at all.</p>
+        <p class="docapi"><b>API</b> a card is a list of the same commands the UI issues: <code>layer.set("headline","fontSize",44)</code>. There is no agent-only command, which is why the receipt can be rendered — and why After/Before is possible at all.</p>
       </div>
     </div>
 
@@ -140,11 +134,15 @@
                     </div>
                   </div>
                 </div>
-                <div class="chat-in"><input class="box" type="text" placeholder="Ask for a change, or type / for a command" aria-label="Ask the agent"><button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button></div>
+                <div class="chat-in"><div class="composer">
+                  <div class="ask-atts"></div>
+                  <textarea class="box" rows="1" placeholder="Ask for a change, or type / for a command" aria-label="Ask the agent"></textarea>
+                  <div class="composer-f"><button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button><span class="hint">or paste a screenshot</span><span class="sp"></span><button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button></div>
+                </div></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Idle</b> .ask-idle · .ask-sug</span>
-            <p class="docsp-d">Not a blank box with a cursor in it. Three <b>real sentences about the layers you actually have</b>, because the one thing a new user needs is proof that a sentence is a legal input.</p>
+            <span class="docsp-l"><b>Idle</b> .ask-idle</span>
+            <p class="docsp-d">Not a blank box with a cursor in it. Three <b>real sentences about the layers you actually have</b> — the one thing a new user needs is proof that a sentence is a legal input.</p>
           </div>
 
           <!-- BUSY -->
@@ -154,30 +152,27 @@
                 <div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span><span class="dot live accent"></span><span class="val">working</span></div>
                 <div class="chat-b">
                   <div class="msg u">make the hero card pop more</div>
-                  <div class="msg a">Working through four layers.
-                    <div class="run" data-state="busy">
-                      <div class="run-h"><span class="busy"></span><b class="run-t">Making the card pop</b><span class="run-m">3 of 7</span><button class="btn ghost icon sm" title="Stop"><i class="ic ic-stop"></i></button></div>
-                      <div class="run-b">
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">3</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Shadow</span><span class="sv"><b>Lifted</b></span></div>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Corner radius</span><span class="sv"><span>10</span><i class="ic ic-arrow-right"></i><b>16</b></span></div>
-                          <div class="step" role="button" tabindex="0" data-state="running" data-layer="card"><span class="st"><span class="busy"></span></span><span class="sl">Gradient angle</span><span class="sv"><span>135°</span><i class="ic ic-arrow-right"></i><b>…</b></span></div>
-                        </div>
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="headline"><i class="ic ic-text"></i><span class="nm">Headline</span><span class="cnt">2</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="pending" data-layer="headline"><span class="st"></span><span class="sl">Size</span><span class="sv"><span>queued</span></span></div>
-                          <div class="step" role="button" tabindex="0" data-state="pending" data-layer="headline"><span class="st"></span><span class="sl">Weight</span><span class="sv"><span>queued</span></span></div>
-                        </div>
+                  <div class="msg a">On it.
+                    <div class="work collapsed" data-state="busy">
+                      <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="busy"></span><span class="work-t">Rotating the card gradient…</span><span class="work-m">3 of 7</span></button>
+                      <div class="work-b">
+                        <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Shadow</span><span class="sv"><b>Lifted</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Corner radius</span><span class="sv"><span>10</span><i class="ic ic-arrow-right"></i><b>16</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="running"><span class="st"><span class="busy"></span></span><span class="sl">Card · Gradient angle</span><span class="sv"><span>135°</span><i class="ic ic-arrow-right"></i><b>…</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="pending"><span class="st"></span><span class="sl">Headline · Weight</span><span class="sv"><span>queued</span></span></div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div class="chat-in"><input class="box" type="text" placeholder="Steer it — you don't have to wait" aria-label="Ask the agent"><button class="btn secondary sm">Queue</button></div>
+                <div class="chat-in"><div class="composer">
+                  <div class="ask-atts"></div>
+                  <textarea class="box" rows="1" placeholder="Steer it — you don't have to wait" aria-label="Ask the agent"></textarea>
+                  <div class="composer-f"><button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button><span class="sp"></span><button class="btn secondary sm">Queue</button></div>
+                </div></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Busy</b> [data-state="busy"]</span>
-            <p class="docsp-d">Steps appear as they land, so the card grows downward and the <b>done ones stay done</b>. One spinner, on the row that is actually running — a column of spinners says everything is happening at once, which is a lie.</p>
+            <span class="docsp-l"><b>Busy</b> [data-state="busy"] · collapsed</span>
+            <p class="docsp-d">The card stays shut and <b>the title narrates</b> — "Rotating the card gradient…" becomes the next sentence when that lands. Open it only if you want the list. The send button becomes <b>Queue</b>: the one thing about the composer that changes.</p>
           </div>
 
           <!-- STEERING -->
@@ -186,30 +181,28 @@
               <div class="chat">
                 <div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span><span class="dot live accent"></span><span class="val">working</span></div>
                 <div class="chat-b">
-                  <div class="msg a">Working through four layers.
-                    <div class="run" data-state="busy">
-                      <div class="run-h"><span class="busy"></span><b class="run-t">Making the card pop</b><span class="run-m">3 of 7</span><button class="btn ghost icon sm" title="Stop"><i class="ic ic-stop"></i></button></div>
-                      <div class="run-b">
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">3</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="running" data-layer="card"><span class="st"><span class="busy"></span></span><span class="sl">Gradient angle</span><span class="sv"><span>135°</span><i class="ic ic-arrow-right"></i><b>…</b></span></div>
-                          <div class="step" role="button" tabindex="0" data-state="pending" data-layer="card"><span class="st"></span><span class="sl">Border</span><span class="sv"><span>queued</span></span></div>
-                        </div>
-                      </div>
+                  <div class="msg a">On it.
+                    <div class="work collapsed" data-state="busy">
+                      <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="busy"></span><span class="work-t">Rotating the card gradient…</span><span class="work-m">3 of 7</span></button>
+                      <div class="work-b"><div class="step" role="button" tabindex="0" data-state="running"><span class="st"><span class="busy"></span></span><span class="sl">Card · Gradient angle</span><span class="sv"><b>…</b></span></div></div>
                     </div>
                     <div class="ask-queue">
                       <i class="ic ic-chat"></i>
                       <span class="q"><span class="txt">actually keep the corners square</span>
-                      <span class="when">Applies after this step <em>· 2 queued steps will be re-planned</em></span></span>
+                      <span class="when">Heard · applies after this step <em>· 3 queued steps will be re-planned</em></span></span>
                       <button class="btn ghost icon sm" title="Cancel this"><i class="ic ic-x"></i></button>
                     </div>
                   </div>
                 </div>
-                <div class="chat-in"><input class="box" type="text" placeholder="Steer it — you don't have to wait" aria-label="Ask the agent"><span class="ask-steer"><b>⏎</b> queue<br><b>⇧⏎</b> interrupt</span></div>
+                <div class="chat-in"><div class="composer">
+                  <div class="ask-atts"><span class="ask-att"><span class="th"></span><span class="nm">Screenshot 3.png</span><button class="x" type="button"><i class="ic ic-x"></i></button></span></div>
+                  <textarea class="box" rows="2" placeholder="Steer it" aria-label="Ask the agent">make the corners match this reference</textarea>
+                  <div class="composer-f"><button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button><span class="sp"></span><button class="btn secondary sm">Queue</button></div>
+                </div></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Steering</b> .ask-queue</span>
-            <p class="docsp-d">You typed while it worked. <b>The composer never disables</b> — that is the exact moment you most want to talk, because you can see it heading somewhere wrong. What changes is the send button's meaning, not the field's availability.</p>
+            <span class="docsp-l"><b>Steering</b> .ask-queue · .ask-att</span>
+            <p class="docsp-d">Typing while it works. The message is <b>acknowledged before it is acted on</b> — pinned under the running card, so the gap between saying it and seeing it is accounted for. The composer grows, and takes a pasted screenshot.</p>
           </div>
 
           <!-- DONE -->
@@ -219,190 +212,147 @@
                 <div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span><span class="val">on-device</span></div>
                 <div class="chat-b">
                   <div class="msg u">make the hero card pop more</div>
-                  <div class="msg a">Done — the card is lifted and the headline is heavier.
-                    <div class="run" data-state="done">
-                      <div class="run-h"><span class="run-st"><i class="ic ic-check-circle"></i></span><b class="run-t">Making the card pop</b><span class="run-m">6 changes · 2 layers</span></div>
-                      <div class="run-b">
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">4</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Shadow</span><span class="sv"><b>Lifted</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Corner radius</span><span class="sv"><span>10</span><i class="ic ic-arrow-right"></i><b>16</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                          <div class="step" role="button" tabindex="0" data-state="fail" data-layer="card"><span class="st"><i class="ic ic-warning"></i></span><span class="sl">Backdrop blur</span><span class="sv"><b>unsupported</b></span><button class="step-x" title="Dismiss"><i class="ic ic-x"></i></button></div>
-                        </div>
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="headline"><i class="ic ic-text"></i><span class="nm">Headline</span><span class="cnt">2</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Weight</span><span class="sv"><span>600</span><i class="ic ic-arrow-right"></i><b>760</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                        </div>
+                  <div class="msg a">Done. One thing I couldn't do — backdrop blur isn't supported on this layer.
+                    <div class="work collapsed" data-state="done">
+                      <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="work-st"><i class="ic ic-check-circle"></i></span><span class="work-t">Lifted the card and thickened the headline</span><span class="work-m">6 changes</span></button>
+                      <div class="work-b">
+                        <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Shadow</span><span class="sv"><b>Lifted</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="fail"><span class="st"><i class="ic ic-warning"></i></span><span class="sl">Card · Backdrop blur</span><span class="sv"><b>unsupported</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Headline · Weight</span><span class="sv"><span>600</span><i class="ic ic-arrow-right"></i><b>760</b></span></div>
                       </div>
-                      <div class="run-f"><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo all</button><button class="btn secondary sm"><i class="ic ic-sparkle"></i> Refine</button><span class="sp"></span><span class="cost">2.1s</span></div>
+                      <div class="work-note"><i class="ic ic-warning"></i><span class="t"></span></div>
+                      <div class="work-f"><span class="seg sm work-view"><button class="on">After</button><button>Before</button></span><span class="sp"></span><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo</button><span class="cost">2.1s</span></div>
                     </div>
                   </div>
                 </div>
-                <div class="chat-in"><input class="box" type="text" placeholder="Ask for another change" aria-label="Ask the agent"><button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button></div>
+                <div class="chat-in"><div class="composer">
+                  <div class="ask-atts"></div>
+                  <textarea class="box" rows="1" placeholder="Ask for another change" aria-label="Ask the agent"></textarea>
+                  <div class="composer-f"><button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button><span class="sp"></span><button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button></div>
+                </div></div>
               </div>
             </div>
             <span class="docsp-l"><b>Done</b> [data-state="done"]</span>
-            <p class="docsp-d">The spinner becomes a tick, the meter becomes a count, and a footer appears. <b>A failed step stays in the list</b> next to the ones that worked — six changes and one refusal is the honest report.</p>
+            <p class="docsp-d">Two lines and a card. <b>The one thing that went wrong is said in prose</b>, because a failure buried in a collapsed list is a failure you hid. The After/Before switch appears now that there is a before to show.</p>
           </div>
 
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">02</div><h3 class="docname">Four states</h3>
-        <p class="docrule">Idle, busy, done, and the one everybody forgets: <b>steering</b>. The card's own state lives on <code>.run[data-state]</code>; the surface's state is just which of these is on screen. The transitions matter more than the states — <b>a step never un-happens</b>, so busy → done adds ticks rather than re-rendering the list, and the card does not resize under your cursor.</p>
+        <div class="docnum">02</div><h3 class="docname">Four states, one composer</h3>
+        <p class="docrule">Idle, busy, steering, done. <b>The composer is present and live in all four</b> — it is the only control that never changes, because the answer to "this is not what I wanted" is always the same: say so, here. The send button's <b>label</b> is the only thing that moves.</p>
         <div class="docdd">
-          <span class="do">Keep the composer live at every state, including busy.</span>
-          <span class="no">Replace a running list with a finished one. Fill it in.</span>
+          <span class="do">Say a real failure in prose. The card is the receipt, not the announcement.</span>
+          <span class="no">Print <code>⏎ queue · ⇧⏎ interrupt</code> beside the field. Two hints read as two controls and match nothing else in the app.</span>
         </div>
-        <p class="docapi"><b>Rule</b> the busy state is only legal if it can be stopped. Every <code>busy</code> run has a Stop, and stopping keeps every step that already landed rather than rolling back the lot.</p>
+        <p class="docapi"><b>Interrupting</b> is the <b>Stop on the card</b>, next to the thing being interrupted — not a modifier on the send button. Stopping keeps every step that already landed.</p>
       </div>
     </div>
 
-    <!-- 3 · GROUPED, AND SELECTABLE -->
+    <!-- 3 · THE SEAM: WORK → STEER → NEW WORK -->
     <div class="docblk">
       <div class="docspec">
-        <div class="docgrid n2">
-          <div class="docsp">
-            <span class="docsp-l"><b>Not this</b> chronological</span>
-            <div class="cg-convo" style="padding:var(--gap-sm)">
-              <div class="run" data-state="done" style="border:0;background:transparent;box-shadow:none">
-                <div class="run-b" style="border-top:0">
-                  <div class="step" role="button" tabindex="0" data-state="done" style="padding-left:var(--gap-sm)"><span class="st" style="margin-left:0"><i class="ic ic-check"></i></span><span class="sl">Set Card shadow to Lifted</span></div>
-                  <div class="step" role="button" tabindex="0" data-state="done" style="padding-left:var(--gap-sm)"><span class="st" style="margin-left:0"><i class="ic ic-check"></i></span><span class="sl">Set Headline size to 44</span></div>
-                  <div class="step" role="button" tabindex="0" data-state="done" style="padding-left:var(--gap-sm)"><span class="st" style="margin-left:0"><i class="ic ic-check"></i></span><span class="sl">Set Card radius to 16</span></div>
-                  <div class="step" role="button" tabindex="0" data-state="done" style="padding-left:var(--gap-sm)"><span class="st" style="margin-left:0"><i class="ic ic-check"></i></span><span class="sl">Set Headline weight to 760</span></div>
-                  <div class="step" role="button" tabindex="0" data-state="done" style="padding-left:var(--gap-sm)"><span class="st" style="margin-left:0"><i class="ic ic-check"></i></span><span class="sl">Set Card border to 1px</span></div>
+        <div class="cg-convo cg-tall" data-convo style="max-width:520px;margin:0 auto;width:100%">
+          <div class="chat">
+            <div class="chat-h"><i class="ic ic-sparkle sm"></i> Agent<span class="tspacer"></span><span class="dot live accent"></span><span class="val">working</span></div>
+            <div class="chat-b">
+              <div class="msg u">make the hero card pop more</div>
+              <div class="msg a">On it.
+                <div class="work collapsed" data-state="stopped">
+                  <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="work-st"><i class="ic ic-warning"></i></span><span class="work-t">Stopped after 3 of 7 — you changed the plan</span><span class="work-m">3 changes</span></button>
+                  <div class="work-b">
+                    <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Shadow</span><span class="sv"><b>Lifted</b></span></div>
+                    <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Corner radius</span><span class="sv"><span>10</span><i class="ic ic-arrow-right"></i><b>16</b></span></div>
+                    <div class="step" role="button" tabindex="0" data-state="skip"><span class="st"><i class="ic ic-x"></i></span><span class="sl">Card · Border</span><span class="sv"><span>dropped</span></span></div>
+                  </div>
+                  <div class="work-note"><i class="ic ic-warning"></i><span class="t"></span></div>
+                  <div class="work-f"><span class="seg sm work-view"><button class="on">After</button><button>Before</button></span><span class="sp"></span><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo</button><span class="cost">0.9s</span></div>
                 </div>
               </div>
-            </div>
-            <p class="docsp-d">Five lines in the order the agent thought of them. To answer "leave the headline alone" you have to <b>read all five and do the grouping yourself</b>, and the layer name is repeated in every row.</p>
-          </div>
-          <div class="docsp">
-            <span class="docsp-l"><b>This</b> grouped by target, in layer order</span>
-            <div class="cg-convo" data-convo style="padding:var(--gap-sm)">
-              <div class="run" data-state="done" style="border:0;background:transparent;box-shadow:none">
-                <div class="run-b" style="border-top:0">
-                  <div class="run-grp">
-                    <button class="run-tgt" data-layer="d-head"><i class="ic ic-text"></i><span class="nm">Headline</span><span class="cnt">2</span></button>
-                    <div class="step" role="button" tabindex="0" data-state="done" data-layer="d-head"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span><span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span></div>
-                    <div class="step" role="button" tabindex="0" data-state="done" data-layer="d-head"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Weight</span><span class="sv"><span>600</span><i class="ic ic-arrow-right"></i><b>760</b></span></div>
-                  </div>
-                  <div class="run-grp">
-                    <button class="run-tgt" data-layer="d-card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">3</span></button>
-                    <div class="step" role="button" tabindex="0" data-state="done" data-layer="d-card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Shadow</span><span class="sv"><b>Lifted</b></span></div>
-                    <div class="step" role="button" tabindex="0" data-state="done" data-layer="d-card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Corner radius</span><span class="sv"><span>10</span><i class="ic ic-arrow-right"></i><b>16</b></span></div>
-                    <div class="step" role="button" tabindex="0" data-state="done" data-layer="d-card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Border</span><span class="sv"><b>1px</b></span></div>
+
+              <div class="ask-seam">you changed your mind</div>
+
+              <div class="msg u">actually keep the corners square</div>
+              <div class="msg a">Reverted the radius and picked up from there.
+                <div class="work collapsed" data-state="busy">
+                  <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="busy"></span><span class="work-t">Thickening the headline…</span><span class="work-m">2 of 4</span></button>
+                  <div class="work-b">
+                    <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Corner radius</span><span class="sv"><span>16</span><i class="ic ic-arrow-right"></i><b>0</b></span></div>
+                    <div class="step" role="button" tabindex="0" data-state="running"><span class="st"><span class="busy"></span></span><span class="sl">Headline · Weight</span><span class="sv"><span>600</span><i class="ic ic-arrow-right"></i><b>…</b></span></div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="pane" style="margin-top:var(--gap-sm);border-radius:var(--r2);overflow:hidden">
-              <div class="lrow" data-layer="d-head"><i class="ic ic-text"></i>Headline</div>
-              <div class="lrow" data-layer="d-card"><i class="ic ic-frame"></i>Card</div>
-              <div class="lrow" data-layer="d-bg"><i class="ic ic-image"></i>Background</div>
-            </div>
-            <p class="docsp-d">Two things, not five. Click a target or a step above and <b>the layer list below selects with it</b> — the transcript has no selection of its own, it drives the document's.</p>
+            <div class="chat-in"><div class="composer">
+              <div class="ask-atts"></div>
+              <textarea class="box" rows="1" placeholder="Steer it — you don't have to wait" aria-label="Ask the agent"></textarea>
+              <div class="composer-f"><button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button><span class="sp"></span><button class="btn secondary sm">Queue</button></div>
+            </div></div>
           </div>
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">03</div><h3 class="docname">Grouped by target, selected as one</h3>
-        <p class="docrule">A run of eleven edits across three layers is <b>three things, not eleven</b>. Group by the layer that changed, order the groups to match the layer tree, and the transcript reads top-to-bottom the same way the Layers panel does. Then make every row a selector: <b>clicking a step selects its layer</b>, ⌘ or ⇧ extends, and that is the canvas selection — not a second highlight that means something else.</p>
+        <div class="docnum">03</div><h3 class="docname">Work → steer → new work</h3>
+        <p class="docrule">Steering leaves a seam, and the seam has to be visible or the transcript lies about itself. It is <b>three entries, not one card mutating</b>: the work that was running <b>stops and says so</b>, your message lands as its own turn, and the new work opens a <b>new card</b>. Scroll back later and you can see why the second card exists.</p>
         <div class="docdd">
-          <span class="do">Order groups by the layer tree, so two panels agree.</span>
-          <span class="no">Invent a transcript-only highlight. One selection per document.</span>
+          <span class="do">Let the stopped card keep its steps. Those changes really did happen.</span>
+          <span class="no">Rewrite the running card in place. It erases the fact that you intervened.</span>
         </div>
-        <p class="docapi"><b>Undo</b> a run is <b>one</b> history entry by default — "make the card pop" is one thing you did. Per-step revert (the ⤺ on hover) peels one change off before you move on, which is the correction people actually want: "all of that, but not the shadow".</p>
+        <p class="docapi"><b>The delay is the honest part.</b> Between saying it and seeing it there is a queued acknowledgement, then a stop, then a re-plan. Each gets its own line rather than being smoothed into one, because a user who sees nothing for two seconds assumes they were ignored.</p>
       </div>
     </div>
 
-    <!-- 4 · DOCK IT -->
+    <!-- 4 · WHERE THE CONVERSATION LIVES -->
     <div class="docblk">
       <div class="docspec">
-        <div class="cg-two">
-
-          <!-- overlay -->
+        <div class="cg-three">
           <div class="docsp">
             <div class="cg-mini">
               <div class="mh"><i></i><i></i><i></i><span style="margin-left:6px">hero-card</span></div>
               <div class="mb">
                 <div class="cg-art"><div class="cg-card">Ship it</div></div>
-                <div class="cg-side">
-                  <div class="dgrp" data-grp="layers"><div class="dgrp-h"><i class="chev ic xs ic-chevron-down"></i><span class="ttl">Layers</span></div>
-                    <div class="dgrp-b" style="padding:var(--s1)"><div class="lrow"><i class="ic ic-text"></i>Headline</div><div class="lrow"><i class="ic ic-frame"></i>Card</div><div class="lrow"><i class="ic ic-image"></i>Background</div></div></div>
-                </div>
+                <div class="cg-right"><span class="cg-lbl">Layers</span><span class="cg-bar"></span><span class="cg-bar a"></span><span class="cg-lbl">Properties</span><span class="cg-bar"></span><span class="cg-bar"></span></div>
                 <div class="cg-scrim"></div>
-                <div class="cg-over">
-                  <div class="run" data-state="busy" style="border:0;border-radius:0;background:transparent;box-shadow:none">
-                    <div class="run-h"><span class="busy"></span><b class="run-t">Making the card pop</b><span class="run-m">3 of 7</span></div>
-                    <div class="run-b">
-                      <div class="run-grp">
-                        <button class="run-tgt"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">3</span></button>
-                        <div class="step" role="button" tabindex="0" data-state="running"><span class="st"><span class="busy"></span></span><span class="sl">Gradient angle</span><span class="sv"><span>135°</span><i class="ic ic-arrow-right"></i><b>…</b></span></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <div class="cg-over"><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span><span class="cg-bar"></span></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Floating</b> .askpal · 560px</span>
-            <p class="docsp-d">Centred over the canvas, scrim behind it. Right for <b>one sentence</b> — you type, it works, you dismiss. Wrong for a run you want to supervise, because <b>it covers the document it is editing</b>.</p>
+            <span class="docsp-l"><b>Floating</b> .askpal · the default</span>
+            <p class="docsp-d">Centred, scrim behind it. Right for <b>one sentence</b> — you type, it works, you dismiss. Wrong for work you want to supervise, because it covers the document it is editing.</p>
           </div>
-
-          <!-- docked -->
           <div class="docsp">
             <div class="cg-mini">
               <div class="mh"><i></i><i></i><i></i><span style="margin-left:6px">hero-card</span></div>
               <div class="mb">
+                <div class="cg-left"><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span><span class="cg-bar"></span><span class="cg-bar"></span></div>
                 <div class="cg-art"><div class="cg-card">Ship it</div></div>
-                <div class="cg-side">
-                  <div class="dgrp grow" data-grp="agent">
-                    <div class="dgrp-h"><i class="chev ic xs ic-chevron-down"></i><span class="ttl">Agent</span><span class="cnt">live</span><button class="btn ghost icon sm" title="Float the conversation"><i class="ic ic-maximize"></i></button></div>
-                    <div class="dgrp-b" style="padding:0">
-                      <div class="chat">
-                        <div class="chat-b" style="padding:var(--gap-sm)">
-                          <div class="run" data-state="busy">
-                            <div class="run-h"><span class="busy"></span><b class="run-t">Making the card pop</b><button class="btn ghost icon sm" title="Stop"><i class="ic ic-stop"></i></button></div>
-                            <div class="run-b">
-                              <div class="run-grp">
-                                <button class="run-tgt"><i class="ic ic-frame"></i><span class="nm">Card</span></button>
-                                <div class="step" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Shadow</span><span class="sv"><b>Lifted</b></span></div>
-                                <div class="step" role="button" tabindex="0" data-state="running"><span class="st"><span class="busy"></span></span><span class="sl">Gradient angle</span><span class="sv"><b>…</b></span></div>
-                                <div class="step" role="button" tabindex="0" data-state="pending"><span class="st"></span><span class="sl">Border</span><span class="sv"><span>queued</span></span></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="chat-in" style="padding:var(--gap-sm);border-top:1px solid var(--line-soft)"><input class="box" type="text" placeholder="Steer it…" aria-label="Ask the agent"><button class="btn secondary sm">Queue</button></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="dgrp collapsed auto-collapsed" data-grp="layers">
-                    <div class="dgrp-h"><i class="chev ic xs ic-chevron-down"></i><span class="ttl">Layers</span><span class="cnt">2</span><span class="why">the run lists what changed</span></div>
-                    <div class="dgrp-b"></div>
-                  </div>
-                  <div class="dgrp collapsed auto-collapsed" data-grp="props">
-                    <div class="dgrp-h"><i class="chev ic xs ic-chevron-down"></i><span class="ttl">Properties</span><span class="cnt">Frame</span></div>
-                    <div class="dgrp-b"></div>
-                  </div>
-                </div>
+                <div class="cg-rail"><i class="ic ic-layers"></i><i class="ic ic-sliders"></i><i class="ic ic-sparkle"></i><i class="ic ic-library"></i></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Docked</b> .dgrp[data-grp="agent"] · 210–300px</span>
-            <p class="docsp-d">The canvas is <b>never covered</b>, so you watch the card change while you steer it. The conversation goes <b>first in the dock</b> and the other groups fold to pay for the height — appended at the bottom of a full dock it would be docked in name and below the fold in fact.</p>
-            <div class="cg-w"><span>compact rules bite at</span><span class="bar"></span><span>340px</span></div>
+            <span class="docsp-l"><b>Docked left</b> .cdock</span>
+            <p class="docsp-d">The canvas is <b>never covered</b>, so you watch the card change while you steer. The width comes from the inspector, which rails itself — <b>not from the canvas</b>, so the window does not have to grow to hold a conversation.</p>
           </div>
-
+          <div class="docsp">
+            <div class="cg-mini">
+              <div class="mh"><i></i><i></i><i></i><span style="margin-left:6px">hero-card · narrow</span></div>
+              <div class="mb">
+                <div class="cg-art"><div class="cg-card" style="width:64%">Ship it</div></div>
+                <div class="cg-rail"><i class="ic ic-layers"></i><i class="ic ic-sliders"></i></div>
+                <div class="cg-float"><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span><span class="cg-bar"></span></div>
+              </div>
+            </div>
+            <span class="docsp-l"><b>Constrained</b> .cdock.as-overlay</span>
+            <p class="docsp-d">Below the width where a left dock still leaves a usable canvas, it <b>stops taking layout width and floats</b>, dismissed by clicking away or Escape. A panel that cannot afford to be inline becomes an overlay — never a sliver nobody can work in.</p>
+          </div>
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">04</div><h3 class="docname">Dock it to steer it</h3>
-        <p class="docrule">Same conversation, two hosts. The chat <b>moves</b> rather than being duplicated — one node, so there is no second transcript to keep in step. The compact form is driven by <code>@container convo</code>, <b>not by the window width and not by a <code>.docked</code> variant class</b>: a variant would let the two drift apart, and a window query would measure the wrong box (the window is the same width in both pictures).</p>
+        <div class="docnum">04</div><h3 class="docname">Left, because it is an input</h3>
+        <p class="docrule">The conversation docks on the <b>left</b>, opposite the inspector. It is where you are <b>typing</b> — an input, next to the tool rail and the reading edge — while the right dock is an <b>output</b> you consult. Stacking a tall conversation on top of Layers and Properties made every group there fold, which is a lot of panel to lose for a chat.</p>
         <div class="docdd">
-          <span class="do">Drop ornament as it narrows: the meter, the count, the cost.</span>
-          <span class="no">Truncate the value. "Corner ra…" is guessable; <code>4</code> vs <code>14</code> is not.</span>
+          <span class="do">Take the width from the inspector and rail it. The canvas keeps its size.</span>
+          <span class="no">Shrink a panel past the point it is usable. Float it instead.</span>
         </div>
-        <p class="docapi"><b>Auto-collapse</b> one expanded group per intent. While you are steering, that is the intent, so the dock's other groups fold to their headers — marked <code>.auto-collapsed</code>, re-expanded when the conversation leaves, and <b>never overriding a collapse the user made themselves</b>. Each keeps its title and count, and Layers keeps a reason, because it is the one the run card actually replaces.</p>
+        <p class="docapi"><b>Same node, three placements.</b> The chat <b>moves</b>; it is never duplicated, so there is no second transcript to keep in step. Hitting <b>Ask</b> while it is docked floats it back rather than opening the empty overlay it was moved out of.</p>
       </div>
     </div>
 
@@ -413,16 +363,19 @@
         <table class="doctbl">
           <thead><tr><th>Question</th><th>Answer</th><th>Why, and what it gives up</th></tr></thead>
           <tbody>
-            <tr><td><b>Prose or a list?</b></td><td>Both — one sentence, then the run card</td><td>The sentence carries intent, the card carries fact. Prose alone is unverifiable; a bare list reads as a machine log.</td></tr>
-            <tr><td><b>Group by what?</b></td><td>By target layer, in layer-tree order</td><td>Matches how you would answer ("leave the headline alone"). Costs you the true chronology, which nobody has ever asked for.</td></tr>
-            <tr><td><b>How is a change selected?</b></td><td>Clicking it selects the layer</td><td>One selection model in the app. Costs the ability to "select a step" as a distinct thing — deliberately, since two selections is the confusing outcome.</td></tr>
-            <tr><td><b>One undo or many?</b></td><td>One per run, plus per-step revert</td><td>"Make the card pop" is one thing you did. The per-step ⤺ handles "all of that but not the shadow" without spraying seven entries into History.</td></tr>
-            <tr><td><b>Can you type while it works?</b></td><td>Always. Enter queues, ⇧Enter interrupts</td><td>Disabling the composer while busy is the single most common mistake in this class of UI. Costs a little ambiguity, which the two-key hint pays for.</td></tr>
-            <tr><td><b>Float or dock?</b></td><td>Float by default, dock on demand</td><td>Most asks are one sentence and want the biggest target. Supervising a long run wants the canvas visible, so the same chat moves into the dock.</td></tr>
-            <tr><td><b>Docked width?</b></td><td>The dock's own 268px, compact under 340</td><td>No new width for the agent; it is a panel group like any other. Layers auto-collapses to pay for the vertical space.</td></tr>
+            <tr><td><b>What is the card called?</b></td><td><b>Work card</b>, <code>.work</code></td><td>It says work is happening, then what work happened. "Plan card" promises a plan agreed up front; the plan changes. "Tool step" is the row inside it.</td></tr>
+            <tr><td><b>Open or closed?</b></td><td>Closed, with a live title</td><td>While it runs you want one line that keeps telling you what is happening. Costs a click to see the list — the rarer need.</td></tr>
+            <tr><td><b>Is the list editable?</b></td><td>No, readonly</td><td>Per-row controls invite the accident that makes an agent feel broken. Changing your mind is a sentence in the composer, which is always right there.</td></tr>
+            <tr><td><b>Toggle, or a diff view?</b></td><td>An After/Before switch on the card</td><td>A diff is a second surface to build and to learn, and you cannot glance at it. The switch flips in place and the row values swap emphasis. Costs a warning line so a stray flip never reads as failure.</td></tr>
+            <tr><td><b>Per step or per card?</b></td><td>Per card</td><td>One switch cannot leave the canvas half-agreeing with the report. Costs the ability to keep four of five changes — that is what "ask again" is for.</td></tr>
+            <tr><td><b>Can you type while it works?</b></td><td>Always. The button says Queue</td><td>Disabling the composer while busy is the most common mistake in this class of UI.</td></tr>
+            <tr><td><b>What does steering look like?</b></td><td>Stop, your message, a new card</td><td>Three entries in the order they happened. Costs vertical space, and buys a transcript that explains itself a week later.</td></tr>
+            <tr><td><b>One line or many?</b></td><td>Grows to five, then scrolls</td><td>A design change is a sentence, not a search term. Enter sends; Shift+Enter is the newline.</td></tr>
+            <tr><td><b>Pictures?</b></td><td>Paste or drag one in</td><td>"Make it look like this" is the most natural thing a designer says. Shots come from capture history or the clipboard and ride along as chips.</td></tr>
+            <tr><td><b>Float or dock?</b></td><td>Float by default, dock left on demand</td><td>Most asks are one sentence and want the biggest target. Supervising wants the canvas visible, so the same chat moves left and the inspector rails.</td></tr>
           </tbody>
         </table>
-        <p class="docnote"><b>In the API</b> every step is a command the UI can also issue, and the run is the transaction that wraps them: <code>history.perform(run)</code>. That is what makes the receipt renderable at all — if the agent had a private path into the document there would be nothing to list, and nothing to undo as one step.</p>
+        <p class="docnote"><b>In the API</b> every step is a command the UI can also issue, and the card is the transaction that wraps them: <code>history.perform(work)</code>. That is what makes the receipt renderable and After/Before possible — if the agent had a private path into the document there would be nothing to list, and nothing to put back.</p>
       </div>
     </div>
 

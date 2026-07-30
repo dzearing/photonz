@@ -337,23 +337,18 @@
                 <div class="chat-h"><i class="ic ic-sparkle sm"></i> Local · Qwen <span class="tspacer"></span><span class="val">on-device</span></div>
                 <div class="chat-b">
                   <div class="msg u">make the headline bigger and add our card glow</div>
-                  <div class="msg a">Done — two layers changed.
-                    <div class="run" data-state="done">
-                      <div class="run-h"><span class="run-st"><i class="ic ic-check-circle"></i></span><b class="run-t">Bigger headline, card glow</b><span class="run-m">3 changes</span></div>
-                      <div class="run-b">
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="headline"><i class="ic ic-text"></i><span class="nm">Headline</span><span class="cnt">2</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span><span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Line height</span><span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                        </div>
-                        <div class="run-grp">
-                          <button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i><span class="nm">Card</span><span class="cnt">1</span></button>
-                          <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Style</span><span class="sv"><b>Card glow</b></span><button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>
-                        </div>
+                  <div class="msg a">Done.
+                    <div class="work collapsed" data-state="done">
+                      <button class="work-h" type="button" aria-expanded="false"><i class="chev ic xs ic-chevron-down"></i><span class="work-st"><i class="ic ic-check-circle"></i></span><span class="work-t">Made the headline bigger and added the card glow</span><span class="work-m">3 changes</span></button>
+                      <div class="work-b">
+                        <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Headline · Size</span><span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="done" data-layer="headline"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Headline · Line height</span><span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span></div>
+                        <div class="step" role="button" tabindex="0" data-state="done" data-layer="card"><span class="st"><i class="ic ic-check"></i></span><span class="sl">Card · Style</span><span class="sv"><b>Card glow</b></span></div>
                       </div>
-                      <div class="run-f"><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo all</button><span class="sp"></span><span class="cost">1.4s</span></div>
+                      <div class="work-note"><i class="ic ic-warning"></i><span class="t"></span></div>
+                      <div class="work-f"><span class="seg sm work-view"><button class="on">After</button><button>Before</button></span><span class="sp"></span><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo</button><span class="cost">1.4s</span></div>
                     </div>
-                    <p class="note" style="margin:var(--gap-sm) 0 0">Click a change to select that layer. All three landed as one undoable step.</p>
+                    <p class="note" style="margin:var(--gap-sm) 0 0">Open the card to see each change. Click one to select that layer. All three landed as one undoable step.</p>
                   </div>
                 </div>
                 <div class="chat-in">

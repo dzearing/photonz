@@ -51,44 +51,56 @@
     ['ic-home', 'Home', 'app.home']
   ];
 
-  /* The receipt for a finished run, in the `.run` card from agent.css. Grouped
-     by the layer each command touched rather than by the order they ran, so
-     what you read back is what happened to the document. It is here, next to
-     the overlay it goes in, because the docked conversation is the SAME node
-     moved — not a second copy to keep in step. */
-  function runHTML() {
-    return '<div class="run" data-state="done">' +
-      '<div class="run-h"><span class="run-st"><i class="ic ic-check-circle"></i></span>' +
-      '<b class="run-t">Bigger headline, card glow</b>' +
-      '<span class="run-m">4 changes · 2 layers</span></div>' +
-      '<div class="run-b">' +
-      '<div class="run-grp">' +
-      '<button class="run-tgt" data-layer="headline"><i class="ic ic-text"></i>' +
-      '<span class="nm">Headline</span><span class="cnt">2</span></button>' +
-      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="headline">' +
-      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Size</span>' +
-      '<span class="sv"><span>36</span><i class="ic ic-arrow-right"></i><b>44</b></span>' +
-      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
-      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="headline">' +
-      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Line height</span>' +
-      '<span class="sv"><span>1.2</span><i class="ic ic-arrow-right"></i><b>1.1</b></span>' +
-      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
+  /* The WORK CARD (`.work` in agent.css): the thing that says work is
+     happening, and then what work happened. Collapsed by default — the header
+     is a live sentence about the step running now, and you open it only if you
+     want the receipt. It is here, next to the overlay it goes in, because the
+     docked conversation is the SAME node moved, not a second copy. */
+  function step(state, label, target, before, after, layer) {
+    var val = before
+      ? '<span>' + before + '</span><i class="ic ic-arrow-right"></i><b>' + after + '</b>'
+      : '<b>' + after + '</b>';
+    var tick = state === 'skip' ? 'ic-x' : state === 'fail' ? 'ic-warning' : 'ic-check';
+    return '<div class="step" role="button" tabindex="0" data-state="' + state + '"' +
+      (layer ? ' data-layer="' + layer + '"' : '') + '>' +
+      '<span class="st"><i class="ic ' + tick + '"></i></span>' +
+      '<span class="sl">' + target + ' · ' + label + '</span>' +
+      '<span class="sv">' + val + '</span></div>';
+  }
+
+  function workHTML() {
+    return '<div class="work collapsed" data-state="done">' +
+      '<button class="work-h" type="button" aria-expanded="false">' +
+      '<i class="chev ic xs ic-chevron-down"></i>' +
+      '<span class="work-st"><i class="ic ic-check-circle"></i></span>' +
+      '<span class="work-t">Made the headline bigger and added the card glow</span>' +
+      '<span class="work-m">4 changes</span></button>' +
+      '<div class="work-b">' +
+      step('done', 'Size', 'Headline', '36', '44', 'headline') +
+      step('done', 'Line height', 'Headline', '1.2', '1.1', 'headline') +
+      step('done', 'Style', 'Card', '', 'Card glow', 'card') +
+      step('skip', 'Corner radius', 'Card', '', 'already 14', 'card') +
       '</div>' +
-      '<div class="run-grp">' +
-      '<button class="run-tgt" data-layer="card"><i class="ic ic-frame"></i>' +
-      '<span class="nm">Card</span><span class="cnt">2</span></button>' +
-      '<div class="step" role="button" tabindex="0" data-state="done" data-layer="card">' +
-      '<span class="st"><i class="ic ic-check"></i></span><span class="sl">Style</span>' +
-      '<span class="sv"><b>Card glow</b></span>' +
-      '<button class="step-x" title="Revert this one"><i class="ic ic-undo"></i></button></div>' +
-      '<div class="step" role="button" tabindex="0" data-state="skip" data-layer="card">' +
-      '<span class="st"><i class="ic ic-x"></i></span><span class="sl">Corner radius</span>' +
-      '<span class="sv"><span>already 14</span></span>' +
-      '<button class="step-x" title="Apply anyway"><i class="ic ic-undo"></i></button></div>' +
-      '</div></div>' +
-      '<div class="run-f"><button class="btn ghost sm"><i class="ic ic-undo"></i> Undo all</button>' +
-      '<button class="btn secondary sm"><i class="ic ic-sparkle"></i> Refine</button>' +
-      '<span class="sp"></span><span class="cost">1.4s · on-device</span></div></div>';
+      '<div class="work-note"><i class="ic ic-warning"></i><span class="t"></span></div>' +
+      '<div class="work-f">' +
+      '<span class="seg sm work-view"><button class="on">After</button><button>Before</button></span>' +
+      '<span class="sp"></span>' +
+      '<button class="btn ghost sm"><i class="ic ic-undo"></i> Undo</button>' +
+      '<span class="cost">1.4s</span></div></div>';
+  }
+
+  /* The composer: multi-line, takes a pasted or dragged image, and ONE send
+     button whose label is the state (Ask / Queue). */
+  function composerHTML(send) {
+    return '<div class="chat-in"><div class="composer">' +
+      '<div class="ask-atts"></div>' +
+      '<textarea class="box" rows="1" placeholder="Ask for a change, or type / for a command"' +
+      ' aria-label="Ask the agent"></textarea>' +
+      '<div class="composer-f">' +
+      '<button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button>' +
+      '<span class="hint">or paste a screenshot</span><span class="sp"></span>' +
+      '<button class="btn primary sm"><i class="ic ic-sparkle"></i> ' + (send || 'Ask') + '</button>' +
+      '</div></div></div>';
   }
 
   function askPalHTML(id) {
@@ -102,15 +114,14 @@
       '<span class="val">on-device</span>' +
       '<button class="btn ghost icon sm" title="New conversation"><i class="ic ic-plus"></i></button>' +
       '<button class="btn ghost icon sm" data-ask-dock aria-pressed="false"' +
-      ' title="Dock the conversation"><i class="ic ic-sidebar-right"></i></button>' +
+      ' title="Dock the conversation"><i class="ic ic-sidebar-left"></i></button>' +
       '<button class="btn ghost icon sm" data-ask-close title="Close (Esc)"><i class="ic ic-x"></i></button>' +
       '</div>' +
       '<div class="chat-b"><div class="msg u">make the headline bigger and add our card glow</div>' +
-      '<div class="msg a">Done — two layers changed.' + runHTML() + '</div></div>' +
+      '<div class="msg a">Done.' + workHTML() + '</div></div>' +
       '<div class="askcmd"><div class="lbl">Commands</div><div class="cplist">' + rows +
       '<div class="empty" style="display:none">No command matches.</div></div></div>' +
-      '<div class="chat-in"><input class="box" type="text" placeholder="Ask for a change, or type / for a command" aria-label="Ask the agent">' +
-      '<button class="btn primary sm"><i class="ic ic-sparkle"></i> Ask</button></div>' +
+      composerHTML('Ask') +
       '</div></div>';
   }
 

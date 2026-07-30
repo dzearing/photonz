@@ -18,7 +18,7 @@
       b.setAttribute('aria-expanded', on ? 'true' : 'false');
     });
     if (on) {
-      var box = pal.querySelector('.chat-in input.box');
+      var box = pal.querySelector('.chat-in .box');
       if (box) requestAnimationFrame(function () { box.focus(); });
     }
   }
@@ -26,7 +26,7 @@
   // "/" in the composer turns the chat into the command palette: same field,
   // same Enter key, a filtered list of real commands instead of prose.
   function wireAskCommands(pal) {
-    var box = pal.querySelector('.chat-in input.box');
+    var box = pal.querySelector('.chat-in .box');
     var cmd = pal.querySelector('.askcmd');
     if (!box || !cmd) return;
     var rows = Array.prototype.slice.call(cmd.querySelectorAll('.cpx'));
