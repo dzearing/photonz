@@ -58,7 +58,8 @@
   padding:var(--gap-sm) var(--pad-sm);min-height:34px;
   border:0;background:transparent;font:inherit;text-align:left;cursor:pointer;
   transition:background .12s ease}
-.work-h:hover{background:var(--glass-thin)}
+.work-h:hover{background:var(--state-hover)}
+.work-h:active{background:var(--state-press)}
 .work-h:focus-visible{outline:none;box-shadow:var(--ring)}
 /* the state glyph. One 14px slot, so the title starts at the same x in every
    state and the card does not jump when the work finishes. */
@@ -79,7 +80,12 @@
 .work-h>.chev{flex:none;width:11px;height:11px;color:var(--faint);transition:transform .15s ease}
 .work.collapsed .work-h>.chev{transform:rotate(-90deg)}
 
-.work-b{border-top:1px solid var(--line-soft);padding:var(--s1) var(--s1) var(--s2)}
+/* 4px all round, so a step row is inset from the card edge by the same amount
+   on every side instead of running full-bleed into it. One number on all four
+   sides, so the block reads as a list inside a card rather than as rows glued
+   to its walls. */
+.work-b{border-top:1px solid var(--line-soft);padding:var(--s1);
+  display:flex;flex-direction:column;gap:2px}
 .work.collapsed>.work-b,.work.collapsed>.work-f,.work.collapsed>.work-note{display:none}
 
 .work-f{display:flex;align-items:center;gap:6px;
@@ -98,8 +104,8 @@
    and it is navigation, not editing. To change something you say so in the
    composer, which is two inches below. */
 .step{display:flex;align-items:center;gap:var(--gap-sm);width:100%;
-  padding:4px var(--gap-sm) 4px var(--s4);
-  border:0;border-radius:var(--r1);background:transparent;
+  padding:5px var(--gap-sm);
+  border:0;border-radius:var(--r2);background:transparent;
   font:inherit;font-size:11px;color:var(--dim);text-align:left;
   cursor:pointer;transition:background .12s ease, color .12s ease}
 .step>.st{flex:none;width:13px;height:13px;display:grid;place-items:center;color:var(--faint)}
@@ -110,9 +116,14 @@
 .step>.sv b{color:var(--ink);font-weight:600}
 .step>.sv .ic{width:9px;height:9px;color:var(--faint)}
 .step>.tgt{flex:none;font-size:9.5px;color:var(--faint);font-weight:600}
-.step:hover{background:var(--glass-thin);color:var(--ink)}
+/* the four states, off the shared ladder in tokens.css. They are overlays, so
+   a step reads the same whether it is on a work card, on a panel, or on glass. */
+.step:hover{background:var(--state-hover);color:var(--ink)}
+.step:active{background:var(--state-press)}
 .step:focus-visible{outline:none;box-shadow:var(--ring)}
-.step[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.step[aria-pressed="true"]{background:var(--state-sel);color:var(--state-sel-ink)}
+.step[aria-pressed="true"]:hover{background:var(--state-sel-hover)}
+.step[aria-pressed="true"]:active{background:var(--state-sel-press)}
 
 /* pending: the outline of a tick that has not happened. Not a spinner — only
    ONE row is running, and a column of spinners says everything is at once. */
@@ -213,7 +224,8 @@
   font:inherit;font-size:11px;color:var(--dim);text-align:left;cursor:pointer;
   transition:var(--ctl-tr)}
 .ask-sug>button>.ic{width:12px;height:12px;flex:none;color:var(--faint)}
-.ask-sug>button:hover{border-color:var(--accent-line);color:var(--ink);background:var(--glass-thin)}
+.ask-sug>button:hover{border-color:var(--accent-line);color:var(--ink);background:var(--state-hover)}
+.ask-sug>button:active{background:var(--state-press)}
 .ask-sug>button:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* ============================================================
@@ -231,9 +243,16 @@
    designer says, so a shot dragged out of capture history or pasted from the
    clipboard lands here as an `.ask-att` chip instead of being refused.
 
-   ONE send button, whose LABEL is the state: Ask normally, Queue while it
-   works. It never disables. Interrupting is the Stop on the work card, next to
-   the thing being interrupted — not a modifier hidden on this button. */
+   The send button's LABEL is the state: Ask normally, Queue while it works.
+   Both are `.primary` and both carry the chat glyph, because they are the same
+   act — say something. (It wore the sparkle for a while, which is the AGENT's
+   mark rather than the verb's: it read as "do AI" instead of "send", and a
+   four-pointed star is hard to pick out at 12px besides.)
+
+   STOP SITS BESIDE IT while busy, and nowhere else. It was on the work card,
+   which is wrong for the one control you reach for in a hurry: the card scrolls
+   away with the transcript, while the composer is pinned to the bottom. Two
+   buttons, not a modifier hidden on one. */
 .chat-in{align-items:flex-end}
 .composer{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;
   padding:var(--gap-sm);border-radius:var(--r3);
@@ -314,10 +333,9 @@
    ============================================================ */
 @container convo (max-width:340px){
   .work-h{padding:6px var(--gap-sm)}
-  .work-b{padding:2px}
   .work-f,.work-note{padding:6px var(--gap-sm)}
   .work-f .cost{display:none}
-  .step{padding-left:var(--gap-sm);font-size:10.5px}
+  .step{font-size:10.5px}
   .step>.sl{flex:1 1 auto}
   .step>.sv{max-width:52%;overflow:hidden}
   .step>.tgt{display:none}

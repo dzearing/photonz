@@ -79,9 +79,48 @@
   --ease-standard:cubic-bezier(.4,0,.2,1);
   --ease-decel:cubic-bezier(0,0,.2,1);
   --ease-spring:cubic-bezier(.34,1.4,.5,1);
+
+  /* === INTERACTION STATES ===
+     Four states every row-shaped control owes you — hover, pressed, and the
+     same two again while selected — and the reason they are TOKENS is that
+     they have to be visible on a surface nobody can predict. A row sits on a
+     panel, or on a card that sits on a panel, or on glass over a canvas. Any
+     FIXED colour is a guess about its backdrop, and the guess is wrong
+     somewhere: `--glass-thin` as a hover was invisible on a dark work card,
+     which is how a row could look completely inert to hover over.
+
+     So these are OVERLAYS, not colours. A percentage of --ink (or --accent when
+     selected) composited over whatever is underneath, which means the delta
+     from the backdrop is the SAME on every surface and in both themes — --ink
+     is near-black in light and near-white in dark, so the overlay darkens or
+     lightens as the surface requires, without a component knowing anything.
+
+     THE ALPHAS DIFFER BY THEME, and that is not an inconsistency — sRGB
+     luminance is wildly nonlinear at the dark end, so the same 8% overlay that
+     is obvious on a light panel is a rumour on a near-black one. The first
+     version used one set for both and dark-mode hover measured 0.012 against a
+     0.02 floor, which is exactly the "I can barely see it" this ladder exists
+     to prevent. `node shared/check-states.mjs` composites every rung over every
+     surface in both themes and fails under the floor, so this is measured
+     rather than eyeballed. */
+  --state-hover:      color-mix(in srgb, var(--ink) 7%, transparent);
+  --state-press:      color-mix(in srgb, var(--ink) 13%, transparent);
+  --state-sel:        color-mix(in srgb, var(--accent) 16%, transparent);
+  --state-sel-hover:  color-mix(in srgb, var(--accent) 24%, transparent);
+  --state-sel-press:  color-mix(in srgb, var(--accent) 32%, transparent);
+  /* selected text stays the accent; on the strongest fills it needs to lift */
+  --state-sel-ink:    var(--accent);
 }
 @media (prefers-color-scheme:dark){
   :root{
+    /* Dark needs a heavier hand: sRGB luminance is nonlinear at the dark end,
+       so the light-theme 7% lands at roughly a third of the perceived step. */
+    --state-hover:      color-mix(in srgb, var(--ink) 13%, transparent);
+    --state-press:      color-mix(in srgb, var(--ink) 22%, transparent);
+    --state-sel:        color-mix(in srgb, var(--accent) 26%, transparent);
+    --state-sel-hover:  color-mix(in srgb, var(--accent) 38%, transparent);
+    --state-sel-press:  color-mix(in srgb, var(--accent) 50%, transparent);
+
     --stage:#08090d; --stage-2:#0d0f15;
     --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
     --panel:#14161d; --panel-2:#181b22;
@@ -104,6 +143,14 @@
   --shadow:0 18px 50px -12px rgba(20,24,40,.28), 0 4px 14px -6px rgba(20,24,40,.18);
 }
 :root[data-theme="dark"]{
+    /* Dark needs a heavier hand: sRGB luminance is nonlinear at the dark end,
+       so the light-theme 7% lands at roughly a third of the perceived step. */
+    --state-hover:      color-mix(in srgb, var(--ink) 13%, transparent);
+    --state-press:      color-mix(in srgb, var(--ink) 22%, transparent);
+    --state-sel:        color-mix(in srgb, var(--accent) 26%, transparent);
+    --state-sel-hover:  color-mix(in srgb, var(--accent) 38%, transparent);
+    --state-sel-press:  color-mix(in srgb, var(--accent) 50%, transparent);
+
   --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
   --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
   --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;

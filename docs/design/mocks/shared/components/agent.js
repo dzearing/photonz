@@ -118,6 +118,12 @@
     chat.setAttribute('data-agent-wired', '');
 
     chat.addEventListener('click', function (e) {
+      // ONLY THE INNERMOST HOST HANDLES A CLICK. A spec page can mark a wrapper
+      // `[data-convo]` that itself contains a real `.chat`, and then both are
+      // wired and both fire — which toggled `collapsed` twice and made a card
+      // look like it simply would not open.
+      if (e.target.closest('.chat, [data-convo]') !== chat) return;
+
       // a · the After/Before switch, before anything reads the click otherwise
       var v = e.target.closest('.work-view button');
       if (v) {

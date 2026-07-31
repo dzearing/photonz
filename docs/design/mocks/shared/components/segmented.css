@@ -123,8 +123,15 @@
   position:absolute;left:0;top:0;z-index:0;
   border-radius:999px;
   background:var(--raised);
-  border:1px solid var(--raised-edge);
-  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+  /* The SAME edge recipe as `.btn`: a dark hairline all round plus one bright
+     inner line along the top. It used to carry `--raised-edge`, which in dark
+     is a light rgba — so the plate was outlined in white on every side while
+     every other raised control in the app is outlined in shadow and lit only
+     along its top. Side by side with a button the shape read as a different
+     kind of object. `--ctl-gloss` is the shared token for that top line, so
+     this cannot drift from the button again. */
+  border:1px solid var(--edge-lo);
+  box-shadow:var(--ctl-gloss), var(--shadow-1);
   pointer-events:none;
   transition:transform var(--dur-3) var(--ease-spring),
              width var(--dur-3) var(--ease-spring);

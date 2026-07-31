@@ -89,17 +89,31 @@
       '<span class="cost">1.4s</span></div></div>';
   }
 
-  /* The composer: multi-line, takes a pasted or dragged image, and ONE send
-     button whose label is the state (Ask / Queue). */
-  function composerHTML(send) {
+  /* The composer: multi-line, takes a pasted or dragged image, and a send
+     button whose LABEL is the state — Ask, or Queue while the agent is busy.
+     Both are `.primary` and both carry the chat glyph, because they are the
+     same act: say something. (The send button used to wear the sparkle, which
+     is the AGENT's mark, not the verb's — it read as "do AI" rather than
+     "send", and a four-pointed star is hard to pick out at 12px besides.)
+
+     STOP LIVES HERE, next to Queue, and only while busy. It was on the work
+     card, which is wrong for the one control you reach for in a hurry: the
+     card scrolls away with the transcript, and the composer is pinned to the
+     bottom, so this is the only place Stop is guaranteed to be on screen. */
+  function composerHTML(busy) {
+    var send = busy
+      ? '<button class="btn secondary sm"><i class="ic ic-stop"></i> Stop</button>' +
+        '<button class="btn primary sm"><i class="ic ic-chat"></i> Queue</button>'
+      : '<button class="btn primary sm"><i class="ic ic-chat"></i> Ask</button>';
     return '<div class="chat-in"><div class="composer">' +
       '<div class="ask-atts"></div>' +
-      '<textarea class="box" rows="1" placeholder="Ask for a change, or type / for a command"' +
-      ' aria-label="Ask the agent"></textarea>' +
+      '<textarea class="box" rows="1" placeholder="' +
+      (busy ? 'Steer it — you don\'t have to wait' : 'Ask for a change, or type / for a command') +
+      '" aria-label="Ask the agent"></textarea>' +
       '<div class="composer-f">' +
       '<button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button>' +
-      '<span class="hint">or paste a screenshot</span><span class="sp"></span>' +
-      '<button class="btn primary sm"><i class="ic ic-sparkle"></i> ' + (send || 'Ask') + '</button>' +
+      (busy ? '' : '<span class="hint">or paste a screenshot</span>') +
+      '<span class="sp"></span>' + send +
       '</div></div></div>';
   }
 
