@@ -43,3 +43,149 @@
 .th-morph{background:radial-gradient(70% 120% at 30% 50%,#12c2e9,transparent 60%),radial-gradient(70% 120% at 70% 50%,#ff5d8f,transparent 60%),#5b53ff}
 .th-cut{background:linear-gradient(90deg,#12c2e9 0 50%,#ff5d8f 50% 100%)}
 .th-cut::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;background:#05060a;transform:translateX(-1px)}
+
+/* ============================================================
+   THE OVERLAP FAMILY · a transition is not a clip
+   ============================================================
+   These were authored on `video-transition-wt.html` and scoped to that one
+   page, which meant the single most video-specific idea in the product — that a
+   transition OVERLAPS two clips and is paid for with spare media — existed
+   nowhere a component author could find it. Promoted here, with the page-local
+   `.cut` folded into the shared `.editpt` above.
+
+   The whole family exists to make one claim legible:
+
+     a transition does not occupy a slot. It sits ON two clips, so adding one
+     never moves a frame of anything. What it spends is SPARE MEDIA — the
+     frames past a clip's in or out point that are recorded but not being read.
+
+   That is why `.xband` draws over the clips rather than between them, and why
+   `.xspare` draws outside them: one shows what the transition costs, the other
+   shows what is available to pay.
+
+   Anatomy, all absolutely positioned inside a `.lane.abs`:
+     .xband            the transition, spanning the seam        (z 6)
+       .gr.l / .gr.r   drag grips for its length
+       .xband.blk      a dip: outline, not fill, so the black underneath reads
+       .xband.sel      selected
+     .xspare.a / .b    spare media, above (A) and below (B)     (z 5)
+       .lb             its duration, riding inside the clip body
+     .xfade.in / .out  a fade INSIDE one clip's own time - no overlap, so
+                       nothing moves and no spare is spent      (z 6)
+   And for the expanded view, where the two clips get their own rows:
+     .xused            the region of a clip the overlap consumed
+     .xboth            the span where both clips are on screen at once
+   ============================================================ */
+
+/* the lane a transition is drawn in: children place themselves in time */
+.lane.abs{display:block;position:relative}
+.lane.abs>*{position:absolute;top:0}
+
+/* THE TRANSITION BAND. Gradient across the seam because the thing it stands for
+   is one image becoming another; the border keeps it legible on any clip
+   colour underneath. */
+/* The band's LABEL had no type treatment, so it inherited the page's body size
+   into a 34px-tall box a couple of centimetres wide: "dip to black" wrapped to
+   two lines and spilled over the clips on either side, hiding the very thing
+   the band is drawn on top of. It is a caption, so it is sized like the other
+   timeline captions (8.5px, mono-adjacent weight), kept to ONE line, and
+   clipped at the band's edge rather than allowed to escape it. */
+.xband{height:34px;border-radius:6px;z-index:6;cursor:grab;
+  background:linear-gradient(90deg,rgba(18,194,233,.75),rgba(255,157,92,.75));
+  border:1px solid rgba(255,255,255,.55);box-shadow:var(--shadow-2);
+  display:flex;align-items:center;justify-content:center;color:#0b0d18;
+  font-size:8.5px;font-weight:700;letter-spacing:0;line-height:1;
+  white-space:nowrap;padding:0 2px}
+/* NOT `overflow:hidden` on the base: the drag grips are absolutely positioned
+   at left/right -2px so they straddle the edge, and clipping the band would
+   eat them. Only the labelled variant needs to contain its text. */
+.xband.blk{overflow:hidden}
+.xband:active{cursor:grabbing}
+/* A DIP spans fade-out + hold + fade-in, and what is underneath it (the tail,
+   the black, the head) has to stay readable — so it is an outline, not a fill.
+   Filling it would hide the three things the dip is made of. */
+.xband.blk{background:transparent;border:1px dashed rgba(255,255,255,.6);
+  box-shadow:none;color:#fff;align-items:flex-start;padding-top:2px;
+  /* it sits over the black hold, so the caption needs its own contrast */
+  text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.xband.sel{box-shadow:0 0 0 2px var(--accent), var(--shadow-2)}
+.xband:focus-visible{outline:none;box-shadow:var(--ring)}
+.xband .gr{position:absolute;top:50%;width:5px;height:16px;transform:translateY(-50%);
+  border-radius:2px;background:rgba(255,255,255,.9)}
+.xband .gr.l{left:-2px}
+.xband .gr.r{right:-2px}
+
+/* SPARE MEDIA. Dashed because it is potential, not content: frames that exist
+   but are not being read. A runs forward along the top, B runs back along the
+   bottom, so which clip owns which spare is positional and needs no legend. */
+.xspare{height:5px;border-radius:3px;z-index:5;opacity:.95}
+.xspare.a{top:-2px;background:repeating-linear-gradient(90deg,#9a7dff,#9a7dff 3px,transparent 3px,transparent 6px)}
+.xspare.b{top:auto;bottom:-2px;background:repeating-linear-gradient(90deg,#ffb98a,#ffb98a 3px,transparent 3px,transparent 6px)}
+/* the label rides INSIDE the clip body, so it never collides with the ruler */
+.xspare .lb{position:absolute;top:7px;left:2px;font-size:8.5px;font-family:var(--mono);
+  color:#dbe4ff;white-space:nowrap;background:rgba(8,10,18,.72);padding:1px 4px;border-radius:3px}
+.xspare.b .lb{top:auto;bottom:7px;right:2px;left:auto}
+
+/* A FADE INSIDE ONE CLIP. The counter-example that makes the overlap rule
+   visible: this one costs no spare and moves nothing, which is exactly why a
+   dip to black can be applied where a cross dissolve cannot. */
+.xfade{height:34px;z-index:6;border-radius:6px;pointer-events:none}
+.xfade.out{background:linear-gradient(90deg,transparent,#05060a)}
+.xfade.in{background:linear-gradient(90deg,#05060a,transparent)}
+
+/* THE EXPANDED CUT · the same two clips on their own rows, where an overlap is
+   literally two clips at the same time and stops being a metaphor. */
+.track.xrow{margin:3px 0}
+.track.xrow .tl{font-size:9.5px;text-transform:none;letter-spacing:0;color:var(--faint)}
+.track.xrow .lane{height:22px}
+.track.xrow .clip{height:22px;line-height:22px;font-size:9.5px;border-radius:5px}
+.track.xrow .xfade{height:22px;border-radius:5px}
+.xused{height:22px;z-index:3;border-radius:5px;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.36),rgba(255,255,255,.36) 3px,transparent 3px,transparent 7px)}
+.xboth{height:22px;z-index:4;border-radius:5px;border:1px dashed rgba(255,255,255,.9);
+  background:rgba(255,255,255,.08)}
+.xboth .lb{position:absolute;left:50%;top:-15px;transform:translateX(-50%);
+  font-size:8.5px;font-weight:700;letter-spacing:.03em;color:#fff;white-space:nowrap;
+  background:rgba(10,12,22,.82);border-radius:4px;padding:1px 5px}
+/* the disclosure that expands a cut into its two rows */
+.xbtn{border:0;background:transparent;color:var(--faint);padding:0;margin-right:2px;
+  display:inline-flex;align-items:center;cursor:pointer}
+.xbtn:hover{color:var(--ink)}
+.xbtn:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
+.xbtn .ic{transform:rotate(-90deg);transition:transform .15s ease}
+.xbtn.open .ic{transform:rotate(0deg)}
+
+/* ============================================================
+   THE CLIP'S OWN PARTS
+   ============================================================
+   These lived unprefixed in video.html's page <style>, which is the violation
+   the authoring contract warns about twice over: they are DS-shaped names
+   sitting in a page, so any other page drawing a clip either re-invented them
+   or silently got nothing. They belong to `.clip` and they belong here.
+   ============================================================ */
+
+/* the label, which must never push the clip wider than its duration */
+.clip .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
+
+/* RETIMED. A badge rather than a different clip colour, because speed is one
+   fact about a clip and colour is already carrying which track it came from. */
+.clip .speed{position:absolute;right:var(--s1);top:3px;background:rgba(0,0,0,.5);color:#fff;
+  font-size:8px;font-weight:700;padding:1px 4px;border-radius:var(--r1);font-family:var(--mono)}
+
+/* TRIM HANDLES. Present but invisible until hover: a clip has two of them and
+   every clip is next to another clip, so drawn at rest they would turn a busy
+   timeline into a picket fence. */
+.clip .edge{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;z-index:3}
+.clip .edge.l{left:0}
+.clip .edge.r{right:0}
+.clip .edge::after{content:"";position:absolute;top:9px;bottom:9px;width:2px;
+  background:rgba(255,255,255,.55);border-radius:2px;left:50%;transform:translateX(-50%);
+  opacity:0;transition:opacity .12s ease}
+.clip:hover .edge::after{opacity:1}
+
+/* KEY MARKS. Read-only on purpose: the timeline says WHEN something changes,
+   and the clip detail pane says what it changes to. A draggable key here would
+   be a second place to edit one value. */
+.clip .kfm{position:absolute;top:50%;width:7px;height:7px;background:#fff;
+  transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(0,0,0,.25);
+  pointer-events:none}
