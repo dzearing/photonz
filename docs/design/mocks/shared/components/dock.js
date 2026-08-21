@@ -252,6 +252,84 @@
       if (cluster && !cluster.querySelector('button')) cluster.parentNode.removeChild(cluster);
     }
   });
+  /* Bottom-dock affordance, mirroring the panel dock above. Any .timeline that
+     has a local bar gets an "×" to collapse it and a one-row rail to bring it
+     back — injected rather than authored, so all fourteen timeline pages get the
+     same control without editing fourteen files. */
+  /* `.win > .timeline` is the DOCK timeline specifically. Plain `.timeline` also
+     matches the static previews pages draw inside on-ramps and panels (the blank
+     project illustration on video.html), and putting a collapse control on an
+     illustration is worse than having none. A bottom dock is always a direct
+     child of the window. */
+  all('.win > .timeline').forEach(function (tl) {
+    if (tl.querySelector(':scope > .tlrail')) return;           // idempotent
+    if (!tl.getAttribute('data-tl')) tl.setAttribute('data-tl', 'open');
+
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'tl-close';
+    x.setAttribute('data-tl-toggle', '');
+    x.setAttribute('title', 'Collapse the timeline');
+    x.setAttribute('aria-label', 'Collapse the timeline');
+    x.innerHTML = '<i class="ic sm ic-x"></i>';
+    /* Most timeline docks have a local bar and the × belongs at the end of it.
+       The ones that don't (app-shell, the walkthrough pages) still need the
+       affordance, so it floats at the dock's top-right instead of being skipped
+       — otherwise "the bottom dock collapses" would be true on five pages out of
+       fourteen, which is the same inconsistency this set out to fix. */
+    var bar = tl.querySelector(':scope > .tlbar');
+    if (bar) { bar.appendChild(x); }
+    else { x.classList.add('afloat'); tl.appendChild(x); }
+
+    var rail = document.createElement('button');
+    rail.type = 'button';
+    rail.className = 'tlrail';
+    rail.setAttribute('data-tl-toggle', '');
+    rail.setAttribute('title', 'Show the timeline');
+    rail.innerHTML = '<i class="ic sm ic-chevron-up"></i>' +
+      '<span class="nm">Timeline</span>' +
+      '<span class="sum"></span>' +
+      '<span class="sp">click to expand</span>';
+    tl.appendChild(rail);
+    syncRail(tl);
+  });
+  /* The summary is whatever the page last wrote to data-tl-summary; observing
+     it keeps the collapsed row honest without the page having to know a rail
+     exists. Falls back to the document, so the row is never blank. */
+  function syncRail(tl) {
+    var rail = tl.querySelector(':scope > .tlrail');
+    if (!rail) return;
+    rail.querySelector('.sum').textContent = tl.getAttribute('data-tl-summary') || '';
+  }
+  all('.timeline[data-tl]').forEach(function (tl) {
+    if (!window.MutationObserver) return;
+    new MutationObserver(function () { syncRail(tl); })
+      .observe(tl, { attributes: true, attributeFilter: ['data-tl-summary'] });
+  });
+  /* Several pages pin their dock with an INLINE height (`style="min-height:170px"`),
+     and an inline declaration outranks any stylesheet rule — so a collapsed dock
+     stayed 170px tall while its contents were correctly hidden: a collapse that
+     reclaimed nothing. Rather than escalate to !important, stash the inline
+     values on the way down and put them back on the way up, so the page keeps
+     ownership of its own expanded size. */
+  var TL_PINNED = ['minHeight', 'height', 'maxHeight'];
+  all('[data-tl-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var tl = btn.closest('.timeline');
+      if (!tl) return;
+      var closing = tl.getAttribute('data-tl') !== 'closed';
+      if (closing) {
+        var saved = {};
+        TL_PINNED.forEach(function (k) { saved[k] = tl.style[k] || ''; tl.style[k] = ''; });
+        tl.__tlPinned = saved;
+      } else if (tl.__tlPinned) {
+        TL_PINNED.forEach(function (k) { tl.style[k] = tl.__tlPinned[k]; });
+        tl.__tlPinned = null;
+      }
+      tl.setAttribute('data-tl', closing ? 'closed' : 'open');
+    });
+  });
+
   all('[data-dock-toggle]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var shell = shellFor(btn);

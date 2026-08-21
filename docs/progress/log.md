@@ -3178,3 +3178,110 @@ its own track that creates a lane with a filled diamond. Property-name clipping
 checked at every breakpoint (68px clipped "Opacity" by 6px; gutter raised).
 
 **Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing).
+
+---
+
+## 2026-07-30 — the video dock finally has a job
+
+Review feedback: the property rows folded into the timeline "got weird" as
+full-width sliders inline in the clip list, and — the more important half —
+"I am confused about the side panel's purpose. Layers, Properties. Do these
+apply to the edit surface or to the video timeline?"
+
+**Verified the model first.** Layers and Properties DO follow the timeline
+selection (clicking clip-01 flips the Properties header to "Clip", selects the
+Layers row, and clears the canvas ring because that clip is not visible at the
+playhead). So the docs were right and the confusion was still legitimate — which
+meant the cause was elsewhere.
+
+**It was.** The Layers pane and the timeline were the same list: the same seven
+objects, in the same five groups, in the same order, nothing in one and not the
+other. Layers was a second rendering of the thing you had just clicked, which is
+why the dock read as having no job. Where there is a timeline, the timeline IS
+the layer list. Dropped from this lens; untouched in the image and UI lenses,
+where it is the only inventory of the document. (D-decision recorded.)
+
+**Then the timeline went back to being about time.** Clips and key marks, no
+property rows — the user's call, and the right one: a value affordance had no
+business in a surface about when. A clip's values now live in the right-hand
+detail pane, and the graph became its own dock group with stable ids so
+re-rendering the pane cannot destroy the plot mid-drag.
+
+**The gap that mattered most** came next: "there are a LOT of properties we can
+animate, not just the 3 you've listed. It's unclear how you would animate any
+property." Correct, and it was a modelling error, not a layout one — the pane
+rendered `propSets`, which records what a clip IS animating, so a clip with
+nothing keyed offered nothing to click. It now renders a CATALOGUE of what a clip
+CAN animate (per kind: Opacity/Position/Scale/Rotation/Blur for visual, Volume/Pan
+for audio), and every row carries the same diamond in one of three states — dim
+outline (dormant, click starts animating), coloured outline (animated, no key
+here), filled (key here). Clearing the last key retires the property to dormant
+rather than deleting its row.
+
+**Both docks collapse now** (D9), injected by `dock.js` for all fourteen timeline
+pages rather than authored per page: an × in the local bar (or floating, for the
+docks that have no bar — otherwise the feature would have been true on 5 pages of
+14), and a one-row rail that reports the SELECTION, because with the timeline
+hidden the question is "what am I still editing". Collapsing takes video.html's
+canvas from 460px to 697px.
+
+Two traps, same symptom of a dock that hides its contents but never shrinks:
+`.timeline`'s `min-height:172px`, and pages that pin the dock with an INLINE
+`style="min-height:170px"` which outranks any rule. `dock.js` stashes and restores
+the inline values instead of escalating to `!important`.
+
+**Verified:** 14/14 dock timelines collapse to 30px and restore to the exact
+original height; the on-ramp illustration on video.html is correctly left alone
+(`.win > .timeline`, not `.timeline`); 0 console errors on all 14; audio clips get
+their own catalogue; animating dormant Rotation and dormant Volume both work and
+re-plot the graph; all 5 property rows visible without scrolling.
+
+**Self-inflicted and caught:** an over-broad range replacement deleted
+`updateReadouts()` entirely — found because the function grep came back empty,
+restored from git with the new call sites.
+
+**Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing).
+
+---
+
+## 2026-07-31 — video primitives become components
+
+Feedback: the transition band that overlaps two clips should be part of the
+shared video design language, and there should be video components in the
+component library.
+
+Correct on both counts, and the audit was worse than the report. The overlap
+family — the single most video-specific idea in the product — lived on **one
+page**, scoped to `#video-transition-wt`: `.xband`, `.spare`, `.fade`, `.used`,
+`.bothmark`, the `.lane.abs` positioning and a local `.cut` that duplicated the
+already-shared `.editpt`. Separately, `video.html` carried **unprefixed**
+`.clip .lbl / .speed / .edge / .kfm` in its page `<style>` — DS-shaped names in
+a page, which is the exact violation the authoring contract warns about: any
+other page drawing a clip either re-invented them or silently got nothing
+(`.kfm` rendered zero-size on the new page until it was promoted).
+
+**Promoted into `shared/components/video.css`**, renamed onto a coherent
+`x`-family so nothing collides with generic words (`.spare` -> `.xspare`,
+`.fade` -> `.xfade`, `.used` -> `.xused`, `.bothmark` -> `.xboth`), plus the
+clip's own parts. `video-transition-wt.html` was refactored onto the shared
+classes and its local block deleted.
+
+**New page `pages/comp-video.html`**, registered in the index nav and the
+library inventory. Six blocks: the clip, the edit point, the overlap + spare
+media, the dip counter-example alongside the expanded-cut proof, the transition
+tile picker, and the collapsed dock. Written around the rule rather than the
+CSS: a transition is not a clip, it occupies no slot, it moves nothing, and it
+is paid for in spare media — which is why the band draws ON the clips and the
+spare draws OUTSIDE them, why a dip is an outline not a fill, and why the
+expanded rows exist at all (so the claim can be checked rather than believed).
+
+**Verified the refactor is behaviour-identical**, not just visually similar:
+drove the walkthrough with its real control on both the refactored page and the
+git baseline and compared the transition band's width at every step —
+`[0,32,54,54,54,54,184,184,184]` on both. (First attempt advanced the steps the
+wrong way and reported the band never appearing; the baseline comparison is what
+showed that was the test, not the page.) Also: 7 pages load with 0 console
+errors, `.kfm`/`.speed` now size correctly on both comp-video and video, no
+horizontal overflow, elevation guard clean.
+
+**Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing).

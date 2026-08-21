@@ -139,6 +139,31 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `selection.js` from the measured box (`md` ≥44px · `sm` shrinks and steps
   outside · `xs` <16px drops them, since a 7px handle on a 6px object is not
   grabbable). Lives in `shared/components/selection.{css,js}`.
+- **Both docks collapse, and `dock.js` injects the controls** — you do not author
+  them. Any `.timeline` with a `.tlbar` gets a `.tl-close` (×) at the end of the
+  bar and a one-row `.tlrail` to bring it back, mirroring the panel dock's
+  `.dock-close` / `.drail`. Write `data-tl-summary` on the `.timeline` to say what
+  the collapsed row reports (the SELECTION, not the panel's name) — an observer
+  picks it up. Collapsed must release `.timeline`'s `min-height:172px`. See
+  UX-PATTERNS D9.
+- **No Layers group in a workspace that has a timeline.** The timeline is the
+  layer list: same objects, same groups, same order, plus when each starts and
+  stops. Layers stays in the image and UI lenses, where it is the only inventory.
+- **Property lists render the CATALOGUE, not the keyed set** (D10). Every
+  animatable property gets a row and a key diamond, including dormant ones, so
+  the way to animate something is visible on a clip nobody has touched. Three
+  diamond states: dim outline (dormant) / coloured outline (animated, no key
+  here) / filled (key here).
+- **Video/timeline primitives are components** — never re-author them per page.
+  `.clip` (with `.lbl`, `.edge.l/.r` trim handles, `.speed` badge, `.kfm` key
+  marks) · `.editpt` the cut · the overlap family `.xband` (`.sel`, `.blk`
+  for a dip, `.gr.l/.r` grips), `.xspare.a/.b`, `.xfade.in/.out`, and the
+  expanded-cut set `.track.xrow` + `.xused` + `.xboth` · transition tiles
+  `.libtile.tt` with `.th-*` thumbnails. All in
+  `shared/components/video.css`; canonical page `pages/comp-video.html`.
+  **The rule they encode: a transition is not a clip.** It overlaps two clips,
+  occupies no slot, moves nothing, and is paid for in spare media — which is
+  why the band draws ON the clips and the spare draws OUTSIDE them.
 - **Tooltip timing is REST, not dwell.** The open clock (`DELAY_IN` 1000ms)
   restarts on every pointermove, so a tooltip is owed to a pointer that has
   *stopped* — sweeping a toolbar is silent at any value. Opening, swapping and

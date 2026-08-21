@@ -19,7 +19,8 @@
 
      titlebar 42 · toolbar 34 · canvas ~370 · transport 49 · dock ~320
 
-   The dock got there by no longer stacking two editors. See .proprow below. */
+   The dock got there by no longer stacking two editors: the timeline is
+   clips only, and a clip's values live in the detail pane on the right. */
 #video .win.shell{height:820px;min-height:0}
 #video .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}/* ---------- blank-slate on-ramp (how a video project begins) ---------- */
 .onramp{padding:var(--pad)}
@@ -53,12 +54,14 @@
    --gutter is the track-label column. The timeline grid AND the keyframe plot
    both use it, so a key sits exactly under the frame it belongs to. It matches
    the shared .track .tl width so nothing drifts. */
-/* The gutter is wider than a plain track label needs because it is now shared
-   with the PROPERTY ROWS, which carry the key toggle, the property name and its
-   value at the playhead. It has to stay one number for every row in the grid —
-   that identity is what makes a key sit under the frame it belongs to — so the
-   widest row sets it. Track names stopped truncating ("Voiceov") as a bonus. */
-#tlDock{--gutter:112px}
+/* The gutter carries track labels only, but keeps a roomier width than the
+   original 58px: at that size the names truncated ("Voiceov"), and a track you
+   cannot name is a track you cannot aim at. */
+#tlDock{--gutter:84px}
+/* the clip detail pane is the subject of this dock now, so it is the only group
+   that grows; Library keeps its header (the media pool is still one click away,
+   D1) but stops splitting the column with it. */
+#gLibrary>.dgrp-b{max-height:118px}
 /* The dock takes its NATURAL height and the canvas takes the rest. Letting the
    dock flex-grow instead squeezed the video preview to 199px — the timeline is
    the supporting cast here, not the subject. max-height is the backstop for a
@@ -92,13 +95,6 @@
 .tlgrid .lane>.clip.blade{cursor:crosshair}
 .clip.comp{background:linear-gradient(135deg,#9a5cff,#c56cff)}
 .clip.ov{background:linear-gradient(135deg,#1b7a8c,#12c2e9)}
-.clip .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
-.clip .speed{position:absolute;right:var(--s1);top:3px;background:rgba(0,0,0,.5);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:var(--r1);font-family:var(--mono)}
-.clip .edge{position:absolute;top:0;bottom:0;width:7px;cursor:ew-resize;z-index:3}
-.clip .edge.l{left:0}.clip .edge.r{right:0}
-.clip .edge::after{content:"";position:absolute;top:9px;bottom:9px;width:2px;background:rgba(255,255,255,.55);border-radius:2px;left:50%;transform:translateX(-50%);opacity:0}
-.clip:hover .edge::after{opacity:1}
-.clip .kfm{position:absolute;top:50%;width:7px;height:7px;background:#fff;transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(0,0,0,.25);pointer-events:none}
 .duck{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ducktag{position:absolute;top:2px;right:6px;font-size:8px;font-family:var(--mono);color:#bff3e4;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:var(--r1)}
 .xition{position:absolute;top:50%;transform:translate(-50%,-50%);height:28px;background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px);border-radius:3px;z-index:2;display:grid;place-items:center;color:#1a1c22}
@@ -109,70 +105,102 @@
 .tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit);pointer-events:auto;cursor:ew-resize}
 .drophint{outline:2px dashed var(--comp);outline-offset:-2px}
 
-/* ============================================================
-   PROPERTY ROWS · the keyframe editor, folded into the track grid
-   ============================================================
-   This used to be a SECOND editor stacked under the first: its own header, its
-   own gutter, its own lane strip, its own axis and plot, 230px of it, below a
-   222px track grid. Two editors of the same thing, on the same time axis, one
-   above the other — and together they forced a 1160px window that does not fit
-   on a laptop.
+/* The timeline is CLIPS ONLY. Property rows were tried here and read as
+   full-width sliders inline in the clip list — a value affordance in a surface
+   that is about time. What a clip's properties ARE now lives in the clip detail
+   pane on the right; what the timeline still says is WHEN, via the .kfm key
+   marks drawn on the clip itself. One question per surface. */
 
-   The giveaway was that the whole reason the keyframe editor lived down in the
-   dock was ALIGNMENT: keys had to sit under the frames they belong to. But a
-   second grid can only ever *imitate* the first one's axis, which is why both
-   had to be handed the same --gutter and kept in sync by hand. Rows in the SAME
-   grid get that for free and cannot drift.
+/* ---------- the clip detail pane ---------- */
+.cliphead{display:flex;align-items:baseline;gap:var(--s2);padding:var(--s2) 0 var(--s1);
+  border-bottom:1px solid var(--edge-lo);margin-bottom:var(--s2)}
+.cliphead .cn{font-size:11.5px;font-weight:640;color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.cliphead .ct{margin-left:auto;flex:none;display:flex;align-items:baseline;gap:6px;
+  font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
+.cliphead .ct b{color:var(--dim);font-weight:600}
+.cliphead .cd{color:var(--faint)}
 
-   So a property is a row of the timeline, indented under the clip it animates,
-   exactly as a layer's properties twirl down in After Effects. The lane is the
-   same lane, so the same pixel is the same instant on every row, and the whole
-   second editor — header, axis, duplicate gutter — stops existing.
+/* one row per animatable property */
+.prow{display:flex;align-items:center;gap:var(--s2);padding:2px 0}
+.prow .rl{flex:none;width:58px;font-size:10.5px;color:var(--dim);background:transparent;
+  border:0;padding:0;cursor:pointer;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .rl:hover{color:var(--ink)}
+.prow .rl:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
+/* a property that is animating reads brighter than one that is merely present,
+   so the pane answers "what is moving on this clip" without being read row by row */
+.prow.anim .rl{color:var(--ink)}
+.prow.sel .rl{color:var(--comp);font-weight:640}
+.prow:not(.anim) .bar{opacity:.55}
+.prow .bar{flex:1 1 auto;min-width:0}
+.prow .pval{flex:none;width:46px;text-align:right;font-family:var(--mono);font-size:10px;
+  color:var(--faint);font-variant-numeric:tabular-nums}
+.prow.sel .pval{color:var(--ink)}
 
-   The value PLOT is the one part that genuinely needs its own vertical space,
-   because it is the only view here with a Y axis. It became a toggle (Graph)
-   rather than a permanent tenant: it is how you inspect an interpolation, not
-   how you read a timeline. */
-.tlgrid .track.proprow{margin:1px 0}
-/* the indent is not decoration: it is the only thing saying these rows BELONG to
-   the clip above rather than sitting beside it. It matches the twirl's width, so
-   a property lines up under its parent's name and not under its disclosure. */
-.tlgrid .track.proprow .tl{display:flex;align-items:center;gap:5px;width:var(--gutter);
-  padding-left:19px;box-sizing:border-box;
-  font-size:10.5px;color:var(--dim);font-weight:560;text-transform:none;letter-spacing:.02em}
-.tlgrid .track.proprow .pn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  background:transparent;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;text-align:left}
-.tlgrid .track.proprow .pn:hover{color:var(--ink)}
-.tlgrid .track.proprow .pn:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
-.tlgrid .track.proprow.sel .tl{color:var(--comp);font-weight:640}
-/* the value at the playhead, pushed to the gutter's right edge so the numbers
-   form a column instead of drifting with each property's name length */
-.tlgrid .track.proprow .pv{margin-left:auto;font-family:var(--mono);font-size:9.5px;
-  color:var(--faint);font-variant-numeric:tabular-nums;flex:none}
-/* a property lane is shorter than a clip lane on purpose: a clip is an object
-   you grab, a property row is a readout you scan. */
-.tlgrid .track.proprow .lane{height:18px;background:var(--panel-2);
-  border:1px solid var(--edge-lo);border-radius:var(--r1)}
-.tlgrid .track.proprow.sel .lane{border-color:var(--comp-line)}
-.tlgrid .track.proprow .lane .kd{position:absolute;top:50%;width:7px;height:7px;
-  background:var(--dim);transform:translate(-50%,-50%) rotate(45deg);border:1px solid var(--panel)}
-.tlgrid .track.proprow.sel .lane .kd{background:var(--comp)}
-/* the twirl on the clip's own track: properties are its children, so the
-   disclosure belongs to the parent row, not to a separate panel header */
-.tlgrid .track .tw{width:14px;height:14px;flex:none;padding:0;border:0;background:transparent;
-  color:var(--faint);display:grid;place-items:center;cursor:pointer;border-radius:3px;
-  transition:transform .12s ease}
-.tlgrid .track .tw:hover{color:var(--ink);background:var(--panel-2)}
-.tlgrid .track .tw:focus-visible{outline:none;box-shadow:var(--ring)}
-.tlgrid .track .tw:not(.open){transform:rotate(-90deg)}
-/* the "nothing is animated yet" row — same shape as a property row, so the
-   empty state is where the filled state will be rather than somewhere else */
-.tlgrid .track.proprow.add .lane{background:transparent;border-style:dashed}
-.propadd{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:10px;
-  color:var(--faint);background:transparent;border:0;cursor:pointer;padding:0;display:flex;
-  align-items:center;gap:5px}
-.propadd:hover{color:var(--comp)}
-.propadd:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--r1)}
+/* the value editor in a property row: a real stepper, so it is typable and
+   scrubbable and — crucially — NOT bounded by the plot's display range */
+.prow .pv-in{flex:1 1 auto;min-width:0}
+.prow .pv-in>input{text-align:right}
+.prow .pv-sw{flex:1 1 auto;min-width:0;height:20px;border-radius:var(--r1);
+  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer}
+.prow .prow-x{flex:none;width:18px;height:18px;padding:0;border:0;background:transparent;
+  color:var(--faint);border-radius:var(--r1);display:grid;place-items:center;cursor:pointer;opacity:0}
+.prow:hover .prow-x,.prow .prow-x:focus-visible{opacity:1}
+.prow .prow-x:hover{background:var(--panel-2);color:var(--crit)}
+.prow .prow-x:focus-visible{outline:none;box-shadow:var(--ring)}
+.addprop{margin-top:var(--s2);justify-content:center;color:var(--dim)}
+.addprop:hover{color:var(--ink)}
+
+/* ---------- the property picker ---------- */
+.propPick{display:none;position:absolute;left:var(--s2);right:var(--s2);top:34px;z-index:14;
+  max-height:260px;overflow:auto;border-radius:var(--r3);
+  background:var(--glass-3);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  border:1px solid var(--edge-lo);box-shadow:var(--lg-shadow-2)}
+.propPick.on{display:block}
+#gProps{position:relative}
+.pick-h{position:sticky;top:0;background:var(--glass-3);padding:var(--s2);border-bottom:1px solid var(--edge-lo)}
+.pick-q{width:100%;height:26px;border-radius:var(--r1);border:1px solid var(--edge-lo);
+  background:var(--panel-2);color:var(--ink);font:inherit;font-size:11px;padding:0 var(--s2);outline:none}
+.pick-q:focus{border-color:var(--accent);box-shadow:var(--ring)}
+.pick-g{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  font-weight:700;padding:var(--s2) var(--s3) 2px}
+.pick-i{display:flex;align-items:center;gap:var(--s2);width:100%;padding:5px var(--s3);
+  border:0;background:transparent;color:var(--dim);font:inherit;font-size:11px;cursor:pointer;text-align:left}
+.pick-i:hover{background:var(--accent-soft);color:var(--ink)}
+.pick-i:focus-visible{outline:none;box-shadow:var(--ring)}
+.pick-i .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick-i .mt{flex:none;font-family:var(--mono);font-size:9px;color:var(--faint)}
+.pick-i .sw{width:12px;height:12px;border-radius:3px;border:1px solid var(--edge-lo);flex:none}
+.pick-i .ic{color:var(--faint);flex:none}
+
+/* ---------- the selected key's editor ----------
+   The gradient stop card floats because a gradient ramp is wide enough to hover
+   over. This panel is ~210px and the same content measured 346px, so it sits
+   under the plot instead: adjacent to the selection, sized to the panel, and
+   incapable of being clipped by the dock's scroller. */
+.kfedit{margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--edge-lo);
+  display:flex;flex-direction:column;gap:5px}
+.kfedit .kf-r{display:flex;align-items:center;gap:5px}
+.kfedit .stepper{flex:1 1 0;min-width:0}
+.kfedit .stepper>input{min-width:0}
+.kfedit .kf-n{font-size:10px;font-weight:640;color:var(--comp);flex:1 1 auto}
+.kfedit .kf-l{font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--faint);font-weight:700}
+.kfedit .kf-e{display:flex;flex-wrap:wrap;gap:3px}
+.kfedit .kf-hint{font-size:10px;color:var(--faint);line-height:1.45}
+.kfedit .kc-x{width:20px;height:20px;padding:0;border:0;background:transparent;color:var(--faint);
+  border-radius:var(--r1);display:grid;place-items:center;cursor:pointer;flex:none}
+.kfedit .kc-x:hover{background:var(--panel-2);color:var(--crit)}
+.kfedit .kc-x:focus-visible{outline:none;box-shadow:var(--ring)}
+.kfedit .kc-e{padding:2px 7px;border-radius:var(--r1);border:1px solid var(--edge-lo);
+  background:transparent;color:var(--dim);font:inherit;font-size:10px;cursor:pointer}
+.kfedit .kc-e:hover{background:var(--panel-2);color:var(--ink)}
+.kfedit .kc-e.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.kfedit .kc-e:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* the selected key outranks the drag state visually: drag is transient, the
+   selection is what the card is bound to */
+.kfpt.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent),0 1px 4px rgba(0,0,0,.35)}
 
 /* THE KEY TOGGLE · this is where "Add key" and "Delete key" went.
    Those two lived on the transport bar as full labelled buttons, which was
@@ -195,21 +223,29 @@
   transition:background .12s ease,border-color .12s ease}
 .kfkey:hover{background:var(--panel-2)}
 .kfkey:hover::before{border-color:var(--ink)}
+/* THREE STATES, and they have to be told apart at 8px:
+     (bare)  not animated       - dim outline, the quietest thing in the row
+     .armed  animated, no key   - full-strength outline in the property colour
+     .on     animated, key here - solid fill
+   The jump from dim outline to coloured outline is what says "this property is
+   now animating"; the fill says "and there is a key on this exact frame". */
+.kfkey::before{border-color:var(--line-strong)}
+.kfkey.armed::before{border-color:var(--comp)}
 .kfkey.on::before{background:var(--comp);border-color:var(--comp)}
 .kfkey:focus-visible{outline:none;box-shadow:var(--ring)}
 /* two states, one colour, no third variable: hollow is always the same grey and
    filled is always the component purple, on the selected lane and off it.
    Tinting the hollow diamond by lane made the ACTIVE lane's EMPTY slot read
    louder than an inactive lane's filled one, which inverts what it means. */
-/* THE GRAPH · the only view here with a Y axis, so the only one that earns its
-   own vertical space — and only when asked for. Same two columns as a track row
-   (gutter + lane) and the same 8px gap, so the curve is plotted on the timeline's
-   axis rather than on a lookalike of it. */
-.kfgraph{display:none;grid-template-columns:var(--gutter) 1fr;column-gap:8px;
-  padding:0 var(--s3) var(--s3);align-items:stretch}
-#tlDock[data-graph="on"] .kfgraph{display:grid}
-.kfaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 2px}
-.kfplot{grid-column:2;position:relative;height:76px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none}
+/* THE GRAPH · in the right dock now, so it no longer borrows the timeline's
+   gutter. Its x axis is the CLIP's duration rather than the document's, which is
+   the honest framing for a panel that cannot line up with the timeline anyway —
+   and the foot labels say so rather than leaving you to assume. */
+.kfgraph{display:grid;grid-template-columns:26px 1fr;column-gap:6px;align-items:stretch}
+.gfoot{display:flex;justify-content:space-between;margin-left:32px;margin-top:3px;
+  font-family:var(--mono);font-size:9px;color:var(--faint)}
+.kfaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:1px 0}
+.kfplot{grid-column:2;position:relative;height:118px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none}
 .kfplot svg{position:absolute;inset:0;width:100%;height:100%}
 .kfpt{position:absolute;width:11px;height:11px;background:var(--comp);transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid var(--panel);border-radius:2px;cursor:grab;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .kfpt:hover{background:color-mix(in srgb,var(--comp) 80%,white)}
@@ -245,24 +281,14 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  /* The gutter now carries the property rows, so it cannot go back to 52px —
-     that was a width for a track label alone. What sheds instead is the per-row
-     VALUE, because the Playhead readout in the bar above already states the
-     active property's value: dropping it loses a duplicate, not information. */
-  #tlDock{--gutter:74px}
-  .tlgrid .track.proprow .pv{display:none}
-  .tlgrid .track.proprow .tl{padding-left:12px}
+  #tlDock{--gutter:52px}
   .tlgrid .track .tl .trk-auto{font-size:9px}
   .kfplot{height:68px}
   #video .vframe{width:300px;height:169px}
   #video .vframe .title{font-size:20px}
 }
 @container shell (max-width:620px){
-  /* 68px clipped "Opacity" by 6px. A property row that cannot say which
-     property it is has lost the only thing distinguishing it from its
-     neighbours, so the indent gives way before the name does. */
-  #tlDock{--gutter:76px}
-  .tlgrid .track.proprow .tl{padding-left:8px}
+  #tlDock{--gutter:58px}
   .tlbar .lbl{display:none}
   .tlbar .kfread{display:none}
   #video .vframe{width:216px;height:122px}
@@ -284,7 +310,7 @@
 
   <p class="pglead">The <b>Video workspace</b> is a lens over the same document. Nothing about the engine changes: the same
     layers, the same dock, the same Library. Time is the only thing that is new, so the <b>transport bar</b> and the
-    <b>timeline dock</b> appear. The crux of the page is a real <b>keyframe editor</b> - and it is not a second panel, it is <b>rows of the timeline itself</b>, so a key sits under the frame it belongs to by construction.</p>
+    <b>timeline dock</b> appear. The timeline answers <b>when</b>; the clip detail pane on the right answers <b>what</b>. Every property row there is keyable, so animating anything is one gesture in one place.</p>
 
   <!-- ========== BLANK SLATE: how a video project begins ========== -->
   <div class="win">
@@ -460,24 +486,46 @@
       <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
       <div class="pdock" id="dock">
 
-        <!-- SELECTION, place 2 of 3: the matching row in Layers -->
-        <div class="dgrp" id="gLayers" style="--gh:104px">
-          <div class="dgrp-h">
-            <span class="ttl">Layers</span><span class="cnt">7</span>
-            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b" id="layerList"><!-- rows injected, one per clip, grouped by track --></div>
-        </div>
+        <!-- NO LAYERS GROUP IN THE VIDEO LENS.
+             It listed the same seven objects, in the same five groups, in the
+             same order as the timeline below it — a second rendering of the
+             thing you had just clicked, which is why the dock's job read as
+             unclear. In a workspace WITH a timeline, the timeline is the layer
+             list; it carries everything Layers did plus when each object starts
+             and stops. Layers is untouched in the image and UI lenses, where
+             there is no timeline and it is the only inventory of the document.
 
-        <div class="splitter h" data-min="90" data-max="320"></div>
-
-        <!-- SELECTION, place 3 of 3: Properties, contextual to the selected clip -->
-        <div class="dgrp" id="gProps" style="--gh:112px">
+             SELECTION, place 2 of 2: the clip detail pane. The timeline says
+             WHEN, this says WHAT — and it is the only place values live now. -->
+        <div class="dgrp grow" id="gProps">
           <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Title</span>
             <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
           </div>
           <div class="dgrp-b" id="propBody"><!-- injected per selection --></div>
+          <!-- the property picker, anchored to this group so it opens over the
+               pane rather than over the canvas -->
+          <div class="propPick" id="propPick"><!-- injected --></div>
+        </div>
+
+        <div class="splitter h" data-min="90" data-max="320"></div>
+
+        <!-- THE GRAPH · its own group so renderProps can rebuild the pane above
+             without destroying the plot's nodes mid-drag. Collapsed by default:
+             it is how you inspect an interpolation, not how you read a clip. -->
+        <div class="dgrp collapsed" id="gGraph" style="--gh:210px">
+          <div class="dgrp-h"><span class="ttl">Graph</span><span class="cnt" id="graphWho">Opacity</span></div>
+          <div class="dgrp-b" style="padding:0 var(--s3) var(--s3)">
+            <div class="kfgraph">
+              <div class="kfaxis" id="kfAxis"><span>100</span><span>50</span><span>0</span></div>
+              <div class="kfplot" id="kfPlot"><svg id="kfSvg" preserveAspectRatio="none" viewBox="0 0 1000 100"></svg></div>
+            </div>
+            <div class="gfoot"><span>0s</span><span id="graphMid">7.5s</span><span id="graphEnd">15s</span></div>
+            <!-- the selected key's editor. Inline rather than floating: the
+                 gradient stop card can hover because a gradient ramp is wide,
+                 but this panel is ~210px and a floating card measured 346px, so
+                 "next to the selection" has to mean under it, not over it. -->
+            <div class="kfedit" id="kfEdit"></div>
+          </div>
         </div>
 
         <div class="dgrp collapsed" id="gEffects" style="--gh:190px">
@@ -498,7 +546,7 @@
         </div>
 
         <!-- LIBRARY · the media pool is this group with scope = Media (D1) -->
-        <div class="dgrp grow" id="gLibrary">
+        <div class="dgrp collapsed" id="gLibrary">
           <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="libScope">Media</span>
             <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
           </div>
@@ -528,26 +576,12 @@
 
       <!-- THE RAIL · what the dock collapses to -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
-      <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:190px;z-index:11">
-        <div class="mlabel">Add adjustment</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
-        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
-      </div>
-      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:198px;z-index:11">
-        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
       <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:238px;width:190px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
         <div class="menuitem"><i class="ic ic-undo"></i> Reset to defaults</div>
@@ -592,7 +626,7 @@
     <!-- TIMELINE DOCK · ONE grid. Clips and the properties they animate are rows
          of the same timeline, so they share the axis instead of imitating it.
          The graph is a toggle because it is the only view with a Y axis. -->
-    <div class="timeline" id="tlDock" data-graph="off">
+    <div class="timeline" id="tlDock">
       <div class="tlbar">
         <span class="tstrip" id="tlTools" data-radio=".tool">
           <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
@@ -600,8 +634,6 @@
         </span>
         <span class="tsep"></span>
         <div class="seg" id="zoomSeg"><button>Fit</button><button class="on">1x</button><button>2x</button><button>4x</button></div>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" id="graphBtn" aria-pressed="false" title="Show the value graph for the selected property"><i class="ic ic-sliders"></i><span class="lb">Graph</span></button>
         <span class="tspacer"></span>
         <span class="kfread">Playhead <b id="kfReadV">Opacity 100%</b> @ <span id="kfReadT">4.12s</span></span>
         <span class="tsep"></span>
@@ -613,18 +645,14 @@
         <div class="tlgrid" id="tlGrid"><!-- ruler + tracks + property rows + playstrip injected --></div>
       </div>
 
-      <div class="kfgraph">
-        <div class="kfaxis" id="kfAxis"><span>100</span><span>50</span><span>0</span></div>
-        <div class="kfplot" id="kfPlot"><svg id="kfSvg" preserveAspectRatio="none" viewBox="0 0 1000 100"></svg></div>
-      </div>
     </div>
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>Video is not another app. It is the same document with a time dimension, so the shell is unchanged and only two regions are added: the <b>transport bar</b> and the <b>timeline dock</b>. Keyframes are not a third region: a property is a <b>row of the timeline</b>, twirled down under the clip it animates, with draggable keys, visible easing and a live value readout.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>Video is not another app. It is the same document with a time dimension, so the shell is unchanged and only two regions are added: the <b>transport bar</b> and the <b>timeline dock</b>. Each surface answers exactly one question: the timeline says <b>when</b> (clips, cuts, and a key mark on the clip), the detail pane says <b>what</b> (every property, its value, and whether it is keyed here). Neither repeats the other.</p></div>
     <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a clip on the timeline and the ring on the canvas, the row in <b>Layers</b>, and the <b>Properties</b> group all follow. The media pool is not its own widget: it is <b>Library, scope Media</b>, the same group that holds components and styles everywhere else.</p></div>
     <div class="c"><div class="lab g2">Scope call · deferred</div><p>Basic video already ships (trim, crop, export). This timeline is its own later chapter, walled off so it never gates image and UI creation.</p></div>
-    <div class="c"><div class="lab g2">Resolved - one grid, not two</div><p>This was an open question: keep the keyframe editor in the dock for alignment, or move it to the right dock for a taller canvas? Both were wrong, because both kept it as a <b>separate editor of the same time axis</b>. Stacked, it forced a <b>1160px window that does not fit a laptop</b>. Folded into the track grid it costs <b>329px instead of 497px</b>, the canvas gets its height back, and alignment stops being something two grids have to be kept in sync about. The <b>graph</b> is the one part with its own Y axis, so it is the one part that is a toggle.</p></div>
+    <div class="c"><div class="lab g2">Resolved - what the dock is for</div><p>Two things were unclear and they turned out to be one thing. <b>Layers listed the same seven objects, in the same five groups, in the same order as the timeline</b> - a second rendering of what you had just clicked, so the dock read as having no job. It is gone from this lens; where there is a timeline, the timeline <i>is</i> the layer list. That frees the dock to be the thing it should have been: the <b>clip detail pane</b>. And because it lists <b>every animatable property</b> rather than only the keyed ones, "how do I animate this?" has a visible answer on a clip nobody has touched - the dim diamond on its row.</p></div>
   </div>
 </section>
 </main>
@@ -754,13 +782,7 @@
     tracks.forEach(function(tr){
       var row=document.createElement("div"); row.className="track";
       var lab=document.createElement("span"); lab.className="tl";
-      /* the twirl belongs to the track that OWNS the selected clip: its
-         properties are its children, so the disclosure is on the parent row */
-      var ownsSel = tr.clips.some(function(c){ return c.id===selClip; });
-      var tw = ownsSel ? '<button class="tw'+(propsOpen?" open":"")+'" aria-expanded="'+propsOpen+'" '+
-                         'title="'+(propsOpen?"Hide":"Show")+' the properties of '+(clipById(selClip)||{c:{label:""}}).c.label+'">'+
-                         '<i class="ic xs ic-chevron-down"></i></button>' : '';
-      lab.innerHTML = tw + (tr.auto ? '<span class="trk-auto"><i class="ic xs ic-sparkle"></i>Caption</span>' : tr.name);
+      lab.innerHTML = (tr.auto ? '<span class="trk-auto"><i class="ic xs ic-sparkle"></i>Caption</span>' : tr.name);
       var lane=document.createElement("div"); lane.className="lane"; lane.setAttribute("data-track",tr.kind);
       TICKS.forEach(function(t){ var g=document.createElement("i"); g.className="gl"; g.style.left=pct(t)+"%"; lane.appendChild(g); });
       (tr.trans||[]).forEach(function(x){
@@ -792,9 +814,6 @@
         lane.appendChild(el);
       });
       row.appendChild(lab); row.appendChild(lane); grid.appendChild(row);
-      // the selected clip's properties twirl down as rows of THIS grid, right
-      // under the clip they animate — same lane, so the same x is the same time
-      if(ownsSel && propsOpen) appendPropRows(grid);
     });
     // playhead overlay spanning every row
     playstrip=document.createElement("div"); playstrip.className="playstrip";
@@ -806,28 +825,7 @@
   }
   function positionPlayhead(){ if(playhead) playhead.style.left=pct(playT)+"%"; }
 
-  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
-  var layerList = document.getElementById("layerList");
-  function renderLayers(){
-    if(!layerList) return;
-    var h="";
-    tracks.forEach(function(tr){
-      h+='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm '+(tr.kind==="aud"?"ic-audio":tr.kind==="cap"?"ic-text":tr.kind==="comp"?"ic-component":"ic-image")+'"></i> '+trackTitle[tr.kind]+'</div>';
-      tr.clips.forEach(function(c){
-        var sel = c.id===selClip ? (tr.kind==="comp"?" selc":" sel") : "";
-        h+='<div class="lrow child'+sel+'" data-clip="'+c.id+'" role="button" tabindex="0">'+
-             '<i class="ic '+c.icon+'"></i><span class="nm">'+c.label+'</span>'+
-             '<i class="ic sm ic-eye eye"></i></div>';
-      });
-    });
-    layerList.innerHTML=h;
-  }
-  layerList && layerList.addEventListener("click", function(e){
-    var row=e.target.closest("[data-clip]"); if(!row) return;
-    selectClip(row.getAttribute("data-clip"));
-  });
-
-  /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
+  /* ---------------- THE CLIP DETAIL PANE (selection, place 2 of 2) ---------------- */
   var propBody=document.getElementById("propBody");
   var propKind=document.getElementById("propKind");
   var CAPTION_WORDS=[{w:"Capture",t:0.4},{w:"design",t:1.1},{w:"automate",t:1.9},{w:"one",t:2.6},{w:"canvas",t:3.0}];
@@ -837,13 +835,49 @@
     var c=hit.c, kind=hit.tr.kind;
     if(propKind) propKind.textContent = kind==="comp"?"Instance":kind==="cap"?"Caption":kind==="aud"?"Audio":"Clip";
     var h="";
-    h+='<div class="section"><div class="sec-h">Clip <span class="mut">'+c.label+'</span></div>'+
-       '<div class="grid2">'+
-         '<div class="field"><span class="k">In</span><span class="v">'+c.t.toFixed(1)+'s</span></div>'+
-         '<div class="field"><span class="k">Out</span><span class="v">'+(c.t+c.dur).toFixed(1)+'s</span></div>'+
-         '<div class="field"><span class="k">Dur</span><span class="v">'+c.dur.toFixed(1)+'s</span></div>'+
-         '<div class="field"><span class="k">Speed</span><span class="v">'+(c.speed||"1.0x")+'</span></div>'+
-       '</div></div>';
+    /* The clip's timing is a READOUT, so it is one compact strip rather than a
+       titled section with a 2x2 grid of boxed fields. That block cost ~100px of
+       a 213px panel and spent it restating what the group header, the canvas
+       badge and the selected clip in the timeline all already say. The four
+       numbers are what is actually only here. */
+    h+='<div class="cliphead">'+
+         '<span class="cn">'+c.label+'</span>'+
+         '<span class="ct"><b>'+c.t.toFixed(1)+'s</b> \u2192 <b>'+(c.t+c.dur).toFixed(1)+'s</b>'+
+           '<span class="cd">'+c.dur.toFixed(1)+'s \u00b7 '+(c.speed||"1.0x")+'</span></span>'+
+       '</div>';
+    /* The pane lists what this clip IS animating; everything else is one click
+       away in the picker. Each row is the property's real editor, so the value
+       is TYPED, not inferred from a bar — that bar could not express a rotation
+       past its own max, which is exactly the case that exposed it. */
+    var ps=propSets[selClip]||null;
+    var cat=catalogFor(kind);
+    var keys=ps?Object.keys(ps):[];
+    h+='<div class="section"><div class="sec-h">Animating <span class="mut">'+
+       (keys.length?keys.length+' of '+cat.length+' properties':'nothing yet')+'</span>'+
+       (keys.some(function(k){ return isNum(catalogEntry(kind,k)||ps[k]); })
+          ?'<button class="linkbtn" id="graphOpen">Graph</button>':'')+'</div>';
+    if(!keys.length){
+      h+='<p class="note">Any property can be keyed, including colours and border width.</p>';
+    }
+    keys.forEach(function(k){
+      var pr=ps[k], e=catalogEntry(kind,k)||{label:pr.label,unit:pr.unit,min:pr.min,max:pr.max};
+      var here=keyAt(pr,playT)>=0;
+      var v=valueAt(pr,playT);
+      h+='<div class="prow anim'+(k===activeProp?" sel":"")+'" data-prop="'+k+'">'+
+           '<button class="kfkey'+(here?" on":" armed")+'" data-key="'+k+'" aria-pressed="'+here+'" title="'+
+             (here?"Remove the "+e.label+" key at ":"Set a key on "+e.label+" at ")+playT.toFixed(2)+'s"></button>'+
+           '<button class="rl" data-sel="'+k+'" title="Plot '+e.label+' on the graph">'+e.label+'</button>'+
+           (isNum(e)
+             ? '<span class="stepper sm pv-in"><input type="number" data-val="'+k+'" value="'+Math.round(v)+'"><span class="u">'+(e.unit||'')+'</span></span>'
+             : '<span class="cpick-btn pv-sw" data-val="'+k+'" style="background:'+v+'" title="'+e.label+' at the playhead"></span>')+
+           '<button class="prow-x" data-drop="'+k+'" title="Stop animating '+e.label+'"><i class="ic xs ic-x"></i></button>'+
+         '</div>';
+    });
+    /* THE WAY IN FOR EVERYTHING ELSE. A picker rather than a longer list,
+       because the list only gets longer: effects add their own properties, and
+       a component instance adds one per override. */
+    h+='<button class="btn ghost sm block addprop" id="addProp"><i class="ic ic-plus"></i> Animate a property</button>';
+    h+='</div>';
     if(kind==="comp"){
       h+='<div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>'+
          '<div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Lower-third</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>'+
@@ -861,18 +895,6 @@
          '<div class="irow"><span class="rl">Duck</span><span class="bar"><i style="width:34%"></i></span></div>'+
          '<p class="note">Ducking is a keyframed envelope on the same time axis, drawn right on the clip.</p></div>';
     }
-    var ps=propSets[selClip];
-    h+='<div class="section"><div class="sec-h">Animated <span class="mut">'+(ps?Object.keys(ps).length+" properties":"none yet")+'</span></div>';
-    if(ps){
-      Object.keys(ps).forEach(function(k){
-        var p=ps[k];
-        h+='<div class="irow"><span class="rl">'+p.label+'</span><span class="bar"><i style="width:'+
-           clamp(((valueAt(p,playT)-p.min)/((p.max-p.min)||1))*100,0,100).toFixed(0)+'%"></i></span></div>';
-      });
-    } else {
-      h+='<p class="note">No animated properties. Press <b>K</b>, or use <b>Animate</b> in the Keyframes editor, to start one.</p>';
-    }
-    h+='</div>';
     propBody.innerHTML=h;
     syncCaptionWords();
   }
@@ -903,7 +925,7 @@
   function selectClip(id){
     selClip=id;
     activeProp = propSets[id] ? (activeProp && propSets[id][activeProp] ? activeProp : Object.keys(propSets[id])[0]) : null;
-    renderTimeline(); renderLayers(); renderProps(); renderCanvasSel(); renderKf(); updateReadouts();
+    renderTimeline(); renderProps(); renderCanvasSel(); renderKf(); updateReadouts();
   }
 
   /* ---------------- TIMELINE INTERACTION ---------------- */
@@ -949,7 +971,7 @@
     var right={id:c.id+"b"+Math.floor(Math.random()*999),t:t,dur:(c.t+c.dur)-t,label:c.label,cls:c.cls,icon:c.icon};
     c.dur=t-c.t;
     tr.clips.splice(tr.clips.indexOf(c)+1,0,right);
-    markDirty(); renderTimeline(); renderLayers();
+    markDirty(); renderTimeline();
   }
 
   /* ---------------- PLAYHEAD + TRANSPORT ---------------- */
@@ -1012,7 +1034,57 @@
   });
 
   /* ---------------- KEYFRAME EDITOR ---------------- */
-  var C = { comp:"#b98cff", accent:"#7f9bff", cyan:"#12c2e9" };
+  var C = { comp:"#b98cff", accent:"#7f9bff", cyan:"#12c2e9", warn:"#febc2e", good:"#3ecf8e" };
+  /* ============================================================
+     THE ANIMATABLE CATALOGUE
+     ============================================================
+     "Anything should be able to be animated" is the actual rule, so a fixed
+     five-item list was wrong twice: it implied a clip has five animatable
+     properties, and it had no room for the ones that obviously matter and were
+     missing — colours, border thickness, corner radius, shadow.
+
+     Two consequences shape this:
+
+     1. The pane lists what a clip IS animating, and everything else is reached
+        through "Animate a property", which is a searchable picker over the whole
+        catalogue. That scales: a list you scroll is fine at eleven properties
+        and impossible at ninety, whereas a picker is the same gesture at both.
+     2. Not every property is a number. A colour keys to a colour and its editor
+        is a swatch, not a stepper — `type` says which, and the graph plots only
+        what has a numeric axis.
+
+     `still` is the value the property holds when nothing is keyed, so a row can
+     show a real value the moment it appears. */
+  var PROP_CATALOG = {
+    vis: [
+      {g:"Transform",  k:"posx",   label:"Position X",    unit:"px", min:-400, max:400, still:0,   color:C.accent},
+      {g:"Transform",  k:"posy",   label:"Position Y",    unit:"px", min:-400, max:400, still:0,   color:C.accent},
+      {g:"Transform",  k:"scale",  label:"Scale",         unit:"%",  min:0,    max:400, still:100, color:C.cyan},
+      {g:"Transform",  k:"rot",    label:"Rotation",      unit:"\u00b0", min:-1440, max:1440, still:0, color:C.warn},
+      {g:"Transform",  k:"skew",   label:"Skew",          unit:"\u00b0", min:-89, max:89, still:0, color:C.warn},
+      {g:"Appearance", k:"opacity",label:"Opacity",       unit:"%",  min:0,    max:100, still:100, color:C.comp},
+      {g:"Appearance", k:"radius", label:"Corner radius", unit:"px", min:0,    max:200, still:8,   color:C.cyan},
+      {g:"Appearance", k:"border", label:"Border width",  unit:"px", min:0,    max:48,  still:0,   color:C.good},
+      {g:"Appearance", k:"bcolor", label:"Border color",  type:"color", still:"#7c4dff"},
+      {g:"Appearance", k:"fill",   label:"Fill color",    type:"color", still:"#12c2e9"},
+      {g:"Effects",    k:"blur",   label:"Blur",          unit:"px", min:0,    max:120, still:0,   color:C.accent},
+      {g:"Effects",    k:"shadow", label:"Shadow size",   unit:"px", min:0,    max:120, still:0,   color:C.comp},
+      {g:"Effects",    k:"sat",    label:"Saturation",    unit:"%",  min:0,    max:300, still:100, color:C.good}
+    ],
+    aud: [
+      {g:"Levels", k:"vol",  label:"Volume", unit:"dB", min:-60, max:12, still:0, color:C.good},
+      {g:"Levels", k:"pan",  label:"Pan",    unit:"",   min:-1,  max:1,  still:0, color:C.accent},
+      {g:"Levels", k:"duck", label:"Duck",   unit:"dB", min:-24, max:0,  still:0, color:C.cyan}
+    ]
+  };
+  function catalogFor(kind){ return kind==="aud" ? PROP_CATALOG.aud : PROP_CATALOG.vis; }
+  function catalogEntry(kind, k){
+    var list=catalogFor(kind);
+    for(var i=0;i<list.length;i++) if(list[i].k===k) return list[i];
+    return null;
+  }
+  function isNum(e){ return !e || e.type!=="color"; }
+
   var propSets = {
     c1:{
       opacity:{label:"Opacity",unit:"%",min:0,max:100,color:C.comp,keys:[{t:0.6,v:0},{t:2.4,v:100},{t:12.6,v:100},{t:14.4,v:0}]},
@@ -1025,16 +1097,12 @@
     }
   };
   var activeProp="opacity";
-  /* the twirl state for the selected clip's properties. Open by default because
-     this page's whole subject is keyframing — the disclosure exists so the rows
-     can get out of the way, not so they have to be found. */
-  var propsOpen=true;
   var dragKey=-1;
+  var selKey=-1;      // the key the card is editing; survives pointerup
 
   var svg=document.getElementById("kfSvg");
   var plot=document.getElementById("kfPlot");
   var dock=document.getElementById("tlDock");
-  var graphBtn=document.getElementById("graphBtn");
   var axis=document.getElementById("kfAxis");
 
   function keyTimes(id){
@@ -1045,15 +1113,55 @@
   }
   function smooth(u){ return u*u*(3-2*u); }
   function spring(u){ return 1-Math.cos(u*Math.PI*1.5)*Math.exp(-2.2*u); }
+  /* EASING IS A PROPERTY OF THE SEGMENT, not of the document. One global
+     Linear/Ease/Spring switch could only say "every transition in this project
+     bends the same way", which is not a thing anyone wants — the answer to "how
+     do I change the curve between these two keys" has to be reachable from the
+     two keys. So each key carries the curve of the segment LEAVING it, and the
+     global control is only the default handed to new keys. */
+  function easeAt(u, mode){
+    if(mode==="linear") return u;
+    if(mode==="spring") return spring(u);
+    if(mode==="in")     return u*u*u;                 // slow start, arrives fast
+    if(mode==="out")    return 1-Math.pow(1-u,3);     // leaves fast, settles
+    if(mode==="hold")   return 0;                     // no interpolation at all
+    return smooth(u);                                 // "ease" - in and out
+  }
+  /* A COLOUR KEYS TO A COLOUR. Interpolating it as a number would produce NaN
+     and a blank swatch, so the same easing curve drives a channel-wise mix
+     instead — which is what makes "anything is animatable" true rather than a
+     claim the numeric path quietly fails at. */
+  function hex2rgb(h){
+    h=String(h).replace("#","");
+    if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+  }
+  function rgb2hex(c){
+    return "#"+c.map(function(x){ return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,"0"); }).join("");
+  }
+  function colorAt(p,t){
+    var k=p.keys; if(!k.length) return "#000000";
+    if(t<=k[0].t) return k[0].v;
+    if(t>=k[k.length-1].t) return k[k.length-1].v;
+    for(var i=0;i<k.length-1;i++){
+      if(t>=k[i].t && t<=k[i+1].t){
+        var u=(t-k[i].t)/((k[i+1].t-k[i].t)||1);
+        var e=easeAt(u, k[i].ease||ease);
+        var a=hex2rgb(k[i].v), b=hex2rgb(k[i+1].v);
+        return rgb2hex([0,1,2].map(function(j){ return a[j]+(b[j]-a[j])*e; }));
+      }
+    }
+    return k[k.length-1].v;
+  }
   function valueAt(p,t){
+    if(p.type==="color") return colorAt(p,t);
     var k=p.keys; if(!k.length) return p.min;
     if(t<=k[0].t) return k[0].v;
     if(t>=k[k.length-1].t) return k[k.length-1].v;
     for(var i=0;i<k.length-1;i++){
       if(t>=k[i].t && t<=k[i+1].t){
         var u=(t-k[i].t)/((k[i+1].t-k[i].t)||1);
-        var e=(ease==="linear")?u:(ease==="spring")?spring(u):smooth(u);
-        return k[i].v+(k[i+1].v-k[i].v)*e;
+        return k[i].v+(k[i+1].v-k[i].v)*easeAt(u, k[i].ease||ease);
       }
     }
     return k[k.length-1].v;
@@ -1070,23 +1178,28 @@
   function curProp(){
     var ps=propSets[selClip];
     if(!ps) return null;
-    if(!activeProp || !ps[activeProp]) activeProp=Object.keys(ps)[0];
+    if(!activeProp || !ps[activeProp]){
+      var num=Object.keys(ps).filter(function(k){ return ps[k].type!=="color"; });
+      activeProp=(num[0]||Object.keys(ps)[0]);
+    }
     return ps[activeProp];
   }
 
-  /* Only the GRAPH now. The lanes, the header and the "who is selected" line
-     all became rows of the timeline grid, so this draws one curve and nothing
-     else. With no property to plot there is nothing to draw and no empty panel
-     to explain it either — the grid's own "Animate a property" row does that,
-     in the place the property will appear. */
+  /* Only the GRAPH. Everything else the old keyframe editor drew — the lane
+     strip, its header, the "who is selected" line — is the clip detail pane's
+     job now. With nothing animated there is no curve, and the group collapses
+     rather than showing an empty box that looks like a broken plot. */
   function renderKf(){
     if(!svg||!plot) return;
     var p=curProp();
+    /* A colour has no numeric axis, so there is nothing honest to plot. The row
+       still keys, scrubs and interpolates — it just is not a curve. */
+    if(p && p.type==="color") p=null;
     if(!p){
       svg.innerHTML="";
       [].forEach.call(plot.querySelectorAll(".kfpt,.kfhead"), function(n){ n.remove(); });
-      if(dock) dock.setAttribute("data-graph","off");
-      if(graphBtn) graphBtn.setAttribute("aria-pressed","false");
+      var g=document.getElementById("gGraph");
+      if(g) g.classList.add("collapsed");
       return;
     }
     var s="";
@@ -1096,10 +1209,17 @@
     if(k.length){
       var d="M "+xOf(k[0].t)+" "+yOf(p,k[0].v);
       if(k[0].t>0) d="M 0 "+yOf(p,k[0].v)+" L "+xOf(k[0].t)+" "+yOf(p,k[0].v);
+      /* sampled, not approximated: the curve drawn has to be the curve the value
+         readout will report, or the graph is decoration. 16 steps is past the
+         point the difference is visible at this size. */
       for(var i=0;i<k.length-1;i++){
-        var x1=xOf(k[i].t), y1=yOf(p,k[i].v), x2=xOf(k[i+1].t), y2=yOf(p,k[i+1].v), dx=x2-x1;
-        if(ease==="linear"){ d+=" L "+x2+" "+y2; }
-        else { d+=" C "+(x1+dx*0.42)+" "+y1+" "+(x2-dx*0.42)+" "+y2+" "+x2+" "+y2; }
+        var m=k[i].ease||ease;
+        if(m==="linear"){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
+        if(m==="hold"){ d+=" L "+xOf(k[i+1].t)+" "+yOf(p,k[i].v)+" L "+xOf(k[i+1].t)+" "+yOf(p,k[i+1].v); continue; }
+        for(var st=1; st<=16; st++){
+          var u=st/16, tt=k[i].t+(k[i+1].t-k[i].t)*u;
+          d+=" L "+xOf(tt)+" "+yOf(p,valueAt(p,tt));
+        }
       }
       if(k[k.length-1].t<DURATION) d+=" L 1000 "+yOf(p,k[k.length-1].v);
       s+='<path d="'+d+'" fill="none" stroke="'+p.color+'" stroke-width="2" vector-effect="non-scaling-stroke"/>';
@@ -1109,7 +1229,7 @@
     [].forEach.call(plot.querySelectorAll(".kfpt,.kfhead"), function(n){ n.remove(); });
     k.forEach(function(key,i){
       var d=document.createElement("div");
-      d.className="kfpt"+(i===dragKey?" act":"");
+      d.className="kfpt"+(i===dragKey?" act":"")+(i===selKey?" sel":"");
       d.style.left=(key.t/DURATION*100)+"%";
       d.style.top=yOf(p,key.v)+"%";
       d.setAttribute("data-i",i);
@@ -1119,61 +1239,44 @@
     head.style.left=(playT/DURATION*100)+"%";
     head.style.top=yOf(p,valueAt(p,playT))+"%";
     plot.appendChild(head);
+    renderKeyCard(p);
     if(axis) axis.innerHTML='<span>'+p.max+'</span><span>'+Math.round((p.min+p.max)/2)+'</span><span>'+p.min+'</span>';
-    syncPropRows();
+    var who=document.getElementById("graphWho");
+    if(who) who.textContent=p.label;
+    var gm=document.getElementById("graphMid"), ge=document.getElementById("graphEnd");
+    if(gm) gm.textContent=(DURATION/2).toFixed(1)+"s";
+    if(ge) ge.textContent=DURATION+"s";
+    syncPropValues();
   }
 
-  /* STRUCTURE: one row per animated property, appended into the timeline grid
-     itself. Called from renderTimeline only, because adding a row changes the
-     grid's shape and that is the expensive, rare case. */
-  function appendPropRows(g){
-    var ps=propSets[selClip];
-    if(!ps){
-      // the empty state lives where the filled state will be, not elsewhere
-      var er=document.createElement("div"); er.className="track proprow add";
-      er.innerHTML='<span class="tl"></span>'+
-        '<div class="lane"><button class="propadd" id="kfAnimate">'+
-        '<i class="ic xs ic-keyframe"></i> Animate a property <span class="kbd">K</span></button></div>';
-      g.appendChild(er);
-      return;
-    }
-    Object.keys(ps).forEach(function(key){
-      var p=ps[key];
-      var row=document.createElement("div");
-      row.className="track proprow"+(key===activeProp?" sel":"");
-      row.setAttribute("data-prop",key);
-      row.innerHTML=
-        '<span class="tl">'+
-          '<button class="kfkey" data-key="'+key+'"></button>'+
-          '<button class="pn" data-sel="'+key+'" title="Plot '+p.label+' on the graph">'+p.label+'</button>'+
-          '<span class="pv"></span>'+
-        '</span>'+
-        '<div class="lane"></div>';
-      g.appendChild(row);
-    });
-    syncPropRows();
-  }
-
-  /* STATE: everything that changes as the playhead moves — the value readout,
-     the diamond's fill, the key marks. Updated IN PLACE rather than re-rendered,
-     because this runs on every frame of a scrub and rebuilding the grid there
-     would destroy the node you are currently dragging. */
-  function syncPropRows(){
-    if(!grid) return;
-    var ps=propSets[selClip]; if(!ps) return;
-    [].forEach.call(grid.querySelectorAll(".proprow[data-prop]"), function(row){
-      var key=row.getAttribute("data-prop"), p=ps[key];
-      if(!p){ row.remove(); return; }
+  /* Scrubbing runs this every frame, so it PATCHES the rows rather than
+     re-rendering the pane: rebuilding propBody mid-drag would throw away the
+     node under the pointer and strand the drag. */
+  function syncPropValues(){
+    if(!propBody) return;
+    var hit=clipById(selClip); if(!hit) return;
+    var ps=propSets[selClip]||null;
+    [].forEach.call(propBody.querySelectorAll(".prow[data-prop]"), function(row){
+      var key=row.getAttribute("data-prop");
+      var pr=ps&&ps[key]||null; if(!pr) return;
+      var e=catalogEntry(hit.tr.kind,key)||pr;
+      var here=keyAt(pr,playT)>=0;
+      var v=valueAt(pr,playT);
       row.classList.toggle("sel", key===activeProp);
-      var here=keyAt(p,playT)>=0;
       var kb=row.querySelector(".kfkey");
-      kb.classList.toggle("on", here);
-      kb.setAttribute("aria-pressed", here);
-      kb.setAttribute("title", (here?"Remove the "+p.label+" key at ":"Set a key on "+p.label+" at ")+playT.toFixed(2)+"s");
-      row.querySelector(".pv").textContent=Math.round(valueAt(p,playT))+p.unit;
-      row.querySelector(".lane").innerHTML=p.keys.map(function(kk){
-        return '<span class="kd" style="left:'+(kk.t/DURATION*100)+'%"></span>';
-      }).join("");
+      if(kb){
+        kb.classList.toggle("on", here);
+        kb.classList.toggle("armed", !here);
+        kb.setAttribute("aria-pressed", here);
+        kb.setAttribute("title", (here?"Remove the "+e.label+" key at ":"Set a key on "+e.label+" at ")+playT.toFixed(2)+"s");
+      }
+      /* Never overwrite a field the user is typing in. Scrubbing runs this every
+         frame, so without the check a half-typed "54" would be replaced by the
+         interpolated value between keystrokes. */
+      var inp=row.querySelector("input[data-val]");
+      if(inp && document.activeElement!==inp) inp.value=Math.round(v);
+      var sw=row.querySelector(".pv-sw");
+      if(sw) sw.style.background=v;
     });
   }
 
@@ -1182,49 +1285,230 @@
     var p=curProp();
     var kv=document.getElementById("kfReadV"), kt=document.getElementById("kfReadT");
     if(kt) kt.textContent=playT.toFixed(2)+"s";
-    if(kv) kv.textContent = p ? (p.label+" "+Math.round(valueAt(p,playT))+p.unit) : "no animated property";
+    if(kv) kv.textContent = p ? (p.label+" "+Math.round(valueAt(p,playT))+(p.unit||"")) : "no animated property";
     if(p){
       var head=plot && plot.querySelector(".kfhead");
       if(head){ head.style.left=(playT/DURATION*100)+"%"; head.style.top=yOf(p,valueAt(p,playT))+"%"; }
     }
-    syncPropRows();
+    syncPropValues();
     syncCaptionWords();
     // live preview: the lower-third really follows its own keyframes
     if(l3 && propSets.c1){
-      var op=valueAt(propSets.c1.opacity,playT)/100;
-      var px=valueAt(propSets.c1.posx,playT);
-      var sc=valueAt(propSets.c1.scale,playT)/100;
+      var op=propSets.c1.opacity?valueAt(propSets.c1.opacity,playT)/100:1;
+      var px=propSets.c1.posx?valueAt(propSets.c1.posx,playT):0;
+      var sc=propSets.c1.scale?valueAt(propSets.c1.scale,playT)/100:1;
+      var rt=propSets.c1.rot?valueAt(propSets.c1.rot,playT):0;
       l3.style.opacity=clamp(op,0,1);
-      l3.style.transform="translateX("+px+"px) scale("+sc+")";
+      l3.style.transform="translateX("+px+"px) scale("+sc+") rotate("+rt+"deg)";
     }
     var cap=document.getElementById("capLine");
     if(cap){ cap.style.opacity=(playT>=1.2 && playT<=11.7)?"1":".25"; }
+    /* what the collapsed timeline row says. With the timeline hidden the
+       question you have is "what am I still editing", so that is what it
+       answers - the selection, then where the playhead is. */
+    var tl=document.getElementById("tlDock");
+    if(tl){
+      var hit=clipById(selClip);
+      tl.setAttribute("data-tl-summary",
+        (hit?hit.c.label+"  \u00b7  ":"")+tcode(playT)+" / "+tcode(DURATION));
+    }
   }
 
-  /* The property rows live in the timeline grid now, so their controls are
-     delegated off the grid alongside the clips. Bound in the capture phase-free
-     bubble path but BEFORE the grid's own pointerdown selection logic can treat
-     a diamond click as "select the clip underneath". */
-  grid && grid.addEventListener("click", function(e){
-    var kb=e.target.closest(".kfkey");
-    if(kb){ toggleKeyAtPlayhead(kb.getAttribute("data-key")); return; }
-    if(e.target.closest("#kfAnimate")){ animateFromScratch(); return; }
-    var tw=e.target.closest(".tw");
-    if(tw){ propsOpen=!propsOpen; renderTimeline(); return; }
-    var sel=e.target.closest("[data-sel]");
-    if(sel){ activeProp=sel.getAttribute("data-sel"); renderKf(); updateReadouts(); syncPropRows(); }
+  /* ---------------- THE KEYFRAME CARD ----------------
+     Selecting a key had no state and no editor: you could drag one, which is a
+     coarse gesture, and that was the whole vocabulary. "Put this key on 6.40s at
+     exactly 100%" was unreachable, and so was "make this segment ease out".
+
+     The card is the gradient stop card's idiom (cp-stopcard), for the same
+     reason it exists there: the thing you selected is small and lives on a plot,
+     so its editor floats next to it rather than in a panel that would make you
+     look away from what you are editing. Time and value are typed. The easing
+     row governs the segment LEAVING this key, which is what "the curve between
+     these two points" means when you have selected the left one. */
+  function renderKeyCard(p){
+    var box=document.getElementById("kfEdit");
+    if(!box) return;
+    if(selKey<0 || !p || !p.keys[selKey]){
+      box.classList.remove("on");
+      box.innerHTML='<span class="kf-hint">Click a key on the graph to retime it, retype its value, or change the curve leaving it.</span>';
+      return;
+    }
+    var k=p.keys[selKey];
+    var isLast = selKey===p.keys.length-1;
+    var mode = k.ease||ease;
+    box.classList.add("on");
+    box.innerHTML=
+      '<div class="kf-r">'+
+        '<span class="kf-n">Key '+(selKey+1)+' of '+p.keys.length+'</span>'+
+        '<button class="kc-x" id="kcDel" title="Delete this key"><i class="ic xs ic-trash"></i></button>'+
+      '</div>'+
+      '<div class="kf-r">'+
+        '<span class="stepper sm"><span class="k">t</span><input type="number" step="0.05" id="kcT" value="'+k.t.toFixed(2)+'"><span class="u">s</span></span>'+
+        '<span class="stepper sm"><span class="k">v</span><input type="number" id="kcV" value="'+Math.round(k.v)+'"><span class="u">'+(p.unit||"")+'</span></span>'+
+      '</div>'+
+      (isLast
+        ? '<div class="kf-hint">Last key \u2014 nothing after it to ease into.</div>'
+        : '<div class="kf-l">Curve to next key</div>'+
+          '<div class="kf-e">'+['linear','in','out','ease','spring','hold'].map(function(m){
+            return '<button class="kc-e'+(m===mode?" on":"")+'" data-ease="'+m+'" title="'+
+              ({linear:"Straight line",in:"Slow start",out:"Slow finish",ease:"Slow both ends",spring:"Overshoot and settle",hold:"Jump, no interpolation"})[m]+
+              '">'+({linear:"Linear",in:"In",out:"Out",ease:"Ease",spring:"Spring",hold:"Hold"})[m]+'</button>';
+          }).join("")+'</div>');
+  }
+
+  var kfEditBox=document.getElementById("kfEdit");
+  kfEditBox && kfEditBox.addEventListener("click", function(e){
+    var p=curProp(); if(!p) return;
+    var b=e.target.closest("[data-ease]");
+    if(b && selKey>=0){
+      p.keys[selKey].ease=b.getAttribute("data-ease");
+      markDirty(); renderKf(); updateReadouts(); return;
+    }
+    if(e.target.closest("#kcDel") && selKey>=0){
+      p.keys.splice(selKey,1); selKey=-1;
+      markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts(); return;
+    }
+  });
+  kfEditBox && kfEditBox.addEventListener("change", function(e){
+    var p=curProp(); if(!p||selKey<0) return;
+    var k=p.keys[selKey];
+    if(e.target.id==="kcT"){
+      var lo=(selKey>0)?p.keys[selKey-1].t+0.05:0;
+      var hi=(selKey<p.keys.length-1)?p.keys[selKey+1].t-0.05:DURATION;
+      k.t=+clamp(parseFloat(e.target.value)||0, lo, hi).toFixed(2);
+    }
+    if(e.target.id==="kcV"){
+      /* NOT clamped to the display range. The range is what the graph plots
+         between, not a limit on what the property can hold — clamping here is
+         what made "rotate more than 180 degrees" impossible. */
+      k.v=parseFloat(e.target.value)||0;
+      if(k.v<p.min) p.min=Math.floor(k.v);
+      if(k.v>p.max) p.max=Math.ceil(k.v);
+    }
+    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
   });
 
-  /* THE GRAPH TOGGLE. It is a view of the ACTIVE property, so turning it on
-     with nothing animated would show an empty box — the button reports that
-     rather than pretending. */
-  graphBtn && graphBtn.addEventListener("click", function(){
-    if(!curProp()) return;
-    var on=dock.getAttribute("data-graph")!=="on";
-    dock.setAttribute("data-graph", on?"on":"off");
-    graphBtn.setAttribute("aria-pressed", String(on));
-    if(on) renderKf();
+  /* ---------------- THE PROPERTY PICKER ----------------
+     Grouped and searchable, because the catalogue is meant to keep growing and
+     a flat list stops working long before it stops being written. */
+  var pickWrap=document.getElementById("propPick");
+  var pickQ="";
+  function renderPicker(){
+    if(!pickWrap) return;
+    var hit=clipById(selClip); if(!hit) return;
+    var ps=propSets[selClip]||{};
+    var cat=catalogFor(hit.tr.kind);
+    var q=pickQ.trim().toLowerCase();
+    var groups={}, order=[];
+    cat.forEach(function(e){
+      if(ps[e.k]) return;                                  // already animating
+      if(q && e.label.toLowerCase().indexOf(q)<0) return;
+      if(!groups[e.g]){ groups[e.g]=[]; order.push(e.g); }
+      groups[e.g].push(e);
+    });
+    var h='<div class="pick-h"><input class="pick-q" id="pickQ" placeholder="Find a property" value="'+pickQ+'"></div>';
+    if(!order.length){
+      h+='<p class="note" style="padding:var(--s2) var(--s3)">'+(q?'Nothing matches "'+pickQ+'".':'Every property is already animating.')+'</p>';
+    }
+    order.forEach(function(g){
+      h+='<div class="pick-g">'+g+'</div>';
+      groups[g].forEach(function(e){
+        h+='<button class="pick-i" data-add="'+e.k+'">'+
+             (e.type==="color"?'<span class="sw" style="background:'+e.still+'"></span>':'<i class="ic xs ic-keyframe"></i>')+
+             '<span class="nm">'+e.label+'</span>'+
+             '<span class="mt">'+(e.type==="color"?"colour":(e.unit||"number"))+'</span>'+
+           '</button>';
+      });
+    });
+    pickWrap.innerHTML=h;
+  }
+  function openPicker(on){
+    if(!pickWrap) return;
+    pickWrap.classList.toggle("on", on!==false);
+    if(on!==false){ pickQ=""; renderPicker();
+      var q=document.getElementById("pickQ"); if(q) q.focus(); }
+  }
+  pickWrap && pickWrap.addEventListener("input", function(e){
+    if(e.target.id==="pickQ"){ pickQ=e.target.value; renderPicker();
+      var q=document.getElementById("pickQ"); if(q){ q.focus(); q.setSelectionRange(q.value.length,q.value.length); } }
   });
+  pickWrap && pickWrap.addEventListener("click", function(e){
+    var b=e.target.closest("[data-add]"); if(!b) return;
+    startAnimating(b.getAttribute("data-add"));
+    openPicker(false);
+  });
+  document.addEventListener("click", function(e){
+    if(!pickWrap || !pickWrap.classList.contains("on")) return;
+    if(e.target.closest("#propPick") || e.target.closest("#addProp")) return;
+    openPicker(false);
+  });
+
+  /* Typing a value in a property row is an EDIT AT THE PLAYHEAD, so it sets or
+     moves the key there rather than changing some global static value — that is
+     what "animated" means, and it is also how you reach a rotation of 540: the
+     field has no range, only the plot does. */
+  propBody && propBody.addEventListener("change", function(e){
+    var f=e.target.closest("[data-val]"); if(!f) return;
+    var k=f.getAttribute("data-val");
+    var ps=propSets[selClip]; if(!ps||!ps[k]) return;
+    var p=ps[k], v=parseFloat(e.target.value);
+    if(isNaN(v)) return;
+    var i=keyAt(p,playT);
+    if(i>=0) p.keys[i].v=v;
+    else { p.keys.push({t:+playT.toFixed(2),v:v,ease:ease}); p.keys.sort(function(a,b){ return a.t-b.t; }); }
+    if(v<p.min) p.min=Math.floor(v);
+    if(v>p.max) p.max=Math.ceil(v);
+    activeProp=k;
+    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
+  });
+
+  function stopAnimating(k){
+    var ps=propSets[selClip]; if(!ps||!ps[k]) return;
+    delete ps[k];
+    if(!Object.keys(ps).length) delete propSets[selClip];
+    selKey=-1;
+    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
+  }
+
+  /* One entry point for "this property starts animating", used by the picker
+     and by the diamond alike, so both produce the same first key. */
+  function startAnimating(k){
+    var hit=clipById(selClip); if(!hit) return;
+    var e=catalogEntry(hit.tr.kind,k); if(!e) return;
+    var ps = propSets[selClip] || (propSets[selClip]={});
+    if(!ps[k]){
+      ps[k]={label:e.label,unit:e.unit,min:e.min,max:e.max,color:e.color,type:e.type,
+             keys:[{t:+playT.toFixed(2),v:e.still,ease:ease}]};
+    }
+    activeProp=k;
+    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
+  }
+
+  /* The detail pane owns the property controls now, so they are delegated off
+     propBody. The timeline grid keeps only clip selection and trimming. */
+  propBody && propBody.addEventListener("click", function(e){
+    var kb=e.target.closest(".kfkey");
+    if(kb){ toggleKeyAtPlayhead(kb.getAttribute("data-key")); return; }
+    if(e.target.closest("#graphOpen")){ openGraph(); return; }
+    if(e.target.closest("#addProp")){ openPicker(); return; }
+    var drop=e.target.closest("[data-drop]");
+    if(drop){ stopAnimating(drop.getAttribute("data-drop")); return; }
+    var sel=e.target.closest("[data-sel]");
+    if(sel){
+      var k=sel.getAttribute("data-sel");
+      var ps=propSets[selClip];
+      if(!ps||!ps[k]) return;          // dormant: nothing to plot, the diamond is the way in
+      activeProp=k; renderKf(); renderProps(); updateReadouts();
+    }
+  });
+
+  /* Opening the graph means expanding its dock group and naming the property it
+     is plotting — a graph that does not say what it graphs is a decoration. */
+  function openGraph(){
+    var g=document.getElementById("gGraph"); if(!g) return;
+    g.classList.remove("collapsed");
+    renderKf();
+  }
 
   /* The one keyframe verb. It takes the property it acts on as an argument
      rather than reading the "active" one, because the lane diamond is the
@@ -1232,14 +1516,27 @@
      transport buttons had to guess. Toggling a lane also makes it active, so
      the plot shows you what you just changed. */
   function toggleKeyAtPlayhead(propKey){
+    var hit=clipById(selClip); if(!hit) return;
     var ps=propSets[selClip];
-    if(!ps){ animateFromScratch(); return; }
-    var p=ps[propKey] || curProp(); if(!p) return;
-    if(propKey && ps[propKey]) activeProp=propKey;
+    /* FIRST CLICK ON A DORMANT PROPERTY starts animating it, rather than being
+       a no-op that leaves you hunting for an "add property" command. The clip
+       may have no propSet at all yet, or may simply not be animating this one —
+       both are the same gesture from the user's side, so both land here. */
+    if(!ps || !ps[propKey]){
+      var e=catalogEntry(hit.tr.kind, propKey); if(!e) return;
+      ps = propSets[selClip] || (propSets[selClip]={});
+      ps[propKey]={label:e.label,unit:e.unit,min:e.min,max:e.max,color:e.color,
+                   keys:[{t:+playT.toFixed(2),v:e.still}]};
+      activeProp=propKey;
+      markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
+      return;
+    }
+    var p=ps[propKey]; if(!p) return;
+    activeProp=propKey;
     var i=keyAt(p,playT);
     if(i>=0){
-      // never strand a property with a single key: one key is a constant, not
-      // an animation, so removing the last-but-one removes the lane instead.
+      /* one key is a constant, not an animation, so clearing the last key
+         retires the property to dormant — its row stays, its diamond goes dim. */
       if(p.keys.length<=1){ delete ps[propKey]; if(!Object.keys(ps).length) delete propSets[selClip]; }
       else p.keys.splice(i,1);
     } else {
@@ -1248,19 +1545,9 @@
     }
     markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
   }
-  /* the empty-state action: the clip has nothing animated yet, so there is no
-     row to click and the first key has to come from somewhere. Opening the
-     twirl is part of it — creating a property and then hiding it would be a
-     no-op as far as the user can see. */
-  function animateFromScratch(){
-    propSets[selClip]={opacity:{label:"Opacity",unit:"%",min:0,max:100,color:C.comp,keys:[{t:+playT.toFixed(2),v:100}]}};
-    activeProp="opacity";
-    propsOpen=true;
-    markDirty(); renderTimeline(); renderProps(); renderKf(); updateReadouts();
-  }
   function addKeyAtPlayhead(){
     var ps=propSets[selClip];
-    if(!ps){ animateFromScratch(); return; }
+    if(!ps){ startAnimating(propKey); return; }
     var p=curProp(); if(!p) return;
     var i=keyAt(p,playT);
     if(i>=0) p.keys[i].v=valueAt(p,playT);
@@ -1270,21 +1557,26 @@
   plot && plot.addEventListener("pointerdown", function(e){
     var p=curProp(); if(!p) return;
     var rect=plot.getBoundingClientRect();
+    if(e.target.closest(".kfcard")) return;      // operating the card, not the plot
     var pt=e.target.closest(".kfpt");
-    if(!pt){ startScrub(e,{getBoundingClientRect:function(){ return rect; }}); return; }
+    if(!pt){
+      selKey=-1; renderKf();                     // clicking empty plot deselects
+      startScrub(e,{getBoundingClientRect:function(){ return rect; }}); return;
+    }
     var i=+pt.getAttribute("data-i");
-    dragKey=i;
+    dragKey=i; selKey=i;
+    renderKf();
     pt.classList.add("act");
     var move=function(ev){
       var t=timeFromX(ev.clientX,rect);
-      var v=clamp(p.min+(1-(ev.clientY-rect.top)/rect.height)*(p.max-p.min),p.min,p.max);
+      var v=p.min+(1-(ev.clientY-rect.top)/rect.height)*(p.max-p.min);
       var lo=(i>0)?p.keys[i-1].t+0.05:0;
       var hi=(i<p.keys.length-1)?p.keys[i+1].t-0.05:DURATION;
       p.keys[i].t=clamp(snap(t),lo,hi);
       p.keys[i].v=Math.round(v);
       markDirty(); renderKf(); updateReadouts();
     };
-    var up=function(){ dragKey=-1; document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); renderTimeline(); renderKf(); };
+    var up=function(){ dragKey=-1; document.removeEventListener("pointermove",move); document.removeEventListener("pointerup",up); renderTimeline(); renderProps(); renderKf(); };
     document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
     e.preventDefault();
   });
@@ -1405,7 +1697,6 @@
 
   /* ---------------- BOOT ---------------- */
   renderTimeline();
-  renderLayers();
   renderProps();
   renderCanvasSel();
   renderKf();

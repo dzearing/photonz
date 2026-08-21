@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · comp-video</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* comp-video — the specimens are real timeline fragments, so almost all of
+     this page is shared classes. Local rules only size the stages the
+     fragments sit on. */
+  #comp-video .cv-stage{border-radius:var(--r3);border:1px solid var(--edge-lo);
+    background:var(--panel);padding:var(--pad-sm) var(--pad-sm) var(--gap);}
+  #comp-video .cv-stage .track{margin:10px 0}
+  #comp-video .cv-lane{height:34px}
+  #comp-video .cv-clipA{background:linear-gradient(135deg,#3f6dff,#7c4dff)}
+  #comp-video .cv-clipB{background:linear-gradient(135deg,#ff7a59,#ff5d8f)}
+  #comp-video .rl-frame{--rl-gut:104px}
+  #comp-video .rl-co .card{width:224px}
+  #comp-video .cv-two{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  @container shell (max-width:720px){ #comp-video .cv-two{grid-template-columns:1fr} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="comp-video">
+    <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Video</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
+
+    <p class="docintro">Time needs its own primitives, and they are the ones most likely to get re-invented per page because they look like decoration. They are not. Each one here encodes a rule about how editing in time actually works, and the most important of them is that <b>a transition is not a clip</b>. The workspace that uses these is <b data-target="video">Video workspace</b>; the scenario that argues the overlap model is <b data-target="video-transition-wt">Add a transition</b>.</p>
+
+    <!-- 1 · THE CLIP -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="track"><span class="tl">V1</span>
+            <div class="lane abs cv-lane">
+              <div class="clip cv-clipA" style="left:0;width:46%"><span class="lbl">screen-recording</span>
+                <span class="kfm" style="left:22%"></span><span class="kfm" style="left:58%"></span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+              <div class="clip cv-clipB" style="left:48%;width:52%"><span class="lbl">b-roll.mov</span><span class="speed">1.5x</span>
+                <span class="edge l"></span><span class="edge r"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">01</div><h3 class="docname">The clip</h3>
+        <p class="docrule">A clip is a <b>layer with an in and an out</b>, so it carries the same selection language as anything else on the canvas and adds only what time requires: <b>trim edges</b> that appear on hover, a <b>speed badge</b> when it is retimed, and <b>key marks</b> (<code>.kfm</code>) for the frames where something about it changes. The marks are read-only here on purpose — the timeline answers <i>when</i>, and <i>what</i> belongs to the clip detail pane.</p>
+        <div class="docdd">
+          <span class="do">Position in percent of the document's duration, so the same clip survives a zoom.</span>
+          <span class="no">Draw a keyframe you can drag on the clip. Two places to edit one key is two places to get it wrong.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.clip</code> in a <code>.lane.abs</code> · <code>.kfm</code> marks · <code>.edge.l/.r</code> trim handles · <code>.speed</code> badge.</p>
+      </div>
+    </div>
+
+    <!-- 2 · THE EDIT POINT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="track"><span class="tl">V1</span>
+            <div class="lane abs cv-lane">
+              <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
+              <div class="clip cv-clipB" style="left:49%;width:51%"><span class="lbl">B</span></div>
+              <button class="editpt sel" style="left:49%" aria-label="Edit point"></button>
+            </div>
+          </div>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">The seam is selected. At rest it draws nothing, because two clips that butt should look like two clips that butt.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">02</div><h3 class="docname">The edit point</h3>
+        <p class="docrule">A transition <b>belongs to the join, not to either clip</b> — it changes both sides — so the thing you select to add one is the <b>cut itself</b>. Without this primitive a page has no way to express "the join is selected", and the only demo left is splitting one clip and dissolving it into itself, which is not an edit anyone would make.</p>
+        <div class="docdd">
+          <span class="do">Invisible at rest, a hairline on hover, accent when selected.</span>
+          <span class="no">Give it width. A cut has no duration until a transition is on it.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.editpt</code> · <code>.editpt.sel</code>. Zero-width, centred on the seam.</p>
+      </div>
+    </div>
+
+    <!-- 3 · THE TRANSITION BAND + SPARE MEDIA -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="track"><span class="tl">V1</span>
+            <div class="lane abs cv-lane" style="margin-top:8px;margin-bottom:8px">
+              <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
+              <div class="clip cv-clipB" style="left:49%;width:51%"><span class="lbl">B</span></div>
+              <span class="xspare a" style="left:49%;width:14%"><span class="lb">2.0s spare</span></span>
+              <span class="xspare b" style="left:36%;width:13%"><span class="lb">1.5s spare</span></span>
+              <div class="xband sel" style="left:43%;width:12%"><span class="gr l"></span><span class="gr r"></span></div>
+            </div>
+          </div>
+        </div>
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">The band sits <b>on</b> both clips. The dashed bars are the spare media it is spending.</p>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">03</div><h3 class="docname">The overlap, and what pays for it</h3>
+        <p class="docrule">This is the one idea the whole video language is built on. A transition <b>overlaps two clips</b>, so it never occupies a slot of its own and putting one on <b>never moves a frame of anything</b>. What it spends is <b>spare media</b> — frames past a clip's in or out point that were recorded but are not being read. So the band draws <i>over</i> the clips and the spare draws <i>outside</i> them: one shows the cost, the other shows what is available to pay it.</p>
+        <p class="docrule">That is also why a cross dissolve can be impossible where a dip to black is not. Run out of spare and the editor has to say so, rather than silently shortening someone's shot.</p>
+        <div class="docdd">
+          <span class="do">A runs forward along the top, B runs back along the bottom — ownership is positional, so it needs no legend.</span>
+          <span class="no">Put the transition in a track of its own. It would imply a transition has a place in the stack, and that adding one can push things around.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.xband</code> (<code>.sel</code>, <code>.blk</code> for a dip) with <code>.gr.l/.r</code> grips · <code>.xspare.a/.b</code> with a <code>.lb</code> duration.</p>
+      </div>
+    </div>
+
+    <!-- 4 · THE COUNTER-EXAMPLE + THE EXPANDED CUT -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-two">
+          <div class="cv-stage">
+            <div class="mlabel">A fade, inside one clip</div>
+            <div class="track"><span class="tl">V1</span>
+              <div class="lane abs cv-lane">
+                <div class="clip cv-clipA" style="left:0;width:49%"><span class="lbl">A</span></div>
+                <div class="clip blk" style="left:49%;width:8%;background:#05060a;border:1px solid #2a2f45;color:#8b93b5"></div>
+                <div class="clip cv-clipB" style="left:57%;width:43%"><span class="lbl">B</span></div>
+                <span class="xfade out" style="left:41%;width:8%"></span>
+                <span class="xfade in" style="left:57%;width:8%"></span>
+                <div class="xband blk" style="left:41%;width:24%">dip to black</div>
+              </div>
+            </div>
+          </div>
+          <div class="cv-stage">
+            <div class="mlabel">The same cut, expanded</div>
+            <div class="track xrow"><span class="tl">A</span>
+              <div class="lane abs">
+                <div class="clip cv-clipA" style="left:0;width:62%"></div>
+                <span class="xused" style="left:49%;width:13%"></span>
+              </div>
+            </div>
+            <div class="track xrow"><span class="tl">B</span>
+              <div class="lane abs">
+                <div class="clip cv-clipB" style="left:49%;width:51%"></div>
+                <span class="xused" style="left:49%;width:13%"></span>
+                <span class="xboth" style="left:49%;width:13%"><span class="lb">both on screen</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">04</div><h3 class="docname">The two ways out, and the proof</h3>
+        <p class="docrule"><b>Left, the counter-example.</b> A dip is a fade-out and a fade-in that each live <b>inside their own clip's time</b>. No overlap, no spare spent, nothing moves — which is exactly why it is always available. Drawn as an outline rather than a fill, because the tail, the black and the head underneath all have to stay readable.</p>
+        <p class="docrule"><b>Right, the proof.</b> Expanding a cut puts the two clips on their own rows, where an overlap stops being a metaphor: it is literally <b>two clips playing at the same time</b>. Anyone who does not believe the band can open this and count the frames.</p>
+        <div class="docdd">
+          <span class="do">Keep the expanded rows on the same time axis as the collapsed one.</span>
+          <span class="no">Explain the overlap in a tooltip. Show it.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.xfade.in/.out</code> · <code>.xband.blk</code> · <code>.track.xrow</code> with <code>.xused</code> and <code>.xboth</code>.</p>
+      </div>
+    </div>
+
+    <!-- 5 · PICKING ONE -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage">
+          <div class="libgrid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="libtile tt sel" tabindex="0"><span class="th th-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">needs 0.6s</span></span></div>
+            <div class="libtile tt" tabindex="0"><span class="th th-dip"></span><span class="cap"><span class="nm">Dip to color</span><span class="mt">no overlap</span></span></div>
+            <div class="libtile tt" tabindex="0"><span class="th th-slide"></span><span class="cap"><span class="nm">Slide</span><span class="mt">needs 0.4s</span></span></div>
+            <div class="libtile tt" tabindex="0"><span class="th th-push"></span><span class="cap"><span class="nm">Push</span><span class="mt">needs 0.4s</span></span></div>
+            <div class="libtile tt" tabindex="0"><span class="th th-morph"></span><span class="cap"><span class="nm">Morph</span><span class="mt">needs 0.8s</span></span></div>
+            <div class="libtile tt" disabled><span class="th th-cut"></span><span class="cap"><span class="nm">Hard cut</span><span class="mt">no spare</span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">05</div><h3 class="docname">Picking a transition</h3>
+        <p class="docrule">A transition is picked with the <b>same tile grammar as a component, a style or a brush</b> — one library idiom, four scopes — so nothing here is a bespoke picker. What is video-specific is the second line: each tile states <b>what it would cost in spare media</b>, and a tile the cut cannot afford is disabled rather than hidden. Hiding it would leave you wondering where cross dissolve went; disabling it tells you to trim.</p>
+        <div class="docdd">
+          <span class="do">State the cost before the choice, not after it fails.</span>
+          <span class="no">Invent a transition picker. It is <code>.libtile</code> with a thumbnail.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.libtile.tt</code> · thumbnails <code>.th-diss/.th-dip/.th-slide/.th-push/.th-morph/.th-cut</code> · <code>[disabled]</code> when there is not enough spare.</p>
+      </div>
+    </div>
+
+    <!-- 6 · THE DOCK -->
+    <div class="docblk">
+      <div class="docspec">
+        <div class="cv-stage" style="padding:0;overflow:hidden">
+          <div class="timeline" data-tl="closed" data-tl-summary="Lower-third · 0:04 / 0:15" style="min-height:0">
+            <div class="tlbar"><span class="lbl">Timeline</span></div>
+            <button class="tlrail" type="button" tabindex="-1">
+              <i class="ic sm ic-chevron-up"></i><span class="nm">Timeline</span>
+              <span class="sum">Lower-third · 0:04 / 0:15</span><span class="sp">click to expand</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="docmeta">
+        <div class="docnum">06</div><h3 class="docname">The dock, collapsed</h3>
+        <p class="docrule">The timeline is the biggest thing between you and a full-height preview, so it collapses — to <b>one row</b>, mirroring the panel dock's rail. The row reports the <b>selection</b> rather than the panel's name, because the reason you collapsed it was to look at the canvas, and the question you then have is "what am I still editing".</p>
+        <div class="docdd">
+          <span class="do">Write <code>data-tl-summary</code> and let the component pick it up.</span>
+          <span class="no">Author the × or the rail. <code>dock.js</code> injects both into any <code>.win &gt; .timeline</code>.</span>
+        </div>
+        <p class="docapi"><b>API</b> <code>.timeline[data-tl="open|closed"]</code> · <code>.tl-close</code> · <code>.tlrail</code> · <code>data-tl-summary</code>. See UX-PATTERNS D9.</p>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="c"><div class="lab">Why these are components</div><p>They look like decoration, so they get re-invented per page — the overlap band lived on exactly one page, scoped to its id, even though it carries the single most video-specific idea in the product. A primitive that encodes a rule has to be somewhere an author can find it, or the rule gets re-litigated every time.</p></div>
+      <div class="c"><div class="lab g2">The one rule to keep</div><p>A transition is <b>not a clip</b>. It has no slot, it moves nothing, and it is paid for in spare media. Every visual decision here follows from that: the band draws on top, the spare draws outside, the dip is an outline, and the expanded rows exist so the claim can be checked.</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>Spare media is drawn only while the cut is selected. Should it be permanently visible at low contrast, so you can see which cuts have room before you pick one — or is that a timeline covered in dashes?</p></div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

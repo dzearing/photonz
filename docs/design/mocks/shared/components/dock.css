@@ -295,3 +295,57 @@
 .drailtab:focus-visible{outline:none;box-shadow:var(--ring)}
 .drailtab.on{color:var(--accent)}
 .drailtab.on .ic{color:var(--accent)}
+
+/* ============================================================
+   THE BOTTOM DOCK COLLAPSES TOO
+   ============================================================
+   The panel dock could be dismissed to a rail; the timeline could not, which
+   made the two docks inconsistent in the one way that matters — whether you can
+   get your canvas back. On a laptop the timeline is the single biggest thing
+   between you and a full-height preview, so it is the one people most want to
+   push away, and it was the one with no handle to do it.
+
+   It follows the side dock exactly, because a second collapse idiom would be
+   worse than none: expanded, an "×" in the local bar (.tl-close, the same
+   control as .dock-close); collapsed, ONE row that names itself, carries the
+   current selection, and expands on click (.tlrail, the horizontal .drail).
+
+   The rail states the SELECTION rather than just "Timeline", because the whole
+   reason you collapsed it was to look at the canvas — and the question you then
+   have is "what am I still editing", not "is there a timeline". Pages keep it
+   current by writing data-tl-summary on the .timeline element.
+   ============================================================ */
+.timeline[data-tl="closed"] > :not(.tlrail){display:none}
+/* .timeline carries min-height:172px for the expanded case (inspector.css), and
+   that floor kept a "collapsed" dock 172px tall — a collapse that reclaims
+   nothing is theatre. Collapsed, the row IS the height. */
+.timeline[data-tl="closed"]{min-height:0;max-height:none;padding:0;overflow:visible}
+.tlrail{display:none}
+.timeline[data-tl="closed"] > .tlrail{
+  display:flex;align-items:center;gap:var(--s2);width:100%;
+  padding:var(--s2) var(--s3);border:0;background:transparent;
+  font-family:inherit;font-size:11px;color:var(--dim);cursor:pointer;
+  text-align:left;transition:var(--ctl-tr)}
+.tlrail:hover{background:var(--glass-thin);color:var(--ink)}
+.tlrail:active{transform:scale(.995)}
+.tlrail:focus-visible{outline:none;box-shadow:var(--ring)}
+.tlrail .ic{color:var(--faint);flex:none}
+.tlrail:hover .ic{color:var(--ink)}
+.tlrail .nm{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);font-weight:660;flex:none}
+/* the selection summary is the payload of the collapsed row, so it gets the
+   readable weight and the monospace numbers the transport uses */
+.tlrail .sum{font-family:var(--mono);font-size:10.5px;color:var(--ink);
+  font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tlrail .sp{margin-left:auto;flex:none;color:var(--faint);font-size:10px}
+/* the × sits at the end of the local bar, mirroring the panel dock's header */
+.tlbar .tl-close{margin-left:auto;flex:none;width:24px;height:24px;padding:0;border:0;
+  border-radius:7px;cursor:pointer;background:transparent;color:var(--faint);
+  display:grid;place-items:center;transition:var(--ctl-tr)}
+.tlbar .tl-close:hover{background:var(--glass-thin);color:var(--ink)}
+.tlbar .tl-close:active{transform:scale(.94)}
+.tlbar .tl-close:focus-visible{outline:none;box-shadow:var(--ring)}
+/* a dock with no local bar has nowhere to put the ×, so it floats at the
+   dock's own top-right. .timeline is already position:relative. */
+.tlbar .tl-close.afloat,
+.timeline > .tl-close.afloat{position:absolute;top:var(--s2);right:var(--s2);z-index:6}

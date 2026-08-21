@@ -46,72 +46,13 @@
   #video-transition-wt .fr.b .hill{position:absolute;left:-10%;right:-10%;bottom:-32%;height:70%;border-radius:50%;
     background:rgba(0,0,0,.28)}
 
-  /* ---------- the timeline, which is where the argument is made ---------- */
-  #video-transition-wt .lane.abs{display:block;position:relative}
-  #video-transition-wt .lane.abs>*{position:absolute;top:0}
+  /* The overlap family (.xband, .xspare, .xfade, .xused, .xboth, .xbtn, the
+     .lane.abs positioning and the cut) now lives in the shared component
+     library — see shared/components/video.css and pages/comp-video.html. Only
+     the two things genuinely local to this scenario stay here. */
   #video-transition-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;
     display:block;line-height:34px}
   #video-transition-wt .clip.blk{background:#05060a;border:1px solid #2a2f45;color:#8b93b5;line-height:32px}
-
-  /* THE CUT · zero width, drawn over the seam. At rest it is invisible: two
-     clips that butt look like two clips that butt. */
-  #video-transition-wt .cut{width:14px;height:34px;transform:translateX(-50%);z-index:7;cursor:pointer;
-    background:transparent;border:0;padding:0}
-  #video-transition-wt .cut::before{content:"";position:absolute;left:50%;top:2px;bottom:2px;width:2px;
-    transform:translateX(-50%);border-radius:2px;background:transparent;transition:background .12s ease}
-  #video-transition-wt .cut:hover::before{background:rgba(255,255,255,.55)}
-  #video-transition-wt .cut.sel::before{background:var(--accent);top:-3px;bottom:-3px;width:3px;
-    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 24%, transparent)}
-
-  /* SPARE MEDIA · the frames past a clip's in or out point that an overlap can
-     be paid for with. Shown while the cut is selected: A's spare runs forward
-     along the top, B's spare runs back along the bottom. */
-  #video-transition-wt .spare{height:5px;border-radius:3px;z-index:5;opacity:.95}
-  #video-transition-wt .spare.a{top:-2px;background:repeating-linear-gradient(90deg,#9a7dff,#9a7dff 3px,transparent 3px,transparent 6px)}
-  #video-transition-wt .spare.b{top:auto;bottom:-2px;background:repeating-linear-gradient(90deg,#ffb98a,#ffb98a 3px,transparent 3px,transparent 6px)}
-  /* the label rides INSIDE the clip body, so it never collides with the ruler */
-  #video-transition-wt .spare .lb{position:absolute;top:7px;left:2px;font-size:8.5px;font-family:var(--mono);
-    color:#dbe4ff;white-space:nowrap;background:rgba(8,10,18,.72);padding:1px 4px;border-radius:3px}
-  #video-transition-wt .spare.b .lb{top:auto;bottom:7px;right:2px;left:auto}
-
-  /* THE TRANSITION · a band ON the two clips. It never occupies a slot of its
-     own, so putting one on never moves a frame of anything. */
-  #video-transition-wt .xband{height:34px;border-radius:6px;z-index:6;cursor:grab;
-    background:linear-gradient(90deg,rgba(18,194,233,.75),rgba(255,157,92,.75));
-    border:1px solid rgba(255,255,255,.55);box-shadow:0 2px 10px -3px rgba(0,0,0,.5);
-    display:flex;align-items:center;justify-content:center;color:#0b0d18}
-  /* a dip spans fade-out + hold + fade-in, and what is underneath (the tail,
-     the black, the head) has to stay readable, so it is an outline not a fill */
-  #video-transition-wt .xband.blk{background:transparent;border:1px dashed rgba(255,255,255,.6);
-    box-shadow:none;color:#fff;align-items:flex-start;padding-top:1px}
-  #video-transition-wt .xband.sel{box-shadow:0 0 0 2px var(--accent),0 2px 10px -3px rgba(0,0,0,.5)}
-  #video-transition-wt .xband .gr{position:absolute;top:50%;width:5px;height:16px;transform:translateY(-50%);
-    border-radius:2px;background:rgba(255,255,255,.9)}
-  #video-transition-wt .xband .gr.l{left:-2px} #video-transition-wt .xband .gr.r{right:-2px}
-  /* a fade that lives INSIDE one clip's own time: no overlap, nothing moves */
-  #video-transition-wt .fade{height:34px;z-index:6;border-radius:6px;pointer-events:none}
-  #video-transition-wt .fade.out{background:linear-gradient(90deg,transparent,#05060a)}
-  #video-transition-wt .fade.in{background:linear-gradient(90deg,#05060a,transparent)}
-
-  /* THE EXPANDED CUT · the same two clips on their own rows, so an overlap is
-     literally two clips at the same time */
-  #video-transition-wt .track.xrow{margin:3px 0}
-  #video-transition-wt .track.xrow .tl{font-size:9.5px;text-transform:none;letter-spacing:0;color:var(--faint)}
-  #video-transition-wt .track.xrow .lane{height:22px}
-  #video-transition-wt .track.xrow .clip{height:22px;line-height:22px;font-size:9.5px;border-radius:5px}
-  #video-transition-wt .track.xrow .fade{height:22px;border-radius:5px}
-  #video-transition-wt .used{height:22px;z-index:3;border-radius:5px;
-    background:repeating-linear-gradient(45deg,rgba(255,255,255,.36),rgba(255,255,255,.36) 3px,transparent 3px,transparent 7px)}
-  #video-transition-wt .bothmark{height:22px;z-index:4;border-radius:5px;border:1px dashed rgba(255,255,255,.9);
-    background:rgba(255,255,255,.08)}
-  #video-transition-wt .bothmark .lb{position:absolute;left:50%;top:-15px;transform:translateX(-50%);
-    font-size:8.5px;font-weight:700;letter-spacing:.03em;color:#fff;white-space:nowrap;
-    background:rgba(10,12,22,.82);border-radius:4px;padding:1px 5px}
-  #video-transition-wt .xbtn{border:0;background:transparent;color:var(--faint);padding:0;margin-right:2px;
-    display:inline-flex;align-items:center;cursor:pointer}
-  #video-transition-wt .xbtn:hover{color:var(--ink)}
-  #video-transition-wt .xbtn .ic{transform:rotate(-90deg);transition:transform .15s ease}
-  #video-transition-wt .xbtn.open .ic{transform:rotate(0deg)}
 
   /* the picker · tiles, and the ones this cut cannot pay for say so */
   #video-transition-wt #transPick{width:248px}
@@ -454,12 +395,12 @@
               <div class="clip v2" id="clipC" style="left:77.778%;width:22.222%" tabindex="0" role="button">outro.mov</div>
 
               <!-- the spare media either side of the selected cut -->
-              <span class="spare a wt-off" id="spareA" style="left:44.444%;width:11.111%"><span class="lb" id="spareALb">2.0s spare</span></span>
-              <span class="spare b wt-off" id="spareB" style="left:36.111%;width:8.333%"><span class="lb" id="spareBLb">1.5s spare</span></span>
+              <span class="xspare a wt-off" id="spareA" style="left:44.444%;width:11.111%"><span class="lb" id="spareALb">2.0s spare</span></span>
+              <span class="xspare b wt-off" id="spareB" style="left:36.111%;width:8.333%"><span class="lb" id="spareBLb">1.5s spare</span></span>
 
               <!-- fades that live inside a clip's own time (the dips) -->
-              <span class="fade out wt-off" id="fadeOut" style="left:41.667%;width:2.778%"></span>
-              <span class="fade in wt-off" id="fadeIn" style="left:44.444%;width:2.778%"></span>
+              <span class="xfade out wt-off" id="fadeOut" style="left:41.667%;width:2.778%"></span>
+              <span class="xfade in wt-off" id="fadeIn" style="left:44.444%;width:2.778%"></span>
 
               <!-- the transition itself, drawn over the seam -->
               <span class="xband wt-off" id="xband" style="left:42.778%;width:3.333%" tabindex="0" role="button">
@@ -467,8 +408,8 @@
               </span>
 
               <!-- the cuts: zero width, invisible until pointed at -->
-              <button class="cut" id="cut1" style="left:44.444%" title="The cut at 0:08" aria-label="Cut at 0:08"></button>
-              <button class="cut" id="cut2" style="left:77.778%" title="The cut at 0:14" aria-label="Cut at 0:14"></button>
+              <button class="editpt" id="cut1" style="left:44.444%" title="The cut at 0:08" aria-label="Cut at 0:08"></button>
+              <button class="editpt" id="cut2" style="left:77.778%" title="The cut at 0:14" aria-label="Cut at 0:14"></button>
             </div>
           </div>
 
@@ -477,16 +418,16 @@
           <div class="track xrow wt-off" id="rowA"><span class="tl">A</span>
             <div class="lane abs">
               <div class="clip v1" id="xClipA" style="left:0;width:44.444%">screen-recording</div>
-              <span class="used wt-off" id="usedA" style="left:44.444%;width:2.778%"></span>
-              <span class="fade out wt-off" id="xFadeOut" style="left:41.667%;width:2.778%"></span>
+              <span class="xused wt-off" id="usedA" style="left:44.444%;width:2.778%"></span>
+              <span class="xfade out wt-off" id="xFadeOut" style="left:41.667%;width:2.778%"></span>
             </div>
           </div>
           <div class="track xrow wt-off" id="rowB"><span class="tl">B</span>
             <div class="lane abs">
               <div class="clip" id="xClipB" style="left:44.444%;width:33.333%;background:linear-gradient(135deg,#ff9d5c,#ff5d8f)">b-roll.mov</div>
-              <span class="used wt-off" id="usedB" style="left:41.667%;width:2.778%"></span>
-              <span class="fade in wt-off" id="xFadeIn" style="left:44.444%;width:2.778%"></span>
-              <span class="bothmark wt-off" id="bothMark" style="left:41.667%;width:5.556%"><span class="lb">both on screen · 1.0s</span></span>
+              <span class="xused wt-off" id="usedB" style="left:41.667%;width:2.778%"></span>
+              <span class="xfade in wt-off" id="xFadeIn" style="left:44.444%;width:2.778%"></span>
+              <span class="xboth wt-off" id="bothMark" style="left:41.667%;width:5.556%"><span class="lb">both on screen · 1.0s</span></span>
             </div>
           </div>
 

@@ -310,6 +310,10 @@ Every editor/scenario page must satisfy:
 - [ ] Controls are canonical `.btn`/`.seg`/etc. with real states.
 - [ ] **Transport bar holds time controls only** (D8): nothing but volume,
       skip, play/pause, loop, the two timecodes and the scrubber shares that row.
+- [ ] **Every animatable property shows how to animate it** (D10): property
+      rows list the whole catalogue, not only the keyed ones.
+- [ ] **Both docks collapse** (D9): the side dock to a rail, the bottom dock to
+      one row that names the selection.
 - [ ] Copy: plain, no em dashes, "agent" not "Claude".
 
 ---
@@ -594,3 +598,73 @@ playhead says when, and the diamond's own fill says whether a key is already
 there (hollow = click to set, filled = click to clear). That is the After
 Effects / Final Cut idiom, and it replaces two labelled buttons with one
 control that also reads as state. Canonical page: `pages/video.html`.
+
+---
+
+### D9 — Every dock collapses, and the bottom one collapses to a row
+
+The panel dock could be dismissed to a rail. The timeline could not, which made
+the two inconsistent in the one way that matters: whether you can get your canvas
+back. On a laptop the timeline is the single biggest thing between you and a
+full-height preview, so it is the one people most want to push away — and it was
+the one with no handle to do it.
+
+It now follows the side dock exactly, because a second collapse idiom is worse
+than none:
+
+| | expanded | collapsed |
+| --- | --- | --- |
+| side dock | `.dock-close` (×) in its header | `.drail` — a vertical rail of `.drailtab`s |
+| bottom dock | `.tl-close` (×) at the end of `.tlbar` | `.tlrail` — ONE row |
+
+Both are injected by `dock.js`, not authored per page, so all fourteen timeline
+pages get the control without editing fourteen files.
+
+**The collapsed row states the selection, not just the panel's name.** The reason
+you collapsed the timeline was to look at the canvas, so the question you then
+have is "what am I still editing" — not "is there a timeline". Pages keep it
+current by writing `data-tl-summary` on the `.timeline`; `dock.js` observes the
+attribute so the page never has to know a rail exists. On `video.html` that reads
+`Lower-third · 0:04 / 0:15`, and collapsing takes the canvas from 460px to 697px.
+
+Two traps, both of which produce the same symptom — contents correctly hidden
+inside a dock that never shrank:
+
+1. `.timeline` carries `min-height:172px` for the expanded case, so the collapsed
+   rule must release it (`min-height:0`).
+2. Several pages pin their dock with an **inline** `style="min-height:170px"`,
+   and an inline declaration outranks any stylesheet rule. `dock.js` stashes the
+   inline `minHeight`/`height`/`maxHeight` on the way down and restores them on
+   the way up, rather than escalating to `!important` — the page keeps ownership
+   of its own expanded size, and it comes back to the pixel.
+
+A collapse that reclaims nothing is theatre. Verified: 14/14 dock timelines
+collapse to a 30px row and restore to their exact original height.
+
+---
+
+### D10 — A property list shows what CAN be animated, not what is
+
+Rendering only already-keyed properties hides the mechanism exactly when it is
+needed most: on a clip with nothing animated there is nothing to click, and on a
+clip with three keyed properties it looks as though those are the only three that
+exist. Neither is true.
+
+So the inspector renders a **catalogue** — every property the selected kind can
+animate — and the keyed set is only a record of what it currently *is* animating.
+Every row carries the same control, so "how do I animate this?" has one answer
+everywhere: click the diamond on its row. The diamond carries three states, and
+they must be distinguishable at 8px:
+
+| state | look | click does |
+| --- | --- | --- |
+| dormant | dim outline, quietest thing in the row | starts animating it, first key at the playhead |
+| animated, no key here | outline in the property colour | adds a key at the playhead |
+| animated, key here | solid fill | removes that key |
+
+Clearing the last key retires the property to dormant rather than deleting the
+row — one key is a constant, not an animation, and a row that vanishes when you
+undo the thing that created it is a trapdoor.
+
+The catalogue is per kind: a visual clip offers Opacity/Position/Scale/Rotation/
+Blur, an audio clip offers Volume/Pan. Canonical page: `pages/video.html`.
