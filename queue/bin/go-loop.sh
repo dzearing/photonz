@@ -7,7 +7,7 @@ set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
 export GO_LOOP_PID=$$
-Q="node queue/bin/queue.mjs"
+Q() { node queue/bin/queue.mjs "$@"; }
 LOG="queue/loop.log"
 CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format text)
 
@@ -15,7 +15,7 @@ banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
 
 cleanup() {
-  $Q stopped
+  Q stopped
   banner "**Go loop stopped**"
   state idle
   exit 0
@@ -23,7 +23,8 @@ cleanup() {
 trap cleanup INT TERM
 
 echo "[go-loop] started pid=$$ repo=$REPO" | tee -a "$LOG"
-$Q event loop_started "{\"pid\":$$}"
+Q event loop_started "{\"pid\":$$}"
+Q busy "starting up"
 
 while :; do
   TODAY=$(date +%F)
@@ -31,21 +32,21 @@ while :; do
   # Daily digest + triage: once per calendar day, before picking new work.
   if [[ ! -f "queue/digests/$TODAY.md" ]]; then
     echo "[go-loop] $(date +%T) generating digest + triage for $TODAY" | tee -a "$LOG"
-    $Q note "running daily digest + triage"
+    Q busy "running daily digest + triage"
     banner "**Go loop** running daily digest + triage for $TODAY"
     state busy
     claude -p "${CLAUDE_FLAGS[@]}" "$(cat queue/bin/digest-prompt.md)" >> "$LOG" 2>&1
     # If the digest still does not exist, write a stub so we do not spin on it.
     if [[ ! -f "queue/digests/$TODAY.md" ]]; then
       printf '# Daily digest %s\n\n## Summary\nDigest generation failed; see queue/loop.log.\n\n## Reflections\n(none)\n\n## Triage review\n(skipped)\n' "$TODAY" > "queue/digests/$TODAY.md"
-      $Q event digest_failed "{}"
+      Q event digest_failed "{}"
     fi
   fi
 
   # Claim the next ready task.
-  TASK_FILE=$($Q next)
+  TASK_FILE=$(Q next)
   if [[ "$TASK_FILE" == "none" ]]; then
-    $Q idle
+    Q idle
     banner "**Go loop** idle, no ready tasks. Queue one from the dashboard."
     state idle
     sleep 60
@@ -65,7 +66,7 @@ TASK FILE: $TASK_FILE" >> "$LOG" 2>&1
   echo "[go-loop] $(date +%T) task $TASK_ID runner exited $EXIT" | tee -a "$LOG"
 
   # Safety net: a runner must finalize its task; reset it if it did not.
-  $Q guard >> "$LOG" 2>&1
-  $Q note "between tasks"
+  Q guard >> "$LOG" 2>&1
+  Q note "between tasks"
   sleep 5
 done

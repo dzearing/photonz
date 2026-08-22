@@ -1,0 +1,4 @@
+# Ephemeral runtime state: the loop rewrites these constantly and they mean
+# nothing on another machine. Tasks, decisions, digests, and history stay tracked.
+status.json
+loop.log

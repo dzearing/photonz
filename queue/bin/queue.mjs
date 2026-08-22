@@ -30,6 +30,9 @@ try {
     case 'idle':
       q.writeStatus({ state: 'idle', task: null, note: 'waiting for tasks', pid });
       break;
+    case 'busy':
+      q.writeStatus({ state: 'running', task: null, note: args.join(' ') || 'working', pid });
+      break;
     case 'stopped':
       q.writeStatus({ state: 'stopped', task: null, note: 'go loop is not running', pid: null });
       break;
