@@ -1,15 +1,146 @@
 {
-  "updated": "2026-08-22T23:30:00.000Z",
+  "updated": "2026-08-22T23:58:05.392Z",
   "epics": [
     {
       "id": "measure-redline",
       "title": "Make Photonz the best UX redlining tool",
       "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
       "children": [
-        { "id": "hover-measure", "title": "Hover to measure: instant size and gap readouts", "note": "", "children": [] },
-        { "id": "measurements-panel", "title": "Measurements panel: a list you can name, filter, and export", "note": "", "children": [] },
-        { "id": "alignment-checks", "title": "Alignment checking", "note": "Blocked on a UX decision.", "children": [] },
-        { "id": "spec-export", "title": "Spec export: copy a clean spec list from a capture", "note": "", "children": [] }
+        {
+          "id": "hover-measure",
+          "title": "Hover to measure: instant size and gap readouts",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "epic-uehjr1",
+          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "measurements-panel",
+          "title": "Measurements panel: a list you can name, filter, and export",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "alignment-checks",
+          "title": "Alignment checking",
+          "note": "Blocked on a UX decision.",
+          "children": []
+        },
+        {
+          "id": "spec-export",
+          "title": "Spec export: copy a clean spec list from a capture",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "video-editing",
+      "title": "Make Photonz the best tool for creating and editing video",
+      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
+      "children": [
+        {
+          "id": "video-cutting",
+          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "video-transitions-motion",
+          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "video-titles-graphics",
+          "title": "Titles, captions, and graphics on the timeline",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "video-audio",
+          "title": "Audio you can see and shape",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "video-share",
+          "title": "Fast, predictable export and share",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "ui-building",
+      "title": "Make Photonz the best tool for building UI",
+      "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
+      "children": [
+        {
+          "id": "ui-components",
+          "title": "Component design: create once, reuse everywhere, override safely",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "ui-layout",
+          "title": "Auto-layout and grids that behave like real UI",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "ui-screens",
+          "title": "Build full screens from nothing fast",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "ui-design-systems",
+          "title": "Design systems: tokens, styles, and switching them",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "ui-prototyping",
+          "title": "Click-through prototyping",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "image-editing",
+      "title": "Make Photonz the best tool for image editing",
+      "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
+      "children": [
+        {
+          "id": "image-retouch",
+          "title": "Retouching: heal, clone, and dodge/burn",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "image-grading",
+          "title": "Color grading with curves, levels, and looks",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "image-masking",
+          "title": "Masking and background removal",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "image-paint",
+          "title": "Drawing and painting with real brushes",
+          "note": "",
+          "children": []
+        }
       ]
     },
     {
@@ -17,9 +148,24 @@
       "title": "Advance the creation vision in Next",
       "note": "One document, layers are everything, surfaces as lenses. Mock-first: a concept graduates from the design study to Next only after its clickthrough is hardened.",
       "children": [
-        { "id": "capture-clickthrough", "title": "Capture and redline clickthrough hardened", "note": "", "children": [] },
-        { "id": "editor-surfaces", "title": "Editor surfaces conform to the one-shell model", "note": "", "children": [] },
-        { "id": "component-video", "title": "Component and video workspaces validated in mocks", "note": "", "children": [] }
+        {
+          "id": "capture-clickthrough",
+          "title": "Capture and redline clickthrough hardened",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "editor-surfaces",
+          "title": "Editor surfaces conform to the one-shell model",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "component-video",
+          "title": "Component and video workspaces validated in mocks",
+          "note": "",
+          "children": []
+        }
       ]
     },
     {
@@ -27,9 +173,24 @@
       "title": "One design system, zero drift",
       "note": "Every page reads as one product: canonical controls, one icon library, control metrics, both themes.",
       "children": [
-        { "id": "control-metrics", "title": "Control metrics conformance: heights, gaps, light source", "note": "", "children": [] },
-        { "id": "icon-conformance", "title": "Icon conformance across all pages", "note": "", "children": [] },
-        { "id": "clickthrough-sweep", "title": "Checklist sweep of every clickthrough page", "note": "", "children": [] }
+        {
+          "id": "control-metrics",
+          "title": "Control metrics conformance: heights, gaps, light source",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "icon-conformance",
+          "title": "Icon conformance across all pages",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "clickthrough-sweep",
+          "title": "Checklist sweep of every clickthrough page",
+          "note": "",
+          "children": []
+        }
       ]
     },
     {
@@ -37,9 +198,24 @@
       "title": "Keep the unmanned loop trustworthy",
       "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality.",
       "children": [
-        { "id": "loop-robustness", "title": "Loop robustness: no double starts, clean recovery", "note": "", "children": [] },
-        { "id": "dashboard-polish", "title": "Dashboard polish and conformance", "note": "", "children": [] },
-        { "id": "digest-quality", "title": "Digests stay honest and useful", "note": "", "children": [] }
+        {
+          "id": "loop-robustness",
+          "title": "Loop robustness: no double starts, clean recovery",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "dashboard-polish",
+          "title": "Dashboard polish and conformance",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "digest-quality",
+          "title": "Digests stay honest and useful",
+          "note": "",
+          "children": []
+        }
       ]
     }
   ]
