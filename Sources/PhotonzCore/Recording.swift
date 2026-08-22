@@ -233,7 +233,7 @@ public enum AnimatedExportPlanner {
         // At least one frame even for a near-zero clip; otherwise one frame per
         // 1/fps step across the duration.
         let count = max(1, Int((max(0, duration) * fps).rounded()))
-        let size = PinnedImageMetrics.fittedSize(imageSize: sourceSize, maxDimension: maxDimension)
+        let size = Geometry.downscaledToFit(sourceSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size)
     }
 
@@ -252,7 +252,7 @@ public enum AnimatedExportPlanner {
         let trimmed = trim.effectiveDuration
         let count = max(1, Int((max(0, trimmed) * fps).rounded()))
         let baseSize = crop?.outputSize ?? sourceSize
-        let size = PinnedImageMetrics.fittedSize(imageSize: baseSize, maxDimension: maxDimension)
+        let size = Geometry.downscaledToFit(baseSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
                                   trimStart: trim.inPoint)
     }

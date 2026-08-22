@@ -201,3 +201,32 @@ struct GeometryTests {
         #expect(abs(Geometry.arrowheadHalfWidth(strokeWidth: 6) - wingReach) < 1e-6)
     }
 }
+
+@Suite("Downscale to fit")
+struct DownscaledToFitTests {
+
+    @Test func landscapeFitsByWidth() {
+        #expect(Geometry.downscaledToFit(CGSize(width: 800, height: 400), maxDimension: 360)
+                == CGSize(width: 360, height: 180))
+    }
+
+    @Test func portraitFitsByHeight() {
+        #expect(Geometry.downscaledToFit(CGSize(width: 400, height: 800), maxDimension: 360)
+                == CGSize(width: 180, height: 360))
+    }
+
+    @Test func smallSizeIsNotUpscaled() {
+        #expect(Geometry.downscaledToFit(CGSize(width: 120, height: 90), maxDimension: 360)
+                == CGSize(width: 120, height: 90))
+    }
+
+    @Test func resultIsWholePixels() {
+        #expect(Geometry.downscaledToFit(CGSize(width: 333, height: 100), maxDimension: 200)
+                == CGSize(width: 200, height: 60))
+    }
+
+    @Test func invalidSizesYieldZero() {
+        #expect(Geometry.downscaledToFit(.zero, maxDimension: 360) == .zero)
+        #expect(Geometry.downscaledToFit(CGSize(width: 100, height: 100), maxDimension: 0) == .zero)
+    }
+}

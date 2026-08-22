@@ -12,6 +12,16 @@ public enum Geometry {
         return CGSize(width: size.width * scale, height: size.height * scale)
     }
 
+    /// Scales `size` down to fit inside a square of side `maxDimension`,
+    /// preserving aspect ratio and **never upscaling** (a small image stays
+    /// small), rounded to whole pixels. The export planners' output-size cap.
+    public static func downscaledToFit(_ size: CGSize, maxDimension: CGFloat) -> CGSize {
+        guard size.width > 0, size.height > 0, maxDimension > 0 else { return .zero }
+        let scale = min(1, min(maxDimension / size.width, maxDimension / size.height))
+        return CGSize(width: (size.width * scale).rounded(),
+                      height: (size.height * scale).rounded())
+    }
+
     /// Scales `size` to fill `bounds` preserving aspect ratio (may overflow one axis).
     public static func aspectFill(_ size: CGSize, in bounds: CGSize) -> CGSize {
         guard size.width > 0, size.height > 0 else { return .zero }

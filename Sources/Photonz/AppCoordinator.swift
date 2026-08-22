@@ -41,9 +41,6 @@ final class AppCoordinator {
     /// when the overlay was opened manually (⌘⇧H) or after it's dismissed.
     private(set) var highlightedCaptureURL: URL?
 
-    /// Pin-to-screen floating windows (phase 11.8).
-    @ObservationIgnored private let pinned = PinnedWindowController()
-
     /// Floating tooltips for the history overlay's per-item icons (their own
     /// window so they escape the overlay bounds — no reserved space per cell).
     @ObservationIgnored private let tooltip = TooltipController()
@@ -355,13 +352,6 @@ final class AppCoordinator {
         alert.runModal()
     }
 
-    /// Pin a capture as a floating, always-on-top window (phase 11.8).
-    func pinCapture(_ url: URL) {
-        guard let entry = capture.store.entries.first(where: { $0.url == url }),
-              let image = capture.store.image(for: entry) else { return }
-        pinned.pin(image: image, on: activeScreen())
-    }
-
     // MARK: - History overlay
 
     /// ⌘⇧H / menu: show the global history overlay, or hide it if already up.
@@ -441,8 +431,8 @@ final class AppCoordinator {
         openWindowAction?(id)
     }
 
-    /// Editor windows are real titled app windows; the history/pinned/tooltip
-    /// surfaces are panels. Be `.regular` while any editor window is open (Dock
+    /// Editor windows are real titled app windows; the history/tooltip surfaces
+    /// are panels. Be `.regular` while any editor window is open (Dock
     /// icon + ⌘` cycling) and return to the windowless agent's `.accessory` (no
     /// Dock icon) when none remain.
     func syncActivationPolicy() {
@@ -454,7 +444,7 @@ final class AppCoordinator {
     }
 
     /// An editor window (titled, non-panel — image or video editor), as opposed
-    /// to the app's panels (history overlay, pinned, tooltip, toast, welcome).
+    /// to the app's panels (history overlay, tooltip, toast, welcome).
     private static func isEditorWindow(_ window: NSWindow) -> Bool {
         !(window is NSPanel) && window.styleMask.contains(.titled)
     }

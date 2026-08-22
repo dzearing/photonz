@@ -3510,3 +3510,31 @@ Finder · Delete for screenshots. Every capture is a real file in a normal folde
 so every tile can point at it.
 
 **Verified**: 799 tests green. Dev app rebuilt and relaunched.
+
+## 2026-08-22 (later still) — pin-to-screen is gone
+
+*"remove the pin feature"* — *"it's stupid and only on some types?"*. Both halves
+were right: pinning floated an always-on-top copy of a screenshot above every
+window, and it only ever appeared on image tiles, so recordings silently didn't
+have it. An action that exists on half the things in a list reads as a bug even
+when it isn't.
+
+Deleted `PinnedWindowController` and `PinnedImageView` (app),
+`AppCoordinator.pinCapture` and its controller, and the tile's Pin button.
+History tile actions are now Copy · Edit (images) or Copy · Play (videos), then
+Show in Finder · Delete on every tile — same set everywhere except the two that
+genuinely differ by media type.
+
+`PinnedImageMetrics` couldn't just go: `fittedSize` had one live non-pin
+consumer, `AnimatedExportPlanner`, which uses it to cap a GIF/HEIC's output size.
+It moved to `Geometry.downscaledToFit(_:maxDimension:)` — a name that says what
+it does now that nothing is pinned — with its five sizing tests rehomed into
+`GeometryTests`. The opacity policy had no consumer left and went away.
+
+While editing `docs/plan/phase-11.json` I found it was **already invalid JSON**:
+a stray `" }, ` had been spliced into the middle of 11.4's note, leaving the rest
+of the sentence dangling outside the string. Rejoined it, so the file parses
+again. Not related to this change — just a file nobody had re-read since.
+
+**Verified**: 798 tests green (six pin tests out, five geometry tests in). Dev
+app rebuilt and relaunched.

@@ -303,10 +303,6 @@ private struct HistoryOverlayCell: View {
                 iconButton("Edit", "square.and.pencil") {
                     coordinator.editCapture(entry.url)
                 }
-                iconButton("Pin", "pin") {
-                    coordinator.pinCapture(entry.url)
-                    coordinator.hideHistory()
-                }
             }
             // Every capture is a real file in a normal folder, so every tile can
             // point at it. Recordings had an Export menu here instead (Export
