@@ -171,7 +171,14 @@ export function readDecisions() {
   ensureDirs();
   return readdirSync(DECISIONS).filter((f) => f.endsWith('.json'))
     .map((f) => readJSON(join(DECISIONS, f))).filter(Boolean)
+    .map((d) => ({ ...d, hasBrief: existsSync(join(DECISIONS, `${d.id}.md`)) }))
     .sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+}
+// The brief: a durable plain-language explainer next to the decision JSON
+// (<id>.md). The dashboard's "Explain in more detail" renders it.
+export function readDecisionBrief(id) {
+  if (!/^[a-z0-9-]+$/.test(id)) return null;
+  try { return readFileSync(join(DECISIONS, `${id}.md`), 'utf8'); } catch { return null; }
 }
 
 export function addDecision({ taskId, question, context = '', options = [], recommended = '' }) {

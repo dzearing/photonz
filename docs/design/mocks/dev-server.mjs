@@ -78,6 +78,11 @@ async function handleApi(req, res, url) {
   if (!lib) return send(503, { error: 'queue unavailable' });
   try {
     if (req.method === 'GET' && url === '/api/state') return send(200, lib.aggregateState());
+    if (req.method === 'GET' && url.startsWith('/api/decision-brief/')) {
+      const id = decodeURIComponent(url.slice('/api/decision-brief/'.length));
+      const body = lib.readDecisionBrief(id);
+      return body === null ? send(404, { error: 'no brief' }) : send(200, { id, body });
+    }
     if (req.method === 'GET' && url.startsWith('/api/digest/')) {
       const name = decodeURIComponent(url.slice('/api/digest/'.length));
       if (!/^[\d-]+\.md$/.test(name)) return send(400, { error: 'bad digest name' });

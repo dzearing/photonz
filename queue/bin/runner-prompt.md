@@ -31,7 +31,16 @@ Do not guess on anything the user would want to weigh in on (visual direction, s
    where each option in the JSON array has this shape:
    `{"id":"a","label":"Short name","summary":"One or two plain sentences: what the user would see and do.","pros":["..."],"cons":["..."],"mitigation":"How the main con gets softened."}`
    Give 2 to 4 real options and always recommend one.
-2. **Frame it as a UX decision, never an engineering one.** The user is deciding
+2. **Write the brief.** Alongside the decision, create
+   `queue/decisions/<decisionId>.md`: a durable plain-language explainer that
+   assumes the reader has NO context. Say what the surface or feature actually
+   is, where it lives (link to the mock page, e.g.
+   `http://127.0.0.1:8791/index.html#redline`), what the user would experience
+   under each option, and anything visual worth studying (link to pages; a spec
+   doc; a short worked example). Headings, short paragraphs, links. The
+   dashboard renders this behind the card's "Explain in more detail" control,
+   so the card itself stays short and the brief carries the depth.
+3. **Frame it as a UX decision, never an engineering one.** The user is deciding
    what the product should feel like, not how to build it. Write the question
    and every option in terms of what appears on screen and what the user does;
    keep implementation detail out (no file names, class names, architectures).

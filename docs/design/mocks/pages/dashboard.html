@@ -9,9 +9,10 @@
   /* Project dashboard. Live page: everything below renders from /api/state,
      which aggregates queue/ at the repo root. Local classes are db- prefixed. */
   #dashboard{max-width:1180px;margin:0 auto}
-  #dashboard .db-tabs{display:flex;align-items:center;gap:var(--gap);margin:var(--gap) 0 var(--gap-lg)}
-  #dashboard .db-tabs .seg{flex:none}
-  #dashboard .db-refresh{margin-left:auto;font-size:10.5px;color:var(--faint);display:flex;align-items:center;gap:var(--s1)}
+  #dashboard #db-body{margin-top:var(--gap-lg)}
+  /* things that arrive get a soft entrance; reduced-motion turns it off below */
+  @keyframes db-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+  #dashboard .db-enter{animation:db-in var(--dur-3) var(--ease-decel) both}
 
   /* ---- cards ---- */
   #dashboard .db-card{border:1px solid var(--edge-lo);border-radius:var(--r4);
@@ -47,10 +48,26 @@
   #dashboard .db-sumgrid .span2{grid-column:1/-1}
   @media (max-width:860px){#dashboard .db-sumgrid{grid-template-columns:1fr}}
 
-  /* ---- decisions: one card per option, select inside the card ---- */
+  /* ---- decisions: a carousel, one question at a time. Cards fade and flip
+     out on answer; the next slides in from the right. ---- */
+  #dashboard .db-decstage{position:relative;perspective:1100px}
   #dashboard .db-decide{border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:var(--r3);
-    background:color-mix(in srgb,var(--warn) 6%,transparent);padding:var(--pad-sm) var(--pad) var(--pad);margin-bottom:var(--gap-sm)}
-  #dashboard .db-decide:last-child{margin-bottom:0}
+    background:color-mix(in srgb,var(--warn) 6%,transparent);padding:var(--pad-sm) var(--pad) var(--pad);
+    transform-origin:50% 50%;
+    transition:opacity var(--dur-3) var(--ease-standard), transform var(--dur-3) var(--ease-standard)}
+  #dashboard .db-decide.out-left{opacity:0;transform:translateX(-56px) rotateY(10deg) scale(.985)}
+  #dashboard .db-decide.out-right{opacity:0;transform:translateX(56px) rotateY(-10deg) scale(.985)}
+  #dashboard .db-decide.out-done{opacity:0;transform:translateX(-24px) rotateY(24deg) scale(.96)}
+  #dashboard .db-decide.in-right{opacity:0;transform:translateX(72px) rotateY(-8deg)}
+  #dashboard .db-decide.in-left{opacity:0;transform:translateX(-72px) rotateY(8deg)}
+  #dashboard .db-decnav{display:flex;gap:2px;align-items:center}
+  #dashboard .db-brieftoggle{margin-top:var(--s3)}
+  #dashboard .db-brieftoggle .ic{transition:transform var(--dur-2) var(--ease-standard)}
+  #dashboard .db-brieftoggle.on .ic{transform:rotate(180deg)}
+  #dashboard .db-brief{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-3) var(--ease-standard)}
+  #dashboard .db-brief.on{grid-template-rows:1fr}
+  #dashboard .db-brief>div{overflow:hidden;min-height:0}
+  #dashboard .db-brief .db-md{border-top:1px solid var(--line-soft);padding-top:var(--s3);margin-top:var(--s2)}
   #dashboard .db-decide .db-q{font-size:13px;font-weight:640;letter-spacing:-.01em;display:flex;gap:var(--gap-sm);align-items:flex-start}
   #dashboard .db-decide .db-q .ic{color:var(--warn);flex:none;margin-top:1px}
   #dashboard .db-decide .db-ctx{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--s2) 0 0 26px;white-space:pre-wrap}
@@ -154,6 +171,11 @@
   /* ---- digest tab ---- */
   #dashboard .db-digrid{display:grid;grid-template-columns:170px 1fr;gap:var(--gap)}
   @media (max-width:700px){#dashboard .db-digrid{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){
+    #dashboard .db-decide{transition:none}
+    #dashboard .db-enter{animation:none}
+    #dashboard .db-brief{transition:none}
+  }
   #dashboard .db-dilist{display:flex;flex-direction:column;gap:2px}
   #dashboard .db-dilist button{text-align:left;border:0;background:transparent;color:var(--dim);font-size:12px;font-weight:560;
     padding:7px 10px;border-radius:var(--r2);cursor:pointer;font-variant-numeric:tabular-nums}
@@ -174,19 +196,8 @@
 <body class="page">
 <main class="stage">
   <section class="screen on" id="dashboard">
-    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Project dashboard</h2><span class="k">· the go loop, the queue, and progress toward the vision</span></div>
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Project dashboard</h2><span class="k" id="db-refresh"></span></div>
     <p class="pglead">Photonz is being built by an unmanned loop that executes one task at a time. This page is its front door: what is running, what needs your call, what shipped, and how the numbers move. Resolving a question here feeds straight back into the queue.</p>
-
-    <div class="db-tabs">
-      <div class="seg" id="db-seg">
-        <button data-dbtab="summary" class="on">Summary</button>
-        <button data-dbtab="objectives">Objectives</button>
-        <button data-dbtab="tasks">Tasks</button>
-        <button data-dbtab="data">Data</button>
-        <button data-dbtab="digest">Digest</button>
-      </div>
-      <span class="db-refresh" id="db-refresh"></span>
-    </div>
 
     <div id="db-body"><div class="db-empty">Connecting to the queue…</div></div>
     <div class="db-tip" id="db-tip"></div>
@@ -226,7 +237,8 @@
       var j = JSON.stringify(data);
       var typing = document.activeElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
       var editingObjectives = tab === 'objectives' && (obDirty || obDragId);
-      if (j !== lastJSON && !typing && !editingObjectives) { lastJSON = j; render(); }
+      var briefOpen = !!document.querySelector('.db-brief.on');
+      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen) { lastJSON = j; render(); }
       var r = document.getElementById('db-refresh');
       if (r) r.textContent = 'live · updated ' + rel(data.generated);
     }).catch(function () {
@@ -240,6 +252,9 @@
   }
 
   // ---- render root ----
+  // Rows carry data-key; anything whose key was not present in the previous
+  // render animates in, so arriving content lands gracefully instead of popping.
+  var renderKeys = null;
   function render() {
     if (!S) return;
     if (tab === 'summary') body.innerHTML = renderSummary();
@@ -247,6 +262,12 @@
     if (tab === 'tasks') body.innerHTML = renderTasks();
     if (tab === 'data') { body.innerHTML = renderData(); wireCharts(); }
     if (tab === 'digest') { body.innerHTML = renderDigest(); }
+    var seen = {};
+    body.querySelectorAll('[data-key]').forEach(function (el) {
+      seen[el.dataset.key] = 1;
+      if (renderKeys && !renderKeys[el.dataset.key]) el.classList.add('db-enter');
+    });
+    renderKeys = seen;
   }
 
   // ---- objectives: the commanding hub. An ordered epic tree; order is
@@ -361,6 +382,81 @@
     });
   }
 
+  // ---- decision carousel ----
+  var decIdx = 0, decAnim = false;
+  function decPending() { return (S && S.decisions.pending) || []; }
+  function decCount(pend) {
+    if (!pend.length) return 'nothing waiting';
+    return (decIdx + 1) + ' of ' + pend.length + ' waiting, tasks are blocked on these';
+  }
+  function decEmpty() { return '<div class="db-empty">No open questions. The loop will surface UX and product calls here instead of guessing.</div>'; }
+  function decCard(d) {
+    var h = '<div class="db-decide" data-decision="' + esc(d.id) + '">';
+    h += '<div class="db-q"><i class="ic ic-help"></i><span>' + esc(d.question) + '</span></div>';
+    if (d.context) h += '<div class="db-ctx">' + esc(d.context) + '</div>';
+    h += '<div class="db-opts">';
+    var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
+    opts.forEach(function (o) {
+      var rec = o.id === d.recommended;
+      var noteKey = d.id + '/' + o.id;
+      h += '<div class="db-opt' + (rec ? ' rec' : '') + '">';
+      h += '<div class="db-opt-t">' + esc(o.label) + (rec ? ' <span class="rec-k">(Recommended)</span>' : '') + '</div>';
+      var summary = o.summary || o.detail;
+      if (summary) h += '<p class="db-opt-s">' + esc(summary) + '</p>';
+      var pc = '';
+      (o.pros || []).forEach(function (p) { pc += '<span class="pro">' + esc(p) + '</span>'; });
+      (o.cons || []).forEach(function (c) { pc += '<span class="con">' + esc(c) + '</span>'; });
+      if (o.mitigation) pc += '<span class="fix">' + esc(o.mitigation) + '</span>';
+      if (pc) h += '<div class="db-pc">' + pc + '</div>';
+      h += '<div class="db-opt-act">';
+      h += '<input class="input sm" name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '">';
+      h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">Select</button>';
+      h += '</div></div>';
+    });
+    h += '</div>';
+    if (d.hasBrief) {
+      h += '<button class="btn sm ghost db-brieftoggle" data-act="dec-brief" data-id="' + esc(d.id) + '">Explain in more detail<i class="ic ic-chevron-down"></i></button>';
+      h += '<div class="db-brief" data-brieffor="' + esc(d.id) + '"><div><div class="db-md"></div></div></div>';
+    }
+    h += '<div class="db-task">blocks ' + esc(d.taskId) + ' · opened ' + rel(d.created) + '</div>';
+    h += '</div>';
+    return h;
+  }
+  // swap the visible card: `out` and `inn` pick the exit/enter direction
+  function decSwap(out, inn, after) {
+    var stage = document.getElementById('db-decstage');
+    if (!stage) return;
+    decAnim = true;
+    var cur = stage.firstElementChild;
+    if (cur) cur.classList.add(out);
+    setTimeout(function () {
+      var pend = decPending();
+      if (decIdx >= pend.length) decIdx = Math.max(0, pend.length - 1);
+      stage.innerHTML = pend.length ? decCard(pend[decIdx]) : decEmpty();
+      var count = document.getElementById('db-dec-count');
+      if (count) count.textContent = decCount(pend);
+      var next = stage.firstElementChild;
+      if (next && next.classList.contains('db-decide')) {
+        next.classList.add(inn);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { next.classList.remove(inn); }); });
+      }
+      setTimeout(function () { decAnim = false; if (after) after(); }, 260);
+    }, 250);
+  }
+  function decStep(dir) {
+    var pend = decPending();
+    if (pend.length < 2 || decAnim) return;
+    decIdx = (decIdx + dir + pend.length) % pend.length;
+    decSwap(dir > 0 ? 'out-left' : 'out-right', dir > 0 ? 'in-right' : 'in-left');
+  }
+  function decResolve(id, choice, note) {
+    fetch('/api/decide', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: id, choice: choice, note: note }) })
+      .then(function () {
+        S.decisions.pending = decPending().filter(function (d) { return d.id !== id; });
+        decSwap('out-done', 'in-right', function () { lastJSON = ''; load(); });
+      });
+  }
+
   // ---- summary ----
   function loopState() {
     var L = S.loop;
@@ -384,43 +480,24 @@
 
     h += '<div class="db-sumgrid">';
 
-    // needs attention: full width when anything is pending
-    h += '<div class="db-card span2"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Needs your decision</h3><span class="k">' + (pend.length ? pend.length + ' waiting, tasks are blocked on these' : 'nothing waiting') + '</span></div><div class="db-card-b">';
-    if (!pend.length) h += '<div class="db-empty">No open questions. The loop will surface UX and product calls here instead of guessing.</div>';
-    pend.forEach(function (d) {
-      h += '<div class="db-decide" data-decision="' + esc(d.id) + '">';
-      h += '<div class="db-q"><i class="ic ic-help"></i><span>' + esc(d.question) + '</span></div>';
-      if (d.context) h += '<div class="db-ctx">' + esc(d.context) + '</div>';
-      h += '<div class="db-opts">';
-      var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
-      opts.forEach(function (o) {
-        var rec = o.id === d.recommended;
-        var noteKey = d.id + '/' + o.id;
-        h += '<div class="db-opt' + (rec ? ' rec' : '') + '">';
-        h += '<div class="db-opt-t">' + esc(o.label) + (rec ? ' <span class="rec-k">(Recommended)</span>' : '') + '</div>';
-        var summary = o.summary || o.detail;
-        if (summary) h += '<p class="db-opt-s">' + esc(summary) + '</p>';
-        var pc = '';
-        (o.pros || []).forEach(function (p) { pc += '<span class="pro">' + esc(p) + '</span>'; });
-        (o.cons || []).forEach(function (c) { pc += '<span class="con">' + esc(c) + '</span>'; });
-        if (o.mitigation) pc += '<span class="fix">' + esc(o.mitigation) + '</span>';
-        if (pc) h += '<div class="db-pc">' + pc + '</div>';
-        h += '<div class="db-opt-act">';
-        h += '<input class="input sm" name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '">';
-        h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">Select</button>';
-        h += '</div></div>';
-      });
-      h += '</div>';
-      h += '<div class="db-task">blocks ' + esc(d.taskId) + ' · opened ' + rel(d.created) + '</div>';
-      h += '</div>';
-    });
-    h += '</div></div>';
+    // needs attention: a carousel, one question at a time
+    if (decIdx >= pend.length) decIdx = Math.max(0, pend.length - 1);
+    h += '<div class="db-card span2"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Needs your decision</h3><span class="k" id="db-dec-count">' + decCount(pend) + '</span>';
+    if (pend.length > 1) {
+      h += '<span style="flex:1"></span><span class="db-decnav">';
+      h += '<button class="btn icon sm ghost" data-act="dec-prev" title="Previous question"><i class="ic ic-chevron-left"></i></button>';
+      h += '<button class="btn icon sm ghost" data-act="dec-next" title="Next question"><i class="ic ic-chevron-right"></i></button>';
+      h += '</span>';
+    }
+    h += '</div><div class="db-card-b"><div class="db-decstage" id="db-decstage">';
+    h += pend.length ? decCard(pend[decIdx]) : decEmpty();
+    h += '</div></div></div>';
 
     // up next
     h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-list"></i><h3>Up next</h3><span class="k">highest priority first</span></div><div class="db-card-b tight">';
     if (!S.next.length) h += '<div class="db-empty">The queue is empty. Add tasks from the Tasks tab.</div>';
     S.next.forEach(function (t) {
-      h += '<div class="db-row"><span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span><span class="db-title">' + esc(t.title) + '</span><span class="db-meta">' + rel(t.created) + '</span></div>';
+      h += '<div class="db-row" data-key="next-' + esc(t.id) + '"><span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span><span class="db-title">' + esc(t.title) + '</span><span class="db-meta">' + rel(t.created) + '</span></div>';
     });
     h += '</div></div>';
 
@@ -428,7 +505,7 @@
     h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-check-circle" style="color:var(--good)"></i><h3>Completed, last 24 hours</h3><span class="k">' + S.completed24h.length + ' shipped</span></div><div class="db-card-b tight">';
     if (!S.completed24h.length) h += '<div class="db-empty">Nothing finished in the last day yet.</div>';
     S.completed24h.forEach(function (t) {
-      h += '<div class="db-row"><span class="dot good db-statusdot"></span><span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(lastNote(t)) + '</span></span><span class="db-meta">' + rel(t.completed) + '</span></div>';
+      h += '<div class="db-row" data-key="done-' + esc(t.id) + '"><span class="dot good db-statusdot"></span><span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(lastNote(t)) + '</span></span><span class="db-meta">' + rel(t.completed) + '</span></div>';
     });
     h += '</div></div>';
 
@@ -502,7 +579,7 @@
     if (!list.length) return '<div class="db-ttempty">No tasks match. Change the filter above or queue one.</div>';
     return list.map(function (t) {
       var open = OPEN_STATUSES.indexOf(t.status) >= 0;
-      var h = '<div class="db-ttrow" title="' + esc(t.notes || '') + '">';
+      var h = '<div class="db-ttrow" data-key="tt-' + esc(t.id) + '" title="' + esc(t.notes || '') + '">';
       h += '<label class="input sm mono seq"><input name="seq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
       h += '<span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span>';
       h += '<span class="db-title">' + esc(t.title) + (lastNote(t) ? '<span class="db-sub">' + esc(lastNote(t)) + '</span>' : '') + '</span>';
@@ -709,6 +786,7 @@
       return esc(s)
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
         .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
     }
     String(src || '').split('\n').forEach(function (line) {
@@ -756,9 +834,28 @@
       return;
     }
     if (b.dataset.act === 'decide') {
+      if (decAnim) return;
       var noteEl = document.querySelector('[data-notefor="' + b.dataset.id + '/' + b.dataset.choice + '"]');
-      b.textContent = 'Resolving…'; b.disabled = true;
-      post('/api/decide', { id: b.dataset.id, choice: b.dataset.choice, note: noteEl ? noteEl.value : '' });
+      b.textContent = 'Sending…'; b.disabled = true;
+      decResolve(b.dataset.id, b.dataset.choice, noteEl ? noteEl.value : '');
+      return;
+    }
+    if (b.dataset.act === 'dec-prev') { decStep(-1); return; }
+    if (b.dataset.act === 'dec-next') { decStep(1); return; }
+    if (b.dataset.act === 'dec-brief') {
+      var wrap = document.querySelector('[data-brieffor="' + b.dataset.id + '"]');
+      if (!wrap) return;
+      var opening = !wrap.classList.contains('on');
+      wrap.classList.toggle('on', opening);
+      b.classList.toggle('on', opening);
+      var md0 = wrap.querySelector('.db-md');
+      if (opening && !md0.innerHTML) {
+        md0.innerHTML = '<p>Loading…</p>';
+        fetch('/api/decision-brief/' + encodeURIComponent(b.dataset.id)).then(function (r) { return r.json(); })
+          .then(function (r) { md0.innerHTML = md(r.body || 'No brief was written for this decision.'); })
+          .catch(function () { md0.innerHTML = '<p>The brief could not be loaded.</p>'; });
+      }
+      return;
     }
     if (b.dataset.act === 'add') {
       var t = document.getElementById('db-new-title'), p = document.getElementById('db-new-prio'), n = document.getElementById('db-new-notes');
@@ -788,7 +885,6 @@
 
   function setTab(t, push) {
     tab = t;
-    document.querySelectorAll('#db-seg [data-dbtab]').forEach(function (b) { b.classList.toggle('on', b.dataset.dbtab === t); });
     render();
     if (push) {
       try { history.replaceState(null, '', '?tab=' + t); } catch (err) {}
