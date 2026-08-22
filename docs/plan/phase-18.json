@@ -1,0 +1,72 @@
+{
+  "phase": 18,
+  "title": "Experiments: dual-release binary (Public / Next) with per-release feature flags",
+  "status": "done",
+  "goal": "USER (2026-08-22): ship an Experiments surface so the next-gen Photonz experience can be built inside the SAME binary without destabilizing what users have today. A Release enum (public = default, next), per-release feature flags with typed parameters, a menu item, and a first-class dialog. No Next features exist yet \u2014 this is the foundation, proven end to end with real flags.",
+  "designNotes": {
+    "isolation": "REVISED 2026-08-22 by the user, superseding the original flags-only decision: releases fork by FOLDER. Sources/Photonz/Releases/{Current,Next,Legacy}/ each own their release's code, reached through ReleaseExperience, which holds the ONE switch over Release in the app. Everything outside Releases/ is shared and stays shared until a release genuinely needs a file different: copy it into that release's folder, prefix the type with the release name (one module, names must stay unique), and point that release's Experience at the copy. Overlay fork, not a full duplicate: nothing was copied up front, so Current's fixes keep reaching Next for free until Next forks that file. Smaller differences still belong behind a feature flag, not a forked file.",
+    "stability": "Public is the default and is never touched by Next-only branches; each release owns its own settings namespace (experiments.flags.<release>); the one-way porting rule is codified in CLAUDE.md + docs/design/experiments.md.",
+    "drift": "Every change to Current must reach Next: automatic while the file is shared, by hand once Next has forked it, and a Current change is not finished until Next has it. Nothing in Next/ is ever back-ported to Current. Next reaches users by being promoted (Next becomes Current, today's Current becomes Legacy), not by leaking.",
+    "thirdCase": "Release must absorb a `legacy` case later without churn: everything about a release (title, tagline, storage prefix) is a property on the case, the dialog lists allCases, and the catalog declares availability per release as data.",
+    "switching": "Switching release requires a RELAUNCH (explicit button in the dialog). Reason: the release choice reaches AppKit surfaces built outside SwiftUI's environment (menu-bar agent, capture overlay, panels) and open windows should not half-morph. Flag edits inside the running release apply LIVE (the store is @Observable and read at use time). The dialog says both out loud.",
+    "layering": "Model + store are PhotonzCore (pure, Codable, Sendable, TDD). The app layer owns only the @Observable wrapper, the window controller, the dialog, and the menu items.",
+    "naming": "The 'public' release was renamed CURRENT (user, 2026-08-22): current / next, with legacy reserved. rawValue 'current' is the storage key; nothing had shipped, so no migration was needed."
+  },
+  "tasks": [
+    {
+      "id": "18.1",
+      "title": "Core model (TDD): Release enum, FeatureParameterValue/FeatureParameter, FeatureFlag, FeatureFlagSettings with catalog reconciliation",
+      "status": "done",
+      "notes": "Sources/PhotonzCore/Release.swift (Release enum + ReleaseTag formatter) and FeatureFlag.swift (NumberBounds, FeatureParameterValue with explicit kind-keyed Codable, FeatureParameter, FeatureFlag, FeatureFlagSettings). Guard rails live in FeatureParameter.setValue: wrong kind is ignored, numbers clamp to bounds, enum selections must be one of the parameter's own declared cases (incoming cases are never trusted). Release cases are `public`/`next` with backticks; `.public` reads fine at call sites. 45 tests in Tests/PhotonzCoreTests/ExperimentsTests.swift."
+    },
+    {
+      "id": "18.2",
+      "title": "Core flag catalog + ExperimentsStore (TDD): per-release namespaced persistence, corrupt-data fallback, release selection",
+      "status": "done",
+      "notes": "FeatureCatalog.swift holds Definitions (flag + releases it appears in + releases it starts on) so per-release defaults are data, not branches. ExperimentsStore.swift persists via an injected ExperimentsDefaults protocol (UserDefaults-backed for the app, InMemory for tests). Keys: experiments.release, experiments.<release>.flags. Loads always go through FeatureFlagSettings.reconciled(with:) so retired flags drop, new flags arrive with defaults, type-changed values fall back, numbers clamp; corrupt JSON falls back to catalog defaults."
+    },
+    {
+      "id": "18.3",
+      "title": "App layer: Experiments observable wrapper (shared + environment), window controller, Experiments dialog",
+      "status": "done",
+      "notes": "Sources/Photonz/Experiments.swift (@MainActor @Observable; .shared singleton because AppKit surfaces never see the SwiftUI environment) + ExperimentsDialog.swift + ExperimentsWindowController.swift. `release` is fixed at launch, `selectedRelease` persists immediately and drives the relaunch bar. Selecting a release row only changes which flags you're viewing; switching is a separate explicit button, so it can't happen by accident. Form(.grouped) for a System Settings look; the outer VStack needs an explicit windowBackgroundColor because the header sits outside the Form. AppRelauncher.swift extracted from WelcomeController (both need quit-and-reopen)."
+    },
+    {
+      "id": "18.4",
+      "title": "Menu wiring: app menu + menu-bar menu Experiments item",
+      "status": "done",
+      "notes": "App menu (EditorCommands, CommandGroup replacing .appInfo, after a Divider) and the menu-bar agent menu (PhotonzApp.MenuBarMenu, next to Welcome & Permissions). Both call AppCoordinator.showExperiments(), which owns the window controller so it opens with zero editor windows."
+    },
+    {
+      "id": "18.5",
+      "title": "Two real flags wired end to end: release tag in window title (string/enum/boolean params), capture toast timing (number params)",
+      "status": "done",
+      "notes": "release-tag-in-window-title (string 'Tag text', enum 'Position' Prefix/Suffix, boolean 'All caps'; ON by default in Next only) reaches EditorState.windowTitle via Experiments.decorated(windowTitle:). capture-toast-timing (number 'Hold (seconds)' 1-30, 'Fade (seconds)' 0-15; off by default, defaults equal the built-in 7/3) is read by ToastController when it presents a toast, so ToastView's timing is no longer hard-coded. Flag edits in the running release apply live (Experiments is @Observable and both call sites read it when they draw); release switching needs a relaunch, and the dialog says so."
+    },
+    {
+      "id": "18.6",
+      "title": "Drift discipline docs: CLAUDE.md section + docs/design/experiments.md",
+      "status": "done",
+      "notes": "CLAUDE.md gained an 'Experiments: two releases in one binary' section (gating style, no parallel Next/ tree, the one-way porting rule); docs/design/experiments.md has the full design and an 'adding a flag' recipe; docs/design/overview.md links it."
+    },
+    {
+      "id": "18.7",
+      "title": "INTERJECTED (user 2026-08-22): the app's own name follows the release (Photonz Next), dev builds keep their (Dev) suffix",
+      "status": "done",
+      "notes": "AppNaming in PhotonzCore composes base + release word + dev suffix: Photonz / Photonz Next / Photonz Next (Dev). baseName(fromBundleName:) strips both suffixes so re-deriving can't produce 'Photonz Next Next'. AppInfo.name became a @MainActor computed var over Experiments.shared.release (fixed for the process, since switching relaunches), so About, Quit, Welcome and the menu-bar accessibility label all follow. The About panel now passes .applicationName. The macOS app menu title comes from the bundle and can't know the release, so AppCoordinator.applyAppMenuTitle() renames menu item 0 at launch and on every didBecomeActive (SwiftUI rebuilds the menu bar as scenes come and go). VERIFIED IN THE REAL BINARY via a temporary env-gated diagnostic: release=public -> name/menu 'Photonz (Dev)', release=next -> 'Photonz Next (Dev)' with window title 'Untitled 1 (Next)'. Diagnostic removed after."
+    },
+    {
+      "id": "18.8",
+      "title": "INTERJECTED (user 2026-08-22): flag list gets a word wheel, and parameters are collapsed by default",
+      "status": "done",
+      "notes": "FeatureFlagSettings.flags(matching:) in core (every whitespace-separated term must match the title, name, description or a parameter label; empty query matches all), 5 tests. The dialog's flag list is now an NSSearchField-backed word wheel (SwiftUI has no native search-field style) plus a per-flag disclosure: a flag is an on/off switch first, and its parameters only appear when you click the row open. Expansion state is ephemeral per window. ExperimentsDialog gained defaulted init parameters (browsing/expanded/query) so previews and the offscreen render harness can show other states."
+    },
+    {
+      "id": "18.9",
+      "title": "REVISED (user 2026-08-22): rename Public to Current, fork releases into real folders, and make the Current-to-Next porting rule explicit",
+      "status": "done",
+      "notes": "Release.public -> Release.current (rawValue 'current'; the case no longer needs backticks). New Sources/Photonz/Releases/: ReleaseExperience.swift (the only switch over Release), Current/CurrentExperience.swift, Next/NextExperience.swift (a copy of Current's, which is the shape every fork takes), Legacy/README.md (reserved, no .legacy case until Current is actually demoted), README.md (how to fork a file + the porting rule). PhotonzApp's EditorRootView now asks ReleaseExperience for the image/video roots; the two window roots moved out of PhotonzApp.swift into the shared EditorWindowRoots.swift so release folders can reach them. Package.swift excludes the two READMEs so SwiftPM doesn't treat them as resources. Fork convention: copy the file in and prefix the type with the release name, since it is all one module (per-release SPM modules are the future option if that gets old). VERIFIED IN THE REAL BINARY with a temporary marker in each Experience: release=current built by CurrentExperience, name 'Photonz (Dev)'; -experiments.release next built by NextExperience, name 'Photonz Next (Dev)', window 'Untitled 1 (Next)'. Markers removed."
+    }
+  ],
+  "completedNote": "Verified: Scripts/test.sh 821 tests green; the dialog was rendered offscreen through the REAL source (NSHostingView + cacheDisplay harness) in three states, since TCC blocks live screenshots and Apple-event automation from the agent session; ExperimentsWindowController.present() was exercised the same way; the app was built, signed and launched. A human click-through of the menu item is still worth a minute. 2026-08-22 follow-ups: app name follows the release (18.7) and the flag list got a word wheel with collapsed parameters (18.8). Then reworked per the user: Public became Current, releases fork by folder under Sources/Photonz/Releases/, and the porting rule now says a Current change is not finished until Next has it (18.9)."
+}

@@ -3433,3 +3433,115 @@ for now: `TextBuilder` applies an auto-contrast shadow on commit, and remembered
 effects would fight it. Callouts are simply untouched.
 
 **Verified**: 776 tests green (2 new). Dev app rebuilt and relaunched.
+
+## 2026-08-22 (evening) — two Photonz in one app
+
+New phase 18: an **Experiments** surface so the next-generation Photonz can be
+built without putting today's Photonz at risk. Both releases ship in the same
+binary. `Release` has `public` (default) and `next`, written so a third case
+(`legacy`) drops in later without churn: every trait is a property on the case,
+the dialog lists `allCases`, and the flag catalog declares per-release
+availability as data. That third case is the endgame, when Next is promoted to
+Public and today's Public is demoted to Legacy.
+
+`PhotonzCore` owns the model and the store (TDD, 45 new tests): typed feature
+parameters (number, string, boolean, enumeration) that refuse a value of the
+wrong kind, clamp numbers to their bounds, and only accept enum cases the
+parameter itself declares; `FeatureCatalog` as the single source of truth; and
+`ExperimentsStore`, which persists each release under its own key
+(`experiments.<release>.flags`) so editing Next can't disturb Public. Storage
+holds only enabled bits and values, and every load is reconciled with the current
+catalog, so retiring a flag or changing a description can't corrupt anyone's
+settings. Corrupt JSON falls back to defaults instead of failing.
+
+Isolation is runtime-gated inside shared code, not a forked tree: a feature flag,
+or a one-off `Experiments.shared.release == .next` at the call site that actually
+differs. The one-way porting rule (Public ports forward into Next; Next is NEVER
+back-ported, it gets promoted) is now in CLAUDE.md and `docs/design/experiments.md`.
+
+Switching release takes a **relaunch** — the choice reaches AppKit surfaces
+outside SwiftUI's environment, and windows shouldn't half-morph — while flag
+edits inside the running release apply live. The dialog says both out loud, and
+selecting a release row only changes which flags you're looking at; switching is
+a separate, explicit button.
+
+Two real flags prove the plumbing: `release-tag-in-window-title` (string, enum
+and boolean parameters, on by default in Next) tags editor window titles, and
+`capture-toast-timing` (number parameters) drives the post-capture toast's hold
+and fade, which used to be hard-coded in `ToastView`.
+
+**Verified**: 821 tests green (45 new). The dialog was rendered offscreen through
+the real source in three states (fresh Public, Next staged with the relaunch bar,
+Next running with every parameter control on screen), and
+`ExperimentsWindowController.present()` was exercised the same way — TCC blocks
+live screenshots and Apple-event automation from the agent session, so that
+harness is the substitute. Dev app built, signed and relaunched.
+
+**Next:** a human click-through of Photonz ▸ Experiments…, then the first real
+Next-only behavior to gate.
+
+## 2026-08-22 (evening, follow-ups) — the app says which Photonz it is
+
+Two rounds of user feedback on Experiments.
+
+**The app names itself after its release.** `AppNaming` (core) composes the name
+from the product name, the release's word, and the dev suffix, so a dev build
+running Next is **Photonz Next (Dev)** and plain Public stays **Photonz**.
+`AppInfo.name` is now computed from `Experiments.shared.release`, which carries
+About, Quit, the Welcome window and the menu-bar accessibility label along with
+it. The About panel passes `.applicationName` so its big title follows too. The
+macOS app menu is the stubborn one: its title comes from the bundle, so
+`applyAppMenuTitle()` renames menu item 0 at launch and on every activation
+(SwiftUI rebuilds the menu bar as scenes come and go).
+
+**The flag list is a word wheel, and parameters hide by default.** A flag reads
+as an on/off switch; its knobs sit behind a per-flag disclosure and only appear
+when you click the row open. Above the list, an `NSSearchField` filters as you
+type, backed by `FeatureFlagSettings.flags(matching:)` in core (every
+whitespace-separated term must match a title, identifier, description or
+parameter label).
+
+**Verified**: 831 tests green (10 new). The naming work was checked in the real
+binary with a temporary env-gated diagnostic, run twice: `release=public` gave
+`name=Photonz (Dev)` / `menuTitle=Photonz (Dev)`, and `-experiments.release next`
+gave `name=Photonz Next (Dev)` / `menuTitle=Photonz Next (Dev)` with the window
+titled `Untitled 1 (Next)`. The diagnostic was removed afterwards. Dialog states
+re-rendered offscreen through the real source.
+
+## 2026-08-22 (night) — Public becomes Current, and releases get real folders
+
+The user reversed the isolation decision, and renamed the default release.
+Runtime one-offs sprinkled through shared code was the wrong shape for building
+a next-generation app: a release should have somewhere to *live*.
+
+`Sources/Photonz/Releases/` now holds `Current/`, `Next/` and a reserved
+`Legacy/`. `ReleaseExperience` is the seam and owns the only switch over
+`Release` in the app; each release folder has an `…Experience` that builds that
+release's surfaces. `EditorRootView` asks the seam instead of naming views
+directly, and the two window roots moved out of `PhotonzApp.swift` into a shared
+`EditorWindowRoots.swift` so release folders can reach them.
+
+It's an **overlay fork**, not a duplicate: nothing was copied up front. Both
+releases still open the same shared editor. A file moves into a release folder
+the moment that release needs it different, renamed with the release prefix
+because it is all one module. Everything unforked keeps flowing from the shared
+code, which is exactly how Current's fixes keep reaching Next for free.
+
+`Release.public` became `Release.current` (storage key `current`; nothing had
+shipped, so no migration). `legacy` stays a folder with a README rather than a
+live case, since picking a Legacy with nothing behind it would just be Current
+wearing a different name.
+
+The porting rule got teeth in CLAUDE.md, `docs/design/experiments.md` and
+`Releases/README.md`: **every change to Current must reach Next** (free while
+the file is shared, by hand once Next has forked it) and **a Current change is
+not finished until Next has it**. Nothing in Next is ever back-ported.
+
+**Verified**: 831 tests green. The dispatch was checked in the real binary with
+a temporary marker in each Experience: `release=current` built by
+`CurrentExperience` with `name=Photonz (Dev)`, `-experiments.release next` built
+by `NextExperience` with `name=Photonz Next (Dev)` and the window titled
+`Untitled 1 (Next)`. Markers removed afterwards. Dialog re-rendered offscreen.
+
+**Next:** the first real Next-only surface, which is also the first real test of
+the fork-a-file workflow.
