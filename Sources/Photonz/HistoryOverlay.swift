@@ -274,8 +274,8 @@ private struct HistoryOverlayCell: View {
     private var actions: some View {
         HStack(spacing: 6) {
             if entry.kind == .video {
-                // Recordings copy as the video file or as an animated GIF —
-                // both honor trim/crop edits persisted by the video editor.
+                // Recordings copy as the video file (the stored one, trim and
+                // all) or as an animated GIF.
                 Menu {
                     Button("Copy Video") {
                         coordinator.copyRecording(entry, as: .mp4)
@@ -295,15 +295,6 @@ private struct HistoryOverlayCell: View {
                     coordinator.openRecording(entry.url)
                     coordinator.hideHistory()
                 }
-                Menu {
-                    Button("Export GIF…") { coordinator.saveRecording(entry.url, as: .gif) }
-                    Button("Export HEIC…") { coordinator.saveRecording(entry.url, as: .heic) }
-                } label: {
-                    Image(systemName: "square.and.arrow.down")
-                }
-                .menuIndicator(.hidden)
-                .frame(width: 22)
-                .historyTooltip("Export", coordinator: coordinator)
             } else {
                 iconButton("Copy", "doc.on.doc") {
                     store.copyToPasteboard(entry)
@@ -312,10 +303,15 @@ private struct HistoryOverlayCell: View {
                 iconButton("Edit", "square.and.pencil") {
                     coordinator.editCapture(entry.url)
                 }
-                iconButton("Pin", "pin") {
-                    coordinator.pinCapture(entry.url)
-                    coordinator.hideHistory()
-                }
+            }
+            // Every capture is a real file in a normal folder, so every tile can
+            // point at it. Recordings had an Export menu here instead (Export
+            // GIF…/HEIC…, a save panel writing a converted copy elsewhere) —
+            // a FORMAT choice, which belongs in the editor's Export menu with
+            // the other format choices, not on a tile.
+            iconButton("Show in Finder", "folder") {
+                coordinator.revealInFinder(entry.url)
+                coordinator.hideHistory()
             }
             iconButton("Delete", "trash", role: .destructive) {
                 store.remove(entry)

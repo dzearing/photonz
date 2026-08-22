@@ -3545,3 +3545,107 @@ by `NextExperience` with `name=Photonz Next (Dev)` and the window titled
 
 **Next:** the first real Next-only surface, which is also the first real test of
 the fork-a-file workflow.
+## 2026-08-22 (night, later) — a saved recording is the trimmed file
+
+Trim a recording, save, close the window, then drag it out of History or paste
+it: you got the original, full length, every time. Reproduced first, on real
+data — `Recording trim-ux-test.mp4` in the capture folder carries a
+`.photonzedits` sidecar saying "keep 3.02s → 12s" while the file on disk is
+still 12 seconds. `CaptureStore.copyToPasteboard` and
+`CaptureThumbnailView.onDrag` hand that file out verbatim, and both are right to.
+The second half reproduced too: ⌘S is gated on an image document, so it was dead
+in a video window, and `WindowCloseGuard` was only ever attached to image
+windows, so closing with a pending trim asked nothing.
+
+Neither call site was the bug. The model was: trim and crop were "non-destructive
+(applied at export)", recorded beside the media and never in it, so anything that
+promised a file delivered an untrimmed one — and every future consumer would have
+had to remember to apply edits. So the stored asset became true instead, and both
+of those lines started working untouched.
+
+**Saving now commits.** ⌘S re-encodes the trim/crop into the recording, the same
+shape as an image window writing its flattened composite back into the capture
+file. The pre-edit bytes move to `.photonz-originals/<same name>.mp4` first — a
+hidden dot-folder the capture scan skips, keeping the media extension so
+AVFoundation reads it unaided — and the editor always edits *from* that original.
+Trims therefore never stack across saves, and clearing one restores the whole
+clip (Video ▸ Revert to Original). `.photonzedits` survives, with a new job: it
+records how the visible file was derived, so the handles come back where you left
+them. Only a save writes it, so it can't lie about the file.
+
+That let the edit-awareness come *out* of the consumers rather than be added to
+more of them: history thumbnails, duration pills, copy, and export-from-history
+all just read the file now, and `posterFrame` lost its `edits:` parameter
+entirely. The editor's own Export/Copy still apply unsaved edits, but read from
+the edit source, not the recording — otherwise an export after a save would trim
+already-trimmed media.
+
+Video windows also joined the document furniture: a shared `SaveableEditor`
+protocol gives them `WindowCloseGuard`, the edited dot, the
+Save/Cancel/Don't Save sheet and the ⌘Q sweep. Saving is completion-based there
+because the commit re-encodes. ⌘⇧S maps to the existing MP4 export panel — Export
+stays for *format*, never as the way to save. A recording trimmed before today
+has a sidecar but no original, so it opens *dirty*: the migration is a prompt,
+not a silent loss.
+
+`VideoExporter` moved out of the app target into a new **PhotonzMedia** library
+so the promise is testable at all: `VideoAssetCommitTests` synthesizes a real 3s
+MP4, commits a 1s trim, and reads the stored file's duration back.
+
+**Verified**: 799 tests green (23 new — 14 core, 9 media, including the
+reproduction). Dev app rebuilt and relaunched.
+
+**Next:** user to confirm in the app — trim a recording, ⌘S, close, then drag it
+out of History and paste it; both should be the trimmed length. Also worth
+checking Revert to Original and that closing without saving now prompts.
+
+## 2026-08-22 (night, later still) — history points at the file instead of exporting it
+
+User on the recording tiles in history: *"the export button on the history for
+video items - i don't understand it. I can understand a show in finder button."*
+Fair. That menu offered **Export GIF…** and **Export HEIC…** — a save panel that
+wrote a converted copy somewhere else — while the thing under the cursor was
+already a file in a normal folder the user could have opened. Images didn't have
+it at all, so it was also the odd one out.
+
+Replaced with **Show in Finder**. Converting to another format stays in the
+editor's Export menu, where a format choice belongs and where MP4 and the quality
+presets already live; **Copy GIF** is still one click away on the tile's Copy
+menu, so nothing is out of reach. `AppCoordinator.saveRecording(_ sourceURL:as:)`
+had no other caller and went with it.
+
+Then, same exchange: *"yes add show in finder to image tiles too"*. So it moved
+out of the video/image branch entirely and now sits beside Delete on every tile —
+Copy · Play · Show in Finder · Delete for recordings, Copy · Edit · Pin · Show in
+Finder · Delete for screenshots. Every capture is a real file in a normal folder,
+so every tile can point at it.
+
+**Verified**: 799 tests green. Dev app rebuilt and relaunched.
+
+## 2026-08-22 (night, last) — pin-to-screen is gone
+
+*"remove the pin feature"* — *"it's stupid and only on some types?"*. Both halves
+were right: pinning floated an always-on-top copy of a screenshot above every
+window, and it only ever appeared on image tiles, so recordings silently didn't
+have it. An action that exists on half the things in a list reads as a bug even
+when it isn't.
+
+Deleted `PinnedWindowController` and `PinnedImageView` (app),
+`AppCoordinator.pinCapture` and its controller, and the tile's Pin button.
+History tile actions are now Copy · Edit (images) or Copy · Play (videos), then
+Show in Finder · Delete on every tile — same set everywhere except the two that
+genuinely differ by media type.
+
+`PinnedImageMetrics` couldn't just go: `fittedSize` had one live non-pin
+consumer, `AnimatedExportPlanner`, which uses it to cap a GIF/HEIC's output size.
+It moved to `Geometry.downscaledToFit(_:maxDimension:)` — a name that says what
+it does now that nothing is pinned — with its five sizing tests rehomed into
+`GeometryTests`. The opacity policy had no consumer left and went away.
+
+While editing `docs/plan/phase-11.json` I found it was **already invalid JSON**:
+a stray `" }, ` had been spliced into the middle of 11.4's note, leaving the rest
+of the sentence dangling outside the string. Rejoined it, so the file parses
+again. Not related to this change — just a file nobody had re-read since.
+
+**Verified**: 798 tests green (six pin tests out, five geometry tests in). Dev
+app rebuilt and relaunched.

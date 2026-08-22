@@ -22,6 +22,7 @@
     { "id": 17, "file": "phase-17.json", "title": "Region selection system: box/ellipse/wand, PS add/subtract modifiers, edge snapping, region fill, ⌘N new layer keeping selection (USER'S NEXT PRIORITY — start here)", "status": "in_progress" },
     { "id": 18, "file": "phase-18.json", "title": "Experiments: dual-release binary (Public / Next) with per-release feature flags", "status": "done", "note": "Foundation shipped 2026-08-22: Current/Next release model, per-release flag store, menu item, dialog, and the app naming itself after its release. Releases fork by FOLDER (Sources/Photonz/Releases/), reached through ReleaseExperience; every Current change must be ported forward to Next, never the reverse." },
     { "id": 14, "file": "phase-14.json", "title": "Annotation toolset expansion: redaction (blur/pixelate), step counter, curved arrows follow-through, spotlight, pencil", "status": "pending" },
-    { "id": 15, "file": "phase-15.json", "title": "Power capture: scrolling capture, window capture (smart detection), freeze-screen, self-timer", "status": "pending" }
+    { "id": 15, "file": "phase-15.json", "title": "Power capture: scrolling capture, window capture (smart detection), freeze-screen, self-timer", "status": "pending" },
+    { "id": 19, "file": "phase-19.json", "title": "Video save: a saved recording IS the trimmed file (trim/crop commit to the stored asset; original preserved for reversibility; history tiles gain Show in Finder, pin-to-screen removed)", "status": "done" }
   ]
 }
