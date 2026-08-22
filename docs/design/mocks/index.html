@@ -32,6 +32,10 @@
   .subnav{display:flex;flex-direction:column}
   .subnav.collapsed{display:none}
   .nav.sub{padding:6px 9px 6px 24px;font-size:12px}
+  .nav.withchip{display:flex;align-items:center;gap:8px}
+  .navchip{margin-left:auto;flex:none;min-width:18px;text-align:center;font-size:9.5px;font-weight:700;
+    font-variant-numeric:tabular-nums;color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:999px;padding:1px 6px;line-height:1.5}
   .themebtn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 11px;font-size:11.5px;font-weight:560;color:var(--dim)}
   .themebtn:hover{border-color:var(--accent-line);color:var(--ink)}
 </style>
@@ -47,7 +51,7 @@
       <div class="subnav" data-group="proj-status">
         <button class="nav sub" data-page="dashboard" data-tab="summary">Summary</button>
         <button class="nav sub" data-page="dashboard" data-tab="objectives">Objectives</button>
-        <button class="nav sub" data-page="dashboard" data-tab="tasks">Tasks</button>
+        <button class="nav sub withchip" data-page="dashboard" data-tab="tasks">Tasks<span class="navchip" id="taskschip" hidden></span></button>
         <button class="nav sub" data-page="dashboard" data-tab="data">Data</button>
         <button class="nav sub" data-page="dashboard" data-tab="digest">Digest</button>
       </div>
@@ -254,6 +258,16 @@
     applyTheme();
   });
   frame.addEventListener('load', applyTheme); // re-assert theme on each page load
+  // live open-task chip on the Tasks nav entry
+  function pollCounts() {
+    fetch('/api/counts', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) {
+      var chip = document.getElementById('taskschip');
+      chip.hidden = !c.open;
+      chip.textContent = c.open;
+    }).catch(function () {});
+  }
+  pollCounts();
+  setInterval(function () { if (!document.hidden) pollCounts(); }, 10000);
   // deep link on first load; default route is the project dashboard summary,
   // so anything blocked on a decision is the first thing you see
   var initial = (location.hash || '').replace('#', '');

@@ -78,6 +78,12 @@ async function handleApi(req, res, url) {
   if (!lib) return send(503, { error: 'queue unavailable' });
   try {
     if (req.method === 'GET' && url === '/api/state') return send(200, lib.aggregateState());
+    if (req.method === 'GET' && url === '/api/counts') {
+      const tasks = lib.readAllTasks();
+      const open = tasks.filter((t) => ['pending', 'in_progress', 'blocked'].includes(t.status)).length;
+      const decisions = lib.readDecisions().filter((d) => d.status === 'pending').length;
+      return send(200, { open, decisions });
+    }
     if (req.method === 'GET' && url.startsWith('/api/decision-brief/')) {
       const id = decodeURIComponent(url.slice('/api/decision-brief/'.length));
       const body = lib.readDecisionBrief(id);
