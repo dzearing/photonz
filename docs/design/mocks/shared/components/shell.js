@@ -112,7 +112,7 @@
     return '<div class="chat-in"><div class="composer">' +
       '<div class="ask-atts"></div>' +
       '<textarea class="box" rows="1" placeholder="' +
-      (busy ? 'Steer it — you don\'t have to wait' : 'Ask for a change, or type / for a command') +
+      (busy ? 'Steer it, you don\'t have to wait' : 'Ask for a change, or type / for a command') +
       '" aria-label="Ask the agent"></textarea>' +
       '<div class="composer-f">' +
       '<button class="btn ghost icon sm" title="Attach an image"><i class="ic ic-image"></i></button>' +

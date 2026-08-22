@@ -179,7 +179,7 @@
                   <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
                   <div class="menu-sep"></div>
                   <div class="mlabel">Document</div>
-                  <div class="menuitem"><i class="ic ic-copy"></i> Copy image <span class="sc">⌘C</span></div>
+                  <div class="menuitem" id="miCopy"><i class="ic ic-copy"></i> Copy image <span class="sc">⌘C</span></div>
                   <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
                 </div>
 
@@ -210,6 +210,19 @@
                         <div class="ca-note wt-off" id="caNote2" style="left:182px;top:258px">Ship it</div>
                         <div class="ca-redact wt-off" id="caRedact" style="left:23px;top:149px;width:228px;height:30px"></div>
                         <div class="ca-redtag wt-off" id="caRedTag" style="left:258px;top:152px"><i class="ic ic-eye-off"></i> Redacted</div>
+
+                        <!-- SELECTION, place 1 of 3: the ring on canvas, matching
+                             the .lrow.sel in Layers and the Properties group -->
+                        <div class="selwrap wt-off" id="selBox" style="position:absolute;left:14px;top:80px;width:372px;height:42px;pointer-events:none">
+                          <div class="sel-ring"></div>
+                          <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                          <span class="mtag">Callout box</span>
+                        </div>
+                        <div class="selwrap wt-off" id="selRedact" style="position:absolute;left:23px;top:149px;width:228px;height:30px;pointer-events:none">
+                          <div class="sel-ring"></div>
+                          <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                          <span class="mtag">Redact · blur 18</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -588,7 +601,7 @@
       <li class="wt-step"
           data-title="Draw the callout"
           data-cue="#caBox" data-cue-label="Drag a box over the Plan row" data-cue-place="top"
-          data-tool="#tBox" data-show="#caBox,#caNote,#caArrow,#caNote2,#lrBox,#lrNote,#propsAnno"
+          data-tool="#tBox" data-show="#caBox,#caNote,#caArrow,#caNote2,#lrBox,#lrNote,#propsAnno,#selBox"
           data-hide="#mbMenu,#propsEmpty" data-select="#lrBox"
           data-set="#layerCount=3|#markCount=3 marks|#propKind=Box">
         <div class="wt-cap img">
@@ -617,7 +630,7 @@
           data-title="Redact the card number"
           data-cue="#caRedact" data-cue-label="Drag over the card number" data-cue-place="top"
           data-tool="#tRedact"
-          data-show="#caRedact,#caRedTag,#lrRedact,#propsRedact" data-hide="#mbMenu,#propsEmpty,#propsAnno"
+          data-show="#caRedact,#caRedTag,#lrRedact,#propsRedact,#selRedact" data-hide="#mbMenu,#propsEmpty,#propsAnno,#selBox"
           data-select="#lrRedact"
           data-set="#layerCount=4|#markCount=4 marks|#propKind=Redact">
         <div class="wt-cap img">
@@ -630,12 +643,12 @@
 
       <li class="wt-step"
           data-title="Copy the result"
-          data-cue="#btnCopy" data-cue-label="Click Copy" data-cue-place="bottom"
-          data-hide="#mbMenu" data-show="#toastCopy" data-set="#markCount=4 marks">
+          data-cue="#miCopy" data-cue-label="Click Copy image" data-cue-place="left"
+          data-pop="#cmdMenu" data-hide="#mbMenu" data-show="#toastCopy">
         <div class="wt-cap img">
           <span class="wt-n">11</span>
-          <p class="wt-do"><b>Copy</b>, or press <code>⌘C</code></p>
-          <p class="wt-where">the title bar, with the document actions</p>
+          <p class="wt-do"><b>Copy image</b>, or press <code>⌘C</code></p>
+          <p class="wt-where">the command menu, under the <b>…</b> button at the top right of the canvas. The shipping app also has it in the native Edit menu</p>
           <p class="wt-res">the finished, redacted image goes on the clipboard, ready to paste into a ticket or a chat. Capture to paste is a handful of seconds and never leaves the keyboard.</p>
         </div>
       </li>

@@ -2,11 +2,11 @@
   "id": "harden-the-capture-and-redline-clickthrough",
   "title": "Harden the Capture and redline clickthrough",
   "priority": "p1-high",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.677Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-22T23:03:37.518Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Audit docs/design/mocks/pages/capture-wt.html against the UX-PATTERNS.md section 9 checklist (shell, icons, canonical controls, responsive, bounded panels, copy rules). Fix every violation in place. Area: design-study. Acceptance: page passes all checklist gates and still tells the capture-to-redline story end to end.",
@@ -22,6 +22,28 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria"
+    },
+    {
+      "t": "2026-08-22T22:54:12.573Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:20:00.000Z",
+      "note": "audited every section 9 gate in a real browser (dev server :8791, all 11 steps, wide + 840px + 620px). Passing already: shell, icons (all .ic-*, zero ascii), Library group with import, bounded panels, responsive rail/overflow, copy rules."
+    },
+    {
+      "t": "2026-08-22T23:20:30.000Z",
+      "note": "found 3 violations: step 11 cue targeted nonexistent #btnCopy (shell builds no title-bar document actions per D3) so the final step had no click cue; canvas never showed the .sel-ring selection idiom while Layers+Properties tracked selection (gate 4); shared shell.js composer placeholder carried an em dash."
+    },
+    {
+      "t": "2026-08-22T23:21:00.000Z",
+      "note": "fixed: step 11 now cues the command menu's Copy image item (id=miCopy, data-pop=#cmdMenu) with corrected 'where' copy naming the … command surface and the native Edit menu; added selwrap/sel-ring/handles/mtag overlays for the callout box and redact marks, wired into steps 8/10 so the canvas ring tracks the Layers selection; replaced the shell.js em dash; regenerated shared/dist. Re-verified: 11/11 cues anchor at wide, 840px and 620px, rings swap with selection, no overflow, no console errors. Scripts/test.sh green (853 tests)."
+    },
+    {
+      "t": "2026-08-22T23:03:37.517Z",
+      "note": "capture-wt.html passes all UX-PATTERNS section 9 gates. Fixed: dead step-11 cue (now anchors the command menu's Copy image item per D3), missing canvas selection rings for the callout and redact marks (sel-ring idiom, tracks Layers selection), and an em dash in the shared shell composer placeholder. Verified in a real browser: 11/11 step cues anchor at wide, 840px and 620px; rings swap with selection; no overflow or console errors; Scripts/test.sh green."
     }
-  ]
+  ],
+  "started": "2026-08-22T22:54:12.573Z",
+  "completed": "2026-08-22T23:03:37.518Z"
 }
