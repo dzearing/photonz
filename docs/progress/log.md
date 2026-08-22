@@ -3649,3 +3649,22 @@ again. Not related to this change — just a file nobody had re-read since.
 
 **Verified**: 798 tests green (six pin tests out, five geometry tests in). Dev
 app rebuilt and relaunched.
+
+## 2026-08-22 (release) — v0.14.0
+
+Cut with the `release` skill. Preflight: clean `main`, 853 tests green,
+`Scripts/build-app.sh --dmg` succeeded locally. Minor bump (pre-1.0, features
+since v0.13.0).
+
+Shipped in this version: video save commits the trim to the stored recording
+(with the untouched original kept for Revert to Original, and video windows
+joining the save/close-guard furniture), Show in Finder on every history tile,
+pin-to-screen removed, the measure caliper's three independent colors plus
+persisted style and effects memory, the readout chip becoming part of the layer
+so effects reach it, every creating tool returning to Select with the new object
+selected, and the Experiments window that picks Current or Next.
+
+**Verified**: Release and Deploy site workflows both green;
+`gh release view v0.14.0` shows `Photonz.dmg`; the
+`releases/latest/download/Photonz.dmg` redirect chain ends in 200; and
+`dzearing.github.io/photonz/version.json` reports 0.14.0.
