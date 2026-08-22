@@ -3364,3 +3364,50 @@ and eyeballed. Dev app rebuilt and relaunched.
 
 **Next:** user to confirm the draw→select flow across tools and that the measure
 defaults survive a relaunch.
+
+## 2026-08-22 (later) — the caliper stops being two things
+
+**Reproduced first.** The report was "opacity in Effects doesn't affect the
+chip". Two tests, written before touching anything: one rendering a measure layer
+at 40% opacity through the export path — it passed, the baked chip fades exactly
+like the legs — and one asserting the interactive composite contains the same
+chip pixels as the export. That one failed, and it named the real bug: on the
+canvas the chip was **not in the render at all**. The interactive paths passed
+`bakeMeasureLabels: false` and an AppKit `MeasureLabelView` painted the pill on
+top of the canvas. Nothing that acts on a layer could reach it — not opacity, not
+shadow, not blend mode, not transform. The export was right the whole time; the
+canvas was lying.
+
+**The fix was deletion.** The overlay is gone, and so is the `bakeMeasureLabels`
+/ `bakeLabel` flag it existed to serve: `MeasureRasterizer` always draws the
+pill, `DocumentRenderer` has one composite path, and `MeasureLabelView`,
+`measureLabelViews`, `refreshMeasureLabels`, and the two canvas preview channels
+went with it — about 150 lines. The caliper is one object, so it is one raster,
+and every layer style, the move sprite, the panel thumbnail and the export agree
+by construction rather than by maintenance.
+
+That flag was only ever there to protect the Liquid-Glass pill, and the glass
+itself was already removed yesterday when the chip became a user-editable color.
+What survived was the machinery, and the split it enforced.
+
+**The trade**, stated plainly: the label now resamples with the canvas when you
+zoom past 100%, exactly like every text layer in the app. Crisp-at-any-zoom text
+was the overlay's one remaining advantage, and it cost the chip its membership in
+the object.
+
+**Perf** (composite path touched, so): baking a label costs ~0.25ms per caliper
+raster and ~0.5ms median on a 12MP document with 10 calipers mid-drag (1.3ms vs
+0.8ms with labels off). The standard 12MP/10-layer interactive edit is unchanged
+at ~5.4ms. Budget is 16ms.
+
+**The chip's opacity slider is gone too.** Its color picker carries
+`supportsOpacity: true`, so alpha comes from the swatch — alpha 0 is "no chip" —
+and the inspector is three swatches with no stray slider. Per-color alpha belongs
+in that color's picker; whole-object transparency belongs to Effects, where every
+other layer's lives.
+
+**Verified**: 774 tests green, including the two new coherence tests. Dev app
+rebuilt and relaunched.
+
+**Next:** user to confirm on canvas that Effects opacity now fades the chip with
+the rest of the caliper, and that the label's zoom behavior is acceptable.

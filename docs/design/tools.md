@@ -67,24 +67,23 @@ gone. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own
   line aligns to the image's pixel grid. Default 1; inspector offers 1/2/3px.
   The two head↔leg joins are **lightly rounded** (round line joins + a small
   `addArc` fillet), refined not cartoonish.
-- **The label pill is a LIVE Liquid-Glass overlay, not baked** (Decision 2). On
-  the canvas it's a `MeasureLabelView` (`NSVisualEffectView .withinWindow` — a
-  real backdrop blur of the composite — hairline border in the caliper color,
-  caliper-colored text) hosted **inside `CanvasNSView`** and repositioned every
-  overlay refresh from live geometry, so it tracks create/handle/move drags and
-  pan/zoom with zero drift; pointer events pass through it. Centered on the head
-  line, which is **cut around the chip** (a gap) so the translucent glass never
-  reveals a stroke behind it.
-- **Export keeps the label** (the trade-off Decision 2 demanded). `bakeMeasureLabels`
-  threads through `DocumentRenderer.compositeImage → ciImage` (folded into the
-  measure raster cache variant). Interactive (`renderInteractive`), the move-drag
-  sprite, and the drag underlay pass **false** (no baked pill — the glass overlay
-  is the label); export / `render(scale:)` / thumbnails / region-promote pass
-  **true**, and `MeasureRasterizer` bakes a **flat glass-style pill** (neutral
-  translucent fill + hairline caliper-color border + caliper-colored text,
-  `TextRasterizer` glyphs blitted upright) into the same head-line gap. So
-  flattened/exported output still shows the measurement, minus the live blur.
-  Perf: the flag is an early-out; interactive re-render stays ~7.5ms (12MP/10L).
+- **The label pill is part of the caliper's raster** — one image, every path
+  (canvas, move sprite, thumbnail, export). It is centered on the head line,
+  which is **cut around the chip** (a gap) so a translucent pill never reveals a
+  stroke behind it. `MeasureRasterizer` fills the pill with the chip color at
+  `chipOpacity`, borders it in the stroke color at full strength, and blits
+  `TextRasterizer` glyphs (upright) in the text color.
+  **History (16.15, 2026-08-22)**: the pill used to be a live Liquid-Glass
+  `MeasureLabelView` (`NSVisualEffectView`) hosted in `CanvasNSView`, with
+  `bakeMeasureLabels: false` on the interactive paths. That put the chip outside
+  the render entirely, so nothing that acts on a LAYER could reach it — the
+  Effects panel's opacity faded the legs but not the chip, and shadow/blend/
+  transform were equally blind. Deleted, along with the `bakeMeasureLabels` flag:
+  the caliper is one object, so it is one raster. The cost of that coherence is a
+  label that resamples with the canvas when you zoom past 100% (exactly like text
+  layers). Perf: baking adds ~0.25ms per caliper raster and ~0.5ms median to a
+  12MP/10-caliper interactive drag (1.3ms vs 0.8ms); 12MP/10-layer interactive
+  edit unchanged at ~5.4ms.
 - **Interaction — placement** (`MeasurePlacement`): while idle a **hover snap dot**
   magnetizes to the nearest detected edge (⌘ bypasses). The measuring line is drawn
   **either** by click/click (click foot A, move, click foot B) **or** by a single
@@ -104,20 +103,24 @@ gone. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own
 - **Migration**: legacy `line`/`bracket`/`free` payloads decode and coerce to a
   valid H/V caliper (explicit `CodingKeys` keep the removed keys decode-only;
   custom `encode` writes only the caliper keys).
-- **Inspector** (`MeasureInspector`): Unit (Pixels/Points) · Thickness (1/2/3px) ·
+- **Inspector** (`MeasureInspector`): Unit (Logical/Actual) · Thickness (1/2/3px) ·
   **Label size** slider (`labelScale`, live preview via `previewMeasureLabelScale`,
-  one undo on release) · Color. (No Show-label toggle — the label is always on.)
-  Defaults live in `EditorState.measureStyle` (in-memory).
+  one undo on release) · three swatches: **Stroke** (ink + chip border), **Chip**
+  (fill; its picker has `supportsOpacity: true`, so alpha 0 = no chip) and
+  **Text**. No separate opacity slider — per-color alpha belongs in that color's
+  picker, and whole-object transparency is the Effects panel's opacity, same as
+  every other layer. (No Show-label toggle — the label is always on.)
+  Defaults + memory live in `MeasureStyles` (PhotonzCore, persisted to
+  UserDefaults): red stroke, `#8C201A` chip, white text, 2px, 20px label.
 - **The caliper is image content.** Lines are ACTUAL image pixels (a "1px" caliper
-  = 1 image px, not ×pixelScale); the label pill scales with zoom exactly like the
-  baked/export pill (sized in image px × zoom), so the live glass pill and the
-  head-line gap match at every zoom and the pill border equals the line width.
+  = 1 image px, not ×pixelScale); the label pill is sized in image px, so the
+  pill and its head-line gap match at every zoom and the pill border equals the
+  line width.
   Selection shows 3 handle dots (two feet + head); the handle layer is raised
   above the pill so the head dot isn't occluded by its own chip.
-- **Open follow-ups**: measureStyle persistence; auto-detect `pixelScale` from the
-  capture's DPI (fixed at 1); optionally swap the pill's `NSVisualEffectView` for a
-  SwiftUI `.glassEffect` host; tune `labelFontSize`/`defaultHeadOffset`/corner
-  radius to taste.
+- **Open follow-ups**: auto-detect `pixelScale` from the capture's DPI (fixed at
+  1); tune `defaultHeadOffset`/corner radius to taste. (Label crispness past 100%
+  zoom is the known trade of the one-raster model — revisit only if it bites.)
 
 ### Edge snapping (16.4–16.5, shipped 2026-07-02) — how the ruler finds UI edges
 

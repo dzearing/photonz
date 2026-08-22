@@ -108,14 +108,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         return image
     }
 
-    /// `bakeMeasureLabels` draws each caliper's label pill into the bitmap. On
-    /// for flattened output (export, thumbnails, region-promote) so the
-    /// measurement survives; off for the interactive canvas / drag sprites, where
-    /// a live Liquid-Glass overlay is the label instead.
-    public func render(_ document: PhotonzDocument, store: ImageStore,
-                       bakeMeasureLabels: Bool = true) -> CGImage? {
-        guard let output = compositeImage(document, store: store,
-                                          bakeMeasureLabels: bakeMeasureLabels) else { return nil }
+    public func render(_ document: PhotonzDocument, store: ImageStore) -> CGImage? {
+        guard let output = compositeImage(document, store: store) else { return nil }
         return context.createCGImage(output, from: output.extent)
     }
 
@@ -173,8 +167,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// buffer and snapshots it as a CGImage. Must hold `interactiveLock`.
     private func renderLocked(_ document: PhotonzDocument, store: ImageStore,
                               region: CGRect?, width: Int, height: Int) -> CGImage? {
-        // Interactive frames never bake caliper labels — the live glass overlay is.
-        guard let output = compositeImage(document, store: store, bakeMeasureLabels: false) else { return nil }
+        guard let output = compositeImage(document, store: store) else { return nil }
         let rowBytes = width * 4
         if frameBufferCapacity < rowBytes * height {
             frameBuffer?.deallocate()
@@ -235,8 +228,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         return context.createCGImage(scaled.cropped(to: extent), from: extent)
     }
 
-    private func compositeImage(_ document: PhotonzDocument, store: ImageStore,
-                                bakeMeasureLabels: Bool = true) -> CIImage? {
+    private func compositeImage(_ document: PhotonzDocument, store: ImageStore) -> CIImage? {
         let canvas = document.canvasSize
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
@@ -244,8 +236,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         var output = CIImage(color: .clear).cropped(to: extent)
 
         for layer in document.layers where layer.isVisible {
-            guard let layerImage = ciImage(for: layer, in: document, store: store, backdrop: output,
-                                           bakeMeasureLabels: bakeMeasureLabels) else { continue }
+            guard let layerImage = ciImage(for: layer, in: document, store: store,
+                                           backdrop: output) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
             // lines) that lives outside the layer frame; composite it beneath
             // the magnified box.
@@ -287,19 +279,14 @@ public final class DocumentRenderer: @unchecked Sendable {
     public func render(_ document: PhotonzDocument, store: ImageStore, hiding id: UUID) -> CGImage? {
         var doc = document
         doc.updateLayer(id: id) { $0.isVisible = false }
-        // Drag-preview underlay = interactive, so other calipers keep their glass
-        // overlay label rather than a baked pill.
-        return render(doc, store: store, bakeMeasureLabels: false)
+        return render(doc, store: store)
     }
 
     /// One layer rendered alone, with `padding` document points of clear canvas
     /// on every side so shadows/blur survive. The result is positioned by the
     /// canvas view as a Core Animation sublayer during drags.
-    /// `bakeMeasureLabels` defaults on (panel thumbnails want the number); the
-    /// move-drag sprite passes `false` so a dragged caliper's label stays the live
-    /// glass overlay rather than a doubled baked pill.
     public func renderSprite(for id: UUID, in document: PhotonzDocument, store: ImageStore,
-                             padding: CGFloat, bakeMeasureLabels: Bool = true) -> CGImage? {
+                             padding: CGFloat) -> CGImage? {
         guard var layer = document.layer(id: id) else { return nil }
         layer.isVisible = true
         layer.frame = CGRect(x: padding, y: padding,
@@ -307,7 +294,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         let doc = PhotonzDocument(canvasSize: CGSize(width: layer.frame.width + padding * 2,
                                                      height: layer.frame.height + padding * 2),
                                   layers: [layer])
-        return render(doc, store: store, bakeMeasureLabels: bakeMeasureLabels)
+        return render(doc, store: store)
     }
 
     /// One layer rendered alone and downscaled for the layers panel. Renders
@@ -334,7 +321,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// zoom callouts magnify a region of it, which is what keeps them live:
     /// they reference the canvas, never a baked copy.
     private func ciImage(for layer: Layer, in document: PhotonzDocument, store: ImageStore,
-                         backdrop: CIImage, bakeMeasureLabels: Bool = true) -> CIImage? {
+                         backdrop: CIImage) -> CIImage? {
         var image: CIImage
         switch layer.content {
         case .image(let ref):
@@ -358,13 +345,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             }) else { return nil }
             image = raster
         case .measure(let measure):
-            // The label text depends on the document's pixelScale (points readout)
-            // and on whether the pill is baked — neither is part of the cache key's
-            // content, so fold both into the variant.
-            let variant = "scale:\(document.pixelScale)|label:\(bakeMeasureLabels)"
+            // The label text depends on the document's pixelScale (points
+            // readout), which isn't part of the cache key's content.
+            let variant = "scale:\(document.pixelScale)"
             guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
                 MeasureRasterizer.rasterize(measure, size: layer.frame.size,
-                                            pixelScale: document.pixelScale, bakeLabel: bakeMeasureLabels)
+                                            pixelScale: document.pixelScale)
             }) else { return nil }
             image = raster
         case .collage(let collage):

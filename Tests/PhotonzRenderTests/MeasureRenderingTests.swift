@@ -54,12 +54,12 @@ struct MeasureRenderingTests {
     }
 
     private func render(_ content: MeasureContent, from: CGPoint, to: CGPoint,
-                        canvas: Int = 300, pixelScale: CGFloat = 1, bakeLabels: Bool = true) -> CGImage {
+                        canvas: Int = 300, pixelScale: CGFloat = 1) -> CGImage {
         let store = ImageStore()
         let base = store.register(solidImage(width: canvas, height: canvas, r: 255, g: 255, b: 255))
         var doc = PhotonzDocument.withBaseImage(base, pixelScale: pixelScale)
         doc.addLayer(MeasureBuilder.layer(content: content, from: from, to: to))
-        return DocumentRenderer().render(doc, store: store, bakeMeasureLabels: bakeLabels)!
+        return DocumentRenderer().render(doc, store: store)!
     }
 
     private func content(mode: MeasureMode, showLabel: Bool = true, strokeWidth: CGFloat = 6) -> MeasureContent {
@@ -78,32 +78,34 @@ struct MeasureRenderingTests {
         #expect(isWhite(pixel(out, x: 130, y: 100)), "above the caliper is untouched")
     }
 
-    @Test func bakedPillFillsTheHeadGapWithColoredText() {
-        // With the label baked, the head-line center carries the pill (colored
-        // text + hairline border), so the chip band shows caliper-colored ink.
+    @Test func pillFillsTheHeadGapWithColoredText() {
+        // The head-line center carries the pill (colored text + hairline
+        // border), so the chip band shows caliper-colored ink.
         let out = render(content(mode: .horizontal, showLabel: true),
-                         from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130), bakeLabels: true)
+                         from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130))
         #expect(anyPixel(out, xs: 105...155, ys: 150...166, where: isRed),
                 "the baked pill draws caliper-colored ink at the head")
     }
 
-    @Test func interactiveOmitsThePillAndCutsTheHeadLine() {
-        // bakeLabel:false is the on-screen path — the head line is cut for the
-        // (live overlay) chip, so its center is transparent, not a baked pill.
-        let img = MeasureRasterizer.rasterize(
-            MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           headOffset: 28, mode: .horizontal, strokeWidth: 6, strokeColorHex: "#FF0000"),
-            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: false)!
-        #expect(pixel(img, x: 120, y: 88).a == 0, "the head-line gap is empty on the interactive path")
+    @Test func theHeadLineIsCutForTheChipButThePillFillsTheGap() {
+        // The head line is split around the chip so a translucent pill never
+        // reveals a stroke behind it — and the pill itself closes the gap.
+        let transparentChip = MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                                             headOffset: 28, mode: .horizontal, strokeWidth: 6,
+                                             strokeColorHex: "#FF0000", chipOpacity: 0)
+        let img = MeasureRasterizer.rasterize(transparentChip, size: CGSize(width: 240, height: 120),
+                                              pixelScale: 1)!
+        // Probe the chip's padding band (clear of the centered readout).
+        let gap = chipFillProbe(chipWidth: chipWidth(for: transparentChip))
+        #expect(pixel(img, x: gap.x, y: gap.y).a == 0, "a fully transparent chip leaves the gap empty")
         #expect(isRed(pixel(img, x: 40, y: 88)), "the head line still strokes outside the gap")
-    }
 
-    @Test func bakedPillIsPresentAndAbsentWithTheFlag() {
-        let baked = MeasureRasterizer.rasterize(
+        let filled = MeasureRasterizer.rasterize(
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           headOffset: 28, mode: .horizontal, strokeWidth: 6, strokeColorHex: "#FF0000"),
-            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
-        #expect(pixel(baked, x: 120, y: 88).a > 0, "the baked pill fills the head gap")
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6,
+                           strokeColorHex: "#FF0000"),
+            size: CGSize(width: 240, height: 120), pixelScale: 1)!
+        #expect(pixel(filled, x: 120, y: 88).a > 0, "the pill fills the head gap")
     }
 
     @Test func labelHiddenLeavesAContinuousHeadLine() {
@@ -141,7 +143,7 @@ struct MeasureRenderingTests {
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
                            headOffset: 28, mode: .horizontal, strokeWidth: 6,
                            strokeColorHex: "#FF0000", textColorHex: "#FF0000"),
-            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
+            size: CGSize(width: 240, height: 120), pixelScale: 1)!
         let text = TextContent(string: "200 px", fontName: "SF Pro",
                                fontSize: MeasureContent.labelFontSize, colorHex: "#FF0000")
         let textImg = TextRasterizer.rasterize(text, size: TextRasterizer.naturalSize(text))!
@@ -156,6 +158,60 @@ struct MeasureRenderingTests {
                 "label ink profile matches upright text, not its vertical flip")
     }
 
+    // MARK: The caliper is ONE object
+
+    /// The measure layer plus a style, composited over the white base.
+    private func render(_ content: MeasureContent, from: CGPoint, to: CGPoint,
+                        style: LayerStyle, interactive: Bool = false) -> CGImage {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 300, height: 300, r: 255, g: 255, b: 255))
+        var doc = PhotonzDocument.withBaseImage(base)
+        var layer = MeasureBuilder.layer(content: content, from: from, to: to)
+        layer.style = style
+        doc.addLayer(layer)
+        let renderer = DocumentRenderer()
+        return (interactive ? renderer.renderInteractive(doc, store: store)
+                            : renderer.render(doc, store: store))!
+    }
+
+    private func opaqueChipCaliper() -> MeasureContent {
+        MeasureContent(mode: .horizontal, strokeWidth: 6, strokeColorHex: "#FF0000",
+                       chipColorHex: "#0000FF", chipOpacity: 1, textColorHex: "#00FF00")
+    }
+
+    @Test func layerOpacityFadesTheChipToo() {
+        // The Effects panel's opacity is an OBJECT-level setting: it must fade
+        // the chip exactly as much as it fades the legs, not leave a solid pill
+        // floating over a ghosted caliper.
+        let solid = render(opaqueChipCaliper(), from: CGPoint(x: 20, y: 130),
+                           to: CGPoint(x: 240, y: 130), style: LayerStyle())
+        let faded = render(opaqueChipCaliper(), from: CGPoint(x: 20, y: 130),
+                           to: CGPoint(x: 240, y: 130), style: LayerStyle(opacity: 0.4))
+        let probe = chipFillProbe(chipWidth: chipWidth(for: opaqueChipCaliper()), centerX: 130, centerY: 158)
+        let s = pixel(solid, x: probe.x, y: probe.y)
+        let f = pixel(faded, x: probe.x, y: probe.y)
+        #expect(s.b > 200 && s.r < 60, "the chip is solid blue at full opacity")
+        // Faded over white: blue stays dominant but the pill washes out.
+        #expect(Int(f.r) > Int(s.r) + 60 && f.b > 150,
+                "40% layer opacity must wash the chip out too (solid r=\(s.r), faded r=\(f.r))")
+    }
+
+    @Test func theInteractiveCanvasShowsTheSameChipTheExportBakes() {
+        // The canvas used to omit the pill and paint an AppKit overlay on top —
+        // which no layer style could reach. One raster now serves both.
+        let content = opaqueChipCaliper()
+        let interactive = render(content, from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130),
+                                 style: LayerStyle(), interactive: true)
+        let exported = render(content, from: CGPoint(x: 20, y: 130), to: CGPoint(x: 240, y: 130),
+                              style: LayerStyle())
+        let probe = chipFillProbe(chipWidth: chipWidth(for: content), centerX: 130, centerY: 158)
+        let live = pixel(interactive, x: probe.x, y: probe.y)
+        let baked = pixel(exported, x: probe.x, y: probe.y)
+        #expect(live.b > 200 && live.r < 60, "the interactive composite carries the chip")
+        #expect(live.r == baked.r && live.g == baked.g && live.b == baked.b,
+                "live and baked must be the same pixels")
+    }
+
     // MARK: Three independent colors (stroke / chip fill / text)
 
     /// A 240×120 caliper whose feet run at y=60 (x 20..220), head +28 below at
@@ -168,13 +224,14 @@ struct MeasureRenderingTests {
                            headOffset: 28, mode: .horizontal, strokeWidth: 1,
                            strokeColorHex: stroke, chipColorHex: chip,
                            chipOpacity: chipOpacity, textColorHex: text),
-            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
+            size: CGSize(width: 240, height: 120), pixelScale: 1)!
     }
 
     /// A point inside the pill's fill but clear of the centered text: the left
     /// padding band on the chip's vertical center line.
-    private func chipFillProbe(chipWidth: CGFloat) -> (x: Int, y: Int) {
-        (x: Int((120 - chipWidth / 2 + 4).rounded()), y: 88)
+    private func chipFillProbe(chipWidth: CGFloat, centerX: CGFloat = 120,
+                               centerY: Int = 88) -> (x: Int, y: Int) {
+        (x: Int((centerX - chipWidth / 2 + 4).rounded()), y: centerY)
     }
 
     private func chipWidth(for content: MeasureContent) -> CGFloat {
@@ -238,7 +295,7 @@ struct MeasureRenderingTests {
         content.chipOpacity = 0
         content.textColorHex = "#00FF00"
         let img = MeasureRasterizer.rasterize(content, size: CGSize(width: 240, height: 120),
-                                              pixelScale: 1, bakeLabel: true)!
+                                              pixelScale: 1)!
         let half = chipWidth(for: content) / 2
         #expect(anyPixel(img, xs: Int((120 - half - 1).rounded())...Int((120 - half + 1).rounded()),
                          ys: 86...90, where: isRed),

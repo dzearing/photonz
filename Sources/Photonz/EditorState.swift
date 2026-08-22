@@ -879,9 +879,6 @@ final class EditorState {
     /// The selected caliper's live label-size preview during a slider drag (no
     /// history); the canvas overlay reads it so the pill resizes live.
     private(set) var measureLabelPreview: (id: UUID, scale: CGFloat)?
-    /// The selected caliper's live chip-opacity preview during a slider drag (no
-    /// history); the canvas overlay reads it so the pill re-tints live.
-    private(set) var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
 
     /// Live label-size slider drag: re-render the baked strokes/gap for the new
     /// size and publish the preview so the glass pill resizes too (no history).
@@ -909,10 +906,13 @@ final class EditorState {
         if commit { recordRecentColor(hex: hex) }
     }
 
-    /// The label chip's fill color (its alpha is `chipOpacity`, set separately).
-    func setMeasureChipColor(_ hex: String, commit: Bool) {
-        updateMeasureStyles { $0.chipColorHex = hex }
-        applyMeasureRestyle { MeasureBuilder.restyled($0, chipColorHex: hex) }
+    /// The label chip's fill — color and alpha together, because the inspector
+    /// picks both from one swatch (its opacity slider IS the chip's alpha).
+    func setMeasureChipColor(_ hex: String, opacity: CGFloat, commit: Bool) {
+        updateMeasureStyles { $0.chipColorHex = hex; $0.chipOpacity = opacity }
+        applyMeasureRestyle {
+            MeasureBuilder.restyled($0, chipColorHex: hex, chipOpacity: opacity)
+        }
         if commit { recordRecentColor(hex: hex) }
     }
 
@@ -921,23 +921,6 @@ final class EditorState {
         updateMeasureStyles { $0.textColorHex = hex }
         applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
-    }
-
-    /// Live chip-opacity slider drag: update the document without history so the
-    /// glass pill re-tints under the thumb (mirrors the label-size slider).
-    func previewMeasureChipOpacity(_ opacity: CGFloat) {
-        updateMeasureStyles { $0.chipOpacity = opacity }
-        guard let layer = selectedMeasureLayer else { return }
-        // The chip isn't baked on the interactive path, so only the glass overlay
-        // needs to move — no re-render, no history.
-        measureChipOpacityPreview = (layer.id, opacity)
-    }
-
-    /// Slider release: commit the chip opacity in one undo step.
-    func commitMeasureChipOpacity(_ opacity: CGFloat) {
-        measureChipOpacityPreview = nil
-        updateMeasureStyles { $0.chipOpacity = opacity }
-        applyMeasureRestyle { MeasureBuilder.restyled($0, chipOpacity: opacity) }
     }
 
     /// Mutate the measure tool's remembered style and persist it — every measure
@@ -2433,10 +2416,7 @@ final class EditorState {
         let store = store
         Task.detached(priority: .userInitiated) {
             let underlay = renderer.render(doc, store: store, hiding: id)
-            // A dragged caliper's label is the live glass overlay, not a baked
-            // pill on the moving sprite.
-            let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding,
-                                               bakeMeasureLabels: false)
+            let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding)
             await MainActor.run { [weak self] in
                 guard let self, self.dragPreviewGeneration == generation,
                       let underlay, let sprite else { return }

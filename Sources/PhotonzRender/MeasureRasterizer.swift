@@ -4,23 +4,23 @@ import Foundation
 import PhotonzCore
 
 /// Rasterizes a caliper (`MeasureContent`) into a transparent-background CGImage:
-/// the squared-U outline (two legs + head bar) with lightly rounded corners, and
-/// — only when `bakeLabel` is set — a flat glass-style label pill baked in.
+/// the squared-U outline (two legs + head bar) with lightly rounded corners, plus
+/// the label pill. When the label is on, the head line is **split around the
+/// chip** (a gap), so a translucent pill never reveals a stroke behind it.
 ///
-/// The live editor draws the pill as a real Liquid-Glass overlay and passes
-/// `bakeLabel: false`, so the caliper bitmap carries no label; export /
-/// thumbnails / region-promote pass `bakeLabel: true` so flattened output still
-/// shows the measurement. Either way, when the label is on the head line is
-/// **split around the chip** (a gap), so a translucent pill never reveals a
-/// stroke behind it.
+/// The pill used to be omitted here and drawn as an AppKit overlay on the live
+/// canvas instead (a Liquid-Glass capsule). That made the chip unreachable by
+/// everything that acts on a LAYER — opacity, shadow, blend mode, transform —
+/// so the canvas and the export disagreed. The caliper is one object; it is one
+/// raster.
 ///
 /// Drawing happens in the layer's local top-left space — the same space
 /// `start`/`end` are stored in — and the readout uses the content's unit,
 /// divided by `pixelScale` for points.
 public enum MeasureRasterizer {
 
-    public static func rasterize(_ measure: MeasureContent, size: CGSize, pixelScale: CGFloat,
-                                 bakeLabel: Bool = true) -> CGImage? {
+    public static func rasterize(_ measure: MeasureContent, size: CGSize,
+                                 pixelScale: CGFloat) -> CGImage? {
         let width = Int(size.width.rounded())
         let height = Int(size.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -76,9 +76,7 @@ public enum MeasureRasterizer {
         drawLeg(foot: g.footA, head: g.headA, toward: gapEdge(toward: g.headA), in: context)
         drawLeg(foot: g.footB, head: g.headB, toward: gapEdge(toward: g.headB), in: context)
 
-        // Flattened pill (export / thumbnails only). On-screen the live glass
-        // overlay fills the same gap.
-        if measure.showLabel, bakeLabel {
+        if measure.showLabel {
             drawPill(labelText, at: mid, chipSize: chipSize, fontSize: measure.labelPointSize,
                      borderWidth: lineWidth, fill: chipColor, border: color,
                      textColorHex: measure.textColorHex, in: context)

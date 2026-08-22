@@ -13,6 +13,12 @@ extension Color {
                       Int((c.greenComponent * 255).rounded()),
                       Int((c.blueComponent * 255).rounded()))
     }
+
+    /// This color's alpha, for the pickers that offer an opacity slider (the
+    /// model stores alpha in its own field — hex strings never carry it).
+    var alphaComponent: CGFloat {
+        NSColor(self).usingColorSpace(.sRGB)?.alphaComponent ?? 1
+    }
 }
 
 // MARK: - Docked inspector panel
@@ -976,34 +982,22 @@ struct MeasureInspector: View {
                             .frame(width: 42, alignment: .trailing)
                     }
                 }
-                // The three colors are narrow controls, so their labels sit to
-                // the left. Stroke = caliper ink + chip border; Chip = the pill's
-                // fill (its own opacity, reachable all the way to invisible);
-                // Text = the readout.
-                swatchRow("Stroke", hex: c.strokeColorHex) {
-                    editorState.setMeasureStrokeColor($0, commit: true)
+                // Three swatches, no extra sliders: Stroke = caliper ink + the
+                // chip's border, Chip = the pill's fill (its picker carries the
+                // opacity slider, so "no chip" is just alpha 0), Text = readout.
+                // Whole-object transparency lives in Effects, where every layer's
+                // does.
+                swatchRow("Stroke", color: Color(hex: c.strokeColorHex)) {
+                    if let hex = $0.hexString { editorState.setMeasureStrokeColor(hex, commit: true) }
                 }
-                swatchRow("Chip", hex: c.chipColorHex) {
-                    editorState.setMeasureChipColor($0, commit: true)
-                } trailing: {
-                    // During a drag the committed doc hasn't changed, so read the
-                    // live preview value (else the thumb snaps back / resets).
-                    let live = editorState.measureChipOpacityPreview?.opacity ?? c.chipOpacity
-                    Slider(value: Binding(
-                        get: { Double(live) },
-                        set: { editorState.previewMeasureChipOpacity(CGFloat($0)) }),
-                           in: 0...1,
-                           onEditingChanged: { editing in
-                               if !editing {
-                                   editorState.commitMeasureChipOpacity(
-                                       editorState.measureChipOpacityPreview?.opacity ?? c.chipOpacity)
-                               }
-                           })
-                        .controlSize(.small)
-                        .help("Chip background opacity: all the way down is fully transparent.")
+                swatchRow("Chip", color: Color(hex: c.chipColorHex).opacity(c.chipOpacity),
+                          supportsOpacity: true) {
+                    if let hex = $0.hexString {
+                        editorState.setMeasureChipColor(hex, opacity: $0.alphaComponent, commit: true)
+                    }
                 }
-                swatchRow("Text", hex: c.textColorHex) {
-                    editorState.setMeasureTextColor($0, commit: true)
+                swatchRow("Text", color: Color(hex: c.textColorHex)) {
+                    if let hex = $0.hexString { editorState.setMeasureTextColor(hex, commit: true) }
                 }
             }
             .padding(.horizontal, 14)
@@ -1021,20 +1015,17 @@ struct MeasureInspector: View {
         }
     }
 
-    /// One color row: caption on the left, an optional inline control, then the
-    /// swatch on the right so the three swatches line up in a column.
-    @ViewBuilder private func swatchRow<Trailing: View>(
-        _ label: String, hex: String, set: @escaping (String) -> Void,
-        @ViewBuilder trailing: () -> Trailing = { EmptyView() }) -> some View {
+    /// One color row: caption on the left, swatch next to it, so the three
+    /// swatches line up in a column.
+    @ViewBuilder private func swatchRow(_ label: String, color: Color,
+                                        supportsOpacity: Bool = false,
+                                        set: @escaping (Color) -> Void) -> some View {
         HStack(spacing: 8) {
             Text(label).font(.caption).foregroundStyle(.secondary)
                 .frame(width: 44, alignment: .leading)
-            ColorPicker(label, selection: Binding(
-                get: { Color(hex: hex) },
-                set: { if let picked = $0.hexString { set(picked) } }),
-                supportsOpacity: false)
+            ColorPicker(label, selection: Binding(get: { color }, set: set),
+                        supportsOpacity: supportsOpacity)
                 .labelsHidden().controlSize(.small)
-            trailing()
             Spacer(minLength: 0)
         }
     }

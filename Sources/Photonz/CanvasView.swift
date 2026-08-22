@@ -52,10 +52,6 @@ struct CanvasView: NSViewRepresentable {
     let textContent: TextContent?
     /// The active measure tool's style, mirrored into the in-flight preview.
     let measureContent: MeasureContent?
-    /// Live label-size preview for the selected caliper during a slider drag.
-    var measureLabelPreview: (id: UUID, scale: CGFloat)?
-    /// Live chip-opacity preview for the selected caliper during a slider drag.
-    var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
@@ -126,8 +122,7 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent, edgeMap: edgeMap,
-                   isCanvasSelected: isCanvasSelected, measureLabelPreview: measureLabelPreview,
-                   measureChipOpacityPreview: measureChipOpacityPreview)
+                   isCanvasSelected: isCanvasSelected)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -249,9 +244,6 @@ final class CanvasNSView: NSView {
     private let snapDotLayer = CAShapeLayer()
     /// Latest pointer location in view space, for the hover snap dot.
     private var hoverPoint: CGPoint?
-    /// Live Liquid-Glass label pills for calipers, keyed by the layer id's UUID
-    /// string. Pass-through subviews positioned + scaled every overlay refresh.
-    private var measureLabelViews: [String: MeasureLabelView] = [:]
     /// Dashed wells + a plus glyph over every EMPTY collage slot — editor
     /// chrome only; empty slots render transparent in the composite.
     private let collageWellsLayer = CAShapeLayer()
@@ -360,8 +352,6 @@ final class CanvasNSView: NSView {
     private var annotationStyle: LayerStyle?
     private var measureContent: MeasureContent?
     /// Live label-size preview for the selected caliper during a slider drag.
-    private var measureLabelPreview: (id: UUID, scale: CGFloat)?
-    private var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
     /// In-progress 3-click caliper placement: click foot A → move → click foot B →
     /// move → click sets the head (depth + direction). Nil = idle (hover only).
     private enum MeasurePlacement {
@@ -975,82 +965,6 @@ final class CanvasNSView: NSView {
             annotationPreviewHeadLayer.path = nil
         }
         CATransaction.commit()
-    }
-
-    /// Live Liquid-Glass label pills for every visible caliper (and the in-flight
-    /// create-drag preview), positioned each overlay refresh from live geometry so
-    /// they track create/handle/move drags and pan/zoom with zero drift. The
-    /// interactive composite never bakes the label, so these are the only on-screen
-    /// readout; the head line is cut where each pill sits.
-    private func refreshMeasureLabels() {
-        guard let viewport, let document else {
-            for view in measureLabelViews.values { view.isHidden = true }
-            return
-        }
-        let pixelScale = document.pixelScale
-        // The pill scales with zoom so it reads as part of the content (matching
-        // the rasterized caliper + the baked export pill) instead of a fixed-size
-        // overlay painted on top.
-        let zoom = viewport.zoom
-        var wanted = Set<String>()
-
-        func showPill(key: String, content: MeasureContent) {
-            guard content.showLabel else { return }
-            let g = content.caliperGeometry()
-            let view = measureLabelViews[key] ?? {
-                let v = MeasureLabelView()
-                addSubview(v)
-                measureLabelViews[key] = v
-                return v
-            }()
-            // The pill is image content: scale it by zoom (matching the baked
-            // pill + the head-line gap). Font/padding come from the measure's
-            // label size (the inspector slider); the border matches the caliper
-            // line's on-screen width (strokeWidth image px × zoom).
-            view.configure(text: content.label(pixelScale: pixelScale),
-                           strokeColorHex: content.strokeColorHex,
-                           chipColorHex: content.chipColorHex, chipOpacity: content.chipOpacity,
-                           textColorHex: content.textColorHex,
-                           fontSize: content.labelPointSize, padding: content.labelPadding,
-                           scale: zoom, borderWidth: content.strokeWidth * zoom)
-            let center = viewport.viewPoint(fromDocument: g.labelAnchor)
-            view.setFrameOrigin(CGPoint(x: (center.x - view.frame.width / 2).rounded(),
-                                        y: (center.y - view.frame.height / 2).rounded()))
-            view.isHidden = false
-            wanted.insert(key)
-        }
-
-        // No pill during the initial create drag — that shows only the red line.
-
-        // Placed calipers (overriding with live drag geometry where applicable).
-        for layer in document.layers where layer.isVisible {
-            guard var mc = layer.measure,
-                  var s = layer.measureEndpoint(.start), var e = layer.measureEndpoint(.end) else { continue }
-            var off = mc.headOffset
-            if let d = measureHandleDrag, d.layerID == layer.id {
-                let p = d.params(); s = p.start; e = p.end; off = p.headOffset
-            }
-            if let mv = moveDrag, mv.layerID == layer.id, mv.moved {
-                let dx = mv.snapped.origin.x - mv.startOrigin.x
-                let dy = mv.snapped.origin.y - mv.startOrigin.y
-                s = CGPoint(x: s.x + dx, y: s.y + dy)
-                e = CGPoint(x: e.x + dx, y: e.y + dy)
-            }
-            mc.start = s; mc.end = e; mc.headOffset = off
-            // Live inspector-slider previews during a drag (no history yet).
-            if let preview = measureLabelPreview, preview.id == layer.id {
-                mc.labelScale = preview.scale
-            }
-            if let preview = measureChipOpacityPreview, preview.id == layer.id {
-                mc.chipOpacity = preview.opacity
-            }
-            showPill(key: layer.id.uuidString, content: mc)
-        }
-
-        for (key, view) in measureLabelViews where !wanted.contains(key) {
-            view.removeFromSuperview()
-            measureLabelViews.removeValue(forKey: key)
-        }
     }
 
     // MARK: Pointer: layer move or marquee
@@ -1845,11 +1759,7 @@ final class CanvasNSView: NSView {
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
-               edgeMap: EdgeMap, isCanvasSelected: Bool = false,
-               measureLabelPreview: (id: UUID, scale: CGFloat)? = nil,
-               measureChipOpacityPreview: (id: UUID, opacity: CGFloat)? = nil) {
-        self.measureLabelPreview = measureLabelPreview
-        self.measureChipOpacityPreview = measureChipOpacityPreview
+               edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -1941,7 +1851,6 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             snapDotLayer.isHidden = true
-            for view in measureLabelViews.values { view.isHidden = true }
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
             annotationPreviewLayer.isHidden = true
@@ -1982,7 +1891,6 @@ final class CanvasNSView: NSView {
         refreshPreviewSprite()
         refreshTextEditorDisplay()
         refreshCollageChrome()
-        refreshMeasureLabels()
         refreshMeasureCreation(modifierFlags: NSEvent.modifierFlags)
     }
 
@@ -2884,81 +2792,6 @@ extension CanvasNSView: NSTextViewDelegate {
         }
         return false
     }
-}
-
-/// A caliper's live label pill: a capsule filled with the measure's chip color
-/// (at its own opacity), bordered in the stroke color, holding the readout in the
-/// text color — centered on the head line. Sized to the same chip footprint the
-/// rasterizer cuts the head line for, so the stroke never shows behind a
-/// translucent chip. Mouse events pass through (`hitTest` → nil) so the canvas
-/// still owns the pointer.
-///
-/// This used to be a Liquid-Glass `NSVisualEffectView` (a real backdrop blur).
-/// Once the chip fill became a user-editable color WITH an alpha, the blur had to
-/// go: exports can't bake a backdrop blur, so any frost here would make the live
-/// canvas disagree with what the user actually gets — and a "fully transparent"
-/// chip would still show a frosted blob. The caliper is image content; it must
-/// preview exactly as it bakes.
-private final class MeasureLabelView: NSView {
-    private let pill = NSView()
-    private let label = NSTextField(labelWithString: "")
-
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        wantsLayer = true
-        pill.wantsLayer = true
-        pill.layer?.masksToBounds = true
-        pill.layer?.borderWidth = 1
-        addSubview(pill)
-
-        label.alignment = .center
-        label.isBezeled = false
-        label.isEditable = false
-        label.isSelectable = false
-        label.drawsBackground = false
-        label.backgroundColor = .clear
-        pill.addSubview(label)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("not used") }
-
-    /// The caliper — pill included — is **image content** (it exports to send to
-    /// designers), so the pill scales with zoom exactly like the baked pill:
-    /// `labelFontSize`/`labelPadding` are IMAGE pixels, shown at ×`scale` (zoom).
-    /// `borderWidth` is the caliper line's on-screen width so the border is as
-    /// thick as the caliper lines.
-    func configure(text: String, strokeColorHex: String, chipColorHex: String, chipOpacity: CGFloat,
-                   textColorHex: String, fontSize: CGFloat, padding: CGFloat,
-                   scale: CGFloat, borderWidth: CGFloat) {
-        func color(_ hex: String, fallback: RGBA, alpha: CGFloat? = nil) -> NSColor {
-            let c = RGBA(hex: hex) ?? fallback
-            return NSColor(srgbRed: c.r, green: c.g, blue: c.b, alpha: alpha ?? c.a)
-        }
-        let stroke = color(strokeColorHex, fallback: RGBA(r: 1, g: 0.23, b: 0.19))
-        // Chip alpha comes from `chipOpacity`, never from the hex (see the model).
-        let fill = color(chipColorHex, fallback: RGBA(r: 1, g: 1, b: 1),
-                         alpha: min(max(chipOpacity, 0), 1))
-        let pad = padding * scale
-        label.font = .systemFont(ofSize: fontSize * scale, weight: .semibold)
-        label.stringValue = text
-        label.textColor = color(textColorHex, fallback: RGBA(r: 1, g: 0.23, b: 0.19))
-        label.sizeToFit()
-        let w = (label.frame.width + 2 * pad).rounded()
-        let h = (label.frame.height + 2 * pad).rounded()
-        setFrameSize(CGSize(width: w, height: h))
-        pill.frame = bounds
-        pill.layer?.cornerRadius = h / 2
-        pill.layer?.backgroundColor = fill.cgColor
-        pill.layer?.borderWidth = max(1, borderWidth)
-        // Full strength, matching the baked pill's border (MeasureRasterizer).
-        pill.layer?.borderColor = stroke.cgColor
-        label.frame = CGRect(x: pad, y: (h - label.frame.height) / 2,
-                             width: w - 2 * pad, height: label.frame.height)
-    }
-
-    // Pass pointer events through to the canvas underneath.
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
 /// The inline text editor. A plain `NSTextView` treats Return as a newline; this
