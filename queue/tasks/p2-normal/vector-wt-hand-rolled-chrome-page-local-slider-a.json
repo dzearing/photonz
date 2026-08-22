@@ -1,0 +1,21 @@
+{
+  "id": "vector-wt-hand-rolled-chrome-page-local-slider-a",
+  "title": "vector-wt: hand-rolled chrome, page-local slider, arrow glyph",
+  "priority": "p2-normal",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:08.096Z",
+  "updated": "2026-08-22T23:43:08.096Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep fails: (1) gate 8: page-local .rng range control (~lines 45-52) styles three real Properties sliders (Fill opacity, Size, Flow) instead of the DS .slider/.slrow the same page already uses for zoom; also carries a deprecated .cmdk (~106). (2) gate 7: clickable caption affordance uses a unicode arrow glyph ('Open the design system' + arrow, ~544), explicitly banned; overlaps existing task icon-conformance-audit-across-mock-pages. (3) gate 1 warn: hand-authors .titlebar/.toolbar/.wsw (~89-122) that shell.js deletes and rebuilds; author via data-shell like every other page. (4) gate 3 warn: Library scope row is Media/Brushes/Styles/Assets, replacing the fixed D2 'Components' scope with a page-invented 'Brushes'. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:08.096Z",
+      "note": "created (manual)"
+    }
+  ]
+}

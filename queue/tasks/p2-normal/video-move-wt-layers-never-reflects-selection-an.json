@@ -1,0 +1,21 @@
+{
+  "id": "video-move-wt-layers-never-reflects-selection-an",
+  "title": "video-move-wt: Layers never reflects selection; animate catalogue incomplete",
+  "priority": "p2-normal",
+  "seq": 210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:30.967Z",
+  "updated": "2026-08-22T23:43:30.968Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep gate 4 fail: all 8 steps select #clipArt while #lrArt never gets .sel, though step 1 copy says 'the row lights up in Layers' (~385). Gate 10 warn: Animate section lists Position/Scale/Opacity only; the D10 visual-clip catalogue also requires Rotation and Blur rows. Shared root cause: steps pass only a .clip id to data-select and walkthrough.js strips .sel from every .lrow, so Layers never mirrors the selection. Also D9 warn: no data-tl-summary, so the collapsed timeline row names nothing; play button lacks aria-pressed. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:30.968Z",
+      "note": "created (manual)"
+    }
+  ]
+}

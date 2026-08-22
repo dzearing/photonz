@@ -1,0 +1,21 @@
+{
+  "id": "video-title-wt-layers-never-reflects-selection-n",
+  "title": "video-title-wt: Layers never reflects selection; no way to animate properties",
+  "priority": "p2-normal",
+  "seq": 200,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:21.478Z",
+  "updated": "2026-08-22T23:43:21.479Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep gate 4 fail: step 3 copy claims the title is 'seen three ways' including a Title row in Layers (~433), but steps only select timeline clips; #lrTitle/#lrArt/#lrL3 never get .sel. Gate 10 warn: property rows (Size/Weight, X/Y/W/H, Length) show no animate affordance and no dormant-property catalogue (D10). Shared root cause across all video walkthroughs: steps only pass a .clip id to data-select, and shared/components/walkthrough.js marks exactly one node and strips .sel from every .lrow, so the Layers rows naming the same clips never light up. agent-generate-wt line ~520 shows data-select on a .lrow working. Also D9 warn: the page never sets data-tl-summary, so the injected collapsed-timeline row names nothing; and the play button lacks aria-pressed. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:21.479Z",
+      "note": "created (manual)"
+    }
+  ]
+}

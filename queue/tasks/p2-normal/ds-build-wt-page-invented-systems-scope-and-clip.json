@@ -1,0 +1,21 @@
+{
+  "id": "ds-build-wt-page-invented-systems-scope-and-clip",
+  "title": "ds-build-wt: page-invented Systems scope and clipped scope tab",
+  "priority": "p2-normal",
+  "seq": 240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:40.825Z",
+  "updated": "2026-08-22T23:43:40.826Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep: (1) gate 3 warn: Library scope row is Media/Comp/Styles/Systems, replacing the fixed D2 fourth scope 'Assets' with a page-invented 'Systems' (grep: only this file uses data-scope=systems); decide whether design systems live under Assets or the scope set changes everywhere. (2) measured in browser: the 'Systems' chip clips 10px (scrollWidth 63 vs clientWidth 53) in the 232px seg; 'Styles' also clips slightly. (3) minor: fill value uses a unicode arrow (#pFillVal '#7C4DFF -> #FF5D8F' rendered with an arrow glyph); .select rows lack role/tabindex. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:40.826Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -2,11 +2,11 @@
   "id": "sweep-every-clickthrough-page-for-checklist-conf",
   "title": "Sweep every clickthrough page for checklist conformance",
   "priority": "p2-normal",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.752Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-22T23:44:17.199Z",
   "deps": [],
   "blockedBy": [],
   "notes": "For each usage clickthrough page listed in docs/design/mocks/index.html (capture-wt, img-retouch-wt, img-grade-wt, walk, composites, component-configure-wt, icon-draw-wt, icon-gradient-wt, video-*-wt, ds-build-wt, agent-generate-wt): verify it returns 200 and passes the UX-PATTERNS section 9 gates. File one queue task per failing page instead of fixing inline. Acceptance: a pass/fail table in the task log and a filed task per failure. Skip capture-wt in this sweep: task harden-the-capture-and-redline-clickthrough (p1) already audits and fixes it.",
@@ -23,7 +23,89 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria; scoped to avoid overlap with the capture-wt harden task"
+    },
+    {
+      "t": "2026-08-22T23:35:05.381Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "Pass/fail table (16 pages; capture-wt skipped, owned by harden-the-capture-and-redline-clickthrough). Method: HTTP check, mechanical greps (cq/em-dash/vendor/emoji/dgrp-b), in-browser measurement sweep at 1280x900 and 760px (shared/audit-sweep.js style, all pages loaded live), and a structural gate audit of every page against UX-PATTERNS section 9 + D8/D9/D10."
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "img-retouch-wt | 200 | FAIL | g4 no canvas sel ring (place 1 of 3 missing) -> task img-retouch-wt-selection-has-no-canvas-ring"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "img-grade-wt | 200 | PASS | warn: #lrRaw layer row has no eye"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "walk | 200 | FAIL | g4 no canvas ring though copy promises one -> task walk-selection-ring-promised-by-copy-but-missing"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "composites | 200 | FAIL | g4 no canvas sel, g6 three layer-row shapes, g2 non-canonical history sheet, measured clipped Library tabs -> task composites-canvas-selection-layer-row-consistenc"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "component-configure-wt | 200 | PASS | warns: lock-row variance, inline-colored tComp glyph, page-local tgl, segs missing aria"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "icon-draw-wt | 200 | FAIL | measured: Grid & snap chips clip, plate span 2px -> task icon-draw-wt-grid-snap-seg-chips-clip-their-labe"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "icon-gradient-wt | 200 | FAIL | g4 zero canvas selection; em dash placeholder in Angle -> task icon-gradient-wt-no-canvas-selection-and-an-em-d"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "vector-wt | 200 | FAIL | g8 page-local .rng slider + .cmdk, g7 arrow glyph affordance, g1 hand-authored titlebar/toolbar, g3 Brushes scope -> task vector-wt-hand-rolled-chrome-page-local-slider-a"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-transition-wt | 200 | FAIL | g4 Layers never mirrors clip selection; g11 no data-tl-summary -> task video-transition-wt-layers-never-reflects-the-se"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-cut-wt | 200 | FAIL | g4 same; copy asserts row lights up -> task video-cut-wt-layers-never-reflects-the-selected"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-title-wt | 200 | FAIL | g4 same; g10 no animate affordances -> task video-title-wt-layers-never-reflects-selection-n"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-move-wt | 200 | FAIL | g4 same; g10 catalogue missing Rotation/Blur -> task video-move-wt-layers-never-reflects-selection-an"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-zoom-wt | 200 | FAIL | g4 both halves (no ring, no Layers sel); g10 keyed-set-only list -> task video-zoom-wt-selection-invisible-on-canvas-and"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "video-freeze-wt | 200 | FAIL | g4 clip sel invisible on canvas+Layers; g10 no property rows -> task video-freeze-wt-clip-selection-has-no-canvas-or"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "ds-build-wt | 200 | FAIL | g3 page-invented Systems scope vs D2; measured Systems chip clips 10px -> task ds-build-wt-page-invented-systems-scope-and-clip"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "agent-generate-wt | 200 | FAIL | g2 steps cue dead selectors (#cmdk/#cmdkPop/#miAsk) -> task agent-generate-wt-walkthrough-steps-point-at-chr"
+    },
+    {
+      "t": "2026-08-22T23:44:12.554Z",
+      "note": "Narrow-width render (760px): clean on all 16 pages (no overflow, no squeezed canvas). Systemic warns rolled into task systemic-checklist-warns-across-clickthrough-pag. Root cause note for the seven g4 selection fails: walkthrough.js marks exactly one data-select node and strips .sel from every .lrow, so pages that select clips/pickers can never mirror into Layers."
+    },
+    {
+      "t": "2026-08-22T23:44:17.198Z",
+      "note": "Swept all 16 clickthrough pages (capture-wt excluded, owned by the harden task): all return 200; 14 fail at least one section 9 gate or a measured render check, 2 pass (img-grade-wt, component-configure-wt). Pass/fail table with evidence is in this task log. Filed 14 per-page fix tasks plus one systemic-warns rollup; no inline fixes. Verified via mechanical greps, live browser measurement at 1280px and 760px, and a structural audit of every page."
     }
   ],
-  "seq": 20
+  "seq": 20,
+  "started": "2026-08-22T23:35:05.381Z",
+  "completed": "2026-08-22T23:44:17.199Z"
 }

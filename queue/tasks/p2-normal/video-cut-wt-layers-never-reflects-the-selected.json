@@ -1,0 +1,21 @@
+{
+  "id": "video-cut-wt-layers-never-reflects-the-selected",
+  "title": "video-cut-wt: Layers never reflects the selected clip",
+  "priority": "p2-normal",
+  "seq": 190,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:21.451Z",
+  "updated": "2026-08-22T23:43:21.451Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep gate 4 fail: step copy says 'its row lights up in Layers' (~342) but the step only selects #clipA; #lrRec/#lrRec2 never get .sel. Shared root cause across all video walkthroughs: steps only pass a .clip id to data-select, and shared/components/walkthrough.js marks exactly one node and strips .sel from every .lrow, so the Layers rows naming the same clips never light up. agent-generate-wt line ~520 shows data-select on a .lrow working. Also D9 warn: the page never sets data-tl-summary, so the injected collapsed-timeline row names nothing; and the play button lacks aria-pressed. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:21.451Z",
+      "note": "created (manual)"
+    }
+  ]
+}

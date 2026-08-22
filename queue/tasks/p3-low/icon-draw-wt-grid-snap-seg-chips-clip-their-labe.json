@@ -1,0 +1,21 @@
+{
+  "id": "icon-draw-wt-grid-snap-seg-chips-clip-their-labe",
+  "title": "icon-draw-wt: Grid & snap seg chips clip their labels",
+  "priority": "p3-low",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:43:08.036Z",
+  "updated": "2026-08-22T23:43:08.037Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Checklist sweep, measured in browser at 1280x900: both 'Grid & snap' .seg.ig-multi groups (224px wide) clip chip labels ('Live area' scrollWidth 72 vs clientWidth 69, 'Geometry' 74 vs 69), and the second seg's sliding plate span is collapsed to 2px wide instead of sitting under the active chip. Widen the seg or shorten labels, and fix the plate positioning. All structural gates pass on this page. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:43:08.037Z",
+      "note": "created (manual)"
+    }
+  ]
+}
