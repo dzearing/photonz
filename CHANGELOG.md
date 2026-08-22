@@ -2,6 +2,24 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.14.0 — 2026-08-22
+
+**Saving a trimmed recording actually trims it.** Trim a video, press Command-S, and the file itself becomes the trimmed one. Dragging it out of History, pasting it, or opening it later all give you the clip you saved, not the original full length. Video windows now behave like image windows: Command-S saves, the title bar shows an edited dot, and closing with unsaved changes asks first. The untouched original is kept alongside, so trims never stack and "Revert to Original" in the Video menu brings the whole clip back. Recordings you trimmed in an earlier version open with unsaved changes so you can commit or discard them.
+
+**Show in Finder on every capture.** Every tile in History, screenshot or recording, has Show in Finder next to Delete. The video tile's Export GIF and Export HEIC items are gone, since converting formats belongs in the editor's Export menu where MP4 and the quality presets already live. Copy GIF is still on the tile's Copy menu.
+
+**Pin to screen is gone.** It only ever worked on screenshots, never recordings, and an action that shows up on half a list reads as broken. Tile actions are now Copy and Edit for images, Copy and Play for videos, then Show in Finder and Delete on everything.
+
+**Three colors on a caliper.** A measure's line, its readout chip, and the chip's text are now colored independently. Transparency comes from each swatch's own picker, so a fully transparent chip leaves just the line and the number. Existing measurements open exactly as they were.
+
+**Measurements remember what you last used.** Colors, thickness, label size, unit, decimals, and now effects like drop shadow all carry over to the next caliper you draw, the way shapes and text already did.
+
+**Effects reach the whole caliper.** The readout chip is part of the layer now, so opacity, shadow, blur, and blend mode apply to it just like the rest of the measurement. What you see on the canvas is what exports.
+
+**Draw it, then have it.** Every tool that creates something, shapes, text, zoom callouts, and measures, hands you back to Select with the new object selected, so you can nudge it with the arrow keys the moment it exists. Drawing five rectangles now means pressing R five times.
+
+**An Experiments window.** The app menu and the menu-bar menu now open Experiments, where you choose which Photonz you run: Current, the one everyone gets, or Next, where the next-generation experience is being built. Both ship in the same app, so there is nothing extra to install. Switching takes a relaunch; feature flags inside a release apply right away.
+
 ## 0.13.0 — 2026-07-25
 
 **A new measure tool.** Measuring is now one caliper instead of a pile of ruler styles. Drag or click out the span you want, then click once more to place the label arm wherever it reads best. The tool snaps to the edges it finds in your screenshot, so lining up on a button or a margin takes no fiddling. Hold Command if you want to ignore the snapping.
