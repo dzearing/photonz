@@ -1,23 +1,23 @@
-# Experiments — two releases in one binary
+# Experiments — releases in one binary
 
-Photonz ships **two experiences in the same app**: `public`, what everyone gets,
+Photonz ships **two experiences in the same app**: `current`, what everyone gets,
 and `next`, where the next-generation experience is built. No separate install,
-no separate build variant, no forked source tree. The user picks a release in
+no separate build variant, no second branch. The user picks a release in
 **Experiments** (app menu, or the menu-bar menu) and can tune per-release
-feature flags there.
+feature flags there. `legacy` is reserved for the day Next is promoted.
 
 ## Why it exists
 
 The next-gen Photonz has to be buildable without putting today's Photonz at
-risk. A separate branch or a duplicated view hierarchy rots: it drifts, it gets
-merge-conflicted, and it never actually ships. So the divergence lives in the
-running code, gated at the few call sites that need it.
+risk. A separate git branch rots: it drifts, it gets merge-conflicted, and it
+never actually ships. So both releases live in one tree, one binary, and the
+user picks which one runs.
 
 ## The model (PhotonzCore, `Release.swift` / `FeatureFlag.swift` / `FeatureCatalog.swift` / `ExperimentsStore.swift`)
 
 | Type | Role |
 | --- | --- |
-| `Release` | `public` (default) and `next`. Every trait (title, tagline, storage namespace) is a property on the case, so a third case drops in without touching call sites. |
+| `Release` | `current` (default) and `next`. Every trait (title, tagline, storage namespace) is a property on the case, so a third case drops in without touching call sites. |
 | `FeatureParameterValue` | A flag's typed knob: number, string, boolean, enumeration (fixed string cases plus the current selection). |
 | `FeatureParameter` | Name, label, optional number bounds, value. Refuses a value of the wrong kind, clamps numbers, and only accepts enum cases it declares. |
 | `FeatureFlag` | Stable name, title, description, enabled bit, parameters. |
@@ -26,7 +26,7 @@ running code, gated at the few call sites that need it.
 | `ExperimentsStore` | Reads/writes the selected release and every release's settings, each under its own key. |
 
 Storage is namespaced per release: `experiments.<release>.flags`, plus
-`experiments.release` for the choice. Editing Next never touches Public, and
+`experiments.release` for the choice. Editing Next never touches Current, and
 switching back and forth loses nothing.
 
 Only enabled bits and parameter values are persisted. Copy, parameter lists and
@@ -34,61 +34,75 @@ limits always come from the catalog, so renaming a description or retiring a
 flag can't corrupt anyone's settings: unknown flags are dropped, new ones arrive
 with defaults, a value whose type changed falls back, and numbers are clamped.
 
-## How next-gen behavior diverges (decided; do not re-litigate)
+## How the releases diverge: folders, then flags
 
-**Runtime-gated inside shared code.** Two tools, in order of preference:
+A release's own code lives in its own folder:
 
-1. **A feature flag** when the behavior is worth configuring or worth turning
-   off independently:
-   ```swift
-   if Experiments.shared.isEnabled(FeatureCatalog.someFlag) { … }
-   ```
-2. **A release branch** at the specific call site when it's simply "Next does
-   this differently":
-   ```swift
-   if Experiments.shared.release == .next { … } else { … }
-   ```
+```
+Sources/Photonz/Releases/
+  ReleaseExperience.swift   the ONE switch over Release; the app asks here
+  Current/                  the Photonz everyone gets (the default)
+  Next/                     the next generation, built in the open
+  Legacy/                   reserved: fills when Current is demoted
+```
 
-One-offs sprinkled through the existing views are FINE. What is not fine:
+`ReleaseExperience` is the seam. The app asks it for a surface, it asks the
+running release, and that release's `…Experience` builds it:
 
-- a parallel `Next/` view hierarchy, or a duplicated editor;
+```swift
+// PhotonzApp, in an editor window
+ReleaseExperience.imageEditor(windowID: windowID)
+```
+
+Everything outside `Releases/` is **shared**, and that is the normal state. A
+file moves into a release folder only when that release genuinely needs it
+different:
+
+1. Copy the shared file into the release's folder.
+2. Rename its type with the release prefix (`NextEditorView`). One module, so
+   names have to stay unique. (If the app is ever split into per-release
+   modules, this convention is what that change would replace.)
+3. Point that release's `…Experience` factory at the copy.
+
+Whatever a release has not forked keeps coming from the shared code, which is
+how Current's fixes keep reaching Next for free.
+
+Smaller differences don't deserve a forked file. Put those behind a feature
+flag:
+
+```swift
+if Experiments.shared.isEnabled(FeatureCatalog.someFlag) { … }
+```
+
+What is not fine:
+
+- branching on `Release` anywhere except `ReleaseExperience`;
 - a second build target, scheme, or bundle id for Next;
-- a global "if next" wrapper around a whole screen instead of the specific
-  behavior that actually differs.
+- forking a whole screen when the actual difference is one behavior a flag
+  could carry.
 
-Public stays stable because it is the default, it is untouched by Next-only
-branches, and it has its own settings namespace.
+Current stays stable because it is the default, because Next's code sits in
+Next's folder, and because each release has its own settings namespace.
 
 ## Drift discipline (the one-way rule)
 
-- Features added to **Public** are **ported forward to Next**. Next must never
-  fall behind the app people actually use.
-- Features in **Next** are **NEVER back-ported to Public**. Next reaches users
-  by being **promoted**, not by leaking.
+- **Every change to Current must reach Next.** While the file is shared, that
+  happens by itself. Once Next has forked that file, carrying the change across
+  by hand is part of the work: **a Current change is not finished until Next has
+  it.** Next must never fall behind the app people actually use.
+- **Nothing in Next is ever back-ported to Current.** Next reaches users by
+  being **promoted**, not by leaking.
 
-Promotion is the endgame: when Next is good enough, `next` becomes `public` and
-today's `public` becomes `legacy`, so nobody is yanked out from under the app
-they know. That is why `Release` is written to absorb a third case.
-
-## Switching releases takes a relaunch
-
-Deliberate. The release choice reaches AppKit surfaces built outside SwiftUI's
-environment (the menu-bar agent, the capture overlay, the floating panels), and
-windows opened under one release should not half-morph into the other. So:
-
-- `Experiments.shared.release` is the release this process is running, fixed at
-  launch.
-- `selectedRelease` is what the next launch will run. It persists immediately.
-- The dialog says so out loud and offers a one-click relaunch.
-
-**Flag edits inside the running release apply live** — `Experiments` is
-`@Observable`, and call sites read it when they draw.
+Promotion is the endgame: when Next is good enough, `next` becomes `current` and
+today's `current` becomes `legacy`, so nobody is yanked out from under the app
+they know. That is why `Release` is written to absorb a third case, and why the
+`Legacy/` folder already exists.
 
 ## The app is named after its release
 
 `AppNaming` (PhotonzCore) composes the user-facing name from three parts: the
 product name, the release's word, and the dev suffix. So a dev build running
-Next calls itself **Photonz Next (Dev)**, and plain Public is just **Photonz**.
+Next calls itself **Photonz Next (Dev)**, and plain Current is just **Photonz**.
 `AppInfo.name` is the single source for that string, so About, Quit, the Welcome
 window and the menu-bar accessibility label all follow.
 

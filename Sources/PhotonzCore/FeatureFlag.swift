@@ -156,7 +156,7 @@ public struct FeatureParameter: Codable, Sendable, Hashable, Identifiable {
 }
 
 /// A feature flag: a named, describable switch with typed parameters. Flags are
-/// scoped to a release — the same flag under Public and under Next carries its
+/// scoped to a release — the same flag under Current and under Next carries its
 /// own independent state.
 public struct FeatureFlag: Codable, Sendable, Hashable, Identifiable {
     /// Stable identifier. Persisted, and what call sites ask for.

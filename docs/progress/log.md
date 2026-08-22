@@ -3507,3 +3507,41 @@ binary with a temporary env-gated diagnostic, run twice: `release=public` gave
 gave `name=Photonz Next (Dev)` / `menuTitle=Photonz Next (Dev)` with the window
 titled `Untitled 1 (Next)`. The diagnostic was removed afterwards. Dialog states
 re-rendered offscreen through the real source.
+
+## 2026-08-22 (night) — Public becomes Current, and releases get real folders
+
+The user reversed the isolation decision, and renamed the default release.
+Runtime one-offs sprinkled through shared code was the wrong shape for building
+a next-generation app: a release should have somewhere to *live*.
+
+`Sources/Photonz/Releases/` now holds `Current/`, `Next/` and a reserved
+`Legacy/`. `ReleaseExperience` is the seam and owns the only switch over
+`Release` in the app; each release folder has an `…Experience` that builds that
+release's surfaces. `EditorRootView` asks the seam instead of naming views
+directly, and the two window roots moved out of `PhotonzApp.swift` into a shared
+`EditorWindowRoots.swift` so release folders can reach them.
+
+It's an **overlay fork**, not a duplicate: nothing was copied up front. Both
+releases still open the same shared editor. A file moves into a release folder
+the moment that release needs it different, renamed with the release prefix
+because it is all one module. Everything unforked keeps flowing from the shared
+code, which is exactly how Current's fixes keep reaching Next for free.
+
+`Release.public` became `Release.current` (storage key `current`; nothing had
+shipped, so no migration). `legacy` stays a folder with a README rather than a
+live case, since picking a Legacy with nothing behind it would just be Current
+wearing a different name.
+
+The porting rule got teeth in CLAUDE.md, `docs/design/experiments.md` and
+`Releases/README.md`: **every change to Current must reach Next** (free while
+the file is shared, by hand once Next has forked it) and **a Current change is
+not finished until Next has it**. Nothing in Next is ever back-ported.
+
+**Verified**: 831 tests green. The dispatch was checked in the real binary with
+a temporary marker in each Experience: `release=current` built by
+`CurrentExperience` with `name=Photonz (Dev)`, `-experiments.release next` built
+by `NextExperience` with `name=Photonz Next (Dev)` and the window titled
+`Untitled 1 (Next)`. Markers removed afterwards. Dialog re-rendered offscreen.
+
+**Next:** the first real Next-only surface, which is also the first real test of
+the fork-a-file workflow.

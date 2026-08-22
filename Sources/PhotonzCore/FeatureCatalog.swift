@@ -7,8 +7,8 @@ import Foundation
 ///
 /// Adding a flag: append a `Definition` below with the releases it belongs to
 /// and where it starts on. Read it at the call site through the app's
-/// `Experiments` object. Remember the porting rule: a flag that graduates in
-/// Public gets ported forward into Next, never the other way (see
+/// `Experiments` object. Remember the porting rule: every change to Current has
+/// to reach Next, and nothing in Next is ever back-ported (see
 /// `docs/design/experiments.md`).
 public enum FeatureCatalog {
 
@@ -55,7 +55,7 @@ public enum FeatureCatalog {
                         FeatureParameter(name: releaseTagUppercase, label: "All caps",
                                          value: .boolean(false)),
                     ]),
-                releases: [.public, .next],
+                releases: [.current, .next],
                 enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
@@ -71,7 +71,7 @@ public enum FeatureCatalog {
                                          value: .number(captureToastFadeSeconds),
                                          bounds: NumberBounds(minimum: 0, maximum: 15, step: 1)),
                     ]),
-                releases: [.public, .next],
+                releases: [.current, .next],
                 enabledByDefaultIn: []),
         ]
     }

@@ -6,14 +6,14 @@ import Testing
 struct ReleaseTests {
 
     @Test func publicIsTheDefault() {
-        #expect(Release.default == .public)
-        #expect(Release.public.isDefault)
+        #expect(Release.default == .current)
+        #expect(Release.current.isDefault)
         #expect(!Release.next.isDefault)
     }
 
     @Test func rawValuesAreStableStorageIdentifiers() {
         // Persisted in UserDefaults — renaming these silently resets people.
-        #expect(Release.public.rawValue == "public")
+        #expect(Release.current.rawValue == "current")
         #expect(Release.next.rawValue == "next")
     }
 
@@ -305,10 +305,10 @@ struct FeatureCatalogTests {
         }
     }
 
-    @Test func theReleaseTagFlagIsOnInNextAndOffInPublic() {
-        // Next announces itself in window titles; Public stays untouched.
+    @Test func theReleaseTagFlagIsOnInNextAndOffInCurrent() {
+        // Next announces itself in window titles; Current stays untouched.
         #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.releaseTagFlag))
-        #expect(!FeatureCatalog.defaultSettings(for: .public).isEnabled(FeatureCatalog.releaseTagFlag))
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.releaseTagFlag))
     }
 
     @Test func theReleaseTagLabelDefaultsToTheReleaseName() {
@@ -317,7 +317,7 @@ struct FeatureCatalogTests {
     }
 
     @Test func theToastTimingFlagShipsWithTheBuiltInSeconds() {
-        let settings = FeatureCatalog.defaultSettings(for: .public)
+        let settings = FeatureCatalog.defaultSettings(for: .current)
         #expect(!settings.isEnabled(FeatureCatalog.captureToastTimingFlag))
         #expect(settings.number(FeatureCatalog.captureToastTimingFlag, FeatureCatalog.captureToastHold) == 7)
         #expect(settings.number(FeatureCatalog.captureToastTimingFlag, FeatureCatalog.captureToastFade) == 3)
@@ -355,7 +355,7 @@ struct ReleaseTagTests {
 struct AppNamingTests {
 
     @Test func publicKeepsThePlainName() {
-        #expect(AppNaming.appName(base: "Photonz", release: .public, isDevBuild: false) == "Photonz")
+        #expect(AppNaming.appName(base: "Photonz", release: .current, isDevBuild: false) == "Photonz")
     }
 
     @Test func otherReleasesAreNamedAfterThemselves() {
@@ -363,7 +363,7 @@ struct AppNamingTests {
     }
 
     @Test func devBuildsKeepTheirSuffixOnTheEnd() {
-        #expect(AppNaming.appName(base: "Photonz", release: .public, isDevBuild: true) == "Photonz (Dev)")
+        #expect(AppNaming.appName(base: "Photonz", release: .current, isDevBuild: true) == "Photonz (Dev)")
         #expect(AppNaming.appName(base: "Photonz", release: .next, isDevBuild: true) == "Photonz Next (Dev)")
     }
 
@@ -384,10 +384,10 @@ struct AppNamingTests {
 @Suite("ExperimentsStore")
 struct ExperimentsStoreTests {
 
-    @Test func startsOnPublicWithCatalogDefaults() {
+    @Test func startsOnCurrentWithCatalogDefaults() {
         let store = ExperimentsStore(defaults: InMemoryExperimentsDefaults())
-        #expect(store.selectedRelease == .public)
-        #expect(store.settings(for: .public) == FeatureCatalog.defaultSettings(for: .public))
+        #expect(store.selectedRelease == .current)
+        #expect(store.settings(for: .current) == FeatureCatalog.defaultSettings(for: .current))
     }
 
     @Test func remembersTheSelectedRelease() {
@@ -396,22 +396,22 @@ struct ExperimentsStoreTests {
         #expect(ExperimentsStore(defaults: defaults).selectedRelease == .next)
     }
 
-    @Test func anUnknownStoredReleaseFallsBackToPublic() {
+    @Test func anUnknownStoredReleaseFallsBackToCurrent() {
         let defaults = InMemoryExperimentsDefaults()
         defaults.setExperimentsString("legacy", forKey: ExperimentsStore.releaseKey)
-        #expect(ExperimentsStore(defaults: defaults).selectedRelease == .public)
+        #expect(ExperimentsStore(defaults: defaults).selectedRelease == .current)
     }
 
     @Test func flagEditsPersistAcrossStores() {
         let defaults = InMemoryExperimentsDefaults()
         let store = ExperimentsStore(defaults: defaults)
-        store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .public)
+        store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .current)
         store.setParameter(FeatureCatalog.captureToastHold,
-                           of: FeatureCatalog.captureToastTimingFlag, to: .number(12), in: .public)
+                           of: FeatureCatalog.captureToastTimingFlag, to: .number(12), in: .current)
 
         let reopened = ExperimentsStore(defaults: defaults)
-        #expect(reopened.settings(for: .public).isEnabled(FeatureCatalog.captureToastTimingFlag))
-        #expect(reopened.settings(for: .public)
+        #expect(reopened.settings(for: .current).isEnabled(FeatureCatalog.captureToastTimingFlag))
+        #expect(reopened.settings(for: .current)
             .number(FeatureCatalog.captureToastTimingFlag, FeatureCatalog.captureToastHold) == 12)
     }
 
@@ -420,11 +420,11 @@ struct ExperimentsStoreTests {
         let store = ExperimentsStore(defaults: defaults)
         store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .next)
         #expect(store.settings(for: .next).isEnabled(FeatureCatalog.captureToastTimingFlag))
-        #expect(!store.settings(for: .public).isEnabled(FeatureCatalog.captureToastTimingFlag))
+        #expect(!store.settings(for: .current).isEnabled(FeatureCatalog.captureToastTimingFlag))
         // And the round trip is lossless in both directions.
         let reopened = ExperimentsStore(defaults: defaults)
         #expect(reopened.settings(for: .next).isEnabled(FeatureCatalog.captureToastTimingFlag))
-        #expect(!reopened.settings(for: .public).isEnabled(FeatureCatalog.captureToastTimingFlag))
+        #expect(!reopened.settings(for: .current).isEnabled(FeatureCatalog.captureToastTimingFlag))
     }
 
     @Test func eachReleaseWritesToItsOwnKey() {
@@ -441,9 +441,9 @@ struct ExperimentsStoreTests {
     @Test func corruptStoredDataFallsBackToCatalogDefaults() {
         let defaults = InMemoryExperimentsDefaults()
         defaults.setExperimentsData(Data("not json".utf8),
-                                    forKey: ExperimentsStore.settingsKey(for: .public))
-        #expect(ExperimentsStore(defaults: defaults).settings(for: .public)
-            == FeatureCatalog.defaultSettings(for: .public))
+                                    forKey: ExperimentsStore.settingsKey(for: .current))
+        #expect(ExperimentsStore(defaults: defaults).settings(for: .current)
+            == FeatureCatalog.defaultSettings(for: .current))
     }
 
     @Test func storedStateIsReconciledWithTheCurrentCatalog() throws {
@@ -454,19 +454,19 @@ struct ExperimentsStoreTests {
             FeatureFlag(name: "retired", title: "Retired", description: "Gone.", isEnabled: true, parameters: []),
         ])
         defaults.setExperimentsData(try JSONEncoder().encode(stale),
-                                    forKey: ExperimentsStore.settingsKey(for: .public))
-        let settings = ExperimentsStore(defaults: defaults).settings(for: .public)
+                                    forKey: ExperimentsStore.settingsKey(for: .current))
+        let settings = ExperimentsStore(defaults: defaults).settings(for: .current)
         #expect(settings.flag(named: "retired") == nil)
-        #expect(settings.flags.map(\.name) == FeatureCatalog.flags(for: .public).map(\.name))
+        #expect(settings.flags.map(\.name) == FeatureCatalog.flags(for: .current).map(\.name))
     }
 
     @Test func resetRestoresTheCatalogDefaultsForOneReleaseOnly() {
         let defaults = InMemoryExperimentsDefaults()
         let store = ExperimentsStore(defaults: defaults)
-        store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .public)
+        store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .current)
         store.setEnabled(true, flag: FeatureCatalog.captureToastTimingFlag, in: .next)
-        store.resetToDefaults(for: .public)
-        #expect(store.settings(for: .public) == FeatureCatalog.defaultSettings(for: .public))
+        store.resetToDefaults(for: .current)
+        #expect(store.settings(for: .current) == FeatureCatalog.defaultSettings(for: .current))
         #expect(store.settings(for: .next).isEnabled(FeatureCatalog.captureToastTimingFlag))
     }
 

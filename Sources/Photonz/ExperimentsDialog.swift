@@ -58,7 +58,7 @@ struct ExperimentsDialog: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Experiments")
                 .font(.title2.weight(.semibold))
-            Text("Two versions of Photonz ship in one app. Public is the one you rely on. Next is where new work lands first.")
+            Text("Two versions of Photonz ship in one app. Current is the one you rely on. Next is where new work lands first.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

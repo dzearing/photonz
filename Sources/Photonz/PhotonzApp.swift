@@ -120,58 +120,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// its own `VideoEditorState`; every other id opens the image editor. Branching
 /// up front keeps `EditorState` image-pure (no AVFoundation) and gives each
 /// surface its own focused-scene value for the menu commands.
+///
+/// Which version of those roots you get is the running release's call, so both
+/// go through `ReleaseExperience` rather than being named directly.
 struct EditorRootView: View {
     let windowID: EditorWindowID?
     @Environment(AppCoordinator.self) private var coordinator
 
     var body: some View {
         if case .video(let url) = windowID {
-            VideoEditorRootView(url: url)
+            ReleaseExperience.videoEditor(url: url)
         } else {
-            ImageEditorRootView(windowID: windowID)
+            ReleaseExperience.imageEditor(windowID: windowID)
         }
-    }
-}
-
-/// Owns this window's image `EditorState`, seeds it once from the window
-/// identity, and publishes it as the focused editor for the menu commands.
-private struct ImageEditorRootView: View {
-    let windowID: EditorWindowID?
-    @Environment(AppCoordinator.self) private var coordinator
-    @State private var editorState = EditorState()
-
-    var body: some View {
-        EditorView()
-            .environment(editorState)
-            .focusedSceneValue(\.editorState, editorState)
-            .navigationTitle(editorState.windowTitle)
-            // Standard document behavior: confirm before closing with unsaved
-            // edits, and show the edited dot in the close button meanwhile.
-            .background(WindowCloseGuard(editorState: editorState))
-            .onChange(of: editorState.hasUnsavedChanges) { _, dirty in
-                editorState.hostWindow?.isDocumentEdited = dirty
-            }
-            .task {
-                if let windowID {
-                    editorState.seed(from: windowID, capture: coordinator.capture)
-                }
-            }
-    }
-}
-
-/// Owns this window's `VideoEditorState` (phase 13.3), seeds it from the
-/// recording URL, and publishes it as the focused video editor.
-private struct VideoEditorRootView: View {
-    let url: URL
-    @Environment(AppCoordinator.self) private var coordinator
-    @State private var state = VideoEditorState()
-
-    var body: some View {
-        VideoEditorView()
-            .environment(state)
-            .focusedSceneValue(\.videoEditorState, state)
-            .navigationTitle(state.windowTitle)
-            .task { state.seed(url: url, capture: coordinator.capture) }
     }
 }
 

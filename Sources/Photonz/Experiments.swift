@@ -5,10 +5,12 @@ import SwiftUI
 /// App-level access to the Experiments settings: which release this launch is
 /// running, and every release's feature flags.
 ///
-/// Two Photonz experiences live in one binary. Next-gen behavior branches at
-/// the call sites that need it (`Experiments.shared.release == .next`) or hides
-/// behind a flag (`Experiments.shared.isEnabled(…)`) — there is deliberately no
-/// parallel view hierarchy. See `docs/design/experiments.md`.
+/// Two Photonz experiences live in one binary. A release's own code lives in
+/// `Sources/Photonz/Releases/<Release>/` and is reached through
+/// `ReleaseExperience`, which owns the only switch over `Release` in the app.
+/// Smaller differences hide behind a feature flag
+/// (`Experiments.shared.isEnabled(…)`) instead of a fork. See
+/// `Sources/Photonz/Releases/README.md` and `docs/design/experiments.md`.
 ///
 /// Release switching takes a relaunch: the choice reaches AppKit surfaces built
 /// outside SwiftUI's environment (the menu-bar agent, the capture overlay, the

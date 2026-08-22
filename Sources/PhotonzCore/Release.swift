@@ -1,27 +1,31 @@
 import Foundation
 
 /// Which Photonz experience the app is running. Both releases ship inside the
-/// SAME binary — there is no separate build, no separate install. `public` is
+/// SAME binary — there is no separate build, no separate install. `current` is
 /// what everyone gets by default and must stay stable; `next` is where the
 /// next-generation experience is built.
 ///
+/// A release's own code lives in `Sources/Photonz/Releases/<Release>/`.
+/// Everything a release has not forked stays shared, which is how Current's
+/// fixes keep reaching Next for free.
+///
 /// A third case (`legacy`) is coming: when Next is good enough it gets promoted
-/// to Public, and today's Public is demoted to Legacy so nobody is yanked out
+/// to Current, and today's Current is demoted to Legacy so nobody is yanked out
 /// from under the app they know. Nothing here hard-codes "there are two" —
 /// every trait is a property on the case, the dialog lists `allCases`, and the
 /// flag catalog declares availability per release as data.
 ///
-/// See `docs/design/experiments.md` for the porting rule (Public ports forward
+/// See `docs/design/experiments.md` for the porting rule (Current ports forward
 /// into Next; Next is NEVER back-ported).
 public enum Release: String, CaseIterable, Codable, Sendable, Hashable, Identifiable {
     /// Today's shipping experience. The default, and the one Next-only branches
     /// must never touch.
-    case `public`
+    case current
     /// The next-generation experience, built in the open behind this switch.
     case next
 
     /// What a fresh install runs, and the fallback for anything unreadable.
-    public static let `default`: Release = .public
+    public static let `default`: Release = .current
 
     public var id: String { rawValue }
 
@@ -30,7 +34,7 @@ public enum Release: String, CaseIterable, Codable, Sendable, Hashable, Identifi
     /// Name shown in the Experiments dialog.
     public var title: String {
         switch self {
-        case .public: "Public"
+        case .current: "Current"
         case .next: "Next"
         }
     }
@@ -38,7 +42,7 @@ public enum Release: String, CaseIterable, Codable, Sendable, Hashable, Identifi
     /// One line under the name in the release picker.
     public var tagline: String {
         switch self {
-        case .public: "The Photonz everyone gets. Stable, and it stays that way."
+        case .current: "The Photonz everyone gets. Stable, and it stays that way."
         case .next: "The next generation, still being built. Expect rough edges."
         }
     }

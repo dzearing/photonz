@@ -196,7 +196,7 @@ final class EditorState {
     var windowTitle: String {
         let name = (documentURL ?? openedFileURL)?.lastPathComponent ?? untitledName
         // Feature flag (phase 18): Next tags its windows so you can tell which
-        // release a window belongs to. Off in Public, so nothing changes there.
+        // release a window belongs to. Off in Current, so nothing changes there.
         return Experiments.shared.decorated(windowTitle: name)
     }
 

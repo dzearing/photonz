@@ -51,7 +51,7 @@ public final class InMemoryExperimentsDefaults: ExperimentsDefaults {
 }
 
 /// Owns the selected release and every release's flag state, each under its own
-/// storage key. Editing Next never touches Public, and switching back and forth
+/// storage key. Editing Next never touches Current, and switching back and forth
 /// loses nothing.
 ///
 /// Anything unreadable — corrupt JSON, a release name from a future build, a
