@@ -15,6 +15,17 @@ banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
 title()  { printf '\033]2;%s\007' "$1"; }      # window title
 
+# Refuse to double-start: two loops race on task claims (seen 2026-08-22,
+# pids 56941/59762). status.json records the owning pid; if that process is
+# alive AND still looks like a go loop (pid reuse guard), decline. A stale
+# pid is fine to take over.
+OWNER=$(Q alive)
+if [[ "$OWNER" != "no" && "$OWNER" != "$$" ]] && ps -o command= -p "$OWNER" 2>/dev/null | grep -q 'go-loop'; then
+  echo "[go-loop] declining to start: another go loop is already running (pid $OWNER, per queue/status.json)." | tee -a "$LOG"
+  echo "[go-loop] stop it first (ctrl-c in its window, or: kill $OWNER) and try again." | tee -a "$LOG"
+  exit 1
+fi
+
 cleanup() {
   Q stopped
   banner "**Go loop stopped**"

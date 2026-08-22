@@ -2,11 +2,11 @@
   "id": "go-loop-refuses-to-double-start",
   "title": "Go loop refuses to double-start",
   "priority": "p2-normal",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:53:21.283Z",
-  "updated": "2026-08-22T22:53:21.283Z",
+  "updated": "2026-08-22T23:57:23.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "history.jsonl shows two loop_started events 42 seconds apart on 2026-08-22 (pids 56941 and 59762), so two loops can run at once and race on task claims. Make go-loop.sh check status.json on startup: if it records a pid that is still alive, exit with a clear message instead of starting a second loop. A stale pid (process gone) is fine to take over. Acceptance: starting the loop twice leaves exactly one running loop and the second invocation explains why it declined.",
@@ -15,7 +15,25 @@
     {
       "t": "2026-08-22T22:53:21.283Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:54:55.780Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T00:02:00.000Z",
+      "note": "added queue.mjs 'alive' subcommand (prints live loop pid or 'no' via loopAlive) and a startup guard in go-loop.sh: before touching status/history it reads the recorded pid; if that process is alive AND its command matches go-loop (pid-reuse guard), it declines with a clear message and exit 1. Stale/dead/recycled pids are taken over."
+    },
+    {
+      "t": "2026-08-23T00:02:30.000Z",
+      "note": "verified live: second invocation while pid 59762 runs declined with message + exit 1, appended nothing to history.jsonl, left the original loop running. Dead pid, null pid, and alive-but-unrelated pid (tail -f) all correctly allow startup. Scripts/test.sh green (863 tests)."
+    },
+    {
+      "t": "2026-08-22T23:57:23.404Z",
+      "note": "go-loop.sh now declines to start when status.json's pid is a live go-loop process (pid-reuse safe); verified by real double-start against the running loop (declined, exit 1, no history event) and stale-pid takeover checks. New queue.mjs 'alive' subcommand backs the check."
     }
   ],
-  "seq": 40
+  "seq": 40,
+  "started": "2026-08-22T23:54:55.780Z",
+  "completed": "2026-08-22T23:57:23.404Z"
 }

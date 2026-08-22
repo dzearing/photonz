@@ -12,6 +12,7 @@
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
+//   node queue/bin/queue.mjs alive           print the live loop's pid, or "no" if none is running
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
@@ -58,6 +59,11 @@ try {
     case 'resolve':
       out(q.resolveDecision(args[0], args[1], args.slice(2).join(' ')).id);
       break;
+    case 'alive': {
+      const s = q.readStatus();
+      out(q.loopAlive(s) ? String(s.pid) : 'no');
+      break;
+    }
     case 'guard':
       out(q.guardStuck());
       break;
