@@ -2,11 +2,11 @@
   "id": "next-measure-hover-to-measure-size-readout",
   "title": "Next Measure: hover-to-measure size readout",
   "priority": "p1-high",
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:11:40.794Z",
-  "updated": "2026-08-22T23:12:46.112Z",
+  "updated": "2026-08-22T23:27:13.415Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Implement docs/design/next-measure.md section 3 behind flag next-measure-hover (Next release only): ElementBounds.detect(at:in:) in PhotonzCore over the existing windowed EdgeMap queries (TDD first), canvas-overlay element outline + transient width/height calipers in the current unit, first-run hint chip, Cmd suppresses, quiet miss when any side is missing. No document mutation, no composite re-render; under 1ms per mouse move.",
@@ -19,8 +19,13 @@
     {
       "t": "2026-08-22T23:12:46.112Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:27:13.414Z",
+      "note": "ElementBounds.detect TDD in PhotonzCore (9 tests: found/partial/nested/gutter/radius/luma-landing/perf); next-measure-hover flag Next-only default-on with radius param; CanvasNSView outline + transient rasterized width/height calipers (cached sprites, cmd suppresses, quiet miss, chrome only); first-run hint chip until first caliper lands. Full suite green (871 tests), app builds/launches/opens a doc. Committed e57cdfe."
     }
   ],
   "started": "2026-08-22T23:12:46.112Z",
-  "seq": 30
+  "seq": 30,
+  "completed": "2026-08-22T23:27:13.415Z"
 }
