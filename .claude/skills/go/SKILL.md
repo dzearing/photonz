@@ -1,6 +1,6 @@
 ---
 name: go
-description: Start the unmanned Photonz go loop and set this window up for monitoring. Use when the user runs /go or asks to start, restart, or check the go loop that executes queued tasks. Spawns the loop in a Ghoztty window titled "Photonz Go Loop" and splits the current window with the live dashboard on the right.
+description: Start the unmanned Photonz go loop and set this window up for monitoring. Use when the user runs /go or asks to start, restart, or check the go loop that executes queued tasks. Spawns the loop in a Ghoztty window titled "photonz: go-loop" and splits the current window with the live dashboard on the right.
 ---
 
 # /go: start the go loop and the monitoring layout
@@ -24,9 +24,10 @@ idempotent; running /go when things are already up just verifies and reports.
    auto-launches it, but `+list` errors, so treat a `+list` failure as "no loop
    window". If missing or exited:
    - `ghoztty +close --target=photonz-go-loop` (safe no-op when absent)
-   - `ghoztty +new-window --target=photonz-go-loop --title="Photonz Go Loop" --no-activate --working-directory=<repo root> --command="queue/bin/go-loop.sh"`
-   The loop keeps its own pane banner and activity state current, so the window
-   title plus banner is the liveness signal a human can read at a glance.
+   - `ghoztty +new-window --target=photonz-go-loop --title="photonz: go-loop" --no-activate --working-directory=<repo root> --command="queue/bin/go-loop.sh"`
+   The running loop titles its window "photonz: go-loop" (and retitles it
+   "photonz: go-loop (stopped)" on the way out), and keeps its pane banner and
+   activity state current, so the title alone answers "is the loop alive".
 
 3. **Verify the loop is actually alive** (do not skip): within ~10 seconds
    `queue/status.json` gets a fresh `updatedAt` and a `pid`; confirm with

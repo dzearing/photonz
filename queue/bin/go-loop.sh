@@ -13,14 +13,17 @@ CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format text)
 
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
 state()  { printf '\033]7777;%s\007' "$1"; }   # Ghoztty activity state
+title()  { printf '\033]2;%s\007' "$1"; }      # window title
 
 cleanup() {
   Q stopped
   banner "**Go loop stopped**"
   state idle
+  title "photonz: go-loop (stopped)"
   exit 0
 }
 trap cleanup INT TERM
+title "photonz: go-loop"
 
 echo "[go-loop] started pid=$$ repo=$REPO" | tee -a "$LOG"
 Q event loop_started "{\"pid\":$$}"

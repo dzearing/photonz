@@ -15,7 +15,7 @@ every judgment call that came up waiting as a one-click decision.
 | Go loop | `queue/bin/go-loop.sh` | Daily digest + triage pass, then one task at a time, each dispatched to a fresh headless agent under `queue/bin/runner-prompt.md`. Keeps status, Ghoztty banner, and activity state current. |
 | API | `dev-server.mjs` `/api/*` | `GET /api/state` (aggregate for the dashboard), `POST /api/decide`, `POST /api/task`, `POST /api/task/update`. Implementation shared with the CLI via `queue/bin/queue-lib.mjs`. |
 | Dashboard | `docs/design/mocks/pages/dashboard.html` | Live page, default route of the site. Tabs: Summary (loop hero, decisions with resolve buttons, up next, done in 24h), Tasks (add/reprioritize/drop), Data (stat tiles + charts from history), Digest (rendered daily digests). Polls `/api/state` every 4s. |
-| /go skill | `.claude/skills/go/SKILL.md` | One command after a reboot: dev server up, loop spawned in a Ghoztty window titled "Photonz Go Loop", dashboard split into the current window. |
+| /go skill | `.claude/skills/go/SKILL.md` | One command after a reboot: dev server up, loop spawned in a Ghoztty window titled "photonz: go-loop", dashboard split into the current window. |
 
 ## Design decisions
 

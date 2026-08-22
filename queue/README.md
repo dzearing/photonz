@@ -35,6 +35,6 @@ A runner that dies mid-task is reset to `pending` by the loop's guard step.
 ## Start / monitor
 
 Run `/go` in a Claude Code session at the repo root. It ensures the dev server is
-up, spawns the loop in a Ghoztty window titled "Photonz Go Loop", and splits the
+up, spawns the loop in a Ghoztty window titled "photonz: go-loop", and splits the
 current window with the dashboard on the right. The dashboard's Summary tab is
 the default route and shows anything that needs your decision.
