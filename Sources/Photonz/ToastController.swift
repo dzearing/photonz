@@ -62,7 +62,9 @@ final class ToastController {
             onEdit: { [weak self] in onEdit(); self?.remove(id, animated: true) },
             onCopyVideo: onCopyVideo.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
             onCopyGIF: onCopyGIF.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
-            onDismiss: { [weak self] in self?.remove(id, animated: true) })
+            onDismiss: { [weak self] in self?.remove(id, animated: true) },
+            holdSeconds: Experiments.shared.captureToastHoldSeconds,
+            fadeSeconds: Experiments.shared.captureToastFadeSeconds)
         let hosting = NSHostingView(rootView: view)
         let size = hosting.fittingSize
         hosting.frame = CGRect(origin: .zero, size: size)
@@ -306,8 +308,10 @@ private struct ToastView: View {
     @State private var opacity: Double = 0 // fades in on appear
     @State private var lifecycle: Task<Void, Never>?
 
-    private let holdSeconds: Double = 7
-    private let fadeSeconds: Double = 3
+    /// Seconds at full opacity, then seconds spent fading. Handed in by the
+    /// controller so the `capture-toast-timing` feature flag can change them.
+    var holdSeconds: Double = FeatureCatalog.captureToastHoldSeconds
+    var fadeSeconds: Double = FeatureCatalog.captureToastFadeSeconds
 
     var body: some View {
         VStack(spacing: 8) {

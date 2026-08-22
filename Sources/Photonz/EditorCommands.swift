@@ -49,6 +49,10 @@ struct EditorCommands: Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
             Button("Check for Updates…") { coordinator.checkForUpdates() }
+            Divider()
+            // Release picker + feature flags (phase 18). App-level, so it opens
+            // with or without an editor window.
+            Button("Experiments…") { coordinator.showExperiments() }
         }
 
         // Replace the auto "New Window" so its default ⌘N binding doesn't

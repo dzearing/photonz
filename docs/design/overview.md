@@ -38,6 +38,7 @@ It runs as a **resident menu-bar agent** (CleanShot-style): always available to 
 - `tools.md` — crop/resize/skew, annotations, text, zoom-callout interactions.
 - `layers.md` — layer model, promote-to-layer, effects semantics.
 - `release.md` — versioning, CI, release pipeline, website.
+- `experiments.md` — the two-release binary (Public / Next), feature flags, and the one-way porting rule.
 
 ## Repo workflow
 

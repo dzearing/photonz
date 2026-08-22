@@ -56,6 +56,28 @@ you grant once there. If a grant ever gets wedged after signing changes:
 - All document mutation goes through `History.perform` so undo/redo stays correct.
 - Layer styling (blur, shadow, border, corner radius, opacity) is non-destructive — applied at render time, never baked into pixels.
 
+## Experiments: two releases in one binary
+
+Photonz ships `public` (default, what everyone gets) and `next` (the
+next-generation experience) **in the same app**. The user picks one in the
+Experiments window and tunes per-release feature flags there. Full design:
+`docs/design/experiments.md`.
+
+- Next-gen behavior diverges by **runtime gating inside shared code**: a feature
+  flag (`Experiments.shared.isEnabled(…)`) or a one-off branch at the call site
+  that needs it (`Experiments.shared.release == .next`). One-offs in existing
+  views are fine.
+- **Never** fork a parallel `Next/` view hierarchy, duplicate the editor, or add
+  a second build target for Next.
+- **Porting rule, one way only**: features added to **Public are ported forward
+  into Next**. Features in **Next are NEVER back-ported to Public** — Next
+  reaches users by being promoted (Next becomes Public, today's Public becomes
+  Legacy), not by leaking.
+- Each release owns its own settings namespace (`experiments.<release>.flags`),
+  so editing one never disturbs the other.
+- Model + flag store live in `PhotonzCore` (pure, Codable, tested). The app layer
+  owns only `Experiments`, the dialog, and the window.
+
 ## Releases
 
 Use the `release` skill (`.claude/skills/release/SKILL.md`). Never hand-roll a release: the skill keeps VERSION, CHANGELOG, `site/version.json`, the git tag, and the GitHub release in lockstep.

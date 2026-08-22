@@ -238,6 +238,7 @@ struct MenuBarMenu: View {
         }
         .disabled(coordinator.isCheckingForUpdates)
         Button("Welcome & Permissions…") { coordinator.showWelcome() }
+        Button("Experiments…") { coordinator.showExperiments() }
         Button("Preferences…") {}
             .disabled(true)  // settings UI lands in a later phase
         Button("About \(AppInfo.name)") { coordinator.showAbout() }
