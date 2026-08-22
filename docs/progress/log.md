@@ -3487,3 +3487,20 @@ reproduction). Dev app rebuilt and relaunched.
 **Next:** user to confirm in the app — trim a recording, ⌘S, close, then drag it
 out of History and paste it; both should be the trimmed length. Also worth
 checking Revert to Original and that closing without saving now prompts.
+
+## 2026-08-22 (later still) — history points at the file instead of exporting it
+
+User on the recording tiles in history: *"the export button on the history for
+video items - i don't understand it. I can understand a show in finder button."*
+Fair. That menu offered **Export GIF…** and **Export HEIC…** — a save panel that
+wrote a converted copy somewhere else — while the thing under the cursor was
+already a file in a normal folder the user could have opened. Images didn't have
+it at all, so it was also the odd one out.
+
+Replaced with **Show in Finder**. Converting to another format stays in the
+editor's Export menu, where a format choice belongs and where MP4 and the quality
+presets already live; **Copy GIF** is still one click away on the tile's Copy
+menu, so nothing is out of reach. `AppCoordinator.saveRecording(_ sourceURL:as:)`
+had no other caller and went with it.
+
+**Verified**: 799 tests green. Dev app rebuilt and relaunched.

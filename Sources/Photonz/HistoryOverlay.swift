@@ -274,8 +274,8 @@ private struct HistoryOverlayCell: View {
     private var actions: some View {
         HStack(spacing: 6) {
             if entry.kind == .video {
-                // Recordings copy as the video file or as an animated GIF —
-                // both honor trim/crop edits persisted by the video editor.
+                // Recordings copy as the video file (the stored one, trim and
+                // all) or as an animated GIF.
                 Menu {
                     Button("Copy Video") {
                         coordinator.copyRecording(entry, as: .mp4)
@@ -295,15 +295,14 @@ private struct HistoryOverlayCell: View {
                     coordinator.openRecording(entry.url)
                     coordinator.hideHistory()
                 }
-                Menu {
-                    Button("Export GIF…") { coordinator.saveRecording(entry.url, as: .gif) }
-                    Button("Export HEIC…") { coordinator.saveRecording(entry.url, as: .heic) }
-                } label: {
-                    Image(systemName: "square.and.arrow.down")
+                // "Show in Finder", not "Export": a recording in history IS a
+                // file in a normal folder, so pointing at it is the useful
+                // answer. Converting to another format lives in the editor's
+                // Export menu, where a format choice belongs.
+                iconButton("Show in Finder", "folder") {
+                    coordinator.revealInFinder(entry.url)
+                    coordinator.hideHistory()
                 }
-                .menuIndicator(.hidden)
-                .frame(width: 22)
-                .historyTooltip("Export", coordinator: coordinator)
             } else {
                 iconButton("Copy", "doc.on.doc") {
                     store.copyToPasteboard(entry)

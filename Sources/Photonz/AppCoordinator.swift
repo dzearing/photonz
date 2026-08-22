@@ -183,32 +183,10 @@ final class AppCoordinator {
         openWindow(.video(standardizing: url))
     }
 
-    /// Convert a recording to an animated GIF / HEIC and save it where the user
-    /// picks (the "quick convert" path of 12.5; the MP4 is already auto-saved).
-    /// The stored file is the truth (phase 18) — a saved trim/crop is already
-    /// baked into it — so this exports it verbatim, with no edits to re-apply.
-    func saveRecording(_ sourceURL: URL, as format: RecordingFormat) {
-        NSApp.activate(ignoringOtherApps: true)
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [format.savePanelType]
-        panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
-        panel.canCreateDirectories = true
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        if format == .mp4 {
-            // Nothing to apply → verbatim copy, no re-encode.
-            try? FileManager.default.removeItem(at: url)
-            try? FileManager.default.copyItem(at: sourceURL, to: url)
-            return
-        }
-        isExportingRecording = true
-        Task {
-            do {
-                try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format)
-            } catch {
-                reportExportFailure(error)
-            }
-            isExportingRecording = false
-        }
+    /// Show a capture in the Finder. History is a live listing of a real folder,
+    /// so "where is this file" is a question it should be able to answer.
+    func revealInFinder(_ url: URL) {
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     // MARK: - Copy recording to clipboard (video / GIF)
