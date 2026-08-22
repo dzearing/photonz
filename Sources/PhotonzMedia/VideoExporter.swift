@@ -52,7 +52,7 @@ public enum VideoExporter {
 
     /// A representative frame for the history thumbnail — sampled a hair into
     /// the clip so it isn't a black first frame. The stored file is the truth
-    /// (phase 18): a saved trim/crop is already baked in, so there is nothing to
+    /// (phase 19): a saved trim/crop is already baked in, so there is nothing to
     /// re-apply here.
     public static func posterFrame(of url: URL, maxDimension: CGFloat = 600) async -> CGImage? {
         let asset = AVURLAsset(url: url)

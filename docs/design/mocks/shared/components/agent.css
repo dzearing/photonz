@@ -252,7 +252,10 @@
    STOP SITS BESIDE IT while busy, and nowhere else. It was on the work card,
    which is wrong for the one control you reach for in a hurry: the card scrolls
    away with the transcript, while the composer is pinned to the bottom. Two
-   buttons, not a modifier hidden on one. */
+   buttons, not a modifier hidden on one — and Stop is ICON-ONLY, because the
+   square needs no gloss and a second word beside Queue would leave the row with
+   two labels competing to be the thing you press. It carries a tooltip, since
+   an icon with no label is unlabelled. */
 .chat-in{align-items:flex-end}
 .composer{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;
   padding:var(--gap-sm);border-radius:var(--r3);

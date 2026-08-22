@@ -229,7 +229,7 @@ library or index. The folder is the single source of truth:
 
 ## Video editing round-trip: a saved recording IS the trimmed file
 
-*(Phase 18, 2026-08-22.)* Trim and crop used to be sidecar-only — recorded in
+*(Phase 19, 2026-08-22.)* Trim and crop used to be sidecar-only — recorded in
 `.photonzedits` and "applied at export" — so the stored MP4 stayed full length
 and everything that hands out the file (drag from history, copy to the
 clipboard) handed out the untrimmed original. The model, not any one call site,
@@ -256,7 +256,7 @@ The recording editor now saves exactly like the image editor:
   apply on the way out; it records how the visible file was *derived* from the
   preserved original. Only a save writes it, so it always matches the file.
 - **Dirty = the edits differ from what's committed** (`VideoSaveState`). A
-  recording trimmed before phase 18 has a sidecar but no original, so it reads
+  recording trimmed before phase 19 has a sidecar but no original, so it reads
   as *unsaved* on open — the migration is a save prompt, not a silent loss.
 - **Same window chrome as an image.** Video windows get `WindowCloseGuard`, the
   edited dot, the Save…/Cancel/Don't Save sheet and the ⌘Q sweep, via a shared

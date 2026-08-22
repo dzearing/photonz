@@ -137,14 +137,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// usually offers "Quit & Reopen" itself; this covers users who chose
     /// "Later" there so they aren't left with a granted-but-broken capture.
     private func relaunch() {
-        let bundlePath = Bundle.main.bundlePath
-        if bundlePath.hasSuffix(".app") {
-            let relauncher = Process()
-            relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")
-            relauncher.arguments = ["-c", "sleep 0.4; /usr/bin/open \"\(bundlePath)\""]
-            try? relauncher.run()
-        }
-        NSApp.terminate(nil)
+        AppRelauncher.relaunch()
     }
 
     private static func openMicrophoneSettings() {

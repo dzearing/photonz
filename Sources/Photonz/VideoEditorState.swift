@@ -11,7 +11,7 @@ import SwiftUI
 /// `AVPlayer`/`AVPlayerItem` (both non-Sendable, so this whole type is
 /// `@MainActor`) plus the pure, non-destructive `VideoTrim`/`VideoCrop`.
 ///
-/// Saving works exactly like the image editor's (phase 18): ⌘S **commits** the
+/// Saving works exactly like the image editor's (phase 19): ⌘S **commits** the
 /// trim/crop into the stored recording, so the file history hands out IS the
 /// trimmed media. The pre-edit bytes are preserved as a hidden original, and
 /// this editor always edits FROM that original — the same shape as the image
@@ -224,7 +224,7 @@ final class VideoEditorState {
         //
         // `committedEdits` is what the stored file already HAS baked in, and it
         // is the clean baseline: matching it means nothing to save. A recording
-        // trimmed before phase 18 has a sidecar but no preserved original, so
+        // trimmed before phase 19 has a sidecar but no preserved original, so
         // its edits recall as *unsaved* — the user gets a save prompt instead of
         // silently losing a trim that was never applied.
         if let mediaURL = self.url {
@@ -338,7 +338,7 @@ final class VideoEditorState {
         seek(to: min(max(trim.inPoint, seconds), trim.outPoint))
     }
 
-    // MARK: - Saving (phase 18)
+    // MARK: - Saving (phase 19)
 
     /// The cumulative edits, measured against `editSourceURL` — the composed
     /// trim plus the crop, with no-op edits dropped. This is what a save

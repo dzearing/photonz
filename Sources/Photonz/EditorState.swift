@@ -194,8 +194,10 @@ final class EditorState {
     /// The window title: the saved package name, else the opened file's name,
     /// else "Untitled N". Reactive — updates when the document is saved.
     var windowTitle: String {
-        if let url = documentURL ?? openedFileURL { return url.lastPathComponent }
-        return untitledName
+        let name = (documentURL ?? openedFileURL)?.lastPathComponent ?? untitledName
+        // Feature flag (phase 18): Next tags its windows so you can tell which
+        // release a window belongs to. Off in Current, so nothing changes there.
+        return Experiments.shared.decorated(windowTitle: name)
     }
 
     /// The .photonz document package type. The bundle's Info.plist exports

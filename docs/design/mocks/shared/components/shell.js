@@ -101,8 +101,12 @@
      card scrolls away with the transcript, and the composer is pinned to the
      bottom, so this is the only place Stop is guaranteed to be on screen. */
   function composerHTML(busy) {
+    // Stop is icon-only: the square is unambiguous, it keeps the send button's
+    // word the loudest thing in the row, and it needs a tooltip because an icon
+    // with no label is unlabelled.
     var send = busy
-      ? '<button class="btn secondary sm"><i class="ic ic-stop"></i> Stop</button>' +
+      ? '<button class="btn secondary icon sm" data-tip="Stop" aria-label="Stop">' +
+        '<i class="ic ic-stop"></i></button>' +
         '<button class="btn primary sm"><i class="ic ic-chat"></i> Queue</button>'
       : '<button class="btn primary sm"><i class="ic ic-chat"></i> Ask</button>';
     return '<div class="chat-in"><div class="composer">' +

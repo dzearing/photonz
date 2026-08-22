@@ -54,6 +54,10 @@ final class AppCoordinator {
     /// mid-session needs a relaunch to take effect).
     @ObservationIgnored private let welcome = WelcomeController()
 
+    /// The Experiments window (release picker + feature flags). App-level so it
+    /// opens with no editor window on screen.
+    @ObservationIgnored private let experimentsWindow = ExperimentsWindowController()
+
     /// One entry in the global focus history (`focusMRU`).
     private enum FocusToken {
         /// A non-Photonz app that came forward. Held strongly — the notification's
@@ -80,6 +84,14 @@ final class AppCoordinator {
         // The bundled app also sets LSUIElement, but this makes plain
         // `swift build` dev runs behave the same.
         NSApp.setActivationPolicy(.accessory)
+        // The app menu's title comes from the bundle, which can't know which
+        // release is running. Rename it (and keep renaming it: SwiftUI rebuilds
+        // the menu bar as scenes come and go).
+        applyAppMenuTitle()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { AppCoordinator.applyAppMenuTitle() }
+        }
         // History presentation: capture signals; the overlay is ours to drive.
         capture.onToggleHistory = { [weak self] in self?.toggleHistory() }
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
@@ -143,6 +155,23 @@ final class AppCoordinator {
         welcome.present(capture: capture)
     }
 
+    /// Menu "Experiments…": the release picker and per-release feature flags.
+    func showExperiments() {
+        experimentsWindow.present()
+    }
+
+    /// Names the app menu after the running release ("Photonz Next"), since the
+    /// bundle's own name is fixed at build time. Cheap and idempotent, so it can
+    /// run on every activation.
+    static func applyAppMenuTitle() {
+        guard let appMenuItem = NSApp.mainMenu?.items.first else { return }
+        let name = AppInfo.name
+        if appMenuItem.title != name { appMenuItem.title = name }
+        if appMenuItem.submenu?.title != name { appMenuItem.submenu?.title = name }
+    }
+
+    private func applyAppMenuTitle() { Self.applyAppMenuTitle() }
+
     // MARK: - Post-capture feedback
 
     /// After a capture/recording lands, stack a bottom-right toast (thumbnail +
@@ -189,7 +218,7 @@ final class AppCoordinator {
     // MARK: - Copy recording to clipboard (video / GIF)
 
     /// History overlay: copy a recording to the clipboard as an MP4 file or an
-    /// animated GIF. The stored file is the truth (phase 18) — a saved trim is
+    /// animated GIF. The stored file is the truth (phase 19) — a saved trim is
     /// already in it — so nothing is re-applied on the way out.
     func copyRecording(_ entry: CaptureEntry, as format: RecordingFormat) {
         copyRecording(sourceURL: entry.url, as: format, trim: nil, crop: nil)
@@ -694,6 +723,10 @@ final class AppCoordinator {
                     .link: url,
                 ]))
         }
-        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+        // Name it after the running release ("Photonz Next"), not the bundle.
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .credits: credits,
+            .applicationName: AppInfo.name,
+        ])
     }
 }

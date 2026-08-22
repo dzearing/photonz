@@ -56,6 +56,37 @@ you grant once there. If a grant ever gets wedged after signing changes:
 - All document mutation goes through `History.perform` so undo/redo stays correct.
 - Layer styling (blur, shadow, border, corner radius, opacity) is non-destructive — applied at render time, never baked into pixels.
 
+## Experiments: releases in one binary
+
+Photonz ships `current` (the default, what everyone gets) and `next` (the
+next-generation experience) **in the same app**. The user picks one in the
+Experiments window and tunes per-release feature flags there. `legacy` is
+reserved for the day Next is promoted. Full design:
+`docs/design/experiments.md`.
+
+- A release's own code lives in `Sources/Photonz/Releases/<Release>/`, reached
+  through `ReleaseExperience` — the ONE switch over `Release` in the app. Never
+  branch on the release anywhere else.
+- Everything outside `Releases/` is **shared**. A file only moves into a release
+  folder when that release genuinely needs it different: copy it in, prefix the
+  type with the release name (`NextEditorView`, since it's one module), and
+  point that release's `…Experience` at the copy. See
+  `Sources/Photonz/Releases/README.md`.
+- Smaller differences belong behind a feature flag
+  (`Experiments.shared.isEnabled(…)`), not a forked file.
+- **Porting rule, one way only.** EVERY change to Current must reach Next. While
+  a file is shared that happens by itself; once Next has forked that file,
+  carrying the change across by hand is part of the work, and **a Current change
+  is not finished until Next has it**. Nothing in `Next/` is ever back-ported to
+  Current — Next reaches users by being promoted (Next becomes Current, today's
+  Current becomes Legacy), not by leaking.
+- Each release owns its own settings namespace (`experiments.<release>.flags`),
+  so editing one never disturbs the other.
+- The app names itself after its release: Photonz, Photonz Next, and dev builds
+  keep their `(Dev)` on the end.
+- Model + flag store live in `PhotonzCore` (pure, Codable, tested). The app layer
+  owns `Experiments`, the release folders, the dialog, and the window.
+
 ## Releases
 
 Use the `release` skill (`.claude/skills/release/SKILL.md`). Never hand-roll a release: the skill keeps VERSION, CHANGELOG, `site/version.json`, the git tag, and the GitHub release in lockstep.

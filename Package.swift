@@ -32,6 +32,11 @@ let package = Package(
         .executableTarget(
             name: "Photonz",
             dependencies: ["PhotonzCore", "PhotonzRender", "PhotonzMedia"],
+            // Docs that live next to the code they describe, not resources.
+            exclude: [
+                "Releases/README.md",
+                "Releases/Legacy/README.md",
+            ],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         // Dev tool: composites a showcase document through the real engine and

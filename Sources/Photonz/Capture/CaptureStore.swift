@@ -246,7 +246,7 @@ final class CaptureStore {
         let url = entry.url
         guard !posterLoading.contains(url) else { return }
         posterLoading.insert(url)
-        // The stored file is the truth (phase 18): a saved trim/crop is already
+        // The stored file is the truth (phase 19): a saved trim/crop is already
         // baked into it, so the poster and duration come straight off the file.
         Task {
             let poster = await VideoExporter.posterFrame(of: url)

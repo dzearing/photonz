@@ -3,7 +3,7 @@ import Foundation
 
 /// Trim window for a recording (phase 13.3). Holds the in/out points in
 /// seconds; the clip plays (and exports) only within `[inPoint, outPoint]`, and
-/// saving commits that window into the stored file (phase 18). Pure value type
+/// saving commits that window into the stored file (phase 19). Pure value type
 /// — the `AVPlayer`/export plumbing lives app-side.
 ///
 /// Editing rules: both points clamp to `[0, duration]`, a minimum window is
@@ -121,7 +121,7 @@ public struct VideoTrim: Codable, Sendable, Hashable {
 /// `.photonzedits` sidecar next to the media (the video sibling of the image
 /// editor's layered `.photonz` sidecar).
 ///
-/// Since phase 18 the stored file is the truth: saving bakes these in, so no
+/// Since phase 19 the stored file is the truth: saving bakes these in, so no
 /// consumer re-applies them. What the sidecar buys is reversibility — the
 /// editor reopens against `VideoOriginals.editSource` and this record puts the
 /// trim handles back where they were, so the edit can be widened, tightened, or
@@ -180,7 +180,7 @@ public enum VideoEditsSidecar {
 }
 
 /// Crop region for a recording (phase 13.4), applied to the stored file when the
-/// recording is saved (phase 18). Stores a `CGRect` in **natural-video-pixel
+/// recording is saved (phase 19). Stores a `CGRect` in **natural-video-pixel
 /// space, top-left origin** (the same convention the
 /// document model uses), plus an optional aspect lock. All editing reuses the
 /// image editor's `Crop`/`CropAspect`/`Geometry.clampCrop` geometry verbatim —
