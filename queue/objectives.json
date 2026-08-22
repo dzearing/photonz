@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-22T23:58:05.392Z",
+  "updated": "2026-08-22T23:59:05.124Z",
   "epics": [
     {
       "id": "measure-redline",
@@ -33,6 +33,43 @@
         {
           "id": "spec-export",
           "title": "Spec export: copy a clean spec list from a capture",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "interaction-foundations",
+      "title": "Interaction foundations: the primitives everything sits on",
+      "note": "The shared architecture the pillar epics build on top of, so it comes early. Source of truth: shared/UX-PATTERNS.md. A surface that needs chrome outside this vocabulary is a signal to fix the foundation, not to invent locally.",
+      "children": [
+        {
+          "id": "found-dock",
+          "title": "One dock system: panel groups that collapse, resize, and rail",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "found-collapse",
+          "title": "One collapse idiom for every section and dock",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "found-overlays",
+          "title": "Dialogs, sheets, popovers, and toasts as one overlay family",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "found-selection",
+          "title": "One selection model: canvas, layers, and properties agree",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "found-colorpicker",
+          "title": "The one color picker, everywhere a color lives",
           "note": "",
           "children": []
         }
