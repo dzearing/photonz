@@ -90,6 +90,30 @@ it (see top of `shared/photonz-ds.css`):
 - Top-level blocks are **full-bleed** (no side margins) so all edges line up.
   Caption columns use `.caption .c { flex:1 }` so they align to the grid above.
 
+## CONTROL METRICS — heights, gaps, and the light source (non-negotiable)
+
+Controls that sit in one row must read as one family. Three rules:
+
+1. **One height scale.** Every interactive control comes in exactly three
+   heights: `--ctl-h-sm:24` · `--ctl-h:32` (default) · `--ctl-h-lg:40`
+   (defined in button.css). `.btn`, `.input`, `.stepper`, `.select`, and `.seg`
+   all sit on it. NEVER a control at its browser-default height: a bare
+   `<select>` or `<input>` without its DS class is a bug, and the "tiny
+   dropdown next to a full-size field" it produces is the exact smell this rule
+   exists to kill. Controls sharing a row share the same height step.
+2. **One gap scale between controls.** Controls in a row: `--gap-sm:8`.
+   Stacked form rows: `--s3:12`. A form block against its neighbors: `--gap:16`.
+   Nothing else.
+3. **One light source, from above.** RAISED things you press (buttons, `.select`
+   triggers, segmented controls, toolbar tools) catch light on their TOP edge:
+   `--ctl-gloss` (inset 0 1px 0 highlight). RECESSED things you type into
+   (`.input`, `.stepper`, any well) shade at the top lip and catch light at the
+   bottom lip: `background:var(--well); box-shadow:var(--well-sh)`. Never put
+   the raised gloss on a field, and never fake an inset with a plain border.
+   The question to ask of any control: do I press it (raised) or fill it
+   (recessed)? `.select` is pressed, so it is raised even though it sits next
+   to fields.
+
 ## Color / type tokens (never hardcode raw hex for chrome)
 
 `--ink --dim --faint` (text) · `--panel --panel-2 --chrome` (surfaces) ·

@@ -47,32 +47,65 @@
   #dashboard .db-sumgrid .span2{grid-column:1/-1}
   @media (max-width:860px){#dashboard .db-sumgrid{grid-template-columns:1fr}}
 
-  /* ---- decisions ---- */
+  /* ---- decisions: one card per option, select inside the card ---- */
   #dashboard .db-decide{border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:var(--r3);
-    background:color-mix(in srgb,var(--warn) 7%,transparent);padding:var(--pad-sm) var(--pad);margin-bottom:var(--gap-sm)}
+    background:color-mix(in srgb,var(--warn) 6%,transparent);padding:var(--pad-sm) var(--pad) var(--pad);margin-bottom:var(--gap-sm)}
   #dashboard .db-decide:last-child{margin-bottom:0}
-  #dashboard .db-decide .db-q{font-size:12.5px;font-weight:640;letter-spacing:-.01em;display:flex;gap:var(--gap-sm);align-items:flex-start}
+  #dashboard .db-decide .db-q{font-size:13px;font-weight:640;letter-spacing:-.01em;display:flex;gap:var(--gap-sm);align-items:flex-start}
   #dashboard .db-decide .db-q .ic{color:var(--warn);flex:none;margin-top:1px}
   #dashboard .db-decide .db-ctx{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--s2) 0 0 26px;white-space:pre-wrap}
-  #dashboard .db-decide .db-opts{display:flex;flex-wrap:wrap;gap:var(--s2);margin:var(--s3) 0 0 26px;align-items:center}
-  #dashboard .db-decide .db-note{margin:var(--s2) 0 0 26px}
-  #dashboard .db-decide .db-task{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-left:26px;margin-top:var(--s2)}
+  #dashboard .db-decide .db-task{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-left:26px;margin-top:var(--s3)}
+  #dashboard .db-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--gap-sm);margin:var(--s3) 0 0 26px}
+  #dashboard .db-opt{display:flex;flex-direction:column;gap:var(--s2);min-width:0;
+    border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm);
+    background:color-mix(in srgb,var(--panel) 65%, transparent)}
+  #dashboard .db-opt.rec{border-color:color-mix(in srgb,var(--good) 45%,transparent);
+    background:color-mix(in srgb,var(--good) 8%,transparent)}
+  #dashboard .db-opt .db-opt-t{font-size:12px;font-weight:640;letter-spacing:-.01em}
+  #dashboard .db-opt.rec .db-opt-t .rec-k{color:var(--good);font-weight:600}
+  #dashboard .db-opt .db-opt-s{font-size:11px;color:var(--dim);line-height:1.5;margin:0}
+  #dashboard .db-opt .db-pc{display:flex;flex-direction:column;gap:3px;margin:0}
+  #dashboard .db-opt .db-pc span{position:relative;display:block;padding-left:30px;font-size:10.5px;line-height:1.45;color:var(--dim)}
+  #dashboard .db-opt .db-pc span::before{position:absolute;left:0;top:1px;font-weight:700;font-size:9px;letter-spacing:.02em}
+  #dashboard .db-opt .db-pc .pro::before{content:"Pro";color:var(--good)}
+  #dashboard .db-opt .db-pc .con::before{content:"Con";color:var(--crit)}
+  #dashboard .db-opt .db-pc .fix::before{content:"Fix";color:var(--accent)}
+  #dashboard .db-opt .db-opt-act{display:flex;gap:var(--s2);align-items:center;margin-top:auto;padding-top:var(--s2)}
+  #dashboard .db-opt .db-opt-act .input{flex:1;min-width:0}
+  #dashboard .db-opt .db-opt-act .btn{flex:none}
 
   /* ---- task rows ---- */
   #dashboard .db-row{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) 0;border-bottom:1px solid var(--line-soft);min-width:0}
   #dashboard .db-row:last-child{border-bottom:0}
-  #dashboard .db-row .db-title{min-width:0;flex:1;font-size:12px;font-weight:560;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #dashboard .db-row .db-meta{flex:none;font-size:10px;color:var(--faint);font-family:var(--mono)}
-  #dashboard .db-row .db-sub{display:block;font-size:10.5px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-title{min-width:0;flex:1;font-size:12px;font-weight:560;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-meta{flex:none;font-size:10px;color:var(--faint);font-family:var(--mono)}
+  #dashboard .db-sub{display:block;font-size:10.5px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-empty{font-size:11.5px;color:var(--faint);padding:var(--s3) 0;text-align:center}
   #dashboard .db-statusdot{flex:none}
 
   /* ---- tasks tab ---- */
-  #dashboard .db-addform{display:grid;grid-template-columns:1fr 150px auto;gap:var(--gap-sm);align-items:start}
+  #dashboard .db-addform{display:grid;grid-template-columns:1fr 150px auto;gap:var(--gap-sm);align-items:center}
   #dashboard .db-addform .notes{grid-column:1/-1}
-  #dashboard .db-prio-grp{margin-top:var(--gap-lg)}
-  #dashboard .db-row .select{flex:none;width:118px}
   @media (max-width:700px){#dashboard .db-addform{grid-template-columns:1fr}}
+  /* details view: one shared column template so header and rows always align */
+  #dashboard .db-tt{--tt-cols:64px 92px minmax(0,1fr) 104px 72px 122px 32px}
+  #dashboard .db-ttbar{display:flex;align-items:center;gap:var(--gap-sm)}
+  #dashboard .db-ttbar .input.search{width:220px}
+  #dashboard .db-tthead,#dashboard .db-ttrow{display:grid;grid-template-columns:var(--tt-cols);gap:var(--gap-sm);align-items:center;min-width:0}
+  #dashboard .db-tthead{padding:var(--s2) var(--pad);border-bottom:1px solid var(--line);
+    background:color-mix(in srgb,var(--panel-2) 55%, transparent)}
+  #dashboard .db-tthead button{display:flex;align-items:center;gap:3px;border:0;background:transparent;padding:2px 0;
+    font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);cursor:pointer;text-align:left}
+  #dashboard .db-tthead button:hover{color:var(--dim)}
+  #dashboard .db-tthead button.on{color:var(--accent)}
+  #dashboard .db-tthead button .ic{width:10px;height:10px}
+  #dashboard .db-ttrow{padding:var(--s2) var(--pad);border-bottom:1px solid var(--line-soft)}
+  #dashboard .db-ttrow:last-child{border-bottom:0}
+  #dashboard .db-ttrow:hover{background:var(--state-hover)}
+  #dashboard .db-ttrow .seq{width:56px}
+  #dashboard .db-ttrow .seq>input{text-align:left}
+  #dashboard .db-ttrow .db-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
+  #dashboard .db-ttempty{padding:var(--gap-lg) var(--pad);text-align:center;font-size:11.5px;color:var(--faint)}
 
   /* ---- data tab ---- */
   #dashboard .db-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
@@ -97,6 +130,26 @@
   #dashboard .db-tip{position:fixed;z-index:50;pointer-events:none;background:var(--chrome-solid);border:1px solid var(--line);
     border-radius:var(--r2);padding:5px 9px;font-size:10.5px;color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.25);display:none}
   #dashboard .db-tip b{font-variant-numeric:tabular-nums}
+
+  /* ---- objectives tab ---- */
+  #dashboard .db-ob{list-style:none;margin:0;padding:0}
+  #dashboard .db-ob .db-ob{padding-left:28px}
+  #dashboard .db-obrow{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s2);
+    border:1px solid transparent;border-radius:var(--r2);min-width:0}
+  #dashboard .db-obrow:hover{background:var(--state-hover)}
+  #dashboard .db-obrow .grip{flex:none;color:var(--faint);cursor:grab;display:grid;place-items:center;width:18px}
+  #dashboard .db-obrow .grip:active{cursor:grabbing}
+  #dashboard .db-obrow .ttl{min-width:0;flex:1;font-size:12.5px;font-weight:600;letter-spacing:-.01em}
+  #dashboard .db-ob .db-ob .db-obrow .ttl{font-weight:520;font-size:12px}
+  #dashboard .db-obrow .sub{display:block;font-size:10.5px;font-weight:400;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-obrow .obact{flex:none;display:flex;gap:2px;opacity:0;transition:opacity .12s ease}
+  #dashboard .db-obrow:hover .obact{opacity:1}
+  #dashboard .db-obrow .ttl[contenteditable="true"]{outline:none;border-radius:4px;box-shadow:var(--ring);padding:0 4px;margin:0 -4px}
+  #dashboard li[data-obid].dragging{opacity:.35}
+  #dashboard .db-obrow.drop-before{box-shadow:inset 0 2px 0 var(--accent)}
+  #dashboard .db-obrow.drop-after{box-shadow:inset 0 -2px 0 var(--accent)}
+  #dashboard .db-obrow.drop-into{border-color:var(--accent);background:var(--accent-soft)}
+  #dashboard .db-obhint{font-size:10.5px;color:var(--faint);margin:var(--s3) 0 0;line-height:1.5}
 
   /* ---- digest tab ---- */
   #dashboard .db-digrid{display:grid;grid-template-columns:170px 1fr;gap:var(--gap)}
@@ -127,6 +180,7 @@
     <div class="db-tabs">
       <div class="seg" id="db-seg">
         <button data-dbtab="summary" class="on">Summary</button>
+        <button data-dbtab="objectives">Objectives</button>
         <button data-dbtab="tasks">Tasks</button>
         <button data-dbtab="data">Data</button>
         <button data-dbtab="digest">Digest</button>
@@ -170,8 +224,9 @@
     fetch('/api/state', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
       S = data;
       var j = JSON.stringify(data);
-      var typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-      if (j !== lastJSON && !typing) { lastJSON = j; render(); }
+      var typing = document.activeElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
+      var editingObjectives = tab === 'objectives' && (obDirty || obDragId);
+      if (j !== lastJSON && !typing && !editingObjectives) { lastJSON = j; render(); }
       var r = document.getElementById('db-refresh');
       if (r) r.textContent = 'live · updated ' + rel(data.generated);
     }).catch(function () {
@@ -188,9 +243,122 @@
   function render() {
     if (!S) return;
     if (tab === 'summary') body.innerHTML = renderSummary();
+    if (tab === 'objectives') { body.innerHTML = renderObjectives(); wireObjectives(); }
     if (tab === 'tasks') body.innerHTML = renderTasks();
     if (tab === 'data') { body.innerHTML = renderData(); wireCharts(); }
     if (tab === 'digest') { body.innerHTML = renderDigest(); }
+  }
+
+  // ---- objectives: the commanding hub. An ordered epic tree; order is
+  // priority, nesting is sub-epics. Drag to reorder or nest, edit inline,
+  // then Retriage to make the loop re-align the whole queue. ----
+  var obDirty = false;
+  function obClone() { return JSON.parse(JSON.stringify((S.objectives && S.objectives.epics) || [])); }
+  var obTree = null; // local working copy; survives polling re-renders while dirty
+  function renderObjectives() {
+    if (!obTree || !obDirty) obTree = obClone();
+    var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-star"></i><h3>Objectives</h3><span class="k">order is priority, drag to reorder or nest</span>';
+    h += '<span style="flex:1"></span>';
+    h += '<button class="btn sm secondary" data-act="ob-add-root"><i class="ic ic-plus"></i>New epic</button>';
+    h += '<button class="btn sm ' + (obDirty ? 'primary' : 'secondary') + '" data-act="ob-save"' + (obDirty ? '' : ' disabled') + '>Save order</button>';
+    h += '<button class="btn sm primary" data-act="retriage" title="Queues an immediate triage pass so the loop re-aligns every task with these objectives">Retriage tasks</button>';
+    h += '</div><div class="db-card-b">';
+    h += obList(obTree);
+    h += '<p class="db-obhint">Changes stay local until you press Save order. Retriage queues an immediate pass where the loop reprioritizes and resequences every open task to match this list. Drop a row onto the middle of another to nest it as a sub-epic.</p>';
+    h += '</div></div>';
+    return h;
+  }
+  function obList(list) {
+    var h = '<ul class="db-ob">';
+    list.forEach(function (e) {
+      h += '<li data-obid="' + esc(e.id) + '" draggable="true">';
+      h += '<div class="db-obrow">';
+      h += '<span class="grip" title="Drag to reorder or nest"><i class="ic ic-more-vertical"></i></span>';
+      h += '<span class="ttl" data-obtitle="' + esc(e.id) + '">' + esc(e.title) + (e.note ? '<span class="sub">' + esc(e.note) + '</span>' : '') + '</span>';
+      h += '<span class="obact">';
+      h += '<button class="btn icon sm ghost" data-act="ob-add-child" data-id="' + esc(e.id) + '" title="Add a sub-epic"><i class="ic ic-plus"></i></button>';
+      h += '<button class="btn icon sm ghost" data-act="ob-rename" data-id="' + esc(e.id) + '" title="Rename"><i class="ic ic-pencil"></i></button>';
+      h += '<button class="btn icon sm ghost" data-act="ob-delete" data-id="' + esc(e.id) + '" title="Delete"><i class="ic ic-trash"></i></button>';
+      h += '</span></div>';
+      if (e.children && e.children.length) h += obList(e.children);
+      h += '</li>';
+    });
+    h += '</ul>';
+    return h;
+  }
+  function obFind(list, id, parent) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return { list: list, index: i, node: list[i], parent: parent || null };
+      var r = obFind(list[i].children || [], id, list[i]);
+      if (r) return r;
+    }
+    return null;
+  }
+  function obMarkDirty() { obDirty = true; render(); }
+  function obSave() {
+    post('/api/objectives', { epics: obTree }).then(function () { obDirty = false; });
+  }
+  var obDragId = null;
+  function wireObjectives() {
+    body.querySelectorAll('li[data-obid]').forEach(function (li) {
+      li.addEventListener('dragstart', function (e) {
+        e.stopPropagation();
+        obDragId = li.dataset.obid;
+        li.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', obDragId); } catch (err) {}
+      });
+      li.addEventListener('dragend', function () { li.classList.remove('dragging'); clearDrops(); obDragId = null; });
+      var row = li.querySelector(':scope > .db-obrow');
+      row.addEventListener('dragover', function (e) {
+        if (!obDragId || obDragId === li.dataset.obid) return;
+        e.preventDefault(); e.stopPropagation();
+        var r = row.getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
+        row.classList.remove('drop-before', 'drop-after', 'drop-into');
+        row.classList.add(y < .35 ? 'drop-before' : y > .65 ? 'drop-after' : 'drop-into');
+      });
+      row.addEventListener('dragleave', function () { row.classList.remove('drop-before', 'drop-after', 'drop-into'); });
+      row.addEventListener('drop', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var mode = row.classList.contains('drop-before') ? 'before' : row.classList.contains('drop-after') ? 'after' : 'into';
+        clearDrops();
+        var targetId = li.dataset.obid;
+        if (!obDragId || obDragId === targetId) return;
+        var src = obFind(obTree, obDragId);
+        if (!src) return;
+        // refuse to drop a node into its own subtree
+        if (obFind([src.node], targetId)) return;
+        src.list.splice(src.index, 1);
+        var dst = obFind(obTree, targetId);
+        if (!dst) { src.list.push(src.node); return; }
+        if (mode === 'into') { dst.node.children = dst.node.children || []; dst.node.children.push(src.node); }
+        else dst.list.splice(dst.index + (mode === 'after' ? 1 : 0), 0, src.node);
+        obMarkDirty();
+      });
+    });
+    function clearDrops() { body.querySelectorAll('.db-obrow').forEach(function (r) { r.classList.remove('drop-before', 'drop-after', 'drop-into'); }); }
+  }
+  function obStartRename(id) {
+    var el = body.querySelector('[data-obtitle="' + id + '"]');
+    var found = obFind(obTree, id);
+    if (!el || !found) return;
+    el.textContent = found.node.title;
+    el.setAttribute('contenteditable', 'true');
+    el.focus();
+    document.getSelection().selectAllChildren(el);
+    function finish(commit) {
+      el.removeAttribute('contenteditable');
+      if (commit) {
+        var v = el.textContent.trim();
+        if (v && v !== found.node.title) { found.node.title = v; obMarkDirty(); return; }
+      }
+      render(); wireObjectives();
+    }
+    el.addEventListener('blur', function () { finish(true); }, { once: true });
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
   }
 
   // ---- summary ----
@@ -227,10 +395,22 @@
       var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
       opts.forEach(function (o) {
         var rec = o.id === d.recommended;
-        h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '" title="' + esc(o.detail || '') + '">' + esc(o.label) + (rec ? ' · recommended' : '') + '</button>';
+        var noteKey = d.id + '/' + o.id;
+        h += '<div class="db-opt' + (rec ? ' rec' : '') + '">';
+        h += '<div class="db-opt-t">' + esc(o.label) + (rec ? ' <span class="rec-k">(Recommended)</span>' : '') + '</div>';
+        var summary = o.summary || o.detail;
+        if (summary) h += '<p class="db-opt-s">' + esc(summary) + '</p>';
+        var pc = '';
+        (o.pros || []).forEach(function (p) { pc += '<span class="pro">' + esc(p) + '</span>'; });
+        (o.cons || []).forEach(function (c) { pc += '<span class="con">' + esc(c) + '</span>'; });
+        if (o.mitigation) pc += '<span class="fix">' + esc(o.mitigation) + '</span>';
+        if (pc) h += '<div class="db-pc">' + pc + '</div>';
+        h += '<div class="db-opt-act">';
+        h += '<input class="input sm" name="note-' + esc(noteKey) + '" placeholder="Optional note" data-notefor="' + esc(noteKey) + '">';
+        h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '">Select</button>';
+        h += '</div></div>';
       });
       h += '</div>';
-      h += '<div class="db-note"><input class="input sm block" name="note-' + esc(d.id) + '" placeholder="Optional note sent back with your choice" data-notefor="' + esc(d.id) + '"></div>';
       h += '<div class="db-task">blocks ' + esc(d.taskId) + ' · opened ' + rel(d.created) + '</div>';
       h += '</div>';
     });
@@ -256,43 +436,89 @@
     return h;
   }
 
-  // ---- tasks ----
+  // ---- tasks: a details view. One column template shared by header and rows,
+  // sortable headers, filter for open/done/all, text search, inline seq edit. ----
+  var tSort = { key: 'order', dir: 1 }, tFilter = 'open', tQuery = '';
+  var OPEN_STATUSES = ['pending', 'in_progress', 'blocked'];
   function renderTasks() {
-    var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-plus"></i><h3>Queue a task</h3><span class="k">lands as pending, the loop picks it up by priority</span></div><div class="db-card-b">';
+    var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-plus"></i><h3>Queue a task</h3><span class="k">lands as pending, the loop picks it up by priority, then sequence</span></div><div class="db-card-b">';
     h += '<div class="db-addform">';
     h += '<input class="input block" id="db-new-title" placeholder="What should get done?">';
-    h += '<select class="select" id="db-new-prio"><option value="p1-high">P1 high</option><option value="p2-normal" selected>P2 normal</option><option value="p3-low">P3 low</option><option value="p0-critical">P0 critical</option></select>';
+    h += '<select class="select block" id="db-new-prio"><option value="p1-high">P1 high</option><option value="p2-normal" selected>P2 normal</option><option value="p3-low">P3 low</option><option value="p0-critical">P0 critical</option></select>';
     h += '<button class="btn primary" data-act="add">Add to queue</button>';
     h += '<textarea class="input area block notes" id="db-new-notes" rows="2" placeholder="Notes for the runner: context, constraints, what done looks like"></textarea>';
     h += '</div></div></div>';
 
-    var active = S.tasks.filter(function (t) { return t.status !== 'done' && t.status !== 'dropped'; });
-    var finished = S.tasks.filter(function (t) { return t.status === 'done' || t.status === 'dropped'; })
-      .sort(function (a, b) { return (b.completed || b.updated || '').localeCompare(a.completed || a.updated || ''); });
-
-    PRIOS.forEach(function (p) {
-      var group = active.filter(function (t) { return t.priority === p; });
-      h += '<div class="db-prio-grp"><div class="mlabel">' + esc(PRIO_LABEL[p]) + ' · ' + group.length + '</div><div class="db-card"><div class="db-card-b tight">';
-      if (!group.length) h += '<div class="db-empty">Nothing at this priority.</div>';
-      group.forEach(function (t) {
-        h += '<div class="db-row" title="' + esc(t.notes || '') + '">';
-        h += '<span class="' + STATUS_DOT[t.status] + ' db-statusdot"></span>';
-        h += '<span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(STATUS_LABEL[t.status]) + (lastNote(t) ? ' · ' + esc(lastNote(t)) : '') + '</span></span>';
-        h += '<span class="db-meta">' + rel(t.updated) + '</span>';
-        h += '<select class="select sm" name="prio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '">' + PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === p ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
-        if (t.status === 'pending') h += '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>';
-        h += '</div>';
-      });
-      h += '</div></div></div>';
-    });
-
-    h += '<div class="db-prio-grp"><div class="mlabel">Finished · ' + finished.length + '</div><div class="db-card"><div class="db-card-b tight">';
-    if (!finished.length) h += '<div class="db-empty">Nothing finished yet.</div>';
-    finished.slice(0, 25).forEach(function (t) {
-      h += '<div class="db-row"><span class="' + STATUS_DOT[t.status] + ' db-statusdot"></span><span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(STATUS_LABEL[t.status]) + ' · ' + esc(lastNote(t)) + '</span></span><span class="db-meta">' + rel(t.completed || t.updated) + '</span></div>';
-    });
-    h += '</div></div></div>';
+    h += '<div class="db-card db-tt" style="margin-top:var(--gap)">';
+    h += '<div class="db-card-h"><i class="ic ic-list"></i><h3>All tasks</h3><span class="spacer" style="flex:1"></span>';
+    h += '<div class="db-ttbar">';
+    h += '<div class="seg sm">' + [['open', 'Open'], ['done', 'Finished'], ['all', 'All']].map(function (f) {
+      return '<button data-tfilter="' + f[0] + '" class="' + (tFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>';
+    }).join('') + '</div>';
+    h += '<label class="input sm search"><i class="ic ic-search"></i><input id="db-tquery" placeholder="Filter tasks" value="' + esc(tQuery) + '"></label>';
+    h += '</div></div>';
+    h += header();
+    h += '<div id="db-tt-body">' + rows() + '</div>';
+    h += '</div>';
     return h;
+
+    function header() {
+      var cols = [['seq', 'Seq'], ['priority', 'Priority'], ['title', 'Task'], ['status', 'Status'], ['updated', 'Updated']];
+      var s = '<div class="db-tthead">';
+      cols.forEach(function (c) {
+        var on = tSort.key === c[0];
+        s += '<button data-tsort="' + c[0] + '" class="' + (on ? 'on' : '') + '">' + c[1] +
+          (on ? '<i class="ic ' + (tSort.dir === 1 ? 'ic-chevron-up' : 'ic-chevron-down') + '"></i>' : '') + '</button>';
+      });
+      s += '<span></span><span></span></div>';
+      return s;
+    }
+  }
+  function taskRowsData() {
+    var list = S.tasks.filter(function (t) {
+      if (tFilter === 'open') return OPEN_STATUSES.indexOf(t.status) >= 0;
+      if (tFilter === 'done') return OPEN_STATUSES.indexOf(t.status) < 0;
+      return true;
+    });
+    if (tQuery.trim()) {
+      var q = tQuery.trim().toLowerCase();
+      list = list.filter(function (t) { return (t.title + ' ' + t.id + ' ' + (t.notes || '') + ' ' + t.status).toLowerCase().indexOf(q) >= 0; });
+    }
+    var key = tSort.key, dir = tSort.dir;
+    list.sort(function (a, b) {
+      var r = 0;
+      if (key === 'order') r = PRIOS.indexOf(a.priority) - PRIOS.indexOf(b.priority) || (a.seq != null ? a.seq : Infinity) - (b.seq != null ? b.seq : Infinity);
+      else if (key === 'seq') r = (a.seq != null ? a.seq : Infinity) - (b.seq != null ? b.seq : Infinity);
+      else if (key === 'priority') r = PRIOS.indexOf(a.priority) - PRIOS.indexOf(b.priority) || (a.seq || 0) - (b.seq || 0);
+      else if (key === 'title') r = a.title.localeCompare(b.title);
+      else if (key === 'status') r = a.status.localeCompare(b.status);
+      else if (key === 'updated') r = (b.updated || '').localeCompare(a.updated || '');
+      return r * dir || (a.created || '').localeCompare(b.created || '');
+    });
+    return list;
+  }
+  function rows() {
+    var list = taskRowsData();
+    if (!list.length) return '<div class="db-ttempty">No tasks match. Change the filter above or queue one.</div>';
+    return list.map(function (t) {
+      var open = OPEN_STATUSES.indexOf(t.status) >= 0;
+      var h = '<div class="db-ttrow" title="' + esc(t.notes || '') + '">';
+      h += '<label class="input sm mono seq"><input name="seq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
+      h += '<span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span>';
+      h += '<span class="db-title">' + esc(t.title) + (lastNote(t) ? '<span class="db-sub">' + esc(lastNote(t)) + '</span>' : '') + '</span>';
+      h += '<span class="db-status"><span class="' + STATUS_DOT[t.status] + '"></span>' + esc(STATUS_LABEL[t.status]) + '</span>';
+      h += '<span class="db-meta">' + rel(t.completed || t.updated) + '</span>';
+      h += '<select class="select sm block" name="prio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '">' + PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
+      h += open && t.status === 'pending'
+        ? '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>'
+        : '<span></span>';
+      h += '</div>';
+      return h;
+    }).join('');
+  }
+  function refreshRows() {
+    var el = document.getElementById('db-tt-body');
+    if (el) el.innerHTML = rows();
   }
 
   // ---- data ----
@@ -498,11 +724,39 @@
 
   // ---- actions ----
   document.getElementById('dashboard').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-act], [data-dbtab]');
+    var b = e.target.closest('[data-act], [data-dbtab], [data-tsort], [data-tfilter]');
     if (!b) return;
     if (b.dataset.dbtab) { setTab(b.dataset.dbtab, true); return; }
+    if (b.dataset.tsort) {
+      if (tSort.key === b.dataset.tsort) tSort.dir = -tSort.dir;
+      else tSort = { key: b.dataset.tsort, dir: 1 };
+      render();
+      return;
+    }
+    if (b.dataset.tfilter) { tFilter = b.dataset.tfilter; render(); return; }
+    if (b.dataset.act === 'ob-add-root' || b.dataset.act === 'ob-add-child') {
+      var epic = { id: 'epic-' + Math.random().toString(36).slice(2, 8), title: 'New epic', note: '', children: [] };
+      if (b.dataset.act === 'ob-add-root') obTree.push(epic);
+      else { var pf = obFind(obTree, b.dataset.id); if (!pf) return; pf.node.children = pf.node.children || []; pf.node.children.push(epic); }
+      obDirty = true; render();
+      obStartRename(epic.id);
+      return;
+    }
+    if (b.dataset.act === 'ob-rename') { obStartRename(b.dataset.id); return; }
+    if (b.dataset.act === 'ob-delete') {
+      var df = obFind(obTree, b.dataset.id);
+      if (df) { df.list.splice(df.index, 1); obMarkDirty(); }
+      return;
+    }
+    if (b.dataset.act === 'ob-save') { obSave(); return; }
+    if (b.dataset.act === 'retriage') {
+      b.textContent = 'Queuing…'; b.disabled = true;
+      var ready = obDirty ? post('/api/objectives', { epics: obTree }).then(function () { obDirty = false; }) : Promise.resolve();
+      ready.then(function () { return post('/api/retriage', {}); }).then(function () { b.textContent = 'Retriage queued'; });
+      return;
+    }
     if (b.dataset.act === 'decide') {
-      var noteEl = document.querySelector('[data-notefor="' + b.dataset.id + '"]');
+      var noteEl = document.querySelector('[data-notefor="' + b.dataset.id + '/' + b.dataset.choice + '"]');
       b.textContent = 'Resolving…'; b.disabled = true;
       post('/api/decide', { id: b.dataset.id, choice: b.dataset.choice, note: noteEl ? noteEl.value : '' });
     }
@@ -519,7 +773,17 @@
   });
   document.getElementById('dashboard').addEventListener('change', function (e) {
     var s = e.target.closest('select[data-act="prio"]');
-    if (s) post('/api/task/update', { id: s.dataset.id, priority: s.value });
+    if (s) { post('/api/task/update', { id: s.dataset.id, priority: s.value }); return; }
+    var q2 = e.target.closest('input[data-act="seq"]');
+    if (q2) {
+      var v = parseFloat(q2.value);
+      if (isFinite(v)) post('/api/task/update', { id: q2.dataset.id, seq: v });
+      else { lastJSON = ''; load(); }
+    }
+  });
+  // the search box filters the table body in place, so typing never loses focus
+  document.getElementById('dashboard').addEventListener('input', function (e) {
+    if (e.target.id === 'db-tquery') { tQuery = e.target.value; refreshRows(); }
   });
 
   function setTab(t, push) {
@@ -533,7 +797,7 @@
   }
 
   var q = new URLSearchParams(location.search).get('tab');
-  if (q && ['summary', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
+  if (q && ['summary', 'objectives', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
   load();
   setInterval(function () { if (!document.hidden) load(); }, 4000);
 })();

@@ -71,15 +71,23 @@ export function saveTask(task) {
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).replace(/^-+|-+$/g, '') || 'task';
 
-export function addTask({ title, priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual' }) {
+export function addTask({ title, priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
   ensureDirs();
   if (!PRIORITIES.includes(priority)) priority = 'p2-normal';
+  const all = readAllTasks();
   let id = slug(title);
-  const existing = new Set(readAllTasks().map((t) => t.id));
+  const existing = new Set(all.map((t) => t.id));
   let n = 2;
   while (existing.has(id)) id = `${slug(title)}-${n++}`;
+  // seq is the sort order within a priority: decimal, stepped by 10 so a task
+  // can be slotted between two others (15 goes between 10 and 20) without
+  // touching every file. Triage renumbers back to clean steps.
+  if (typeof seq !== 'number' || !isFinite(seq)) {
+    const peers = all.filter((t) => t.priority === priority && typeof t.seq === 'number');
+    seq = peers.length ? Math.max(...peers.map((t) => t.seq)) + 10 : 10;
+  }
   const task = {
-    id, title, priority, status: 'pending', release, area,
+    id, title, priority, seq, status: 'pending', release, area,
     created: now(), updated: now(), deps: [], blockedBy: [],
     notes, acceptance, log: [{ t: now(), note: `created (${source})` }],
     file: join(TASKS, priority, `${id}.json`),
@@ -104,6 +112,18 @@ export function setPriority(id, priority) {
   return moved;
 }
 
+export function setSeq(id, seq) {
+  if (typeof seq !== 'number' || !isFinite(seq)) throw new Error(`bad seq ${seq}`);
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  const from = t.seq;
+  t.seq = seq;
+  t.log = [...(t.log || []), { t: now(), note: `seq ${from ?? 'none'} -> ${seq}` }];
+  saveTask(t);
+  appendEvent('task_resequenced', { id, from, to: seq });
+  return t;
+}
+
 export function setStatus(id, status, note = '') {
   const t = findTask(id);
   if (!t) throw new Error(`no task ${id}`);
@@ -122,7 +142,7 @@ export function claimNext(pid = null) {
   const doneIds = new Set(tasks.filter((t) => t.status === 'done').map((t) => t.id));
   const ready = tasks.filter((t) => t.status === 'pending' && (t.deps || []).every((d) => doneIds.has(d)));
   if (!ready.length) return null;
-  ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.created || '').localeCompare(b.created || ''));
+  ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
   const t = ready[0];
   t.status = 'in_progress';
   t.started = now();
@@ -202,6 +222,43 @@ export function loopAlive(status = readStatus()) {
   try { process.kill(status.pid, 0); return true; } catch { return false; }
 }
 
+// ---- objectives -------------------------------------------------------------
+// The ordered epic tree that steers triage. Order IS priority; nesting is
+// sub-epics. The dashboard's Objectives tab edits this wholesale.
+const OBJECTIVES = join(QUEUE, 'objectives.json');
+export function readObjectives() {
+  return readJSON(OBJECTIVES, { updated: null, epics: [] });
+}
+export function writeObjectives(epics) {
+  if (!Array.isArray(epics)) throw new Error('epics must be an array');
+  const clean = (list) => list.map((e) => ({
+    id: String(e.id || slug(e.title)),
+    title: String(e.title || 'Untitled'),
+    note: e.note ? String(e.note) : '',
+    children: Array.isArray(e.children) ? clean(e.children) : [],
+  }));
+  const doc = { updated: now(), epics: clean(epics) };
+  writeJSON(OBJECTIVES, doc);
+  appendEvent('objectives_updated', { count: doc.epics.length });
+  return doc;
+}
+// Queue a p0 triage pass against the current objectives (used by the dashboard's
+// Retriage button). No-op if one is already waiting.
+export function requestRetriage() {
+  const existing = readAllTasks().find((t) => t.id.startsWith('retriage-queue-against-objectives') && ['pending', 'in_progress'].includes(t.status));
+  if (existing) return { queued: false, id: existing.id };
+  const t = addTask({
+    title: 'Retriage queue against objectives',
+    priority: 'p0-critical',
+    seq: 1,
+    area: 'queue',
+    source: 'dashboard retriage button',
+    notes: 'The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.',
+    acceptance: ['Every open task priority/sequence is consistent with the objectives ordering', 'A triage history event summarizes the changes'],
+  });
+  return { queued: true, id: t.id };
+}
+
 // ---- digests ----------------------------------------------------------------
 export function listDigests() {
   ensureDirs();
@@ -235,6 +292,7 @@ export function aggregateState() {
 
   const digestNames = listDigests();
   return {
+    objectives: readObjectives(),
     generated: now(),
     loop: { ...status, alive, stale: !alive && status.state === 'running' },
     tasks,
@@ -245,7 +303,7 @@ export function aggregateState() {
     },
     decisions: { pending: decisions.filter((d) => d.status === 'pending'), resolved: decisions.filter((d) => d.status === 'resolved').slice(0, 10) },
     completed24h: tasks.filter((t) => t.status === 'done' && (t.completed || '') >= cutoff24),
-    next: tasks.filter((t) => t.status === 'pending').sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.created || '').localeCompare(b.created || '')).slice(0, 8),
+    next: tasks.filter((t) => t.status === 'pending').sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || '')).slice(0, 8),
     series,
     history: history.slice(-80).reverse(),
     digests: { list: digestNames, latest: digestNames[0] ? { name: digestNames[0], body: readDigest(digestNames[0]) } : null },

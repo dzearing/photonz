@@ -84,6 +84,13 @@ async function handleApi(req, res, url) {
       const body = lib.readDigest(name);
       return body === null ? send(404, { error: 'not found' }) : send(200, { name, body });
     }
+    if (req.method === 'POST' && url === '/api/objectives') {
+      const { epics } = await readBody(req);
+      return send(200, lib.writeObjectives(epics));
+    }
+    if (req.method === 'POST' && url === '/api/retriage') {
+      return send(200, lib.requestRetriage());
+    }
     if (req.method === 'POST' && url === '/api/decide') {
       const { id, choice, note } = await readBody(req);
       return send(200, lib.resolveDecision(id, choice, note || ''));
@@ -94,11 +101,12 @@ async function handleApi(req, res, url) {
       return send(200, lib.addTask({ title, priority, notes: notes || '', source: 'dashboard' }));
     }
     if (req.method === 'POST' && url === '/api/task/update') {
-      const { id, priority, status, note } = await readBody(req);
+      const { id, priority, status, note, seq } = await readBody(req);
       let t = null;
       if (priority) t = lib.setPriority(id, priority);
+      if (typeof seq === 'number') t = lib.setSeq(id, seq);
       if (status) t = lib.setStatus(id, status, note || 'set from dashboard');
-      return t ? send(200, { id: t.id, priority: t.priority, status: t.status }) : send(400, { error: 'nothing to update' });
+      return t ? send(200, { id: t.id, priority: t.priority, status: t.status, seq: t.seq }) : send(400, { error: 'nothing to update' });
     }
     return send(404, { error: 'unknown api route' });
   } catch (e) { return send(500, { error: String(e.message || e) }); }

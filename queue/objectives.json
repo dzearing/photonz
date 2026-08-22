@@ -1,0 +1,46 @@
+{
+  "updated": "2026-08-22T23:30:00.000Z",
+  "epics": [
+    {
+      "id": "measure-redline",
+      "title": "Make Photonz the best UX redlining tool",
+      "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
+      "children": [
+        { "id": "hover-measure", "title": "Hover to measure: instant size and gap readouts", "note": "", "children": [] },
+        { "id": "measurements-panel", "title": "Measurements panel: a list you can name, filter, and export", "note": "", "children": [] },
+        { "id": "alignment-checks", "title": "Alignment checking", "note": "Blocked on a UX decision.", "children": [] },
+        { "id": "spec-export", "title": "Spec export: copy a clean spec list from a capture", "note": "", "children": [] }
+      ]
+    },
+    {
+      "id": "creation-vision",
+      "title": "Advance the creation vision in Next",
+      "note": "One document, layers are everything, surfaces as lenses. Mock-first: a concept graduates from the design study to Next only after its clickthrough is hardened.",
+      "children": [
+        { "id": "capture-clickthrough", "title": "Capture and redline clickthrough hardened", "note": "", "children": [] },
+        { "id": "editor-surfaces", "title": "Editor surfaces conform to the one-shell model", "note": "", "children": [] },
+        { "id": "component-video", "title": "Component and video workspaces validated in mocks", "note": "", "children": [] }
+      ]
+    },
+    {
+      "id": "design-system",
+      "title": "One design system, zero drift",
+      "note": "Every page reads as one product: canonical controls, one icon library, control metrics, both themes.",
+      "children": [
+        { "id": "control-metrics", "title": "Control metrics conformance: heights, gaps, light source", "note": "", "children": [] },
+        { "id": "icon-conformance", "title": "Icon conformance across all pages", "note": "", "children": [] },
+        { "id": "clickthrough-sweep", "title": "Checklist sweep of every clickthrough page", "note": "", "children": [] }
+      ]
+    },
+    {
+      "id": "unmanned-loop",
+      "title": "Keep the unmanned loop trustworthy",
+      "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality.",
+      "children": [
+        { "id": "loop-robustness", "title": "Loop robustness: no double starts, clean recovery", "note": "", "children": [] },
+        { "id": "dashboard-polish", "title": "Dashboard polish and conformance", "note": "", "children": [] },
+        { "id": "digest-quality", "title": "Digests stay honest and useful", "note": "", "children": [] }
+      ]
+    }
+  ]
+}

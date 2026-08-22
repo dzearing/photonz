@@ -1,23 +1,45 @@
 {
   "id": "next-measure-describe-specs-agent-action-blocked-ship-the-mock-describe-specs-age",
   "taskId": "next-measure-describe-specs-agent-action-blocked",
-  "question": "Ship the mock Describe specs agent action, a scriptable surface, or neither?",
-  "context": "The redline mock Export section has a Describe specs button and says every control is one API call so the agent can measure a capture and hand back the spec list. No agent integration exists in Photonz. Spec: docs/design/next-measure.md section 7.",
+  "question": "The mock has a Describe specs button that writes a spec paragraph for you. What should it do in the first release?",
+  "context": "Today there is nothing behind that button. We need to decide what a user gets when they want their measurements out of the app.",
   "options": [
     {
       "id": "omit",
-      "label": "Omit for v1",
-      "detail": "Ship Copy as spec list (deterministic text export) only. The agent button returns when there is real agent infrastructure to hand the list to."
+      "label": "Copy as text only, no button",
+      "summary": "You measure, then copy a clean text list of every measurement to paste into a bug, doc, or chat. The written-for-you spec comes later.",
+      "pros": [
+        "Predictable and instant, works everywhere text works",
+        "Nothing half-working ships"
+      ],
+      "cons": [
+        "The delightful write it for me moment from the mock is deferred"
+      ],
+      "mitigation": "The copied list is formatted well enough to paste as a spec with minimal editing."
     },
     {
       "id": "scriptable",
-      "label": "Spec-list export plus a scriptable surface",
-      "detail": "Also expose measurements through a scriptable command (URL scheme or CLI) so an external agent can pull the spec list without the UI; the button itself still waits."
+      "label": "Copy as text, plus let other tools ask for it",
+      "summary": "Same copyable list, and other apps or scripts can also request a capture's measurements without opening the app.",
+      "pros": [
+        "Power users and tools can automate their redlining flow"
+      ],
+      "cons": [
+        "More surface to design and support before the basics have shipped"
+      ],
+      "mitigation": "Keep the outside interface tiny: one way in, one list out."
     },
     {
       "id": "build",
-      "label": "Build the agent action now",
-      "detail": "An in-app action that sends the capture + measurements to an agent and returns a written spec description. Largest scope; no agent plumbing exists in the app today."
+      "label": "Build the full Describe specs button now",
+      "summary": "One click sends the capture and measurements off and returns a written description of the spec, like the mock promises.",
+      "pros": [
+        "The most magical version of the feature, exactly as mocked"
+      ],
+      "cons": [
+        "Biggest effort, and it depends on plumbing that does not exist yet, so it would delay everything else"
+      ],
+      "mitigation": "If chosen, ship it behind a flag so the rest of Measure does not wait on it."
     }
   ],
   "recommended": "omit",

@@ -24,5 +24,6 @@
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria; scoped to avoid overlap with the capture-wt harden task"
     }
-  ]
+  ],
+  "seq": 20
 }

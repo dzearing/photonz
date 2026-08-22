@@ -1,23 +1,45 @@
 {
   "id": "next-measure-measurement-naming-blocked-on-decis-how-should-measurements-be-named",
   "taskId": "next-measure-measurement-naming-blocked-on-decis",
-  "question": "How should measurements be named in the Measurements panel and spec list?",
-  "context": "The redline mock panel shows semantic names (Save Changes / width, Row gap / Appearance, Field to button gap). A screenshot has no UI tree, so semantic names require OCR. Names also feed the Copy as spec list export. Spec: docs/design/next-measure.md section 6.",
+  "question": "In the measurements list, what should each measurement be called?",
+  "context": "The mock shows friendly names like Save Changes / width. A screenshot is just pixels, so friendly names have to come from somewhere: you, the app reading the text in the image, or nowhere.",
   "options": [
     {
       "id": "derived",
-      "label": "Derived names + inline rename",
-      "detail": "Rows default to axis word + value (Width 128 px, Gap 16 px); double-click a row to rename. Simple, offline, testable in core."
+      "label": "Simple automatic names you can rename",
+      "summary": "Each row names itself from what it measures, like Width 128 px or Gap 16 px, and you can double-click any row to rename it.",
+      "pros": [
+        "Always works, fully predictable",
+        "Renaming the few rows that matter takes seconds"
+      ],
+      "cons": [
+        "A long list of Width and Gap rows looks samey until you rename"
+      ],
+      "mitigation": "Rows also show a small thumbnail of where they point, so samey names still find their element."
     },
     {
       "id": "ocr",
-      "label": "Semantic names via text recognition",
-      "detail": "Use Vision text recognition near the measured element to build names like the mock (Save Changes / width). App-layer only, falls back to derived names when no text is found; more magic, more wrong-name risk."
+      "label": "Read names from the screenshot text",
+      "summary": "The app reads nearby text in the image, so a measurement of a button labeled Save Changes calls itself Save Changes / width, like the mock.",
+      "pros": [
+        "The list reads like a real spec with no effort"
+      ],
+      "cons": [
+        "Text reading can be wrong or slow, and misnamed rows are worse than plain ones"
+      ],
+      "mitigation": "Fall back to the simple name whenever the text read is not confident, and keep rename available."
     },
     {
       "id": "values-only",
-      "label": "Values only, no names",
-      "detail": "Rows and the spec list show just role + value. Least work, but a 20-row spec list becomes hard to read."
+      "label": "No names, just values",
+      "summary": "Rows show only the kind and number, like width 128 px. Nothing to name, nothing to rename.",
+      "pros": [
+        "The least to build and the least to explain"
+      ],
+      "cons": [
+        "Twenty rows of bare numbers are hard to scan, and the exported list reads poorly"
+      ],
+      "mitigation": "None really; this trades readability away."
     }
   ],
   "recommended": "derived",

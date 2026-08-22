@@ -9,6 +9,7 @@
 //   node queue/bin/queue.mjs status <id> <pending|in_progress|blocked|done|dropped> [note]
 //   node queue/bin/queue.mjs add <title> [priority] [notes]
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
+//   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending
@@ -47,6 +48,9 @@ try {
       break;
     case 'priority':
       out(q.setPriority(args[0], args[1]).id);
+      break;
+    case 'seq':
+      out(q.setSeq(args[0], Number(args[1])).id);
       break;
     case 'decision':
       out(q.addDecision({ taskId: args[0], question: args[1], options: JSON.parse(args[2] || '[]'), context: args[3] || '', recommended: args[4] || '' }).id);

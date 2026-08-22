@@ -4,10 +4,13 @@ You are the daily digest and triage iteration of the Photonz go loop. Produce to
 
 ## 1. Triage pass (do this first, so the digest can report it)
 
-Read every task under `queue/tasks/` and every decision in `queue/decisions/`, then:
+Read `queue/objectives.json` first: it is the user's ordered epic tree, and it steers everything below. Epic order is priority order; nesting is sub-epics. Then read every task under `queue/tasks/` and every decision in `queue/decisions/`, and:
+
+- Align: task priorities and sequences must reflect the objectives ordering. Work serving a higher epic outranks work serving a lower one; work serving no epic at all is a candidate to drop or park at p3.
 
 - Dedupe: merge duplicate or overlapping tasks (keep the better-written one, fold notes in, drop the other with `node queue/bin/queue.mjs status <id> dropped "duplicate of <keeper>"`).
 - Reprioritize: move tasks whose priority no longer matches reality with `node queue/bin/queue.mjs priority <id> <priority>`. Blocked-on-user tasks stay where they are; decision resolution already requeues them.
+- Resequence: every task carries `seq`, the sort order within its priority (the loop claims lowest first). Decimals exist so a task can slot between two others without touching the rest. During triage, renumber each priority's OPEN tasks back to clean ascending steps of 10 (`node queue/bin/queue.mjs seq <id> <n>`), preserving relative order, and give any task missing a seq one at the end.
 - Repair: any task left `in_progress` with no live runner gets reset (`node queue/bin/queue.mjs guard`). Tasks with unmet or circular deps get fixed or flagged.
 - Groom: rewrite vague titles/notes so any future runner can execute without archaeology. Ensure every pending task has at least one concrete acceptance item.
 - Record one history event summarizing the pass: `node queue/bin/queue.mjs event triage '{"summary":"<counts: merged, moved, reset, groomed>"}'`.

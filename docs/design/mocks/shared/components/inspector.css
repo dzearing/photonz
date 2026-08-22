@@ -266,11 +266,30 @@
 .irow{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:var(--s3);margin:var(--s2) 0}
 .irow.split{grid-template-columns:76px 1fr auto}
 .irow>.rl{color:var(--faint);font-size:10.5px}
-.select{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:7px 10px;font-size:11.5px;font-weight:520;color:var(--ink);min-width:0}
+/* .select — the ONE dropdown trigger. It is a BUTTON, not a well: you press it,
+   so it wears the raised control treatment and sits on the same height scale as
+   every other control (--ctl-h-sm/--ctl-h/--ctl-h-lg from button.css). Never a
+   bare default-height <select>. Works two ways with one look:
+     <div class="select"><span class="lead">Value</span><i class="car">…</i></div>
+     <select class="select"><option>…</option></select>   (native, dashboard forms) */
+.select{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  height:var(--ctl-h);padding:0 10px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);
+  font-size:11.5px;font-weight:520;color:var(--ink);min-width:0}
+.select.sm{height:var(--ctl-h-sm);padding:0 var(--gap-sm);font-size:11px;border-radius:var(--r1)}
+.select.lg{height:var(--ctl-h-lg);padding:0 var(--s3);font-size:12.5px;border-radius:var(--r3)}
+.select.block{width:100%}
 .select:hover{border-color:var(--accent-line)}
 .select.comp{border-color:var(--comp-line)}
 .select .lead{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .select .lead .sw{width:14px;height:14px;border-radius:4px;flex:none}
 .select .car{color:var(--faint);font-size:9px;flex:none}
+/* native element: same trigger, the chevron is painted since it can hold no <i>.
+   The glyph is --faint (#8b92a1 light / #8b93a2 dark), close enough to share. */
+select.select{appearance:none;-webkit-appearance:none;font-family:var(--sans);
+  padding-right:28px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b92a1' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><path d='M8 9.5 12 5.5l4 4'/><path d='M8 14.5l4 4 4-4'/></svg>");
+  background-repeat:no-repeat;background-position:right 8px center;background-size:13px}
+select.select.sm{padding-right:24px;background-position:right 6px center;background-size:12px}
 .linkbtn{font-size:10.5px;color:var(--accent);font-weight:560;background:none;border:0;padding:0;white-space:nowrap;cursor:pointer}
 .note{font-size:10.5px;color:var(--faint);line-height:1.45;margin-top:var(--s2)}

@@ -46,6 +46,12 @@
   --stage:#e9ebf0; --stage-2:#dfe2e9;
   --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
   --panel:#fbfcfe; --panel-2:#f1f3f7;
+  /* the WELL: the recessed surface of anything you type into. Light comes from
+     above, so an inset surface shades at its top lip and catches light at its
+     bottom lip — the exact inverse of a raised control's top gloss. Wells are
+     slightly darker than the panel around them; raised controls are lighter. */
+  --well:#eef0f5;
+  --well-sh:inset 0 1px 2px rgba(22,28,45,.10), inset 0 2px 5px rgba(22,28,45,.05), inset 0 -1px 0 rgba(255,255,255,.75);
   --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
   --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
   --accent:#4c6fff; --accent-ink:#ffffff; --accent-soft:#e9edff; --accent-line:#c4cffe;
@@ -124,6 +130,8 @@
     --stage:#08090d; --stage-2:#0d0f15;
     --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
     --panel:#14161d; --panel-2:#181b22;
+    --well:#0e1015;
+    --well-sh:inset 0 1px 2px rgba(0,0,0,.55), inset 0 2px 5px rgba(0,0,0,.30), inset 0 -1px 0 rgba(255,255,255,.05);
     --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
     --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
     --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
@@ -136,6 +144,8 @@
 :root[data-theme="light"]{
   --stage:#e9ebf0; --stage-2:#dfe2e9; --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
   --panel:#fbfcfe; --panel-2:#f1f3f7; --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --well:#eef0f5;
+  --well-sh:inset 0 1px 2px rgba(22,28,45,.10), inset 0 2px 5px rgba(22,28,45,.05), inset 0 -1px 0 rgba(255,255,255,.75);
   --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
   --accent:#4c6fff; --accent-ink:#fff; --accent-soft:#e9edff; --accent-line:#c4cffe;
   --comp:#9a5cff; --comp-soft:#efe7ff; --comp-line:#d8c4ff;
@@ -153,6 +163,8 @@
 
   --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
   --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
+  --well:#0e1015;
+  --well-sh:inset 0 1px 2px rgba(0,0,0,.55), inset 0 2px 5px rgba(0,0,0,.30), inset 0 -1px 0 rgba(255,255,255,.05);
   --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;
   --accent:#7f9bff; --accent-ink:#0b0d14; --accent-soft:#1a2033; --accent-line:#2f3a5e;
   --comp:#b98cff; --comp-soft:#241a38; --comp-line:#3d2f63;

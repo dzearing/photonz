@@ -2,6 +2,8 @@
 
 You are one iteration of the Photonz go loop, executing exactly ONE task, unmanned. The task file path is given at the end of this prompt. Read it, do the work, keep status current, and finalize before you exit. The dashboard at http://127.0.0.1:8791 renders everything you write into `queue/`, so status hygiene is a deliverable, not bookkeeping.
 
+`queue/objectives.json` is the user's ordered epic tree; read it for why your task matters and let it settle judgment calls about scope.
+
 ## Hard rules
 
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
@@ -25,10 +27,22 @@ You are one iteration of the Photonz go loop, executing exactly ONE task, unmann
 Do not guess on anything the user would want to weigh in on (visual direction, scope, destructive changes, feature behavior). Instead:
 
 1. Open a decision:
-   `node queue/bin/queue.mjs decision <taskId> "<the question>" '[{"id":"a","label":"Option A","detail":"..."},{"id":"b","label":"Option B","detail":"..."}]' "<context: what you found, tradeoffs>" "<recommended option id>"`
-   Give 2 to 4 real options with honest detail, and always recommend one.
-2. Mark the task blocked (status protocol above) and exit. The dashboard surfaces the decision; when the user clicks an option the task returns to the queue automatically with the answer written into its log.
-3. If part of the task is decidable, finish that part first and say so in the log.
+   `node queue/bin/queue.mjs decision <taskId> "<the question>" '<optionsJSON>' "<context>" "<recommended option id>"`
+   where each option in the JSON array has this shape:
+   `{"id":"a","label":"Short name","summary":"One or two plain sentences: what the user would see and do.","pros":["..."],"cons":["..."],"mitigation":"How the main con gets softened."}`
+   Give 2 to 4 real options and always recommend one.
+2. **Frame it as a UX decision, never an engineering one.** The user is deciding
+   what the product should feel like, not how to build it. Write the question
+   and every option in terms of what appears on screen and what the user does;
+   keep implementation detail out (no file names, class names, architectures).
+   If the underlying question is technical, translate it into its visible
+   consequence before filing; if it has no visible consequence, it is not a
+   decision, so pick the sound engineering answer yourself and note it in the log.
+3. Mark the task blocked (status protocol above) and exit. The dashboard shows
+   each option as a card with your pros, cons, and mitigation; when the user
+   selects one the task returns to the queue automatically with the answer
+   written into its log.
+4. If part of the task is decidable, finish that part first and say so in the log.
 
 ## Definition of done
 

@@ -1,23 +1,45 @@
 {
   "id": "next-measure-free-angle-two-point-measure-blocke-two-point-measure-keep-the-calip",
   "taskId": "next-measure-free-angle-two-point-measure-blocke",
-  "question": "Two-point measure: keep the caliper H/V-only or offer the mock free-angle version?",
-  "context": "The redline mock renders the live two-point measurement as a caliper rotated to any angle. The shipped caliper is deliberately horizontal/vertical only after the 16.12 redesign. Spec: docs/design/next-measure.md section 3, last paragraph.",
+  "question": "When you measure between two points, should the measurement stay straight, or follow the exact angle between them?",
+  "context": "The mock draws the two-point measurement rotated to any angle. The current tool deliberately keeps measurements horizontal or vertical because redlines are almost always axis aligned.",
   "options": [
     {
       "id": "keep-hv",
-      "label": "Keep H/V only",
-      "detail": "The 16.12 redesign deliberately dropped free/diagonal mode for one opinionated interaction. UX redlining is almost always axis-aligned; the mock hint (click two points) still works, the caliper just levels to the dominant axis."
+      "label": "Straight only",
+      "summary": "Measurements always read horizontally or vertically, snapping to whichever way you are measuring. One simple, consistent behavior.",
+      "pros": [
+        "Matches how UI redlining actually works almost every time",
+        "Keeps the tool simple and the numbers unambiguous"
+      ],
+      "cons": [
+        "A true diagonal, like an icon sitting off-axis, cannot be measured directly"
+      ],
+      "mitigation": "You can still read a diagonal from its horizontal and vertical parts."
     },
     {
       "id": "shift-free",
-      "label": "H/V default, modifier for free angle",
-      "detail": "Hold Shift while placing the second point to get a rotated caliper measuring the true diagonal; release-to-level otherwise."
+      "label": "Straight by default, hold Shift for the true diagonal",
+      "summary": "Everything works as today, but holding Shift lets the measurement rotate to the exact angle between your two points.",
+      "pros": [
+        "Simple default stays, the diagonal is there when rarely needed"
+      ],
+      "cons": [
+        "A hidden mode a modifier key controls is easy to trigger by accident or never discover"
+      ],
+      "mitigation": "Show a small hint near the cursor while measuring so the Shift option teaches itself."
     },
     {
       "id": "free-default",
-      "label": "Free angle by default (as the mock draws)",
-      "detail": "The live caliper rotates to the exact angle between the two clicked points; brings back the complexity 16.12 removed."
+      "label": "Always follow the exact angle",
+      "summary": "The measurement rotates freely to connect your two points, exactly as the mock draws it.",
+      "pros": [
+        "Matches the mock image precisely"
+      ],
+      "cons": [
+        "Every measurement now needs careful aim, and axis-aligned redlines get harder, which is the main use"
+      ],
+      "mitigation": "Snapping near 0 and 90 degrees would ease it, but adds the complexity back."
     }
   ],
   "recommended": "keep-hv",
