@@ -3503,4 +3503,10 @@ presets already live; **Copy GIF** is still one click away on the tile's Copy
 menu, so nothing is out of reach. `AppCoordinator.saveRecording(_ sourceURL:as:)`
 had no other caller and went with it.
 
+Then, same exchange: *"yes add show in finder to image tiles too"*. So it moved
+out of the video/image branch entirely and now sits beside Delete on every tile —
+Copy · Play · Show in Finder · Delete for recordings, Copy · Edit · Pin · Show in
+Finder · Delete for screenshots. Every capture is a real file in a normal folder,
+so every tile can point at it.
+
 **Verified**: 799 tests green. Dev app rebuilt and relaunched.

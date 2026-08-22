@@ -295,14 +295,6 @@ private struct HistoryOverlayCell: View {
                     coordinator.openRecording(entry.url)
                     coordinator.hideHistory()
                 }
-                // "Show in Finder", not "Export": a recording in history IS a
-                // file in a normal folder, so pointing at it is the useful
-                // answer. Converting to another format lives in the editor's
-                // Export menu, where a format choice belongs.
-                iconButton("Show in Finder", "folder") {
-                    coordinator.revealInFinder(entry.url)
-                    coordinator.hideHistory()
-                }
             } else {
                 iconButton("Copy", "doc.on.doc") {
                     store.copyToPasteboard(entry)
@@ -315,6 +307,15 @@ private struct HistoryOverlayCell: View {
                     coordinator.pinCapture(entry.url)
                     coordinator.hideHistory()
                 }
+            }
+            // Every capture is a real file in a normal folder, so every tile can
+            // point at it. Recordings had an Export menu here instead (Export
+            // GIF…/HEIC…, a save panel writing a converted copy elsewhere) —
+            // a FORMAT choice, which belongs in the editor's Export menu with
+            // the other format choices, not on a tile.
+            iconButton("Show in Finder", "folder") {
+                coordinator.revealInFinder(entry.url)
+                coordinator.hideHistory()
             }
             iconButton("Delete", "trash", role: .destructive) {
                 store.remove(entry)

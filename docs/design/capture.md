@@ -152,13 +152,14 @@ A **global, top-of-screen overlay**, not editor chrome.
   **Clear All** header action (moves everything to the Trash, with a confirm).
   Per-item actions are **hidden until the item is hovered** (they're noisy
   otherwise) and each shows a small tooltip **below** the row so it never covers
-  the thumbnail: **Copy**, **Edit** / **Pin** (images) or **Play** / **Show in
-  Finder** (videos), **Delete**, plus drag-the-file-out. Recordings get **Show
-  in Finder**, not an Export menu: a history item IS a file in a normal folder,
-  so pointing at it is the useful answer, while converting to another format
-  belongs in the editor's Export menu with the other format choices (2026-08-22,
-  user feedback: "the export button on history video items — I don't understand
-  it"). **Double-clicking an
+  the thumbnail: **Copy**, **Edit** / **Pin** (images) or **Play** (videos), then
+  **Show in Finder** and **Delete** on every tile, plus drag-the-file-out. Every
+  capture is a real file in a normal folder, so every tile can point at it.
+  Recordings used to carry an Export menu there instead (Export GIF…/HEIC…, a
+  save panel writing a converted copy elsewhere) — that's a *format* choice, and
+  it belongs in the editor's Export menu with the other format choices
+  (2026-08-22, user feedback: "the export button on history video items — I
+  don't understand it. I can understand a show in finder button"). **Double-clicking an
   image tile opens it in the editor** (2026-07-03; videos open on a single
   click — the tap recognizers are installed conditionally so Play never waits
   out a double-click window). The newest item is ring-highlighted right after
