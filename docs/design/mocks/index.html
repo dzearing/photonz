@@ -7,7 +7,17 @@
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
   html,body{height:100%;margin:0;overflow:hidden}
-  .shellbody{display:grid;grid-template-rows:auto 1fr;height:100vh;font-family:var(--sans);background:var(--stage);color:var(--ink)}
+  .shellbody{display:grid;grid-template-rows:1fr;height:100vh;font-family:var(--sans);background:var(--stage);color:var(--ink)}
+  /* the rail owns brand (top), scrolling nav (middle), and theme (pinned foot) */
+  .rail{display:flex;flex-direction:column;overflow:hidden;padding:0}
+  .railbrand{display:flex;align-items:center;gap:9px;flex:none;padding:14px 14px 12px;border-bottom:1px solid var(--line-soft)}
+  .railbrand .mark{width:20px;height:20px;border-radius:6px;flex:none;background:conic-gradient(from 210deg,#7f9bff,#c56cff,#ff7a9c,#ffb057,#7f9bff);box-shadow:0 0 0 1px rgba(0,0,0,.06) inset}
+  .railbrand h1{font-size:13px;font-weight:640;margin:0;letter-spacing:-.01em}
+  .railbrand .railtag{font-size:10px;color:var(--faint);font-weight:520;margin-left:auto}
+  .railscroll{flex:1;min-height:0;overflow-y:auto;padding:12px 10px}
+  .railfoot{flex:none;padding:10px;border-top:1px solid var(--line-soft)}
+  .railfoot .themebtn{display:flex;align-items:center;gap:7px;width:100%;justify-content:center}
+  .railfoot .themebtn .ic{width:13px;height:13px}
   .framearea{min-height:0}
   .framearea iframe{width:100%;height:100%;border:0;display:block;background:var(--stage)}
   .nav .wip{display:inline-block;margin-left:6px;font-size:8.5px;font-weight:700;letter-spacing:.05em;color:var(--comp);background:var(--comp-soft);border:1px solid var(--comp-line);padding:1px 5px;border-radius:5px;vertical-align:1px;white-space:nowrap}
@@ -28,16 +38,10 @@
 </head>
 <body>
 <div class="shellbody">
-  <div class="pbar">
-    <span class="mark"></span>
-    <h1>Photonz</h1>
-    <span class="tag">Design dashboard · vision, system &amp; progress</span>
-    <span class="spacer"></span>
-    <span class="hint"><b>Project pages are live</b>, wired to the task queue · everything else is a non-functional mock sharing one design system.</span>
-    <button class="themebtn" id="theme" style="margin-left:16px">◐ Theme</button>
-  </div>
   <div class="body" style="min-height:0">
     <nav class="rail" id="rail">
+      <div class="railbrand"><span class="mark"></span><h1>Photonz</h1><span class="railtag">Design dashboard</span></div>
+      <div class="railscroll">
       <div class="raildiv">Project · live</div>
       <button class="grp gtoggle" data-group="proj-status">Status &amp; progress<i class="gchev ic ic-chevron-down"></i></button>
       <div class="subnav" data-group="proj-status">
@@ -189,6 +193,8 @@
         <button class="nav sub" data-page="agent-variations">Generate variations</button>
         <button class="nav sub" data-page="ideas">Idea board</button>
       </div>
+      </div>
+      <div class="railfoot"><button class="themebtn" id="theme"><i class="ic ic-contrast"></i><span id="themelabel">Theme</span></button></div>
     </nav>
     <div class="framearea">
       <iframe id="frame" src="/pages/dashboard.html" title="Photonz mock"></iframe>
@@ -244,7 +250,7 @@
   }
   document.getElementById('theme').addEventListener('click', function () {
     theme = theme === null ? 'dark' : theme === 'dark' ? 'light' : null;
-    this.textContent = theme === null ? '◐ Theme' : theme === 'dark' ? '● Dark' : '○ Light';
+    document.getElementById('themelabel').textContent = theme === null ? 'Theme' : theme === 'dark' ? 'Dark' : 'Light';
     applyTheme();
   });
   frame.addEventListener('load', applyTheme); // re-assert theme on each page load

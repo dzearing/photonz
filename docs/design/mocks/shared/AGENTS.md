@@ -114,6 +114,15 @@ Controls that sit in one row must read as one family. Three rules:
    (recessed)? `.select` is pressed, so it is raised even though it sits next
    to fields.
 
+## Links (one primitive, never browser-default)
+
+Bare `a` is styled by the DS (`links.css`): accent ink, quiet always-on
+underline that firms on hover, no visited-purple, standard focus ring. Use
+`.link` to give a button the same look, `.link.quiet` for dense runs of
+repeated links, and `<i class="ic ic-external linkext"></i>` inside a link that
+leaves the surface. Never restyle links per page and never let default blue
+or visited purple appear.
+
 ## Color / type tokens (never hardcode raw hex for chrome)
 
 `--ink --dim --faint` (text) · `--panel --panel-2 --chrome` (surfaces) ·

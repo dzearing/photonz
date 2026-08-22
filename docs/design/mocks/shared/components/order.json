@@ -5,6 +5,7 @@
   "____": "Run `node shared/build-ds.mjs` to write the static bundles.",
   "css": [
     "tokens",
+    "links",
     "titlebar",
     "canvas",
     "selection",

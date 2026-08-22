@@ -1,0 +1,52 @@
+/* ============================================================
+   LINKS — the hyperlink primitive
+   ============================================================
+   The design language had no link definition, so prose surfaces fell through
+   to the browser default: saturated blue and visited purple, unreadable on the
+   dark surfaces and foreign to the palette on the light ones. One primitive,
+   used everywhere text links appear (briefs, digests, doc pages, notes).
+
+   Rules:
+   - A link is ACCENT ink with a quiet underline that firms up on hover. The
+     underline is always present at rest: color alone may not clear 3:1 against
+     surrounding text, so the shape carries the affordance, not just the hue.
+   - :visited stays the same color. In an app-shaped surface, history-purple
+     is noise, and it is the single biggest "default browser" tell.
+   - Focus gets the standard control ring, same as every other interactive.
+   - `.link` opts any element into the same look (a <button> posing as a link);
+     `.link.quiet` de-emphasizes for repeated links in dense lists (ink-colored,
+     underline only on hover).
+   ============================================================ */
+a, .link{
+  color:var(--accent);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-decoration-color:color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset:2.5px;
+  border-radius:3px;
+  transition:color var(--dur-1) var(--ease-standard), text-decoration-color var(--dur-1) var(--ease-standard);
+}
+a:visited{color:var(--accent)}
+a:hover, .link:hover{
+  color:color-mix(in srgb, var(--accent) 80%, var(--ink));
+  text-decoration-color:currentColor;
+}
+a:active, .link:active{color:color-mix(in srgb, var(--accent) 70%, var(--ink))}
+a:focus-visible, .link:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* button-shaped elements borrowing the link look */
+button.link{border:0;background:none;padding:0;font:inherit;cursor:pointer}
+
+/* de-emphasized: for runs of links where accent-everywhere would shout */
+.link.quiet, a.quiet{
+  color:var(--dim);
+  text-decoration-color:transparent;
+}
+.link.quiet:hover, a.quiet:hover{color:var(--ink);text-decoration-color:var(--line-strong)}
+
+/* a link that leaves the current surface; pair with <i class="ic ic-external"> */
+a .ic.linkext, .link .ic.linkext{width:11px;height:11px;vertical-align:-1px;margin-left:2px;opacity:.7}
+
+@media (prefers-reduced-motion:reduce){
+  a, .link{transition:none}
+}

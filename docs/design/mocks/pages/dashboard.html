@@ -55,11 +55,15 @@
     background:color-mix(in srgb,var(--warn) 6%,transparent);padding:var(--pad-sm) var(--pad) var(--pad);
     transform-origin:50% 50%;
     transition:opacity var(--dur-3) var(--ease-standard), transform var(--dur-3) var(--ease-standard)}
-  #dashboard .db-decide.out-left{opacity:0;transform:translateX(-56px) rotateY(10deg) scale(.985)}
-  #dashboard .db-decide.out-right{opacity:0;transform:translateX(56px) rotateY(-10deg) scale(.985)}
-  #dashboard .db-decide.out-done{opacity:0;transform:translateX(-24px) rotateY(24deg) scale(.96)}
-  #dashboard .db-decide.in-right{opacity:0;transform:translateX(72px) rotateY(-8deg)}
-  #dashboard .db-decide.in-left{opacity:0;transform:translateX(-72px) rotateY(8deg)}
+  /* The stage is a carousel seen from the front: a card leaving to the LEFT
+     turns to face left (negative rotateY) as it rounds the cylinder, a card
+     arriving from the RIGHT starts turned to face right (positive rotateY) and
+     normalizes flat as it centers. Tilt direction always matches travel. */
+  #dashboard .db-decide.out-left{opacity:0;transform:translateX(-64px) rotateY(-16deg) scale(.985)}
+  #dashboard .db-decide.out-right{opacity:0;transform:translateX(64px) rotateY(16deg) scale(.985)}
+  #dashboard .db-decide.out-done{opacity:0;transform:translateX(-40px) rotateY(-22deg) scale(.96)}
+  #dashboard .db-decide.in-right{opacity:0;transform:translateX(80px) rotateY(16deg)}
+  #dashboard .db-decide.in-left{opacity:0;transform:translateX(-80px) rotateY(-16deg)}
   #dashboard .db-decnav{display:flex;gap:2px;align-items:center}
   #dashboard .db-brieftoggle{margin-top:var(--s3)}
   #dashboard .db-brieftoggle .ic{transition:transform var(--dur-2) var(--ease-standard)}
