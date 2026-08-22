@@ -171,6 +171,12 @@ private struct VideoEditorRootView: View {
             .environment(state)
             .focusedSceneValue(\.videoEditorState, state)
             .navigationTitle(state.windowTitle)
+            // Same document behavior as an image window: confirm before closing
+            // with an uncommitted trim/crop, and show the edited dot meanwhile.
+            .background(WindowCloseGuard(editorState: state))
+            .onChange(of: state.hasUnsavedChanges) { _, dirty in
+                state.hostWindow?.isDocumentEdited = dirty
+            }
             .task { state.seed(url: url, capture: coordinator.capture) }
     }
 }

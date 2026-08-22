@@ -19,10 +19,19 @@ let package = Package(
             dependencies: ["PhotonzCore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        // AVFoundation / ImageIO media IO for recordings: poster frames, MP4
+        // re-encode, animated GIF/HEIC, and committing a save into the stored
+        // asset. No UI imports — it lives outside the app target so the
+        // "a saved recording IS the trimmed file" promise is unit-testable.
+        .target(
+            name: "PhotonzMedia",
+            dependencies: ["PhotonzCore"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         // SwiftUI app shell. Assembled into Photonz.app by Scripts/build-app.sh.
         .executableTarget(
             name: "Photonz",
-            dependencies: ["PhotonzCore", "PhotonzRender"],
+            dependencies: ["PhotonzCore", "PhotonzRender", "PhotonzMedia"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         // Dev tool: composites a showcase document through the real engine and
@@ -40,6 +49,10 @@ let package = Package(
         .testTarget(
             name: "PhotonzRenderTests",
             dependencies: ["PhotonzRender"]
+        ),
+        .testTarget(
+            name: "PhotonzMediaTests",
+            dependencies: ["PhotonzMedia"]
         ),
     ]
 )

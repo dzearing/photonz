@@ -3433,3 +3433,57 @@ for now: `TextBuilder` applies an auto-contrast shadow on commit, and remembered
 effects would fight it. Callouts are simply untouched.
 
 **Verified**: 776 tests green (2 new). Dev app rebuilt and relaunched.
+
+## 2026-08-22 (later still) — a saved recording is the trimmed file
+
+Trim a recording, save, close the window, then drag it out of History or paste
+it: you got the original, full length, every time. Reproduced first, on real
+data — `Recording trim-ux-test.mp4` in the capture folder carries a
+`.photonzedits` sidecar saying "keep 3.02s → 12s" while the file on disk is
+still 12 seconds. `CaptureStore.copyToPasteboard` and
+`CaptureThumbnailView.onDrag` hand that file out verbatim, and both are right to.
+The second half reproduced too: ⌘S is gated on an image document, so it was dead
+in a video window, and `WindowCloseGuard` was only ever attached to image
+windows, so closing with a pending trim asked nothing.
+
+Neither call site was the bug. The model was: trim and crop were "non-destructive
+(applied at export)", recorded beside the media and never in it, so anything that
+promised a file delivered an untrimmed one — and every future consumer would have
+had to remember to apply edits. So the stored asset became true instead, and both
+of those lines started working untouched.
+
+**Saving now commits.** ⌘S re-encodes the trim/crop into the recording, the same
+shape as an image window writing its flattened composite back into the capture
+file. The pre-edit bytes move to `.photonz-originals/<same name>.mp4` first — a
+hidden dot-folder the capture scan skips, keeping the media extension so
+AVFoundation reads it unaided — and the editor always edits *from* that original.
+Trims therefore never stack across saves, and clearing one restores the whole
+clip (Video ▸ Revert to Original). `.photonzedits` survives, with a new job: it
+records how the visible file was derived, so the handles come back where you left
+them. Only a save writes it, so it can't lie about the file.
+
+That let the edit-awareness come *out* of the consumers rather than be added to
+more of them: history thumbnails, duration pills, copy, and export-from-history
+all just read the file now, and `posterFrame` lost its `edits:` parameter
+entirely. The editor's own Export/Copy still apply unsaved edits, but read from
+the edit source, not the recording — otherwise an export after a save would trim
+already-trimmed media.
+
+Video windows also joined the document furniture: a shared `SaveableEditor`
+protocol gives them `WindowCloseGuard`, the edited dot, the
+Save/Cancel/Don't Save sheet and the ⌘Q sweep. Saving is completion-based there
+because the commit re-encodes. ⌘⇧S maps to the existing MP4 export panel — Export
+stays for *format*, never as the way to save. A recording trimmed before today
+has a sidecar but no original, so it opens *dirty*: the migration is a prompt,
+not a silent loss.
+
+`VideoExporter` moved out of the app target into a new **PhotonzMedia** library
+so the promise is testable at all: `VideoAssetCommitTests` synthesizes a real 3s
+MP4, commits a 1s trim, and reads the stored file's duration back.
+
+**Verified**: 799 tests green (23 new — 14 core, 9 media, including the
+reproduction). Dev app rebuilt and relaunched.
+
+**Next:** user to confirm in the app — trim a recording, ⌘S, close, then drag it
+out of History and paste it; both should be the trimmed length. Also worth
+checking Revert to Original and that closing without saving now prompts.

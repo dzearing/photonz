@@ -20,6 +20,7 @@ It runs as a **resident menu-bar agent** (CleanShot-style): always available to 
 | --- | --- | --- |
 | `PhotonzCore` | Document model: layers, geometry, history. | Pure values. CoreGraphics types only. 100% testable. |
 | `PhotonzRender` | `ImageStore` (bitmaps) + `DocumentRenderer` (CIImage compositor). | No UI imports. Pixel-tested. |
+| `PhotonzMedia` | Recording media IO: poster frames, MP4 re-encode (trim/crop), animated GIF/HEIC, and `VideoAssetCommit` (a save bakes edits into the stored file). | AVFoundation/ImageIO, no UI imports. Tested against real synthesized MP4s. |
 | `Photonz` (app) | SwiftUI/AppKit shell: menu-bar `AppCoordinator`, per-window `EditorState`/`EditorView`, capture + history overlay, tools. | Thin; logic pushed down into core. |
 
 ## Key decisions (and why)

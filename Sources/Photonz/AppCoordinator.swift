@@ -1,6 +1,7 @@
 import AppKit
 import Observation
 import PhotonzCore
+import PhotonzMedia
 import SwiftUI
 
 /// The resident menu-bar agent's root (CleanShot-style). Owns everything that
@@ -184,9 +185,8 @@ final class AppCoordinator {
 
     /// Convert a recording to an animated GIF / HEIC and save it where the user
     /// picks (the "quick convert" path of 12.5; the MP4 is already auto-saved).
-    /// Honors trim/crop persisted by the video editor (the `.photonzedits`
-    /// sidecar) — an export from history must match what the editor would
-    /// export, or a trimmed recording silently exports full-length.
+    /// The stored file is the truth (phase 18) — a saved trim/crop is already
+    /// baked into it — so this exports it verbatim, with no edits to re-apply.
     func saveRecording(_ sourceURL: URL, as format: RecordingFormat) {
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSSavePanel()
@@ -194,9 +194,8 @@ final class AppCoordinator {
         panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        let edits = VideoEditsSidecar.load(for: sourceURL) ?? VideoEdits()
-        if format == .mp4, edits.isEmpty {
-            // Fast path: no edits → verbatim copy, no re-encode.
+        if format == .mp4 {
+            // Nothing to apply → verbatim copy, no re-encode.
             try? FileManager.default.removeItem(at: url)
             try? FileManager.default.copyItem(at: sourceURL, to: url)
             return
@@ -204,15 +203,7 @@ final class AppCoordinator {
         isExportingRecording = true
         Task {
             do {
-                if format == .mp4 {
-                    let seconds = await VideoExporter.duration(of: sourceURL)
-                    try await VideoExporter.exportMP4(from: sourceURL, to: url,
-                                                      trim: edits.trim ?? VideoTrim(duration: seconds),
-                                                      crop: edits.crop)
-                } else {
-                    try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format,
-                                                           trim: edits.trim, crop: edits.crop)
-                }
+                try await VideoExporter.exportAnimated(from: sourceURL, to: url, format: format)
             } catch {
                 reportExportFailure(error)
             }
@@ -223,16 +214,17 @@ final class AppCoordinator {
     // MARK: - Copy recording to clipboard (video / GIF)
 
     /// History overlay: copy a recording to the clipboard as an MP4 file or an
-    /// animated GIF, honoring persisted trim/crop edits.
+    /// animated GIF. The stored file is the truth (phase 18) — a saved trim is
+    /// already in it — so nothing is re-applied on the way out.
     func copyRecording(_ entry: CaptureEntry, as format: RecordingFormat) {
-        let edits = VideoEditsSidecar.load(for: entry.url) ?? VideoEdits()
-        copyRecording(sourceURL: entry.url, as: format, trim: edits.trim, crop: edits.crop)
+        copyRecording(sourceURL: entry.url, as: format, trim: nil, crop: nil)
     }
 
-    /// Video editor: same, but with the window's live (possibly not-yet-saved)
-    /// edits.
+    /// Video editor: copies what the window is showing, including edits the user
+    /// hasn't saved yet — so it reads from the edit source (the preserved
+    /// original once one exists) and applies them.
     func copyRecording(_ state: VideoEditorState, as format: RecordingFormat) {
-        guard let url = state.url else { return }
+        guard let url = state.editSourceURL else { return }
         let edits = state.exportEdits
         copyRecording(sourceURL: url, as: format, trim: edits.trim, crop: edits.crop)
     }
@@ -324,11 +316,14 @@ final class AppCoordinator {
     /// threaded through). Runs off the main actor with basic error reporting.
     func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
                        quality: VideoExportQuality = .standard) {
-        guard let sourceURL = state.url else { return }
+        // Read from the edit source (the preserved original once one exists) so
+        // the window's edits apply to full-length media rather than stacking on
+        // an already-committed trim; name the file after the recording.
+        guard let recordingURL = state.url, let sourceURL = state.editSourceURL else { return }
         NSApp.activate(ignoringOtherApps: true)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.savePanelType]
-        panel.nameFieldStringValue = sourceURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
+        panel.nameFieldStringValue = recordingURL.deletingPathExtension().lastPathComponent + ".\(format.fileExtension)"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
 

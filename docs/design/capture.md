@@ -217,6 +217,47 @@ library or index. The folder is the single source of truth:
     Review Changes… / Cancel / Discard and Quit (`applicationShouldTerminate`
     + `.terminateLater`).
 
+## Video editing round-trip: a saved recording IS the trimmed file
+
+*(Phase 18, 2026-08-22.)* Trim and crop used to be sidecar-only — recorded in
+`.photonzedits` and "applied at export" — so the stored MP4 stayed full length
+and everything that hands out the file (drag from history, copy to the
+clipboard) handed out the untrimmed original. The model, not any one call site,
+was the bug: correct code sitting on top of a promise the file didn't keep.
+
+The recording editor now saves exactly like the image editor:
+
+- **The stored media file is the truth.** ⌘S **commits**: the trim/crop are
+  re-encoded into the recording, so every consumer gets trimmed media without
+  knowing trimming exists. No consumer re-applies edits any more — history
+  thumbnails, duration pills, copy, and export-from-history all read the file
+  verbatim.
+- **The original is preserved, so the edit is reversible.** The pre-edit bytes
+  move to `.photonz-originals/<same name>.mp4` beside the recording on the first
+  save — a hidden dot-folder (so the capture scan never lists it) that keeps the
+  media extension (so AVFoundation reads it unaided). Deleting a recording (or
+  Clear All) trashes it along with the sidecar.
+- **The editor always edits FROM the original**
+  (`VideoOriginals.editSource(for:)`), the same way an image window prefers a
+  capture's layered `.photonz` sidecar over the flattened PNG. Edits therefore
+  always compose against full-length source: repeated saves never stack trims,
+  and clearing the trim restores the whole clip (Video ▸ **Revert to Original**).
+- **`.photonzedits` changed meaning.** It no longer describes pending edits to
+  apply on the way out; it records how the visible file was *derived* from the
+  preserved original. Only a save writes it, so it always matches the file.
+- **Dirty = the edits differ from what's committed** (`VideoSaveState`). A
+  recording trimmed before phase 18 has a sidecar but no original, so it reads
+  as *unsaved* on open — the migration is a save prompt, not a silent loss.
+- **Same window chrome as an image.** Video windows get `WindowCloseGuard`, the
+  edited dot, the Save…/Cancel/Don't Save sheet and the ⌘Q sweep, via a shared
+  `SaveableEditor` protocol (completion-based, because a video commit
+  re-encodes). ⌘⇧S "Save As…" maps to the existing MP4 export panel — Export
+  stays for *format* choices (GIF/HEIC/quality), never as the way to save.
+- **Failure is not partial.** `VideoAssetCommit` builds the new media into a
+  hidden scratch file first, preserves the original second, then swaps with
+  `FileManager.replaceItemAt` (keeping the recording's name and creation date,
+  which history sorts by), then writes the sidecar.
+
 ## Updater
 
 **Check for Updates…** uses a **lightweight custom check** *(decided — no

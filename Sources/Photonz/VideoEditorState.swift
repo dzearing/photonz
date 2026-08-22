@@ -3,19 +3,30 @@ import AVFoundation
 import CoreGraphics
 import Observation
 import PhotonzCore
+import PhotonzMedia
 import SwiftUI
 
 /// Per-window state for the in-app video editor (phase 13.3). The sibling of
 /// `EditorState` for recordings: it keeps `EditorState` image-pure by owning the
 /// `AVPlayer`/`AVPlayerItem` (both non-Sendable, so this whole type is
-/// `@MainActor`) plus the pure, non-destructive `VideoTrim`/`VideoCrop`. Trim
-/// and crop live only in memory for v1 — they're applied at export, never baked
-/// into the source file.
+/// `@MainActor`) plus the pure, non-destructive `VideoTrim`/`VideoCrop`.
+///
+/// Saving works exactly like the image editor's (phase 18): ⌘S **commits** the
+/// trim/crop into the stored recording, so the file history hands out IS the
+/// trimmed media. The pre-edit bytes are preserved as a hidden original, and
+/// this editor always edits FROM that original — the same shape as the image
+/// editor writing a flattened PNG while keeping the layered `.photonz` sidecar.
 @MainActor
 @Observable
 final class VideoEditorState {
-    /// The recording being edited; nil until `seed`.
+    /// The recording being edited — the file in capture history, and the file
+    /// a save commits into; nil until `seed`.
     private(set) var url: URL?
+    /// The asset actually loaded into the player and measured against: the
+    /// preserved original once a save has made one, else the recording itself.
+    /// Editing from the original is what keeps repeated saves from stacking
+    /// trims and lets clearing the trim restore the whole clip.
+    private(set) var editSourceURL: URL?
     /// Window title (the recording's file name) so video windows are tellable
     /// apart in the ⌘` switcher / Window menu / Dock.
     var windowTitle: String { url?.lastPathComponent ?? "Recording" }
@@ -99,7 +110,9 @@ final class VideoEditorState {
         return crop.rect.size
     }
 
-    @ObservationIgnored private var sidecarSaveTask: Task<Void, Never>?
+    /// The capture history, so a commit can refresh the recording's thumbnail
+    /// and duration pill.
+    @ObservationIgnored private weak var capture: CaptureCenter?
     @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var didPlayToEndObserver: NSObjectProtocol?
 
@@ -123,8 +136,11 @@ final class VideoEditorState {
     func seed(url: URL, capture: CaptureCenter) {
         guard self.url == nil else { return }
         self.url = url
+        self.capture = capture
+        let source = VideoOriginals.editSource(for: url)
+        self.editSourceURL = source
 
-        let item = AVPlayerItem(url: url)
+        let item = AVPlayerItem(url: source)
         let player = AVPlayer(playerItem: item)
         // Looping is handled within [in, out]; never let AVPlayer overshoot.
         player.actionAtItemEnd = .pause
@@ -132,7 +148,7 @@ final class VideoEditorState {
         self.cleanupPlayer = player
 
         installObservers(on: player)
-        Task { await loadMetadata(url: url) }
+        Task { await loadMetadata(url: source) }
     }
 
     private func installObservers(on player: AVPlayer) {
@@ -153,6 +169,13 @@ final class VideoEditorState {
         timeObserver = observer
         cleanupTimeObserver = observer
 
+        installEndObserver(on: player)
+    }
+
+    /// The did-play-to-end observer is bound to the *item*, so it is re-installed
+    /// whenever the player is re-pointed at a different asset.
+    private func installEndObserver(on player: AVPlayer) {
+        if let didPlayToEndObserver { NotificationCenter.default.removeObserver(didPlayToEndObserver) }
         let endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -163,6 +186,19 @@ final class VideoEditorState {
         }
         didPlayToEndObserver = endObserver
         cleanupEndObserver = endObserver
+    }
+
+    /// Re-point the player at `source` (the preserved original, after the first
+    /// save turned the recording itself into the trimmed output), keeping the
+    /// playhead and play state.
+    private func rebindPlayer(to source: URL) {
+        guard let player else { return }
+        let wasPlaying = isPlaying
+        let resumeAt = currentTime
+        player.replaceCurrentItem(with: AVPlayerItem(url: source))
+        installEndObserver(on: player)
+        seek(to: resumeAt)
+        if wasPlaying { player.play() }
     }
 
     private func loadMetadata(url: URL) async {
@@ -181,19 +217,26 @@ final class VideoEditorState {
         self.poster = poster
         self.frameRate = fps
         self.trim = VideoTrim(duration: seconds)
-        // Recall persisted edits (sidecar) so a trim/crop made in an earlier
-        // session survives the window closing. A saved trim is the recording's
-        // state, not a pending action, so it folds straight into the applied
-        // window with NO undo step — opening a previously trimmed video shows it
-        // trimmed with nothing to undo. Trim handles only appear in trim mode,
-        // where Reset restores the full length.
-        if let edits = VideoEditsSidecar.load(for: url) {
-            if let saved = edits.trim, saved.isTrimmed {
-                self.appliedIn = saved.inPoint
-                self.appliedOut = saved.outPoint
-                self.trim = VideoTrim(duration: duration)
+        // Recall the recording's edits so reopening it shows what it shows in
+        // history. They fold straight into the applied window with NO undo step
+        // — this is the recording's state, not a pending action. Trim handles
+        // only appear in trim mode, where Reset restores the full length.
+        //
+        // `committedEdits` is what the stored file already HAS baked in, and it
+        // is the clean baseline: matching it means nothing to save. A recording
+        // trimmed before phase 18 has a sidecar but no preserved original, so
+        // its edits recall as *unsaved* — the user gets a save prompt instead of
+        // silently losing a trim that was never applied.
+        if let mediaURL = self.url {
+            self.committedEdits = VideoSaveState.committedEdits(for: mediaURL)
+            if let edits = VideoEditsSidecar.load(for: mediaURL) {
+                if let saved = edits.trim, saved.isTrimmed {
+                    self.appliedIn = saved.inPoint
+                    self.appliedOut = saved.outPoint
+                    self.trim = VideoTrim(duration: duration)
+                }
+                self.crop = edits.crop
             }
-            self.crop = edits.crop
         }
         self.isReady = seconds > 0
         self.metadataDidLoad = true
@@ -295,24 +338,122 @@ final class VideoEditorState {
         seek(to: min(max(trim.inPoint, seconds), trim.outPoint))
     }
 
-    // MARK: - Edits persistence
+    // MARK: - Saving (phase 18)
 
-    /// The cumulative edits every export/copy path should honor — the composed
-    /// trim plus the crop, with no-op edits dropped.
+    /// The cumulative edits, measured against `editSourceURL` — the composed
+    /// trim plus the crop, with no-op edits dropped. This is what a save
+    /// commits, and what Export/Copy apply for edits not yet saved.
     var exportEdits: VideoEdits {
         VideoEdits(trim: exportTrim, crop: crop).normalized(videoSize: naturalSize)
     }
 
-    /// Persist the current edits to the `.photonzedits` sidecar (debounced —
-    /// handle drags mutate the trim once per pointer move). This is what lets
-    /// the history overlay's export/copy honor edits after this window closes.
-    private func persistEdits() {
-        guard url != nil, isReady else { return }
-        sidecarSaveTask?.cancel()
-        sidecarSaveTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled, let self, let url = self.url else { return }
-            VideoEditsSidecar.save(self.exportEdits, for: url)
+    /// The edits the stored recording already has baked in — the clean
+    /// baseline, the video sibling of `EditorState.savedDocument`. Observed, so
+    /// the dirty dot and the Save affordance track it live.
+    private(set) var committedEdits = VideoEdits()
+
+    /// True while a save's re-encode is in flight.
+    private(set) var isSaving = false
+
+    /// Whether closing this window would lose work — the same question
+    /// `EditorState.hasUnsavedChanges` answers for an image.
+    var hasUnsavedChanges: Bool {
+        guard isReady, url != nil else { return false }
+        return VideoSaveState.needsSave(edits: exportEdits, committed: committedEdits)
+    }
+
+    /// True when there is a save to perform (drives ⌘S / the Save button).
+    var canSave: Bool { isReady && url != nil && !isSaving }
+
+    /// ⌘S: **commit** the trim/crop into the stored recording, so the file that
+    /// history hands out — drag, clipboard, anything reading it — is the
+    /// trimmed media. The pre-edit bytes are preserved as a hidden original
+    /// first, so the edit stays reversible: reopen, clear the trim, save again.
+    ///
+    /// Mirrors the image editor's ⌘S writing the flattened composite back into
+    /// the capture file. `completion(true)` once the recording is saved (or had
+    /// nothing to save); `completion(false)` if the commit failed, so the close
+    /// confirmation keeps the window open rather than dropping the edits.
+    func save(completion: (@MainActor (Bool) -> Void)? = nil) {
+        guard let mediaURL = url, isReady else {
+            completion?(true) // nothing loaded, nothing to lose
+            return
+        }
+        // Never claim "saved" while an earlier commit is still running — edits
+        // made since it started would be dropped on the floor.
+        guard !isSaving else {
+            completion?(false)
+            return
+        }
+        let edits = exportEdits
+        guard let plan = VideoCommitPlanner.plan(mediaURL: mediaURL, edits: edits,
+                                                 committed: committedEdits,
+                                                 hasOriginal: VideoOriginals.exists(for: mediaURL))
+        else {
+            committedEdits = edits // already true on disk
+            completion?(true)
+            return
+        }
+        isSaving = true
+        Task {
+            do {
+                try await VideoAssetCommit.commit(plan)
+                committedEdits = edits
+                // The first commit creates the original; from here on the
+                // recording itself is the trimmed output, so keep editing (and
+                // playing) the original.
+                if plan.originalToPreserve != nil {
+                    let source = VideoOriginals.url(for: mediaURL)
+                    editSourceURL = source
+                    rebindPlayer(to: source)
+                }
+                isSaving = false
+                // The stored media changed: refresh the history thumbnail and
+                // duration pill.
+                capture?.store.reload()
+                completion?(true)
+            } catch {
+                isSaving = false
+                presentSaveFailure(error)
+                completion?(false)
+            }
+        }
+    }
+
+    /// Restore the whole recording: clears the trim and crop so the next save
+    /// copies the preserved original back over the stored file. Only offered
+    /// once an original exists — before the first save there is nothing to
+    /// revert to, and Undo already covers the session.
+    var canRevertToOriginal: Bool {
+        guard let url else { return false }
+        return VideoOriginals.exists(for: url) && (hasEdits || !committedEdits.isEmpty)
+    }
+
+    func revertToOriginal() {
+        guard canRevertToOriginal else { return }
+        editUndo.append(EditStep(kind: .trim, appliedIn: appliedIn, appliedOut: appliedOut,
+                                 trim: trim, crop: crop))
+        appliedIn = 0
+        appliedOut = originalDuration
+        trim = VideoTrim(duration: originalDuration)
+        crop = nil
+        isTrimming = false
+        isCropping = false
+        pause()
+        seek(to: 0)
+    }
+
+    private func presentSaveFailure(_ error: Error) {
+        NSLog("Couldn't save the recording: \(error)")
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Couldn't save the recording"
+        alert.informativeText = String(describing: error)
+        alert.addButton(withTitle: "OK")
+        if let hostWindow {
+            alert.beginSheetModal(for: hostWindow, completionHandler: nil)
+        } else {
+            alert.runModal()
         }
     }
 
@@ -323,7 +464,6 @@ final class VideoEditorState {
         pause()
         trim.setIn(seconds, duration: duration)
         seek(to: trim.inPoint)
-        persistEdits()
     }
 
     /// Drag the out-handle; seeking to the out-point so the preview shows it.
@@ -331,7 +471,6 @@ final class VideoEditorState {
         pause()
         trim.setOut(seconds, duration: duration)
         seek(to: trim.outPoint)
-        persistEdits()
     }
 
     /// True when at least one applied edit can be undone this session.
@@ -356,7 +495,6 @@ final class VideoEditorState {
     /// Clear the selection back to the whole working clip (stay in trim mode).
     func resetTrimSelection() {
         trim = VideoTrim(duration: duration)
-        persistEdits()
     }
 
     /// Finish trimming: fold any selection into the working window (undoable
@@ -364,7 +502,7 @@ final class VideoEditorState {
     func commitTrim() {
         isTrimming = false
         trimBeforeSession = nil
-        if trim.isTrimmed { applyTrim() } else { persistEdits() }
+        if trim.isTrimmed { applyTrim() }
     }
 
     /// Cancel trimming, restoring the selection from when the mode began.
@@ -372,13 +510,12 @@ final class VideoEditorState {
         isTrimming = false
         if let prev = trimBeforeSession { trim = prev }
         trimBeforeSession = nil
-        persistEdits()
     }
 
     /// Apply the live trim: shrink the working clip to `[in, out]`. The timeline,
     /// duration, and playhead re-seat to the kept range so further edits compose
-    /// on top; export maps the cumulative window back onto the source file. The
-    /// source file is never modified — undo via `undoLastEdit`.
+    /// on top; the cumulative window maps back onto the original file. Nothing
+    /// on disk changes until a save — undo via `undoLastEdit` before then.
     func applyTrim() {
         guard trim.isTrimmed else { return }
         editUndo.append(EditStep(kind: .trim, appliedIn: appliedIn, appliedOut: appliedOut,
@@ -388,7 +525,6 @@ final class VideoEditorState {
         trim = VideoTrim(duration: duration)
         pause()
         seek(to: 0)
-        persistEdits()
     }
 
     /// Undo the most recent applied edit, restoring the editable state captured
@@ -409,7 +545,6 @@ final class VideoEditorState {
             }
             seek(to: trim.inPoint)
         }
-        persistEdits()
     }
 
     // MARK: - Crop editing (phase 13.4)
@@ -427,7 +562,6 @@ final class VideoEditorState {
     /// Replace the crop region (already in natural-video pixels; clamped here).
     func setCropRect(_ rect: CGRect) {
         crop = VideoCrop(rect: rect, videoSize: naturalSize, aspect: cropAspectSelection)
-        persistEdits()
     }
 
     /// Set the crop aspect lock, re-fitting any existing crop; with none yet,
@@ -437,14 +571,12 @@ final class VideoEditorState {
         if var c = crop {
             c.setAspect(aspect, videoSize: naturalSize)
             crop = c
-            persistEdits()
         }
     }
 
     /// Clear the region but stay in crop mode — back to drag-to-select.
     func resetCropRegion() {
         crop = nil
-        persistEdits()
     }
 
     /// Finish cropping, keeping the chosen region (cleared if it's full-frame).
@@ -458,21 +590,18 @@ final class VideoEditorState {
                                      trim: trim, crop: cropBeforeSession))
         }
         cropBeforeSession = nil
-        persistEdits()
     }
 
     /// Cancel cropping, restoring whatever region existed when it began.
     func cancelCrop() {
         isCropping = false
         crop = cropBeforeSession
-        persistEdits()
     }
 
     /// Reset to the full frame.
     func clearCrop() {
         crop = nil
         isCropping = false
-        persistEdits()
     }
 
     /// The trim to apply at export, in **source-file** seconds: the cumulative

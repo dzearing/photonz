@@ -62,12 +62,24 @@ struct EditorCommands: Commands {
             Button("Open…") { coordinator.presentOpenPanel() }
                 .keyboardShortcut("o", modifiers: .command)
             Divider()
-            Button("Save") { editor?.saveDocument() }
-                .keyboardShortcut("s", modifiers: .command)
-                .disabled(editor?.document == nil)
-            Button("Save As…") { editor?.saveDocumentAs() }
-                .keyboardShortcut("s", modifiers: [.command, .shift])
-                .disabled(editor?.document == nil)
+            // ⌘S means the same thing in both editors: commit back to where
+            // the media came from. For an image that's the flattened composite
+            // written into the capture file; for a recording it's the trim/crop
+            // baked into the stored MP4 (the original is preserved alongside,
+            // so it stays reversible).
+            Button("Save") {
+                if let editor { editor.saveDocument() } else { video?.save() }
+            }
+            .keyboardShortcut("s", modifiers: .command)
+            .disabled(editor?.document == nil && !(video?.canSave ?? false))
+            // For a recording, "save a copy somewhere else" IS the MP4 export —
+            // same panel, same re-encode, no second flow to discover.
+            Button("Save As…") {
+                if let editor { editor.saveDocumentAs() }
+                else if let video { coordinator.saveRecording(video, as: .mp4) }
+            }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+            .disabled(editor?.document == nil && !(video?.isReady ?? false))
             Button("Save to Capture History") {
                 if let editor, let image = editor.compositeImage(),
                    let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
@@ -150,6 +162,12 @@ struct EditorCommands: Commands {
             .disabled(!hasVideo)
             Button("Reset Crop") { video?.clearCrop() }
                 .disabled(!(video?.crop != nil))
+            Divider()
+            // The saved trim/crop is reversible: the untouched original is kept
+            // beside the recording, so this clears the edits and the next save
+            // puts the whole clip back.
+            Button("Revert to Original") { video?.revertToOriginal() }
+                .disabled(!(video?.canRevertToOriginal ?? false))
             Divider()
             Button("Export MP4…") {
                 if let video { coordinator.saveRecording(video, as: .mp4) }

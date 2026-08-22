@@ -1,9 +1,10 @@
 import CoreGraphics
 import Foundation
 
-/// Non-destructive trim window for a recording (phase 13.3). Holds the in/out
-/// points in seconds; the clip plays (and exports) only within `[inPoint,
-/// outPoint]`. Pure value type — the `AVPlayer`/export plumbing lives app-side.
+/// Trim window for a recording (phase 13.3). Holds the in/out points in
+/// seconds; the clip plays (and exports) only within `[inPoint, outPoint]`, and
+/// saving commits that window into the stored file (phase 18). Pure value type
+/// — the `AVPlayer`/export plumbing lives app-side.
 ///
 /// Editing rules: both points clamp to `[0, duration]`, a minimum window is
 /// enforced, and moving one handle past the other **pushes** the other instead
@@ -115,11 +116,16 @@ public struct VideoTrim: Codable, Sendable, Hashable {
     }
 }
 
-/// The persisted non-destructive edits for a recording: the trim window and
-/// crop region, stored in a `.photonzedits` sidecar next to the media file (the
-/// video sibling of the image editor's layered `.photonz` sidecar). Persisting
-/// them is what lets the history overlay's export/copy honor edits made in a
-/// video-editor window — the source MP4 is never modified.
+/// The edits that produced a recording's current media file: the trim window
+/// and crop region, in **preserved-original** seconds/pixels, stored in a
+/// `.photonzedits` sidecar next to the media (the video sibling of the image
+/// editor's layered `.photonz` sidecar).
+///
+/// Since phase 18 the stored file is the truth: saving bakes these in, so no
+/// consumer re-applies them. What the sidecar buys is reversibility — the
+/// editor reopens against `VideoOriginals.editSource` and this record puts the
+/// trim handles back where they were, so the edit can be widened, tightened, or
+/// cleared away entirely.
 public struct VideoEdits: Codable, Sendable, Hashable {
     /// Kept window in source-file seconds; nil = whole clip.
     public var trim: VideoTrim?
@@ -148,7 +154,9 @@ public struct VideoEdits: Codable, Sendable, Hashable {
 /// Sidecar IO for `VideoEdits`: same folder, same basename as the recording,
 /// `.photonzedits` extension (deliberately not a media extension, so the
 /// capture-folder scan never lists it as history). Best-effort like the image
-/// sidecar — a failed write loses edits persistence, never media.
+/// sidecar — a failed write loses the record of how the file was derived, never
+/// the media itself. Written only by a save (`VideoAssetCommit`), so it always
+/// describes what the stored file actually has baked in.
 public enum VideoEditsSidecar {
     public static func url(for mediaURL: URL) -> URL {
         mediaURL.deletingPathExtension().appendingPathExtension("photonzedits")
@@ -171,8 +179,9 @@ public enum VideoEditsSidecar {
     }
 }
 
-/// Non-destructive crop region for a recording (phase 13.4). Stores a `CGRect`
-/// in **natural-video-pixel space, top-left origin** (the same convention the
+/// Crop region for a recording (phase 13.4), applied to the stored file when the
+/// recording is saved (phase 18). Stores a `CGRect` in **natural-video-pixel
+/// space, top-left origin** (the same convention the
 /// document model uses), plus an optional aspect lock. All editing reuses the
 /// image editor's `Crop`/`CropAspect`/`Geometry.clampCrop` geometry verbatim —
 /// only the storage and the clamp-to-video-size wrapper are new. The bottom-left

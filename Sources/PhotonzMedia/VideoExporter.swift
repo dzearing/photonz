@@ -10,7 +10,7 @@ import UniformTypeIdentifiers
 /// `AnimatedExportPlanner` (PhotonzCore); this is the AVFoundation / ImageIO shell.
 extension RecordingFormat {
     /// The save-panel content type for this output format.
-    var savePanelType: UTType {
+    public var savePanelType: UTType {
         switch self {
         case .mp4: return .mpeg4Movie
         case .gif: return .gif
@@ -19,10 +19,10 @@ extension RecordingFormat {
     }
 }
 
-enum VideoExporter {
+public enum VideoExporter {
 
     /// Recording length in seconds.
-    static func duration(of url: URL) async -> TimeInterval {
+    public static func duration(of url: URL) async -> TimeInterval {
         let asset = AVURLAsset(url: url)
         guard let seconds = try? await asset.load(.duration).seconds, seconds.isFinite else { return 0 }
         return seconds
@@ -32,7 +32,7 @@ enum VideoExporter {
     /// portrait recording reports portrait dimensions). Used by the in-app
     /// editor's crop overlay (phase 13.3/13.4). Falls back to `.zero` if the
     /// track can't be read.
-    static func orientedNaturalSize(of url: URL) async -> CGSize {
+    public static func orientedNaturalSize(of url: URL) async -> CGSize {
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .video).first,
               let natural = try? await track.load(.naturalSize),
@@ -43,50 +43,28 @@ enum VideoExporter {
 
     /// The video's nominal frame rate (fps), for frame-accurate ←/→ stepping in
     /// the editor. Falls back to 30 if the track can't be read or reports 0.
-    static func frameRate(of url: URL) async -> Double {
+    public static func frameRate(of url: URL) async -> Double {
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .video).first,
               let fps = try? await track.load(.nominalFrameRate), fps > 0 else { return 30 }
         return Double(fps)
     }
 
-    /// A representative frame for the history thumbnail — sampled a hair into the
-    /// clip so it isn't a black first frame. Honors persisted edits so the
-    /// thumbnail shows what an export would produce: sampled inside the trim
-    /// window, cropped to the crop region.
-    static func posterFrame(of url: URL, maxDimension: CGFloat = 600,
-                            edits: VideoEdits = VideoEdits()) async -> CGImage? {
+    /// A representative frame for the history thumbnail — sampled a hair into
+    /// the clip so it isn't a black first frame. The stored file is the truth
+    /// (phase 18): a saved trim/crop is already baked in, so there is nothing to
+    /// re-apply here.
+    public static func posterFrame(of url: URL, maxDimension: CGFloat = 600) async -> CGImage? {
         let asset = AVURLAsset(url: url)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
-        // With a crop we must keep full resolution until after cropping.
-        if edits.crop == nil {
-            generator.maximumSize = CGSize(width: maxDimension, height: maxDimension)
-        }
-        // A trimmed clip must sample inside the kept window — the default
-        // (loose) tolerance could snap to a keyframe outside it.
-        if edits.trim != nil {
-            generator.requestedTimeToleranceBefore = .zero
-            generator.requestedTimeToleranceAfter = .zero
-        }
+        generator.maximumSize = CGSize(width: maxDimension, height: maxDimension)
         let seconds = await duration(of: url)
-        let start = edits.trim?.inPoint ?? 0
-        let end = edits.trim?.outPoint ?? seconds
-        let at = CMTime(seconds: min(start + 0.2, (start + end) / 2), preferredTimescale: 600)
-        guard var frame = try? await generator.image(at: at).image else { return nil }
-        if let crop = edits.crop, let cropped = frame.cropping(to: Geometry.pixelAligned(crop.rect)) {
-            let size = CGSize(width: cropped.width, height: cropped.height)
-            if max(size.width, size.height) > maxDimension {
-                let fit = Geometry.aspectFit(size, in: CGSize(width: maxDimension, height: maxDimension))
-                frame = scaled(cropped, to: fit) ?? cropped
-            } else {
-                frame = cropped
-            }
-        }
-        return frame
+        let at = CMTime(seconds: min(0.2, seconds / 2), preferredTimescale: 600)
+        return try? await generator.image(at: at).image
     }
 
-    enum ExportError: Error { case noDestination, generationFailed, noVideoTrack, exportFailed }
+    public enum ExportError: Error { case noDestination, generationFailed, noVideoTrack, exportFailed }
 
     /// Re-encode the recording at `url` to an animated GIF or HEIC at
     /// `destination`, honoring an optional `trim` window and `crop` region
@@ -98,7 +76,7 @@ enum VideoExporter {
     /// `onProgress(completedFrames, totalFrames)` fires after each frame is
     /// appended, so a caller can surface GIF-prep progress. It's invoked off the
     /// main actor (this whole function runs off-main) — hop before touching UI.
-    static func exportAnimated(from url: URL, to destination: URL,
+    public static func exportAnimated(from url: URL, to destination: URL,
                                format: RecordingFormat,
                                trim: VideoTrim? = nil, crop: VideoCrop? = nil,
                                targetFPS: Double = 15, maxDimension: CGFloat = 800,
@@ -151,7 +129,7 @@ enum VideoExporter {
     /// size and whose layer-instruction transform translates the cropped origin
     /// to (0,0) — accounting for the track's `preferredTransform` and Core
     /// Video's bottom-left origin — then writes H.264/.mp4.
-    static func exportMP4(from url: URL, to destination: URL,
+    public static func exportMP4(from url: URL, to destination: URL,
                           trim: VideoTrim, crop: VideoCrop?) async throws {
         let asset = AVURLAsset(url: url)
         let seconds = await duration(of: url)

@@ -1,13 +1,42 @@
 import AppKit
 import SwiftUI
 
+/// What the close confirmation needs from an editor window, so image and video
+/// windows behave identically: both know whether they are dirty, what they are
+/// called, and how to save. Saving is completion-based because committing a
+/// video re-encodes (the image path just calls back immediately).
+@MainActor
+protocol SaveableEditor: AnyObject {
+    var hasUnsavedChanges: Bool { get }
+    var windowTitle: String { get }
+    var hostWindow: NSWindow? { get set }
+    /// `completion(true)` once the document is saved (or had nothing to save);
+    /// `completion(false)` when the save was cancelled or failed, so the window
+    /// stays open instead of dropping the edits.
+    func saveForClose(completion: @escaping @MainActor (Bool) -> Void)
+}
+
+extension EditorState: SaveableEditor {
+    func saveForClose(completion: @escaping @MainActor (Bool) -> Void) {
+        saveDocument()
+        // A cancelled Save-As panel leaves the document dirty.
+        completion(!hasUnsavedChanges)
+    }
+}
+
+extension VideoEditorState: SaveableEditor {
+    func saveForClose(completion: @escaping @MainActor (Bool) -> Void) {
+        save { completion($0) }
+    }
+}
+
 /// Installs the standard "Do you want to save the changes…" confirmation on an
 /// editor window. SwiftUI's `WindowGroup` offers no close veto, so a delegate
 /// PROXY takes the window's delegate slot: it answers `windowShouldClose`
 /// itself and transparently forwards every other delegate call to SwiftUI's
 /// original delegate (which still runs scene teardown, resize persistence, …).
 struct WindowCloseGuard: NSViewRepresentable {
-    let editorState: EditorState
+    let editorState: any SaveableEditor
 
     func makeNSView(context: Context) -> InstallerView {
         let view = InstallerView()
@@ -25,7 +54,7 @@ struct WindowCloseGuard: NSViewRepresentable {
     /// sets first. Using it as the "already installed" marker silently disabled
     /// the guard entirely (the v0.12.0 silent-discard regression).
     final class InstallerView: NSView {
-        weak var editorState: EditorState?
+        weak var editorState: (any SaveableEditor)?
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
@@ -98,12 +127,12 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
     // `nonisolated(unsafe)`: read from the nonisolated forwarding overrides
     // below; window delegate dispatch only ever happens on the main thread.
     nonisolated(unsafe) private weak var original: (any NSWindowDelegate)?
-    private weak var editorState: EditorState?
+    private weak var editorState: (any SaveableEditor)?
 
     /// The guarded editor, for the app-termination sweep.
-    var editor: EditorState? { editorState }
+    var editor: (any SaveableEditor)? { editorState }
 
-    init(original: (any NSWindowDelegate)?, editorState: EditorState) {
+    init(original: (any NSWindowDelegate)?, editorState: any SaveableEditor) {
         self.original = original
         self.editorState = editorState
     }
@@ -153,14 +182,16 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
             }
             switch response {
             case .alertFirstButtonReturn: // Save
-                editorState.saveDocument()
-                // A cancelled Save-As panel leaves the document dirty — the
-                // window stays open rather than silently dropping the edits.
-                if !editorState.hasUnsavedChanges {
-                    window.close() // close(), not performClose(): skip re-asking
-                    completion?(true)
-                } else {
-                    completion?(false)
+                // A cancelled Save-As panel (or a failed video commit) leaves
+                // the document dirty — the window stays open rather than
+                // silently dropping the edits.
+                editorState.saveForClose { saved in
+                    if saved {
+                        window.close() // close(), not performClose(): skip re-asking
+                        completion?(true)
+                    } else {
+                        completion?(false)
+                    }
                 }
             case .alertThirdButtonReturn: // Don't Save
                 window.close()

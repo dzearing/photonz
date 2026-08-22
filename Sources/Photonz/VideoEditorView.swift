@@ -7,7 +7,9 @@ import SwiftUI
 /// QuickTime-style glass controller that auto-hides during playback and returns
 /// on mouse movement or a keypress. The controller carries a neutral scrubber,
 /// centered transport, volume, and the explicit trim/crop edit modes. Trim and
-/// crop are non-destructive (applied at export). Mirrors `EditorView`'s idioms.
+/// crop stay editable until you save; saving (⌘S) commits them into the stored
+/// recording, exactly like saving an image writes its composite back into the
+/// capture file. Mirrors `EditorView`'s idioms.
 struct VideoEditorView: View {
     @Environment(VideoEditorState.self) private var state
     @Environment(AppCoordinator.self) private var coordinator
@@ -341,9 +343,11 @@ struct VideoEditorView: View {
     }
 
     /// The right-side actions, all sharing the circular icon style: undo (when
-    /// there's an applied edit to revert), trim, crop, copy, export.
+    /// there's an applied edit to revert), trim, crop, save (when there's an
+    /// edit to commit), copy, export.
     private var editButtons: some View {
         HStack(spacing: 6) {
+            saveButton
             if let action = state.lastEditActionName {
                 Button { state.undoLastEdit() } label: {
                     Image(systemName: "arrow.uturn.backward")
@@ -365,6 +369,26 @@ struct VideoEditorView: View {
 
             copyMenu
             exportMenu
+        }
+    }
+
+    /// Save commits the trim/crop into the stored recording — the ordinary,
+    /// expected path, not a second export flow. It appears once there's
+    /// something to commit (and while the commit runs), the same way the Undo
+    /// affordance appears once there's something to undo.
+    @ViewBuilder
+    private var saveButton: some View {
+        if state.isSaving {
+            ProgressView()
+                .controlSize(.small)
+                .frame(width: 28, height: 28)
+                .help("Saving…")
+        } else if state.hasUnsavedChanges {
+            Button { state.save() } label: {
+                Image(systemName: "arrow.down.doc")
+            }
+            .buttonStyle(IconActionButtonStyle())
+            .help("Save (⌘S)")
         }
     }
 
