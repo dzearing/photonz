@@ -6,15 +6,22 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.776Z",
-  "updated": "2026-08-22T22:40:48.777Z",
+  "updated": "2026-08-22T22:53:08.237Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Audit docs/design/mocks/pages/dashboard.html (the Project dashboard) against shared/AGENTS.md rules: tokens only, 4pt spacing, ic-* icons only, prefixed local classes, light and dark themes, no em dashes in copy. Fix violations. Acceptance: clean pass of the audit rules in both themes.",
-  "acceptance": [],
+  "acceptance": [
+    "docs/design/mocks/pages/dashboard.html passes every shared/AGENTS.md audit rule: tokens only, 4pt spacing, ic-* icons only, prefixed local classes, no em dashes in copy",
+    "Verified visually in both light and dark themes"
+  ],
   "log": [
     {
       "t": "2026-08-22T22:40:48.777Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T22:53:08.237Z",
+      "note": "triage: filled in concrete acceptance criteria"
     }
   ]
 }

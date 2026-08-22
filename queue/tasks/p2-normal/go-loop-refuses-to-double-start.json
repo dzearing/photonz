@@ -1,0 +1,20 @@
+{
+  "id": "go-loop-refuses-to-double-start",
+  "title": "Go loop refuses to double-start",
+  "priority": "p2-normal",
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T22:53:21.283Z",
+  "updated": "2026-08-22T22:53:21.283Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "history.jsonl shows two loop_started events 42 seconds apart on 2026-08-22 (pids 56941 and 59762), so two loops can run at once and race on task claims. Make go-loop.sh check status.json on startup: if it records a pid that is still alive, exit with a clear message instead of starting a second loop. A stale pid (process gone) is fine to take over. Acceptance: starting the loop twice leaves exactly one running loop and the second invocation explains why it declined.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T22:53:21.283Z",
+      "note": "created (manual)"
+    }
+  ]
+}

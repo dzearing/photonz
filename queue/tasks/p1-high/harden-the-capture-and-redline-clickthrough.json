@@ -6,15 +6,22 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.677Z",
-  "updated": "2026-08-22T22:48:26.740Z",
+  "updated": "2026-08-22T22:53:08.237Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Audit docs/design/mocks/pages/capture-wt.html against the UX-PATTERNS.md section 9 checklist (shell, icons, canonical controls, responsive, bounded panels, copy rules). Fix every violation in place. Area: design-study. Acceptance: page passes all checklist gates and still tells the capture-to-redline story end to end.",
-  "acceptance": [],
+  "acceptance": [
+    "docs/design/mocks/pages/capture-wt.html passes every UX-PATTERNS.md section 9 gate (shell, icons, canonical controls, responsive, bounded panels, copy rules)",
+    "The page still tells the capture-to-redline story end to end after fixes"
+  ],
   "log": [
     {
       "t": "2026-08-22T22:40:48.677Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T22:53:08.237Z",
+      "note": "triage: filled in concrete acceptance criteria"
     }
   ]
 }

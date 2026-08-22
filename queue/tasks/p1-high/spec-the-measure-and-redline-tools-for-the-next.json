@@ -6,15 +6,23 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.702Z",
-  "updated": "2026-08-22T22:40:48.703Z",
+  "updated": "2026-08-22T22:53:08.237Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Primary real-world use of Photonz is UX redlining of screenshots. Write docs/design/next-measure.md translating the capture-wt and redline mock concepts into an implementable spec for the Next release: measurement overlays, gap/size readouts, alignment checks, export of annotations. Ground every feature in the mock pages; flag anything speculative as a decision instead of speccing it. Acceptance: spec reviewed against mocks, open questions filed as queue decisions.",
-  "acceptance": [],
+  "acceptance": [
+    "docs/design/next-measure.md exists and covers measurement overlays, gap and size readouts, alignment checks, and annotation export",
+    "Every specced feature traces back to a mock page (capture-wt or redline concepts); nothing speculative is specced",
+    "Each open question is filed as a queue decision, not left in the doc"
+  ],
   "log": [
     {
       "t": "2026-08-22T22:40:48.703Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T22:53:08.237Z",
+      "note": "triage: filled in concrete acceptance criteria"
     }
   ]
 }

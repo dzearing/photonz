@@ -6,15 +6,23 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.752Z",
-  "updated": "2026-08-22T22:40:48.752Z",
+  "updated": "2026-08-22T22:53:08.237Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "For each usage clickthrough page listed in docs/design/mocks/index.html (capture-wt, img-retouch-wt, img-grade-wt, walk, composites, component-configure-wt, icon-draw-wt, icon-gradient-wt, video-*-wt, ds-build-wt, agent-generate-wt): verify it returns 200 and passes the UX-PATTERNS section 9 gates. File one queue task per failing page instead of fixing inline. Acceptance: a pass/fail table in the task log and a filed task per failure.",
-  "acceptance": [],
+  "notes": "For each usage clickthrough page listed in docs/design/mocks/index.html (capture-wt, img-retouch-wt, img-grade-wt, walk, composites, component-configure-wt, icon-draw-wt, icon-gradient-wt, video-*-wt, ds-build-wt, agent-generate-wt): verify it returns 200 and passes the UX-PATTERNS section 9 gates. File one queue task per failing page instead of fixing inline. Acceptance: a pass/fail table in the task log and a filed task per failure. Skip capture-wt in this sweep: task harden-the-capture-and-redline-clickthrough (p1) already audits and fixes it.",
+  "acceptance": [
+    "A pass/fail table covering every clickthrough page listed in docs/design/mocks/index.html is recorded in this task log",
+    "One queue task filed per failing page; no inline fixes",
+    "capture-wt is skipped here because harden-the-capture-and-redline-clickthrough already owns it"
+  ],
   "log": [
     {
       "t": "2026-08-22T22:40:48.752Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T22:53:08.237Z",
+      "note": "triage: filled in concrete acceptance criteria; scoped to avoid overlap with the capture-wt harden task"
     }
   ]
 }

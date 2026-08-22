@@ -4,3 +4,8 @@
 {"t":"2026-08-22T22:40:48.753Z","ev":"task_created","id":"sweep-every-clickthrough-page-for-checklist-conf","priority":"p2-normal","title":"Sweep every clickthrough page for checklist conformance"}
 {"t":"2026-08-22T22:40:48.777Z","ev":"task_created","id":"audit-dashboard-page-for-design-system-conforman","priority":"p2-normal","title":"Audit dashboard page for design system conformance"}
 {"t":"2026-08-22T22:40:48.802Z","ev":"task_created","id":"icon-conformance-audit-across-mock-pages","priority":"p3-low","title":"Icon conformance audit across mock pages"}
+{"t":"2026-08-22T22:51:16.137Z","ev":"loop_started","pid":56941}
+{"t":"2026-08-22T22:51:58.562Z","ev":"loop_started","pid":59762}
+{"t":"2026-08-22T22:53:21.284Z","ev":"task_created","id":"go-loop-refuses-to-double-start","priority":"p2-normal","title":"Go loop refuses to double-start"}
+{"t":"2026-08-22T22:53:24.466Z","ev":"triage","summary":"merged 0, moved 0, reset 0, groomed 6 (acceptance criteria added to all tasks; sweep scoped to skip capture-wt), queued 1 (go-loop-refuses-to-double-start)"}
+{"t":"2026-08-22T22:53:51.360Z","ev":"digest","file":"2026-08-22.md"}
