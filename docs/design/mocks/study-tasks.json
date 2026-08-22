@@ -1,6 +1,6 @@
 {
   "project": "Photonz creation-vision direction study",
-  "updated": "2026-07-20",
+  "updated": "2026-08-22",
   "purpose": "Audit the clickable mock for usability + consistency, then keep improving it in bounded tasks: make controls consistent, make interactions legible (drag/choose/create/save/modify), and deeply flesh out real video + image editing workflows.",
   "loop": {
     "contextBudget": "Each task must fit in ~200k context. The coordinator dispatches ONE task at a time to a fresh subagent (its own 200k), or resets its own context via /reset-context with the continuation 'go'.",
@@ -115,11 +115,12 @@
       "title": "Turn Video into a full multi-page section (like Design language): overview + sub-pages",
       "area": "video",
       "priority": "P0",
-      "status": "pending",
+      "status": "skipped",
       "deps": [
         "ctrl-system"
       ],
-      "notes": "User strongly wants video expanded. Rail already supports collapsible sections. [DEFERRED: do after the UX foundation + reconciliation phase.]"
+      "notes": "User strongly wants video expanded. Rail already supports collapsible sections. [DEFERRED: do after the UX foundation + reconciliation phase.]",
+      "triage": "SKIPPED 2026-08-22 (queue import): superseded. The more-examples decomposition already built Video Editing as a full multi-page rail section (video-create-wt, video-animate-wt, video-motion, video-captions, video-transitions, video-audio, video-speed, video-compositing)."
     },
     {
       "id": "video-create-flow",
@@ -168,7 +169,7 @@
       "deps": [
         "ctrl-system"
       ],
-      "notes": "DONE (documents.html): dirty<->saved dot, autosave, Save (\u2318S) appends a version, version-history restore, export presets menu; portable document note."
+      "notes": "DONE (documents.html): dirty<->saved dot, autosave, Save (⌘S) appends a version, version-history restore, export presets menu; portable document note."
     },
     {
       "id": "modify-flow",
@@ -179,7 +180,7 @@
       "deps": [
         "ctrl-system"
       ],
-      "notes": "DONE (documents.html): select->inspect->change cycle on sample objects, live property edits, Undo/Redo (\u2318Z/\u21e7\u2318Z) with history list, non-destructive effects."
+      "notes": "DONE (documents.html): select->inspect->change cycle on sample objects, live property edits, Undo/Redo (⌘Z/⇧⌘Z) with history list, non-destructive effects."
     },
     {
       "id": "ds-switching",
@@ -263,11 +264,13 @@
       "title": "Show Save + dirty-state + autosave across editors (f-020)",
       "area": "workflow",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "ctrl-system"
       ],
-      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]"
+      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]",
+      "queue": "show-save-and-dirty-state-across-editor-mocks",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "glyph-convention",
@@ -276,7 +279,7 @@
       "priority": "P2",
       "status": "done",
       "deps": [],
-      "notes": "DONE (lang scope): unified back-chip glyph; Crop \u2317->\u25f2 to stop colliding with Measure. Remaining minor: patch(\u25c7) vs keyframe(\u25c7) live on different pages (image vs video), not an in-page collision."
+      "notes": "DONE (lang scope): unified back-chip glyph; Crop ⌗->◲ to stop colliding with Measure. Remaining minor: patch(◇) vs keyframe(◇) live on different pages (image vs video), not an in-page collision."
     },
     {
       "id": "quick-copy-fixes",
@@ -303,11 +306,12 @@
       "title": "Global refinement pass: alignment, gaps, dead controls, hover states, wrap issues across the whole study",
       "area": "consistency",
       "priority": "P2",
-      "status": "pending",
+      "status": "skipped",
       "deps": [
         "apply-controls"
       ],
-      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]"
+      "notes": " [DEFERRED: do after the UX foundation + reconciliation phase.]",
+      "triage": "SKIPPED 2026-08-22 (queue import): superseded by the queued clickthrough checklist sweep (sweep-every-clickthrough-page-for-checklist-conf), the conform-pass import, and the re-audit import, which together cover alignment/gaps/dead-controls/hover sweeps with UX-PATTERNS gates."
     },
     {
       "id": "typography-labels",
@@ -651,7 +655,7 @@
       "status": "done",
       "deps": [],
       "title": "Author shared/UX-PATTERNS.md: one app shell, navigation to surfaces (media pool/catalog/tools), panel taxonomy, selection global-vs-contextual, layers flat-vs-grouped, menu/command system, one icon library",
-      "notes": "DONE (v1.0). All six section-10 open questions resolved into baked decisions D1-D6 and propagated into sections 2/6/7. D1: media pool = left-dock Library panel, scope=Media, open via toolbar Library button/\u2325\u2318L/\u2318K, add via +Import/drag-drop/Capture. D2: ONE Library panel, two left-dock tabs (Layers|Library), internal segmented scope switch (Media\u00b7Components\u00b7Styles\u00b7Assets), no per-scope docks. D3: mock shows a compact command surface + \u2318K, NOT a faked native menu bar (shipping app keeps the real menu bar; mock doesn't draw it). D4: canonical ordered tool-strip inventory per app (UI/image/video/draw) with shared tools (Select/Hand/Zoom/Text/Shape/Measure) keeping same glyph+slot everywhere. D5: walkthroughs embed the REAL shell (may reduce, never relocate). D6: adopt \u2318K command palette as the fourth equal command entry, the clearest UI==API==agent proof. This doc is the rubric; app-shell-spec + icon-library-consolidate + ux-audit-run now unblocked."
+      "notes": "DONE (v1.0). All six section-10 open questions resolved into baked decisions D1-D6 and propagated into sections 2/6/7. D1: media pool = left-dock Library panel, scope=Media, open via toolbar Library button/⌥⌘L/⌘K, add via +Import/drag-drop/Capture. D2: ONE Library panel, two left-dock tabs (Layers|Library), internal segmented scope switch (Media·Components·Styles·Assets), no per-scope docks. D3: mock shows a compact command surface + ⌘K, NOT a faked native menu bar (shipping app keeps the real menu bar; mock doesn't draw it). D4: canonical ordered tool-strip inventory per app (UI/image/video/draw) with shared tools (Select/Hand/Zoom/Text/Shape/Measure) keeping same glyph+slot everywhere. D5: walkthroughs embed the REAL shell (may reduce, never relocate). D6: adopt ⌘K command palette as the fourth equal command entry, the clearest UI==API==agent proof. This doc is the rubric; app-shell-spec + icon-library-consolidate + ux-audit-run now unblocked."
     },
     {
       "id": "app-shell-spec",
@@ -662,7 +666,7 @@
         "ux-foundation-doc"
       ],
       "title": "Build ONE reusable app shell in shared DS (title bar + options bar with tool strip + left dock Layers/Library tabs + canvas + right dock Inspector + bottom timeline) and an app-shell.html reference page; pages compose this instead of reinventing chrome",
-      "notes": "DONE. Extended the existing .win/.edit/.toolbar/.timeline system (no parallel shell). New shared classes in an APP SHELL block of shared/photonz-ds.css: .dnav/.dtab(.on) left-dock tab header (Layers|Library); .libtools Library toolbar; .srch reusable capsule search; .libgrid + .libtile(.sel/.comp + .th/.cap/.nm/.mt) draggable tiles; .cmdk \u2318K launcher. Command surface reuses .tool+ic-more + existing .popover/.menu; scope switch reuses .seg. Built pages/app-shell.html reference page: tool strip in exact D4 UI order (Select\u00b7Frame\u00b7Component\u00b7Shape\u00b7Pen\u00b7Text\u00b7Measure\u00b7Hand\u00b7Zoom), Layers|Library tabs + Media\u00b7Components\u00b7Styles\u00b7Assets scope switch, command surface+\u2318K (no faked menu bar), \u00a74 selection shown in 3 places. Documented composition in AGENTS.md ('App shell (compose this, don't reinvent)'). Verified: page+css 200, node --check clean, zero ascii/emoji glyphs, no em dashes, no 'Claude'. Coordinator independently re-verified 200s + new classes present + page clean."
+      "notes": "DONE. Extended the existing .win/.edit/.toolbar/.timeline system (no parallel shell). New shared classes in an APP SHELL block of shared/photonz-ds.css: .dnav/.dtab(.on) left-dock tab header (Layers|Library); .libtools Library toolbar; .srch reusable capsule search; .libgrid + .libtile(.sel/.comp + .th/.cap/.nm/.mt) draggable tiles; .cmdk ⌘K launcher. Command surface reuses .tool+ic-more + existing .popover/.menu; scope switch reuses .seg. Built pages/app-shell.html reference page: tool strip in exact D4 UI order (Select·Frame·Component·Shape·Pen·Text·Measure·Hand·Zoom), Layers|Library tabs + Media·Components·Styles·Assets scope switch, command surface+⌘K (no faked menu bar), §4 selection shown in 3 places. Documented composition in AGENTS.md ('App shell (compose this, don't reinvent)'). Verified: page+css 200, node --check clean, zero ascii/emoji glyphs, no em dashes, no 'Claude'. Coordinator independently re-verified 200s + new classes present + page clean."
     },
     {
       "id": "icon-library-consolidate",
@@ -671,7 +675,7 @@
       "status": "done",
       "deps": [],
       "title": "ONE consistent icon library: enforce one line-icon grammar, fix mixed styles + ascii/emoji glyphs across ALL pages, one-concept-one-icon, add any missing glyphs to the set. Supersedes icon-sweep-rest",
-      "notes": "DONE. (A) Shared-DS fixes: ds.js '\u25be' textContent -> injected `.ic ic-chevron-down`; `.transition::after` '\u292b' -> masked ic-x glyph; added ic-library glyph (+mapped app-shell Library button off the ic-grid stopgap); fixed a `<span class=ic>T</span>` solid-box bug in lang-resize. (B) Added 9 recurring glyphs to shared: chevron-left, star, trash, group, flip-horizontal, flip-vertical, align-left, align-center, align-right (+AGENTS available list). (C) Swept 31 pages via 6 disjoint parallel subagents (~250 icon-role glyph conversions \u25c8\u25be\u25c9T\u25ad\u22ee\u22ef\u2726\u2713 etc -> .ic-*); excluded 10 pages whose only suspects were legit keyboard shortcuts. (D) Baked a durable AGENTS.md carve-out rule: keyboard-shortcut symbols (\u2318\u2325\u21e7\u2303\u2326\u232b\u21a9\u238b) in .kbd/.sc/<code> and prose connectors (\u2192 \u00b7 in flow text) are NOT icons. (E) Standardized ALL backchips onto ic-chevron-left across 17 pages (removed the scaleX(-1) flip stopgaps + literal '\u2039'). (F) Adopted ic-star (ideas favorites x5), ic-trash + ic-group (lang-overlays menuitems). VERIFIED: all 63 pages 200, css 200, js node --check OK; global scan shows only legitimate carve-outs remain (values like \u221222, <kbd> keys, CSS comments, prose breadcrumbs \u25b8, walkthrough \u2190 Back nav text)."
+      "notes": "DONE. (A) Shared-DS fixes: ds.js '▾' textContent -> injected `.ic ic-chevron-down`; `.transition::after` '⤫' -> masked ic-x glyph; added ic-library glyph (+mapped app-shell Library button off the ic-grid stopgap); fixed a `<span class=ic>T</span>` solid-box bug in lang-resize. (B) Added 9 recurring glyphs to shared: chevron-left, star, trash, group, flip-horizontal, flip-vertical, align-left, align-center, align-right (+AGENTS available list). (C) Swept 31 pages via 6 disjoint parallel subagents (~250 icon-role glyph conversions ◈▾◉T▭⋮⋯✦✓ etc -> .ic-*); excluded 10 pages whose only suspects were legit keyboard shortcuts. (D) Baked a durable AGENTS.md carve-out rule: keyboard-shortcut symbols (⌘⌥⇧⌃⌦⌫↩⎋) in .kbd/.sc/<code> and prose connectors (→ · in flow text) are NOT icons. (E) Standardized ALL backchips onto ic-chevron-left across 17 pages (removed the scaleX(-1) flip stopgaps + literal '‹'). (F) Adopted ic-star (ideas favorites x5), ic-trash + ic-group (lang-overlays menuitems). VERIFIED: all 63 pages 200, css 200, js node --check OK; global scan shows only legitimate carve-outs remain (values like −22, <kbd> keys, CSS comments, prose breadcrumbs ▸, walkthrough ← Back nav text)."
     },
     {
       "id": "ux-audit-agent-doc",
@@ -692,7 +696,7 @@
         "ux-audit-agent-doc"
       ],
       "title": "Run the UX-audit agent across ALL pages (disjoint batches) -> ux-audit-findings.json; cluster findings",
-      "notes": "DONE. 7 disjoint read-only audit subagents covered all 63 pages (~180 raw findings). Coordinator clustered into 7 recurring patterns (A shell, B command surface+\u2318K, C left-dock Library tabs, D bespoke library widgets, E selection->Inspector, F bespoke chrome/one-off controls, G icon near-misses + copy tail) written to ux-audit-clusters.md. Clean pages: app-shell, ds-modes, lang-resize, lang-spacing. Drives the conform pass."
+      "notes": "DONE. 7 disjoint read-only audit subagents covered all 63 pages (~180 raw findings). Coordinator clustered into 7 recurring patterns (A shell, B command surface+⌘K, C left-dock Library tabs, D bespoke library widgets, E selection->Inspector, F bespoke chrome/one-off controls, G icon near-misses + copy tail) written to ux-audit-clusters.md. Clean pages: app-shell, ds-modes, lang-resize, lang-spacing. Drives the conform pass."
     },
     {
       "id": "product-model-doc",
@@ -707,23 +711,26 @@
       "id": "foundation-adjust",
       "area": "foundation",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "queued",
       "deps": [
         "product-model-doc"
       ],
-      "title": "Model pass: adjust the shared shell/DS to express the model - workspace switch (Image/UI/Video lens) in the shell, timeline-when-time, adjustment/filter layer as a first-class layer type in the Layers panel + Inspector, and align UX-PATTERNS \u00a71 with 'surfaces are workspaces over one document'. Add any missing icon glyphs the conform pass needs (boolean/union, eyedropper, swap, flow-h/v, dodge-burn, bold, italic).",
-      "notes": "Shared-DS task (sequential, single CSS file). Do BEFORE the conform pass so pages adopt real shared pieces. Add glyphs listed in ux-audit-clusters.md cluster G so subagents stop stopgapping."
+      "title": "Model pass: adjust the shared shell/DS to express the model - workspace switch (Image/UI/Video lens) in the shell, timeline-when-time, adjustment/filter layer as a first-class layer type in the Layers panel + Inspector, and align UX-PATTERNS §1 with 'surfaces are workspaces over one document'. Add any missing icon glyphs the conform pass needs (boolean/union, eyedropper, swap, flow-h/v, dodge-burn, bold, italic).",
+      "notes": "Shared-DS task (sequential, single CSS file). Do BEFORE the conform pass so pages adopt real shared pieces. Add glyphs listed in ux-audit-clusters.md cluster G so subagents stop stopgapping.",
+      "queue": "finish-the-mock-conform-pass-across-all-pages",
+      "triage": "Was in_progress when the mock loop went dormant. The July component rebuild landed the shell pieces (wsw switcher, dock timeline, toggle, titlebar contract); the unverified residue (adjustment/filter layer first-class in Layers + Inspector) is folded into the queued conform-pass task. Note the wsw it built is itself now superseded (see supersede-workspace-switcher)."
     },
     {
       "id": "ia-restructure",
       "area": "foundation",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "done",
       "deps": [
         "product-model-doc"
       ],
       "title": "Restructure index.html navigation into 3 zones: App Design (canonical: model, shell, surfaces, entrypoints, primitives, iconography, design language), Usage clickthroughs (folded under each surface, one template), Prototypes & Ideas (speculative feature pages). Remove the standalone 'Guided walkthrough' section; move its pages into their homes.",
-      "notes": "Single file (index.html) + maybe a new App Design overview page. Reflects PRODUCT-MODEL \u00a76."
+      "notes": "Single file (index.html) + maybe a new App Design overview page. Reflects PRODUCT-MODEL §6.",
+      "triage": "DONE (verified 2026-08-22 during queue import): index.html carries the 3-zone IA (App Design / Usage clickthroughs / Prototypes & ideas rail dividers)."
     },
     {
       "id": "layout-system",
@@ -734,43 +741,49 @@
         "foundation-adjust"
       ],
       "title": "Build the scalable layout/panel system in shared DS (collapsible + resizable panel groups with independent scroll areas, collapsed rails, responsive small-width behavior, floating bottom tool bar with overflow, slide-down overlay/history) and RE-BASE app-shell.html onto it, matching the real shipping app's lean canvas-first language",
-      "notes": "USER REQUIREMENTS (PRODUCT-MODEL \u00a74b): responsive at every width; every dock/panel group collapsible; Photoshop-like resizable panes; long lists (Layers/Effects) scroll inside their own bounded group; history-first capture->edit loop preserved; new capability must reuse the same small pattern vocabulary. Real app reference: floating bottom tool bar w/ overflow collapse + color swatch + zoom; single collapsible right Layers panel; native macOS menu bar; \u2318\u21e7H slide-down history (All/Screenshots/Videos filmstrip + per-item actions); video bottom transport bar."
+      "notes": "USER REQUIREMENTS (PRODUCT-MODEL §4b): responsive at every width; every dock/panel group collapsible; Photoshop-like resizable panes; long lists (Layers/Effects) scroll inside their own bounded group; history-first capture->edit loop preserved; new capability must reuse the same small pattern vocabulary. Real app reference: floating bottom tool bar w/ overflow collapse + color swatch + zoom; single collapsible right Layers panel; native macOS menu bar; ⌘⇧H slide-down history (All/Screenshots/Videos filmstrip + per-item actions); video bottom transport bar."
     },
     {
       "id": "conform-pass",
       "area": "foundation",
       "priority": "P0",
-      "status": "in_progress",
+      "status": "queued",
       "deps": [
         "foundation-adjust",
         "ia-restructure",
         "layout-system"
       ],
-      "title": "Conform ALL pages to the model + shell (batched disjoint subagents) per ux-audit-clusters.md clusters A-G + copy tail: shell composition, command surface+\u2318K, left-dock Library tabs, docked Library instead of bespoke widgets, selection->Inspector, shared controls/timelines/rings, icon near-misses. Promote repeated fixes into shared DS.",
-      "notes": "The big reconcile. Batch by disjoint page sets. Reference ux-audit-clusters.md for exact per-page fixes. Clean-reference pages: app-shell/ds-modes/lang-resize/lang-spacing."
+      "title": "Conform ALL pages to the model + shell (batched disjoint subagents) per ux-audit-clusters.md clusters A-G + copy tail: shell composition, command surface+⌘K, left-dock Library tabs, docked Library instead of bespoke widgets, selection->Inspector, shared controls/timelines/rings, icon near-misses. Promote repeated fixes into shared DS.",
+      "notes": "The big reconcile. Batch by disjoint page sets. Reference ux-audit-clusters.md for exact per-page fixes. Clean-reference pages: app-shell/ds-modes/lang-resize/lang-spacing.",
+      "queue": "finish-the-mock-conform-pass-across-all-pages",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "entries-pass",
       "area": "foundation",
       "priority": "P0",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "conform-pass"
       ],
       "title": "Build ONE consistent blank-slate usage clickthrough per surface (Image, UI, Video) using a single shared walkthrough template that embeds the REAL docked shell in every step (D5). Each: start from the history/launcher blank slate -> click -> reach the key outcome. Fold the old walkthrough pages into this template or move to Prototypes & Ideas.",
-      "notes": "Success criteria 3+4: legible entries + one template so learning one teaches the rest. Depends on the shell being conformed first."
+      "notes": "Success criteria 3+4: legible entries + one template so learning one teaches the rest. Depends on the shell being conformed first.",
+      "queue": "blank-slate-entry-clickthrough-per-surface-on-on",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "reaudit",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "conform-pass",
         "entries-pass"
       ],
       "title": "Re-audit all pages against the 6 PRODUCT-MODEL success criteria; feed misses back into the loop until clean",
-      "notes": "Closes the refine loop. Use ux-audit-agent.md + the 6 criteria."
+      "notes": "Closes the refine loop. Use ux-audit-agent.md + the 6 criteria.",
+      "queue": "re-audit-mock-pages-against-the-product-model-su",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     }
   ],
   "discovered": [
@@ -778,30 +791,35 @@
       "id": "fix-dgrp-grow-crush",
       "area": "foundation",
       "priority": "P0",
-      "status": "pending",
+      "status": "skipped",
       "deps": [],
       "title": "SHARED-DS BUG: with 4 stacked groups the .dgrp.grow Library body collapses to ~8px (editor.html) vs 94px (app-shell). Add a min-height to .dgrp.grow > .dgrp-b (or a shell-level height budget) so every adopter gets a usable Library without hand-tuning --gh and window heights",
-      "notes": "Found by the C3 conform agent. Central CSS fix = retroactively fixes every conformed page, no page rework needed. Apply once shared/photonz-ds.css is free (the operated-walkthrough agent owns it right now)."
+      "notes": "Found by the C3 conform agent. Central CSS fix = retroactively fixes every conformed page, no page rework needed. Apply once shared/photonz-ds.css is free (the operated-walkthrough agent owns it right now).",
+      "triage": "SKIPPED 2026-08-22 (queue import): fixed by the component rebuild. dock.css now has .dgrp.grow{min-height:244px} and .dgrp.grow>.dgrp-b{min-height:200px}."
     },
     {
       "id": "fix-export-share-scale",
       "area": "content",
       "priority": "P2",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "CONTENT BUG in export-share.html: picking SVG or PDF disables the scale segmented control but never resets scale to 1, so the generated filename still reads 'launch-poster@2x.svg'",
-      "notes": "Pre-existing, found by the title-bar sweep agent while re-chroming (it correctly left content alone). A vector format has no @2x."
+      "notes": "Pre-existing, found by the title-bar sweep agent while re-chroming (it correctly left content alone). A vector format has no @2x.",
+      "queue": "export-share-vector-filename-keeps-2x",
+      "triage": "Verified still live 2026-08-22: filename() keeps the @2x suffix when SVG/PDF disables the scale seg."
     },
     {
       "id": "ds-consolidated-cleanup",
       "area": "foundation",
       "priority": "P0",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "build-shell-surfaces"
       ],
       "title": "ONE consolidated shared-DS cleanup pass (run after the systray/toast agent releases shared/*). Land every accumulated central defect + promote the repeatedly hand-rolled primitives, then delete the page-local workarounds they replace",
-      "notes": "ACCUMULATED LIST (each found by a conform agent, each currently worked around per page = the divergence we are removing): (1) `.grow` MUST BE THE LAST dock group - putting .dgrp.grow in the middle causes REAL visual overlap of group headers/bodies (hit on paint.html); add a DS guard (e.g. flex-shrink floor on .dgrp:not(.grow)) or state the rule in AGENTS.md. (2) `.chip` has no `.on` state though it is the natural control for OpenType toggles and export presets (defined page-locally twice). (3) `.efx .en` is styled as a span so making it a real <button> needs appearance:none/border:0/padding:0 + hover/active/focus-visible. (4) titlebar responsive contract (see titlebar-responsive-contract - lift the @container block from #lang-frame). (5) `.spec` specimen-card primitive + SPECIMEN label (makes \u00a74c enforceable by class). (6) shared .is-hover/.is-focus forced-state classes. (7) `.handle` 8-point + rotate. (8) preset-picker, ARTBOARD primitive, .rng/.rrow slider row, canonical toggle/switch. (9) .codeblk display:block + .dgrp.grow min-height (already sent to the systray agent). AFTER landing: sweep pages to delete their now-redundant local overrides. ADDITIONAL (from the title-bar sweeps): (10) `.efx .meta` is only reachable at (0,1,1) specificity so ANY page-local `#page .meta` silently wins - this bit language.html and is now riskier since `.wtitle .meta` became a shared responsive hook; scope it harder or rename. (11) `.dgrp-b` has no scroll affordance, so a bounded group clips its last row with no visual hint that it scrolls - add a fade or scrollbar gutter so the bounded-scroller contract is legible."
+      "notes": "ACCUMULATED LIST (each found by a conform agent, each currently worked around per page = the divergence we are removing): (1) `.grow` MUST BE THE LAST dock group - putting .dgrp.grow in the middle causes REAL visual overlap of group headers/bodies (hit on paint.html); add a DS guard (e.g. flex-shrink floor on .dgrp:not(.grow)) or state the rule in AGENTS.md. (2) `.chip` has no `.on` state though it is the natural control for OpenType toggles and export presets (defined page-locally twice). (3) `.efx .en` is styled as a span so making it a real <button> needs appearance:none/border:0/padding:0 + hover/active/focus-visible. (4) titlebar responsive contract (see titlebar-responsive-contract - lift the @container block from #lang-frame). (5) `.spec` specimen-card primitive + SPECIMEN label (makes §4c enforceable by class). (6) shared .is-hover/.is-focus forced-state classes. (7) `.handle` 8-point + rotate. (8) preset-picker, ARTBOARD primitive, .rng/.rrow slider row, canonical toggle/switch. (9) .codeblk display:block + .dgrp.grow min-height (already sent to the systray agent). AFTER landing: sweep pages to delete their now-redundant local overrides. ADDITIONAL (from the title-bar sweeps): (10) `.efx .meta` is only reachable at (0,1,1) specificity so ANY page-local `#page .meta` silently wins - this bit language.html and is now riskier since `.wtitle .meta` became a shared responsive hook; scope it harder or rename. (11) `.dgrp-b` has no scroll affordance, so a bounded group clips its last row with no visual hint that it scrolls - add a fade or scrollbar gutter so the bounded-scroller contract is legible.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Re-scoped 2026-08-22: several list items landed in the component rebuild (toggle, slider, grow floors, titlebar contract, dgrp scroller). The queued task carries the verified-still-missing remainder."
     },
     {
       "id": "titlebar-responsive-contract",
@@ -816,28 +834,34 @@
       "id": "ds-specimen-card",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "SHARED-DS: promote a `.spec` specimen-card primitive (+ a SPECIMEN label) into the DS. All six lang-* pages AND app-shell.html hand-rolled the same -spec/-spec-h/-blk scaffolding",
-      "notes": "HIGH CONCEPTUAL VALUE: a shared specimen card makes the PRODUCT-MODEL \u00a74c Kind-1 (app screen) vs Kind-2 (specimen) distinction enforceable BY CLASS rather than by convention - an auditor can then just check that anything wearing traffic lights is a complete shell and anything in a .spec card wears no chrome. Also promote shared forced-state classes (.is-hover/.is-focus) so state ladders stop copying DS declarations verbatim and drifting."
+      "notes": "HIGH CONCEPTUAL VALUE: a shared specimen card makes the PRODUCT-MODEL §4c Kind-1 (app screen) vs Kind-2 (specimen) distinction enforceable BY CLASS rather than by convention - an auditor can then just check that anything wearing traffic lights is a complete shell and anything in a .spec card wears no chrome. Also promote shared forced-state classes (.is-hover/.is-focus) so state ladders stop copying DS declarations verbatim and drifting.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (still missing: no .spec in shared/components/)."
     },
     {
       "id": "ds-handle-eight-point",
       "area": "foundation",
       "priority": "P2",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "SHARED-DS: `.handle` ships only four corner slots; a real transform frame has eight plus a rotate handle. lang-selection defines .handle.tc/.bc/.ml/.mr and a rotate stem locally and marked them as DS-extension candidates",
-      "notes": "Low risk, additive. Lift the local definitions from lang-selection into the shared DS."
+      "notes": "Low risk, additive. Lift the local definitions from lang-selection into the shared DS.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (selection.css still ships only 4 corner handles)."
     },
     {
       "id": "ds-missing-primitives",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "Promote 4 repeatedly hand-rolled primitives into the shared DS (each is currently copy-pasted across pages = the exact divergence the study exists to kill): (1) preset-picker `.bpick`/`.bchip` - canvas-previewable thumbnail chips in a role=radiogroup, generic for brushes/paints/styles/transitions; (2) an ARTBOARD primitive - position:relative + aspect-ratio + overflow:hidden with stacked <canvas> and <svg> at inset:0, needed anywhere geometry and pixels must register (hand-rolled as .draw-art and .bart); (3) `.rng`/`.rrow` slider row (copied across draw, brush-editor, brush-library, vector-wt); (4) a canonical TOGGLE/SWITCH - none exists, so authors fake it with a two-button .seg",
-      "notes": "Reported by the brush-stroked-vector agent. The artboard primitive is the most valuable: registering a canvas and an SVG pixel-for-pixel is now needed by every page that mixes geometry with pixels, and getting it wrong silently collapses artwork to zero size."
+      "notes": "Reported by the brush-stroked-vector agent. The artboard primitive is the most valuable: registering a canvas and an SVG pixel-for-pixel is now needed by every page that mixes geometry with pixels, and getting it wrong silently collapses artwork to zero size.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task. Toggle and slider landed in the rebuild; preset-picker and the ARTBOARD primitive are still missing, and 6 pages still hand-roll .rng."
     },
     {
       "id": "build-shell-surfaces",
@@ -845,128 +869,162 @@
       "priority": "P0",
       "status": "done",
       "deps": [],
-      "title": "Build the two MISSING shell surfaces as shared patterns (PRODUCT-MODEL \u00a74e): (1) the menu-bar/systray app menu with its real command list (Capture Region \u21e7\u23184 \u00b7 Capture Full Screen \u21e7\u23183 \u00b7 Stop Recording \u21e7\u23185 \u00b7 Show History \u21e7\u2318H \u00b7 New Window \u00b7 New from Clipboard \u00b7 Open\u2026 \u00b7 Check for Updates\u2026 \u00b7 Welcome & Permissions\u2026 \u00b7 Preferences\u2026 \u00b7 About \u00b7 Quit \u2318Q); (2) the CAPTURE TOAST - a floating card showing the real captured thumbnail + a green check and 'Copied to clipboard!', stacking for multiple captures",
+      "title": "Build the two MISSING shell surfaces as shared patterns (PRODUCT-MODEL §4e): (1) the menu-bar/systray app menu with its real command list (Capture Region ⇧⌘4 · Capture Full Screen ⇧⌘3 · Stop Recording ⇧⌘5 · Show History ⇧⌘H · New Window · New from Clipboard · Open… · Check for Updates… · Welcome & Permissions… · Preferences… · About · Quit ⌘Q); (2) the CAPTURE TOAST - a floating card showing the real captured thumbnail + a green check and 'Copied to clipboard!', stacking for multiple captures",
       "notes": "DONE. .desk/.deskbody/.mbar/.mbitem/.mbicon/.mbmenu systray menu (verified to match Sources/Photonz/PhotonzApp.swift MenuBarMenu EXACTLY) + new ic-aperture glyph taken from MenuBarIcon.swift; .ctoast-stack/.ctoast/.cshot/.cfm/.ok capture toast with a [data-toast] hook that live-clones a card so stacking is demonstrable; .wshot reusable miniature window screenshot. Both demoed on app-shell.html as chromeless desk plates (Kind 2). Verified at 1280/900/620/560/420 in native light AND dark. Bug found+fixed: local .shot collided with DS .shot{width:420px} and blew the toast up -> renamed .cshot."
     },
     {
       "id": "supersede-workspace-switcher",
       "area": "foundation",
       "priority": "P0",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
-      "title": "Remove/repurpose the persistent workspace switcher (.wsw Image\u00b7UI\u00b7Video lens) now superseded by PRODUCT-MODEL \u00a74f: UI and image are NOT different apps and there is no live mode toggle. Replace with document identity in the title bar, tools/Properties contextual to the SELECTED LAYER, and the timeline appearing only when the document has time",
-      "notes": "The .wsw was built during foundation-adjust and has since been adopted across ~25 conformed pages, so this is a sweep. Keep a workspace concept ONLY as a starting template chosen at New (menu-bar New Window / New from Clipboard / Open\u2026), never as a live switcher. Also revert the UX-PATTERNS \u00a71 text that describes workspaces as a lens you toggle."
+      "title": "Remove/repurpose the persistent workspace switcher (.wsw Image·UI·Video lens) now superseded by PRODUCT-MODEL §4f: UI and image are NOT different apps and there is no live mode toggle. Replace with document identity in the title bar, tools/Properties contextual to the SELECTED LAYER, and the timeline appearing only when the document has time",
+      "notes": "The .wsw was built during foundation-adjust and has since been adopted across ~25 conformed pages, so this is a sweep. Keep a workspace concept ONLY as a starting template chosen at New (menu-bar New Window / New from Clipboard / Open…), never as a live switcher. Also revert the UX-PATTERNS §1 text that describes workspaces as a lens you toggle.",
+      "queue": "remove-the-workspace-switcher-from-the-mock-shel",
+      "triage": "Verified still live 2026-08-22: .wsw in dock.css and 43 pages."
     },
     {
       "id": "fix-canvas-child-sizing",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "SHARED-DS: `.canvas` is display:grid + place-items:center, so a nested child with a percentage/min() width resolves against a shrink-to-fit parent and COLLAPSES TO 0. Add a shared `.canvas > *` sizing rule (or document the pattern) so authors put the definite width on the direct grid child",
-      "notes": "Caused a live invisible-content bug in brush-library.html (.bstage + #smpCanvas measured 0x250, sample stroke invisible). FIXED in that page by moving the width to .selwrap; verified in-browser at 560x250 with 21512 painted px. The hazard is shared, so other pages can hit it. Added a zero-size render check to ux-audit-agent.md \u00a70a."
+      "notes": "Caused a live invisible-content bug in brush-library.html (.bstage + #smpCanvas measured 0x250, sample stroke invisible). FIXED in that page by moving the width to .selwrap; verified in-browser at 560x250 with 21512 painted px. The hazard is shared, so other pages can hit it. Added a zero-size render check to ux-audit-agent.md §0a.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (canvas.css still display:grid place-items:center with no child sizing rule)."
     },
     {
       "id": "fix-titlebar-tight-widths",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "skipped",
       "deps": [],
-      "title": "SHARED-DS: `.wtitle` (document identity, e.g. 'sketch-sheet \u00b7 1200 x 630') wraps to three lines below ~640px window width, and the Library `.seg` with four scope labels wraps to two rows at the default 268px dock. Add ellipsis/hide-at-tight rules in the DS",
-      "notes": "Found by the C4 conform agent. Affects EVERY conformed page since both are shared chrome. Agents are working around it by shortening scope labels per page, which is exactly the per-page divergence the study is trying to kill."
+      "title": "SHARED-DS: `.wtitle` (document identity, e.g. 'sketch-sheet · 1200 x 630') wraps to three lines below ~640px window width, and the Library `.seg` with four scope labels wraps to two rows at the default 268px dock. Add ellipsis/hide-at-tight rules in the DS",
+      "notes": "Found by the C4 conform agent. Affects EVERY conformed page since both are shared chrome. Agents are working around it by shortening scope labels per page, which is exactly the per-page divergence the study is trying to kill.",
+      "triage": "SKIPPED 2026-08-22 (queue import): superseded. titlebar-responsive-contract (done) gave .wtitle nowrap+ellipsis with container-query drops, and vr3 made dock .segs auto-fit grids verified across all pages."
     },
     {
       "id": "reserve-data-target",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "skipped",
       "deps": [],
       "title": "SHARED-DS LANDMINE: `[data-target]` is a global cross-page nav hook in photonz-ds.js that preventDefault+stopPropagation on click. Any page using data-target as its own page data breaks SILENTLY. Either namespace the nav hook (data-goto) or document the reservation loudly in AGENTS.md",
-      "notes": "Found by the C1 conform agent: img-masking's luminosity buttons used data-target='highlights|midtones|shadows' and never worked. That page is fixed (renamed data-lum). Verified study-wide: every remaining data-target now resolves to a real page id, so no active breakage - but the hazard remains for future authors. Prefer renaming the hook to data-goto."
+      "notes": "Found by the C1 conform agent: img-masking's luminosity buttons used data-target='highlights|midtones|shadows' and never worked. That page is fixed (renamed data-lum). Verified study-wide: every remaining data-target now resolves to a real page id, so no active breakage - but the hazard remains for future authors. Prefer renaming the hook to data-goto.",
+      "triage": "SKIPPED 2026-08-22 (queue import): resolved via the documentation option. AGENTS.md now reserves data-target loudly as the global cross-page nav hook, and every live usage resolves to a real page id."
     },
     {
       "id": "fix-class-collisions",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [],
       "title": "Page-local kind classes named like DS classes (bar, btn, card, dsub, sw) silently inherit DS rules and break layout (ui-grid: DS .bar/.btn overflow:hidden swallowed the selection ring; ui-prototype: .dsub inherited uppercase). Sweep pages for colliding local class names and namespace them",
-      "notes": "Found by the C3 conform agent, which fixed ui-grid (gbar/gbtn/gavatar/ghero) and ui-prototype. Added as an audit-agent grep rule. Other pages likely have the same latent hazard."
+      "notes": "Found by the C3 conform agent, which fixed ui-grid (gbar/gbtn/gavatar/ghero) and ui-prototype. Added as an audit-agent grep rule. Other pages likely have the same latent hazard.",
+      "queue": "sweep-mock-pages-for-ds-class-name-collisions",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "dedupe-dock-tabs",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "app-shell-spec"
       ],
       "title": "Consolidate the three overlapping left-dock tab constructs in the DS (.ptabs/.ptab, .dock-tabs/.dock-tab, .dnav/.dtab) onto the canonical .dnav/.dtab and deprecate the older two (.ptab/.dock-tab lack focus states and are div-based)",
-      "notes": "Found while building app-shell-spec. Do during ux-reconcile so pages migrate to the one tab system in the same pass."
+      "notes": "Found while building app-shell-spec. Do during ux-reconcile so pages migrate to the one tab system in the same pass.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (only app-patterns.css and titlebar.css still mention the old tab constructs)."
     },
     {
       "id": "icon-semantic-refine",
       "area": "foundation",
       "priority": "P2",
-      "status": "pending",
+      "status": "queued",
       "deps": [
         "icon-library-consolidate"
       ],
-      "title": "Adopt the newly-added glyphs where sweeps left a semantically-close stopgap: lang-toolbars text-align seg (L/C/R text -> ic-align-left/center/right) + flip H/V (both ic-transition -> ic-flip-horizontal/ic-flip-vertical, now distinguishable); optionally walkthrough .wbar nav '\u2190 Back'/'Next \u2192' -> ic-chevron-left/right for consistency with standardized backchips",
-      "notes": "Pages are already icon-clean (no ascii/emoji); this is semantic polish. Low-value acceptable stopgaps intentionally left: ic-clone for duplicate (\u29c9), ic-sparkle for decorative 'New' badges (\u25c6), ic-warning for detach (\u26a1), ic-circle for status-dot (\u25cf), text labels 'Rad'/'Rot' for corner-radius/rotation. The ux-audit pass will flag any that matter."
+      "title": "Adopt the newly-added glyphs where sweeps left a semantically-close stopgap: lang-toolbars text-align seg (L/C/R text -> ic-align-left/center/right) + flip H/V (both ic-transition -> ic-flip-horizontal/ic-flip-vertical, now distinguishable); optionally walkthrough .wbar nav '← Back'/'Next →' -> ic-chevron-left/right for consistency with standardized backchips",
+      "notes": "Pages are already icon-clean (no ascii/emoji); this is semantic polish. Low-value acceptable stopgaps intentionally left: ic-clone for duplicate (⧉), ic-sparkle for decorative 'New' badges (◆), ic-warning for detach (⚡), ic-circle for status-dot (●), text labels 'Rad'/'Rot' for corner-radius/rotation. The ux-audit pass will flag any that matter.",
+      "queue": "adopt-semantic-icons-where-sweeps-left-stopgaps",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "zoom-scales-grid-not-artwork",
       "from": "vr2-canvas-grid",
       "severity": "medium",
-      "note": "Zoom now changes grid density but the artwork stays the same size, so the readout can say 260% while 'Hero card 420x260' renders at 420x260. Honest fix: scale the canvas's centred artwork (.canvas>.selwrap) by --zoom and COUNTER-scale the selection chrome (.sel-ring border+inset, .handle size+offsets, .mtag) by 1/--zoom so rings and handles stay constant-size like a real editor. At zoom 1 it is a no-op, so default rendering cannot regress. NEEDS A CALL: it changes what zoom means across every editor page."
+      "note": "Zoom now changes grid density but the artwork stays the same size, so the readout can say 260% while 'Hero card 420x260' renders at 420x260. Honest fix: scale the canvas's centred artwork (.canvas>.selwrap) by --zoom and COUNTER-scale the selection chrome (.sel-ring border+inset, .handle size+offsets, .mtag) by 1/--zoom so rings and handles stay constant-size like a real editor. At zoom 1 it is a no-op, so default rendering cannot regress. NEEDS A CALL: it changes what zoom means across every editor page.",
+      "status": "queued",
+      "queue": "decide-zoom-semantics-on-mock-canvases",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "light-artboard-grid-invisible",
       "from": "vr2-canvas-grid",
       "severity": "low",
-      "note": "--artboard-grid/-major are white, so on a LIGHT artboard (ds-modes Light/Brand sample) the grid vanishes. Pre-existing, not caused by the canvas rewrite. Shared fix: a .canvas.on-light variant flipping both grid colours to rgba(0,0,0,.06/.11), toggled by the ds-modes mode switch."
+      "note": "--artboard-grid/-major are white, so on a LIGHT artboard (ds-modes Light/Brand sample) the grid vanishes. Pre-existing, not caused by the canvas rewrite. Shared fix: a .canvas.on-light variant flipping both grid colours to rgba(0,0,0,.06/.11), toggled by the ds-modes mode switch.",
+      "status": "queued",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (tokens.css grid colors are still white in both theme blocks)."
     },
     {
       "id": "radial-only-stages",
       "from": "vr2-canvas-grid",
       "severity": "medium",
-      "note": "9 more page-local artboard surfaces use the radial gradient WITHOUT the grid, so they are still per-page canvases under VISUAL RULE 5: components.html:102, ds-switch:113, effects:44 and :58, paint:66, lang-motion:135, lang-elevation:49, lang-resize:34, video-motion:22. Fold into vr6-page-sweep: replace each with .canvas.mini + an --artboard-glow override."
+      "note": "9 more page-local artboard surfaces use the radial gradient WITHOUT the grid, so they are still per-page canvases under VISUAL RULE 5: components.html:102, ds-switch:113, effects:44 and :58, paint:66, lang-motion:135, lang-elevation:49, lang-resize:34, video-motion:22. Fold into vr6-page-sweep: replace each with .canvas.mini + an --artboard-glow override.",
+      "status": "queued",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task (verify each of the 9 pages before converting; the rebuild may have caught some)."
     },
     {
       "id": "stray-comment-deleted-a-shared-rule",
       "from": "vr3-panel-ergonomics",
       "severity": "high",
-      "note": "A stray `*/` left mid-comment in photonz-ds.css silently DELETED the rule that followed it (CSS error recovery skips to the end of the next block). Every page still rendered plausibly and the measured numbers still looked right, because a different rule happened to cover for it. LESSON now baked into shared/audit-sweep.js: assert a shared rule is ACTUALLY IN EFFECT (getComputedStyle(el).display === 'grid'), never just that the result looks reasonable."
+      "note": "A stray `*/` left mid-comment in photonz-ds.css silently DELETED the rule that followed it (CSS error recovery skips to the end of the next block). Every page still rendered plausibly and the measured numbers still looked right, because a different rule happened to cover for it. LESSON now baked into shared/audit-sweep.js: assert a shared rule is ACTUALLY IN EFFECT (getComputedStyle(el).display === 'grid'), never just that the result looks reasonable.",
+      "status": "skipped",
+      "triage": "SKIPPED 2026-08-22 (queue import): this was a lesson, not work; it is baked into shared/audit-sweep.js as in-effect assertions."
     },
     {
       "id": "library-tiles-have-no-vertical-budget",
       "from": "vr3-panel-ergonomics",
       "severity": "medium",
-      "note": "On app-shell the Library tiles start ~15px above the dock bottom, so the grid reads as slivers. Measured BOTH before and after the VR7 stack, so it is not caused by it: even with the old single-row toolbar the grid began at y=753 against a dock bottom of 770. vr4-library-tiles must fix the group's VERTICAL budget (--gh / .grow floor), not only the tile min-width."
+      "note": "On app-shell the Library tiles start ~15px above the dock bottom, so the grid reads as slivers. Measured BOTH before and after the VR7 stack, so it is not caused by it: even with the old single-row toolbar the grid began at y=753 against a dock bottom of 770. vr4-library-tiles must fix the group's VERTICAL budget (--gh / .grow floor), not only the tile min-width.",
+      "status": "skipped",
+      "triage": "SKIPPED 2026-08-22 (queue import): resolved by vr4 (grow floor 244/200 after the user dropped the body Import button) and carried into dock.css by the rebuild."
     },
     {
       "id": "import-header-menu-missing-3-pages",
       "from": "vr4-library-tiles",
       "severity": "low",
-      "note": "3 Library groups kept their body Import button because their header has no + menu to move it to: img-grade-wt (1) and lang-panels (2). For vr6: give those headers the standard `.btn.ghost.icon.sm [data-menu]` + affordance, then delete the body button like the other 39."
+      "note": "3 Library groups kept their body Import button because their header has no + menu to move it to: img-grade-wt (1) and lang-panels (2). For vr6: give those headers the standard `.btn.ghost.icon.sm [data-menu]` + affordance, then delete the body button like the other 39.",
+      "status": "queued",
+      "queue": "library-group-leftovers-on-four-mock-pages",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "components-page-chrome",
       "from": "vr4-library-tiles",
       "severity": "low",
-      "note": "components.html is the one page whose Library row is still cut: it adds a bespoke 52px .catrow on top of the standard chrome (156px total vs 77px). No shared floor can cover per-page chrome - fold the category row into the scope control during vr6."
+      "note": "components.html is the one page whose Library row is still cut: it adds a bespoke 52px .catrow on top of the standard chrome (156px total vs 77px). No shared floor can cover per-page chrome - fold the category row into the scope control during vr6.",
+      "status": "queued",
+      "queue": "library-group-leftovers-on-four-mock-pages",
+      "triage": "Imported into the repo queue 2026-08-22; the queue task is now the source of truth."
     },
     {
       "id": "vr6-tier2-primitives",
       "area": "foundation",
       "priority": "P1",
-      "status": "pending",
+      "status": "queued",
       "title": "VR6 leftovers: 3 primitives that ARE duplicated across pages but whose bodies genuinely diverge, so they need a variable-driven DS version rather than a straight copy",
-      "notes": "Found by the same duplicate-rule scan that drove vr6 (re-run it: the scan is 40 lines of python over each page's <style> block, grouping rules by normalised selector+body). (1) `.rng` slider + `::-webkit-slider-thumb`/`::-moz-range-thumb` -- 6 pages, 18 distinct rules; the base and both thumbs are identical, only focus/disabled states drift, so promote the base and the thumbs. (2) `.rrow` -- 6 pages, 15 distinct rules; the divergence is ONLY the first/last column widths (62/40, 64/42, 60/42), so promote it with `--rl-w`/`--rv-w` custom properties and let pages retune those. (3) the video timeline `.tlbar`/`.tlgrid`/`.tlz` -- 6 pages, 38 distinct rules for .tlgrid alone; this is a real component with real per-page extension, so it needs a designed DS version, not a lift. Also: `.apiline` (8 pages, 17 rules) and the lang-* specimen doc-block cluster `.blk/.bname/.bnum/.api/.intro/.dd` (6-7 pages) -- the latter is ds-specimen-card, and note `.dd` COLLIDES with a colour-dot class on one page, so that one needs a markup rename, not just a CSS move."
+      "notes": "Found by the same duplicate-rule scan that drove vr6 (re-run it: the scan is 40 lines of python over each page's <style> block, grouping rules by normalised selector+body). (1) `.rng` slider + `::-webkit-slider-thumb`/`::-moz-range-thumb` -- 6 pages, 18 distinct rules; the base and both thumbs are identical, only focus/disabled states drift, so promote the base and the thumbs. (2) `.rrow` -- 6 pages, 15 distinct rules; the divergence is ONLY the first/last column widths (62/40, 64/42, 60/42), so promote it with `--rl-w`/`--rv-w` custom properties and let pages retune those. (3) the video timeline `.tlbar`/`.tlgrid`/`.tlz` -- 6 pages, 38 distinct rules for .tlgrid alone; this is a real component with real per-page extension, so it needs a designed DS version, not a lift. Also: `.apiline` (8 pages, 17 rules) and the lang-* specimen doc-block cluster `.blk/.bname/.bnum/.api/.intro/.dd` (6-7 pages) -- the latter is ds-specimen-card, and note `.dd` COLLIDES with a colour-dot class on one page, so that one needs a markup rename, not just a CSS move.",
+      "queue": "shared-ds-cleanup-land-the-missing-primitives-ba",
+      "triage": "Folded into the shared-DS cleanup queue task. Slider and timeline are now shared components; the remaining work is migrating the 6 pages that still hand-roll .rng and verifying the timeline adopters."
     }
   ],
   "findingsFile": "ux-audit-clusters.md",
   "currentGoal": "MODEL-DRIVEN REFINE LOOP (user-approved). The site is pretty but not cohesively designed. Establish the product MODEL first, then refine everything against it in a loop with clear success criteria. Canonical model = shared/PRODUCT-MODEL.md: ONE document engine; Image/UI/Video are workspaces (lenses) over the same layer stack; adjustment/filter layers apply to UI frames exactly as photos; Video = same doc + time; Tokens->Styles->Components->Design Systems with semantic binding (extract-from-URL, catalog, AI re-theme); everything is one command (UI==API==agent). 6 success criteria (one model written down; shell coherence; legible blank-slate entries; ONE walkthrough template; foundation-gated features; the build test). 3-zone IA: App Design (canonical) / Usage clickthroughs (folded per surface, one template) / Prototypes & Ideas (speculative). User wants to return to LOTS of improvements ready.",
-  "resume": "ON GO: (1) server: cd docs/design/mocks; curl -s localhost:8791 >/dev/null || nohup node dev-server.mjs >/tmp/photonz-mock-server.log 2>&1 & disown. (2) NEXT TASK is `vr6-tier2-primitives` (in discovered) - .rng, .rrow (promote with --rl-w/--rv-w custom props, do NOT lift one page's column widths) and the video timeline. Then the older backlog: ds-consolidated-cleanup, supersede-workspace-switcher, ds-specimen-card, reaudit. (3) HOW TO FIND WORK: do not read 64 pages. Scan. Parse each page's <style>, group rules by normalised selector+body, rank by page count; anything identical across 4+ pages belongs in the shared DS. vr6-strip.py does the deletion half and is also a standing guard - it must always report 0 rules to remove. (4) VERIFY EVERYTHING in the browser, three ways, never by looking at it: (a) geometry diff of every element on all 64 pages before/after at 2px tolerance (below that, getBoundingClientRect rounding flips +/-1px and reports 50 false pages); (b) getComputedStyle assertions that the shared rule is IN EFFECT on pages that no longer declare it - presence in the file proves nothing, a stray */ once silently deleted a rule and every page still looked fine; (c) the standing sweep in shared/audit-sweep.js. All three run from ONE chrome-devtools evaluate_script call using hidden iframes. Stash the baseline in localStorage, NOT on window: evaluate_script runs in an isolated world and window does not persist between calls. STATE OF PLAY: vr1-vr6 done. 64/64 pages serve 200, sweep clean, zero issues. RESET CONTEXT between VR tasks."
+  "resume": "ON GO: (1) server: cd docs/design/mocks; curl -s localhost:8791 >/dev/null || nohup node dev-server.mjs >/tmp/photonz-mock-server.log 2>&1 & disown. (2) NEXT TASK is `vr6-tier2-primitives` (in discovered) - .rng, .rrow (promote with --rl-w/--rv-w custom props, do NOT lift one page's column widths) and the video timeline. Then the older backlog: ds-consolidated-cleanup, supersede-workspace-switcher, ds-specimen-card, reaudit. (3) HOW TO FIND WORK: do not read 64 pages. Scan. Parse each page's <style>, group rules by normalised selector+body, rank by page count; anything identical across 4+ pages belongs in the shared DS. vr6-strip.py does the deletion half and is also a standing guard - it must always report 0 rules to remove. (4) VERIFY EVERYTHING in the browser, three ways, never by looking at it: (a) geometry diff of every element on all 64 pages before/after at 2px tolerance (below that, getBoundingClientRect rounding flips +/-1px and reports 50 false pages); (b) getComputedStyle assertions that the shared rule is IN EFFECT on pages that no longer declare it - presence in the file proves nothing, a stray */ once silently deleted a rule and every page still looked fine; (c) the standing sweep in shared/audit-sweep.js. All three run from ONE chrome-devtools evaluate_script call using hidden iframes. Stash the baseline in localStorage, NOT on window: evaluate_script runs in an isolated world and window does not persist between calls. STATE OF PLAY: vr1-vr6 done. 64/64 pages serve 200, sweep clean, zero issues. RESET CONTEXT between VR tasks.",
+  "imported": "This backlog was triaged into the repo task queue (queue/) on 2026-08-22 by the go loop task import-the-design-study-backlog-into-the-queue. Items marked status:queued carry a `queue` field naming the queue task that owns the work; items marked status:skipped carry a `triage` note saying why. New work goes into the queue, not this file."
 }

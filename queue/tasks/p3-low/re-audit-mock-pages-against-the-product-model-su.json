@@ -1,0 +1,31 @@
+{
+  "id": "re-audit-mock-pages-against-the-product-model-su",
+  "title": "Re-audit mock pages against the product model success criteria",
+  "priority": "p3-low",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-08-22T23:32:47.052Z",
+  "updated": "2026-08-22T23:33:14.954Z",
+  "deps": [
+    "finish-the-mock-conform-pass-across-all-pages",
+    "blank-slate-entry-clickthrough-per-surface-on-on"
+  ],
+  "blockedBy": [],
+  "notes": "From study-tasks.json reaudit. Run shared/ux-audit-agent.md across all pages against the 6 PRODUCT-MODEL.md success criteria; feed misses back into the queue until clean. Do after the conform pass and entries pass.",
+  "acceptance": [
+    "A findings file records pass/fail per page against each of the 6 PRODUCT-MODEL success criteria",
+    "Every miss is filed as its own queue task; zero unfiled misses"
+  ],
+  "log": [
+    {
+      "t": "2026-08-22T23:32:47.053Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:33:14.954Z",
+      "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    }
+  ]
+}

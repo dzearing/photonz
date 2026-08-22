@@ -1,0 +1,30 @@
+{
+  "id": "finish-the-mock-conform-pass-across-all-pages",
+  "title": "Finish the mock conform pass across all pages",
+  "priority": "p2-normal",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-08-22T23:32:46.951Z",
+  "updated": "2026-08-22T23:33:14.952Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From study-tasks.json conform-pass (was in_progress when the mock loop went dormant) plus the residue of foundation-adjust. The July component rebuild (shared/components/) landed much of the shell; unknown how many of the 88 pages conform. First re-run the ux-audit clusters A-G scan (shared/ux-audit-agent.md, ux-audit-clusters.md) to find what remains, then conform in disjoint batches. Adjustment/filter layer as a first-class layer type in Layers panel + Inspector was never verified landed.",
+  "acceptance": [
+    "A fresh ux-audit scan (clusters A-G) over all pages is recorded, listing exactly which pages still fail which cluster",
+    "Every failing page is conformed or has its own follow-up queue task filed",
+    "Adjustment/filter layer appears as a first-class layer type in the Layers panel and Inspector of the shell reference page, or a note explains where it landed",
+    "All touched pages return 200 and pass shared/audit-sweep.js"
+  ],
+  "log": [
+    {
+      "t": "2026-08-22T23:32:46.952Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:33:14.952Z",
+      "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "remove-the-workspace-switcher-from-the-mock-shel",
+  "title": "Remove the workspace switcher from the mock shell",
+  "priority": "p2-normal",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-08-22T23:32:47.002Z",
+  "updated": "2026-08-22T23:33:14.954Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From study-tasks.json supersede-workspace-switcher (P0 there). PRODUCT-MODEL section 4f: UI and image are NOT different apps; no live lens toggle. .wsw still lives in shared/components/dock.css and 43 pages. Replace with document identity in the title bar, tools/Properties contextual to the selected layer, timeline only when the document has time. Keep workspace only as a starting template at New. Also revert the UX-PATTERNS section 1 text describing workspaces as a toggleable lens.",
+  "acceptance": [
+    "grep for wsw across pages/ and shared/components/ returns zero live workspace-switcher usages",
+    "Title bar shows document identity; timeline appears only on documents with time",
+    "UX-PATTERNS section 1 no longer describes workspaces as a live toggleable lens",
+    "All touched pages return 200 and pass shared/audit-sweep.js"
+  ],
+  "log": [
+    {
+      "t": "2026-08-22T23:32:47.003Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:33:14.954Z",
+      "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    }
+  ]
+}

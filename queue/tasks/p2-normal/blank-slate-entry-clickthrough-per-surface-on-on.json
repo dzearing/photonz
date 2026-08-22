@@ -1,0 +1,31 @@
+{
+  "id": "blank-slate-entry-clickthrough-per-surface-on-on",
+  "title": "Blank-slate entry clickthrough per surface on one template",
+  "priority": "p2-normal",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-08-22T23:32:46.976Z",
+  "updated": "2026-08-22T23:33:14.953Z",
+  "deps": [
+    "finish-the-mock-conform-pass-across-all-pages"
+  ],
+  "blockedBy": [],
+  "notes": "From study-tasks.json entries-pass. Build ONE consistent blank-slate usage clickthrough per surface (Image, UI, Video) using a single shared walkthrough template that embeds the real docked shell in every step (UX-PATTERNS D5). Start from the history/launcher blank slate, click through to the key outcome. Fold old walkthrough pages into the template or move them to Prototypes and Ideas. Do after the conform pass.",
+  "acceptance": [
+    "One shared walkthrough template exists; the Image, UI, and Video entry clickthroughs all use it",
+    "Each clickthrough starts from the history/launcher blank slate and reaches its key outcome with the real docked shell visible in every step",
+    "Old walkthrough pages are folded into the template or moved to Prototypes and Ideas in index.html; no orphaned rail links"
+  ],
+  "log": [
+    {
+      "t": "2026-08-22T23:32:46.977Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:33:14.953Z",
+      "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "library-group-leftovers-on-four-mock-pages",
+  "title": "Library group leftovers on four mock pages",
+  "priority": "p3-low",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-08-22T23:32:47.179Z",
+  "updated": "2026-08-22T23:33:14.955Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From study-tasks.json import-header-menu-missing-3-pages + components-page-chrome. (1) img-grade-wt and lang-panels Library groups kept a body Import button because their headers lack the + import menu; give them the standard header menu and delete the body button. (2) components.html adds a bespoke 52px .catrow on top of standard Library chrome so its tile row is cut; fold categories into the scope control. Findings are from July: verify each is still present before fixing.",
+  "acceptance": [
+    "img-grade-wt and lang-panels Library headers carry the standard + import menu and have no body Import button, or the log records the finding was already fixed",
+    "components.html Library shows a full uncut tile row without the bespoke .catrow, or the log records it was already fixed",
+    "Touched pages return 200"
+  ],
+  "log": [
+    {
+      "t": "2026-08-22T23:32:47.179Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-22T23:33:14.955Z",
+      "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    }
+  ]
+}

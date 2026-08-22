@@ -2,11 +2,11 @@
   "id": "import-the-design-study-backlog-into-the-queue",
   "title": "Import the design study backlog into the queue",
   "priority": "p2-normal",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.727Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-22T23:34:28.165Z",
   "deps": [],
   "blockedBy": [],
   "notes": "docs/design/mocks/study-tasks.json has a discovered/pending task list from the mock audit loop. Triage it: queue the still-relevant items as individual tasks with real acceptance criteria, mark the stale ones as skipped inside that file. Acceptance: no pending item in study-tasks.json that is not represented or explicitly skipped.",
@@ -22,7 +22,21 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria"
+    },
+    {
+      "t": "2026-08-22T23:27:43.376Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:34:15.126Z",
+      "note": "Triaged all 29 open items (5 pending + 3 stalled in_progress in tasks[], 14 pending + 7 status-less findings in discovered[]). Verified each against the current mocks first: the July component rebuild (shared/components/) had already fixed several (dgrp grow floors, titlebar contract, toggle/slider, data-target docs, 3-zone IA). Result: 11 new queue tasks (4 p2, 7 p3), 8 items skipped as fixed/superseded with evidence, 10 items folded into the shared-DS cleanup batch task, ia-restructure marked done. study-tasks.json now carries queue/triage pointers on every item plus a header note that the queue owns new work."
+    },
+    {
+      "t": "2026-08-22T23:34:28.164Z",
+      "note": "Triaged all 29 open backlog items in docs/design/mocks/study-tasks.json against the current mocks. 11 new queue tasks created (4 p2, 7 p3) with concrete acceptance criteria; 8 items skipped as already fixed or superseded (with evidence); 10 folded into the shared-DS cleanup batch; ia-restructure verified done. Every item now carries a queue pointer or a skip reason; no duplicates of existing queue tasks."
     }
   ],
-  "seq": 10
+  "seq": 10,
+  "started": "2026-08-22T23:27:43.376Z",
+  "completed": "2026-08-22T23:34:28.165Z"
 }
