@@ -848,7 +848,10 @@ final class EditorState {
         var content = measureStyle
         content.mode = mode
         content.headOffset = headOffset
-        let layer = MeasureBuilder.layer(content: content, from: start, to: end)
+        var layer = MeasureBuilder.layer(content: content, from: start, to: end)
+        // Inherit the last caliper's non-destructive effects (a drop shadow added
+        // in Effects carries to the next measure), like annotations do per shape.
+        layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
         finishCreating(layer.id)
@@ -1777,7 +1780,7 @@ final class EditorState {
         guard let preview = stylePreview, preview.id == id else { return }
         stylePreview = nil
         perform { $0.updateLayer(id: id) { $0.style = preview.style } }
-        captureAnnotationStyleDefault(layerID: id)
+        captureStyleDefault(layerID: id)
     }
 
     /// One-shot style edit (steppers, toggles): a single undo step, no preview.
@@ -1785,15 +1788,20 @@ final class EditorState {
         stylePreview = nil
         discardDragPreview()
         perform { $0.updateLayer(id: id) { mutate(&$0.style) } }
-        captureAnnotationStyleDefault(layerID: id)
+        captureStyleDefault(layerID: id)
     }
 
-    /// If `layerID` is an annotation, remember its current effects as that
-    /// shape's default so the next-drawn object of the type inherits them.
-    private func captureAnnotationStyleDefault(layerID: UUID) {
-        guard let layer = document?.layer(id: layerID), let shape = layer.annotation?.shape else { return }
-        annotationStyles.setLayerStyle(layer.style, forShape: shape)
-        saveAnnotationStyles()
+    /// Remember a styled layer's effects as its TOOL's default, so the next
+    /// object of that kind inherits them — per shape for annotations, and for the
+    /// measure tool as a whole.
+    private func captureStyleDefault(layerID: UUID) {
+        guard let layer = document?.layer(id: layerID) else { return }
+        if let shape = layer.annotation?.shape {
+            annotationStyles.setLayerStyle(layer.style, forShape: shape)
+            saveAnnotationStyles()
+        } else if layer.measure != nil {
+            updateMeasureStyles { $0.layerStyle = layer.style }
+        }
     }
 
     func toggleLayerVisibility(id: UUID) {

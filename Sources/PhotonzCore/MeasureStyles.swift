@@ -31,6 +31,11 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     }
     public var unit: MeasureUnit
     public var decimals: Int
+    /// Non-destructive effects (shadow, opacity, blur, border, corner radius,
+    /// blend) a NEW caliper inherits — captured from the last one you styled, so
+    /// a drop shadow you add in Effects carries to the next measure. Same deal
+    /// `AnnotationStyles` gives each shape.
+    public var layerStyle: LayerStyle
 
     public init(strokeColorHex: String = "#FF3B30",
                 chipColorHex: String = "#8C201A",
@@ -42,7 +47,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                 // on-screen (design) sizes, and a 2× Retina screenshot's raw
                 // pixels read double that.
                 unit: MeasureUnit = .points,
-                decimals: Int = 0) {
+                decimals: Int = 0,
+                layerStyle: LayerStyle = LayerStyle()) {
         self.strokeColorHex = strokeColorHex
         self.chipColorHex = chipColorHex
         self.chipOpacity = min(max(chipOpacity, 0), 1)
@@ -51,6 +57,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         self.labelSizePx = Self.clampedLabelSize(labelSizePx)
         self.unit = unit
         self.decimals = decimals
+        self.layerStyle = layerStyle
     }
 
     private static func clampedLabelSize(_ value: CGFloat) -> CGFloat {
@@ -73,7 +80,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             strokeWidth: try c.decodeIfPresent(CGFloat.self, forKey: .strokeWidth) ?? d.strokeWidth,
             labelSizePx: try c.decodeIfPresent(CGFloat.self, forKey: .labelSizePx) ?? d.labelSizePx,
             unit: try c.decodeIfPresent(MeasureUnit.self, forKey: .unit) ?? d.unit,
-            decimals: try c.decodeIfPresent(Int.self, forKey: .decimals) ?? d.decimals)
+            decimals: try c.decodeIfPresent(Int.self, forKey: .decimals) ?? d.decimals,
+            layerStyle: try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? d.layerStyle)
     }
 
     /// The label scale (`MeasureContent.labelScale`) this pixel size means.

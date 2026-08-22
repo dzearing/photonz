@@ -3411,3 +3411,25 @@ rebuilt and relaunched.
 
 **Next:** user to confirm on canvas that Effects opacity now fades the chip with
 the rest of the caliper, and that the label's zoom behavior is acceptable.
+
+## 2026-08-22 (later still) — effects join the measure tool's memory
+
+Tweak a caliper's drop shadow, draw the next one, no shadow. The cause was a
+guard: `captureAnnotationStyleDefault` returned early unless the styled layer was
+an *annotation*, and `addMeasure` never applied a remembered style at all, so a
+new caliper's `LayerStyle` was always fresh. Colors, thickness and label size had
+memory; effects didn't.
+
+`MeasureStyles` now carries a `layerStyle` alongside them, `addMeasure` applies
+it, and the capture hook — renamed `captureStyleDefault`, since it is no longer
+annotation-only — writes a styled measure's effects back into it. Every control
+in Effects and Shadow already routes through `setLayerStyle` or
+`previewLayerStyle` + `commitLayerStyle`, and both call it, so shadow, opacity,
+blur, border, corner radius and blend are all covered. The field decodes
+optionally, so existing prefs backfill instead of being dropped.
+
+Text layers and zoom callouts still don't remember effects. Text is deliberate
+for now: `TextBuilder` applies an auto-contrast shadow on commit, and remembered
+effects would fight it. Callouts are simply untouched.
+
+**Verified**: 776 tests green (2 new). Dev app rebuilt and relaunched.

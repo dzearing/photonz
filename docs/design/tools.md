@@ -111,7 +111,10 @@ gone. `MeasureContent` (`PhotonzCore/Measure.swift`) is its own
   picker, and whole-object transparency is the Effects panel's opacity, same as
   every other layer. (No Show-label toggle — the label is always on.)
   Defaults + memory live in `MeasureStyles` (PhotonzCore, persisted to
-  UserDefaults): red stroke, `#8C201A` chip, white text, 2px, 20px label.
+  UserDefaults): red stroke, `#8C201A` chip, white text, 2px, 20px label — plus
+  `layerStyle`, so **effects carry too**: a drop shadow (or opacity/blur/border)
+  tuned in Effects on one caliper is what the next one starts with
+  (`captureStyleDefault` on every style commit; `addMeasure` applies it).
 - **The caliper is image content.** Lines are ACTUAL image pixels (a "1px" caliper
   = 1 image px, not ×pixelScale); the label pill is sized in image px, so the
   pill and its head-line gap match at every zoom and the pill border equals the

@@ -44,8 +44,29 @@ struct MeasureStylesTests {
         #expect(c.showLabel)
     }
 
+    @Test func effectsAreRememberedAlongsideTheColors() throws {
+        // A drop shadow (or opacity, or blur) tuned on one caliper is what the
+        // NEXT caliper starts with — the same deal AnnotationStyles gives shapes.
+        var s = MeasureStyles()
+        #expect(s.layerStyle == LayerStyle(), "a fresh measure has no effects")
+        s.layerStyle = LayerStyle(opacity: 0.5, blurRadius: 2,
+                                  shadow: ShadowStyle(radius: 8, opacity: 0.6))
+        let back = try JSONDecoder().decode(MeasureStyles.self, from: JSONEncoder().encode(s))
+        #expect(back.layerStyle == s.layerStyle)
+        #expect(back.layerStyle.shadow?.radius == 8)
+    }
+
+    @Test func effectsDoNotLeakIntoTheContentTemplate() {
+        // The style rides on the LAYER; the content template stays untouched.
+        var s = MeasureStyles()
+        s.layerStyle = LayerStyle(opacity: 0.25)
+        #expect(s.content.strokeColorHex == s.strokeColorHex)
+        #expect(s.layerStyle.opacity == 0.25)
+    }
+
     @Test func stylesSurviveALaunchRoundTrip() throws {
         var s = MeasureStyles()
+        s.layerStyle = LayerStyle(shadow: ShadowStyle())
         s.strokeColorHex = "#00FF00"
         s.chipColorHex = "#0000FF"
         s.chipOpacity = 0
@@ -66,6 +87,7 @@ struct MeasureStylesTests {
         #expect(back.chipColorHex == MeasureStyles().chipColorHex)
         #expect(back.strokeWidth == MeasureStyles().strokeWidth)
         #expect(back.labelSizePx == MeasureStyles().labelSizePx)
+        #expect(back.layerStyle == LayerStyle())
     }
 
     @Test func opacityAndLabelSizeAreClampedToTheirRanges() {
