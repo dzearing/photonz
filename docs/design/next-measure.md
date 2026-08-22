@@ -1,0 +1,258 @@
+# Next Measure — measurement overlays, readouts, alignment & export (Next release)
+
+Status: SPEC, 2026-08-22. Implements the redline concepts from the design-study
+mocks for the **Next** release only. Sources of truth:
+
+- `docs/design/mocks/pages/redline.html` — the Measure tool page (hover
+  readouts, roles, Measurements panel, export, alignment concept).
+- `docs/design/mocks/pages/capture-wt.html` — the capture walkthrough (Measure
+  in the tool strip and command menu, marks-are-layers, copy path).
+- Baseline: the shipped phase-16 caliper (`docs/design/tools.md § Measure`),
+  which this spec builds AROUND, not over.
+
+Ground rule (from the task): **every feature below traces to a mock element**.
+Anything the mocks show but do not define (or that history argues against) is an
+open question filed as a queue decision, referenced here and NOT specced.
+
+## 1. What already ships (shared code — do not re-spec)
+
+Both releases already have, from phase 16: the 3-point H/V caliper
+(`MeasureContent`, feet + head + chip), edge-map smart snapping with luma
+landings and the hover snap dot, px/pt units, stroke/chip/text colors +
+label-size inspector, persisted `MeasureStyles` (colors, thickness, label size,
+layer effects), draw-then-select, marquee multi-select + batch delete, and
+exports that bake the caliper (one raster since 16.15). The redline mock's
+"click two points for a live distance", "Units", "Snap", color controls, and
+"selected measurement in Properties" are therefore **already true**. This spec
+adds what the mocks show beyond that.
+
+## 2. Delivery mechanics (Next-only)
+
+Everything here lands behind **feature flags declared in `FeatureCatalog` and
+scoped to the `next` release only, default ON in next** (`experiments.md`):
+
+| Flag | Carries |
+| --- | --- |
+| `next-measure-hover` | § 3 hover-to-measure size readout |
+| `next-measure-roles` | § 5 roles, legend, show filter |
+| `next-measure-panel` | § 6 Measurements panel, count pill, § 7 export surface |
+| `next-measure-center-snap` | § 8 centers snapping option |
+
+- No `Release` branching anywhere (the flags ARE the gate); no forked files
+  expected — every surface is additive to the shared editor. Fork per
+  `Releases/README.md` only if implementation proves a shared file can't host
+  a change cleanly.
+- New model types live in `PhotonzCore` (pure, Codable, TDD-first). Core is
+  shared, which is safe: the fields are inert when the flags are off, and since
+  both releases are **one binary**, a document saved in Next always decodes in
+  Current (same code; `role` decodes with a default either way — no format
+  skew is possible).
+- Tool shortcut stays **i** (Photoshop parity: PS groups its Ruler under I; the
+  mock's M is PS's marquee and is not adopted).
+
+## 3. Hover-to-measure: element size readout — `next-measure-hover`
+
+Mock: `redline.html` `.rl-hover` red outline + the two `hoverc` calipers
+(width below, height right), driven by hovering a `.hit` element; hint chip
+"Measure mode: click two points for a live distance".
+
+The Measure tool's idle hover today shows only a snap **dot**. In Next, hovering
+also reads the **element under the pointer**:
+
+- While the Measure tool is active, no drag/placement in progress, and the
+  pointer rests over the image: detect the element rect at the pointer and show
+  a tinted outline over it plus two **transient size calipers** — width along
+  the bottom edge, height along the right edge — labeled in the current unit.
+- Pointer moves to another element → readout follows. Leaving the image,
+  starting a click/drag placement, Esc, or switching tools clears it. Holding
+  **⌘** suppresses it (same key that bypasses snapping today).
+- **Detection is core, TDD** — `ElementBounds.detect(at:in:) -> CGRect?`
+  (`PhotonzCore`): from the probe point, walk each of the four directions for
+  the nearest accepted edge using the existing windowed `EdgeMap` queries
+  (`horizontalEdges(inXRange:)` / `verticalEdges(inYRange:)`, absolute floor,
+  luma landings on the element side), the perpendicular window centered on the
+  probe. All four sides found within a max radius (default 600 image px, a flag
+  parameter) → that rect; any side missing → `nil` and **no highlight** (a
+  quiet miss, never a wrong box). Nested hits resolve to the innermost rect
+  (nearest edges win by construction).
+- **Overlay chrome only.** The readout is canvas overlay layers in
+  `CanvasNSView` (like the snap dot and guides) styled from the size-role
+  colors (§ 5) at reduced opacity — it never enters the document, makes no
+  history entries, and triggers no composite re-render.
+- Perf: queries hit the block-summed fields; budget < 1 ms per mouse-move,
+  and hover is a no-op until the edge map has finished computing (same gate
+  snapping uses).
+- The **hint chip** from the mock ships with this flag: a small glass pill
+  ("Click two points for a live distance") shown while the Measure tool is
+  active and the document has no measurements yet; it disappears forever once
+  the first caliper lands (per document).
+
+Committing a measurement stays exactly the shipped flow (click-click or drag,
+then head placement). The mock shows hover as a **readout only** — no
+click-to-stamp is shown, so none is specced.
+
+Not specced here: the mock's live caliper rotates to any angle between the two
+clicked points; the shipped caliper is deliberately H/V-only (16.12). That
+conflict is queue decision **D2** (§ 10).
+
+## 4. Gap and size readouts — what the numbers mean
+
+Unchanged from the baseline and restated only for traceability: the two-point
+flow measures **gaps** (feet snapped to opposing edges via luma landings, so a
+baseline-to-divider gap reads the designer's number), hover (§ 3) measures
+**sizes**, and both display via the caliper chip in px (default) or pt. The
+mock's `From / To / Distance / Units` fields in Properties map to the shipped
+feet coordinates and `rawDistance`; exposing them read-only in the measure
+inspector is part of § 6.
+
+## 5. Measurement roles — `next-measure-roles`
+
+Mock: `redline.html` legend (Size red / Spacing blue / Alignment dashed), the
+`Role` segmented control on the selected measurement, role swatches on every
+Measurements row, and blue gap calipers vs red size calipers on the canvas.
+
+- **Model (core, TDD):** `MeasureRole { size, spacing }` on `MeasureContent`.
+  Codable via `decodeIfPresent` defaulting to `.size`, so every existing
+  document decodes unchanged. (`alignment` joins the enum only if decision
+  **D1** lands — the type is written to absorb the case.)
+- **Role styling:** `MeasureStyles` becomes per-role — size keeps the shipped
+  red set (#FF3B30 stroke, #8C201A chip, white text); spacing defaults to the
+  blue set (#0A84FF stroke, #1B3A66 chip, white text). Switching a
+  measurement's role applies that role's remembered style; subsequent style
+  edits absorb into that role's memory (same absorb rule the tool already
+  uses). One undo step per role switch.
+- **Creation default:** a new caliper takes the last-used role (absorbed into
+  `MeasureStyles` like every other default). The mock puts no role picker in
+  tool options, so none is added — the role is edited on the selected
+  measurement (`Role` segmented control in the measure inspector, per the
+  mock's Properties section).
+- **Legend:** the mock's top-left glass legend renders while the Measure tool
+  is active, listing only the roles present in the document (plus Alignment if
+  D1 lands). Canvas overlay, not exported unless the user's measurements are.
+- **Show filter:** tool options gain the mock's `Show` control —
+  All / Size / Spacing. It is an **`EditorState` display filter**: filtered
+  measure layers are excluded from the interactive render (like a temporary
+  eye-off) without touching the model — never persisted, and exports always
+  include every visible layer regardless of the filter.
+
+## 6. The Measurements panel — `next-measure-panel`
+
+Mock: `redline.html` dock group "Measurements" (count badge, rows with role
+swatch + name + value + per-row eye, panel menu Show all / Hide all / Copy as
+spec list / Clear measurements), the toolbar pill "7 measurements", and the
+command-menu items (Measure tool / Show all measurements / Clear measurements).
+
+- A dock group listing the document's measure layers, top-most first. It is a
+  **filtered view of the layer list, not new state**: selection is the shared
+  selection (mock: "one selection, three places" — canvas caliper, panel row,
+  Properties), the row eye is the layer's visibility, delete is layer delete.
+- Rows show role swatch (§ 5), name, and the formatted value. Until decision
+  **D3** resolves, the name is derived: axis word + value ("Width 128 px",
+  "Gap 16 px") — D3 decides semantic auto-names (mock shows
+  "Save Changes · width", which needs text recognition) and a rename
+  affordance.
+- Panel menu: **Show all** / **Hide all** (set visibility on every measure
+  layer, one undo step), **Copy as spec list** (§ 7), **Clear measurements**
+  (delete every measure layer, one undo step; undo is the safety net, no
+  confirmation dialog — matches the mock).
+- Command surface: "Show all measurements" and "Clear measurements" join the
+  editor's command menu next to the Measure tool entry, exactly the mock's
+  `Measure` group.
+- The toolbar **count pill** ("7 measurements") appears when the document has
+  at least one measurement; clicking it reveals/scrolls to the panel.
+- The measure inspector gains the mock's read-only **From / To / Distance /
+  Units** grid for the selected measurement (values from `caliperGeometry()` —
+  no new model state).
+
+## 7. Export: the redline sheet — `next-measure-panel`
+
+Mock: `redline.html` Properties "Export · redline sheet" section (Copy image /
+Export PNG / Describe specs) and the Measurements panel menu "Copy as spec
+list"; `capture-wt.html` step 11 (Copy image, ⌘C).
+
+- **Copy image / Export PNG** already exist app-wide, and since 16.15 the
+  caliper (chip included) is baked into every export by construction. The
+  delta is surfacing the two existing actions as convenience buttons in an
+  Export section of the measure inspector, per the mock.
+- **Copy as spec list** is new — `MeasureSpecList.render(document:) -> String`
+  in `PhotonzCore` (TDD, format pinned by tests): a header line
+  `<document name> · <W> × <H> px`, then one line per **visible** measurement
+  in panel order: `- <name>: <value> <unit> (<role>)`. Plain text to the
+  clipboard. This is the deterministic half of the mock's "the agent can hand
+  back the spec list" promise.
+- **Describe specs** (the mock's agent button) is NOT specced — queue decision
+  **D4**.
+
+## 8. Snapping option: centers — `next-measure-center-snap`
+
+Mock: `redline.html` tool options row `Snap: Edges and centers`.
+
+Tool options gain the mock's Snap control with two values, **Edges** and
+**Edges and centers**. With centers on, `EdgeSnapping` also offers **midpoint
+candidates**: the midpoint between each pair of adjacent accepted edges in the
+query window (element centers and gap centers fall out of the same rule),
+scored below a real edge at equal distance so an edge always wins a tie. Core
+TDD alongside the existing snapping tests. Default follows the mock: Edges and
+centers. ⌘ bypass covers both.
+
+## 9. Alignment checks — concept covered, gated on decision D1
+
+Mock: `redline.html` dashed guide spanning four left edges with an `aligned`
+tag, the legend's Alignment row, the Measurements row "Left edge alignment ·
+4 items", and the `Align` option in the Role control.
+
+The concept: an alignment **check** is a measurement object whose value is a
+verdict — the elements it spans either share an edge (tag: `aligned`) or do
+not (the useful redline: tag the outlier and its delta). It would render as the
+mock's dashed guide with a tag chip, list in the panel with an item count, and
+carry the third `MeasureRole`.
+
+It is **not specced further** because (a) the mock never shows the creation
+gesture, and (b) phase 16.6 shipped draggable alignment guides and the user
+rejected them ("I don't know when I'd use a guide") — this is a check with a
+verdict, not a snapping guide, but that history makes the value question the
+user's call, not a guess (see also the 16.7 auto-inspect spike, which could
+subsume it). Filed as queue decision **D1**; the model (§ 5) is shaped to
+absorb the role if it lands.
+
+## 10. Decision index (open questions → queue, not this doc)
+
+| # | Question | Queue task holding the decision |
+| --- | --- | --- |
+| D1 | Build alignment checks (and how are they created), fold into the 16.7 auto-inspect spike, or skip? | `next-measure-alignment-checks-blocked-on-decisio` |
+| D2 | Two-point measure: stay H/V-only (16.12 decision) or offer the mock's free-angle caliper? | `next-measure-free-angle-two-point-measure-blocke` |
+| D3 | Measurement names: derived defaults + rename, or OCR semantic names like the mock's "Save Changes · width"? | `next-measure-measurement-naming-blocked-on-decis` |
+| D4 | The mock's "Describe specs" agent action: omit, script-surface only, or build? | `next-measure-describe-specs-agent-action-blocked` |
+
+## 11. Shown in the mocks but deliberately out of scope
+
+- **Saved measure Styles / redline Components** (`capture-wt.html` Library tile
+  "Caliper / red", caption "A direction"): the mock itself labels this
+  directional, and per-role style memory (§ 5) already covers "same calipers on
+  every capture". Revisit only with explicit user demand.
+- **Workspace switcher (Image / UI / Video), ⌘K palette, History sheet**: shell
+  furniture of the mock study, owned by other tracks, unchanged by this spec.
+- **Hover click-to-stamp**: hover is a readout in the mock; committing stays
+  the existing placement flow.
+- **Units**: "Logical (px)" is the shipped px/pt control; `pixelScale`
+  auto-detect from capture DPI remains a phase-16 follow-up, not re-specced.
+
+## 12. Done when (per flag)
+
+- `next-measure-hover`: hovering a settings-style capture with the Measure tool
+  outlines the row/button/field under the pointer with width + height readouts;
+  a fully flat region shows nothing; ⌘ suppresses; no history entries appear;
+  `ElementBounds` unit tests cover found/partial/nested/radius-capped cases.
+- `next-measure-roles`: a caliper can be re-roled between Size and Spacing with
+  the role's colors applied and remembered per role; legend appears in measure
+  mode listing only present roles; Show filter hides the other role on canvas
+  but never in an export. Codable round-trip + legacy-decode tests green.
+- `next-measure-panel`: panel rows, canvas selection, and the inspector agree
+  on selection; eye/Show all/Hide all/Clear behave as one undo step each;
+  count pill matches the panel count; Copy as spec list output matches the
+  pinned format for a fixture document.
+- `next-measure-center-snap`: with centers enabled a foot drag lands on the
+  midpoint between two rows when nearer than either edge; edges win ties;
+  option persists with the tool's styles.
+- All of it: flags appear only in the Next release's Experiments list; Current
+  behavior is byte-identical with flags absent/off; `Scripts/test.sh` green.

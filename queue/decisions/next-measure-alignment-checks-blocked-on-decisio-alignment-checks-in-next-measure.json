@@ -1,0 +1,26 @@
+{
+  "id": "next-measure-alignment-checks-blocked-on-decisio-alignment-checks-in-next-measure",
+  "taskId": "next-measure-alignment-checks-blocked-on-decisio",
+  "question": "Alignment checks in Next Measure: build, fold into the auto-inspect spike, or skip?",
+  "context": "The redline mock shows a dashed left-edge guide tagged aligned spanning 4 elements, an Align role option, and a panel row Left edge alignment / 4 items. But the mock never shows how one gets created, and phase 16.6 draggable alignment guides were built and rejected (you said you did not know when you would use a guide). A check with a verdict is a different value prop from a snapping guide, so it may still earn its place; asking before building per the validate-first rule. Spec: docs/design/next-measure.md section 9.",
+  "options": [
+    {
+      "id": "role",
+      "label": "Build as an Align measurement role",
+      "detail": "Drag along an edge to create an alignment check: it verifies the elements the line crosses share that edge (edge-map based), renders the mock dashed guide with an aligned / off-by-N tag, and lists in the Measurements panel with an item count."
+    },
+    {
+      "id": "spike",
+      "label": "Fold into the 16.7 auto-inspect spike",
+      "detail": "No hand tool. Alignment findings (and spacing outliers) come from an analyzer pass over the edge map, scoped by marquee."
+    },
+    {
+      "id": "skip",
+      "label": "Skip alignment for v1",
+      "detail": "Ship size + spacing roles only; revisit after hover-to-measure and the panel prove out."
+    }
+  ],
+  "recommended": "role",
+  "status": "pending",
+  "created": "2026-08-22T23:11:09.040Z"
+}

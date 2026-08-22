@@ -3686,3 +3686,24 @@ validated for CVD + contrast in both themes.
 
 Next: let the loop run; resolve decisions on the dashboard; watch the first
 daily digest land.
+
+## 2026-08-22 — Next Measure spec (go-loop task, redline mocks → implementable plan)
+
+Wrote `docs/design/next-measure.md`: the redline + capture-wt mock concepts
+translated into a spec for the **Next** release, built around the shipped
+phase-16 caliper rather than over it. Specced (each behind a `next`-scoped
+feature flag): hover-to-measure element size readout (`ElementBounds.detect`
+over the existing windowed EdgeMap queries), measurement roles (Size/Spacing)
+with per-role style memory + canvas legend + Show filter, a Measurements dock
+panel (shared selection, Show/Hide all, Clear, count pill), Copy-as-spec-list
+export (`MeasureSpecList`, pinned format), and a centers snapping option.
+Every section cites its mock element; exclusions are listed with reasons.
+
+Four open questions became dashboard decisions on blocked holder tasks instead
+of spec guesses: alignment checks (16.6 guides were rejected — asking, not
+building), free-angle vs H/V two-point measure, measurement naming (derived vs
+OCR), and the "Describe specs" agent button. Four implementation tasks queued
+(hover readout at p1; roles, panel+export at p2; centers snap at p3).
+
+Next: user resolves the decisions on the dashboard; the loop picks up
+`next-measure-hover-to-measure-size-readout`.

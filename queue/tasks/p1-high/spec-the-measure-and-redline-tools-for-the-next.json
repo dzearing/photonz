@@ -2,11 +2,11 @@
   "id": "spec-the-measure-and-redline-tools-for-the-next",
   "title": "Spec the Measure and redline tools for the Next release",
   "priority": "p1-high",
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.702Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-22T23:04:10.136Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Primary real-world use of Photonz is UX redlining of screenshots. Write docs/design/next-measure.md translating the capture-wt and redline mock concepts into an implementable spec for the Next release: measurement overlays, gap/size readouts, alignment checks, export of annotations. Ground every feature in the mock pages; flag anything speculative as a decision instead of speccing it. Acceptance: spec reviewed against mocks, open questions filed as queue decisions.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria"
+    },
+    {
+      "t": "2026-08-22T23:04:10.136Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:20:00.000Z",
+      "note": "read both mocks (redline.html, capture-wt.html) plus the phase-16 caliper baseline; the spec covers only the deltas the mocks add"
+    },
+    {
+      "t": "2026-08-22T23:40:00.000Z",
+      "note": "wrote docs/design/next-measure.md: hover-to-measure size readout, roles + legend + show filter, Measurements panel, spec-list export, centers snapping; alignment checks covered as a concept but gated on a decision (16.6 guides were rejected); every section cites its mock element; registered in overview.md"
+    },
+    {
+      "t": "2026-08-22T23:45:00.000Z",
+      "note": "filed 4 open questions as queue decisions on blocked holder tasks (alignment checks, free-angle, naming, describe-specs agent) and queued 4 implementation tasks (hover readout p1, roles p2, panel + spec list p2, centers snap p3)"
     }
-  ]
+  ],
+  "started": "2026-08-22T23:04:10.135Z"
 }

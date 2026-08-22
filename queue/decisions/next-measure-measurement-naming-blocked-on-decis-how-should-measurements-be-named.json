@@ -1,0 +1,26 @@
+{
+  "id": "next-measure-measurement-naming-blocked-on-decis-how-should-measurements-be-named",
+  "taskId": "next-measure-measurement-naming-blocked-on-decis",
+  "question": "How should measurements be named in the Measurements panel and spec list?",
+  "context": "The redline mock panel shows semantic names (Save Changes / width, Row gap / Appearance, Field to button gap). A screenshot has no UI tree, so semantic names require OCR. Names also feed the Copy as spec list export. Spec: docs/design/next-measure.md section 6.",
+  "options": [
+    {
+      "id": "derived",
+      "label": "Derived names + inline rename",
+      "detail": "Rows default to axis word + value (Width 128 px, Gap 16 px); double-click a row to rename. Simple, offline, testable in core."
+    },
+    {
+      "id": "ocr",
+      "label": "Semantic names via text recognition",
+      "detail": "Use Vision text recognition near the measured element to build names like the mock (Save Changes / width). App-layer only, falls back to derived names when no text is found; more magic, more wrong-name risk."
+    },
+    {
+      "id": "values-only",
+      "label": "Values only, no names",
+      "detail": "Rows and the spec list show just role + value. Least work, but a 20-row spec list becomes hard to read."
+    }
+  ],
+  "recommended": "derived",
+  "status": "pending",
+  "created": "2026-08-22T23:11:19.717Z"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "next-measure-hover-to-measure-size-readout",
+  "title": "Next Measure: hover-to-measure size readout",
+  "priority": "p1-high",
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:11:40.794Z",
+  "updated": "2026-08-22T23:11:40.795Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Implement docs/design/next-measure.md section 3 behind flag next-measure-hover (Next release only): ElementBounds.detect(at:in:) in PhotonzCore over the existing windowed EdgeMap queries (TDD first), canvas-overlay element outline + transient width/height calipers in the current unit, first-run hint chip, Cmd suppresses, quiet miss when any side is missing. No document mutation, no composite re-render; under 1ms per mouse move.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:11:40.795Z",
+      "note": "created (manual)"
+    }
+  ]
+}

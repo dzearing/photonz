@@ -1,0 +1,26 @@
+{
+  "id": "next-measure-free-angle-two-point-measure-blocke-two-point-measure-keep-the-calip",
+  "taskId": "next-measure-free-angle-two-point-measure-blocke",
+  "question": "Two-point measure: keep the caliper H/V-only or offer the mock free-angle version?",
+  "context": "The redline mock renders the live two-point measurement as a caliper rotated to any angle. The shipped caliper is deliberately horizontal/vertical only after the 16.12 redesign. Spec: docs/design/next-measure.md section 3, last paragraph.",
+  "options": [
+    {
+      "id": "keep-hv",
+      "label": "Keep H/V only",
+      "detail": "The 16.12 redesign deliberately dropped free/diagonal mode for one opinionated interaction. UX redlining is almost always axis-aligned; the mock hint (click two points) still works, the caliper just levels to the dominant axis."
+    },
+    {
+      "id": "shift-free",
+      "label": "H/V default, modifier for free angle",
+      "detail": "Hold Shift while placing the second point to get a rotated caliper measuring the true diagonal; release-to-level otherwise."
+    },
+    {
+      "id": "free-default",
+      "label": "Free angle by default (as the mock draws)",
+      "detail": "The live caliper rotates to the exact angle between the two clicked points; brings back the complexity 16.12 removed."
+    }
+  ],
+  "recommended": "keep-hv",
+  "status": "pending",
+  "created": "2026-08-22T23:11:14.686Z"
+}
