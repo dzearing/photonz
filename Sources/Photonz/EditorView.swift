@@ -231,9 +231,26 @@ struct EditorView: View {
                        onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
                        onClearBackground: { editorState.clearBackgroundLayer() },
                        onWindowChange: { editorState.canvasDidMoveToWindow($0) })
+                .overlay(alignment: .bottom) {
+                    if editorState.showsMeasureHint { measureHintChip }
+                }
+                .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
         } else {
             emptyState
         }
+    }
+
+    /// First-run hint for the Measure tool (Next, `next-measure-hover`): a
+    /// small glass pill that lives until the document's first caliper lands.
+    private var measureHintChip: some View {
+        Text("Click two points for a live distance")
+            .font(.callout)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .glassEffect(.regular, in: .capsule)
+            .padding(.bottom, 14)
+            .allowsHitTesting(false)
+            .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
     private var emptyState: some View {

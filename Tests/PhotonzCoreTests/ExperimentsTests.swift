@@ -316,6 +316,16 @@ struct FeatureCatalogTests {
             .string(FeatureCatalog.releaseTagFlag, FeatureCatalog.releaseTagLabel) == Release.next.title)
     }
 
+    @Test func theHoverMeasureFlagIsNextOnlyAndOnByDefault() {
+        // Section 3 of docs/design/next-measure.md: the readout exists only in
+        // Next (default on there), and Current never even lists the flag.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureHoverFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureHoverFlag })
+        #expect(FeatureCatalog.defaultSettings(for: .next)
+            .number(FeatureCatalog.measureHoverFlag, FeatureCatalog.measureHoverRadius)
+            == ElementBounds.defaultMaxRadius)
+    }
+
     @Test func theToastTimingFlagShipsWithTheBuiltInSeconds() {
         let settings = FeatureCatalog.defaultSettings(for: .current)
         #expect(!settings.isEnabled(FeatureCatalog.captureToastTimingFlag))

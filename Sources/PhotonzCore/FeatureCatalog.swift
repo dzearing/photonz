@@ -28,6 +28,9 @@ public enum FeatureCatalog {
     public static let captureToastHoldSeconds: Double = 7
     public static let captureToastFadeSeconds: Double = 3
 
+    public static let measureHoverFlag = "next-measure-hover"
+    public static let measureHoverRadius = "radius"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -73,6 +76,19 @@ public enum FeatureCatalog {
                     ]),
                 releases: [.current, .next],
                 enabledByDefaultIn: []),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureHoverFlag,
+                    title: "Hover to measure",
+                    description: "While the Measure tool is idle, hovering outlines the element under the pointer with its width and height. Hold Command to suppress it.",
+                    isEnabled: false,
+                    parameters: [
+                        FeatureParameter(name: measureHoverRadius, label: "Search radius (px)",
+                                         value: .number(ElementBounds.defaultMaxRadius),
+                                         bounds: NumberBounds(minimum: 100, maximum: 2000, step: 50)),
+                    ]),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
         ]
     }
 

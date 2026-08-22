@@ -856,7 +856,24 @@ final class EditorState {
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
+        measureHintDismissed = true
         finishCreating(layer.id)
+    }
+
+    /// Once the first caliper lands in this document, the measure hint chip is
+    /// gone for good — deleting every measurement doesn't bring it back.
+    /// Session-scoped on purpose: hint state is chrome and never persists into
+    /// the document.
+    private var measureHintDismissed = false
+
+    /// Whether the Measure tool's first-run hint chip ("Click two points for a
+    /// live distance") shows: Next's hover flag on, Measure tool active, and no
+    /// caliper has ever landed in this document.
+    var showsMeasureHint: Bool {
+        guard activeTool == .measure, !measureHintDismissed,
+              Experiments.shared.measureHoverEnabled,
+              let document else { return false }
+        return !document.layers.contains { $0.measure != nil }
     }
 
     // MARK: - Measure styling

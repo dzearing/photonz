@@ -127,6 +127,18 @@ extension Experiments {
             ?? FeatureCatalog.captureToastHoldSeconds
     }
 
+    /// `next-measure-hover`: whether the Measure tool's idle hover reads the
+    /// element under the pointer (outline + transient size calipers). Exists
+    /// only in the Next release's catalog, so Current always reads false.
+    var measureHoverEnabled: Bool { isEnabled(FeatureCatalog.measureHoverFlag) }
+
+    /// `next-measure-hover`: how far (image px) the element-bounds walk reaches
+    /// before a side counts as missing.
+    var measureHoverMaxRadius: Double {
+        number(FeatureCatalog.measureHoverFlag, FeatureCatalog.measureHoverRadius)
+            ?? ElementBounds.defaultMaxRadius
+    }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

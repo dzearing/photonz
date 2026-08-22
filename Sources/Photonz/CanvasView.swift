@@ -242,6 +242,25 @@ final class CanvasNSView: NSView {
     /// the cursor and magnetizes to the nearest detected edge (⌘ bypasses),
     /// marking where a drag will begin.
     private let snapDotLayer = CAShapeLayer()
+    /// Hover-to-measure readout (`next-measure-hover`, Next release): while the
+    /// Measure tool idles over the image, the element rect under the pointer
+    /// gets a tinted outline plus two transient size calipers (width along the
+    /// bottom edge, height along the right), rasterized exactly like committed
+    /// calipers. Canvas chrome only — nothing here touches the document, makes
+    /// history entries, or triggers a composite re-render.
+    private let hoverBoundsLayer = CAShapeLayer()
+    private let hoverWidthCaliperLayer = CALayer()
+    private let hoverHeightCaliperLayer = CALayer()
+    /// A rasterized transient caliper, cached so resting on one element (or
+    /// gliding within it) never re-renders text per mouse move.
+    private struct HoverCaliperSprite {
+        let key: String
+        let image: CGImage
+        /// Document-space frame of the rasterized caliper layer.
+        let frame: CGRect
+    }
+    private var hoverWidthSprite: HoverCaliperSprite?
+    private var hoverHeightSprite: HoverCaliperSprite?
     /// Latest pointer location in view space, for the hover snap dot.
     private var hoverPoint: CGPoint?
     /// Dashed wells + a plus glyph over every EMPTY collage slot — editor
@@ -719,6 +738,18 @@ final class CanvasNSView: NSView {
         snapDotLayer.isHidden = true
         layer?.addSublayer(snapDotLayer)
 
+        // Hover-to-measure readout: outline styling lands per-refresh (it
+        // follows the measure style's ink); the caliper sprites sit at reduced
+        // opacity so a transient readout never reads as a committed caliper.
+        hoverBoundsLayer.lineWidth = 1.5
+        for hoverLayer in [hoverBoundsLayer, hoverWidthCaliperLayer, hoverHeightCaliperLayer] {
+            hoverLayer.isHidden = true
+            hoverLayer.zPosition = 95
+            layer?.addSublayer(hoverLayer)
+        }
+        hoverWidthCaliperLayer.opacity = 0.85
+        hoverHeightCaliperLayer.opacity = 0.85
+
         // Selection handles and the snap dot must sit ABOVE the caliper label
         // pills (which are NSView subviews), so a caliper's third (head) handle
         // isn't hidden behind its own glass chip.
@@ -899,13 +930,117 @@ final class CanvasNSView: NSView {
         measurePressDownView = nil
         snapGuide = nil
         snapDotLayer.isHidden = true
+        hideMeasureHoverReadout()
         clearAnnotationPreview()
+    }
+
+    // MARK: Hover-to-measure element readout (Next, `next-measure-hover`)
+
+    /// Hides every hover-to-measure layer (a miss, ⌘, placement, tool switch).
+    private func hideMeasureHoverReadout() {
+        hoverBoundsLayer.isHidden = true
+        hoverWidthCaliperLayer.isHidden = true
+        hoverHeightCaliperLayer.isHidden = true
+    }
+
+    /// Draws (or hides) the hover-to-measure readout for the current pointer:
+    /// detect the element rect under the probe with `ElementBounds` and outline
+    /// it with transient width/height calipers in the current unit. Misses are
+    /// quiet (no chrome at all), ⌘ suppresses — the same key that bypasses
+    /// snapping — and until the edge map has finished computing, detection sees
+    /// `EdgeMap.empty` and this stays a no-op, the same gate snapping uses.
+    private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
+        guard tool == .measure, measurePlacement == nil,
+              !modifierFlags.contains(.command),
+              Experiments.shared.measureHoverEnabled,
+              let viewport, let document, let hoverPoint else {
+            hideMeasureHoverReadout()
+            return
+        }
+        let probe = viewport.documentPoint(fromView: hoverPoint)
+        guard CGRect(origin: .zero, size: document.canvasSize).contains(probe),
+              let rect = ElementBounds.detect(at: probe, in: edgeMap,
+                                              maxRadius: Experiments.shared.measureHoverMaxRadius) else {
+            hideMeasureHoverReadout()
+            return
+        }
+
+        let style = measureContent ?? MeasureContent()
+        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+
+        // Element outline: the measure ink at reduced opacity + a whisper of fill.
+        let corners = [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
+                       CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)]
+            .map { viewport.viewPoint(fromDocument: $0) }
+        let outline = CGMutablePath()
+        outline.addLines(between: corners)
+        outline.closeSubpath()
+        hoverBoundsLayer.path = outline
+        hoverBoundsLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 0.7)
+        hoverBoundsLayer.fillColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 0.05)
+        hoverBoundsLayer.isHidden = false
+
+        // Width caliper along the bottom edge, height caliper along the right,
+        // both heads pointing outward.
+        let reach = MeasureContent.defaultHeadOffset / 2
+        layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
+                           style: style, mode: .horizontal,
+                           from: CGPoint(x: rect.minX, y: rect.maxY),
+                           to: CGPoint(x: rect.maxX, y: rect.maxY),
+                           headOffset: reach, viewport: viewport,
+                           pixelScale: document.pixelScale)
+        layoutHoverCaliper(hoverHeightCaliperLayer, sprite: &hoverHeightSprite,
+                           style: style, mode: .vertical,
+                           from: CGPoint(x: rect.maxX, y: rect.minY),
+                           to: CGPoint(x: rect.maxX, y: rect.maxY),
+                           headOffset: reach, viewport: viewport,
+                           pixelScale: document.pixelScale)
+    }
+
+    /// Positions one transient caliper layer, rasterizing through the same
+    /// `MeasureBuilder`/`MeasureRasterizer` pipeline a committed caliper uses so
+    /// the readout (chip, unit, decimals, ink) matches a real measure exactly.
+    /// The raster is cached until the measured span or style actually changes.
+    private func layoutHoverCaliper(_ caliperLayer: CALayer, sprite: inout HoverCaliperSprite?,
+                                    style: MeasureContent, mode: MeasureMode,
+                                    from start: CGPoint, to end: CGPoint, headOffset: CGFloat,
+                                    viewport: Viewport, pixelScale: CGFloat) {
+        var content = style
+        content.mode = mode
+        content.headOffset = headOffset
+        content.showLabel = true
+        let built = MeasureBuilder.layer(content: content, from: start, to: end)
+        let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
+            + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
+            + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)"
+        if sprite?.key != key {
+            guard let measure = built.measure,
+                  let image = MeasureRasterizer.rasterize(measure, size: built.frame.size,
+                                                          pixelScale: pixelScale) else {
+                sprite = nil
+                caliperLayer.isHidden = true
+                return
+            }
+            sprite = HoverCaliperSprite(key: key, image: image, frame: built.frame)
+        }
+        guard let sprite else { return }
+        caliperLayer.contents = sprite.image
+        let origin = viewport.viewPoint(fromDocument: sprite.frame.origin)
+        caliperLayer.frame = CGRect(x: origin.x, y: origin.y,
+                                    width: sprite.frame.width * viewport.zoom,
+                                    height: sprite.frame.height * viewport.zoom)
+        caliperLayer.isHidden = false
     }
 
     /// Draws the measure tool's creation chrome — the snapping dot(s) and the
     /// in-progress preview line/squared-U — for the 3-click placement flow. ⌘
     /// bypasses edge snapping throughout.
     private func refreshMeasureCreation(modifierFlags: NSEvent.ModifierFlags) {
+        refreshMeasureHoverReadout(modifierFlags: modifierFlags)
         guard tool == .measure, let viewport else {
             snapDotLayer.isHidden = true
             return
@@ -1792,6 +1927,7 @@ final class CanvasNSView: NSView {
             cropDrag = nil
             transformDrag = nil
             transformHold = nil
+            hideMeasureHoverReadout()
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
             // tick because this runs inside a SwiftUI update.
@@ -1851,6 +1987,7 @@ final class CanvasNSView: NSView {
             layerOutlineLayer.isHidden = true
             snapGuideLayer.isHidden = true
             snapDotLayer.isHidden = true
+            hideMeasureHoverReadout()
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
             annotationPreviewLayer.isHidden = true

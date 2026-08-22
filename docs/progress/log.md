@@ -3707,3 +3707,29 @@ OCR), and the "Describe specs" agent button. Four implementation tasks queued
 
 Next: user resolves the decisions on the dashboard; the loop picks up
 `next-measure-hover-to-measure-size-readout`.
+
+## 2026-08-22 — Next Measure: hover-to-measure size readout (go-loop task)
+
+Implemented `docs/design/next-measure.md` § 3 behind `next-measure-hover`
+(Next-only, default on, with a Search radius parameter). Core:
+`ElementBounds.detect(at:in:)` in PhotonzCore walks the four directions from
+the probe over the existing windowed EdgeMap queries (perpendicular window
+centered on the probe, probe-side luma landings, 600 px default radius); any
+missing side is a quiet miss. TDD: 9 tests in `ElementBoundsTests` cover
+found/partial/nested/gutter/radius-capped/luma-landing plus a generous-slack
+perf smoke for the sub-1ms mouse-move budget.
+
+App: `CanvasNSView` gained a tinted element outline + two transient size
+calipers (width along the bottom edge, height along the right), rasterized
+through the same MeasureBuilder/MeasureRasterizer pipeline as committed
+calipers so the chip/unit/ink match exactly — sprites cached per element rect,
+so resting on one element costs two windowed queries per move and no text
+re-render. ⌘ suppresses; placement start, Esc, tool switch, and leaving the
+image all clear it; nothing touches the document or composite. The first-run
+hint chip ("Click two points for a live distance") shows in EditorView while
+the Measure tool is active until the document's first caliper lands
+(session-scoped, never persisted).
+
+Verified: full suite green (871 tests), dev app builds, launches, and opens a
+document cleanly. Not verified visually (no screen-capture in this session):
+the on-canvas look of the hover chrome — worth a glance next manned session.
