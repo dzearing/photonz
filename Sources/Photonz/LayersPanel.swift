@@ -976,15 +976,34 @@ struct MeasureInspector: View {
                             .frame(width: 42, alignment: .trailing)
                     }
                 }
-                // Color is a narrow control, so its label sits to the left.
-                HStack {
-                    Text("Color").font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    ColorPicker("Color", selection: Binding(
-                        get: { Color(hex: c.colorHex) },
-                        set: { if let hex = $0.hexString { editorState.setMeasureColor(hex, commit: true) } }),
-                        supportsOpacity: false)
-                        .labelsHidden().controlSize(.small)
+                // The three colors are narrow controls, so their labels sit to
+                // the left. Stroke = caliper ink + chip border; Chip = the pill's
+                // fill (its own opacity, reachable all the way to invisible);
+                // Text = the readout.
+                swatchRow("Stroke", hex: c.strokeColorHex) {
+                    editorState.setMeasureStrokeColor($0, commit: true)
+                }
+                swatchRow("Chip", hex: c.chipColorHex) {
+                    editorState.setMeasureChipColor($0, commit: true)
+                } trailing: {
+                    // During a drag the committed doc hasn't changed, so read the
+                    // live preview value (else the thumb snaps back / resets).
+                    let live = editorState.measureChipOpacityPreview?.opacity ?? c.chipOpacity
+                    Slider(value: Binding(
+                        get: { Double(live) },
+                        set: { editorState.previewMeasureChipOpacity(CGFloat($0)) }),
+                           in: 0...1,
+                           onEditingChanged: { editing in
+                               if !editing {
+                                   editorState.commitMeasureChipOpacity(
+                                       editorState.measureChipOpacityPreview?.opacity ?? c.chipOpacity)
+                               }
+                           })
+                        .controlSize(.small)
+                        .help("Chip background opacity: all the way down is fully transparent.")
+                }
+                swatchRow("Text", hex: c.textColorHex) {
+                    editorState.setMeasureTextColor($0, commit: true)
                 }
             }
             .padding(.horizontal, 14)
@@ -999,6 +1018,24 @@ struct MeasureInspector: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
+        }
+    }
+
+    /// One color row: caption on the left, an optional inline control, then the
+    /// swatch on the right so the three swatches line up in a column.
+    @ViewBuilder private func swatchRow<Trailing: View>(
+        _ label: String, hex: String, set: @escaping (String) -> Void,
+        @ViewBuilder trailing: () -> Trailing = { EmptyView() }) -> some View {
+        HStack(spacing: 8) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+                .frame(width: 44, alignment: .leading)
+            ColorPicker(label, selection: Binding(
+                get: { Color(hex: hex) },
+                set: { if let picked = $0.hexString { set(picked) } }),
+                supportsOpacity: false)
+                .labelsHidden().controlSize(.small)
+            trailing()
+            Spacer(minLength: 0)
         }
     }
 }

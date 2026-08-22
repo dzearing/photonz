@@ -71,7 +71,16 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     public var headOffset: CGFloat
     public var mode: MeasureMode
     public var strokeWidth: CGFloat
-    public var colorHex: String
+    /// The caliper's ink: legs, head line, and the label chip's border.
+    public var strokeColorHex: String
+    /// The label chip's fill. Its alpha lives in `chipOpacity`, NOT in this hex —
+    /// `RGBA.hexString` emits six digits and drops alpha, so a `#RRGGBBAA` stored
+    /// here would lose its transparency on the first round-trip through a picker.
+    public var chipColorHex: String
+    /// The label chip fill's alpha, 0 (invisible chip) … 1 (solid). Clamped.
+    public var chipOpacity: CGFloat
+    /// The numeric readout's color.
+    public var textColorHex: String
     /// Whether the numeric size readout is drawn. The label is always shown in the
     /// UI now (no toggle); the field stays for internal/legacy use.
     public var showLabel: Bool
@@ -84,28 +93,47 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
                 mode: MeasureMode = .horizontal, strokeWidth: CGFloat = 1,
-                colorHex: String = "#FF3B30", showLabel: Bool = true,
+                strokeColorHex: String = MeasureContent.defaultStrokeColorHex,
+                chipColorHex: String = MeasureContent.defaultChipColorHex,
+                chipOpacity: CGFloat = MeasureContent.defaultChipOpacity,
+                textColorHex: String = MeasureContent.defaultStrokeColorHex,
+                showLabel: Bool = true,
                 unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1) {
         self.start = start
         self.end = end
         self.headOffset = headOffset
         self.mode = mode
         self.strokeWidth = strokeWidth
-        self.colorHex = colorHex
+        self.strokeColorHex = strokeColorHex
+        self.chipColorHex = chipColorHex
+        self.chipOpacity = MeasureContent.clampedOpacity(chipOpacity)
+        self.textColorHex = textColorHex
         self.showLabel = showLabel
         self.unit = unit
         self.decimals = decimals
         self.labelScale = labelScale
     }
 
+    /// Default caliper ink — the original single measure color.
+    public static let defaultStrokeColorHex = "#FF3B30"
+    /// Default chip fill: the neutral white the rasterizer used to hardcode…
+    public static let defaultChipColorHex = "#FFFFFF"
+    /// …at the alpha it used to hardcode with it.
+    public static let defaultChipOpacity: CGFloat = 0.92
+
+    /// Alpha clamped into 0…1 (a picker or a hand-edited document can overshoot).
+    static func clampedOpacity(_ value: CGFloat) -> CGFloat { min(max(value, 0), 1) }
+
     enum CodingKeys: String, CodingKey {
-        case start, end, headOffset, mode, strokeWidth, colorHex, showLabel, unit, decimals, labelScale
-        // Legacy keys (decode-only) from the pre-caliper measure model.
-        case form, capStyle
+        case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
+        case strokeColorHex, chipColorHex, chipOpacity, textColorHex
+        // Legacy keys from the pre-caliper measure model (decode-only) and the
+        // pre-split single color (decode + a write-only mirror, see `encode`).
+        case form, capStyle, colorHex
     }
 
     /// Explicit so the legacy-only `CodingKeys` cases don't block synthesis; only
-    /// the current caliper keys are written.
+    /// the current caliper keys are written (plus the legacy color mirror).
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(start, forKey: .start)
@@ -113,7 +141,15 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(headOffset, forKey: .headOffset)
         try c.encode(mode, forKey: .mode)
         try c.encode(strokeWidth, forKey: .strokeWidth)
-        try c.encode(colorHex, forKey: .colorHex)
+        try c.encode(strokeColorHex, forKey: .strokeColorHex)
+        try c.encode(chipColorHex, forKey: .chipColorHex)
+        try c.encode(chipOpacity, forKey: .chipOpacity)
+        try c.encode(textColorHex, forKey: .textColorHex)
+        // Write-only mirror of the pre-split key: a build from before the color
+        // split REQUIRES `colorHex`, so keeping it here means an older Photonz can
+        // still open documents this one saves (it just sees one color). Never read
+        // back when `strokeColorHex` is present.
+        try c.encode(strokeColorHex, forKey: .colorHex)
         try c.encode(showLabel, forKey: .showLabel)
         try c.encode(unit, forKey: .unit)
         try c.encode(decimals, forKey: .decimals)
@@ -128,7 +164,17 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         let s = try c.decode(CGPoint.self, forKey: .start)
         let e = try c.decode(CGPoint.self, forKey: .end)
         strokeWidth = try c.decode(CGFloat.self, forKey: .strokeWidth)
-        colorHex = try c.decode(String.self, forKey: .colorHex)
+        // Pre-split documents carry one `colorHex`; it seeded both the ink and the
+        // readout, and the chip was always white at 92%. Migrating that way makes
+        // an existing caliper look byte-identical to how it looked before.
+        let legacyColor = try c.decodeIfPresent(String.self, forKey: .colorHex)
+        strokeColorHex = try c.decodeIfPresent(String.self, forKey: .strokeColorHex)
+            ?? legacyColor ?? Self.defaultStrokeColorHex
+        textColorHex = try c.decodeIfPresent(String.self, forKey: .textColorHex) ?? strokeColorHex
+        chipColorHex = try c.decodeIfPresent(String.self, forKey: .chipColorHex)
+            ?? Self.defaultChipColorHex
+        chipOpacity = Self.clampedOpacity(
+            try c.decodeIfPresent(CGFloat.self, forKey: .chipOpacity) ?? Self.defaultChipOpacity)
         showLabel = try c.decode(Bool.self, forKey: .showLabel)
         unit = try c.decode(MeasureUnit.self, forKey: .unit)
         decimals = try c.decode(Int.self, forKey: .decimals)
@@ -380,13 +426,18 @@ public enum MeasureBuilder {
 
     /// Style/readout edit on an existing measure: feet stay anchored in document
     /// space while the frame re-pads for any new stroke width.
-    public static func restyled(_ layer: Layer, colorHex: String? = nil, strokeWidth: CGFloat? = nil,
+    public static func restyled(_ layer: Layer, strokeColorHex: String? = nil,
+                                chipColorHex: String? = nil, chipOpacity: CGFloat? = nil,
+                                textColorHex: String? = nil, strokeWidth: CGFloat? = nil,
                                 showLabel: Bool? = nil, unit: MeasureUnit? = nil, decimals: Int? = nil,
                                 mode: MeasureMode? = nil, labelScale: CGFloat? = nil) -> Layer {
         guard var m = layer.measure,
               let start = layer.measureEndpoint(.start),
               let end = layer.measureEndpoint(.end) else { return layer }
-        if let colorHex { m.colorHex = colorHex }
+        if let strokeColorHex { m.strokeColorHex = strokeColorHex }
+        if let chipColorHex { m.chipColorHex = chipColorHex }
+        if let chipOpacity { m.chipOpacity = MeasureContent.clampedOpacity(chipOpacity) }
+        if let textColorHex { m.textColorHex = textColorHex }
         if let strokeWidth { m.strokeWidth = strokeWidth }
         if let showLabel { m.showLabel = showLabel }
         if let unit { m.unit = unit }

@@ -183,6 +183,7 @@ struct EditorView: View {
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyle,
                        measureLabelPreview: editorState.measureLabelPreview,
+                       measureChipOpacityPreview: editorState.measureChipOpacityPreview,
                        edgeMap: editorState.snappingEdgeMap,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },

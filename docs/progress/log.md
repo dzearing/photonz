@@ -3285,3 +3285,45 @@ errors, `.kfm`/`.speed` now size correctly on both comp-video and video, no
 horizontal overflow, elevation guard clean.
 
 **Next:** `pages/lang-resize.html` still hangs the tab on load (pre-existing).
+
+## 2026-08-21 — the caliper's one color becomes three
+
+**Stroke, chip, and text are now independently editable.** The measure tool had
+a single `colorHex` driving the outline, the chip border, and the readout, with
+a hardcoded white-at-92% chip fill nobody could touch. `MeasureContent` now
+carries `strokeColorHex` (legs, head line, chip border), `chipColorHex` +
+`chipOpacity`, and `textColorHex`. The chip's alpha is its own `CGFloat` field
+rather than an 8-digit hex on purpose: `RGBA.hexString` emits six digits and
+drops alpha, so a `#RRGGBBAA` chip color would quietly lose its transparency the
+first time it round-tripped through the picker.
+
+**Existing documents open looking identical.** The hand-written `init(from:)`
+falls back to the legacy `colorHex` for both stroke and text, and to white/0.92
+for the chip — the exact fill the rasterizer used to hardcode. `encode` still
+writes `colorHex` as a write-only mirror of the stroke color, because a build
+from before the split *requires* that key; without the mirror, a downgrade would
+fail to open its own documents.
+
+**Two deliberate visual decisions**, both noted in the code:
+- The chip border now uses the stroke color at full strength instead of 0.7
+  alpha. The softening existed to sit politely under a fixed white chip; now that
+  the chip can be transparent, the border is often the only thing closing the
+  head line's gap, so it has to read as the same line as the caliper.
+- The live pill lost its `NSVisualEffectView` backdrop blur. Exports can't bake a
+  blur, so any frost made the on-canvas caliper disagree with the exported file,
+  and a "fully transparent" chip would still have shown a frosted blob. The
+  overlay now paints the exact chip color and alpha it will bake.
+
+**Inspector**: the single Color row became three — `Stroke [swatch]`,
+`Chip [swatch] [opacity slider]`, `Text [swatch]` — with the swatches aligned in
+a column. The opacity slider drags through a new `measureChipOpacityPreview`
+channel (mirroring the label-size slider) so the live pill re-tints without
+writing an undo entry per frame.
+
+**Verified**: 766 tests green, including chip fill/opacity/text/border pixel
+tests and a legacy-payload migration test. Baked output checked visually over a
+checkerboard across five color/opacity combinations (including a fully
+transparent chip). Dev app built and launched for the interactive pass.
+
+**Next:** user to confirm in the dev app that each swatch moves only its own
+element and that the live overlay matches the export.

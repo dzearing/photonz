@@ -53,10 +53,16 @@ struct FillTests {
             #expect(c.colorHex == "#FF0000")
         } else { Issue.record("text fill failed") }
 
+        // A measure's "color" is its ink — outline + readout. The chip fill is
+        // its own inspector control, so the bucket leaves it alone.
         let measure = MeasureBuilder.layer(
-            content: MeasureContent(mode: .horizontal, strokeWidth: 1, colorHex: "#000000"),
+            content: MeasureContent(mode: .horizontal, strokeWidth: 1, strokeColorHex: "#000000",
+                                    chipColorHex: "#123456", textColorHex: "#000000"),
             from: .zero, to: CGPoint(x: 50, y: 0))
-        #expect(Fill.filled(measure, colorHex: "#FF0000", solidRef: nil)?.measure?.colorHex == "#FF0000")
+        let filled = Fill.filled(measure, colorHex: "#FF0000", solidRef: nil)?.measure
+        #expect(filled?.strokeColorHex == "#FF0000")
+        #expect(filled?.textColorHex == "#FF0000")
+        #expect(filled?.chipColorHex == "#123456")
     }
 
     @Test func collageFillsItsBackdrop() {

@@ -12,7 +12,7 @@ public enum Fill {
     /// - image → content becomes the solid ref (crop cleared)
     /// - rectangle/ellipse → interior `fillColorHex` (stroke untouched)
     /// - line/arrow/highlight → stroke color
-    /// - text / measure → color
+    /// - text → color; measure → outline + readout (not the chip fill)
     /// - collage → backdrop color
     public static func filled(_ layer: Layer, colorHex: String, solidRef: ImageRef?) -> Layer? {
         var filled = layer
@@ -33,7 +33,10 @@ public enum Fill {
             text.colorHex = colorHex
             filled.content = .text(text)
         case .measure(var measure):
-            measure.colorHex = colorHex
+            // A measure's "color" is its ink: outline + readout. The chip fill is
+            // its own inspector control, so the bucket leaves it alone.
+            measure.strokeColorHex = colorHex
+            measure.textColorHex = colorHex
             filled.content = .measure(measure)
         case .collage(var collage):
             collage.backdropColorHex = colorHex

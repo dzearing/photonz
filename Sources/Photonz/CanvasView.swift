@@ -54,6 +54,8 @@ struct CanvasView: NSViewRepresentable {
     let measureContent: MeasureContent?
     /// Live label-size preview for the selected caliper during a slider drag.
     var measureLabelPreview: (id: UUID, scale: CGFloat)?
+    /// Live chip-opacity preview for the selected caliper during a slider drag.
+    var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
@@ -124,7 +126,8 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent, edgeMap: edgeMap,
-                   isCanvasSelected: isCanvasSelected, measureLabelPreview: measureLabelPreview)
+                   isCanvasSelected: isCanvasSelected, measureLabelPreview: measureLabelPreview,
+                   measureChipOpacityPreview: measureChipOpacityPreview)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -358,6 +361,7 @@ final class CanvasNSView: NSView {
     private var measureContent: MeasureContent?
     /// Live label-size preview for the selected caliper during a slider drag.
     private var measureLabelPreview: (id: UUID, scale: CGFloat)?
+    private var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
     /// In-progress 3-click caliper placement: click foot A → move → click foot B →
     /// move → click sets the head (depth + direction). Nil = idle (hover only).
     private enum MeasurePlacement {
@@ -956,7 +960,7 @@ final class CanvasNSView: NSView {
             let pts = previewPoints.map { viewport.viewPoint(fromDocument: $0) }
             path.move(to: pts[0])
             for p in pts.dropFirst() { path.addLine(to: p) }
-            let rgba = RGBA(hex: style.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+            let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
             annotationPreviewLayer.path = path
             annotationPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
             annotationPreviewLayer.fillColor = nil
@@ -1003,7 +1007,10 @@ final class CanvasNSView: NSView {
             // pill + the head-line gap). Font/padding come from the measure's
             // label size (the inspector slider); the border matches the caliper
             // line's on-screen width (strokeWidth image px × zoom).
-            view.configure(text: content.label(pixelScale: pixelScale), colorHex: content.colorHex,
+            view.configure(text: content.label(pixelScale: pixelScale),
+                           strokeColorHex: content.strokeColorHex,
+                           chipColorHex: content.chipColorHex, chipOpacity: content.chipOpacity,
+                           textColorHex: content.textColorHex,
                            fontSize: content.labelPointSize, padding: content.labelPadding,
                            scale: zoom, borderWidth: content.strokeWidth * zoom)
             let center = viewport.viewPoint(fromDocument: g.labelAnchor)
@@ -1030,9 +1037,12 @@ final class CanvasNSView: NSView {
                 e = CGPoint(x: e.x + dx, y: e.y + dy)
             }
             mc.start = s; mc.end = e; mc.headOffset = off
-            // Live label-size preview during a slider drag (no history yet).
+            // Live inspector-slider previews during a drag (no history yet).
             if let preview = measureLabelPreview, preview.id == layer.id {
                 mc.labelScale = preview.scale
+            }
+            if let preview = measureChipOpacityPreview, preview.id == layer.id {
+                mc.chipOpacity = preview.opacity
             }
             showPill(key: layer.id.uuidString, content: mc)
         }
@@ -1836,8 +1846,10 @@ final class CanvasNSView: NSView {
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
                edgeMap: EdgeMap, isCanvasSelected: Bool = false,
-               measureLabelPreview: (id: UUID, scale: CGFloat)? = nil) {
+               measureLabelPreview: (id: UUID, scale: CGFloat)? = nil,
+               measureChipOpacityPreview: (id: UUID, opacity: CGFloat)? = nil) {
         self.measureLabelPreview = measureLabelPreview
+        self.measureChipOpacityPreview = measureChipOpacityPreview
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -2874,30 +2886,30 @@ extension CanvasNSView: NSTextViewDelegate {
     }
 }
 
-/// A caliper's live label pill: a Liquid-Glass (real backdrop-blur) capsule with
-/// a hairline border in the caliper color and caliper-colored text, centered on
-/// the head line. Sized to the same chip footprint the rasterizer cuts the head
-/// line for, so the stroke never shows behind the translucent glass. Mouse
-/// events pass through (`hitTest` → nil) so the canvas still owns the pointer.
+/// A caliper's live label pill: a capsule filled with the measure's chip color
+/// (at its own opacity), bordered in the stroke color, holding the readout in the
+/// text color — centered on the head line. Sized to the same chip footprint the
+/// rasterizer cuts the head line for, so the stroke never shows behind a
+/// translucent chip. Mouse events pass through (`hitTest` → nil) so the canvas
+/// still owns the pointer.
+///
+/// This used to be a Liquid-Glass `NSVisualEffectView` (a real backdrop blur).
+/// Once the chip fill became a user-editable color WITH an alpha, the blur had to
+/// go: exports can't bake a backdrop blur, so any frost here would make the live
+/// canvas disagree with what the user actually gets — and a "fully transparent"
+/// chip would still show a frosted blob. The caliper is image content; it must
+/// preview exactly as it bakes.
 private final class MeasureLabelView: NSView {
-    private let effect = NSVisualEffectView()
+    private let pill = NSView()
     private let label = NSTextField(labelWithString: "")
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        // `.withinWindow` blends the content behind the pill inside the window —
-        // i.e. the canvas composite drawn below — giving a real backdrop blur.
-        // `.popover` is a NEUTRAL, appearance-adaptive frost (Decision 2 wanted a
-        // neutral glass, not a dark HUD) so the live pill matches the light/neutral
-        // pill baked into exports.
-        effect.blendingMode = .withinWindow
-        effect.material = .popover
-        effect.state = .active
-        effect.wantsLayer = true
-        effect.layer?.masksToBounds = true
-        effect.layer?.borderWidth = 1
-        addSubview(effect)
+        pill.wantsLayer = true
+        pill.layer?.masksToBounds = true
+        pill.layer?.borderWidth = 1
+        addSubview(pill)
 
         label.alignment = .center
         label.isBezeled = false
@@ -2905,7 +2917,7 @@ private final class MeasureLabelView: NSView {
         label.isSelectable = false
         label.drawsBackground = false
         label.backgroundColor = .clear
-        effect.addSubview(label)
+        pill.addSubview(label)
     }
 
     @available(*, unavailable)
@@ -2916,22 +2928,31 @@ private final class MeasureLabelView: NSView {
     /// `labelFontSize`/`labelPadding` are IMAGE pixels, shown at ×`scale` (zoom).
     /// `borderWidth` is the caliper line's on-screen width so the border is as
     /// thick as the caliper lines.
-    func configure(text: String, colorHex: String, fontSize: CGFloat, padding: CGFloat,
+    func configure(text: String, strokeColorHex: String, chipColorHex: String, chipOpacity: CGFloat,
+                   textColorHex: String, fontSize: CGFloat, padding: CGFloat,
                    scale: CGFloat, borderWidth: CGFloat) {
-        let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        let tint = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        func color(_ hex: String, fallback: RGBA, alpha: CGFloat? = nil) -> NSColor {
+            let c = RGBA(hex: hex) ?? fallback
+            return NSColor(srgbRed: c.r, green: c.g, blue: c.b, alpha: alpha ?? c.a)
+        }
+        let stroke = color(strokeColorHex, fallback: RGBA(r: 1, g: 0.23, b: 0.19))
+        // Chip alpha comes from `chipOpacity`, never from the hex (see the model).
+        let fill = color(chipColorHex, fallback: RGBA(r: 1, g: 1, b: 1),
+                         alpha: min(max(chipOpacity, 0), 1))
         let pad = padding * scale
         label.font = .systemFont(ofSize: fontSize * scale, weight: .semibold)
         label.stringValue = text
-        label.textColor = tint
+        label.textColor = color(textColorHex, fallback: RGBA(r: 1, g: 0.23, b: 0.19))
         label.sizeToFit()
         let w = (label.frame.width + 2 * pad).rounded()
         let h = (label.frame.height + 2 * pad).rounded()
         setFrameSize(CGSize(width: w, height: h))
-        effect.frame = bounds
-        effect.layer?.cornerRadius = h / 2
-        effect.layer?.borderWidth = max(1, borderWidth)
-        effect.layer?.borderColor = tint.withAlphaComponent(0.75).cgColor
+        pill.frame = bounds
+        pill.layer?.cornerRadius = h / 2
+        pill.layer?.backgroundColor = fill.cgColor
+        pill.layer?.borderWidth = max(1, borderWidth)
+        // Full strength, matching the baked pill's border (MeasureRasterizer).
+        pill.layer?.borderColor = stroke.cgColor
         label.frame = CGRect(x: pad, y: (h - label.frame.height) / 2,
                              width: w - 2 * pad, height: label.frame.height)
     }

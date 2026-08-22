@@ -114,8 +114,9 @@ final class EditorState {
     // Default to LOGICAL points, not raw bitmap pixels: redlining a UI expects
     // on-screen (design) sizes, and a 2× Retina screenshot's raw pixels read
     // double that. Actual pixels stay one toggle away in the measure inspector.
-    private(set) var measureStyle = MeasureContent(mode: .horizontal, strokeWidth: 1, colorHex: "#FF3B30",
-                                                   showLabel: true, unit: .points)
+    private(set) var measureStyle = MeasureContent(mode: .horizontal, strokeWidth: 1,
+                                                   strokeColorHex: "#FF3B30", showLabel: true,
+                                                   unit: .points)
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -842,7 +843,7 @@ final class EditorState {
         content.headOffset = headOffset
         let layer = MeasureBuilder.layer(content: content, from: start, to: end)
         perform { $0.addLayer(layer) }
-        recordRecentColor(hex: content.colorHex)
+        recordRecentColor(hex: content.strokeColorHex)
         setTool(.select)
         selectedLayerID = layer.id
     }
@@ -872,6 +873,9 @@ final class EditorState {
     /// The selected caliper's live label-size preview during a slider drag (no
     /// history); the canvas overlay reads it so the pill resizes live.
     private(set) var measureLabelPreview: (id: UUID, scale: CGFloat)?
+    /// The selected caliper's live chip-opacity preview during a slider drag (no
+    /// history); the canvas overlay reads it so the pill re-tints live.
+    private(set) var measureChipOpacityPreview: (id: UUID, opacity: CGFloat)?
 
     /// Live label-size slider drag: re-render the baked strokes/gap for the new
     /// size and publish the preview so the glass pill resizes too (no history).
@@ -892,10 +896,42 @@ final class EditorState {
         applyMeasureRestyle { MeasureBuilder.restyled($0, labelScale: scale) }
     }
 
-    func setMeasureColor(_ hex: String, commit: Bool) {
-        measureStyle.colorHex = hex
-        applyMeasureRestyle { MeasureBuilder.restyled($0, colorHex: hex) }
+    /// The caliper's ink: legs, head line, and the chip's border.
+    func setMeasureStrokeColor(_ hex: String, commit: Bool) {
+        measureStyle.strokeColorHex = hex
+        applyMeasureRestyle { MeasureBuilder.restyled($0, strokeColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
+    }
+
+    /// The label chip's fill color (its alpha is `chipOpacity`, set separately).
+    func setMeasureChipColor(_ hex: String, commit: Bool) {
+        measureStyle.chipColorHex = hex
+        applyMeasureRestyle { MeasureBuilder.restyled($0, chipColorHex: hex) }
+        if commit { recordRecentColor(hex: hex) }
+    }
+
+    /// The numeric readout's color.
+    func setMeasureTextColor(_ hex: String, commit: Bool) {
+        measureStyle.textColorHex = hex
+        applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
+        if commit { recordRecentColor(hex: hex) }
+    }
+
+    /// Live chip-opacity slider drag: update the document without history so the
+    /// glass pill re-tints under the thumb (mirrors the label-size slider).
+    func previewMeasureChipOpacity(_ opacity: CGFloat) {
+        measureStyle.chipOpacity = opacity
+        guard let layer = selectedMeasureLayer else { return }
+        // The chip isn't baked on the interactive path, so only the glass overlay
+        // needs to move — no re-render, no history.
+        measureChipOpacityPreview = (layer.id, opacity)
+    }
+
+    /// Slider release: commit the chip opacity in one undo step.
+    func commitMeasureChipOpacity(_ opacity: CGFloat) {
+        measureChipOpacityPreview = nil
+        measureStyle.chipOpacity = opacity
+        applyMeasureRestyle { MeasureBuilder.restyled($0, chipOpacity: opacity) }
     }
 
     /// The document's pixels-per-point scale, driving the points readout. A Retina

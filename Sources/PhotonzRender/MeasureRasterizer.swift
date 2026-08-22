@@ -36,8 +36,13 @@ public enum MeasureRasterizer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: 1, y: -1)
 
-        let rgba = RGBA(hex: measure.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        let rgba = RGBA(hex: measure.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         let color = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+        // The chip's fill is its own color; its alpha comes from `chipOpacity`
+        // (the hex never carries alpha — see MeasureContent.chipColorHex).
+        let chip = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        let chipColor = CGColor(srgbRed: chip.r, green: chip.g, blue: chip.b,
+                                alpha: min(max(measure.chipOpacity, 0), 1))
         // Caliper lines are ACTUAL image pixels — a "1px" caliper is exactly one
         // image pixel (pixel-precise redlining), NOT scaled up by pixelScale.
         let lineWidth = measure.strokeWidth
@@ -75,7 +80,8 @@ public enum MeasureRasterizer {
         // overlay fills the same gap.
         if measure.showLabel, bakeLabel {
             drawPill(labelText, at: mid, chipSize: chipSize, fontSize: measure.labelPointSize,
-                     borderWidth: lineWidth, colorHex: measure.colorHex, tint: color, in: context)
+                     borderWidth: lineWidth, fill: chipColor, border: color,
+                     textColorHex: measure.textColorHex, in: context)
         }
 
         return context.makeImage()
@@ -107,31 +113,34 @@ public enum MeasureRasterizer {
         context.strokePath()
     }
 
-    /// Draws the flattened readout centered at `anchor`: a neutral translucent
-    /// pill (the glass look minus live blur) with a hairline border in the
-    /// caliper color and caliper-colored text. Glyphs come from `TextRasterizer`
-    /// (the proven-upright path) and are blitted in — drawing CoreText directly
-    /// into this already-flipped context renders the text upside down.
+    /// Draws the flattened readout centered at `anchor`: the chip `fill`, a
+    /// border in the caliper's stroke color, and text in the readout color — the
+    /// three independently editable measure colors. Glyphs come from
+    /// `TextRasterizer` (the proven-upright path) and are blitted in — drawing
+    /// CoreText directly into this already-flipped context renders the text
+    /// upside down.
     private static func drawPill(_ string: String, at anchor: CGPoint, chipSize: CGSize,
-                                 fontSize: CGFloat, borderWidth: CGFloat, colorHex: String,
-                                 tint: CGColor, in context: CGContext) {
+                                 fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
+                                 border: CGColor, textColorHex: String, in context: CGContext) {
         let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
                           width: chipSize.width, height: chipSize.height)
         let radius = chipSize.height / 2
         let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
-        // Neutral translucent fill.
-        context.setFillColor(CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.92))
+        context.setFillColor(fill)
         context.addPath(pill)
         context.fillPath()
-        // Border in the caliper color, matched to the caliper's stroke width.
-        context.setStrokeColor(tint.copy(alpha: 0.7) ?? tint)
+        // Border at the stroke color's FULL strength (it used to be softened to
+        // 0.7α to sit politely under a hardcoded white chip). Now that the chip
+        // can be any color — transparent included — the border is often the only
+        // thing closing the head line's gap, so it must read as the same line as
+        // the caliper it interrupts.
+        context.setStrokeColor(border)
         context.setLineWidth(max(1, borderWidth))
         context.addPath(pill)
         context.strokePath()
 
-        // Caliper-colored text, blitted upright.
         let text = TextContent(string: string, fontName: "SF Pro",
-                               fontSize: fontSize, colorHex: colorHex)
+                               fontSize: fontSize, colorHex: textColorHex)
         let textSize = TextRasterizer.naturalSize(text)
         guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
         let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,

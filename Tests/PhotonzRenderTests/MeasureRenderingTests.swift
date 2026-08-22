@@ -34,6 +34,11 @@ struct MeasureRenderingTests {
     private func isRed(_ p: (r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool {
         p.r > 200 && p.g < 80 && p.b < 80 && p.a > 40
     }
+    /// Red ink at ANY coverage: premultiplied components stay red-dominant even
+    /// where a hairline stroke only partly covers the pixel.
+    private func isRedInk(_ p: (r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool {
+        p.a > 40 && Int(p.r) > Int(p.g) + 60 && Int(p.r) > Int(p.b) + 60
+    }
     private func isWhite(_ p: (r: UInt8, g: UInt8, b: UInt8, a: UInt8)) -> Bool {
         p.r > 240 && p.g > 240 && p.b > 240
     }
@@ -58,7 +63,8 @@ struct MeasureRenderingTests {
     }
 
     private func content(mode: MeasureMode, showLabel: Bool = true, strokeWidth: CGFloat = 6) -> MeasureContent {
-        MeasureContent(mode: mode, strokeWidth: strokeWidth, colorHex: "#FF0000", showLabel: showLabel)
+        MeasureContent(mode: mode, strokeWidth: strokeWidth, strokeColorHex: "#FF0000",
+                       textColorHex: "#FF0000", showLabel: showLabel)
     }
 
     // Feet run at y=130 from x=20..240; head sits +28 below at y=158.
@@ -86,7 +92,7 @@ struct MeasureRenderingTests {
         // (live overlay) chip, so its center is transparent, not a baked pill.
         let img = MeasureRasterizer.rasterize(
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6, strokeColorHex: "#FF0000"),
             size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: false)!
         #expect(pixel(img, x: 120, y: 88).a == 0, "the head-line gap is empty on the interactive path")
         #expect(isRed(pixel(img, x: 40, y: 88)), "the head line still strokes outside the gap")
@@ -95,7 +101,7 @@ struct MeasureRenderingTests {
     @Test func bakedPillIsPresentAndAbsentWithTheFlag() {
         let baked = MeasureRasterizer.rasterize(
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6, strokeColorHex: "#FF0000"),
             size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
         #expect(pixel(baked, x: 120, y: 88).a > 0, "the baked pill fills the head gap")
     }
@@ -133,7 +139,8 @@ struct MeasureRenderingTests {
         // profile in the chip band must match upright text, not its vertical flip.
         let measureImg = MeasureRasterizer.rasterize(
             MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
-                           headOffset: 28, mode: .horizontal, strokeWidth: 6, colorHex: "#FF0000"),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 6,
+                           strokeColorHex: "#FF0000", textColorHex: "#FF0000"),
             size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
         let text = TextContent(string: "200 px", fontName: "SF Pro",
                                fontSize: MeasureContent.labelFontSize, colorHex: "#FF0000")
@@ -147,6 +154,95 @@ struct MeasureRenderingTests {
         }
         #expect(ssd(measureProfile, upright) < ssd(measureProfile, flipped),
                 "label ink profile matches upright text, not its vertical flip")
+    }
+
+    // MARK: Three independent colors (stroke / chip fill / text)
+
+    /// A 240×120 caliper whose feet run at y=60 (x 20..220), head +28 below at
+    /// y=88 — the chip centers at (120, 88). Hairline stroke so the chip border
+    /// stays out of the fill probe.
+    private func colored(stroke: String, chip: String, chipOpacity: CGFloat,
+                         text: String) -> CGImage {
+        MeasureRasterizer.rasterize(
+            MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                           headOffset: 28, mode: .horizontal, strokeWidth: 1,
+                           strokeColorHex: stroke, chipColorHex: chip,
+                           chipOpacity: chipOpacity, textColorHex: text),
+            size: CGSize(width: 240, height: 120), pixelScale: 1, bakeLabel: true)!
+    }
+
+    /// A point inside the pill's fill but clear of the centered text: the left
+    /// padding band on the chip's vertical center line.
+    private func chipFillProbe(chipWidth: CGFloat) -> (x: Int, y: Int) {
+        (x: Int((120 - chipWidth / 2 + 4).rounded()), y: 88)
+    }
+
+    private func chipWidth(for content: MeasureContent) -> CGFloat {
+        // Same footprint the rasterizer measures: text + padding on all sides.
+        let text = TextContent(string: content.label(pixelScale: 1), fontName: "SF Pro",
+                               fontSize: content.labelPointSize)
+        return TextRasterizer.naturalSize(text).width + 2 * content.labelPadding
+    }
+
+    private var probeContent: MeasureContent {
+        MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                       headOffset: 28, mode: .horizontal, strokeWidth: 1)
+    }
+
+    @Test func chipFillUsesItsOwnColorNotTheStroke() {
+        let img = colored(stroke: "#FF0000", chip: "#0000FF", chipOpacity: 1, text: "#00FF00")
+        let probe = chipFillProbe(chipWidth: chipWidth(for: probeContent))
+        let p = pixel(img, x: probe.x, y: probe.y)
+        #expect(p.b > 200 && p.r < 80 && p.g < 80 && p.a > 250, "the pill fills with the chip color")
+        // The hairline leg is antialiased (partial coverage), so match its HUE
+        // rather than a solid-red threshold.
+        #expect(anyPixel(img, xs: 18...22, ys: 70...80, where: isRedInk),
+                "the leg keeps the stroke color")
+    }
+
+    @Test func chipOpacityZeroLeavesThePillFillFullyTransparent() {
+        let img = colored(stroke: "#FF0000", chip: "#0000FF", chipOpacity: 0, text: "#00FF00")
+        let probe = chipFillProbe(chipWidth: chipWidth(for: probeContent))
+        #expect(pixel(img, x: probe.x, y: probe.y).a == 0, "a 0-opacity chip paints nothing")
+        // The readout and the caliper itself must survive a transparent chip.
+        #expect(anyPixel(img, xs: 100...140, ys: 78...98,
+                         where: { $0.g > 200 && $0.r < 80 && $0.b < 80 }),
+                "the text still draws over a transparent chip")
+        // The hairline leg is antialiased (partial coverage), so match its HUE
+        // rather than a solid-red threshold.
+        #expect(anyPixel(img, xs: 18...22, ys: 70...80, where: isRedInk),
+                "the leg keeps the stroke color")
+    }
+
+    @Test func chipOpacityBlendsBetweenZeroAndOne() {
+        let img = colored(stroke: "#FF0000", chip: "#0000FF", chipOpacity: 0.5, text: "#00FF00")
+        let probe = chipFillProbe(chipWidth: chipWidth(for: probeContent))
+        let a = pixel(img, x: probe.x, y: probe.y).a
+        #expect(a > 100 && a < 160, "a half-opacity chip is half transparent (got \(a))")
+    }
+
+    @Test func textUsesItsOwnColorNotTheStrokeOrChip() {
+        let img = colored(stroke: "#FF0000", chip: "#0000FF", chipOpacity: 1, text: "#00FF00")
+        #expect(anyPixel(img, xs: 100...140, ys: 80...96,
+                         where: { $0.g > 180 && $0.r < 90 && $0.b < 90 }),
+                "the readout draws in the text color")
+    }
+
+    @Test func chipBorderFollowsTheStrokeColor() {
+        // Border at full strength (see MeasureRasterizer.drawPill): the chip
+        // outline reads as one continuous line with the head line it sits in.
+        // Rendered over a transparent chip so the probe sees the border alone.
+        var content = probeContent
+        content.strokeWidth = 3
+        content.strokeColorHex = "#FF0000"
+        content.chipOpacity = 0
+        content.textColorHex = "#00FF00"
+        let img = MeasureRasterizer.rasterize(content, size: CGSize(width: 240, height: 120),
+                                              pixelScale: 1, bakeLabel: true)!
+        let half = chipWidth(for: content) / 2
+        #expect(anyPixel(img, xs: Int((120 - half - 1).rounded())...Int((120 - half + 1).rounded()),
+                         ys: 86...90, where: isRed),
+                "the pill border is stroked in the stroke color")
     }
 
     @Test func retinaScaleStillRendersAPill() {

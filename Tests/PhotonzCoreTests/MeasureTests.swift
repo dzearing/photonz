@@ -219,11 +219,122 @@ struct MeasureMigrationTests {
     @Test func newCaliperPayloadRoundTrips() throws {
         let original = MeasureContent(start: CGPoint(x: 5, y: 7), end: CGPoint(x: 105, y: 7),
                                       headOffset: -24, mode: .horizontal, strokeWidth: 2,
-                                      colorHex: "#123456", showLabel: false, unit: .points,
+                                      strokeColorHex: "#123456", showLabel: false, unit: .points,
                                       decimals: 1)
         let data = try JSONEncoder().encode(original)
         let back = try JSONDecoder().decode(MeasureContent.self, from: data)
         #expect(back == original)
+    }
+}
+
+// MARK: - The three independent colors (stroke / chip fill / text)
+
+@Suite("Measure colors")
+struct MeasureColorTests {
+
+    private func placed(_ m: MeasureContent) -> MeasureContent {
+        var m = m
+        m.start = .zero
+        m.end = CGPoint(x: 100, y: 0)
+        return m
+    }
+
+    @Test func defaultsMatchTheLegacyLook() {
+        let m = MeasureContent()
+        #expect(m.strokeColorHex == "#FF3B30")
+        #expect(m.textColorHex == "#FF3B30")
+        #expect(m.chipColorHex == "#FFFFFF")
+        #expect(m.chipOpacity == 0.92)
+    }
+
+    @Test func allThreeColorsRoundTripThroughCodable() throws {
+        let original = placed(MeasureContent(mode: .horizontal, strokeColorHex: "#112233",
+                                             chipColorHex: "#445566", chipOpacity: 0.35,
+                                             textColorHex: "#778899"))
+        let back = try JSONDecoder().decode(MeasureContent.self, from: JSONEncoder().encode(original))
+        #expect(back.strokeColorHex == "#112233")
+        #expect(back.chipColorHex == "#445566")
+        #expect(back.chipOpacity == 0.35)
+        #expect(back.textColorHex == "#778899")
+        #expect(back == original)
+    }
+
+    @Test func fullyTransparentChipSurvivesTheRoundTrip() throws {
+        // Alpha lives in its own field precisely because `RGBA.hexString` drops it.
+        let original = placed(MeasureContent(mode: .horizontal, chipOpacity: 0))
+        let back = try JSONDecoder().decode(MeasureContent.self, from: JSONEncoder().encode(original))
+        #expect(back.chipOpacity == 0)
+    }
+
+    @Test func chipOpacityIsClampedToZeroThroughOne() throws {
+        #expect(placed(MeasureContent(mode: .horizontal, chipOpacity: 4)).chipOpacity == 1)
+        #expect(placed(MeasureContent(mode: .horizontal, chipOpacity: -2)).chipOpacity == 0)
+        var obj = try legacyPayload(colorHex: "#FF0000")
+        obj["chipOpacity"] = 9
+        let wild = try JSONSerialization.data(withJSONObject: obj)
+        #expect(try JSONDecoder().decode(MeasureContent.self, from: wild).chipOpacity == 1)
+    }
+
+    /// A caliper saved before the color split: only `colorHex`, no chip/text keys.
+    /// Built from a real encode so the point/enum encodings stay authoritative.
+    private func legacyPayload(colorHex: String) throws -> [String: Any] {
+        let m = placed(MeasureContent(mode: .horizontal))
+        var obj = try #require(try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(m)) as? [String: Any])
+        for key in ["strokeColorHex", "chipColorHex", "chipOpacity", "textColorHex"] {
+            obj.removeValue(forKey: key)
+        }
+        obj["colorHex"] = colorHex
+        return obj
+    }
+
+    @Test func legacySingleColorPayloadKeepsItsExactLook() throws {
+        let data = try JSONSerialization.data(withJSONObject: legacyPayload(colorHex: "#00AAFF"))
+        let back = try JSONDecoder().decode(MeasureContent.self, from: data)
+        // Stroke and text inherit the old single color; the chip inherits the
+        // fill that used to be hardcoded in the rasterizer (white at 92%).
+        #expect(back.strokeColorHex == "#00AAFF")
+        #expect(back.textColorHex == "#00AAFF")
+        #expect(back.chipColorHex == "#FFFFFF")
+        #expect(back.chipOpacity == 0.92)
+    }
+
+    @Test func encodedPayloadKeepsTheLegacyColorKeyForOlderBuilds() throws {
+        let m = placed(MeasureContent(mode: .horizontal, strokeColorHex: "#00FF00",
+                                      chipColorHex: "#000000", textColorHex: "#0000FF"))
+        let obj = try #require(try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(m)) as? [String: Any])
+        // Mirrored (never read back when the new keys are present) so a build
+        // predating the split can still open a document written by this one.
+        #expect(obj["colorHex"] as? String == "#00FF00")
+    }
+
+    @Test func restyleAppliesEachColorIndependently() {
+        let layer = MeasureBuilder.layer(content: MeasureContent(mode: .horizontal),
+                                         from: .zero, to: CGPoint(x: 100, y: 0))
+        let stroked = MeasureBuilder.restyled(layer, strokeColorHex: "#111111")
+        #expect(stroked.measure?.strokeColorHex == "#111111")
+        #expect(stroked.measure?.chipColorHex == "#FFFFFF")
+        #expect(stroked.measure?.textColorHex == "#FF3B30")
+
+        let chipped = MeasureBuilder.restyled(stroked, chipColorHex: "#222222", chipOpacity: 0.4)
+        #expect(chipped.measure?.chipColorHex == "#222222")
+        #expect(chipped.measure?.chipOpacity == 0.4)
+        #expect(chipped.measure?.strokeColorHex == "#111111")
+        #expect(chipped.measure?.textColorHex == "#FF3B30")
+
+        let texted = MeasureBuilder.restyled(chipped, textColorHex: "#333333")
+        #expect(texted.measure?.textColorHex == "#333333")
+        #expect(texted.measure?.strokeColorHex == "#111111")
+        #expect(texted.measure?.chipColorHex == "#222222")
+        #expect(texted.measure?.chipOpacity == 0.4)
+    }
+
+    @Test func restyleClampsChipOpacity() {
+        let layer = MeasureBuilder.layer(content: MeasureContent(mode: .horizontal),
+                                         from: .zero, to: CGPoint(x: 100, y: 0))
+        #expect(MeasureBuilder.restyled(layer, chipOpacity: 1.5).measure?.chipOpacity == 1)
+        #expect(MeasureBuilder.restyled(layer, chipOpacity: -0.5).measure?.chipOpacity == 0)
     }
 }
 
@@ -336,8 +447,8 @@ struct MeasureBuilderTests {
                                          from: CGPoint(x: 0, y: 0), to: CGPoint(x: 100, y: 0))
         let startDoc = layer.measureEndpoint(.start)
         let endDoc = layer.measureEndpoint(.end)
-        let restyled = MeasureBuilder.restyled(layer, colorHex: "#00FF00", showLabel: false)
-        #expect(restyled.measure?.colorHex == "#00FF00")
+        let restyled = MeasureBuilder.restyled(layer, strokeColorHex: "#00FF00", showLabel: false)
+        #expect(restyled.measure?.strokeColorHex == "#00FF00")
         #expect(restyled.measure?.showLabel == false)
         #expect(restyled.measureEndpoint(.start) == startDoc)
         #expect(restyled.measureEndpoint(.end) == endDoc)
