@@ -2,11 +2,11 @@
   "id": "next-measure-describe-specs-agent-action-blocked",
   "title": "Next Measure: Describe specs agent action (blocked on decision)",
   "priority": "p3-low",
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.504Z",
-  "updated": "2026-08-22T23:11:32.283Z",
+  "updated": "2026-08-22T23:50:16.351Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 7. Mock has a Describe specs button handing the spec list to an agent; no agent integration exists in the app. Await the attached decision.",
@@ -19,6 +19,10 @@
     {
       "t": "2026-08-22T23:11:32.283Z",
       "note": "awaiting the describe-specs decision on the dashboard"
+    },
+    {
+      "t": "2026-08-22T23:50:16.351Z",
+      "note": "decision \"The mock has a Describe specs button that writes a spec paragraph for you. What should it do in the first release?\" resolved: Copy as text only, no button"
     }
   ],
   "seq": 30

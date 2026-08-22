@@ -2,11 +2,11 @@
   "id": "next-measure-alignment-checks-blocked-on-decisio",
   "title": "Next Measure: alignment checks (blocked on decision)",
   "priority": "p2-normal",
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.423Z",
-  "updated": "2026-08-22T23:11:32.208Z",
+  "updated": "2026-08-22T23:49:53.293Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 9. The redline mock shows an alignment check (dashed guide, aligned tag, Align role) but the creation gesture is unshown and 16.6 alignment guides were rejected. Await the attached decision before any code.",
@@ -19,6 +19,10 @@
     {
       "t": "2026-08-22T23:11:32.207Z",
       "note": "awaiting the alignment-checks decision on the dashboard"
+    },
+    {
+      "t": "2026-08-22T23:49:53.293Z",
+      "note": "decision \"When you are redlining a screenshot, how should checking alignment work?\" resolved: Draw an alignment guide yourself"
     }
   ],
   "seq": 50

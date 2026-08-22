@@ -45,6 +45,11 @@
     }
   ],
   "recommended": "role",
-  "status": "pending",
-  "created": "2026-08-22T23:11:09.040Z"
+  "status": "resolved",
+  "created": "2026-08-22T23:11:09.040Z",
+  "answer": {
+    "choice": "role",
+    "note": "",
+    "resolved": "2026-08-22T23:49:53.291Z"
+  }
 }

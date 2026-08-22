@@ -2,11 +2,11 @@
   "id": "next-measure-measurement-naming-blocked-on-decis",
   "title": "Next Measure: measurement naming (blocked on decision)",
   "priority": "p2-normal",
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.478Z",
-  "updated": "2026-08-22T23:11:32.260Z",
+  "updated": "2026-08-22T23:50:10.319Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 6. Panel rows need names; mock shows semantic names like 'Save Changes / width' which need text recognition. Await the attached decision.",
@@ -19,6 +19,10 @@
     {
       "t": "2026-08-22T23:11:32.260Z",
       "note": "awaiting the naming decision on the dashboard"
+    },
+    {
+      "t": "2026-08-22T23:50:10.319Z",
+      "note": "decision \"In the measurements list, what should each measurement be called?\" resolved: Simple automatic names you can rename"
     }
   ],
   "seq": 60

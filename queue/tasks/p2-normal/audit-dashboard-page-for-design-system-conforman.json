@@ -2,11 +2,11 @@
   "id": "audit-dashboard-page-for-design-system-conforman",
   "title": "Audit dashboard page for design system conformance",
   "priority": "p2-normal",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.776Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-22T23:54:20.436Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Audit docs/design/mocks/pages/dashboard.html (the Project dashboard) against shared/AGENTS.md rules: tokens only, 4pt spacing, ic-* icons only, prefixed local classes, light and dark themes, no em dashes in copy. Fix violations. Acceptance: clean pass of the audit rules in both themes.",
@@ -22,7 +22,21 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria"
+    },
+    {
+      "t": "2026-08-22T23:45:07.844Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-22T23:59:00.000Z",
+      "note": "audit done: renamed .rec/.rec-k to db-rec/db-rec-k (DS bare-class collision, card was inheriting overflow:hidden), tooltip shadow+padding to tokens (--lg-shadow, --s1/--gap-sm), off-scale spacing swept to the 4pt scale (26->24 via --s5, 30->32 via --s6, 7x10->--s2/--s3, 5px margins->--s1, pulse dot 7->6 matching DS .dot, sort chevron ad-hoc 10px -> .ic.xs, grip 18->20, hbar 86->88, tt col 122->120). Icons already all ic-*, no em dashes found. check-elevation.mjs passes. Verified all five tabs in light and dark via headless Chrome, decision card verified with an injected mock decision, zero console errors. Chart series hexes kept: data-series ink, CVD-validated, not chrome."
+    },
+    {
+      "t": "2026-08-22T23:54:20.436Z",
+      "note": "dashboard.html now passes the AGENTS.md audit: fixed a DS bare-class collision (.rec -> db-rec), tokenized the chart tooltip shadow/padding, swept all off-scale spacing onto the 4pt scale, replaced an ad-hoc 10px icon size with .ic.xs. Icons were already all ic-*, no em dashes. Verified all five tabs in light and dark (headless Chrome, mock decision injected for the recommended-option card), zero console errors, check-elevation.mjs green."
     }
   ],
-  "seq": 30
+  "seq": 30,
+  "started": "2026-08-22T23:45:07.843Z",
+  "completed": "2026-08-22T23:54:20.436Z"
 }
