@@ -3327,3 +3327,40 @@ transparent chip). Dev app built and launched for the interactive pass.
 
 **Next:** user to confirm in the dev app that each swatch moves only its own
 element and that the live overlay matches the export.
+
+## 2026-08-22 — draw it, then have it
+
+**Every draw tool now hands you the object.** Finish a line, a shape, a text
+block, a callout, or a caliper and the editor switches to Select with that layer
+selected — so the arrow keys nudge it immediately instead of after a trip to the
+toolbar. One helper, `EditorState.finishCreating(_:)`, is what each creation path
+calls. This deliberately reverses 17.12's sticky Photoshop-style tools: drawing
+five rectangles in a row now means pressing R five times. That is the trade the
+user asked for, and it is the only behavior in the app that changed for the
+non-measure tools.
+
+Zoom callouts were the one case already halfway there — they returned to Select
+but selected nothing, so the thing you just placed still needed a click.
+
+**The measure tool remembers itself now.** New `MeasureStyles` in PhotonzCore is
+the measure tool's persisted memory, the same role `AnnotationStyles` plays per
+shape and `TextStyles` plays for text: colors, chip opacity, thickness, label
+size, unit, decimals. `EditorState.measureStyle` became a computed view over it,
+and every measure setter routes through one `updateMeasureStyles { }` that writes
+UserDefaults — so "it stays how I left it" needs no bookkeeping at the call sites.
+Label size is stored in **pixels**, not as a scale, so the remembered number is
+the one the slider showed.
+
+New defaults, per the user: red stroke `#FF3B30`, solid darker-red chip
+`#8C201A`, white text, 2px line, 20px label. Those live in `MeasureStyles`, NOT
+in `MeasureContent` — the model's own defaults stay pinned to the pre-split look
+so existing documents keep decoding to exactly what they always drew. Every field
+decodes optionally too, so a prefs blob written by an older build backfills the
+fields it lacks instead of being thrown away wholesale.
+
+**Verified**: 773 tests green (7 new `MeasureStyles` tests: defaults, label-size
+round-trip, clamping, partial-prefs decode, `absorb`). Default caliper rendered
+and eyeballed. Dev app rebuilt and relaunched.
+
+**Next:** user to confirm the draw→select flow across tools and that the measure
+defaults survive a relaunch.

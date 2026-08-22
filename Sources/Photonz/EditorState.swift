@@ -106,17 +106,15 @@ final class EditorState {
     /// Styling for new text blocks, set from the font picker. Persisted like
     /// annotation styles.
     private(set) var textStyles: TextStyles = EditorState.loadTextStyles()
-    /// Template style for new calipers (color, stroke, unit, label toggle). The
-    /// axis and head offset are set per drag, so mode/start/end/headOffset here
-    /// are placeholders. In-memory default for now.
+    /// The measure tool's persisted memory: colors, thickness, label size, unit.
+    /// Every measure setter writes it back to UserDefaults, so the next caliper —
+    /// this session or after a relaunch — starts where the last one left off.
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
-    // Default to LOGICAL points, not raw bitmap pixels: redlining a UI expects
-    // on-screen (design) sizes, and a 2× Retina screenshot's raw pixels read
-    // double that. Actual pixels stay one toggle away in the measure inspector.
-    private(set) var measureStyle = MeasureContent(mode: .horizontal, strokeWidth: 1,
-                                                   strokeColorHex: "#FF3B30", showLabel: true,
-                                                   unit: .points)
+    private(set) var measureStyles: MeasureStyles = EditorState.loadMeasureStyles()
+    /// Template content for a new caliper. The axis, feet, and head offset are
+    /// set per placement, so mode/start/end/headOffset here are placeholders.
+    var measureStyle: MeasureContent { measureStyles.content }
     /// Recently committed colors, SHARED across annotations/text/borders (13.2).
     /// Recorded on commit only (never on live preview) and persisted.
     private(set) var recentColors: RecentColors = EditorState.loadRecentColors()
@@ -817,20 +815,29 @@ final class EditorState {
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
-        // Sticky by default (17.12, Photoshop-style): the tool stays active so
-        // you can draw shape after shape. Switch to Select (V) to adjust one.
+        finishCreating(layer.id)
+    }
+
+    /// What every draw tool does the moment its object exists: hand the editor
+    /// back to Select with the new layer selected, so it can be nudged with the
+    /// arrow keys, restyled, or dragged without a trip to the toolbar. (Reverses
+    /// 17.12's sticky Photoshop-style tools — user request 2026-08-21: "when I
+    /// draw a line or a measure or any object, I want the tool to switch to V
+    /// and the object selected, so I can left/right arrow".)
+    private func finishCreating(_ layerID: UUID) {
+        setTool(.select)
+        selectedLayerID = layerID
     }
 
     /// Completed source-box drag from the zoom tool. One undo step adds the
-    /// callout (placement picked by Geometry); unlike the sticky annotation
-    /// tools the editor returns to select — callouts are usually adjusted,
-    /// not added in batches.
+    /// callout (placement picked by Geometry), then the editor returns to select
+    /// with it selected.
     func addZoomCallout(from start: CGPoint, to end: CGPoint) {
         guard let document,
               let layer = ZoomCalloutBuilder.layer(from: start, to: end,
                                                    canvas: document.canvasSize) else { return }
         perform { $0.addLayer(layer) }
-        setTool(.select)
+        finishCreating(layer.id)
     }
 
     /// Completed 3-click caliper placement: add the dimension layer with the
@@ -844,8 +851,7 @@ final class EditorState {
         let layer = MeasureBuilder.layer(content: content, from: start, to: end)
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
-        setTool(.select)
-        selectedLayerID = layer.id
+        finishCreating(layer.id)
     }
 
     // MARK: - Measure styling
@@ -860,13 +866,13 @@ final class EditorState {
     /// The unit shown by new measures and the selected one. Each setter restyles
     /// the selected measure (re-padding its frame via the builder) in one undo step.
     func setMeasureUnit(_ unit: MeasureUnit) {
-        measureStyle.unit = unit
+        updateMeasureStyles { $0.unit = unit }
         applyMeasureRestyle { MeasureBuilder.restyled($0, unit: unit) }
     }
 
     /// Sizer line thickness in logical pixels.
     func setMeasureThickness(_ width: CGFloat) {
-        measureStyle.strokeWidth = width
+        updateMeasureStyles { $0.strokeWidth = width }
         applyMeasureRestyle { MeasureBuilder.restyled($0, strokeWidth: width) }
     }
 
@@ -880,7 +886,7 @@ final class EditorState {
     /// Live label-size slider drag: re-render the baked strokes/gap for the new
     /// size and publish the preview so the glass pill resizes too (no history).
     func previewMeasureLabelScale(_ scale: CGFloat) {
-        measureStyle.labelScale = scale
+        updateMeasureStyles { $0.labelSizePx = scale * MeasureContent.labelFontSize }
         guard let layer = selectedMeasureLayer, var doc = document else { return }
         measureLabelPreview = (layer.id, scale)
         doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
@@ -892,27 +898,27 @@ final class EditorState {
     func commitMeasureLabelScale(_ scale: CGFloat) {
         measureLabelPreview = nil
         previewMove = nil
-        measureStyle.labelScale = scale
+        updateMeasureStyles { $0.labelSizePx = scale * MeasureContent.labelFontSize }
         applyMeasureRestyle { MeasureBuilder.restyled($0, labelScale: scale) }
     }
 
     /// The caliper's ink: legs, head line, and the chip's border.
     func setMeasureStrokeColor(_ hex: String, commit: Bool) {
-        measureStyle.strokeColorHex = hex
+        updateMeasureStyles { $0.strokeColorHex = hex }
         applyMeasureRestyle { MeasureBuilder.restyled($0, strokeColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
 
     /// The label chip's fill color (its alpha is `chipOpacity`, set separately).
     func setMeasureChipColor(_ hex: String, commit: Bool) {
-        measureStyle.chipColorHex = hex
+        updateMeasureStyles { $0.chipColorHex = hex }
         applyMeasureRestyle { MeasureBuilder.restyled($0, chipColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
 
     /// The numeric readout's color.
     func setMeasureTextColor(_ hex: String, commit: Bool) {
-        measureStyle.textColorHex = hex
+        updateMeasureStyles { $0.textColorHex = hex }
         applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
@@ -920,7 +926,7 @@ final class EditorState {
     /// Live chip-opacity slider drag: update the document without history so the
     /// glass pill re-tints under the thumb (mirrors the label-size slider).
     func previewMeasureChipOpacity(_ opacity: CGFloat) {
-        measureStyle.chipOpacity = opacity
+        updateMeasureStyles { $0.chipOpacity = opacity }
         guard let layer = selectedMeasureLayer else { return }
         // The chip isn't baked on the interactive path, so only the glass overlay
         // needs to move — no re-render, no history.
@@ -930,8 +936,28 @@ final class EditorState {
     /// Slider release: commit the chip opacity in one undo step.
     func commitMeasureChipOpacity(_ opacity: CGFloat) {
         measureChipOpacityPreview = nil
-        measureStyle.chipOpacity = opacity
+        updateMeasureStyles { $0.chipOpacity = opacity }
         applyMeasureRestyle { MeasureBuilder.restyled($0, chipOpacity: opacity) }
+    }
+
+    /// Mutate the measure tool's remembered style and persist it — every measure
+    /// setter goes through here so "it stays how I left it" needs no bookkeeping
+    /// at the call sites.
+    private func updateMeasureStyles(_ mutate: (inout MeasureStyles) -> Void) {
+        mutate(&measureStyles)
+        if let data = try? JSONEncoder().encode(measureStyles) {
+            UserDefaults.standard.set(data, forKey: Self.measureStylesKey)
+        }
+    }
+
+    private static let measureStylesKey = "measureStyles"
+
+    private static func loadMeasureStyles() -> MeasureStyles {
+        guard let data = UserDefaults.standard.data(forKey: measureStylesKey),
+              let styles = try? JSONDecoder().decode(MeasureStyles.self, from: data) else {
+            return MeasureStyles()
+        }
+        return styles
     }
 
     /// The document's pixels-per-point scale, driving the points readout. A Retina
@@ -1699,9 +1725,9 @@ final class EditorState {
                                                   minWidth: TextRasterizer.minimumTextWidth)
             let layer = TextBuilder.layer(content: content, at: origin, naturalSize: size)
             perform { $0.addLayer(layer) }
-            // Sticky by default (17.12): the text tool stays active for the next
-            // block. (Re-editing existing text runs with Select already active,
-            // so this leaves that flow untouched.)
+            // Re-editing existing text already runs with Select active, so only
+            // the new-block path hands the editor back.
+            finishCreating(layer.id)
         }
     }
 
