@@ -2,11 +2,11 @@
   "id": "spec-the-measure-and-redline-tools-for-the-next",
   "title": "Spec the Measure and redline tools for the Next release",
   "priority": "p1-high",
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.702Z",
-  "updated": "2026-08-22T23:04:10.136Z",
+  "updated": "2026-08-22T23:12:23.183Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Primary real-world use of Photonz is UX redlining of screenshots. Write docs/design/next-measure.md translating the capture-wt and redline mock concepts into an implementable spec for the Next release: measurement overlays, gap/size readouts, alignment checks, export of annotations. Ground every feature in the mock pages; flag anything speculative as a decision instead of speccing it. Acceptance: spec reviewed against mocks, open questions filed as queue decisions.",
@@ -39,7 +39,12 @@
     {
       "t": "2026-08-22T23:45:00.000Z",
       "note": "filed 4 open questions as queue decisions on blocked holder tasks (alignment checks, free-angle, naming, describe-specs agent) and queued 4 implementation tasks (hover readout p1, roles p2, panel + spec list p2, centers snap p3)"
+    },
+    {
+      "t": "2026-08-22T23:12:23.182Z",
+      "note": "docs/design/next-measure.md written and committed (0e2147e); every section cites its redline/capture-wt mock element; 4 open questions filed as dashboard decisions (alignment checks, free-angle, naming, agent export) on blocked holder tasks; 4 implementation tasks queued (hover readout p1, roles p2, panel+spec-list p2, centers snap p3); overview.md + progress log updated"
     }
   ],
-  "started": "2026-08-22T23:04:10.135Z"
+  "started": "2026-08-22T23:04:10.135Z",
+  "completed": "2026-08-22T23:12:23.183Z"
 }
