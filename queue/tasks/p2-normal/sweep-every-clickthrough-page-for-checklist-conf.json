@@ -1,0 +1,20 @@
+{
+  "id": "sweep-every-clickthrough-page-for-checklist-conf",
+  "title": "Sweep every clickthrough page for checklist conformance",
+  "priority": "p2-normal",
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T22:40:48.752Z",
+  "updated": "2026-08-22T22:40:48.752Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "For each usage clickthrough page listed in docs/design/mocks/index.html (capture-wt, img-retouch-wt, img-grade-wt, walk, composites, component-configure-wt, icon-draw-wt, icon-gradient-wt, video-*-wt, ds-build-wt, agent-generate-wt): verify it returns 200 and passes the UX-PATTERNS section 9 gates. File one queue task per failing page instead of fixing inline. Acceptance: a pass/fail table in the task log and a filed task per failure.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T22:40:48.752Z",
+      "note": "created (manual)"
+    }
+  ]
+}

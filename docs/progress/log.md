@@ -3668,3 +3668,21 @@ selected, and the Experiments window that picks Current or Next.
 `gh release view v0.14.0` shows `Photonz.dmg`; the
 `releases/latest/download/Photonz.dmg` redirect chain ends in 200; and
 `dzearing.github.io/photonz/version.json` reports 0.14.0.
+
+## 2026-08-22 — Design dashboard, task queue & unmanned go loop
+
+The design study site is now the Photonz design dashboard (default route:
+Project · Summary). New: file-based task queue at `queue/` (tasks by priority
+folder, decisions, digests, history.jsonl, status.json) with `queue.mjs` CLI;
+`/api/*` endpoints in the mock dev server; a live `pages/dashboard.html`
+(Summary / Tasks / Data / Digest tabs, 4s polling, one-click decision
+resolution that requeues blocked tasks — verified end to end in the browser);
+`queue/bin/go-loop.sh` running a daily digest + triage pass then one task per
+fresh headless agent under `runner-prompt.md`; and a `/go` skill that restores
+dev server + loop window ("Photonz Go Loop") + dashboard split after a reboot.
+Queue-driven app work is scoped to the Next release. Six seed tasks queued.
+Full design: `docs/design/dashboard.md`. Chart series pair (#4c6fff/#b7791f)
+validated for CVD + contrast in both themes.
+
+Next: let the loop run; resolve decisions on the dashboard; watch the first
+daily digest land.

@@ -1,0 +1,20 @@
+{
+  "id": "import-the-design-study-backlog-into-the-queue",
+  "title": "Import the design study backlog into the queue",
+  "priority": "p2-normal",
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T22:40:48.727Z",
+  "updated": "2026-08-22T22:40:48.728Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "docs/design/mocks/study-tasks.json has a discovered/pending task list from the mock audit loop. Triage it: queue the still-relevant items as individual tasks with real acceptance criteria, mark the stale ones as skipped inside that file. Acceptance: no pending item in study-tasks.json that is not represented or explicitly skipped.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T22:40:48.728Z",
+      "note": "created (manual)"
+    }
+  ]
+}

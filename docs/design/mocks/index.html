@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Photonz · Creation Vision · Direction Study</title>
+<title>Photonz · Design Dashboard</title>
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
   html,body{height:100%;margin:0;overflow:hidden}
@@ -31,13 +31,22 @@
   <div class="pbar">
     <span class="mark"></span>
     <h1>Photonz</h1>
-    <span class="tag">Creation Vision · direction study</span>
+    <span class="tag">Design dashboard · vision, system &amp; progress</span>
     <span class="spacer"></span>
-    <span class="hint"><b>Non-functional mockups.</b> Each page is independent &amp; shares one design system · <span style="color:var(--comp)">◆</span> = agent building it now.</span>
+    <span class="hint"><b>Project pages are live</b>, wired to the task queue · everything else is a non-functional mock sharing one design system.</span>
     <button class="themebtn" id="theme" style="margin-left:16px">◐ Theme</button>
   </div>
   <div class="body" style="min-height:0">
     <nav class="rail" id="rail">
+      <div class="raildiv">Project · live</div>
+      <button class="grp gtoggle" data-group="proj-status">Status &amp; progress<i class="gchev ic ic-chevron-down"></i></button>
+      <div class="subnav" data-group="proj-status">
+        <button class="nav sub" data-page="dashboard" data-tab="summary">Summary</button>
+        <button class="nav sub" data-page="dashboard" data-tab="tasks">Tasks</button>
+        <button class="nav sub" data-page="dashboard" data-tab="data">Data</button>
+        <button class="nav sub" data-page="dashboard" data-tab="digest">Digest</button>
+      </div>
+
       <div class="raildiv">App Design · canonical</div>
       <button class="grp gtoggle" data-group="ad-core">Overview &amp; shell<i class="gchev ic ic-chevron-down"></i></button>
       <div class="subnav" data-group="ad-core">
@@ -181,7 +190,7 @@
       </div>
     </nav>
     <div class="framearea">
-      <iframe id="frame" src="/pages/app-design.html" title="Photonz mock"></iframe>
+      <iframe id="frame" src="/pages/dashboard.html" title="Photonz mock"></iframe>
     </div>
   </div>
 </div>
@@ -190,8 +199,10 @@
   var frame = document.getElementById('frame');
   var navs = [].slice.call(document.querySelectorAll('.nav[data-page]'));
   var theme = null; // null = follow system
-  function paintActive(id) {
-    navs.forEach(function (n) { n.classList.toggle('on', n.dataset.page === id); });
+  function paintActive(id, tab) {
+    navs.forEach(function (n) {
+      n.classList.toggle('on', n.dataset.page === id && (!n.dataset.tab || n.dataset.tab === (tab || 'summary')));
+    });
   }
   function setGroup(g, collapsed) {
     document.querySelectorAll('.gtoggle[data-group="' + g + '"], .subnav[data-group="' + g + '"]')
@@ -201,21 +212,28 @@
     var el = document.querySelector('.subnav .nav[data-page="' + id + '"]');
     if (el) setGroup(el.closest('.subnav').dataset.group, false);
   }
-  function go(id) {
+  // id may carry a dashboard tab as "dashboard@tasks"
+  function go(id, tab) {
     if (!id) return;
-    frame.src = '/pages/' + id + '.html';
-    paintActive(id);
+    if (id.indexOf('@') > -1) { var p = id.split('@'); id = p[0]; tab = tab || p[1]; }
+    frame.src = '/pages/' + id + '.html' + (tab ? '?tab=' + tab : '');
+    paintActive(id, tab);
     expandGroupFor(id);
-    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    try { history.replaceState(null, '', '#' + id + (tab ? '@' + tab : '')); } catch (e) {}
   }
-  navs.forEach(function (n) { n.addEventListener('click', function () { go(n.dataset.page); }); });
+  navs.forEach(function (n) { n.addEventListener('click', function () { go(n.dataset.page, n.dataset.tab); }); });
   document.querySelectorAll('.gtoggle').forEach(function (t) {
     t.addEventListener('click', function () { setGroup(t.dataset.group, !t.classList.contains('collapsed')); });
   });
-  // pages ask to navigate via postMessage (cross-links)
+  // pages ask to navigate via postMessage (cross-links); the dashboard reports
+  // internal tab switches so the rail stays in sync without a reload
   window.addEventListener('message', function (e) {
     var d = e.data || {};
     if (d.photonzNav) go(d.photonzNav);
+    if (d.photonzDashTab) {
+      paintActive('dashboard', d.photonzDashTab);
+      try { history.replaceState(null, '', '#dashboard@' + d.photonzDashTab); } catch (err) {}
+    }
   });
   // theme toggle: cycle system -> dark -> light -> system, and push to the iframe
   function applyTheme() {
@@ -229,10 +247,10 @@
     applyTheme();
   });
   frame.addEventListener('load', applyTheme); // re-assert theme on each page load
-  // deep link on first load
+  // deep link on first load; default route is the project dashboard summary,
+  // so anything blocked on a decision is the first thing you see
   var initial = (location.hash || '').replace('#', '');
-  if (initial) { go(initial); }
-  else { paintActive('app-design'); expandGroupFor('app-design'); }
+  go(initial || 'dashboard');
 })();
 </script>
 </body>

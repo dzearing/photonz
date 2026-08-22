@@ -87,6 +87,16 @@ reserved for the day Next is promoted. Full design:
 - Model + flag store live in `PhotonzCore` (pure, Codable, tested). The app layer
   owns `Experiments`, the release folders, the dialog, and the window.
 
+## Task queue & go loop (unmanned progress)
+
+`queue/` at the repo root drives an unmanned build loop: tasks by priority
+folder, one-click UX decisions, daily digest + triage, all rendered live on the
+design dashboard (http://127.0.0.1:8791, Project section). Start or restore
+everything with the `go` skill (`/go`). Full design: `docs/design/dashboard.md`
+and `queue/README.md`. Queue mutations go through `queue/bin/queue.mjs`, never
+hand-edited status files. Queue-driven app work targets the **next** release
+unless a task explicitly says otherwise.
+
 ## Releases
 
 Use the `release` skill (`.claude/skills/release/SKILL.md`). Never hand-roll a release: the skill keeps VERSION, CHANGELOG, `site/version.json`, the git tag, and the GitHub release in lockstep.

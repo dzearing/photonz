@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · dashboard</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Project dashboard. Live page: everything below renders from /api/state,
+     which aggregates queue/ at the repo root. Local classes are db- prefixed. */
+  #dashboard{max-width:1180px;margin:0 auto}
+  #dashboard .db-tabs{display:flex;align-items:center;gap:var(--gap);margin:var(--gap) 0 var(--gap-lg)}
+  #dashboard .db-tabs .seg{flex:none}
+  #dashboard .db-refresh{margin-left:auto;font-size:10.5px;color:var(--faint);display:flex;align-items:center;gap:var(--s1)}
+
+  /* ---- cards ---- */
+  #dashboard .db-card{border:1px solid var(--edge-lo);border-radius:var(--r4);
+    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+    box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
+  #dashboard .db-card-h{display:flex;align-items:center;gap:var(--gap-sm);
+    padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--edge-lo);
+    background:color-mix(in srgb,var(--panel-2) 55%, transparent)}
+  #dashboard .db-card-h h3{font-size:13px;font-weight:640;margin:0;letter-spacing:-.01em}
+  #dashboard .db-card-h .k{font-size:10.5px;color:var(--faint);margin-left:auto}
+  #dashboard .db-card-b{padding:var(--pad)}
+  #dashboard .db-card-b.tight{padding:var(--s2) var(--pad)}
+
+  /* ---- loop hero ---- */
+  #dashboard .db-hero{display:flex;align-items:center;gap:var(--gap);padding:var(--pad)}
+  #dashboard .db-hero .db-state{display:flex;align-items:center;gap:var(--gap-sm);flex:none;
+    padding:var(--s2) var(--s3);border-radius:999px;border:1px solid var(--line);font-size:12px;font-weight:640}
+  #dashboard .db-state.run{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+  #dashboard .db-state.idle{color:var(--dim);background:var(--panel-2)}
+  #dashboard .db-state.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+  #dashboard .db-state.off{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent);background:color-mix(in srgb,var(--crit) 10%,transparent)}
+  #dashboard .db-hero .db-what{min-width:0;flex:1}
+  #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
+  #dashboard .db-hero .db-beat{flex:none;text-align:right;font-size:10.5px;color:var(--faint);line-height:1.5}
+  #dashboard .db-pulse{width:7px;height:7px;border-radius:50%;background:currentColor;position:relative}
+  #dashboard .db-state.run .db-pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+    border:1px solid currentColor;opacity:.5;animation:db-ping 1.6s ease-out infinite}
+  @keyframes db-ping{0%{transform:scale(.5);opacity:.6}100%{transform:scale(1.4);opacity:0}}
+
+  /* ---- summary grid ---- */
+  #dashboard .db-sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-top:var(--gap)}
+  #dashboard .db-sumgrid .span2{grid-column:1/-1}
+  @media (max-width:860px){#dashboard .db-sumgrid{grid-template-columns:1fr}}
+
+  /* ---- decisions ---- */
+  #dashboard .db-decide{border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:var(--r3);
+    background:color-mix(in srgb,var(--warn) 7%,transparent);padding:var(--pad-sm) var(--pad);margin-bottom:var(--gap-sm)}
+  #dashboard .db-decide:last-child{margin-bottom:0}
+  #dashboard .db-decide .db-q{font-size:12.5px;font-weight:640;letter-spacing:-.01em;display:flex;gap:var(--gap-sm);align-items:flex-start}
+  #dashboard .db-decide .db-q .ic{color:var(--warn);flex:none;margin-top:1px}
+  #dashboard .db-decide .db-ctx{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--s2) 0 0 26px;white-space:pre-wrap}
+  #dashboard .db-decide .db-opts{display:flex;flex-wrap:wrap;gap:var(--s2);margin:var(--s3) 0 0 26px;align-items:center}
+  #dashboard .db-decide .db-note{margin:var(--s2) 0 0 26px}
+  #dashboard .db-decide .db-task{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-left:26px;margin-top:var(--s2)}
+
+  /* ---- task rows ---- */
+  #dashboard .db-row{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) 0;border-bottom:1px solid var(--line-soft);min-width:0}
+  #dashboard .db-row:last-child{border-bottom:0}
+  #dashboard .db-row .db-title{min-width:0;flex:1;font-size:12px;font-weight:560;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-row .db-meta{flex:none;font-size:10px;color:var(--faint);font-family:var(--mono)}
+  #dashboard .db-row .db-sub{display:block;font-size:10.5px;font-weight:400;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #dashboard .db-empty{font-size:11.5px;color:var(--faint);padding:var(--s3) 0;text-align:center}
+  #dashboard .db-statusdot{flex:none}
+
+  /* ---- tasks tab ---- */
+  #dashboard .db-addform{display:grid;grid-template-columns:1fr 150px auto;gap:var(--gap-sm);align-items:start}
+  #dashboard .db-addform .notes{grid-column:1/-1}
+  #dashboard .db-prio-grp{margin-top:var(--gap-lg)}
+  #dashboard .db-row .select{flex:none;width:118px}
+  @media (max-width:700px){#dashboard .db-addform{grid-template-columns:1fr}}
+
+  /* ---- data tab ---- */
+  #dashboard .db-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
+  #dashboard .db-tile{border:1px solid var(--edge-lo);border-radius:var(--r3);padding:var(--pad-sm) var(--pad);
+    background:var(--glass-thin);box-shadow:inset 0 1px 0 var(--edge-hi)}
+  #dashboard .db-tile .n{font-size:26px;font-weight:660;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+  #dashboard .db-tile .l{font-size:10.5px;color:var(--dim);margin-top:2px}
+  #dashboard .db-tile .d{font-size:10px;color:var(--faint);margin-top:2px}
+  #dashboard .db-charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:var(--gap)}
+  #dashboard .db-chart svg{display:block;width:100%;height:auto}
+  #dashboard .db-legend{display:flex;gap:var(--gap);align-items:center;font-size:10.5px;color:var(--dim);margin-bottom:var(--s2)}
+  #dashboard .db-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  #dashboard .db-hbar{display:grid;grid-template-columns:86px 1fr 32px;align-items:center;gap:var(--gap-sm);padding:var(--s2) 0}
+  #dashboard .db-hbar .l{font-size:11px;color:var(--dim);font-weight:560}
+  #dashboard .db-hbar .t{height:14px;border-radius:4px;background:var(--panel-2);position:relative;overflow:hidden}
+  #dashboard .db-hbar .t i{position:absolute;inset:0 auto 0 0;border-radius:4px;background:var(--accent);min-width:2px}
+  #dashboard .db-hbar .n{font-size:11px;font-weight:640;font-variant-numeric:tabular-nums;text-align:right}
+  #dashboard .db-stack{display:flex;height:16px;border-radius:5px;overflow:hidden;gap:2px;background:transparent;margin:var(--s2) 0 var(--s3)}
+  #dashboard .db-stack i{border-radius:3px;min-width:3px}
+  #dashboard .db-stackleg{display:flex;flex-wrap:wrap;gap:var(--s2) var(--gap);font-size:11px;color:var(--dim)}
+  #dashboard .db-stackleg b{color:var(--ink);font-weight:640;font-variant-numeric:tabular-nums}
+  #dashboard .db-tip{position:fixed;z-index:50;pointer-events:none;background:var(--chrome-solid);border:1px solid var(--line);
+    border-radius:var(--r2);padding:5px 9px;font-size:10.5px;color:var(--ink);box-shadow:0 6px 20px rgba(0,0,0,.25);display:none}
+  #dashboard .db-tip b{font-variant-numeric:tabular-nums}
+
+  /* ---- digest tab ---- */
+  #dashboard .db-digrid{display:grid;grid-template-columns:170px 1fr;gap:var(--gap)}
+  @media (max-width:700px){#dashboard .db-digrid{grid-template-columns:1fr}}
+  #dashboard .db-dilist{display:flex;flex-direction:column;gap:2px}
+  #dashboard .db-dilist button{text-align:left;border:0;background:transparent;color:var(--dim);font-size:12px;font-weight:560;
+    padding:7px 10px;border-radius:var(--r2);cursor:pointer;font-variant-numeric:tabular-nums}
+  #dashboard .db-dilist button:hover{background:var(--panel-2);color:var(--ink)}
+  #dashboard .db-dilist button.on{background:var(--accent-soft);color:var(--accent)}
+  #dashboard .db-md{font-size:12.5px;line-height:1.65;color:var(--dim)}
+  #dashboard .db-md h1{font-size:16px;letter-spacing:-.01em;color:var(--ink);margin:0 0 var(--s3)}
+  #dashboard .db-md h2{font-size:13.5px;letter-spacing:-.01em;color:var(--ink);margin:var(--gap-lg) 0 var(--s2);
+    padding-bottom:var(--s2);border-bottom:1px solid var(--line-soft)}
+  #dashboard .db-md h3{font-size:12.5px;color:var(--ink);margin:var(--gap) 0 var(--s1)}
+  #dashboard .db-md p{margin:0 0 var(--s3)}
+  #dashboard .db-md ul,#dashboard .db-md ol{margin:0 0 var(--s3);padding-left:var(--gap-lg)}
+  #dashboard .db-md li{margin-bottom:var(--s1)}
+  #dashboard .db-md code{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:5px}
+  #dashboard .db-md b,#dashboard .db-md strong{color:var(--ink);font-weight:620}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="dashboard">
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Project dashboard</h2><span class="k">· the go loop, the queue, and progress toward the vision</span></div>
+    <p class="pglead">Photonz is being built by an unmanned loop that executes one task at a time. This page is its front door: what is running, what needs your call, what shipped, and how the numbers move. Resolving a question here feeds straight back into the queue.</p>
+
+    <div class="db-tabs">
+      <div class="seg" id="db-seg">
+        <button data-dbtab="summary" class="on">Summary</button>
+        <button data-dbtab="tasks">Tasks</button>
+        <button data-dbtab="data">Data</button>
+        <button data-dbtab="digest">Digest</button>
+      </div>
+      <span class="db-refresh" id="db-refresh"></span>
+    </div>
+
+    <div id="db-body"><div class="db-empty">Connecting to the queue…</div></div>
+    <div class="db-tip" id="db-tip"></div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  'use strict';
+  var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {};
+  var body = document.getElementById('db-body');
+  var tip = document.getElementById('db-tip');
+  var PRIOS = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
+  var PRIO_LABEL = { 'p0-critical': 'P0 critical', 'p1-high': 'P1 high', 'p2-normal': 'P2 normal', 'p3-low': 'P3 low' };
+  var PRIO_BADGE = { 'p0-critical': 'badge crit', 'p1-high': 'badge warn', 'p2-normal': 'badge accent', 'p3-low': 'badge' };
+  var STATUS_DOT = { pending: 'dot', in_progress: 'dot accent', blocked: 'dot warn', done: 'dot good', dropped: 'dot' };
+  var STATUS_LABEL = { pending: 'pending', in_progress: 'in progress', blocked: 'blocked', done: 'done', dropped: 'dropped' };
+  // Chart series pair, validated for CVD + contrast on both light and dark surfaces.
+  var C_CREATED = '#4c6fff', C_COMPLETED = '#b7791f';
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function rel(iso) {
+    if (!iso) return 'never';
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 50) return 'just now';
+    if (s < 3600) return Math.round(s / 60) + 'm ago';
+    if (s < 86400) return Math.round(s / 3600) + 'h ago';
+    return Math.round(s / 86400) + 'd ago';
+  }
+  function dayLabel(d) { return new Date(d + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  function lastNote(t) { var l = t.log || []; return l.length ? l[l.length - 1].note : ''; }
+
+  // ---- data ----
+  function load() {
+    fetch('/api/state', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
+      S = data;
+      var j = JSON.stringify(data);
+      var typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (j !== lastJSON && !typing) { lastJSON = j; render(); }
+      var r = document.getElementById('db-refresh');
+      if (r) r.textContent = 'live · updated ' + rel(data.generated);
+    }).catch(function () {
+      body.innerHTML = '<div class="db-empty">The queue API is not answering. Is the dev server running from docs/design/mocks?</div>';
+    });
+  }
+  function post(url, payload) {
+    return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { lastJSON = ''; load(); return res; });
+  }
+
+  // ---- render root ----
+  function render() {
+    if (!S) return;
+    if (tab === 'summary') body.innerHTML = renderSummary();
+    if (tab === 'tasks') body.innerHTML = renderTasks();
+    if (tab === 'data') { body.innerHTML = renderData(); wireCharts(); }
+    if (tab === 'digest') { body.innerHTML = renderDigest(); }
+  }
+
+  // ---- summary ----
+  function loopState() {
+    var L = S.loop;
+    if (L.stale) return { cls: 'warn', ic: 'ic-warning', label: 'Loop lost', note: 'A task is marked running but the loop process is gone. Run /go to restart it.' };
+    if (!L.alive) return { cls: 'off', ic: 'ic-x-circle', label: 'Loop stopped', note: 'Run /go in a repo session to start the go loop.' };
+    if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
+    return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
+  }
+  function renderSummary() {
+    var st = loopState();
+    var L = S.loop;
+    var pend = S.decisions.pending;
+    var h = '<div class="db-card"><div class="db-hero">';
+    h += '<span class="db-state ' + st.cls + '">' + (st.cls === 'run' ? '<span class="db-pulse"></span>' : '<i class="ic ' + st.ic + '"></i>') + esc(st.label) + '</span>';
+    h += '<div class="db-what">';
+    if (L.task) h += '<b>' + esc(L.task.title) + '</b><span>' + esc(L.note || 'working') + ' · <span class="badge sm soft">' + esc(PRIO_LABEL[L.task.priority] || '') + '</span></span>';
+    else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
+    h += '</div>';
+    h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked</div>';
+    h += '</div></div>';
+
+    h += '<div class="db-sumgrid">';
+
+    // needs attention: full width when anything is pending
+    h += '<div class="db-card span2"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Needs your decision</h3><span class="k">' + (pend.length ? pend.length + ' waiting, tasks are blocked on these' : 'nothing waiting') + '</span></div><div class="db-card-b">';
+    if (!pend.length) h += '<div class="db-empty">No open questions. The loop will surface UX and product calls here instead of guessing.</div>';
+    pend.forEach(function (d) {
+      h += '<div class="db-decide" data-decision="' + esc(d.id) + '">';
+      h += '<div class="db-q"><i class="ic ic-help"></i><span>' + esc(d.question) + '</span></div>';
+      if (d.context) h += '<div class="db-ctx">' + esc(d.context) + '</div>';
+      h += '<div class="db-opts">';
+      var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
+      opts.forEach(function (o) {
+        var rec = o.id === d.recommended;
+        h += '<button class="btn sm ' + (rec ? 'primary' : 'secondary') + '" data-act="decide" data-id="' + esc(d.id) + '" data-choice="' + esc(o.id) + '" title="' + esc(o.detail || '') + '">' + esc(o.label) + (rec ? ' · recommended' : '') + '</button>';
+      });
+      h += '</div>';
+      h += '<div class="db-note"><input class="input sm block" name="note-' + esc(d.id) + '" placeholder="Optional note sent back with your choice" data-notefor="' + esc(d.id) + '"></div>';
+      h += '<div class="db-task">blocks ' + esc(d.taskId) + ' · opened ' + rel(d.created) + '</div>';
+      h += '</div>';
+    });
+    h += '</div></div>';
+
+    // up next
+    h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-list"></i><h3>Up next</h3><span class="k">highest priority first</span></div><div class="db-card-b tight">';
+    if (!S.next.length) h += '<div class="db-empty">The queue is empty. Add tasks from the Tasks tab.</div>';
+    S.next.forEach(function (t) {
+      h += '<div class="db-row"><span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span><span class="db-title">' + esc(t.title) + '</span><span class="db-meta">' + rel(t.created) + '</span></div>';
+    });
+    h += '</div></div>';
+
+    // done last 24h
+    h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-check-circle" style="color:var(--good)"></i><h3>Completed, last 24 hours</h3><span class="k">' + S.completed24h.length + ' shipped</span></div><div class="db-card-b tight">';
+    if (!S.completed24h.length) h += '<div class="db-empty">Nothing finished in the last day yet.</div>';
+    S.completed24h.forEach(function (t) {
+      h += '<div class="db-row"><span class="dot good db-statusdot"></span><span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(lastNote(t)) + '</span></span><span class="db-meta">' + rel(t.completed) + '</span></div>';
+    });
+    h += '</div></div>';
+
+    h += '</div>';
+    return h;
+  }
+
+  // ---- tasks ----
+  function renderTasks() {
+    var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-plus"></i><h3>Queue a task</h3><span class="k">lands as pending, the loop picks it up by priority</span></div><div class="db-card-b">';
+    h += '<div class="db-addform">';
+    h += '<input class="input block" id="db-new-title" placeholder="What should get done?">';
+    h += '<select class="select" id="db-new-prio"><option value="p1-high">P1 high</option><option value="p2-normal" selected>P2 normal</option><option value="p3-low">P3 low</option><option value="p0-critical">P0 critical</option></select>';
+    h += '<button class="btn primary" data-act="add">Add to queue</button>';
+    h += '<textarea class="input area block notes" id="db-new-notes" rows="2" placeholder="Notes for the runner: context, constraints, what done looks like"></textarea>';
+    h += '</div></div></div>';
+
+    var active = S.tasks.filter(function (t) { return t.status !== 'done' && t.status !== 'dropped'; });
+    var finished = S.tasks.filter(function (t) { return t.status === 'done' || t.status === 'dropped'; })
+      .sort(function (a, b) { return (b.completed || b.updated || '').localeCompare(a.completed || a.updated || ''); });
+
+    PRIOS.forEach(function (p) {
+      var group = active.filter(function (t) { return t.priority === p; });
+      h += '<div class="db-prio-grp"><div class="mlabel">' + esc(PRIO_LABEL[p]) + ' · ' + group.length + '</div><div class="db-card"><div class="db-card-b tight">';
+      if (!group.length) h += '<div class="db-empty">Nothing at this priority.</div>';
+      group.forEach(function (t) {
+        h += '<div class="db-row" title="' + esc(t.notes || '') + '">';
+        h += '<span class="' + STATUS_DOT[t.status] + ' db-statusdot"></span>';
+        h += '<span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(STATUS_LABEL[t.status]) + (lastNote(t) ? ' · ' + esc(lastNote(t)) : '') + '</span></span>';
+        h += '<span class="db-meta">' + rel(t.updated) + '</span>';
+        h += '<select class="select sm" name="prio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '">' + PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === p ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
+        if (t.status === 'pending') h += '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>';
+        h += '</div>';
+      });
+      h += '</div></div></div>';
+    });
+
+    h += '<div class="db-prio-grp"><div class="mlabel">Finished · ' + finished.length + '</div><div class="db-card"><div class="db-card-b tight">';
+    if (!finished.length) h += '<div class="db-empty">Nothing finished yet.</div>';
+    finished.slice(0, 25).forEach(function (t) {
+      h += '<div class="db-row"><span class="' + STATUS_DOT[t.status] + ' db-statusdot"></span><span class="db-title">' + esc(t.title) + '<span class="db-sub">' + esc(STATUS_LABEL[t.status]) + ' · ' + esc(lastNote(t)) + '</span></span><span class="db-meta">' + rel(t.completed || t.updated) + '</span></div>';
+    });
+    h += '</div></div></div>';
+    return h;
+  }
+
+  // ---- data ----
+  function renderData() {
+    var c = S.counts;
+    var open = c.byStatus.pending + c.byStatus.in_progress + c.byStatus.blocked;
+    var h = '<div class="db-tiles">';
+    h += tile(open, 'Open tasks', 'across all priorities');
+    h += tile(c.byStatus.done, 'Completed', 'all time');
+    h += tile(c.byStatus.blocked, 'Blocked', 'waiting on decisions');
+    h += tile(S.decisions.pending.length, 'Decisions waiting', 'resolve on Summary');
+    h += '</div>';
+
+    h += '<div class="db-charts">';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Open tasks over time</h3><span class="k">end of day</span></div><div class="db-card-b" id="db-line"></div></div>';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Created vs completed by day</h3></div><div class="db-card-b" id="db-bars"></div></div>';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Open by priority</h3></div><div class="db-card-b" id="db-prio-chart"></div></div>';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Status mix</h3><span class="k">every task ever filed</span></div><div class="db-card-b" id="db-stack"></div></div>';
+    h += '</div>';
+    return h;
+  }
+  function tile(n, l, d) { return '<div class="db-tile"><div class="n">' + n + '</div><div class="l">' + l + '</div><div class="d">' + d + '</div></div>'; }
+
+  function contDays(series, maxDays) {
+    if (!series.length) return [];
+    var by = {}; series.forEach(function (s) { by[s.day] = s; });
+    var out = [], d = new Date(series[0].day + 'T12:00:00'), today = new Date();
+    var lastOpen = 0;
+    while (out.length < 400) {
+      var key = d.toISOString().slice(0, 10);
+      var row = by[key] || { day: key, created: 0, completed: 0, open: lastOpen };
+      lastOpen = row.open;
+      out.push(row);
+      if (key >= today.toISOString().slice(0, 10)) break;
+      d.setDate(d.getDate() + 1);
+    }
+    return out.slice(-maxDays);
+  }
+
+  function wireCharts() {
+    var days = contDays(S.series, 21);
+    drawLine(document.getElementById('db-line'), days);
+    drawBars(document.getElementById('db-bars'), days.slice(-14));
+    drawPrio(document.getElementById('db-prio-chart'));
+    drawStack(document.getElementById('db-stack'));
+  }
+
+  // line: open tasks over time (single series, accent, crosshair tooltip)
+  function drawLine(el, days) {
+    if (!el) return;
+    if (days.length < 2) { el.innerHTML = '<div class="db-empty">Charts fill in once the loop has a day or two of history.</div>'; return; }
+    var W = 560, H = 190, P = { l: 30, r: 10, t: 12, b: 24 };
+    var max = Math.max.apply(null, days.map(function (d) { return d.open; }).concat([4]));
+    var x = function (i) { return P.l + (W - P.l - P.r) * i / (days.length - 1); };
+    var y = function (v) { return P.t + (H - P.t - P.b) * (1 - v / max); };
+    var line = days.map(function (d, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(d.open).toFixed(1); }).join(' ');
+    var area = line + ' L' + x(days.length - 1).toFixed(1) + ' ' + y(0) + ' L' + x(0).toFixed(1) + ' ' + y(0) + ' Z';
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" id="db-line-svg">';
+    [0, .5, 1].forEach(function (f) {
+      var v = Math.round(max * f);
+      s += '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line-soft)" stroke-width="1"/>';
+      s += '<text x="' + (P.l - 6) + '" y="' + (y(v) + 3) + '" text-anchor="end" font-size="9" fill="var(--faint)">' + v + '</text>';
+    });
+    days.forEach(function (d, i) {
+      if (i === 0 || i === days.length - 1 || i % Math.ceil(days.length / 6) === 0) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--faint)">' + dayLabel(d.day) + '</text>';
+    });
+    s += '<path d="' + area + '" fill="var(--accent)" opacity="0.10"/>';
+    s += '<path d="' + line + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s += '<circle cx="' + x(days.length - 1) + '" cy="' + y(days[days.length - 1].open) + '" r="3.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>';
+    s += '<line id="db-cross" y1="' + P.t + '" y2="' + (H - P.b) + '" stroke="var(--line-strong)" stroke-width="1" visibility="hidden"/>';
+    s += '<circle id="db-crossdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>';
+    s += '</svg>';
+    el.innerHTML = s;
+    var svg = el.querySelector('svg');
+    svg.addEventListener('mousemove', function (e) {
+      var r = svg.getBoundingClientRect();
+      var i = Math.round((e.clientX - r.left) / r.width * (days.length - 1) * (W / (W - P.l - P.r)) - P.l / (W - P.l - P.r) * (days.length - 1));
+      i = Math.max(0, Math.min(days.length - 1, i));
+      var cx = x(i), cy = y(days[i].open);
+      svg.querySelector('#db-cross').setAttribute('x1', cx);
+      svg.querySelector('#db-cross').setAttribute('x2', cx);
+      svg.querySelector('#db-cross').setAttribute('visibility', 'visible');
+      var dot = svg.querySelector('#db-crossdot');
+      dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('visibility', 'visible');
+      showTip(e, dayLabel(days[i].day) + ' · <b>' + days[i].open + '</b> open');
+    });
+    svg.addEventListener('mouseleave', function () {
+      svg.querySelector('#db-cross').setAttribute('visibility', 'hidden');
+      svg.querySelector('#db-crossdot').setAttribute('visibility', 'hidden');
+      hideTip();
+    });
+  }
+
+  // paired bars: created vs completed (two validated series colors + legend + per-bar tooltip)
+  function drawBars(el, days) {
+    if (!el) return;
+    if (!days.length) { el.innerHTML = '<div class="db-empty">No history yet.</div>'; return; }
+    var W = 560, H = 190, P = { l: 30, r: 10, t: 12, b: 24 };
+    var max = Math.max.apply(null, days.map(function (d) { return Math.max(d.created, d.completed); }).concat([4]));
+    var slot = (W - P.l - P.r) / days.length, bw = Math.min(14, (slot - 8) / 2);
+    var y = function (v) { return P.t + (H - P.t - P.b) * (1 - v / max); };
+    var h = '<div class="db-legend"><span><i style="background:' + C_CREATED + '"></i>Created</span><span><i style="background:' + C_COMPLETED + '"></i>Completed</span></div>';
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
+    [0, .5, 1].forEach(function (f) {
+      var v = Math.round(max * f);
+      s += '<line x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line-soft)" stroke-width="1"/>';
+      s += '<text x="' + (P.l - 6) + '" y="' + (y(v) + 3) + '" text-anchor="end" font-size="9" fill="var(--faint)">' + v + '</text>';
+    });
+    days.forEach(function (d, i) {
+      var cx = P.l + slot * i + slot / 2;
+      if (i === 0 || i === days.length - 1 || i % Math.ceil(days.length / 6) === 0) s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--faint)">' + dayLabel(d.day) + '</text>';
+      [['created', C_CREATED, cx - bw - 1], ['completed', C_COMPLETED, cx + 1]].forEach(function (spec) {
+        var v = d[spec[0]], by = y(v), bh = Math.max(0, y(0) - by);
+        if (v > 0 && bh < 3) { bh = 3; by = y(0) - 3; }
+        s += '<rect data-day="' + d.day + '" data-kind="' + spec[0] + '" data-v="' + v + '" x="' + spec[2] + '" y="' + (v ? by : y(0) - 1) + '" width="' + bw + '" height="' + (v ? bh : 1) + '" rx="2.5" fill="' + spec[1] + '"' + (v ? '' : ' opacity="0.25"') + '/>';
+      });
+    });
+    s += '</svg>';
+    el.innerHTML = h + s;
+    el.querySelectorAll('rect').forEach(function (r2) {
+      r2.addEventListener('mousemove', function (e) { showTip(e, dayLabel(r2.dataset.day) + ' · ' + r2.dataset.kind + ' <b>' + r2.dataset.v + '</b>'); });
+      r2.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  // horizontal bars, one per priority; identity is the row label so all bars share the accent
+  function drawPrio(el) {
+    if (!el) return;
+    var by = S.counts.byPriority;
+    var max = Math.max.apply(null, PRIOS.map(function (p) { return by[p] || 0; }).concat([1]));
+    el.innerHTML = PRIOS.map(function (p) {
+      var v = by[p] || 0;
+      return '<div class="db-hbar"><span class="l">' + PRIO_LABEL[p] + '</span><span class="t">' + (v ? '<i style="width:' + (v / max * 100) + '%"></i>' : '') + '</span><span class="n">' + v + '</span></div>';
+    }).join('') + '<div class="docnote" style="margin-top:8px">Open tasks only. Done and dropped are excluded.</div>';
+  }
+
+  // stacked status bar; semantic colors, never color alone: the legend carries label + count
+  function drawStack(el) {
+    if (!el) return;
+    var c = S.counts.byStatus;
+    var parts = [
+      { k: 'done', l: 'Done', col: 'var(--good)' },
+      { k: 'in_progress', l: 'In progress', col: 'var(--accent)' },
+      { k: 'pending', l: 'Pending', col: 'var(--faint)' },
+      { k: 'blocked', l: 'Blocked', col: 'var(--warn)' },
+      { k: 'dropped', l: 'Dropped', col: 'var(--line-strong)' }
+    ].filter(function (p) { return c[p.k] > 0; });
+    var total = parts.reduce(function (a, p) { return a + c[p.k]; }, 0);
+    if (!total) { el.innerHTML = '<div class="db-empty">No tasks yet.</div>'; return; }
+    el.innerHTML = '<div class="db-stack">' + parts.map(function (p) {
+      return '<i style="flex:' + c[p.k] + ';background:' + p.col + '" title="' + p.l + ' ' + c[p.k] + '"></i>';
+    }).join('') + '</div><div class="db-stackleg">' + parts.map(function (p) {
+      return '<span><i class="dot" style="background:' + p.col + ';margin-right:5px"></i>' + p.l + ' <b>' + c[p.k] + '</b></span>';
+    }).join('') + '</div>';
+  }
+
+  function showTip(e, html) { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; }
+  function hideTip() { tip.style.display = 'none'; }
+
+  // ---- digest ----
+  function renderDigest() {
+    var list = S.digests.list;
+    if (!list.length) return '<div class="db-card"><div class="db-card-b"><div class="db-empty">No digest yet. The go loop writes one on its first pass each day: a summary of the last 24 hours, reflections, and a triage review.</div></div></div>';
+    if (!digestSel || list.indexOf(digestSel) < 0) digestSel = list[0];
+    var h = '<div class="db-digrid"><div class="db-dilist">';
+    list.forEach(function (n) {
+      h += '<button data-act="digest" data-name="' + esc(n) + '" class="' + (n === digestSel ? 'on' : '') + '">' + esc(n.replace('.md', '')) + '</button>';
+    });
+    h += '</div><div class="db-card"><div class="db-card-b"><div class="db-md" id="db-md">Loading…</div></div></div></div>';
+    setTimeout(function () { loadDigest(digestSel); }, 0);
+    return h;
+  }
+  function loadDigest(name) {
+    var el = document.getElementById('db-md');
+    if (!el) return;
+    if (S.digests.latest && S.digests.latest.name === name) { el.innerHTML = md(S.digests.latest.body); return; }
+    if (digestCache[name]) { el.innerHTML = md(digestCache[name]); return; }
+    fetch('/api/digest/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
+      digestCache[name] = d.body || '';
+      el.innerHTML = md(digestCache[name]);
+    });
+  }
+  // minimal markdown: headings, lists, bold, code, links. Digests are our own format.
+  function md(src) {
+    var out = [], para = [], inList = false;
+    function flushPara() { if (para.length) { out.push('<p>' + para.join(' ') + '</p>'); para = []; } }
+    function inline(s) {
+      return esc(s)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    }
+    String(src || '').split('\n').forEach(function (line) {
+      var m;
+      if ((m = line.match(/^(#{1,3})\s+(.*)/))) { flushPara(); if (inList) { out.push('</ul>'); inList = false; } out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); return; }
+      if ((m = line.match(/^\s*[-*]\s+(.*)/))) { flushPara(); if (!inList) { out.push('<ul>'); inList = true; } out.push('<li>' + inline(m[1]) + '</li>'); return; }
+      if (!line.trim()) { flushPara(); if (inList) { out.push('</ul>'); inList = false; } return; }
+      para.push(inline(line));
+    });
+    flushPara(); if (inList) out.push('</ul>');
+    return out.join('\n');
+  }
+
+  // ---- actions ----
+  document.getElementById('dashboard').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act], [data-dbtab]');
+    if (!b) return;
+    if (b.dataset.dbtab) { setTab(b.dataset.dbtab, true); return; }
+    if (b.dataset.act === 'decide') {
+      var noteEl = document.querySelector('[data-notefor="' + b.dataset.id + '"]');
+      b.textContent = 'Resolving…'; b.disabled = true;
+      post('/api/decide', { id: b.dataset.id, choice: b.dataset.choice, note: noteEl ? noteEl.value : '' });
+    }
+    if (b.dataset.act === 'add') {
+      var t = document.getElementById('db-new-title'), p = document.getElementById('db-new-prio'), n = document.getElementById('db-new-notes');
+      if (!t.value.trim()) { t.focus(); return; }
+      post('/api/task', { title: t.value.trim(), priority: p.value, notes: n.value.trim() });
+      t.value = ''; n.value = '';
+    }
+    if (b.dataset.act === 'drop') {
+      post('/api/task/update', { id: b.dataset.id, status: 'dropped', note: 'dropped from the dashboard' });
+    }
+    if (b.dataset.act === 'digest') { digestSel = b.dataset.name; render(); }
+  });
+  document.getElementById('dashboard').addEventListener('change', function (e) {
+    var s = e.target.closest('select[data-act="prio"]');
+    if (s) post('/api/task/update', { id: s.dataset.id, priority: s.value });
+  });
+
+  function setTab(t, push) {
+    tab = t;
+    document.querySelectorAll('#db-seg [data-dbtab]').forEach(function (b) { b.classList.toggle('on', b.dataset.dbtab === t); });
+    render();
+    if (push) {
+      try { history.replaceState(null, '', '?tab=' + t); } catch (err) {}
+      try { parent.postMessage({ photonzDashTab: t }, '*'); } catch (err) {}
+    }
+  }
+
+  var q = new URLSearchParams(location.search).get('tab');
+  if (q && ['summary', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
+  load();
+  setInterval(function () { if (!document.hidden) load(); }, 4000);
+})();
+</script>
+</body>
+</html>

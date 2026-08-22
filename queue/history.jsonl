@@ -1,0 +1,6 @@
+{"t":"2026-08-22T22:40:48.678Z","ev":"task_created","id":"harden-the-capture-and-redline-clickthrough","priority":"p1-high","title":"Harden the Capture and redline clickthrough"}
+{"t":"2026-08-22T22:40:48.703Z","ev":"task_created","id":"spec-the-measure-and-redline-tools-for-the-next-","priority":"p1-high","title":"Spec the Measure and redline tools for the Next release"}
+{"t":"2026-08-22T22:40:48.728Z","ev":"task_created","id":"import-the-design-study-backlog-into-the-queue","priority":"p2-normal","title":"Import the design study backlog into the queue"}
+{"t":"2026-08-22T22:40:48.753Z","ev":"task_created","id":"sweep-every-clickthrough-page-for-checklist-conf","priority":"p2-normal","title":"Sweep every clickthrough page for checklist conformance"}
+{"t":"2026-08-22T22:40:48.777Z","ev":"task_created","id":"audit-dashboard-page-for-design-system-conforman","priority":"p2-normal","title":"Audit dashboard page for design system conformance"}
+{"t":"2026-08-22T22:40:48.802Z","ev":"task_created","id":"icon-conformance-audit-across-mock-pages","priority":"p3-low","title":"Icon conformance audit across mock pages"}

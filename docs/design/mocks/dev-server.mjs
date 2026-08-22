@@ -55,8 +55,58 @@ export async function assemble(kind) {
   return parts.join('\n');
 }
 
+// ---- task queue API (backs the Project dashboard pages) --------------------
+// Implementation lives in queue/bin/queue-lib.mjs at the repo root; the queue
+// itself is outside ROOT on purpose so status writes never trip livereload.
+const QUEUE_LIB = join(ROOT, '..', '..', '..', 'queue', 'bin', 'queue-lib.mjs');
+let q = null;
+async function queueLib() {
+  if (!q) { try { q = await import(QUEUE_LIB); } catch (e) { console.error('queue lib unavailable:', e.message); } }
+  return q;
+}
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (c) => { data += c; if (data.length > 1e6) req.destroy(); });
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch (e) { reject(e); } });
+    req.on('error', reject);
+  });
+}
+async function handleApi(req, res, url) {
+  const lib = await queueLib();
+  const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
+  if (!lib) return send(503, { error: 'queue unavailable' });
+  try {
+    if (req.method === 'GET' && url === '/api/state') return send(200, lib.aggregateState());
+    if (req.method === 'GET' && url.startsWith('/api/digest/')) {
+      const name = decodeURIComponent(url.slice('/api/digest/'.length));
+      if (!/^[\d-]+\.md$/.test(name)) return send(400, { error: 'bad digest name' });
+      const body = lib.readDigest(name);
+      return body === null ? send(404, { error: 'not found' }) : send(200, { name, body });
+    }
+    if (req.method === 'POST' && url === '/api/decide') {
+      const { id, choice, note } = await readBody(req);
+      return send(200, lib.resolveDecision(id, choice, note || ''));
+    }
+    if (req.method === 'POST' && url === '/api/task') {
+      const { title, priority, notes } = await readBody(req);
+      if (!title) return send(400, { error: 'title required' });
+      return send(200, lib.addTask({ title, priority, notes: notes || '', source: 'dashboard' }));
+    }
+    if (req.method === 'POST' && url === '/api/task/update') {
+      const { id, priority, status, note } = await readBody(req);
+      let t = null;
+      if (priority) t = lib.setPriority(id, priority);
+      if (status) t = lib.setStatus(id, status, note || 'set from dashboard');
+      return t ? send(200, { id: t.id, priority: t.priority, status: t.status }) : send(400, { error: 'nothing to update' });
+    }
+    return send(404, { error: 'unknown api route' });
+  } catch (e) { return send(500, { error: String(e.message || e) }); }
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
+  if (url.startsWith('/api/')) return handleApi(req, res, url);
   const bundle = url === '/shared/photonz-ds.css' ? 'css'
     : url === '/shared/photonz-ds.js' ? 'js' : null;
   if (bundle) {
