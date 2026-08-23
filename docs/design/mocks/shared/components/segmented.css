@@ -195,6 +195,20 @@
    author that this should have been a `.select`. */
 .pdock .seg,.dgrp-b .seg,.cpick .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
 
+/* THE LIBRARY SCOPE ROW (`.seg.scopeseg`, D2). Four scopes in a ~230px dock
+   column: equal columns give each segment ~37px of text space, so the longer
+   labels ("Styles", "Systems") sat one or two pixels past their box and
+   ellipsized — under the collapse threshold above, so the row stayed a seg and
+   just showed `Style…`. Scope labels are short and UNEQUAL, so this row uses
+   natural-width columns spread across the track plus the dense padding, which
+   keeps every label whole at the dock's default width. `minmax(0,…)` keeps the
+   columns shrinkable, so at the dock's true minimum the labels clip again and
+   the collapse-to-menu above still takes over. The fixed 2px gap goes too —
+   space-between already separates the segments, and those 6px are exactly the
+   margin the longest label set needs at the dock's default width. */
+.seg.scopeseg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,max-content);justify-content:space-between;gap:0;width:100%}
+.seg.scopeseg>button{padding:0 var(--s2)}
+
 /* `.seg.stack` used to mean "allowed to wrap". Nothing is allowed to wrap, so
    it is now just the full-width form, kept because five pages ask for it. */
 .seg.stack{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}

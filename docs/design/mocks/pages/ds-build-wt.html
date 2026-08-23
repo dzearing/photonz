@@ -259,12 +259,12 @@
                 <div id="propsSel" class="wt-off">
                   <div class="section wt-off" id="pComp">
                     <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> main</span></div>
-                    <div class="irow"><span class="rl">Name</span><span class="select comp"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Card · Sign up</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
-                    <div class="irow"><span class="rl">Instances</span><span class="select"><span class="lead" id="pInst">1 in this document</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                    <div class="irow"><span class="rl">Name</span><span class="select comp" tabindex="0" role="button"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Card · Sign up</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                    <div class="irow"><span class="rl">Instances</span><span class="select" tabindex="0" role="button"><span class="lead" id="pInst">1 in this document</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
                   </div>
                   <div class="section" id="pFill">
                     <div class="sec-h">Fill <span class="mut" id="pFillKind">Raw gradient</span></div>
-                    <div class="irow"><span class="rl">Paint</span><span class="select"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> <span id="pFillVal">#7C4DFF → #FF5D8F</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Paint</span><span class="select" tabindex="0" role="button"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> <span id="pFillHex">#7C4DFF <i class="ic xs ic-arrow-right"></i> #FF5D8F</span><span id="pFillStyle" class="wt-off">Brand / gradient</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                     <div class="irow"><span class="rl">Style</span><button class="btn secondary sm" id="btnSaveStyle"><i class="ic ic-plus"></i> Save as style</button></div>
                     <p class="note" id="pFillNote">This paint is a one-off. Name it and every layer that uses it follows one source.</p>
                   </div>
@@ -283,7 +283,7 @@
               </div>
               <div class="dgrp-b">
                 <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-                  <div class="seg scopeseg" style="width:100%;justify-content:space-between">
+                  <div class="seg scopeseg">
                     <button data-scope="media" data-scope-name="Media">Media</button>
                     <button data-scope="components" data-scope-name="Components">Comp</button>
                     <button class="on" data-scope="styles" data-scope-name="Styles">Styles</button>
@@ -382,8 +382,8 @@
       <li class="wt-step"
           data-title="Save the fill as a Style"
           data-cue="#btnSaveStyle" data-cue-label="Click Save as style" data-cue-place="left"
-          data-scope="styles" data-show="#libStyleGrid" data-hide="#libStyleEmpty"
-          data-set="#pFillVal=Brand / gradient|#pFillKind=Style|#pFillNote=Painted with a named Style. Change it once and every layer using it follows.">
+          data-scope="styles" data-show="#libStyleGrid,#pFillStyle" data-hide="#libStyleEmpty,#pFillHex"
+          data-set="#pFillKind=Style|#pFillNote=Painted with a named Style. Change it once and every layer using it follows.">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
           <p class="wt-do"><b>Save as style</b></p>

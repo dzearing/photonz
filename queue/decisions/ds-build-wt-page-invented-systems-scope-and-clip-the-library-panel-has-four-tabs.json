@@ -1,0 +1,51 @@
+{
+  "id": "ds-build-wt-page-invented-systems-scope-and-clip-the-library-panel-has-four-tabs",
+  "taskId": "ds-build-wt-page-invented-systems-scope-and-clip",
+  "question": "The Library panel has four tabs. Should the fourth tab be Assets, or Systems, the home of your published design system?",
+  "context": "The Build a design system walkthrough added a Systems tab to the Library, but every other screen uses Assets as the fourth tab. The shared pattern doc locks the set to Media, Comp, Styles, Assets, while the approved product model says systems are picked from the Library at scope Styles/Systems. Whichever option wins gets applied to every screen so the Library reads the same everywhere.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Systems replaces Assets",
+      "summary": "The Library tabs become Media, Comp, Styles, Systems on every screen. The Systems tab holds your named design system, draft or published, and later a catalog of systems you can browse and apply.",
+      "pros": [
+        "Completes the ladder the product teaches: tokens, then styles, then components, then a system",
+        "Gives publishing and applying a system a clear, named home on every screen",
+        "Assets is an empty tab today that no screen defines or fills"
+      ],
+      "cons": [
+        "Loses a generic drawer for miscellaneous reusable files"
+      ],
+      "mitigation": "Imported files already live under the Media tab, so nothing is left without a home."
+    },
+    {
+      "id": "b",
+      "label": "Systems live inside Assets",
+      "summary": "The tabs stay Media, Comp, Styles, Assets. The design system card and the future catalog appear under Assets.",
+      "pros": [
+        "No other screen changes",
+        "Keeps a place for generic reusable files"
+      ],
+      "cons": [
+        "The word Assets does not say your design system lives here, so publishing and applying a system hides behind a vague label"
+      ],
+      "mitigation": "The Assets tab would lead with the system card so it is the first thing you see."
+    },
+    {
+      "id": "c",
+      "label": "Systems live with Styles",
+      "summary": "The tabs stay as they are. The Styles tab shows the system card above the list of styles, matching the product model note that reads scope = Styles/Systems.",
+      "pros": [
+        "Styles and the system they belong to sit together",
+        "No tab renames anywhere"
+      ],
+      "cons": [
+        "One tab does two jobs, and the publish moment loses its own place in the walkthrough"
+      ],
+      "mitigation": "A divider and a clear header keep the system zone visually separate from the styles grid."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-08-23T02:36:07.274Z"
+}

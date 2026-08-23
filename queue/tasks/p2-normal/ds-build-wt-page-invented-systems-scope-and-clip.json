@@ -3,11 +3,11 @@
   "title": "ds-build-wt: page-invented Systems scope and clipped scope tab",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:40.825Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T02:36:57.325Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: ui-building > ui-design-systems (plus design-system conformance). Checklist sweep: (1) gate 3 warn: Library scope row is Media/Comp/Styles/Systems, replacing the fixed D2 fourth scope 'Assets' with a page-invented 'Systems' (grep: only this file uses data-scope=systems); decide whether design systems live under Assets or the scope set changes everywhere. (2) measured in browser: the 'Systems' chip clips 10px (scrollWidth 63 vs clientWidth 53) in the 232px seg; 'Styles' also clips slightly. (3) minor: fill value uses a unicode arrow (#pFillVal '#7C4DFF -> #FF5D8F' rendered with an arrow glyph); .select rows lack role/tabindex. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -24,6 +24,23 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T02:23:25.059Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T02:55:00.000Z",
+      "note": "Items 2 and 3 fixed and verified in Chrome. Clip: .scopeseg now has an owner in segmented.css (natural-width columns via minmax(0,max-content), space-between, gap 0, dense --s2 padding); all four labels render whole at the 232px dock width on this page AND on agent-generate-wt/capture-wt/component-configure-wt which share the class; equal columns had given each segment ~37px of text space while Systems needs 48px. Page drops its inline seg style. Arrow: #pFillVal split into #pFillHex (with ic-arrow-right icon) and #pFillStyle swapped by step 3 via data-show/hide, because data-set snapshots textContent and would have destroyed the icon on Reset; verified step-3 swap and Reset restore the icon. Selects: three .select rows got tabindex/role=button; .select gained cursor:pointer and a :focus-visible ring in inspector.css (it had none)."
+    },
+    {
+      "t": "2026-08-23T02:56:00.000Z",
+      "note": "Item 1 needs the user: UX-PATTERNS D2 locks the fourth scope to Assets (empty on every page, never defined) while approved PRODUCT-MODEL section 3 says systems are picked from 'Library panel, scope = Styles/Systems'. Filed decision ds-build-wt-page-invented-systems-scope-and-clip-the-library-panel-has-four-tabs with brief in queue/decisions/; recommended option a (Systems replaces Assets everywhere). On answer: apply the chosen shape to this page, UX-PATTERNS D2, and the other Library pages (agent-generate-wt, capture-wt, component-configure-wt, app-shell, brush-library, brush-editor)."
+    },
+    {
+      "t": "2026-08-23T02:36:57.324Z",
+      "note": "Clip and a11y fixes shipped and verified in Chrome; the fourth-scope question (Assets vs Systems) is a filed decision with a brief, recommended: Systems replaces Assets everywhere."
     }
-  ]
+  ],
+  "started": "2026-08-23T02:23:25.058Z"
 }
