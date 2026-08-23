@@ -135,13 +135,32 @@ public enum AlignmentScan {
     /// the same element edge.
     public static let runMergeTolerance: CGFloat = 1.5
 
+    /// How bold a boundary has to be, next to the boldest one its own sample
+    /// window offers, before the guide will treat it as the edge of an ELEMENT.
+    ///
+    /// Below this it is a ghost, not an element. The edge map sums in 16px
+    /// blocks, so the block holding the bottom of a line of text keeps echoing
+    /// that text's left edge for a sample or two BELOW the words, a couple of
+    /// pixels further out and a fraction as strong. Nothing on the screen sits
+    /// there. Letting those samples become an item is how a guide down a label
+    /// that is 4px out came to report 5: the echo was further from the
+    /// reference than the real edge, so it won the worst-offender vote and
+    /// spoke for an element that does not exist.
+    ///
+    /// Deliberately the same fraction as `ElementBounds`' own element floor:
+    /// both are asking one map the same question, and an answer that differed
+    /// between hovering an element and checking its edge would be a bug of its
+    /// own.
+    public static let defaultElementStrength: Double = 0.2
+
     /// The element edges a guide line crosses, in document space. `axis` is the
     /// guide's direction: a `.vertical` guide at x = `position` spanning
     /// y = `span` checks vertical edges; `.horizontal` mirrors it.
     public static func items(axis: MeasureMode, position: CGFloat,
                              span: ClosedRange<CGFloat>, in edges: EdgeMap,
                              captureRadius: CGFloat = defaultCaptureRadius,
-                             sampleStep: CGFloat = defaultSampleStep) -> [AlignmentItem] {
+                             sampleStep: CGFloat = defaultSampleStep,
+                             elementStrength: Double = defaultElementStrength) -> [AlignmentItem] {
         guard !edges.isEmpty, span.upperBound > span.lowerBound, sampleStep > 0 else { return [] }
         let length = span.upperBound - span.lowerBound
         let sampleCount = max(1, Int((length / sampleStep).rounded(.up)))
@@ -160,9 +179,10 @@ public enum AlignmentScan {
         for i in 0...sampleCount {
             let t = span.lowerBound + length * CGFloat(i) / CGFloat(sampleCount)
             let window = (Double(t) - half)...(Double(t) + half)
-            let candidates = axis == .vertical
+            let candidates = (axis == .vertical
                 ? edges.verticalEdges(inYRange: window)
-                : edges.horizontalEdges(inXRange: window)
+                : edges.horizontalEdges(inXRange: window))
+                .filter { $0.strength >= elementStrength }
             let nearest = candidates.min {
                 abs($0.position - Double(position)) < abs($1.position - Double(position))
             }

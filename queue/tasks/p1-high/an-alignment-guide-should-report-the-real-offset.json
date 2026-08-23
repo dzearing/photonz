@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:03:57.229Z",
-  "updated": "2026-08-23T18:03:57.229Z",
+  "updated": "2026-08-23T21:30:02.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "See queue/audits/2026-08-23-measure-redline.md. AlignmentCheck.verdict was fixed 2026-08-23 to use the span-weighted heaviest cluster as the reference (was a plain median that invented a line between two clusters). What remains: (1) AlignmentScan.items produces a spurious 2-sample run at x=108 spanning y 602-610 just under the File name prefix label, which beats the real edge at x=106 for worst-offender, so the chip reads 5 instead of 4. Fix in the scan: a run that no element accounts for should not become an item. (2) MeasureRasterizer puts the verdict chip at the guide midpoint; move it perpendicular, away from the outlier. (3) The aligned ticks are MeasureBuilder.alignmentTickHalf = 5 px and read as nothing; the mock also showed an item count (Left edge alignment, 4 items) that the panel row does not carry.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-08-23T18:03:57.229Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T21:30:02.508Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T21:40:00.000Z",
+      "note": "Adversarial review, before building. Walked the flow as someone who has never seen it: you drag a line down a column and get a small red pill somewhere and a hairline mark somewhere else. The number is the least of it. The real failure is that nothing says WHICH row is off, so the answer is a number you cannot act on. Cut from scope: nothing decorative to remove, the drawing is already minimal to a fault. Shortest version that delivers the value: fix the number, and make the offending element itself the loud thing so the pill is confirmation rather than the whole answer."
+    },
+    {
+      "t": "2026-08-23T21:45:00.000Z",
+      "note": "Reproduced through the shipping path on the real capture (EdgeMapAnalyzer -> AlignmentScan -> verdict): 4 items, the fourth a 2-sample run at x=108 spanning y 602-610 with edge strength 0.17, against 0.56-1.00 for the three real label edges. It is the block-summed map echoing the middle label's edge just BELOW the text, where nothing is. maxDelta 10.44 device px -> off 5. Also swept the drag: through EdgeSnapping every press from device x 88 to 102 snaps onto 96 or 98 and produced the same wrong answer, so this was not a one-pixel curiosity."
+    },
+    {
+      "t": "2026-08-23T21:55:00.000Z",
+      "note": "Fix 1, the number. AlignmentScan gained defaultElementStrength = 0.2, the same fraction ElementBounds already uses to decide a boundary is structure: a sample whose nearest edge is fainter than that is not element evidence and closes the run. On the capture the ghost drops, 3 items remain, delta 8.44 -> off 4 px, and the outlier becomes the middle label instead of the ghost under it. Pinned by AlignmentFixtureTests (new, PhotonzRenderTests, against Fixtures/settings-pane-2x.png) and by two synthetic scan tests in AlignmentCheckTests; verified both synthetic tests fail with the floor set to 0."
+    },
+    {
+      "t": "2026-08-23T22:05:00.000Z",
+      "note": "Fix 2, the pill. Already solved by the callout-clearance work landed earlier today: the planner puts an alignment verdict past the end of the guide, and on this capture the pill clears all three subject rects. Pinned rather than rewritten (theVerdictPillClearsEveryRowItJudges)."
+    },
+    {
+      "t": "2026-08-23T22:15:00.000Z",
+      "note": "Fix 3, legibility. The offender used to get a 1px edge line plus a midpoint connector, indistinguishable from the aligned ticks. It now gets a bracket at twice the stroke: out from the guide to its real edge, down the edge for the whole run, and back, so the error is an enclosed shape. The guide also goes solid across every element it confirms and stays dashed between them, so what the check covered is visible without counting. alignmentTickHalf 5 -> 8. Checked at 1:1 and 3x on the real capture, and on a horizontal guide over the two footer buttons."
+    },
+    {
+      "t": "2026-08-23T22:20:00.000Z",
+      "note": "Adversarial review, on the built thing. Renders through the shipping path at 1:1 read well: the bracket is the first thing you see, the number agrees with it. Still clumsy and recorded in the audit rather than fixed: the pill can overhang a card's left edge, there is no count of what was checked, and the verdict still sits at the end of the guide rather than beside the offender (that placement is the D14 rule set yesterday, so overriding it a day later is the user's call, not mine). 1025 tests green."
     }
-  ]
+  ],
+  "started": "2026-08-23T21:30:02.507Z"
 }

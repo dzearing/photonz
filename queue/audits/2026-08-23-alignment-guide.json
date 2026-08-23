@@ -1,0 +1,29 @@
+{
+  "feature": "Alignment guide: the real offset, and an offender you can see",
+  "epic": "alignment-checks",
+  "summary": "Drag a guide down a column of things and it now reports the true offset and draws a bracket around the one element that is off, so you can see which row it means without reading the number twice.",
+  "setup": "Photonz Dev, Experiments window, release Next, next-measure-align on (it is by default). Open queue/audits/2026-08-23-measure-00-capture.png, or the copy already on your Desktop as alignment-check-capture.png.",
+  "try": [
+    { "do": "Press i for the Measure tool, then set the mode chip in the tool options to Alignment." },
+    { "do": "Press just left of the S in \"Save captures to\" and drag straight down past \"Copy to clipboard\", then release." },
+    { "do": "Read the pill below the guide. It should say off 4 px.", "shot": "2026-08-23-alignment-2-after.png" },
+    { "do": "Look at \"File name prefix\" without reading anything: a heavy bracket wraps the gap between the guide and that label's real edge.", "shot": "2026-08-23-alignment-3-detail.png" },
+    { "do": "Follow the guide up and down: it is solid across each label it agrees with and dashed in between." },
+    { "do": "Now drag a horizontal guide along the top of the Reset and Save Changes buttons. It should read aligned.", "shot": "2026-08-23-alignment-4-horizontal.png" },
+    { "do": "Undo, redraw the first guide a few pixels to the left or right, and check the number does not change." }
+  ],
+  "evaluate": [
+    "Can you tell which row is off without reading the pill?",
+    "Is the bracket the right amount of ink, or does it shout louder than the thing it is pointing at?",
+    "Does solid-where-it-agrees, dashed-where-it-travels read as information, or just as a line that looks inconsistent?",
+    "The pill sits below the end of the guide, well away from the row it names. Is that far enough to be useful, or would you rather it sat beside the offender?",
+    "Would you want a count somewhere, the way the mock showed \"Left edge alignment, 4 items\"?"
+  ],
+  "rough": [
+    "The pill can hang a few pixels off the left of a card when the guide runs near a card's edge. It stays on the picture, but it looks like it fell off the shelf.",
+    "The verdict still sits at the end of the guide rather than next to the offender. That placement is the rule the callout-clearance work just set (predictable beats clever, and a sideways push is a coin flip on covering a row), so I left it alone rather than overriding it a day later. The bracket is what closes the gap. If you want the number beside the offender instead, say so and it is a small change.",
+    "Nothing carries a count of what the guide checked. The mock's \"Left edge alignment, 4 items\" panel row is still not there.",
+    "Drag the guide onto the misaligned label's OWN edge instead of the shared one and the answer changes (you asked a different question, and it answers off 3 or 4 depending). Reasonable, but nothing tells you which edge the guide settled on.",
+    "The aligned ticks went from 5px to 8px half-length. They read as deliberate marks now, but they are still the quietest thing in the picture."
+  ]
+}

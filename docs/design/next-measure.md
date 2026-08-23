@@ -330,11 +330,17 @@ px `tolerance` parameter, default 1):
   click without a real drag is a quiet no-op. Esc cancels.
 - **Scan (core, TDD).** `AlignmentScan.items(axis:position:span:in:)`
   (`PhotonzCore/AlignmentCheck.swift`) samples the guide every 8px, captures
-  the nearest `EdgeMap` edge within 12px of the drawn line, and merges
-  consecutive samples seeing the same edge (±1.5px) into per-element
-  `AlignmentItem`s (edge position + along-axis span). Block-summed resolution
-  caveat: stacked elements with sub-block gaps can merge — harmless, since
-  merged items agreed with each other.
+  the nearest `EdgeMap` edge within 12px of the drawn line that is at least
+  `defaultElementStrength` (0.2) as bold as the boldest boundary its own sample
+  window offers, and merges consecutive samples seeing the same edge (±1.5px)
+  into per-element `AlignmentItem`s (edge position + along-axis span). That
+  strength floor is the same fraction `ElementBounds` uses, and it is what
+  keeps ghosts out: the block-summed map echoes a line of text's left edge for
+  a sample or two BELOW the words, a couple of pixels further out and a
+  fraction as strong, and before 2026-08-23 that echo became an item and won
+  the worst-offender vote, so a 4px offset read "off 5 px". Block-summed
+  resolution caveat: stacked elements with sub-block gaps can merge — harmless,
+  since merged items agreed with each other.
 - **Verdict (derived, never stored).** `AlignmentCheck.verdict`: the reference
   is the edge the MAJORITY of the crossed elements agree on, and the worst
   deviation beyond `tolerance` names the outlier. Fewer than two items → no
@@ -344,20 +350,29 @@ px `tolerance` parameter, default 1):
   original plain median settling the guide between two clusters, on a line no
   element sat on, whenever the item count was even or the scan split one label
   into two runs. A genuine tie (two edges, nothing to break it) still falls back
-  to the median and splits the difference. Known residual, filed: the scan can
-  emit a spurious short run that then wins the outlier callout, so a 4 px offset
-  can read "off 5 px" (`an-alignment-guide-should-report-the-real-offset`).
+  to the median and splits the difference.
 - **Model.** Not a new layer kind: `MeasureContent.alignment: AlignmentCheck?`
   (headOffset 0, feet = guide ends). Old documents decode with nil; the § 5
   role model can treat `alignment != nil` as the Align role when it lands.
   The committed guide settles on the reference edge, one undo step, then
   draw-then-select as usual. No endpoint/frame handles (a stretched guide
   would carry a stale scan) — move, restyle, or delete and redraw.
-- **Render.** `MeasureRasterizer` branch: dashed guide split around the chip,
-  a small tick where each aligned element crosses, the outlier's REAL edge
-  drawn beside the guide with a connector, and the verdict chip ("aligned" /
-  "off 4 px", unit-aware) at the guide midpoint. Baked into the layer raster,
-  so exports carry it (16.15 rule).
+- **Render.** `MeasureRasterizer` branch, and the whole point is that the
+  answer is legible without reading the chip:
+  - The guide is **dashed where it is only travelling and solid across every
+    element whose edge it confirms**, so what the check actually covered is
+    visible without counting anything, plus a short perpendicular tick
+    (`MeasureBuilder.alignmentTickHalf`, 8px) at each crossing.
+  - The offender gets a **bracket, not a tick**: out from the guide to where
+    that element's edge really sits, down the edge for the element's whole run,
+    and back — drawn at twice the stroke, so it encloses the error as a shape
+    you see at a glance and can never be confused with a tick meaning "agrees".
+    It replaced a 1px edge line plus a midpoint connector that read as nothing
+    at 1:1 (2026-08-23).
+  - The verdict chip ("aligned" / "off 4 px", unit-aware) lands wherever
+    `MeasureLabelPlacement` puts it — past the end of the guide by preference,
+    never on a row being judged (D14).
+  All of it is baked into the layer raster, so exports carry it (16.15 rule).
 
 ## 10. Decision index (open questions → queue, not this doc)
 

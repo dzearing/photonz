@@ -84,15 +84,70 @@ struct MeasureRenderingTests {
     @Test func alignmentGuideDrawsDashesTicksAndTheOutliersRealEdge() {
         let out = render(alignmentContent(showLabel: false),
                          from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
-        #expect(anyPixel(out, xs: 98...102, ys: 35...55, where: isRedInk),
-                "the dashed guide strokes along x=100")
+        #expect(anyPixel(out, xs: 98...102, ys: 31...38, where: isRedInk),
+                "the guide strokes along x=100")
         #expect(anyPixel(out, xs: 94...106, ys: 58...62, where: isRedInk),
                 "an aligned element gets a tick at its span midpoint (y=60)")
         #expect(anyPixel(out, xs: 110...114, ys: 115...150, where: isRedInk),
                 "the outlier's REAL edge is drawn at x=112")
-        #expect(anyPixel(out, xs: 103...109, ys: 130...134, where: isRedInk),
-                "a connector bridges the guide to the outlier at its midpoint")
         #expect(isWhite(pixel(out, x: 160, y: 60)), "away from the guide is untouched")
+    }
+
+    /// The offender is bracketed, not ticked: the guide reaches across to its
+    /// real edge at BOTH ends of the run, so the error is an enclosed shape you
+    /// can see rather than a hairline you have to hunt for.
+    @Test func theOutlierIsBracketedAtBothEndsOfItsRun() {
+        let out = render(alignmentContent(showLabel: false),
+                         from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        // The outlier spans y 112…152 at x=112; the guide is at x=100.
+        #expect(anyPixel(out, xs: 104...108, ys: 108...116, where: isRedInk),
+                "the bracket reaches from the guide to the outlier's edge at the top of its run")
+        #expect(anyPixel(out, xs: 104...108, ys: 148...156, where: isRedInk),
+                "and again at the bottom of its run")
+        // Nothing is drawn beyond the offender's own edge.
+        #expect(isWhite(pixel(out, x: 130, y: 112)), "the bracket stops at the real edge")
+    }
+
+    /// The bracket is drawn heavier than the guide, so which row is off reads at
+    /// a glance. A 1px hairline was the whole complaint.
+    @Test func theOutliersBracketIsHeavierThanTheGuide() {
+        var c = alignmentContent(showLabel: false)
+        c.strokeWidth = 2
+        let out = render(c, from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        func inkedRows(x: Int, ys: ClosedRange<Int>) -> Int {
+            ys.filter { isRedInk(pixel(out, x: x, y: $0)) }.count
+        }
+        // Across the outlier's edge (x=112, y 112…152) vs across the guide in a
+        // stretch nothing else touches.
+        let bracket = inkedRows(x: 112, ys: 120...144)
+        let guide = inkedRows(x: 100, ys: 88...104)
+        #expect(bracket > 0 && guide > 0)
+        // Measured the other way: how WIDE each stroke is.
+        func inkedColumns(y: Int, xs: ClosedRange<Int>) -> Int {
+            xs.filter { isRedInk(pixel(out, x: $0, y: y)) }.count
+        }
+        #expect(inkedColumns(y: 130, xs: 106...120) > inkedColumns(y: 95, xs: 94...108),
+                "the outlier's edge is a thicker stroke than the guide it is measured from")
+    }
+
+    /// The guide runs solid across every element whose edge it confirms and
+    /// dashed in between, so what the check covered is visible without counting
+    /// ticks.
+    @Test func theGuideGoesSolidOverEachElementThatAgrees() {
+        // At the tool's own 2px stroke: a 6px stroke's round caps fill the
+        // dash gaps in, so the distinction only exists at a redlining weight.
+        var c = alignmentContent(showLabel: false)
+        c.strokeWidth = 2
+        let out = render(c, from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        func inkedRows(_ ys: ClosedRange<Int>) -> Int {
+            ys.filter { y in anyPixel(out, xs: 97...103, ys: y...y, where: isRedInk) }.count
+        }
+        // The first aligned element runs y 40…80; y 84…108 is guide between
+        // elements, where the dashes leave gaps.
+        let overElement = inkedRows(44...76)
+        let betweenElements = inkedRows(84...108)
+        #expect(overElement == 33, "the guide is unbroken over the element it confirms")
+        #expect(betweenElements < 25, "and dashed where it is only travelling")
     }
 
     @Test func alignmentVerdictChipRendersAtTheGuideMidpoint() {
@@ -114,8 +169,8 @@ struct MeasureRenderingTests {
         // fully drawn, with no pill fill sitting over them.
         #expect(anyPixel(out, xs: 110...114, ys: 115...150, where: isRedInk),
                 "the outlier's edge is still there")
-        #expect(anyPixel(out, xs: 103...109, ys: 129...135, where: isRedInk),
-                "the connector the verdict used to sit on top of is visible again")
+        #expect(anyPixel(out, xs: 104...108, ys: 108...116, where: isRedInk),
+                "the bracket the verdict used to sit on top of is visible again")
         #expect(anyPixel(out, xs: 60...140, ys: 216...260, where: isRedInk),
                 "the verdict now reads past the end of the guide")
     }

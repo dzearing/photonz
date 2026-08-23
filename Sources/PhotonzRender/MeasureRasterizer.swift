@@ -94,9 +94,9 @@ public enum MeasureRasterizer {
     }
 
     /// An alignment check (§9, decision D1): a dashed guide along the feet
-    /// line, a short solid tick where each aligned element crosses it, the
-    /// outlier's ACTUAL edge drawn beside the guide with a connector showing
-    /// the gap, and the verdict chip ("aligned" / "off 4 px") wherever the
+    /// line, a short solid tick where each element that AGREES crosses it, a
+    /// heavier bracket enclosing the gap between the guide and the one element
+    /// that does not, and the verdict chip ("aligned" / "off 4 px") wherever the
     /// content's `labelPlacement` puts it — never on the rows being judged.
     private static func drawAlignmentCheck(_ measure: MeasureContent, geometry g: CaliperGeometry,
                                            pixelScale: CGFloat, color: CGColor,
@@ -127,19 +127,45 @@ public enum MeasureRasterizer {
         let guidePos = vertical ? g.footA.x : g.footA.y
         let outlier = check.verdict?.outlierIndex
         let tick = MeasureBuilder.alignmentTickHalf
+        // The stretch of the guide the pill is sitting on, if it still is: the
+        // solid runs below have to leave it alone for the same reason the dashes
+        // do — a translucent pill must never show a stroke through it.
+        let gap: ClosedRange<CGFloat>? = {
+            guard let split = plan.splitCenter, plan.gapHalf > 0 else { return nil }
+            let centre = vertical ? split.y : split.x
+            return (centre - plan.gapHalf)...(centre + plan.gapHalf)
+        }()
         for (index, item) in check.items.enumerated() {
             let spanMid = (item.spanStart + item.spanEnd) / 2
             if index == outlier {
-                // The outlier's real edge across its span, plus a connector
-                // from the guide so the gap itself is visible.
-                context.move(to: point(cross: item.edge, along: item.spanStart, vertical: vertical))
-                context.addLine(to: point(cross: item.edge, along: item.spanEnd, vertical: vertical))
+                // The offender gets a bracket, not a tick: out from the guide to
+                // where this element's edge REALLY sits, down that edge for the
+                // element's whole run, and back to the guide. It encloses the
+                // error, so the gap is a shape you can see at a glance rather
+                // than a hairline you have to hunt for — and it can never be
+                // mistaken for one of the ticks saying "this one agrees".
+                let lo = min(item.spanStart, item.spanEnd)
+                let hi = max(item.spanStart, item.spanEnd)
+                context.saveGState()
+                context.setLineWidth(max(measure.strokeWidth * 2, 2))
+                context.move(to: point(cross: guidePos, along: lo, vertical: vertical))
+                context.addLine(to: point(cross: item.edge, along: lo, vertical: vertical))
+                context.addLine(to: point(cross: item.edge, along: hi, vertical: vertical))
+                context.addLine(to: point(cross: guidePos, along: hi, vertical: vertical))
                 context.strokePath()
-                context.move(to: point(cross: guidePos, along: spanMid, vertical: vertical))
-                context.addLine(to: point(cross: item.edge, along: spanMid, vertical: vertical))
-                context.strokePath()
+                context.restoreGState()
             } else {
-                // A short perpendicular tick where the element crosses the guide.
+                // An element that agrees: the guide goes SOLID for the length of
+                // its run, and a short perpendicular tick marks the crossing. The
+                // dashes are the guide travelling; solid is the guide confirming,
+                // so what the check actually covered is visible without counting
+                // anything.
+                for run in clip(min(item.spanStart, item.spanEnd)...max(item.spanStart, item.spanEnd),
+                                around: gap) {
+                    context.move(to: point(cross: guidePos, along: run.lowerBound, vertical: vertical))
+                    context.addLine(to: point(cross: guidePos, along: run.upperBound, vertical: vertical))
+                    context.strokePath()
+                }
                 context.move(to: point(cross: guidePos - tick, along: spanMid, vertical: vertical))
                 context.addLine(to: point(cross: guidePos + tick, along: spanMid, vertical: vertical))
                 context.strokePath()
@@ -266,6 +292,16 @@ public enum MeasureRasterizer {
         context.addLine(to: leader.to)
         context.strokePath()
         context.restoreGState()
+    }
+
+    /// `run` with `gap` cut out of it: nothing, one piece or two.
+    private static func clip(_ run: ClosedRange<CGFloat>,
+                             around gap: ClosedRange<CGFloat>?) -> [ClosedRange<CGFloat>] {
+        guard let gap, gap.overlaps(run) else { return [run] }
+        var pieces: [ClosedRange<CGFloat>] = []
+        if run.lowerBound < gap.lowerBound { pieces.append(run.lowerBound...gap.lowerBound) }
+        if gap.upperBound < run.upperBound { pieces.append(gap.upperBound...run.upperBound) }
+        return pieces
     }
 
     /// A point from guide-relative coordinates: `cross` is the guide's own axis

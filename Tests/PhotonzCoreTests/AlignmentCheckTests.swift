@@ -100,6 +100,54 @@ struct AlignmentScanTests {
                                         in: EdgeMap.empty)
         #expect(items.isEmpty)
     }
+
+    /// Three stacked boxes, the middle one 4px out, plus a faint stub a couple
+    /// of pixels beyond that middle box and just below it — the shape the
+    /// block-summed edge map takes on under a line of text. Nothing is there,
+    /// so the guide must not report anything there.
+    private func sceneWithAGhostUnderTheMiddleBox() -> Scene {
+        var s = Scene(w: 400, h: 420)
+        s.addBox(CGRect(x: 100, y: 48, width: 120, height: 48))
+        s.addBox(CGRect(x: 104, y: 160, width: 120, height: 48))
+        s.addBox(CGRect(x: 100, y: 288, width: 120, height: 48))
+        // The ghost: a seventh as bold as a real edge, and 4px further out again.
+        s.addVerticalEdge(col: 108, y0: 226, y1: 238, magnitude: 0.3)
+        // Something bold elsewhere in the same band, so the ghost is measured
+        // against a real edge the way it would be on a screenshot.
+        s.addVerticalEdge(col: 300, y0: 226, y1: 238, magnitude: 2.0)
+        return s
+    }
+
+    @Test func aFaintGhostBesideTheRealEdgeNeverBecomesAnItem() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 40...344,
+                                        in: sceneWithAGhostUnderTheMiddleBox().map)
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { abs($0.edge - 108) > 2 })
+    }
+
+    /// And the number that reaches the chip is the real offset, not the ghost's.
+    @Test func theGhostDoesNotInflateTheReportedOffset() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 40...344,
+                                        in: sceneWithAGhostUnderTheMiddleBox().map)
+        guard let verdict = AlignmentCheck(items: items, tolerance: 1).verdict else {
+            Issue.record("no verdict")
+            return
+        }
+        #expect(abs(verdict.maxDelta - 4) <= 1)
+    }
+
+    /// The floor is relative to what each window offers, so a capture whose
+    /// every boundary is faint still gets checked — quiet is not the same as
+    /// absent.
+    @Test func aUniformlyFaintSceneIsStillScanned() {
+        var s = Scene(w: 400, h: 300)
+        s.addBox(CGRect(x: 100, y: 40, width: 120, height: 40), magnitude: 0.2)
+        s.addBox(CGRect(x: 100, y: 112, width: 120, height: 40), magnitude: 0.2)
+        s.addBox(CGRect(x: 100, y: 184, width: 120, height: 40), magnitude: 0.2)
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 36...228,
+                                        in: s.map)
+        #expect(items.count == 3)
+    }
 }
 
 @Suite("Alignment verdict")

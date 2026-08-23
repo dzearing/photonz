@@ -414,8 +414,11 @@ extension MeasureContent {
 public enum MeasureBuilder {
 
     /// Perpendicular half-length of the small tick drawn where an aligned
-    /// element crosses an alignment guide.
-    public static let alignmentTickHalf: CGFloat = 5
+    /// element crosses an alignment guide. Big enough to read as a deliberate
+    /// mark at 1:1 on a Retina capture — at 5 it was a hairline you had to look
+    /// for, and a guide that cannot show what it checked is not showing its
+    /// work.
+    public static let alignmentTickHalf: CGFloat = 8
 
     /// The stock layer names a fresh caliper / alignment guide is born with.
     /// `MeasureSpecList.displayName` treats these as "never renamed" and shows
