@@ -3880,3 +3880,10 @@ behind `next-measure-panel` (Next-only, default ON; Current byte-identical).
 - Shipped `.seg.multi` in the shared design system (segmented.css/js): independent toggles with aria-pressed, no travelling plate, accent-on tint, scopeseg-style natural-width columns + dense padding. Collapse-to-menu still works; the trigger lists the on chips. Page dropped its private override CSS and click handler.
 - Verified in Chrome at 1280x900: zero clipped labels, independent toggling, walkthrough data-class driving keeps aria in sync, radio segs on this page and components.html unaffected.
 - Only icon-draw-wt uses the variant so far; other chip-like rows can adopt `seg multi` when touched.
+
+## 2026-08-23 · go loop: agent-generate-wt steps reach the real Ask
+
+- The Prompt to design walkthrough's first two steps cued chrome that shell.js deleted a while ago (`#cmdk` well, `#cmdkPop`, `#miAsk`), so the steps teaching how you reach the agent highlighted nothing, and the copy placed Ask "in the toolbar, next to History" though the shell builds it in the title bar.
+- Shared: walkthrough.js gains `data-ask-open` / `data-ask-shut` directives that drive an `.askpal` (class + aria on the pal and its launcher together, resync on reset; no scrim so the shell around the overlay stays readable). Any walkthrough can now teach the D6 Ask entry. Also fixed shell.js building every default askpal composer in its busy state (`composerHTML('Ask')` — truthy means busy) while the canned transcript shows finished work; it now builds idle, so the send button says Ask.
+- Page: step 1 cues `.askbtn` in the title bar and opens the overlay fresh (demo transcript hidden); step 2 shows the goal typed in the composer and cues its Ask button while the Agent group opens with the plan; step 3 puts the overlay away. Gate 8 warn cleared: the page-local `.chg` Last-change rows became DS `.step` receipt rows (agent.css gained `.step.on` mirroring aria-pressed so data-activate can select one).
+- Verified in Chrome: steps 1/2/3/8 states + cue geometry, back/forward/reset resync aria, no console errors here or on app-shell / video-cut-wt; check-states.mjs green; dist bundles rebuilt.

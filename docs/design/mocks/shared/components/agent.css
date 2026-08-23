@@ -121,9 +121,12 @@
 .step:hover{background:var(--state-hover);color:var(--ink)}
 .step:active{background:var(--state-press)}
 .step:focus-visible{outline:none;box-shadow:var(--ring)}
-.step[aria-pressed="true"]{background:var(--state-sel);color:var(--state-sel-ink)}
-.step[aria-pressed="true"]:hover{background:var(--state-sel-hover)}
-.step[aria-pressed="true"]:active{background:var(--state-sel-press)}
+/* .on mirrors aria-pressed: it is the DS's state class everywhere else
+   (.tool.on, .cpx.on, seg buttons), and the declarative drivers — the
+   walkthroughs' data-activate — select by class, not by aria. */
+.step[aria-pressed="true"],.step.on{background:var(--state-sel);color:var(--state-sel-ink)}
+.step[aria-pressed="true"]:hover,.step.on:hover{background:var(--state-sel-hover)}
+.step[aria-pressed="true"]:active,.step.on:active{background:var(--state-sel-press)}
 
 /* pending: the outline of a tick that has not happened. Not a spinner — only
    ONE row is running, and a column of spinners says everything is at once. */

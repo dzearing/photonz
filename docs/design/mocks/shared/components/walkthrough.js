@@ -51,6 +51,17 @@
        data-sheet-open/-shut     the .sheet.down overlay (history)
        data-pop="#id"            open a .popover.pop (so a cue can sit on a
                                  real menu item)
+       data-ask-open="#id"       open an .askpal (the agent chat / ⌘K
+                                 palette): the pal and its [data-ask]
+                                 launcher take their open state, class and
+                                 aria together. No scrim: a walkthrough
+                                 narrates the shell AROUND the overlay, so it
+                                 keeps that shell readable, the same way a
+                                 data-pop menu casts none.
+       data-ask-shut="#id"       …and put it away again. Ask overlays are not
+                                 transient menus, so they do NOT auto-close
+                                 between steps: a step that ends the
+                                 conversation says so.
        data-time="on|off"        the document has time: transport + timeline
        data-set="#id=text|#id2=text"     set a readout's text
        data-css="#id=width:26%"  inline geometry (a trimmed clip, a bar)
@@ -98,6 +109,19 @@
       pairs(s.getAttribute('data-set'), function (el) { remember(snapText, el, el.textContent); });
       pairs(s.getAttribute('data-css'), function (el) { remember(snapStyle, el, el.getAttribute('style')); });
     });
+    /* the Ask overlay's open state, kept whole: the pal's class + aria and its
+       launcher's aria-expanded move together (mirrors ask.js's setAsk, which is
+       IIFE-private). resetStage re-derives aria from the restored class, so the
+       class snapshot stays the single source of truth. */
+    function askState(pal, on) {
+      pal.classList.toggle('on', on);
+      pal.setAttribute('aria-hidden', on ? 'false' : 'true');
+      all('[data-ask]', stage).forEach(function (b) {
+        if (stage.querySelector(b.getAttribute('data-ask')) === pal) {
+          b.setAttribute('aria-expanded', on ? 'true' : 'false');
+        }
+      });
+    }
     function resetStage() {
       snapClass.forEach(function (r) {
         if (r[1] === null) r[0].removeAttribute('class'); else r[0].setAttribute('class', r[1]);
@@ -107,6 +131,7 @@
       snapStyle.forEach(function (r) {
         if (r[1] === null) r[0].removeAttribute('style'); else r[0].setAttribute('style', r[1]);
       });
+      all('.askpal', stage).forEach(function (p) { askState(p, p.classList.contains('on')); });
     }
 
     function applyStep(s) {
@@ -206,6 +231,9 @@
          across two steps declares data-pop on both. */
       all('.popover.pop', stage).forEach(function (p) { p.classList.remove('on'); });
       list(s.getAttribute('data-pop')).forEach(function (p) { p.classList.add('on'); });
+
+      list(s.getAttribute('data-ask-open')).forEach(function (p) { askState(p, true); });
+      list(s.getAttribute('data-ask-shut')).forEach(function (p) { askState(p, false); });
 
       v = s.getAttribute('data-time');
       if (v) {

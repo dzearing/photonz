@@ -139,7 +139,9 @@
       '<div class="msg a">Done.' + workHTML() + '</div></div>' +
       '<div class="askcmd"><div class="lbl">Commands</div><div class="cplist">' + rows +
       '<div class="empty" style="display:none">No command matches.</div></div></div>' +
-      composerHTML('Ask') +
+      // idle, not busy: the canned transcript above is FINISHED work ("Done."),
+      // so the composer offers Ask — Stop/Queue exist only while running.
+      composerHTML(false) +
       '</div></div>';
   }
 

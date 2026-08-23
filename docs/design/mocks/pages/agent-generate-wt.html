@@ -20,14 +20,8 @@
     color:var(--dim);font-size:9.5px;font-weight:700;display:grid;place-items:center;flex:none;font-family:var(--mono)}
   #agent-generate-wt .cpx{padding:5px 8px;gap:var(--gap-sm);font-size:11px}
   #agent-generate-wt .cpx .tk{margin-left:auto;color:var(--good);flex:none}
-  #agent-generate-wt .chg{display:flex;align-items:center;gap:var(--gap-sm);padding:6px 8px;border-radius:var(--r2);
-    font-size:11px;color:var(--dim);cursor:pointer;border:1px solid transparent;text-align:left;width:100%;background:transparent}
-  #agent-generate-wt .chg:hover{background:var(--panel-2);border-color:var(--line);color:var(--ink)}
-  #agent-generate-wt .chg:active{transform:scale(.99)}
-  #agent-generate-wt .chg:focus-visible{outline:none;box-shadow:var(--ring)}
-  #agent-generate-wt .chg.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
-  #agent-generate-wt .chg .ic{color:var(--good);flex:none}
-  #agent-generate-wt .chg b{color:var(--ink);font-weight:640}
+  /* the Last-change rows are the DS .step receipt row (agent.css), not a
+     page-local control: what the agent did reads like any other work step. */
 
   /* the generated pricing section · real designed content, not gray boxes */
   #agent-generate-wt .selwrap{width:min(432px,92%)}
@@ -80,8 +74,10 @@
         <!-- TITLE BAR · document identity only. The lesson title lives in
              .scen-head above, never here. -->
 
-        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6).
-             This is where the agent is reached: one more thing you can run. -->
+        <!-- ASK (D6) · the shell component builds the title bar and its Ask
+             launcher (.askbtn) plus the agent chat overlay (.askpal). That
+             overlay is where the agent is reached — it is also the ⌘K command
+             palette, and the first two steps below drive it. -->
 
         <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
         <div class="edit lean" id="shell" data-dock="open">
@@ -353,8 +349,8 @@
                 <div id="agentChanges" class="wt-off">
                   <div class="section">
                     <div class="sec-h">Last change <span class="mut">2 commands · undoable</span></div>
-                    <button class="chg" id="chgSize" type="button"><i class="ic xs ic-check"></i> CTA · size 11 to <b>13</b></button>
-                    <button class="chg" id="chgFill" type="button"><i class="ic xs ic-check"></i> CTA · fill to <b>Accent / 500</b></button>
+                    <div class="step" id="chgSize" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">CTA · Size</span><span class="sv"><span>11</span><i class="ic ic-arrow-right"></i><b>13</b></span></div>
+                    <div class="step" id="chgFill" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">CTA · Fill</span><span class="sv"><b>Accent / 500</b></span></div>
                     <p class="note">Click a change to select it on the canvas and keep going by hand.</p>
                   </div>
                 </div>
@@ -444,26 +440,26 @@
 
       <li class="wt-step"
           data-title="Open the command surface"
-          data-cue="#cmdk" data-cue-label="Click the command surface, or press ⌘K" data-cue-place="bottom"
-          data-pop="#cmdkPop">
+          data-cue=".askbtn" data-cue-label="Click Ask, or press ⌘K" data-cue-place="bottom"
+          data-ask-open=".askpal" data-hide=".askpal .chat-b">
         <div class="wt-cap auto">
           <span class="wt-n">1</span>
-          <p class="wt-do">the <b>command surface</b>, or press <code>⌘K</code></p>
-          <p class="wt-where">the toolbar, next to History</p>
-          <p class="wt-res">the palette opens on the goal you typed. It lists the ordinary commands you can run, and at the top, <b>Ask the agent</b>. The agent is not a separate window: it is one more thing you can run from here.</p>
+          <p class="wt-do"><b>Ask</b>, or press <code>⌘K</code></p>
+          <p class="wt-where">the title bar, on the right</p>
+          <p class="wt-res">the agent chat opens over the canvas, and it is also the command palette: type <code>/</code> and it lists the ordinary commands you can run. The agent is not a separate window: it is one more thing you can run from here.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Hand the goal to the agent"
-          data-cue="#miAsk" data-cue-label="Click Ask the agent" data-cue-place="bottom"
-          data-pop="#cmdkPop" data-open="#gAgent"
-          data-show="#agentPlan" data-hide="#agentEmpty"
-          data-set="#agentState=planning">
+          data-cue=".askpal .composer .btn.primary" data-cue-label="Click Ask" data-cue-place="bottom"
+          data-ask-open=".askpal" data-open="#gAgent"
+          data-show="#agentPlan" data-hide=".askpal .chat-b,#agentEmpty"
+          data-set=".askpal .composer .box=Make a pricing section on brand|#agentState=planning">
         <div class="wt-cap auto">
           <span class="wt-n">2</span>
-          <p class="wt-do"><b>Ask the agent · Make a pricing section on brand</b></p>
-          <p class="wt-where">the command palette</p>
+          <p class="wt-do"><b>Ask</b>, with the goal typed: <b>Make a pricing section on brand</b></p>
+          <p class="wt-where">the agent chat's composer</p>
           <p class="wt-res">the <b>Agent</b> group opens in the dock with a readable plan: six named commands, the same ones the tool bar and the panels call. Nothing has run yet, and you can see the model it will use.</p>
         </div>
       </li>
@@ -471,7 +467,7 @@
       <li class="wt-step"
           data-title="Run the plan"
           data-cue="#btnRun" data-cue-label="Click Run plan" data-cue-place="left"
-          data-open="#gAgent"
+          data-ask-shut=".askpal" data-open="#gAgent"
           data-show="#agentPlan,#tk1,#tk2,#tk3,#tk4,#tk5,#tk6,#cvPricing,#layersList,#instRing1,#instRing2,#instRing3"
           data-hide="#agentEmpty,#cvEmpty,#layersEmpty"
           data-set="#agentState=ran 6 commands|#layerCount=4">
@@ -557,7 +553,7 @@
           data-set="#agentState=2 commands|#layerCount=4|#propKind=Text layer|#ctaStudio=Choose Studio|#pFillVal=Accent / 500|#pFillNote=The change is a normal bound style on a normal layer. Nothing about it is agent-only, so you can keep editing or undo just this line.">
         <div class="wt-cap auto">
           <span class="wt-n">8</span>
-          <p class="wt-do">the <b>CTA · fill to Accent / 500</b> row</p>
+          <p class="wt-do">the <b>CTA · Fill</b> change row</p>
           <p class="wt-where">the Agent group, in <b>Last change</b></p>
           <p class="wt-res">the selection jumps to that exact layer on the canvas and Properties shows the bound style. The agent hands the work back as ordinary layers, which is the whole point: the design stays yours.</p>
         </div>
