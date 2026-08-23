@@ -1,0 +1,21 @@
+{
+  "id": "go-loop-surfaces-runner-failures-instead-of-spin",
+  "title": "Go loop surfaces runner failures instead of spinning silently",
+  "priority": "p1-high",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T14:24:51.973Z",
+  "updated": "2026-08-23T14:24:51.973Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "On 2026-08-23 the monthly spend limit killed every runner instantly; the loop claimed, failed, reset, and re-claimed 3,959 times over 13 hours while the dashboard showed Running the whole time. Fix three things: (1) treat a runner that exits non-zero without finalizing its task as a FAILURE, recording the exit code and the last stderr line into status.json so the dashboard can show it; (2) back off exponentially and stop re-claiming the same task after N consecutive failures, parking it with a clear reason; (3) show a loop-unhealthy state on the dashboard Summary hero (consecutive failures, last error) so a stalled loop never reads as Running. Acceptance: simulate a runner that always exits non-zero and confirm the dashboard says unhealthy with the error text, the loop stops hot-retrying, and history records one failure event per attempt rather than 3,959 resets.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T14:24:51.973Z",
+      "note": "created (manual)"
+    }
+  ]
+}

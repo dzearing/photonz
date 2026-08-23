@@ -225,11 +225,14 @@
     var el = document.querySelector('.subnav .nav[data-page="' + id + '"]');
     if (el) setGroup(el.closest('.subnav').dataset.group, false);
   }
-  // id may carry a dashboard tab as "dashboard@tasks"
+  // id may carry a dashboard tab as "dashboard@tasks", and a tab may carry a
+  // sub-address as "digest/2026-08-23.md" so every digest has its own URL
   function go(id, tab) {
     if (!id) return;
     if (id.indexOf('@') > -1) { var p = id.split('@'); id = p[0]; tab = tab || p[1]; }
-    frame.src = '/pages/' + id + '.html' + (tab ? '?tab=' + tab : '');
+    var sub = '';
+    if (tab && tab.indexOf('/') > -1) { var t = tab.split('/'); tab = t[0]; sub = t.slice(1).join('/'); }
+    frame.src = '/pages/' + id + '.html' + (tab ? '?tab=' + tab + (sub ? '&d=' + encodeURIComponent(sub) : '') : '');
     paintActive(id, tab);
     expandGroupFor(id);
     try { history.replaceState(null, '', '#' + id + (tab ? '@' + tab : '')); } catch (e) {}
@@ -245,7 +248,8 @@
     if (d.photonzNav) go(d.photonzNav);
     if (d.photonzDashTab) {
       paintActive('dashboard', d.photonzDashTab);
-      try { history.replaceState(null, '', '#dashboard@' + d.photonzDashTab); } catch (err) {}
+      var frag = '#dashboard@' + d.photonzDashTab + (d.photonzDigest ? '/' + d.photonzDigest : '');
+      try { history.replaceState(null, '', frag); } catch (err) {}
     }
   });
   // theme toggle: cycle system -> dark -> light -> system, and push to the iframe
