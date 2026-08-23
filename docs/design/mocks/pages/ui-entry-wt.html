@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · ui-entry-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* ui-entry-wt · the BLANK-SLATE ENTRY clickthrough for the UI surface, on
+     the shared entry template: the desk carries data-entry, so entry.js
+     builds the canonical menu bar (SHELL SURFACE 1) and its ids. The page
+     authors only what is unique to this flow: the front door window, the UI
+     starter document, and the steps. Every local class is namespaced `ue-`
+     so nothing collides with a DS name. */
+
+  #ui-entry-wt .desk{height:724px}
+  #ui-entry-wt .deskhint{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
+    text-align:center;color:rgba(255,255,255,.5);font-size:12.5px;line-height:1.6;max-width:340px}
+  #ui-entry-wt .deskhint .g{display:block;font-size:22px;opacity:.6;margin-bottom:var(--s2)}
+  #ui-entry-wt .deskhint b{color:rgba(255,255,255,.82);font-weight:600}
+
+  /* the front door window (Kind 1: holds no document, so no canvas, no tool
+     bar, no dock). It floats ABOVE the editor it spawns, the way the real
+     launcher still fronts a freshly opened document for a beat. */
+  #ui-entry-wt #homeWin{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);
+    width:min(640px,92%);height:auto;min-height:0;z-index:6}
+  #ui-entry-wt #homeWin .tiles{grid-template-columns:repeat(2,1fr)}
+  #ui-entry-wt #homeWin .recents{grid-template-columns:repeat(3,1fr)}
+  #ui-entry-wt #homeWin .rec .pv{height:64px}
+  #ui-entry-wt .tile.on{border-color:var(--accent-line);box-shadow:var(--glow)}
+
+  /* the editor window a New click opens into */
+  #ui-entry-wt .win.shell{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;min-height:0;z-index:2}
+  #ui-entry-wt .win.shell .edit.lean{flex:1 1 auto;min-height:0}
+
+  /* ---- THE STARTER FRAME · what the Design UI template seeds ------------ */
+  #ui-entry-wt .ue-frame{width:320px;padding:28px 24px 24px;border-radius:16px;background:#fff;
+    color:#1d1d1f;font-family:var(--sans);border:1px solid rgba(0,0,0,.12);
+    box-shadow:0 22px 46px -14px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:12px}
+  #ui-entry-wt .ue-fh{font-size:21px;font-weight:700;letter-spacing:-.02em}
+  #ui-entry-wt .ue-fsub{font-size:12px;color:#6b6b70;margin-top:-8px}
+  #ui-entry-wt .ue-field{height:36px;border:1px solid #d6d6da;border-radius:9px;background:#fff;
+    display:flex;align-items:center;padding:0 12px;font-size:12.5px;color:#8a8a8f}
+  #ui-entry-wt .ue-btn{position:relative;height:38px;border-radius:10px;display:flex;align-items:center;
+    justify-content:center;font-size:13px;font-weight:640;color:#fff;
+    background:linear-gradient(135deg,#7c4dff,#ff5d8f);
+    box-shadow:0 6px 16px -6px rgba(124,77,255,.55),inset 0 1px 0 rgba(255,255,255,.35)}
+
+  @container shell (max-width:620px){ #ui-entry-wt .ue-frame{width:min(280px,86cqw)} }
+  @container desk (max-width:640px){ #ui-entry-wt .deskhint{display:none} }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="ui-entry-wt">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Start a UI design</h2><span class="k">· usage clickthrough · from the blank slate</span></div>
+
+  <p class="pglead">Where a UI document comes from when there is <b>nothing on screen at all</b>. Photonz is a resident
+    <b>menu-bar agent</b>, so the path is: <b>New Window</b> opens the front door, a workspace there is only a
+    <b>starting template</b>, and the template seeds a real canvas you immediately design on. Seven real clicks on
+    ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE screen, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtUiEntry">
+
+    <div class="wt-stage">
+      <!-- THE BLANK-SLATE ENTRY TEMPLATE (data-entry): entry.js injects the
+           canonical menu bar (#mbAgent, #mbMenu, #miNewWindow…). -->
+      <div class="desk" id="uiDesk" data-entry>
+
+        <div class="deskbody">
+
+          <p class="deskhint" id="deskHint"><span class="g"><i class="ic lg ic-aperture"></i></span>
+            <b>No document open.</b> Photonz is running in the menu bar, and <b>New Window</b> there is the front
+            door to a fresh canvas.</p>
+
+          <!-- THE EDITOR WINDOW · what New canvas opens into -->
+          <div class="win tall cq shell wt-off" id="editorWin" data-shell="untitled-ui · 1280 × 800" data-ws="ui" data-status="&lt;span id=&quot;uiStatus&quot;&gt;Design UI starter&lt;/span&gt;">
+
+            <!-- TITLE BAR · document identity only (built by the shell component) -->
+
+            <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+            <div class="edit lean" id="shell" data-dock="open">
+
+              <!-- D3 command surface: THIS PAGE'S commands -->
+              <div class="popover menu pop cmdpop" id="cmdMenu">
+                <div class="mlabel">Layer</div>
+                <div class="menuitem"><i class="ic ic-frame"></i> New frame <span class="sc">F</span></div>
+                <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+                <div class="menu-sep"></div>
+                <div class="mlabel">Window</div>
+                <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+              </div>
+
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="artboard-label">1280 × 800 · untitled-ui</div>
+                  <div class="selwrap">
+                    <div class="ue-frame" id="cvLogin" tabindex="0" role="button">
+                      <div class="ue-fh">Welcome back</div>
+                      <div class="ue-fsub">Sign in to continue</div>
+                      <div class="ue-field">you@example.com</div>
+                      <div class="ue-field">••••••••</div>
+                      <div class="ue-btn wt-off" id="cvBtn">Sign in
+                        <span id="cvInst" class="wt-off">
+                          <span class="cinst"></span>
+                          <span class="cbadge"><i class="ic xs ic-component"></i> Button · Primary</span>
+                        </span>
+                      </div>
+                    </div>
+                    <!-- SELECTION, place 1 of 3: the ring on canvas -->
+                    <span id="selFrame" class="wt-off">
+                      <span class="sel-ring"></span>
+                      <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                      <span class="mtag">Login · 320 × 380</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="cnv-act">
+                  <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+
+                <!-- FLOATING TOOL BAR · the D4 UI inventory -->
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tFrame" title="Frame (F)"><i class="ic sm ic-frame"></i></button>
+                    <button class="tool" id="tComp" title="Component insert (C)" style="color:var(--comp)"><i class="ic sm ic-component"></i></button>
+                    <button class="tool ovf" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                    <button class="tool ovf" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                    <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                    <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="swpair" title="Foreground and background color">
+                    <span class="fg" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="bg" style="background:#ffffff"></span>
+                  </span>
+                  <button class="tool" title="Swap foreground and background (X)"><i class="ic sm ic-swap"></i></button>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                    <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+                    <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+                    <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+                    <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="splitter v" data-min="220" data-max="420"></div>
+
+              <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+              <div class="pdock" id="dock">
+
+                <div class="dgrp" id="gLayers" style="--gh:132px">
+                  <div class="dgrp-h" id="gLayersH">
+                    <span class="ttl">Layers</span><span class="cnt" id="layerCount">5</span>
+                    <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <!-- SELECTION, place 2 of 3: the matching row in Layers -->
+                    <div class="lrow" id="lrLogin"><i class="ic ic-frame"></i><span class="nm">Login</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Subhead</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-square"></i><span class="nm">Email field</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child"><i class="ic ic-square"></i><span class="nm">Password field</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="lrow child wt-off" id="lrBtn"><i class="ic ic-component" style="color:var(--comp)"></i><span class="nm">Button · Primary</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
+                  </div>
+                </div>
+
+                <div class="splitter h" data-min="90" data-max="300"></div>
+
+                <!-- SELECTION, place 3 of 3: Properties, contextual to selection -->
+                <div class="dgrp" id="gProps" style="--gh:176px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+                  <div class="dgrp-b">
+                    <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a layer to edit it</div>
+                    <div id="propsSel" class="wt-off">
+                      <div class="section" id="pFrame">
+                        <div class="sec-h">Auto layout <span class="mut">vertical</span></div>
+                        <div class="irow"><span class="rl">Gap</span><span class="val">12</span></div>
+                        <div class="irow"><span class="rl">Padding</span><span class="val">24</span></div>
+                        <div class="grid2"><div class="field"><span class="k">W</span><span class="v">320</span></div><div class="field"><span class="k">H</span><span class="v">380</span></div><div class="field"><span class="k">R</span><span class="v">16</span></div><div class="field"><span class="k">Rot</span><span class="v">0°</span></div></div>
+                        <p class="note">The starter frame is an ordinary frame. The template gave you a head start, not a mode.</p>
+                      </div>
+                      <div class="section wt-off" id="pComp">
+                        <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> instance</span></div>
+                        <div class="irow"><span class="rl">Name</span><span class="select comp" tabindex="0" role="button"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button · Primary</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                        <div class="irow"><span class="rl">Variant</span><span class="select" tabindex="0" role="button"><span class="lead">Primary</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                        <div class="irow"><span class="rl">Label</span><span class="field" style="flex:1"><span class="v">Sign in</span></span></div>
+                        <p class="note">A live instance: re-paint it with a Style or swap its variant, and the main component stays the source of truth.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+                <div class="dgrp grow collapsed" id="gLibrary">
+                  <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Components</span>
+                    <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                      <div class="seg scopeseg">
+                        <button data-scope="media" data-scope-name="Media">Media</button>
+                        <button class="on" data-scope="components" data-scope-name="Components">Comp</button>
+                        <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                        <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                      </div>
+                    </div>
+                    <div class="libtools">
+                      <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                    </div>
+                    <div data-scope-body="media" class="wt-off">
+                      <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media imported</div>
+                    </div>
+                    <div data-scope-body="components">
+                      <div class="libgrid">
+                        <div class="libtile comp" id="tileBtn" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Button · Primary</span><span class="mt">3 variants</span></span></div>
+                        <div class="libtile comp" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Card · Sign up</span><span class="mt">2 variants</span></span></div>
+                        <div class="libtile comp" tabindex="0" title="Drag onto the canvas"><span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span><span class="cap"><span class="nm">Nav bar</span><span class="mt">1 variant</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="styles" class="wt-off">
+                      <div class="libgrid">
+                        <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cap"><span class="nm">Brand / gradient</span><span class="mt">paint</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="systems" class="wt-off">
+                      <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- THE RAIL · what the dock collapses to -->
+              <div class="drail">
+                <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+                <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+              </div>
+
+              <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
+                <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+                <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+                <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+              </div>
+              <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
+                <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+                <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- THE FRONT DOOR · Kind 1 window: holds no document, so no canvas,
+               no tool bar, no dock. Reached from the menu bar's New Window. -->
+          <div class="win tall wt-off" id="homeWin">
+            <div class="titlebar">
+              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
+              <div class="wtitle"><b>Photonz</b><span class="meta">· New</span></div>
+              <div class="tbtns">
+                <button class="btn secondary sm"><i class="ic ic-folder"></i> Open…</button>
+                <button class="btn primary sm" id="btnNew"><i class="ic ic-plus"></i> <span id="btnNewLb">New canvas</span></button>
+              </div>
+            </div>
+            <div class="home">
+              <div class="aibar"><span class="glow"><i class="ic ic-sparkle"></i></span><span class="ph">Describe what you want to create · “a pricing card with our brand gradient”…</span><button class="btn primary">Create</button></div>
+              <div>
+                <div class="h-lab" style="margin-bottom:10px">Start a project · pick a template</div>
+                <div class="tiles">
+                  <div class="tile" id="tileUI" tabindex="0" role="button"><span class="ti" style="background:var(--comp-soft);color:var(--comp)"><i class="ic ic-component"></i></span><span class="tt">Design UI</span><span class="td">Components, tokens, auto-layout</span></div>
+                  <div class="tile" tabindex="0" role="button"><span class="ti" style="background:#ffe8dd;color:#ff7e5f"><i class="ic ic-image"></i></span><span class="tt">Edit an image</span><span class="td">Adjust, mask, retouch, effects</span></div>
+                  <div class="tile" tabindex="0" role="button"><span class="ti" style="background:#dff5fb;color:#12a0c9"><i class="ic ic-play"></i></span><span class="tt">Edit video</span><span class="td">Timeline, transitions, captions</span></div>
+                  <div class="tile" tabindex="0" role="button"><span class="ti" style="background:var(--accent-soft);color:var(--accent)"><i class="ic ic-ruler"></i></span><span class="tt">Capture &amp; redline</span><span class="td">⌘⇧4 · measure + annotate</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="h-lab" style="margin-bottom:10px">Recent</div>
+                <div class="recents">
+                  <div class="rec"><div class="pv" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></div><div class="cap"><span>hero-card</span><span>2h</span></div></div>
+                  <div class="rec"><div class="pv" style="background:linear-gradient(180deg,#ffb36b,#7b4397)"></div><div class="cap"><span>sunset-edit</span><span>y'day</span></div></div>
+                  <div class="rec"><div class="pv" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></div><div class="cap"><span>launch-teaser</span><span>2d</span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The screen above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Open the Photonz menu"
+          data-cue="#mbAgent" data-cue-label="Click the Photonz status icon" data-cue-place="bottom"
+          data-pop="#mbMenu">
+        <div class="wt-cap comp">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Photonz</b> status icon</p>
+          <p class="wt-where">the macOS menu bar. Photonz is a resident agent, so this works with no window open</p>
+          <p class="wt-res">the app's real root menu drops: capture, history, then the ways to make a document. Nothing is running yet, and nothing needs to be.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the front door"
+          data-cue="#miNewWindow" data-cue-label="Click New Window" data-cue-place="left"
+          data-pop="#mbMenu" data-show="#homeWin" data-hide="#deskHint">
+        <div class="wt-cap comp">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>New Window</b></p>
+          <p class="wt-where">the Photonz menu, third group</p>
+          <p class="wt-res">the front door opens: a prompt bar for the agent, four starting points, and your recent documents. Still no document, and the window says so: it has no canvas, no tool bar, no dock.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Pick the Design UI template"
+          data-cue="#tileUI" data-cue-label="Click Design UI" data-cue-place="top"
+          data-class="#tileUI=on" data-set="#btnNewLb=New UI canvas">
+        <div class="wt-cap comp">
+          <span class="wt-n">3</span>
+          <p class="wt-do">the <b>Design UI</b> tile</p>
+          <p class="wt-where">the front door, under Start a project</p>
+          <p class="wt-res">the tile is picked and the primary action now reads <b>New UI canvas</b>. A workspace is only a starting template chosen here, never a mode you will toggle later.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Create the canvas"
+          data-cue="#btnNew" data-cue-label="Click New UI canvas" data-cue-place="bottom"
+          data-class="#tileUI=on" data-set="#btnNewLb=New UI canvas"
+          data-show="#editorWin">
+        <div class="wt-cap comp">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>New UI canvas</b></p>
+          <p class="wt-where">the front door's title bar, right where document actions always sit</p>
+          <p class="wt-res">an editor window opens behind the front door: <b>untitled-ui · 1280 × 800</b>, seeded with a Login starter frame, the UI tool strip, and the one right dock. The template gave you real layers, not a wizard.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select the starter frame"
+          data-cue="#cvLogin" data-cue-label="Click the Login frame" data-cue-place="top"
+          data-hide="#homeWin,#propsEmpty" data-tool="#tSelect" data-select="#lrLogin"
+          data-show="#selFrame,#propsSel" data-set="#propKind=Frame">
+        <div class="wt-cap comp">
+          <span class="wt-n">5</span>
+          <p class="wt-do">the <b>Login</b> frame</p>
+          <p class="wt-where">the canvas, with the Select tool</p>
+          <p class="wt-res">the front door has closed on its own now that a document exists. One selection in three places: the ring and handles on canvas, the <b>Login</b> row in Layers, and Properties showing the frame's auto layout.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open the Library at Components"
+          data-cue="#gLibraryH" data-cue-label="Click the Library header" data-cue-place="left"
+          data-hide="#homeWin" data-open="#gLibrary" data-scope="components">
+        <div class="wt-cap comp">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>Library</b> group header</p>
+          <p class="wt-where">the right dock, bottom group</p>
+          <p class="wt-res">Library expands at scope <b>Components</b>: the reusable pieces you drag onto any canvas. The same surface also holds Media, Styles, and Systems behind the scope switch.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Drop in a Button component"
+          data-cue="#tileBtn" data-cue-label="Drag Button · Primary onto the frame" data-cue-place="left"
+          data-hide="#homeWin,#propsEmpty,#pFrame,#selFrame" data-open="#gLibrary" data-scope="components"
+          data-show="#cvBtn,#cvInst,#lrBtn,#propsSel,#pComp" data-select="#lrBtn"
+          data-set="#layerCount=6|#propKind=Instance|#uiStatus=Button · Primary placed">
+        <div class="wt-cap comp">
+          <span class="wt-n">7</span>
+          <p class="wt-do" data-verb="Drag"><b>Button · Primary</b> onto the bottom of the frame</p>
+          <p class="wt-where">the Library's Components grid, in the right dock</p>
+          <p class="wt-res">the component lands as a live instance: the purple ring and badge on canvas, a marked row in Layers, and Properties showing its variant and label. From an empty desk to a designed screen in seven clicks.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the blank slate"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Every surface starts from the same blank slate: the resident <b>menu-bar agent</b>. For UI the entry is <b>New Window → a template tile → a real canvas</b>, and the template's only job is to seed honest layers. After that it is the ordinary shell: same Layers, same Properties, same Library as a photo or a cut.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The front door's prompt bar could take the same journey further back: describe the screen and the agent seeds the starter frame itself, then you keep designing by hand from layer one.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should the front door close the moment a document opens, as shown here, or stay behind the editor so a second New is one click away? Closing is calmer; staying is faster for batch starts.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch live when a person clicks it
+     directly (the walkthrough drives the same state declaratively). */
+  (function () {
+    var seg = document.querySelector('#ui-entry-wt .scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

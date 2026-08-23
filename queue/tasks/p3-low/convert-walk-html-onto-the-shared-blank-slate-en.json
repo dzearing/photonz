@@ -1,0 +1,21 @@
+{
+  "id": "convert-walk-html-onto-the-shared-blank-slate-en",
+  "title": "Convert walk.html onto the shared blank-slate entry template",
+  "priority": "p3-low",
+  "seq": 140,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T07:14:13.190Z",
+  "updated": "2026-08-23T07:14:13.191Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "walk.html still hand-authors the menu-bar agent, histbar, and filler history cards that shared/components/entry.js now injects for .desk[data-entry] pages (capture-wt, ui-entry-wt, video-entry-wt). Convert it the way capture-wt was converted: add data-entry, add data-entry-fill to the filmstrip, delete the copied chrome, keep its own first card and artwork. Verify all 15 steps still replay and the cues land.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T07:14:13.191Z",
+      "note": "created (manual)"
+    }
+  ]
+}

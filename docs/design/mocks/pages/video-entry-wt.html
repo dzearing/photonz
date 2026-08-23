@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-entry-wt</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* video-entry-wt · the BLANK-SLATE ENTRY clickthrough for the video
+     surface, on the shared entry template: the desk carries data-entry, so
+     entry.js builds the canonical menu bar and the history chrome. The page
+     authors only what is unique to this flow: the recording's card, the
+     editor it opens into, and the steps. Every local class is namespaced
+     `ve-` so nothing collides with a DS name. */
+
+  #video-entry-wt .desk{height:724px}
+  #video-entry-wt .deskhint{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
+    text-align:center;color:rgba(255,255,255,.5);font-size:12.5px;line-height:1.6;max-width:360px}
+  #video-entry-wt .deskhint .g{display:block;font-size:22px;opacity:.6;margin-bottom:var(--s2)}
+  #video-entry-wt .deskhint b{color:rgba(255,255,255,.82);font-weight:600}
+  #video-entry-wt .win.shell{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;min-height:0}
+  #video-entry-wt .win.shell .edit.lean{flex:1 1 auto;min-height:0}
+
+  /* ---- THE RECORDED FRAME · what the recording shows: a dark demo stage,
+     a bar chart, a call to action. Drawn once for the editor canvas and once
+     small for the history card, so the two read as the same footage. ------ */
+  #video-entry-wt .ve-pv{width:min(470px,88%)}
+  #video-entry-wt .ve-frame{width:100%;aspect-ratio:16/9;border-radius:var(--r3);position:relative;
+    overflow:hidden;background:radial-gradient(120% 120% at 30% 20%,#171c2e,#0b0d18 70%);
+    border:1px solid var(--line-strong)}
+  #video-entry-wt .ve-shot{position:absolute;left:12%;top:16%;right:12%;bottom:14%;border-radius:9px;
+    background:#10142a;border:1px solid rgba(255,255,255,.14);overflow:hidden}
+  #video-entry-wt .ve-shot .ve-sb{height:16px;display:flex;align-items:center;gap:4px;padding:0 7px;
+    background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.08)}
+  #video-entry-wt .ve-shot .ve-sb i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  #video-entry-wt .ve-shot .ve-bars{display:flex;align-items:flex-end;gap:6px;height:calc(100% - 16px);padding:12px 14px}
+  #video-entry-wt .ve-shot .ve-bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#12c2e9,#7c4dff)}
+  #video-entry-wt .ve-shot .ve-cta{position:absolute;right:12px;bottom:12px;font-size:8px;font-weight:700;color:#0b0d18;
+    background:#fff;border-radius:999px;padding:3px 8px;letter-spacing:.02em}
+
+  /* the same footage at card scale, inside the history thumbnail */
+  #video-entry-wt .ve-mini{position:absolute;inset:0;background:#0d1017;display:flex;
+    align-items:flex-end;justify-content:center;gap:3px;padding:0 14px 12px}
+  #video-entry-wt .ve-mini i{display:block;width:9px;border-radius:2px 2px 0 0;
+    background:linear-gradient(180deg,#7c4dff,#12c2e9)}
+  #video-entry-wt .ve-mini .ve-pill{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    font-size:6.5px;font-weight:700;color:#fff;background:rgba(124,77,255,.85);
+    border-radius:999px;padding:2px 7px;letter-spacing:.02em}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-entry-wt">
+  <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Open a recording and trim it</h2><span class="k">· usage clickthrough · from the blank slate</span></div>
+
+  <p class="pglead">Where a video document comes from when there is <b>nothing on screen at all</b>. A screen recording
+    lands in the global <b>history</b> exactly like a screenshot does, so the entry is: open history from the
+    <b>menu-bar agent</b>, filter to <b>Videos</b>, and the editor is what the recording <i>opens into</i>, timeline and
+    all. Trim the flubbed ending, export, done. Eight real clicks on ONE screen, which never re-renders below.</p>
+
+  <!-- ============================================================
+       THE WALKTHROUGH · ONE screen, rendered once, then operated.
+       ============================================================ -->
+  <div class="wt" id="wtVidEntry">
+
+    <div class="wt-stage">
+      <!-- THE BLANK-SLATE ENTRY TEMPLATE (data-entry): entry.js injects the
+           canonical menu bar, wires Show History to #histSheet, injects the
+           histbar (#hsAll/#hsShots/#hsVids), and appends the standard past
+           to the filmstrip below. -->
+      <div class="desk" id="vidDesk" data-entry>
+
+        <div class="deskbody">
+
+          <p class="deskhint" id="deskHint"><span class="g"><i class="ic lg ic-aperture"></i></span>
+            <b>No document open.</b> The screen recording you made this morning is already in <b>history</b>,
+            one keystroke away behind the menu-bar icon.</p>
+
+          <!-- THE EDITOR WINDOW · what a recording opens into -->
+          <div class="win tall cq shell wt-off" id="editorWin" data-shell='demo-run · 1920 × 1080 · <span id="docLen">0:14</span>' data-ws="video" data-status="1080p · 30 fps">
+
+            <!-- TITLE BAR · document identity only (built by the shell component) -->
+
+            <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
+            <div class="edit lean" id="shell" data-dock="open">
+
+              <!-- D3 command surface: THIS PAGE'S commands -->
+              <div class="popover menu pop cmdpop" id="cmdMenu">
+                <div class="mlabel">Clip</div>
+                <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
+                <div class="menuitem"><i class="ic ic-audio"></i> Detach audio <span class="sc">⌃⇧D</span></div>
+                <div class="menu-sep"></div>
+                <div class="mlabel">Document</div>
+                <div class="menuitem" id="miExport"><i class="ic ic-export"></i> Export video… <span class="sc">⌘E</span></div>
+                <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+              </div>
+
+              <div class="cnv">
+                <div class="canvas">
+                  <div class="ve-pv selwrap">
+                    <div class="ve-frame" id="cvFrame">
+                      <div class="ve-shot">
+                        <div class="ve-sb"><i></i><i></i><i></i></div>
+                        <div class="ve-bars">
+                          <i style="height:38%"></i><i style="height:62%"></i><i style="height:47%"></i>
+                          <i style="height:81%"></i><i style="height:56%"></i><i style="height:70%"></i>
+                        </div>
+                        <span class="ve-cta">Get Photonz</span>
+                      </div>
+                      <div class="toast wt-off" id="toastExport"><i class="ic sm ic-check"></i> Exported demo-run.mp4 · 1080p · 0:11</div>
+                    </div>
+                    <span class="sel-ring wt-off" id="frameRing"></span>
+                  </div>
+                </div>
+
+                <div class="cnv-act">
+                  <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+                </div>
+
+                <!-- FLOATING TOOL BAR · the D4 video inventory -->
+                <div class="tbar">
+                  <span class="tstrip" data-radio=".tool">
+                    <button class="tool on" id="tSelect" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tBlade" title="Blade · split at the playhead (B)"><i class="ic sm ic-blade"></i></button>
+                    <button class="tool" id="tTitle" title="Title / Text (T)"><i class="ic sm ic-text"></i></button>
+                    <button class="tool" id="tShape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+                    <span class="tsep ovf"></span>
+                    <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
+                    <span class="tsep"></span>
+                    <button class="tool" id="tHand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+                    <button class="tool" id="tZoom" title="Zoom (Z)"><i class="ic sm ic-zoom"></i></button>
+                  </span>
+                  <button class="tool tbar-more" title="More tools" data-menu="#toolOvf"><i class="ic sm ic-more"></i></button>
+                  <span class="tsep"></span>
+                  <span class="zoomctl">
+                    <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
+                    <span class="val zval">100%</span>
+                  </span>
+                  <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:180px;z-index:12">
+                    <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="splitter v" data-min="220" data-max="420"></div>
+
+              <!-- THE RIGHT DOCK · no Layers group here: the timeline below IS
+                   the layer list (UX-PATTERNS D9 note) -->
+              <div class="pdock" id="dock">
+
+                <div class="dgrp" id="gProps" style="--gh:250px">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
+                  <div class="dgrp-b">
+                    <div class="empty" id="propsEmpty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-cursor"></i></span>Select a clip or a layer</div>
+                    <div id="propsClip" class="wt-off">
+                      <div class="section">
+                        <div class="sec-h">Clip <span class="mut">demo-run</span></div>
+                        <div class="grid2">
+                          <div class="field"><span class="k">In</span><span class="v">0:00</span></div>
+                          <div class="field"><span class="k">Out</span><span class="v" id="pOut">0:14</span></div>
+                          <div class="field"><span class="k">Speed</span><span class="v">100%</span></div>
+                          <div class="field"><span class="k">Vol</span><span class="v">0 dB</span></div>
+                        </div>
+                        <p class="note">In and out are where you start and stop reading the source. Trimming never touches the file, so the frames you cut off are still there if you drag the edge back out.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- LIBRARY · one surface, four scopes (D1/D2) -->
+                <div class="dgrp grow collapsed" id="gLibrary">
+                  <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
+                    <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
+                  </div>
+                  <div class="dgrp-b">
+                    <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                      <div class="seg scopeseg">
+                        <button class="on" data-scope="media" data-scope-name="Media">Media</button>
+                        <button data-scope="components" data-scope-name="Components">Comp</button>
+                        <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                        <button data-scope="systems" data-scope-name="Systems">Systems</button>
+                      </div>
+                    </div>
+                    <div class="libtools">
+                      <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search library" aria-label="Search library"></span>
+                    </div>
+                    <div data-scope-body="media">
+                      <div class="libgrid">
+                        <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
+                        <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="components" class="wt-off">
+                      <div class="libgrid">
+                        <div class="libtile comp" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#9a5cff,#c56cff)"></span><span class="cap"><span class="nm">Lower third</span><span class="mt">3 variants</span></span></div>
+                      </div>
+                    </div>
+                    <div data-scope-body="styles" class="wt-off">
+                      <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-swatch"></i></span>No styles yet</div>
+                    </div>
+                    <div data-scope-body="systems" class="wt-off">
+                      <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- THE RAIL · what the dock collapses to -->
+              <div class="drail">
+                <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+                <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
+              </div>
+
+              <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
+                <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+                <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
+              </div>
+            </div>
+
+            <!-- TRANSPORT + TIMELINE · this document has time, so both are here -->
+            <div class="transport">
+              <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+              <span class="grp">
+                <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+                <button class="btn primary icon" title="Play"><i class="ic ic-play"></i></button>
+                <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+              </span>
+              <span class="tc cur">0:00</span>
+              <span class="scrub" id="scrub" data-duration="14" role="slider" aria-label="Scrub" aria-valuenow="0" aria-valuemin="0" aria-valuemax="14" tabindex="0">
+                <span class="fill" id="scrubFill" style="width:0%"></span>
+                <span class="knob" id="scrubKnob" style="left:0%"></span>
+              </span>
+              <span class="tc" id="tcEnd">0:14</span>
+            </div>
+
+            <div class="timeline" id="timeline" data-tl-summary="demo-run · 0:00 / 0:14" style="min-height:110px">
+              <div class="ruler"><span>0s</span><span>2s</span><span>4s</span><span>6s</span><span>8s</span><span>10s</span><span>12s</span><span>14s</span></div>
+              <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+                <div class="lane abs">
+                  <div class="clip v1" id="clipMain" style="left:0;width:100%" tabindex="0" role="button"><span class="lbl">demo-run</span>
+                    <span class="edge l"></span><span class="edge r" id="clipEdgeR"></span>
+                    <span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span>
+                  </div>
+                </div>
+              </div>
+              <div class="playhead" id="playhead" style="--t:0.0"></div>
+            </div>
+          </div>
+
+          <!-- THE GLOBAL HISTORY OVERLAY · chromeless, and it belongs to the
+               menu-bar agent, not to any window (§4b req 5). The histbar and
+               the standard past cards are injected by entry.js. -->
+          <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
+            <div class="sheet-b">
+              <div class="filmstrip" id="stripHist" data-radio=".filmcard" data-radio-class="sel" data-entry-fill>
+                <div class="filmcard sel fk-clip" id="fcRec" tabindex="0" role="button">
+                  <span class="th">
+                    <span class="ve-mini">
+                      <span class="ve-pill">Get Photonz</span>
+                      <i style="height:34%"></i><i style="height:56%"></i><i style="height:42%"></i><i style="height:73%"></i><i style="height:50%"></i><i style="height:63%"></i>
+                    </span>
+                    <span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:14</span>
+                  </span>
+                  <span class="cap"><span class="nm">demo-run</span><span class="ago">19 minutes ago</span></span>
+                  <span class="acts">
+                    <button class="btn primary sm" id="btnOpen"><i class="ic ic-pen"></i> Open</button>
+                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== THE STEPS · state only. The screen above never re-renders. ===== -->
+    <ol class="wt-steps">
+
+      <li class="wt-step"
+          data-title="Open the Photonz menu"
+          data-cue="#mbAgent" data-cue-label="Click the Photonz status icon" data-cue-place="bottom"
+          data-pop="#mbMenu">
+        <div class="wt-cap vid">
+          <span class="wt-n">1</span>
+          <p class="wt-do">the <b>Photonz</b> status icon</p>
+          <p class="wt-where">the macOS menu bar. Photonz is a resident agent, so this works with no window open</p>
+          <p class="wt-res">the app's real root menu drops. <b>Stop Recording</b> sits grayed because nothing is recording right now; the recording you made this morning is one item down, behind <b>Show History</b>.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Show the history"
+          data-cue="#miHistory" data-cue-label="Click Show History" data-cue-place="left"
+          data-pop="#mbMenu" data-sheet-open="#histSheet" data-select="#fcRec" data-hide="#deskHint">
+        <div class="wt-cap vid">
+          <span class="wt-n">2</span>
+          <p class="wt-do"><b>Show History</b>, or press <code>⌘⇧H</code> from anywhere</p>
+          <p class="wt-where">the Photonz menu, second group</p>
+          <p class="wt-res">the chromeless history pane drops over the screen, screenshots and recordings side by side, newest first. <b>demo-run</b> is already selected, so its action row is showing.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Filter to Videos"
+          data-cue="#hsVids" data-cue-label="Click Videos" data-cue-place="bottom"
+          data-sheet-open="#histSheet" data-activate="#hsVids" data-class="#stripHist=flt-vid"
+          data-select="#fcRec">
+        <div class="wt-cap vid">
+          <span class="wt-n">3</span>
+          <p class="wt-do"><b>Videos</b></p>
+          <p class="wt-where">the scope filter, centered at the top of the history pane</p>
+          <p class="wt-res">the screenshots drop out and only recordings remain, each wearing a play badge and its duration. Same pane, same cards; a recording is just a capture with time in it.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Open it in the editor"
+          data-cue="#btnOpen" data-cue-label="Click Open" data-cue-place="bottom"
+          data-sheet-open="#histSheet" data-activate="#hsVids" data-class="#stripHist=flt-vid"
+          data-select="#fcRec" data-show="#editorWin">
+        <div class="wt-cap vid">
+          <span class="wt-n">4</span>
+          <p class="wt-do"><b>Open</b></p>
+          <p class="wt-where">the selected card's action row, in the filmstrip</p>
+          <p class="wt-res">an editor window opens onto the recording: <b>demo-run · 1920 × 1080 · 0:14</b>. Because this document has time, the <b>transport bar</b> and the <b>timeline</b> are simply there; nothing was switched into a video mode.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Put the history away"
+          data-cue="#mbAgent" data-cue-label="Click the icon again" data-cue-place="bottom"
+          data-sheet-shut="#histSheet">
+        <div class="wt-cap vid">
+          <span class="wt-n">5</span>
+          <p class="wt-do">the <b>Photonz</b> icon again, or press <code>⎋</code>, or click anywhere else</p>
+          <p class="wt-where">the menu bar. The pane is chromeless, so there is no close button to hunt for</p>
+          <p class="wt-res">the overlay retracts and the editor stands alone: canvas, floating tool bar, one right dock, and the recording as the one clip on the timeline. The timeline is the layer list here; there is no separate Layers panel to manage.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Select the clip"
+          data-cue="#clipMain" data-cue-label="Click the demo-run clip" data-cue-place="top"
+          data-select="#clipMain" data-show="#propsClip,#frameRing" data-hide="#propsEmpty"
+          data-set="#propKind=Clip">
+        <div class="wt-cap vid">
+          <span class="wt-n">6</span>
+          <p class="wt-do">the <b>demo-run</b> clip</p>
+          <p class="wt-where">the V1 track on the timeline</p>
+          <p class="wt-res">the clip outlines on the timeline, a ring lands on the frame, and Properties shows what a clip is: a layer with an <b>in</b> and an <b>out</b>. The last three seconds are a flubbed retake, and the out point is how they leave.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Trim the flubbed ending"
+          data-cue="#clipEdgeR" data-cue-label="Drag the right edge to 0:11" data-cue-place="top"
+          data-select="#clipMain" data-css="#clipMain=width:78.6%"
+          data-set="#pOut=0:11|#docLen=0:11|#tcEnd=0:11">
+        <div class="wt-cap vid">
+          <span class="wt-n">7</span>
+          <p class="wt-do" data-verb="Drag">the clip's <b>right edge</b> left, to <b>0:11</b></p>
+          <p class="wt-where">the clip itself; the edge is the trim handle</p>
+          <p class="wt-res">the flub is gone and the document is <b>0:11</b> everywhere at once: the clip, the Out field, the transport, and the title bar. The trim only moved a read point, so dragging the edge back out would bring every frame back.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="Export the result"
+          data-cue="#miExport" data-cue-label="Click Export video…" data-cue-place="left"
+          data-pop="#cmdMenu" data-select="#clipMain" data-show="#toastExport">
+        <div class="wt-cap vid">
+          <span class="wt-n">8</span>
+          <p class="wt-do"><b>Export video…</b>, or press <code>⌘E</code></p>
+          <p class="wt-where">the command menu, under the <b>…</b> button at the top right of the canvas. The shipping app also has it in the native File menu</p>
+          <p class="wt-res">the trimmed recording renders to <b>demo-run.mp4</b>, ready to drop into a ticket or a chat. From blank slate to a shipped clip, and the source recording in history is untouched.</p>
+        </div>
+      </li>
+
+    </ol>
+
+    <div class="wbar">
+      <button class="wprev"><i class="ic sm ic-chevron-left"></i> Back</button>
+      <div class="wdots"></div>
+      <span class="wlabel"></span>
+      <button class="wt-reset" title="Back to the blank slate"><i class="ic sm ic-undo"></i> Reset</button>
+      <button class="wnext next">Next <i class="ic sm ic-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">The idea</div><p>Video gets no special front door. A recording lands in the same global <b>history</b> as a screenshot, the same <b>Open</b> makes a document of it, and the only thing that changes in the editor is what the document itself brings: <b>time</b>, so the transport and timeline appear. Entry is identical across surfaces; the document is what differs.</p></div>
+    <div class="c"><div class="lab g2">A direction</div><p>The history card for a recording could offer <b>Trim here</b> without opening the editor at all: scrub inside the card, drag two handles, copy the result. The editor stays the place for real work; the pane handles the fast crop.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>Should <b>Export</b> for a one-clip document default to the clipboard, like a capture does, instead of a file? Copy-to-paste is the fast daily path for screenshots; recordings may want the same.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+  /* Page-local: make the Library scope switch live when a person clicks it
+     directly (the walkthrough drives the same state declaratively). */
+  (function () {
+    var seg = document.querySelector('#video-entry-wt .scopeseg');
+    if (!seg) return;
+    var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
+    var label = document.querySelector('#gLibrary [data-scope-label]');
+    var bodies = [].slice.call(document.querySelectorAll('#gLibrary [data-scope-body]'));
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var scope = b.getAttribute('data-scope');
+        btns.forEach(function (x) { x.classList.toggle('on', x === b); });
+        bodies.forEach(function (p) { p.classList.toggle('wt-off', p.getAttribute('data-scope-body') !== scope); });
+        if (label) label.textContent = b.getAttribute('data-scope-name') || b.textContent.trim();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

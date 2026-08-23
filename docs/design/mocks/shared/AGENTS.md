@@ -251,7 +251,7 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
 ## Where the design system lives
 
 `shared/photonz-ds.css` and `.js` are **empty on purpose**. Every component is
-its own file under `shared/components/` (23 CSS, 12 JS), assembled into those two
+its own file under `shared/components/` (38 CSS, 17 JS), assembled into those two
 URLs by `dev-server.mjs`. Pages are unaffected: same two `<link>`/`<script>`
 tags, same order. To change a component, edit its file. To add one, add the file
 and register it in `shared/components/order.json` at the cascade position it
@@ -649,8 +649,37 @@ concrete: name the panel, the badge, the row, the chrome that appeared.
   never the taught path. `pages/capture-wt.html` shows the small desktop +
   menu-bar agent representation this needs.
 
-Reference implementations: `pages/ds-build-wt.html` and
-`pages/video-transition-wt.html`.
+### Blank-slate ENTRY walkthroughs: one shared template
+
+Every "how do I start from nothing" clickthrough opens on the SAME screen: an
+empty desk, the resident menu-bar agent, and the global history. That chrome is
+identical by definition, so it is a component (`shared/components/entry.js`),
+not markup you retype. Mark the desk and it is built for you:
+
+- **`.desk[data-entry]`** injects the canonical **`.mbar`** (spacer · Photonz
+  status item with the FULL canonical menu · sound · clock) as the desk's first
+  child, unless the page authors its own `.mbar`. Stable ids for step cues:
+  `#mbAgent #mbMenu #miCapture #miCaptureFull #miRecord #miHistory
+  #miNewWindow #miNewClipboard #miOpen`. `Show History` is auto-wired
+  (`data-sheet`) to the desk's own `.sheet.down.hist`.
+- A history sheet with no `.histbar` gets the canonical one injected
+  (`#hsAll #hsShots #hsVids` + Clear All).
+- **`.filmstrip[data-entry-fill]`** gets the **standard past** appended after
+  the page's own card(s): the same eight filler captures on every entry page.
+  Cards carry their kind (`.fk-shot` / `.fk-clip`; stamp your own cards too),
+  and the strip filters with `.flt-shot` / `.flt-vid` — a step drives it with
+  `data-activate="#hsVids" data-class="#<stripId>=flt-vid"`, and direct clicks
+  on the injected histbar do the same live.
+
+The page authors only what is unique to its flow: the desk artwork and hint,
+its own history card(s), the toast, and the editor window(s) the flow opens
+into. One entry page exists per surface and they share this template:
+`capture-wt` (image), `ui-entry-wt` (UI, via New Window and the front door),
+`video-entry-wt` (video, via history's Videos scope).
+
+Reference implementations: `pages/ds-build-wt.html`,
+`pages/video-transition-wt.html`, and (for the entry template)
+`pages/capture-wt.html`.
 
 **One scenario per page.** The video clickthroughs are the model: `transition`,
 `cut`, `title`, `move`, `zoom`, `freeze`, each answering one question a person
@@ -660,12 +689,10 @@ which is why `video-create-wt` was retired.
 
 ### Legacy: `.wsteps`
 
-`.wsteps` > `.wstep`(+`.on`), `.wcap` > `.num` + `.tx`, driven by the same
-`.wbar`, still works because several pages have not been converted yet
-(`walk`, `capture-wt`, `img-grade-wt`, `img-retouch-wt`,
-`component-configure-wt`, `agent-generate-wt`, `vector-wt`). It swaps a whole
-illustration per step, which is exactly the failure §4d forbids. **Do not author
-new pages with it; convert to `.wt` instead.**
+`.wsteps` swapped a whole illustration per step, which is exactly the failure
+§4d forbids. The conversion is COMPLETE: no page uses it any more (verified
+2026-08-23), and only the driver in `core.js` remains for archival safety.
+**Never author a page with it; every walkthrough is a `.wt`.**
 
 ## Controls (canonical)
 

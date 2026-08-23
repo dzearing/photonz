@@ -318,14 +318,21 @@
 .tlrail .sum{font-family:var(--mono);font-size:10.5px;color:var(--ink);
   font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tlrail .sp{margin-left:auto;flex:none;color:var(--faint);font-size:10px}
-/* the × sits at the end of the local bar, mirroring the panel dock's header */
-.tlbar .tl-close{margin-left:auto;flex:none;width:24px;height:24px;padding:0;border:0;
+/* the × sits at the end of the local bar, mirroring the panel dock's header.
+   The visual rules cover the floating variant too: scoped to .tlbar alone,
+   the afloat button fell back to the UA's light-gray default and rendered as
+   an empty box over a dark timeline. */
+.tlbar .tl-close,
+.timeline > .tl-close.afloat{margin-left:auto;flex:none;width:24px;height:24px;padding:0;border:0;
   border-radius:7px;cursor:pointer;background:transparent;color:var(--faint);
   display:grid;place-items:center;transition:var(--ctl-tr)}
-.tlbar .tl-close:hover{background:var(--glass-thin);color:var(--ink)}
-.tlbar .tl-close:active{transform:scale(.94)}
-.tlbar .tl-close:focus-visible{outline:none;box-shadow:var(--ring)}
+.tlbar .tl-close:hover,
+.timeline > .tl-close.afloat:hover{background:var(--glass-thin);color:var(--ink)}
+.tlbar .tl-close:active,
+.timeline > .tl-close.afloat:active{transform:scale(.94)}
+.tlbar .tl-close:focus-visible,
+.timeline > .tl-close.afloat:focus-visible{outline:none;box-shadow:var(--ring)}
 /* a dock with no local bar has nowhere to put the ×, so it floats at the
    dock's own top-right. .timeline is already position:relative. */
 .tlbar .tl-close.afloat,
-.timeline > .tl-close.afloat{position:absolute;top:var(--s2);right:var(--s2);z-index:6}
+.timeline > .tl-close.afloat{position:absolute;top:var(--s2);right:var(--s2);z-index:6;margin-left:0}

@@ -3,11 +3,11 @@
   "title": "Blank-slate entry clickthrough per surface on one template",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:46.976Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T06:49:53.224Z",
   "deps": [
     "finish-the-mock-conform-pass-across-all-pages"
   ],
@@ -34,6 +34,31 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T06:49:53.224Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T07:40:00.000Z",
+      "note": "found the .wsteps legacy list in AGENTS.md stale: every walkthrough already uses .wt, so 'fold old pages into the template' was already done; the real gap was the shared blank-slate ENTRY chrome (menu bar, histbar, filler history) copied per page, and no UI/video entry pages at all"
+    },
+    {
+      "t": "2026-08-23T07:41:00.000Z",
+      "note": "built shared/components/entry.js: .desk[data-entry] injects the canonical menu-bar agent (stable ids for cues), auto-wires Show History, injects the histbar, and appends the standard past to [data-entry-fill] filmstrips; .fk-shot/.fk-clip + .flt-shot/.flt-vid filter rules added to history.css; registered in order.json"
+    },
+    {
+      "t": "2026-08-23T07:42:00.000Z",
+      "note": "converted capture-wt (the image entry) onto the template (~160 lines of copied chrome deleted); authored ui-entry-wt (menu bar -> New Window -> front door -> Design UI template -> starter frame -> drop a component) and video-entry-wt (menu bar -> history -> Videos scope -> Open -> trim the ending -> export), both on the same template; rail links added first in their groups"
+    },
+    {
+      "t": "2026-08-23T07:43:00.000Z",
+      "note": "bonus shared fix while verifying: the floating timeline collapse button (.tl-close.afloat, injected by dock.js on every .tlbar-less timeline page) had NO visual styles (scoped to .tlbar only) and rendered as a UA-default gray box; dock.css now covers the afloat variant"
+    },
+    {
+      "t": "2026-08-23T07:44:00.000Z",
+      "note": "verified in Chrome against the live dev server: all three entry pages stepped through (cue alignment measured, filter, trim, export, instance drop all correct), walk.html and non-entry pages unaffected, zero console errors, elevation check green, no orphaned rail links; AGENTS.md documents the entry template and the stale legacy note is corrected"
     }
-  ]
+  ],
+  "started": "2026-08-23T06:49:53.224Z"
 }

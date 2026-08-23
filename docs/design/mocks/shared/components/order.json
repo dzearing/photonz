@@ -46,6 +46,7 @@
   "js": [
     "core",
     "shell",
+    "entry",
     "dock",
     "selection",
     "overlays",

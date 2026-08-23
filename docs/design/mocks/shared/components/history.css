@@ -42,3 +42,10 @@
   color:#fff;background:rgba(6,8,14,.5);border:1px solid rgba(255,255,255,.3);
   backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm)}
 .filmcard .th .pl .ic{width:12px;height:12px}
+
+/* the scope filter, expressed as a class on the strip. Cards carry their kind
+   (.fk-shot / .fk-clip — entry.js stamps its standard cards; a page stamps its
+   own); the histbar's Screenshots / Videos buttons and walkthrough steps
+   (data-class="#<strip>=flt-vid") set the filter. */
+.filmstrip.flt-shot .fk-clip{display:none}
+.filmstrip.flt-vid .fk-shot{display:none}
