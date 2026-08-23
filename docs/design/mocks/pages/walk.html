@@ -226,6 +226,16 @@
                         <div class="wa-inst wt-off" id="waInst" style="left:30px;top:-30px">Pro is the default
                           <span class="cinst"></span><span class="cbadge"><i class="ic xs ic-component"></i> instance</span>
                         </div>
+
+                        <!-- THE SELECTION FRAME · bounds of the callout layer
+                             (note + arrow together, since they land as ONE
+                             layer). Shown by the steps in lockstep with
+                             .lrow.sel in Layers and the Properties group. -->
+                        <div class="selwrap wt-off" id="selCallout" style="position:absolute;left:214px;top:-30px;width:108px;height:134px;pointer-events:none">
+                          <div class="sel-ring"></div>
+                          <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                          <span class="mtag" id="waSelTag">Callout · text</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -615,7 +625,7 @@
       <li class="wt-step"
           data-title="Drop the callout"
           data-cue="#waNote" data-cue-label="Drag a callout onto the Pro card" data-cue-place="top"
-          data-tool="#tText" data-show="#waNote,#waArrow,#lrCallout,#propsMark"
+          data-tool="#tText" data-show="#waNote,#waArrow,#selCallout,#lrCallout,#propsMark"
           data-hide="#mbMenu,#propsEmpty" data-select="#lrCallout"
           data-set="#layerCount=2|#markCount=2 layers|#propKind=Text">
         <div class="wt-cap img">
@@ -630,7 +640,7 @@
           data-title="Pick up Measure"
           data-cue="#tMeasure" data-cue-label="Click the Measure tool" data-cue-place="top"
           data-tool="#tMeasure" data-show="#propsMeasure,#unitChip"
-          data-hide="#mbMenu,#propsEmpty,#propsMark" data-set="#propKind=Measure">
+          data-hide="#mbMenu,#propsEmpty,#propsMark,#selCallout" data-set="#propKind=Measure">
         <div class="wt-cap img">
           <span class="wt-n">9</span>
           <p class="wt-do">the <b>Measure</b> tool</p>
@@ -643,7 +653,7 @@
           data-title="Redline the layout"
           data-cue="#waGap" data-cue-label="Drag between the two cards" data-cue-place="right"
           data-tool="#tMeasure" data-show="#waGap,#waSize,#lrMeasure,#propsMeasure,#unitChip"
-          data-hide="#mbMenu,#propsEmpty,#propsMark" data-select="#lrMeasure"
+          data-hide="#mbMenu,#propsEmpty,#propsMark,#selCallout" data-select="#lrMeasure"
           data-set="#layerCount=3|#markCount=3 layers|#propKind=Measure">
         <div class="wt-cap img">
           <span class="wt-n">10</span>
@@ -656,7 +666,7 @@
       <li class="wt-step"
           data-title="Select the callout"
           data-cue="#lrCallout" data-cue-label="Click the Callout layer" data-cue-place="left"
-          data-hide="#mbMenu,#propsEmpty,#propsMeasure" data-show="#propsMark"
+          data-hide="#mbMenu,#propsEmpty,#propsMeasure" data-show="#propsMark,#selCallout"
           data-select="#lrCallout" data-set="#propKind=Text">
         <div class="wt-cap img">
           <span class="wt-n">11</span>
@@ -671,7 +681,7 @@
           data-cue="#miMakeComp" data-cue-label="Click Make component" data-cue-place="left"
           data-pop="#layerMenu" data-hide="#mbMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout"
           data-show="#lrCalloutComp,#libCallout,#propsComp,#toastComp"
-          data-select="#lrCalloutComp" data-set="#propKind=Component|#pCompKind=main">
+          data-select="#lrCalloutComp" data-set="#propKind=Component|#pCompKind=main|#waSelTag=Callout · main">
         <div class="wt-cap img">
           <span class="wt-n">12</span>
           <p class="wt-do"><b>Make component</b>, or press <code>⌘⌥K</code></p>
@@ -697,7 +707,7 @@
       <li class="wt-step"
           data-title="Drop an instance"
           data-cue="#libCallout" data-cue-label="Drag Callout onto the Starter card" data-cue-place="left"
-          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp"
+          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp,#selCallout"
           data-show="#lrCalloutComp,#libCallout,#propsComp,#waInst,#lrInst" data-open="#gLibrary" data-scope="components"
           data-select="#lrInst" data-set="#layerCount=4|#markCount=4 layers|#propKind=Component|#pCompKind=instance">
         <div class="wt-cap img">
@@ -711,7 +721,7 @@
       <li class="wt-step"
           data-title="Re-paint the instance"
           data-cue="#selStyle" data-cue-label="Click the Fill style" data-cue-place="left"
-          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp"
+          data-hide="#mbMenu,#layerMenu,#propsEmpty,#propsMeasure,#propsMark,#lrCallout,#toastComp,#selCallout"
           data-show="#lrCalloutComp,#libCallout,#propsComp,#waInst,#lrInst" data-open="#gLibrary" data-scope="components"
           data-select="#lrInst"
           data-css="#waInst=background:linear-gradient(135deg,#7c4dff,#ff5d8f)|#swFill=background:linear-gradient(135deg,#7c4dff,#ff5d8f)"

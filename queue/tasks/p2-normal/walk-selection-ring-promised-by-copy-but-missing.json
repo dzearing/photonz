@@ -3,11 +3,11 @@
   "title": "walk: selection ring promised by copy but missing on canvas",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:42:55.756Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-23T07:37:14.501Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: creation-vision > capture-clickthrough (plus interaction-foundations > found-selection). Checklist sweep gate 4 fail: no .sel-ring/.handle/.mtag anywhere in walk.html; canvas wrapper is a bare .selwrap (~line 199) while step copy asserts 'selected on the canvas, in Layers, and in Properties at once' (~625) and 'the ring returns on the canvas' (~665). Add the canvas selection ring per img-grade-wt. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -24,6 +24,24 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T07:29:36.525Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T07:45:00.000Z",
+      "note": "Added #selCallout (.selwrap > .sel-ring + 4 .handle + .mtag) inside .wa-frame, bounds measured live in Chrome as the union of the note pill and its arrow (214,-30 108x134). Followed capture-wt's standalone-selwrap pattern; selection.js stamps it md/above automatically."
+    },
+    {
+      "t": "2026-08-23T07:46:00.000Z",
+      "note": "Wired steps: shown at 8 (callout lands selected) and 11 (ring returns), hidden at 9-10 (measure) and 14-15 (instance selected, purple .cinst takes over). Steps 12-13 keep the ring and data-set the .mtag to 'Callout · main'. Verified every step state via scripted click-through plus screenshots at 8, 11, 12; Reset restores baseline."
+    },
+    {
+      "t": "2026-08-23T07:37:14.500Z",
+      "note": "walk.html canvas now draws the promised selection ring: .selwrap/.sel-ring/.handle/.mtag over the callout layer (note + arrow bounds), shown at steps 8 and 11-13, hidden while measuring and once the instance takes selection; mtag flips to 'Callout · main' after Make component. Verified live in Chrome step-by-step with screenshots."
     }
-  ]
+  ],
+  "started": "2026-08-23T07:29:36.524Z",
+  "completed": "2026-08-23T07:37:14.501Z"
 }
