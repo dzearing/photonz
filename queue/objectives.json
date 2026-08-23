@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T00:00:56.523Z",
+  "updated": "2026-08-23T00:01:13.366Z",
   "epics": [
     {
       "id": "measure-redline",
@@ -175,6 +175,43 @@
         {
           "id": "image-paint",
           "title": "Drawing and painting with real brushes",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "icon-svg",
+      "title": "Make Photonz the best platform for building icons and animated SVGs",
+      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar.",
+      "children": [
+        {
+          "id": "icon-grid",
+          "title": "Draw on the icon grid: keylines, snapping, live previews at every size",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "icon-vector",
+          "title": "Vector tools tuned for icons: booleans, strokes, gradient paint",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "icon-animate",
+          "title": "Animate SVG properties on the timeline, keyframes like any layer",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "icon-export",
+          "title": "Export clean SVG, static and animated, that works everywhere",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "icon-sets",
+          "title": "Icon sets as a library scope: one style, one grid, whole families",
           "note": "",
           "children": []
         }
