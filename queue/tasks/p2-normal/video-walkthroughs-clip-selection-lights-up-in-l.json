@@ -3,11 +3,11 @@
   "title": "Video walkthroughs: clip selection lights up in Layers and on canvas",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T00:26:44.948Z",
-  "updated": "2026-08-23T00:27:19.001Z",
+  "updated": "2026-08-23T02:05:38.655Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: video-editing (mock-first video clickthroughs) + interaction-foundations > found-selection (canvas, Layers, and Properties agree). Consolidates six checklist-sweep tasks with one shared root cause: steps pass only a .clip id to data-select, and shared/components/walkthrough.js marks exactly one node and strips .sel from every .lrow, so the Layers rows naming the same clips never light up (agent-generate-wt ~line 520 shows data-select on a .lrow working; fix the shared pattern or each page's step markup). Pages and page-specific items: video-cut-wt (copy says 'its row lights up in Layers' ~342 but #lrRec/#lrRec2 never get .sel; D9 warn: no data-tl-summary). video-transition-wt (steps select #cut1/#txDiss/#xband/#clipBlack; #lrRec/#lrBroll/#lrOutro never .sel; D9 warn: no data-tl-summary). video-title-wt (step 3 claims 'seen three ways' ~433; #lrTitle/#lrArt/#lrL3 never .sel; gate 10 warn: property rows show no animate affordance, no dormant-property catalogue per D10). video-move-wt (all 8 steps select #clipArt, #lrArt never .sel; gate 10 warn: Animate lists Position/Scale/Opacity only, D10 also requires Rotation and Blur; D9 warn: no data-tl-summary). video-zoom-wt (zero .sel-ring in file AND #lrRec never .sel; gate 10 fail: Reframe offers only the keyed Scale/Centre instead of the D10 catalogue). video-freeze-wt (canvas ring only for the arrow; #lrRec/#lrStill/#lrArrow shown/hidden but never .sel; gate 10 warn: no animatable-property rows, dead keyframe CSS ~38-44). Replaces the six per-page tasks dropped in the 2026-08-23 retriage.",
@@ -20,6 +20,27 @@
     {
       "t": "2026-08-23T00:27:19.001Z",
       "note": "seq 260 -> 10"
+    },
+    {
+      "t": "2026-08-23T02:05:38.655Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T02:20:00.000Z",
+      "note": "Direction call: the task title said 'lights up in Layers', but UX-PATTERNS (the source of truth named in queue/objectives.json) and the canonical video.html resolved on 2026-08-21 that a workspace with a timeline has NO Layers group: the timeline IS the layer list. The six wt pages predated that rule and still carried stale Layers panels, which is the real reason the sweep found rows that never lit. Conformed the pages to the canon instead of investing in a panel the design already deleted."
+    },
+    {
+      "t": "2026-08-23T02:21:00.000Z",
+      "note": "Shared fix: walkthrough.js data-select now takes a comma list (every listed target lights, class per target) and the exclusivity clear covers .editpt/.xband, so one step can mark the same selection in every surface and a cut/band selection actually replaces the previous one. Backward compatible; agent-generate-wt regression-checked in the browser."
+    },
+    {
+      "t": "2026-08-23T02:22:00.000Z",
+      "note": "Per page: removed gLayers dgrp + rail tab + layerMenu from all six; selection now reads timeline clip (.sel) + canvas sel-ring + Properties. Added full-frame rings (pvwrap.selwrap + #frameRing) to cut, zoom, freeze; freeze hands off frame ring to arrow ring at step 7; transition steps select tile+band and band+black clip together. D9: data-tl-summary on all six timelines (verified: collapses to a 30px row stating the selection). D10: Animate catalogue rows added (move gained Rotation+Blur; zoom gained Opacity/Rotation/Blur beside Reframe; freeze gained the full five-row catalogue; title gained catalogues on the text and art panes). Deleted freeze's dead keyframe CSS. Rewrote the copy that claimed Layers rows."
+    },
+    {
+      "t": "2026-08-23T02:23:00.000Z",
+      "note": "Verified by scripted step-through of all six pages in Chrome (selection state + ring visibility asserted per step), shared/check-states.mjs and check-elevation.mjs green, Scripts/test.sh green (932 tests)."
     }
-  ]
+  ],
+  "started": "2026-08-23T02:05:38.654Z"
 }

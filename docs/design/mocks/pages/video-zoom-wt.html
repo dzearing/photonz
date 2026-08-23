@@ -91,7 +91,7 @@
 
           <div class="cnv">
             <div class="canvas">
-              <div class="pvwrap">
+              <div class="pvwrap selwrap">
                 <div class="pvframe" id="cvFrame">
                   <div class="shot" id="cvShot">
                     <div class="sb"><i></i><i></i><i></i></div>
@@ -103,6 +103,7 @@
                   </div>
                   <div class="zoomtag wt-off" id="zoomTag">220%</div>
                 </div>
+                <span class="sel-ring wt-off" id="frameRing"></span>
               </div>
             </div>
 
@@ -185,18 +186,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers" style="--gh:76px">
-              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
-                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-              </div>
-              <div class="dgrp-b">
-                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-keyframe wt-off" id="lrRecKf"></i><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
-            <div class="splitter h" data-min="90" data-max="300"></div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:330px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -219,6 +210,16 @@
                       <button class="btn ghost icon sm" id="kfCentre" title="Keyframe Centre"><i class="ic ic-keyframe"></i></button></div>
                     <div class="irow"><span class="rl">&nbsp;</span><button class="btn secondary sm" id="btnReset"><i class="ic ic-undo"></i> Reset reframe</button></div>
                     <p class="note" id="pZoomNote">Reframing is Scale and Centre on the clip. A punch-in is those two values changing over time, which is why it uses the same keys and the same lanes as anything else that moves.</p>
+                  </div>
+
+                  <div class="section">
+                    <div class="sec-h">Animate <span class="mut">no keys</span></div>
+                    <div class="irow split"><span class="rl">Opacity</span><span class="field"><span class="v">100%</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Opacity"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Rotation</span><span class="field"><span class="v">0&deg;</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Rotation"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Blur</span><span class="field"><span class="v">0</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Blur"><i class="ic ic-keyframe"></i></button></div>
                   </div>
 
                   <div class="section wt-off" id="secEase">
@@ -280,15 +281,10 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
             <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -311,7 +307,7 @@
           <span class="tc" id="tcEnd">0:18</span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:170px">
+        <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:18" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
           <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
             <div class="lane abs"><div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div></div>
@@ -346,20 +342,20 @@
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-set="#propKind=Clip">
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>screen-recording</b> clip</p>
           <p class="wt-where">the V1 track</p>
-          <p class="wt-res">Properties shows the clip and a <b>Reframe</b> section: Scale and Centre. There is no crop mode and no separate effect. Where you are looking is a property of the clip.</p>
+          <p class="wt-res">the clip outlines on the timeline, a ring lands on the frame, and Properties shows a <b>Reframe</b> section: Scale and Centre. There is no crop mode and no separate effect. Where you are looking is a property of the clip.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Go to where the move starts"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:03" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
           data-set="#propKind=Clip|#tcCur=0:03">
         <div class="wt-cap vid">
@@ -373,7 +369,7 @@
       <li class="wt-step"
           data-title="Record the wide shot"
           data-cue="#kfScale" data-cue-label="Click the keyframe button on Scale" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#lrRecKf" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
           data-css="#scrubFill=width:16.7%|#scrubKnob=left:16.7%|#playhead=--t:0.167"
           data-set="#propKind=Clip|#tcCur=0:03|#pKeyCount=1 key|#vScale=100%">
         <div class="wt-cap vid">
@@ -387,7 +383,7 @@
       <li class="wt-step"
           data-title="Go to where it should be tight"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:05" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#lrRecKf" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=1 key|#vScale=100%">
         <div class="wt-cap vid">
@@ -401,7 +397,7 @@
       <li class="wt-step"
           data-title="Zoom in"
           data-cue="#vScale" data-cue-label="Drag the Scale value up to 220%" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=2 keys|#vScale=220%">
         <div class="wt-cap vid">
@@ -415,7 +411,7 @@
       <li class="wt-step"
           data-title="Put the button in the middle"
           data-cue="#cvFrame" data-cue-label="Drag the picture to frame the button" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810">
         <div class="wt-cap vid">
@@ -429,7 +425,7 @@
       <li class="wt-step"
           data-title="Ease the move"
           data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-activate="#cvEase"
           data-css="#scrubFill=width:27.8%|#scrubKnob=left:27.8%|#playhead=--t:0.278|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
           data-set="#propKind=Clip|#tcCur=0:05|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pEaseState=Ease in-out">
@@ -444,7 +440,7 @@
       <li class="wt-step"
           data-title="Let it hold"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#lrRecKf,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#laneScale,#kdS1,#kdS2,#segScale,#secEase,#zoomTag,#laneCentre,#kdC1,#kdC2,#segCentre" data-hide="#propsEmpty"
           data-activate="#cvEase"
           data-css="#scrubFill=width:44.4%|#scrubKnob=left:44.4%|#playhead=--t:0.444|#cvShot=transform:scale(2.2) translate(-13%,-9.7%)"
           data-set="#propKind=Clip|#tcCur=0:08|#pKeyCount=4 keys|#vScale=220%|#vCentre=1480, 810|#pZoomNote=After the last key a value simply stays. Pulling back out later is one more key holding the old 100%, which is why the wide shot was worth recording in step 3.">

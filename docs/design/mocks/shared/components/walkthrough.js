@@ -39,10 +39,13 @@
                                  [data-scope-label] text
        data-activate="#id"       exclusive .on among that element's
                                  like-classed siblings (workspace switcher)
-       data-select="#id"         exclusive selection across .lrow/.libtile/
-                                 .filmcard/.clip. Class comes from the step's
-                                 data-select-class, else the target's
-                                 data-sel-class, else "sel"
+       data-select="#a,#b"       exclusive selection across .lrow/.libtile/
+                                 .filmcard/.clip/.editpt/.xband. Every listed
+                                 target lights, so ONE step can mark the same
+                                 selection in every surface that shows it
+                                 (found-selection: the surfaces must agree).
+                                 Class comes from the step's data-select-class,
+                                 else the target's data-sel-class, else "sel"
        data-show / data-hide     drop or add .wt-off (reveal canvas content,
                                  selection rings, empty states, badges)
        data-sheet-open/-shut     the .sheet.down overlay (history)
@@ -166,14 +169,13 @@
 
       v = s.getAttribute('data-select');
       if (v) {
-        all('.lrow,.libtile,.filmcard,.clip', stage).forEach(function (r) {
+        all('.lrow,.libtile,.filmcard,.clip,.editpt,.xband', stage).forEach(function (r) {
           r.classList.remove('sel', 'selc');
         });
-        var pick = stage.querySelector(v);
-        if (pick) {
+        list(v).forEach(function (pick) {
           pick.classList.add(s.getAttribute('data-select-class') ||
             pick.getAttribute('data-sel-class') || 'sel');
-        }
+        });
       }
 
       list(s.getAttribute('data-show')).forEach(function (e) { e.classList.remove('wt-off'); });

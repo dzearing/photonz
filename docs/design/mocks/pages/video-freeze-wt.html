@@ -30,18 +30,11 @@
 
   /* lanes that place clips at real times */
   #video-freeze-wt .lane.abs{display:block;position:relative}
-  #video-freeze-wt .lane.abs>.clip,#video-freeze-wt .lane.abs>.kfd,#video-freeze-wt .lane.abs>.kfseg{position:absolute}
+  #video-freeze-wt .lane.abs>.clip{position:absolute}
   #video-freeze-wt .clip{white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis;display:block;line-height:34px;top:0}
   #video-freeze-wt .clip.gfx{background:linear-gradient(135deg,#febc2e,#ff9d5c)}
   #video-freeze-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
 
-  /* keyframe lanes · the same timeline, one row per animated property */
-  #video-freeze-wt .track.kft{margin:2px 0}
-  #video-freeze-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
-  #video-freeze-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
-  #video-freeze-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
-    border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
-  #video-freeze-wt .kfseg{position:absolute;top:50%;height:2px;border-radius:2px;background:var(--accent);opacity:.45;transform:translateY(-50%)}
 
   /* a still is a clip whose in and out are the same frame, so it gets its
      own read on the timeline: hatched, and labelled with the frame it holds */
@@ -96,7 +89,7 @@
 
           <div class="cnv">
             <div class="canvas">
-              <div class="pvwrap">
+              <div class="pvwrap selwrap">
                 <div class="pvframe" id="cvFrame">
                   <div class="shot">
                     <div class="sb"><i></i><i></i><i></i></div>
@@ -117,6 +110,7 @@
 
                   <div class="frzBadge wt-off" id="frzBadge"><i class="ic xs ic-pause"></i> <span id="frzBadgeTx">Held frame · 0:06</span></div>
                 </div>
+                <span class="sel-ring wt-off" id="frameRing"></span>
               </div>
             </div>
 
@@ -199,20 +193,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers" style="--gh:100px">
-              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span>
-                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-              </div>
-              <div class="dgrp-b">
-                <div class="lrow wt-off" id="lrArrow"><i class="ic ic-cursor"></i><span class="nm">Arrow</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow wt-off" id="lrStill"><i class="ic ic-pause"></i><span class="nm">Still · 0:06</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
-            <div class="splitter h" data-min="90" data-max="300"></div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:320px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -242,6 +224,19 @@
                       </span>
                     </div>
                     <p class="note" id="pFreezeNote">A freeze is not a new kind of object. It is a clip whose in and out are the same frame, which is why it trims, moves, and takes a transition like any other clip.</p>
+                  </div>
+                  <div class="section">
+                    <div class="sec-h">Animate <span class="mut">no keys</span></div>
+                    <div class="irow split"><span class="rl">Opacity</span><span class="field"><span class="v">100%</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Opacity"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Position</span><span class="field"><span class="v">960, 540</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Position"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Scale</span><span class="field"><span class="v">100%</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Scale"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Rotation</span><span class="field"><span class="v">0&deg;</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Rotation"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Blur</span><span class="field"><span class="v">0</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Blur"><i class="ic ic-keyframe"></i></button></div>
                   </div>
                 </div>
 
@@ -303,15 +298,10 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
             <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -334,7 +324,7 @@
           <span class="tc" id="tcEnd">0:18</span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:160px">
+        <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:06" style="min-height:160px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
           <div class="track wt-off" id="trackGfx"><span class="tl"><i class="ic xs ic-cursor"></i> Gfx</span>
             <div class="lane abs">
@@ -381,7 +371,7 @@
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.333"
           data-set="#tcCur=0:06|#propKind=Clip">
         <div class="wt-cap vid">
@@ -395,9 +385,9 @@
       <li class="wt-step"
           data-title="Freeze the frame"
           data-cue="#btnFreeze" data-cue-label="Click Freeze frame" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7,#clipAud2,#audGap" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7,#clipAud2,#audGap" data-hide="#propsEmpty"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:28.57%"
-          data-set="#tcCur=0:06|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21">
+          data-set="#tcCur=0:06|#propKind=Clip|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">3</span>
           <p class="wt-do"><b>Freeze frame</b></p>
@@ -409,10 +399,10 @@
       <li class="wt-step"
           data-title="Decide what gets pushed"
           data-cue="#ripPic" data-cue-label="Click Picture only" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:06|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21|#pFreezeNote=Everything pushes the whole timeline, which keeps sound locked to the picture it belongs to. Picture only holds the image while the voice keeps running, which is what you want when you are talking over the frozen frame.">
+          data-set="#tcCur=0:06|#propKind=Clip|#docLen=0:21|#tcEnd=0:21|#pFreezeNote=Everything pushes the whole timeline, which keeps sound locked to the picture it belongs to. Picture only holds the image while the voice keeps running, which is what you want when you are talking over the frozen frame.">
         <div class="wt-cap vid">
           <span class="wt-n">4</span>
           <p class="wt-do"><b>Picture only</b></p>
@@ -424,10 +414,10 @@
       <li class="wt-step"
           data-title="Look inside the hold"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:08|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21|#frzBadgeTx=Held frame · 0:06">
+          data-set="#tcCur=0:08|#propKind=Clip|#docLen=0:21|#tcEnd=0:21|#frzBadgeTx=Held frame · 0:06">
         <div class="wt-cap vid">
           <span class="wt-n">5</span>
           <p class="wt-do" data-verb="Drag">the <b>playhead</b> two seconds further, to <b>0:08</b></p>
@@ -439,10 +429,10 @@
       <li class="wt-step"
           data-title="Pick up the Shape tool"
           data-cue="#tShape" data-cue-label="Click the Shape tool" data-cue-place="top"
-          data-tool="#tShape" data-select="#clipA" data-show="#propsClip,#clipFrz,#clipB,#lrStill,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-tool="#tShape" data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:08|#propKind=Clip|#layerCount=3|#docLen=0:21|#tcEnd=0:21">
+          data-set="#tcCur=0:08|#propKind=Clip|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
           <p class="wt-do">the <b>Shape</b> tool, or press <code>R</code></p>
@@ -454,10 +444,10 @@
       <li class="wt-step"
           data-title="Point at the thing"
           data-cue="#cvArrow" data-cue-label="Drag an arrow towards the button" data-cue-place="right"
-          data-tool="#tShape" data-select="#clipArrow" data-show="#clipFrz,#clipB,#lrStill,#frzBadge,#tick7,#cvArrow,#arrowRing,#trackGfx,#clipArrow,#lrArrow,#propsArrow" data-hide="#propsEmpty,#propsClip,#clipAud2,#audGap"
+          data-tool="#tShape" data-select="#clipArrow" data-show="#clipFrz,#clipB,#frzBadge,#tick7,#cvArrow,#arrowRing,#trackGfx,#clipArrow,#propsArrow" data-hide="#propsEmpty,#propsClip,#frameRing,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:08|#propKind=Shape|#layerCount=4|#docLen=0:21|#tcEnd=0:21">
+          data-set="#tcCur=0:08|#propKind=Shape|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag">an <b>arrow</b> across the frame, towards the button</p>

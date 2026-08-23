@@ -92,7 +92,7 @@
 
           <div class="cnv">
             <div class="canvas">
-              <div class="pvwrap">
+              <div class="pvwrap selwrap">
                 <div class="pvframe" id="cvFrame">
                   <div class="shot">
                     <div class="sb"><i></i><i></i><i></i></div>
@@ -104,6 +104,7 @@
                   </div>
                   <div class="toast wt-off" id="toastDetach"><i class="ic sm ic-audio"></i> Audio detached to its own layer</div>
                 </div>
+                <span class="sel-ring wt-off" id="frameRing"></span>
               </div>
             </div>
 
@@ -186,19 +187,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers" style="--gh:88px">
-              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span>
-                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-              </div>
-              <div class="dgrp-b">
-                <div class="lrow wt-off" id="lrRec2"><i class="ic ic-image"></i><span class="nm">screen-recording · 2</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow wt-off" id="lrVoice"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
-            <div class="splitter h" data-min="90" data-max="300"></div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:330px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -272,15 +262,10 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
             <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -303,7 +288,7 @@
           <span class="tc" id="tcEnd">0:18</span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:126px">
+        <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:15" style="min-height:126px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
           <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
             <div class="lane abs">
@@ -333,20 +318,20 @@
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-set="#propKind=Clip">
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>screen-recording</b> clip</p>
           <p class="wt-where">the V1 track on the timeline</p>
-          <p class="wt-res">the clip outlines, its row lights up in Layers, and Properties shows what a clip really is: a layer with an <b>in</b> and an <b>out</b>. The little waveform drawn inside it is the tell that its sound is still part of the picture.</p>
+          <p class="wt-res">the clip outlines on the timeline, a ring lands on the frame, and Properties shows what a clip really is: a layer with an <b>in</b> and an <b>out</b>. The little waveform drawn inside it is the tell that its sound is still part of the picture.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Get the sound out of the picture"
           data-cue="#btnDetach" data-cue-label="Click Detach audio" data-cue-place="left"
-          data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice,#toastDetach" data-hide="#propsEmpty,#vWave,#audEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipVoice,#toastDetach" data-hide="#propsEmpty,#vWave,#audEmpty"
           data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio">
         <div class="wt-cap vid">
           <span class="wt-n">2</span>
@@ -359,7 +344,7 @@
       <li class="wt-step"
           data-title="Go to the moment to cut"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:07" data-cue-place="top"
-          data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39"
           data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07">
         <div class="wt-cap vid">
@@ -373,7 +358,7 @@
       <li class="wt-step"
           data-title="Pick up the Blade"
           data-cue="#tBlade" data-cue-label="Click the Blade tool" data-cue-place="top"
-          data-tool="#tBlade" data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-tool="#tBlade" data-select="#clipA" data-show="#frameRing,#propsClip,#clipVoice" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39"
           data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07">
         <div class="wt-cap vid">
@@ -387,9 +372,9 @@
       <li class="wt-step"
           data-title="Split it"
           data-cue="#clipA" data-cue-label="Click the clip at the playhead" data-cue-place="top"
-          data-tool="#tBlade" data-select="#clipA" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-tool="#tBlade" data-select="#clipA" data-show="#frameRing,#propsClip,#clipVoice,#clipB" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%"
-          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pOut=0:07">
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#pOut=0:07">
         <div class="wt-cap vid">
           <span class="wt-n">5</span>
           <p class="wt-do">the <b>clip</b>, at the playhead</p>
@@ -401,9 +386,9 @@
       <li class="wt-step"
           data-title="Take the second piece"
           data-cue="#clipB" data-cue-label="Click screen-recording · 2" data-cue-place="top"
-          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-tool="#tSelect" data-select="#clipB" data-show="#frameRing,#propsClip,#clipVoice,#clipB" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%"
-          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:07|#pOut=0:18">
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#pClipName=screen-recording · 2|#pIn=0:07|#pOut=0:18">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
           <p class="wt-do">the second half, <b>screen-recording · 2</b>, with the Select tool</p>
@@ -415,9 +400,9 @@
       <li class="wt-step"
           data-title="Trim off the fumble"
           data-cue="#clipB" data-cue-label="Drag its left edge to 0:10" data-cue-place="top"
-          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2,#theGap" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-tool="#tSelect" data-select="#clipB" data-show="#frameRing,#propsClip,#clipVoice,#clipB,#theGap" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%|#clipB=left:55.5%;width:44.5%"
-          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#pTrimNote=In moved from 0:07 to 0:10. The three seconds are not deleted, they are just not being read: drag the edge back out and they return.">
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#pTrimNote=In moved from 0:07 to 0:10. The three seconds are not deleted, they are just not being read: drag the edge back out and they return.">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag">the piece’s <b>left edge</b> right, to <b>0:10</b></p>
@@ -429,9 +414,9 @@
       <li class="wt-step"
           data-title="Close the gap"
           data-cue="#clipB" data-cue-label="Drag the piece left until it snaps" data-cue-place="top"
-          data-tool="#tSelect" data-select="#clipB" data-show="#propsClip,#clipVoice,#lrVoice,#clipB,#lrRec2,#snapLine" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
+          data-tool="#tSelect" data-select="#clipB" data-show="#frameRing,#propsClip,#clipVoice,#clipB,#snapLine" data-hide="#propsEmpty,#vWave,#audEmpty,#toastDetach"
           data-css="#scrubFill=width:39%|#scrubKnob=left:39%|#playhead=--t:0.39|#clipA=width:39%|#clipB=left:39%;width:44.5%"
-          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#layerCount=3|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#docLen=0:15|#tcEnd=0:15">
+          data-set="#propKind=Clip|#pSoundState=its own layer|#btnDetachLb=Re-attach audio|#tcCur=0:07|#pClipName=screen-recording · 2|#pIn=0:10|#pOut=0:18|#docLen=0:15|#tcEnd=0:15">
         <div class="wt-cap vid">
           <span class="wt-n">8</span>
           <p class="wt-do" data-verb="Drag">the piece <b>left</b> until it snaps against the first half</p>

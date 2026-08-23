@@ -229,20 +229,8 @@
           <!-- THE RIGHT DOCK -->
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers" style="--gh:96px">
-              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt">4</span>
-                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-              </div>
-              <div class="dgrp-b">
-                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrBroll"><i class="ic ic-image"></i><span class="nm">b-roll.mov</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrOutro"><i class="ic ic-image"></i><span class="nm">outro.mov</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
-            <div class="splitter h" data-min="90" data-max="300"></div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · a cut is not a layer, so this is the one place it
                  can speak for itself, including what it can afford -->
             <div class="dgrp" id="gProps" style="--gh:398px">
@@ -349,15 +337,10 @@
           </div>
 
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
-            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
             <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -380,7 +363,7 @@
           <span class="tc" id="tcEnd">0:18</span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:186px">
+        <div class="timeline" id="timeline" data-tl-summary="Cross dissolve · 1.0s at 0:08" style="min-height:186px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
 
           <!-- V1 · the result. Clips butt. A cut draws nothing until you point
@@ -473,7 +456,7 @@
       <li class="wt-step"
           data-title="Take the dissolve"
           data-cue="#txDiss" data-cue-label="Click Cross dissolve" data-cue-place="left"
-          data-select="#txDiss" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign" data-hide="#propsEmpty,#rowAdd"
+          data-select="#txDiss,#xband" data-show="#propsCut,#spareA,#spareB,#xband,#rowType,#rowLen,#rowPaid,#rowAlign" data-hide="#propsEmpty,#rowAdd"
           data-pop="#transPick"
           data-set="#propKind=Edit point|#pTransState=Cross dissolve|#pType=Cross dissolve|#pLen=0.6s|#pPaid=0.3s + 0.3s of spare">
         <div class="wt-cap vid">
@@ -546,7 +529,7 @@
       <li class="wt-step"
           data-title="Sit on black for a beat"
           data-cue="#selHold" data-cue-label="Set Hold on black to 3.0s" data-cue-place="left"
-          data-select="#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
+          data-select="#xband,#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
           data-class="#btnExpand=open|#xband=blk"
           data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:38.095%;width:9.524%|#spareB=left:30.952%;width:7.143%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:1|#scrubFill=width:38.1%|#scrubKnob=left:38.1%|#playhead=--t:0.381"
           data-set="#propKind=Transition|#tcCur=0:08|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s|#docLen=0:21|#tcEnd=0:21|#pTransNote=This is the only thing on this page that moved a clip, and you asked for it by name. Set the hold back to 0.0s and b-roll and outro slide back to where they were.">
@@ -561,7 +544,7 @@
       <li class="wt-step"
           data-title="Move along to the next cut"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:17" data-cue-place="top"
-          data-select="#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
+          data-select="#xband,#clipBlack" data-show="#propsCut,#xband,#rowType,#rowLen,#rowHold,#rowA,#rowB,#fadeOut,#fadeIn,#xFadeOut,#xFadeIn,#clipBlack,#tick7" data-hide="#propsEmpty,#rowAdd,#rowPaid,#rowAlign,#usedA,#usedB,#bothMark,#spareA,#spareB"
           data-class="#btnExpand=open|#xband=blk"
           data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:38.095%;width:9.524%|#spareB=left:30.952%;width:7.143%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:0|#frB=opacity:1|#scrubFill=width:81%|#scrubKnob=left:81%|#playhead=--t:0.81"
           data-set="#propKind=Transition|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pTransState=Dip to black|#pType=Dip to black|#pLen=1.0s|#pHold=3.0s">

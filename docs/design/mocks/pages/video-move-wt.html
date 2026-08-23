@@ -207,19 +207,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <div class="dgrp" id="gLayers" style="--gh:88px">
-              <div class="dgrp-h" id="gLayersH"><span class="ttl">Layers</span><span class="cnt" id="layerCount">3</span>
-                <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-              </div>
-              <div class="dgrp-b">
-                <div class="lrow" id="lrArt"><i class="ic ic-sparkle"></i><span class="nm">Sparkle</span><i class="ic sm ic-keyframe wt-off" id="lrArtKf"></i><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrRec"><i class="ic ic-image"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
-            <div class="splitter h" data-min="90" data-max="300"></div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:300px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -242,6 +231,10 @@
                       <button class="btn ghost icon sm" id="kfScale" title="Keyframe Scale"><i class="ic ic-keyframe"></i></button></div>
                     <div class="irow split"><span class="rl">Opacity</span><span class="field"><span class="v">100%</span></span>
                       <button class="btn ghost icon sm" id="kfOpacity" title="Keyframe Opacity"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Rotation</span><span class="field"><span class="v">0&deg;</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Rotation"><i class="ic ic-keyframe"></i></button></div>
+                    <div class="irow split"><span class="rl">Blur</span><span class="field"><span class="v">0</span></span>
+                      <button class="btn ghost icon sm" title="Keyframe Blur"><i class="ic ic-keyframe"></i></button></div>
                     <p class="note">A key records a value at a moment. The button that makes one sits on the row of the value it records, so there is no separate mode to enter.</p>
                   </div>
 
@@ -310,15 +303,10 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
-          <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
             <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
@@ -341,7 +329,7 @@
           <span class="tc" id="tcEnd">0:18</span>
         </div>
 
-        <div class="timeline" id="timeline" style="min-height:170px">
+        <div class="timeline" id="timeline" data-tl-summary="Sparkle · 0:04 / 0:08" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
           <div class="track"><span class="tl"><i class="ic xs ic-sparkle"></i> Gfx</span>
             <div class="lane abs">
@@ -382,7 +370,7 @@
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Sparkle</b> clip</p>
           <p class="wt-where">the Gfx track on the timeline</p>
-          <p class="wt-res">one selection in three places: the clip outlines, the row lights up in Layers, and Properties shows this layer’s Transform and an <b>Animate</b> section. Nothing about animating is hidden behind a mode.</p>
+          <p class="wt-res">one selection in three places: the ring on the canvas, the clip outlined on the timeline, and Properties showing this layer’s Transform and an <b>Animate</b> section. Nothing about animating is hidden behind a mode.</p>
         </div>
       </li>
 
@@ -403,21 +391,21 @@
       <li class="wt-step"
           data-title="Record where it starts"
           data-cue="#kfPos" data-cue-label="Click the keyframe button on Position" data-cue-place="left"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#lrArtKf,#secEase" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
           data-set="#propKind=Asset layer|#tcCur=0:04|#pKeyCount=1 key|#vPosition=280, 690">
         <div class="wt-cap vid">
           <span class="wt-n">3</span>
           <p class="wt-do">the <b>keyframe</b> button on the <b>Position</b> row</p>
           <p class="wt-where">Properties, in the Animate section</p>
-          <p class="wt-res">Position starts animating. A diamond lands at <b>0:04</b> on a new <b>Position</b> lane, directly under the clip and on the same ruler. The Layers row picks up a keyframe glyph so you can see at a glance that this layer moves.</p>
+          <p class="wt-res">Position starts animating. A diamond lands at <b>0:04</b> on a new <b>Position</b> lane, directly under the clip and on the same ruler. That lane is the at-a-glance tell that this layer moves.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Go to where it should arrive"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#lrArtKf,#secEase" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=1 key|#vPosition=280, 690">
         <div class="wt-cap vid">
@@ -431,7 +419,7 @@
       <li class="wt-step"
           data-title="Drag it to the other point"
           data-cue="#cvArt" data-cue-label="Drag the graphic up beside the button" data-cue-place="left"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#lrArtKf,#secEase,#pathLine" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290">
         <div class="wt-cap vid">
@@ -445,7 +433,7 @@
       <li class="wt-step"
           data-title="Ease the move"
           data-cue="#cvEase" data-cue-label="Click Ease in-out" data-cue-place="left"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#lrArtKf,#secEase,#pathLine" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
           data-activate="#cvEase"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290|#pEaseState=Ease in-out">
@@ -460,7 +448,7 @@
       <li class="wt-step"
           data-title="Bend the path"
           data-cue="#pathHandle" data-cue-label="Drag the path handle up" data-cue-place="top"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#lrArtKf,#secEase,#pathArc" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
           data-activate="#cvEase" data-class="#pathCur=on|#pathStr=-on"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290|#pEaseState=Ease in-out|#pPathNote=The handle is the curve’s control point. Drag it and the graphic arcs; double-click it and the path snaps back to straight.">
@@ -475,7 +463,7 @@
       <li class="wt-step"
           data-title="Scrub through it"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:06" data-cue-place="top"
-          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#lrArtKf,#secEase,#pathArc" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
           data-activate="#cvEase" data-class="#pathCur=on|#pathStr=-on"
           data-css="#scrubFill=width:33%|#scrubKnob=left:33%|#playhead=--t:0.33|#cvArt=left:35%;top:28%"
           data-set="#propKind=Asset layer|#tcCur=0:06|#pKeyCount=2 keys|#vPosition=790, 320|#pX=790|#pY=320">
