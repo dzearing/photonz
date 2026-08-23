@@ -65,6 +65,10 @@ struct CanvasView: NSViewRepresentable {
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
+    /// The same analysis's brightness field: element detection walks it to find
+    /// how far each boundary runs, which is what tells a settings row from the
+    /// card around it. Empty until the sweep lands.
+    let lumaField: LumaField
     let onViewSizeChange: (CGSize) -> Void
     let onViewportChange: (Viewport) -> Void
     /// (region, captureLayers): capture is true for the arrow tool's marquee
@@ -147,7 +151,7 @@ struct CanvasView: NSViewRepresentable {
                    measureToolMode: measureToolMode,
                    measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
-                   isCanvasSelected: isCanvasSelected)
+                   lumaField: lumaField, isCanvasSelected: isCanvasSelected)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -448,6 +452,7 @@ final class CanvasNSView: NSView {
     /// Detected UI edges, mirrored from EditorState; measure corners magnetize to
     /// these (and the pixel grid) while dragging.
     private var edgeMap = EdgeMap.empty
+    private var lumaField = LumaField.empty
     /// Document-space x/y of the edge(s) a measure corner is currently snapped to,
     /// drawn as a highlight while the corner is held. Cleared on mouse-up.
     private var snapGuide: (x: CGFloat?, y: CGFloat?)?
@@ -1097,7 +1102,11 @@ final class CanvasNSView: NSView {
         let style = measureContent ?? MeasureContent()
         switch measureToolMode {
         case .size:
-            let ladder = ElementBounds.candidates(at: probe, in: edgeMap)
+            let ladder = ElementBounds.candidates(
+                at: probe, in: edgeMap, luma: lumaField,
+                // Ten logical points is the smallest thing worth calling an
+                // element, whatever the capture's scale.
+                minElement: max(10, 10 * document.pixelScale))
             guard let rect = ladder.isEmpty
                     ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
                 hideMeasureHoverReadout()
@@ -2152,7 +2161,8 @@ final class CanvasNSView: NSView {
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent, measureContent: measureContent,
               measureToolMode: measureToolMode, measureCandidateLevel: measureCandidateLevel,
-              measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap)
+              measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
+              lumaField: lumaField)
         onViewportChange(next)
     }
 
@@ -2169,7 +2179,8 @@ final class CanvasNSView: NSView {
                measureToolMode: MeasureToolMode = .distance,
                measureCandidateLevel: Int = 0,
                measureSnapsToCenters: Bool = false,
-               edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
+               edgeMap: EdgeMap, lumaField: LumaField,
+               isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
@@ -2194,6 +2205,7 @@ final class CanvasNSView: NSView {
         }
         self.measureSnapsToCenters = measureSnapsToCenters
         self.edgeMap = edgeMap
+        self.lumaField = lumaField
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds
         if tool != self.tool {

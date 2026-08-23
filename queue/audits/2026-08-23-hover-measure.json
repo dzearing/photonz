@@ -1,0 +1,30 @@
+{
+  "feature": "Size mode reads the element you are pointing at",
+  "epic": "measure-redline",
+  "summary": "Point at a button, a switch or a settings row in Measure's Size mode and the outline now wraps the whole thing and reads its real width and height. Before, a button read nothing at all, a switch read a 12 by 12 sliver of its knob, and a row stopped at its label text.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open queue/audits/2026-08-23-measure-00-capture.png, press i for Measure, and set the mode chip to Size.",
+  "try": [
+    { "do": "Point at the blue Save Changes button, anywhere on it, including over the words. It should read 124 px by 30 px and never change as you move across it." },
+    { "do": "Point at the grey Reset button next to it. 72 px by 30 px." },
+    { "do": "Point at the dead centre of a green switch, right on the white knob. It should read 42 px by 24 px, the switch, not the knob." },
+    { "do": "Point at the empty space in a settings row, between the label and the switch. 624 px by 44 px." },
+    { "do": "Now point at the row's label text instead. Same 624 by 44." },
+    { "do": "Press ] twice from a row. The pick should grow to two rows, then to the whole card, always containing what it just showed." },
+    { "do": "Point at the grey page background outside the cards. Nothing should appear at all." },
+    { "do": "Click once on the button. Two calipers land, 124 and 30, in one undo step." }
+  ],
+  "evaluate": [
+    "When you sweep the pointer across a button, does the readout hold perfectly still, or does it twitch enough to make you doubt the number?",
+    "Pointing at the middle of a switch gives you the switch. Is that what you expected, or did you want the knob and now have to press [ to get it?",
+    "The row reads 624 wide, which is the row, not the 656-wide card it sits in. Is the row the thing you wanted measured?",
+    "Half the pane reads nothing at all (the whitespace inside cards, the gaps between them). Does the silence feel right, or does it feel broken?",
+    "Is one press of ] a big enough jump, or does the ladder skip past something you wanted?"
+  ],
+  "rough": [
+    "The empty text field reads 218 px wide when it is truly 220. A 1 px border between two whites puts the boundary reading on its inside flank at both ends. Pinned in tests so it cannot get worse, not fixed.",
+    "The card reads 652 wide when it is truly 656. Its outline is white on near-white under a drop shadow, so the edge is genuinely soft.",
+    "Point exactly ON a divider between two rows and the pick jumps to both rows at once, because a boundary under the pointer cannot be the element's own edge. Correct, but it looks like a glitch if you did not expect it.",
+    "The band of whitespace between two cards reads as a 652 by 20 element. It is honest (that band does have a top and a bottom) but it is not an element, and Gap mode is the right tool for it.",
+    "Nothing here was seen with human eyes this session: screen recording is blocked for this agent, so the play-test was run numerically through the shipping code over the real capture, plus stability sweeps across each element. The feel of the outline following the pointer is unverified."
+  ]
+}

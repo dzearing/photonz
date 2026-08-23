@@ -21,8 +21,25 @@ public enum EdgeMapAnalyzer {
     /// Sobel Gy weights (responds to horizontal boundaries).
     private static let sobelY = CIVector(values: [-1, -2, -1, 0, 0, 0, 1, 2, 1], count: 9)
 
+    /// Everything one pass over a bitmap yields for measuring: where the
+    /// boundaries are (`EdgeMap`) and how bright every pixel is (`LumaField`,
+    /// which element detection walks to find how far each boundary runs). One
+    /// struct because the two are computed together and cached together.
+    public struct Analysis: Sendable {
+        public var edges: EdgeMap
+        public var luma: LumaField
+
+        public static let empty = Analysis(edges: .empty, luma: .empty)
+    }
+
     /// Analyzes `image` and returns its locally-queryable edge map.
     public static func analyze(_ image: CGImage) -> EdgeMap {
+        analyzeFully(image).edges
+    }
+
+    /// Analyzes `image` into both the edge map and the full-resolution luma
+    /// field element detection needs.
+    public static func analyzeFully(_ image: CGImage) -> Analysis {
         let w = image.width, h = image.height
         guard w > 0, h > 0 else { return .empty }
         let bounds = CGRect(x: 0, y: 0, width: w, height: h)
@@ -78,6 +95,7 @@ public enum EdgeMapAnalyzer {
         // a third CI render. 0...1 units; top-left row order by construction.
         var rgba = [UInt8](repeating: 0, count: w * h * 4)
         var luma: [Double]?
+        var field = LumaField.empty
         let drewImage = rgba.withUnsafeMutableBytes { raw -> Bool in
             guard let base = raw.baseAddress,
                   let cg = CGContext(data: base, width: w, height: h,
@@ -90,19 +108,29 @@ public enum EdgeMapAnalyzer {
         }
         if drewImage {
             var l = [Double](repeating: 0, count: w * h)
+            // The same brightness, kept at one byte per pixel, is what element
+            // detection walks along a boundary to find where it ends.
+            var bytes = [UInt8](repeating: 0, count: w * h)
             rgba.withUnsafeBufferPointer { src in
                 l.withUnsafeMutableBufferPointer { dst in
-                    for i in 0..<(w * h) {
-                        let o = i * 4
-                        dst[i] = (0.299 * Double(src[o]) + 0.587 * Double(src[o + 1])
-                                  + 0.114 * Double(src[o + 2])) / 255
+                    bytes.withUnsafeMutableBufferPointer { small in
+                        for i in 0..<(w * h) {
+                            let o = i * 4
+                            let value = 0.299 * Double(src[o]) + 0.587 * Double(src[o + 1])
+                                + 0.114 * Double(src[o + 2])
+                            dst[i] = value / 255
+                            small[i] = UInt8(min(max(value.rounded(), 0), 255))
+                        }
                     }
                 }
             }
             luma = l
+            field = LumaField(width: w, height: h, samples: bytes)
         }
 
-        return EdgeMap(width: w, height: h, gxMagnitude: gx, gyMagnitude: gy, luma: luma)
+        return Analysis(edges: EdgeMap(width: w, height: h, gxMagnitude: gx,
+                                       gyMagnitude: gy, luma: luma),
+                        luma: field)
     }
 
     /// Renders a CIImage's red channel to a `w*h` array of 32-bit floats.
@@ -121,7 +149,7 @@ public enum EdgeMapAnalyzer {
 /// GPU + CPU sweep and the base bitmap never changes for a given ref. Thread-safe;
 /// shared by the app so every measure drag reuses one analysis per image.
 public final class EdgeMapCache: @unchecked Sendable {
-    private var cache: [UUID: EdgeMap] = [:]
+    private var cache: [UUID: EdgeMapAnalyzer.Analysis] = [:]
     private let lock = NSLock()
 
     public init() {}
@@ -129,16 +157,27 @@ public final class EdgeMapCache: @unchecked Sendable {
     /// Returns the cached map for `ref`, computing (and caching) it on first use.
     /// Returns `.empty` if the ref has no registered bitmap.
     public func edgeMap(for ref: ImageRef, store: ImageStore) -> EdgeMap {
+        analysis(for: ref, store: store).edges
+    }
+
+    /// The brightness field for `ref`, from the same cached analysis — what
+    /// element detection walks to find how far a boundary runs.
+    public func lumaField(for ref: ImageRef, store: ImageStore) -> LumaField {
+        analysis(for: ref, store: store).luma
+    }
+
+    /// Returns the cached analysis for `ref`, computing it on first use.
+    public func analysis(for ref: ImageRef, store: ImageStore) -> EdgeMapAnalyzer.Analysis {
         lock.lock()
         if let hit = cache[ref.id] { lock.unlock(); return hit }
         lock.unlock()
 
         guard let image = store.image(for: ref) else { return .empty }
-        let map = EdgeMapAnalyzer.analyze(image)
+        let result = EdgeMapAnalyzer.analyzeFully(image)
         lock.lock()
-        cache[ref.id] = map
+        cache[ref.id] = result
         lock.unlock()
-        return map
+        return result
     }
 
     public func invalidate(_ ref: ImageRef) {

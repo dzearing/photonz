@@ -5,22 +5,34 @@ import Foundation
 /// tool's **Size** mode and the gap it reads in **Gap** mode (Next release).
 ///
 /// A screenshot has no semantic UI tree, so "the element under the pointer" is
-/// read from the same windowed `EdgeMap` queries snapping uses: from the probe,
-/// walk each of the four directions for the nearest accepted edge, querying the
-/// perpendicular window centered on the probe. Each side is taken at its
-/// PROBE-SIDE luma landing (the visually clean position hugging the element,
-/// the exact rule `EdgeSnapping` applies), so the rect reads the number a
-/// redliner would measure to. All four sides within `maxRadius` make the rect;
-/// any side missing is a quiet miss (`nil`) — never a wrong box. Nested
-/// elements resolve to the innermost rect because the nearest edge per
-/// direction wins by construction.
+/// read from the picture. Two signals, and both are needed:
 ///
-/// A flat bitmap carries no semantic tree, so the innermost rect is a GUESS,
-/// and the audit of 2026-08-23 measured how often it is the wrong one (a
-/// button's glyph strokes beat its border; a settings row stops at its label).
-/// `candidates` therefore returns the whole nested ladder, innermost first, so
-/// Size mode can offer `[` and `]` to shrink and grow the pick instead of
-/// handing over one wrong number with no recourse.
+/// - `EdgeMap` says WHERE the boundaries are. It is block-summed, so it finds
+///   them cheaply and to the pixel in the direction that matters, but it cannot
+///   say how far along a boundary runs.
+/// - `LumaField` says HOW FAR each one reaches (`EdgeRun`). That is what
+///   separates the hairline under one settings row from the card border a few
+///   pixels wider, which is exactly the difference between reading a row and
+///   grabbing the whole card.
+///
+/// So an element is built from a PAIR of horizontal boundaries — one above the
+/// pointer, one below — whose runs agree with each other. Agreement is the whole
+/// trick: a button's top and bottom borders start and stop together, while a
+/// glyph's baseline stops where the word does and never lines up with the
+/// button's top. The agreed run gives the element's width; nearby vertical
+/// boundaries sharpen its left and right, since a border reads more precisely
+/// than the end of a run. Sides are placed at the OUTER boundary estimate — half
+/// way between the gradient peak and the first clean background pixel outside
+/// it — so a button measures the width a spec would quote, not the width of its
+/// inside.
+///
+/// Every rung that survives is offered, innermost first, so Size mode's `[` and
+/// `]` can shrink and grow the pick when the guess is not the element the person
+/// meant. Nothing readable is a quiet miss (`nil`) — never a wrong box.
+///
+/// Both signals come from one analysis pass, so both arrive together: until the
+/// screenshot has been analyzed there is no edge map and no brightness field and
+/// detection is quiet, which is the same gate snapping already waits on.
 public enum ElementBounds {
 
     /// How far from the probe (image px) each directional walk reaches before
@@ -28,27 +40,54 @@ public enum ElementBounds {
     public static let defaultMaxRadius: Double = 600
 
     /// How many nested candidates the ladder is capped at. Long enough to reach
-    /// a card from inside a glyph, short enough that `[` / `]` stays a handful
+    /// a card from inside a button, short enough that `[` / `]` stays a handful
     /// of presses rather than an endless scroll.
     public static let candidateLimit = 10
 
-    /// Two candidates this close on every side are the same element read twice
-    /// (an antialiased border comes back as a pair of peaks, and a bold-edge
-    /// reading often lands a few pixels off a nearest-edge one), so the outer one
-    /// is dropped. Sized so that every press of `]` visibly changes the pick
-    /// rather than nudging it.
+    /// Two candidates this close on every side are the same element read twice,
+    /// so the outer one is dropped. Sized so that every press of `]` visibly
+    /// changes the pick rather than nudging it.
     private static let candidateMinGrowth: Double = 12
 
-    /// How much bigger each rung has to be than the one before it, by area. The
-    /// raw walk emits a rung per glyph stroke, which would make `]` a dozen
-    /// presses to cross one word; thinning to real jumps in scale keeps the
-    /// ladder to a handful of presses that each visibly change the pick.
-    private static let candidateScaleStep: Double = 1.35
+    /// How bold a boundary has to be, relative to the boldest one its query
+    /// window offers, to be treated as a possible EDGE OF AN ELEMENT. Deliberately
+    /// low: over a settings row's own label the boldest thing in the window is a
+    /// glyph, and a threshold tuned to throw glyphs out throws the row out with
+    /// them. What actually rules text out is geometry — a word's cap-height band
+    /// is too short to be an element, and its baseline's run does not agree with
+    /// the border above it.
+    private static let elementFraction: Double = 0.2
 
-    /// How bold an edge has to be, as a fraction of the boldest one that
-    /// direction offers, to count for the strong ladder. 0.8 was measured on a
-    /// real capture: it keeps a button's border and drops the text inside it.
-    private static let strongFraction: Double = 0.8
+    /// Two boundaries closer together than this are one boundary read twice (the
+    /// two flanks of an antialiased border), so only the bolder one can define a
+    /// side. Sharpening a side (below) still sees both, which is how a switch's
+    /// outer edge is preferred over its knob four pixels inside it.
+    private static let pairSeparation: Double = 5
+
+    /// How far inside an element the pointer has to be for the pick to be that
+    /// element. Standing within a pixel or two of a boundary is not pointing at
+    /// what it encloses: it is what makes the middle of a switch read as the
+    /// switch rather than as the knob whose edge happens to pass under the
+    /// pointer.
+    private static let probeMargin: Double = 4
+
+    /// How much of the longer run the two runs must SHARE to be called the same
+    /// element's width. A card's rounded top reads a little wider than the
+    /// divider beneath it, so the test is a proportion rather than a pixel
+    /// count; a glyph's baseline shares a small fraction of the border above it
+    /// and is thrown out.
+    private static let runAgreement: Double = 0.85
+
+    /// How close a vertical boundary must be to the end of a run to be taken as
+    /// that side's true edge.
+    private static let sideSnap: Double = 12
+
+    /// Smallest element worth offering, in IMAGE px, when the caller does not
+    /// say. 20 is ten logical points on the 2x captures this tool is pointed at:
+    /// small enough for a checkbox, big enough that the band between a word's
+    /// cap height and its baseline — which looks exactly like a wide, short box
+    /// — is not offered as something to measure.
+    public static let defaultMinElement: Double = 20
 
     /// Half-width of the perpendicular query window centered on the probe —
     /// the same locality snapping's fallback window uses, so hover accepts the
@@ -58,93 +97,118 @@ public enum ElementBounds {
     /// The element rect at `point`: the innermost candidate, or nil when no
     /// candidate is readable (including the not-yet-computed `EdgeMap.empty`).
     public static func detect(at point: CGPoint, in edges: EdgeMap,
+                              luma: LumaField,
                               maxRadius: Double = defaultMaxRadius,
-                              spanRadius: Double = defaultSpanRadius) -> CGRect? {
-        candidates(at: point, in: edges, maxRadius: maxRadius, spanRadius: spanRadius,
-                   limit: 1).first
+                              spanRadius: Double = defaultSpanRadius,
+                              minElement: Double = defaultMinElement) -> CGRect? {
+        candidates(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                   spanRadius: spanRadius, minElement: minElement, limit: 1).first
     }
 
     /// The nested ladder of element rects around `point`, innermost first, each
     /// containing the one before it. Empty when nothing is readable.
-    ///
-    /// Built by growing outward one edge at a time: start from the nearest
-    /// accepted edge on each of the four sides, then repeatedly step whichever
-    /// side's next edge is closest. A rung that does not enclose the probe (the
-    /// probe-side landings can invert across a glyph, which is why a button used
-    /// to read nothing at all) is skipped rather than ending the walk.
     public static func candidates(at point: CGPoint, in edges: EdgeMap,
+                                  luma: LumaField,
                                   maxRadius: Double = defaultMaxRadius,
                                   spanRadius: Double = defaultSpanRadius,
+                                  minElement: Double = defaultMinElement,
                                   limit: Int = candidateLimit) -> [CGRect] {
-        guard !edges.isEmpty, maxRadius > 0, limit > 0 else { return [] }
+        guard !edges.isEmpty, !luma.isEmpty, maxRadius > 0, limit > 0 else { return [] }
         let px = Double(point.x), py = Double(point.y)
         let sides = sides(at: point, in: edges, maxRadius: maxRadius, spanRadius: spanRadius)
-        guard sides.allSatisfy({ !$0.isEmpty }) else { return [] }
+        let above = pairable(sides[0])
+        let below = pairable(sides[1])
+        guard !above.isEmpty, !below.isEmpty else { return [] }
 
-        // Two ladders, merged. The NEAREST ladder answers "the smallest thing
-        // around the pointer", which is right for a field or a toggle and wrong
-        // inside a button, where every rung is another glyph. The STRONG ladder
-        // ignores everything but the boldest edges each direction offers, which
-        // is what a border is, so the button appears a press or two in instead of
-        // a dozen. Merged by area, the list stays a plain grow-outward ladder.
-        let nearest = ladder(sides, px: px, py: py).map { (rect: $0, isStrong: false) }
-        let strong = ladder(sides.map(strongest), px: px, py: py).map { (rect: $0, isStrong: true) }
-        var merged: [CGRect] = []
-        var lastArea: Double = 0
-        for rung in (nearest + strong)
-            .sorted(by: { $0.rect.width * $0.rect.height < $1.rect.width * $1.rect.height }) {
-            let area = Double(rung.rect.width * rung.rect.height)
-            guard grows(rung.rect, beyond: merged.last) else { continue }
-            // Thinning keeps the ladder to a handful of presses, but a rung read
-            // off bold edges is the most likely to be an actual border, so it
-            // never gets thinned away by a neighbour of a similar size.
-            guard rung.isStrong || merged.isEmpty || area >= lastArea * candidateScaleStep
-            else { continue }
-            merged.append(rung.rect)
-            lastArea = area
-            if merged.count >= limit { break }
-        }
-        return merged
-    }
-
-    /// Walks one set of side candidates outward, innermost rect first: start at
-    /// the nearest accepted edge on each side, then repeatedly step whichever
-    /// side's next edge is closest. A rung that does not enclose the probe (the
-    /// probe-side landings can invert across a glyph, which is why a button used
-    /// to read nothing at all) is skipped rather than ending the walk.
-    private static func ladder(_ sides: [[Side]], px: Double, py: Double) -> [CGRect] {
-        guard sides.allSatisfy({ !$0.isEmpty }) else { return [] }
-        var index = [0, 0, 0, 0]
+        // Grow the pair outward one boundary at a time, so the rungs come out
+        // smallest first and every rung is a real pair rather than a cross
+        // product of everything in range.
         var found: [CGRect] = []
-        // One step per available edge across all four sides, so the walk always
-        // terminates even if every rung is rejected.
-        let budget = sides.reduce(0) { $0 + $1.count }
-        for _ in 0...budget {
-            let minY = sides[0][index[0]].landing, maxY = sides[1][index[1]].landing
-            let minX = sides[2][index[2]].landing, maxX = sides[3][index[3]].landing
-            if maxX > minX, maxY > minY, minX <= px, px <= maxX, minY <= py, py <= maxY {
-                let rect = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-                if grows(rect, beyond: found.last) { found.append(rect) }
+        var runs: [Int: ClosedRange<Int>?] = [:]
+        var top = 0, bottom = 0
+        for _ in 0...(above.count + below.count) {
+            if let rect = rung(top: above[top], bottom: below[bottom], px: px, py: py,
+                               left: sides[2], right: sides[3], luma: luma,
+                               minElement: minElement, runs: &runs),
+               grows(rect, beyond: found.last) {
+                found.append(rect)
+                if found.count >= limit { break }
             }
-            // Step the side whose next edge is nearest — the ladder grows by the
-            // smallest possible amount each rung.
-            var next: (side: Int, distance: Double)?
-            for side in 0..<4 where index[side] + 1 < sides[side].count {
-                let distance = sides[side][index[side] + 1].distance
-                if distance < (next?.distance ?? .infinity) { next = (side, distance) }
-            }
-            guard let next else { break }
-            index[next.side] += 1
+            let nextTop = top + 1 < above.count ? above[top + 1].distance : Double.infinity
+            let nextBottom = bottom + 1 < below.count ? below[bottom + 1].distance : Double.infinity
+            if nextTop == .infinity, nextBottom == .infinity { break }
+            if nextTop <= nextBottom { top += 1 } else { bottom += 1 }
         }
         return found
     }
 
-    /// One side's candidates thinned to the boldest ones: everything within
-    /// `strongFraction` of that side's strongest edge. A button's border survives
-    /// this; the text inside it does not.
-    private static func strongest(_ side: [Side]) -> [Side] {
-        guard let peak = side.map(\.strength).max(), peak > 0 else { return side }
-        return side.filter { $0.strength >= peak * strongFraction }
+    /// One rung: the element bounded above by `top` and below by `bottom`, or nil
+    /// when those two boundaries do not describe one.
+    ///
+    /// Width comes from the stretch the two boundaries BOTH cover. They have to
+    /// agree at each end, which is what rules out a pairing of a border with a
+    /// baseline. `runs` memoizes the walk per row, since growing the pair
+    /// revisits the same boundary many times.
+    private static func rung(top: Side, bottom: Side, px: Double, py: Double,
+                             left: [Side], right: [Side], luma: LumaField,
+                             minElement: Double,
+                             runs: inout [Int: ClosedRange<Int>?]) -> CGRect? {
+        guard bottom.bound - top.bound >= minElement else { return nil }
+
+        func run(_ side: Side) -> ClosedRange<Int>? {
+            let row = Int(side.peak.rounded())
+            if let cached = runs[row] { return cached }
+            let walked = EdgeRun.horizontal(row: row, seedX: Int(px.rounded()), in: luma)
+            runs[row] = walked
+            return walked
+        }
+        guard let topRun = run(top), let bottomRun = run(bottom) else { return nil }
+        let shared = Double(min(topRun.upperBound, bottomRun.upperBound)
+                            - max(topRun.lowerBound, bottomRun.lowerBound))
+        let longest = Double(max(topRun.count, bottomRun.count))
+        guard shared >= runAgreement * longest else { return nil }
+        var lower = Double(max(topRun.lowerBound, bottomRun.lowerBound))
+        // A run's last covered pixel is the element's last pixel; the boundary
+        // itself is the far side of it.
+        var upper = Double(min(topRun.upperBound, bottomRun.upperBound)) + 1
+        lower = snapped(lower, to: left, outward: true) ?? lower
+        upper = snapped(upper, to: right, outward: false) ?? upper
+
+        guard upper - lower >= minElement,
+              lower + probeMargin <= px, px <= upper - probeMargin,
+              top.bound + probeMargin <= py, py <= bottom.bound - probeMargin else { return nil }
+        return CGRect(x: lower, y: top.bound,
+                      width: upper - lower, height: bottom.bound - top.bound)
+    }
+
+    /// The boundaries on one side that may DEFINE an element edge: bold enough
+    /// to be structure, and thinned so the two flanks of one antialiased border
+    /// cannot be mistaken for the top and bottom of something 3 px tall.
+    private static func pairable(_ side: [Side]) -> [Side] {
+        var kept: [Side] = []
+        for candidate in side.filter({ $0.strength >= elementFraction })
+            .sorted(by: { $0.strength > $1.strength }) {
+            if kept.contains(where: { abs($0.peak - candidate.peak) < pairSeparation }) { continue }
+            kept.append(candidate)
+        }
+        return kept.sorted { $0.distance < $1.distance }
+    }
+
+    /// A run's end refined to a real vertical boundary sitting on it.
+    ///
+    /// Only ever OUTWARD. The run is a floor on how far the element reaches —
+    /// the boundary was still readable there — so a vertical border a few pixels
+    /// further out is the element's true edge (a run stops just inside a rounded
+    /// corner, and a switch's knob sits just inside the switch). One that lies
+    /// INSIDE the run is something painted on the element, and pulling in to it
+    /// would make the readout wobble as the pointer moved.
+    private static func snapped(_ end: Double, to side: [Side], outward: Bool) -> Double? {
+        let hits = side.filter { candidate in
+            abs(candidate.peak - end) <= sideSnap
+                && (outward ? candidate.bound <= end + 1 : candidate.bound >= end - 1)
+        }
+        guard !hits.isEmpty else { return nil }
+        return outward ? hits.map(\.bound).min() : hits.map(\.bound).max()
     }
 
     /// The gap under `point`: the two facing edges of whatever sits on either
@@ -155,7 +219,10 @@ public enum ElementBounds {
     /// two stacked cards has a top and a bottom and no sides at all, and
     /// refusing to measure it because the sides are missing would fail the most
     /// ordinary case there is. When both axes read, the shorter span wins,
-    /// because the tighter one is what a person means by "the gap".
+    /// because the tighter one is what a person means by "the gap". A gap is
+    /// measured to the PROBE-SIDE landing of each edge — the clean background
+    /// hugging each element — since what is being measured is the whitespace,
+    /// not the elements.
     public static func gap(at point: CGPoint, in edges: EdgeMap,
                            maxRadius: Double = defaultMaxRadius,
                            spanRadius: Double = defaultSpanRadius) -> GapMeasurement? {
@@ -178,19 +245,32 @@ public enum ElementBounds {
         return best
     }
 
-    /// Whether a rung is far enough outside the previous one to be worth
-    /// offering as a separate pick.
+    /// Whether a rung belongs on the ladder after `previous`: it has to CONTAIN
+    /// what came before (a ladder that narrows on the way out is a shuffle, not
+    /// a ladder) and be enough bigger on some side to be worth a keypress.
     private static func grows(_ rect: CGRect, beyond previous: CGRect?) -> Bool {
         guard let previous else { return true }
+        guard rect.insetBy(dx: -1, dy: -1).contains(previous) else { return false }
         return Double(previous.minX - rect.minX) >= candidateMinGrowth
             || Double(previous.minY - rect.minY) >= candidateMinGrowth
             || Double(rect.maxX - previous.maxX) >= candidateMinGrowth
             || Double(rect.maxY - previous.maxY) >= candidateMinGrowth
     }
 
-    /// One accepted edge on one side of the probe.
+    /// One accepted boundary on one side of the probe.
     private struct Side {
+        /// Distance from the probe to the gradient peak.
         var distance: Double
+        /// The gradient peak — the middle of the transition ramp.
+        var peak: Double
+        /// Where the ELEMENT's edge is taken to be: the outer flank of the
+        /// boundary pixel. The peak names the pixel the transition sits in, so
+        /// the element's edge is half a pixel further out — but no further,
+        /// because a drop shadow's clean-background landing can be six pixels
+        /// out and would inflate the card by three.
+        var bound: Double
+        /// The clean background position on the PROBE's side — what a gap
+        /// measures to.
         var landing: Double
         var strength: Double
     }
@@ -213,17 +293,23 @@ public enum ElementBounds {
     }
 
     /// Every accepted candidate on one side (`lowerSide` = positions at or below
-    /// the probe coordinate) within `maxRadius`, nearest first, each read at its
-    /// probe-side landing. The probe sits on the element side of the edge, so
-    /// above the probe that is the after-side landing and below it the
-    /// before-side.
+    /// the probe coordinate) within `maxRadius`, nearest first. The probe sits on
+    /// the element side of the boundary, so above the probe the clean background
+    /// OUTSIDE the element is the before-side landing and below it the
+    /// after-side.
     private static func sideLandings(_ candidates: [EdgeCandidate], probe: Double,
                                      lowerSide: Bool, maxRadius: Double) -> [Side] {
         candidates
             .filter { lowerSide ? $0.position <= probe : $0.position > probe }
-            .map { Side(distance: abs(probe - $0.position),
-                        landing: lowerSide ? $0.edgeAfter : $0.edgeBefore,
-                        strength: $0.strength) }
+            .map { candidate in
+                let outer = lowerSide ? candidate.edgeBefore : candidate.edgeAfter
+                let flank = min(max(outer - candidate.position, -0.5), 0.5)
+                return Side(distance: abs(probe - candidate.position),
+                            peak: candidate.position,
+                            bound: candidate.position + flank,
+                            landing: lowerSide ? candidate.edgeAfter : candidate.edgeBefore,
+                            strength: candidate.strength)
+            }
             .filter { $0.distance <= maxRadius }
             .sorted { $0.distance < $1.distance }
     }

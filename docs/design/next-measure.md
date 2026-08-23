@@ -79,20 +79,21 @@ why Size commits two standard calipers instead of a combined "124 × 30" badge.
 
 **Detection is core, TDD** — `ElementBounds` (`PhotonzCore`):
 
-- `candidates(at:in:)` returns the nested LADDER of element rects, innermost
-  first, walked outward one edge at a time from the same windowed `EdgeMap`
-  queries snapping uses (luma landings on the probe side). A flat bitmap has no
-  element tree, so the innermost rect is a guess; the ladder is what makes a
-  wrong guess a keypress to fix rather than a dead end. Two ladders are merged:
-  one off the NEAREST edges (right for a field, wrong inside a button where
-  every rung is a glyph) and one off the BOLDEST edges each direction offers
-  (which is what a border is). Rungs that barely differ are thinned so each
-  press visibly changes the pick.
-- `detect(at:in:)` is the first rung, unchanged in meaning.
+- `candidates(at:in:luma:)` returns the nested LADDER of element rects,
+  innermost first, grown one boundary at a time from the windowed `EdgeMap`
+  queries snapping uses PLUS the picture itself (see "Detection reads the
+  pixels" below). A flat bitmap has no element tree, so even the best guess is a
+  guess; the ladder is what makes a wrong one a keypress to fix rather than a
+  dead end. Each rung must CONTAIN the one before it, and rungs that barely
+  differ are thinned, so every press visibly changes the pick.
+- `detect(at:in:luma:)` is the first rung, unchanged in meaning.
 - `gap(at:in:)` needs only ONE axis: the space between two stacked cards has a
-  top and a bottom and no sides, and the shorter span wins when both read.
-- Perf budget unchanged: under 1 ms per mouse-move, and a no-op until the edge
-  map has finished computing (the same gate snapping uses).
+  top and a bottom and no sides, and the shorter span wins when both read. It
+  measures whitespace, so it keeps reading to the probe-side landing (the clean
+  background hugging each element) rather than to the element boundary.
+- Perf budget unchanged: under 1 ms per mouse-move (measured ~32 µs), and a
+  no-op until the analysis has finished — the edge map and the brightness field
+  arrive together, which is the same gate snapping uses.
 
 **Placement.** Modes that place their own calipers use
 `MeasureBuilder.clearingHeadOffset`, which stands the readout off far enough to
@@ -108,12 +109,47 @@ the document and makes no history entries.
 shown while the Measure tool is active and the document has no measurements
 yet; it disappears forever once the first measurement lands (per document).
 
-**Known gap.** Detection accuracy is still the weak link: on the audit capture,
-Size reads an empty field exactly and gets a button's width, a toggle and a
-settings row wrong. That is tracked as its own task
-(`hover-to-measure-should-outline-the-button-or-ro`) with fixture-pinned
-acceptance; the modes ship without waiting on it because the preview shows you
-the answer before you commit to it.
+**Detection reads the pixels, not just the edge map (2026-08-23).** The first
+version walked outward from the pointer and took the nearest accepted edge on
+each side, which is why a button read a sliver of a letter and a settings row
+stopped at its label. It is now built the other way round:
+
+- A pair of horizontal boundaries, one above the pointer and one below, defines
+  the element. `EdgeRun` (core) walks each one along the picture — in
+  `LumaField`, the full-resolution brightness the analyzer already computes and
+  now keeps — to find how far it actually reaches. The pair has to AGREE (share
+  85% of the longer run) to be one element: a button's top and bottom borders
+  start and stop together, a glyph's baseline does not line up with the border
+  above it.
+- The agreed run is the element's width. That is the only way a settings row can
+  read 624 wide: it has no left or right border at all, and its width is
+  knowable only from how far the hairline under it runs (the card it sits in is
+  32 px wider).
+- Vertical boundaries then sharpen the sides, but only OUTWARD: a border a few
+  pixels past the run's end is the real edge (runs stop just inside a rounded
+  corner); one inside the run is something painted on the element, and following
+  it would make the readout wobble as the pointer moves.
+- Sides land on the outer flank of the boundary pixel, never more than half a
+  pixel out, so a drop shadow cannot inflate a card.
+- A boundary under the pointer cannot define the element (nobody pointing at the
+  middle of a switch means the knob whose edge passes under the cursor), and
+  nothing under ten logical points is offered at all (a word's cap-height band
+  looks exactly like a wide, short box).
+
+Measured on the audit capture, at ~32 µs per mouse move: primary button 124 x 30
+(true 124 x 30), secondary button 72 x 30 (true 72 x 30), switch 42 x 24 (true
+42 x 24), settings row 624 x 44 (true 624 x 44), card 652 x 132 (true 656 x 132),
+empty field 218 x 26 (true 220 x 26). Flat background still reads nothing.
+Pinned in `ElementDetectionFixtureTests` against the capture itself.
+
+**Still off.** A 1 px border between two whites (the text field) puts the
+gradient peak on its inside flank at both ends, so the field reads 2 px narrow;
+the card's own outline is white-on-near-white under a drop shadow and reads ~4 px
+narrow. Both are pinned so they cannot get worse.
+
+**Cost.** The brightness field is one byte per pixel (12 MB for a 12-megapixel
+capture), cached beside the edge map and built in the same pass, so it exists
+only for documents a snapping tool has been pointed at.
 
 Not specced here: the mock's live caliper rotates to any angle between the two
 clicked points; the shipped caliper is deliberately H/V-only (16.12). That

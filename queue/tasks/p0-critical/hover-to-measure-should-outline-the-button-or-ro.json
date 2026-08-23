@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:03:40.300Z",
-  "updated": "2026-08-23T18:57:52.716Z",
+  "updated": "2026-08-23T20:59:53.050348Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Diagnosis in queue/audits/2026-08-23-measure-redline.md. ElementBounds.detect walks outward and takes the NEAREST accepted EdgeMap candidate per direction, so glyph strokes win over the element boundary; over text the probe-side landings invert (minY > maxY) and it returns nil, which is why buttons read nothing. Measured counterexamples: strongest-edge-per-direction nails the button (233/480/755/815 -> 124x30 exactly) but makes a settings row grab its whole card (card bottom strength 1.0 beats the hairline divider at 0.795). Nearest-with-strength-threshold at 0.8 of the walk max fixes the button and still breaks the row. Likely needs a signal the edge map alone does not carry (uniformity beyond the candidate edge, or reusing FloodFill/ContourTracer from the wand). PhotonzCore has no image access today, so this may mean moving detection or passing a sampler in. Spec: docs/design/next-measure.md section 3.",
+  "notes": "Shipped. Detection now reads pixels (LumaField + EdgeRun) as well as the edge map; see docs/design/next-measure.md section 3. Known residual errors are pinned in ElementDetectionFixtureTests: the empty field reads 218 instead of 220, the card 652 instead of 656.",
   "acceptance": [
     "On the audit capture at queue/audits/2026-08-23-measure-00-capture.png, hovering the Save Changes button reads 124 by 30 logical px",
     "Hovering a toggle reads 42 by 24, and hovering a settings row reads 624 by 44",
@@ -35,6 +35,34 @@
     {
       "t": "2026-08-23T18:57:52.716Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Adversarial review before building: the mock's promise (hover an element, get its size) is right, but the old approach could not deliver it in principle. Half of what a redliner points at (a settings row) has NO left or right border, so its width is unknowable from an edge map alone; and the strongest-edge rule that fixes a button breaks a row, as the audit measured. Shortest version that delivers the value: stop trying to rank edges, and read the picture."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Built: LumaField (PhotonzCore, one byte per pixel, produced by the same analyzer pass) and EdgeRun (walks a boundary along the image to find how far it reaches). ElementBounds now pairs a horizontal boundary above the pointer with one below, requires their runs to share 85% of the longer one, takes the shared stretch as the width, and sharpens the sides against vertical boundaries OUTWARD only. Sides land on the outer flank of the boundary pixel, capped at half a pixel so a drop shadow cannot inflate a card. A boundary under the pointer cannot define the element (that is what makes the middle of a switch read as the switch), and nothing under ten logical points is offered."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Measured on the audit capture through the shipping path: primary button 124x30 (true 124x30), secondary button 72x30 (true 72x30), switch 42x24 from its centre and from its green (true 42x24), settings rows 1-3 all 624x44 (true 624x44), row read from over its label 623x44, card 652x132 (true 656x132), empty field 218x26 (true 220x26), flat background nothing. ~32 microseconds per mouse move."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Stability swept across each element rather than eyeballed: the button reads 124x30 at every one of 48 points across it, the switch 42x24 at every point, a row 624x44 down the whole pane. The outward-only snapping rule was added because the first version wobbled between 619 and 624 on rows as the pointer moved."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Tests: ElementDetectionFixtureTests (PhotonzRenderTests) pins all of the above against the real capture, checked out to the readout string the shipping formatter produces. Core tests rewritten to paint real pixels and derive gradients the way the analyzer does, so they exercise the shipping path rather than hand-placed edge responses. New EdgeRunTests and LumaFieldTests. 977 tests green."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Deliberately not done: the field's 2 px and the card's 4 px under-read, both explained and pinned. The old no-pixels fallback was removed rather than kept: the edge map and the brightness field come from one cached analysis, so a map without pixels only exists before analysis lands, when detection should be quiet anyway."
+    },
+    {
+      "t": "2026-08-23T20:59:53.050348Z",
+      "note": "Not verified: anything visual. Screen recording is blocked for this agent, so no screenshot of the overlay exists. Audit: queue/audits/2026-08-23-hover-measure.json."
     }
   ],
   "started": "2026-08-23T18:57:52.716Z",

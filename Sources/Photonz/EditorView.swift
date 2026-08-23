@@ -187,6 +187,7 @@ struct EditorView: View {
                        measureSnapsToCenters: editorState.measureSnapsToCenters
                            && Experiments.shared.measureCenterSnapEnabled,
                        edgeMap: editorState.snappingEdgeMap,
+                       lumaField: editorState.measureLumaField,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
                        onSelectionChange: { editorState.setSelection($0, captureLayers: $1) },

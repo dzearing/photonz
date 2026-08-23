@@ -16,7 +16,7 @@ final class EditorState {
     @ObservationIgnored private let edgeMapCache = EdgeMapCache()
     /// Edge maps that finished analysis, ready for synchronous access during a
     /// drag. Observable so the canvas picks the map up when analysis lands.
-    private var readyEdgeMaps: [UUID: EdgeMap] = [:]
+    private var readyEdgeMaps: [UUID: EdgeMapAnalyzer.Analysis] = [:]
     /// Refs whose analysis is in flight (don't kick it twice).
     @ObservationIgnored private var edgeMapAnalysisPending: Set<UUID> = []
     /// Created lazily (not in init) so its frame-delivery closure can capture self.
@@ -1371,9 +1371,19 @@ final class EditorState {
             || activeTool == .rectSelect || activeTool == .ellipseSelect
         guard toolSnaps || selectedIsMeasure,
               let ref = document?.layers.compactMap(\.imageRef).first else { return .empty }
-        if let ready = readyEdgeMaps[ref.id] { return ready }
+        if let ready = readyEdgeMaps[ref.id] { return ready.edges }
         analyzeEdgeMap(for: ref)
         return .empty
+    }
+
+    /// The same analysis's brightness field, which element detection walks to
+    /// find how far a boundary runs (`ElementBounds`). Empty until the sweep
+    /// lands, exactly like `snappingEdgeMap`, so Size mode simply draws nothing
+    /// for the first moment after a screenshot opens.
+    var measureLumaField: LumaField {
+        guard let ref = document?.layers.compactMap(\.imageRef).first,
+              let ready = readyEdgeMaps[ref.id] else { return .empty }
+        return ready.luma
     }
 
     /// Runs the edge analysis for `ref` in the background, once.
@@ -1383,10 +1393,10 @@ final class EditorState {
         let cache = edgeMapCache
         let store = store
         Task.detached(priority: .userInitiated) { [weak self] in
-            let map = cache.edgeMap(for: ref, store: store)
+            let analysis = cache.analysis(for: ref, store: store)
             await MainActor.run {
                 guard let self else { return }
-                self.readyEdgeMaps[ref.id] = map
+                self.readyEdgeMaps[ref.id] = analysis
                 self.edgeMapAnalysisPending.remove(ref.id)
             }
         }

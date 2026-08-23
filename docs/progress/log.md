@@ -3986,3 +3986,48 @@ button reachable at all. The real fix stays queued as
 Spec rewritten: `docs/design/next-measure.md` § 3. 953 tests green.
 Audit: `queue/audits/2026-08-23-measure-modes.json`.
 Next: the detection task, then whether Size should commit one caliper or two.
+
+## 2026-08-23 — Size mode reads the element you are pointing at
+
+`hover-to-measure-should-outline-the-button-or-ro` (p0). Detection accuracy was
+the last thing wrong with Measure, and it could not be fixed by tuning: half of
+what a redliner points at has no left or right border at all. A settings row is
+624 px wide and the card around it is 656, and nothing in the edge map can tell
+those apart, because its gradients are summed into 16 px blocks. So detection
+now reads the picture.
+
+New in `PhotonzCore`: `LumaField` (the full-resolution brightness the analyzer
+already computed and used to throw away, kept at one byte per pixel) and
+`EdgeRun` (walks a boundary along the image to find how far it actually
+reaches). `ElementBounds` was rebuilt on top of them: an element is a PAIR of
+horizontal boundaries, one above the pointer and one below, whose runs agree
+with each other — a button's top and bottom borders start and stop together, a
+glyph's baseline does not line up with the border above it. The agreed run is
+the width; vertical boundaries then sharpen the sides, but only outward, or the
+readout wobbles as the pointer moves. A boundary under the pointer cannot define
+the element, which is what makes the middle of a switch read as the switch
+rather than as the knob its edge passes under.
+
+Measured on the audit capture, through the shipping path, at ~32 µs per mouse
+move: primary button **124 × 30** (true 124 × 30, used to read nothing at all),
+secondary button **72 × 30** (true 72 × 30), switch **42 × 24** from its centre
+(true 42 × 24, used to read a 12 × 12 sliver of the knob), settings rows all
+**624 × 44** (true 624 × 44, used to stop at the label at 490 × 42), card
+652 × 132 (true 656 × 132), empty field 218 × 26 (true 220 × 26). Flat
+background still reads nothing. Stability was swept rather than eyeballed: the
+button reads the same at all 48 points across it.
+
+Still off and pinned so it cannot get worse: the field's 2 px (a 1 px border
+between two whites puts the reading on its inside flank at both ends) and the
+card's 4 px (white on near-white under a drop shadow).
+
+`ElementDetectionFixtureTests` (render side) pins every number above against the
+real capture, checked as the readout string the shipping formatter produces. The
+core tests were rewritten to paint pixels and derive gradients the way the
+analyzer does, so they exercise the shipping path. 977 tests green.
+
+Spec updated: `docs/design/next-measure.md` § 3.
+Audit: `queue/audits/2026-08-23-hover-measure.json`.
+Nothing visual was verified — screen recording is blocked for the agent.
+Next: whether Size should commit one caliper or two, and the alignment-scan
+short-run fix.

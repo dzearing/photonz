@@ -53,7 +53,11 @@ let package = Package(
         ),
         .testTarget(
             name: "PhotonzRenderTests",
-            dependencies: ["PhotonzRender"]
+            dependencies: ["PhotonzRender"],
+            // A real 2x screenshot of a settings pane whose CSS geometry is
+            // known, so element detection is pinned against measured truth
+            // rather than against a synthetic drawing of what we expect.
+            resources: [.copy("Fixtures")]
         ),
         .testTarget(
             name: "PhotonzMediaTests",
