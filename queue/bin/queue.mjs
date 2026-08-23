@@ -13,7 +13,8 @@
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
 //   node queue/bin/queue.mjs alive           print the live loop's pid, or "no" if none is running
-//   node queue/bin/queue.mjs guard           reset any in_progress task back to pending
+//   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing)
+//   node queue/bin/queue.mjs compact        collapse old churn events in history.jsonl into counted entries
 //   node queue/bin/queue.mjs reset-health   clear the unhealthy flag (the loop does this on start)
 //   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [error]
 //                                            record how a runner ended; prints shell vars
@@ -71,6 +72,11 @@ try {
     case 'guard':
       out(q.guardStuck());
       break;
+    case 'compact': {
+      const r = q.compactHistory();
+      out(`history: ${r.before} -> ${r.after} events${r.changed ? '' : ' (already compact)'}`);
+      break;
+    }
     // A restart is a fresh claim about health: an unhealthy flag from a previous
     // run should not colour a loop that has not tried anything yet.
     case 'reset-health':

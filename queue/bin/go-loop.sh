@@ -92,10 +92,22 @@ backoff_wait() {
   title "photonz: go-loop"
 }
 
+# loop.log is the raw runner transcript and grows without limit: one stuck night
+# on 2026-08-23 put 2.9MB into it. Keep one generation so a loop left running
+# cannot fill the disk, and so tailing it stays instant.
+LOG_MAX_BYTES=$((32 * 1024 * 1024))
+rotate_log() {
+  local size
+  size=$(stat -f %z "$LOG" 2>/dev/null || echo 0)
+  (( size > LOG_MAX_BYTES )) && mv -f "$LOG" "$LOG.1"
+  return 0
+}
+
 ITERS=0
 while :; do
   TODAY=$(date +%F)
   ITERS=$((ITERS + 1))
+  rotate_log
   [[ "$MAX_ITERS" != 0 && $ITERS -gt $MAX_ITERS ]] && { echo "[go-loop] reached PHOTONZ_MAX_ITERS=$MAX_ITERS, exiting" | tee -a "$LOG"; cleanup; }
 
   # Daily digest + triage: once per calendar day, at or after 05:00 so it reads

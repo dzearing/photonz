@@ -39,10 +39,70 @@ function writeJSON(file, obj) {
 }
 
 // ---- history ----------------------------------------------------------------
+// history.jsonl is append-only and the dashboard parses ALL of it on every poll
+// (aggregateState reads it whole to build the charts). A loop stuck in a
+// claim/reset cycle writes two events every few seconds, and on 2026-08-23 that
+// left 7,949 churn events buried under 165 real ones in a 1.3MB file. So the
+// file self-compacts: churn beyond the retention window collapses to one
+// counted entry per task per day, while anything that describes a real change
+// to the queue is kept forever and the charts stay exact.
+export const HISTORY_MAX_BYTES = 512 * 1024;
+export const HISTORY_GROW_BYTES = 64 * 1024;  // re-compact only after this much new growth
+export const CHURN_EVENTS = new Set(['task_started', 'task_reset', 'runner_failed']);
+// Churn stays entry-per-attempt while it is recent AND recent-enough to matter.
+// The age window keeps yesterday debuggable; the count keeps a storm that
+// happened an hour ago from filling the file on its own.
+const CHURN_KEEP_MS = 48 * 3600 * 1000;
+const CHURN_KEEP_MAX = 200;
+
 export function appendEvent(ev, data = {}) {
   ensureDirs();
   appendFileSync(HISTORY, JSON.stringify({ t: now(), ev, ...data }) + '\n');
+  maybeCompactHistory();
 }
+
+// Collapse runs of churn events (same day, same event, same task) into a single
+// entry carrying `repeats` and `until`. Order is preserved: a rolled-up entry sits
+// where its first occurrence was. Everything else passes through untouched.
+export function compactHistory() {
+  const events = readHistory();
+  const cutoff = new Date(Date.now() - CHURN_KEEP_MS).toISOString();
+  const churnTotal = events.filter((e) => CHURN_EVENTS.has(e.ev)).length;
+  let churnSeen = 0;
+  const out = [];
+  const rolled = new Map();
+  for (const e of events) {
+    if (!CHURN_EVENTS.has(e.ev)) { out.push(e); continue; }
+    churnSeen++;
+    const verbatim = (e.t || '') >= cutoff && churnSeen > churnTotal - CHURN_KEEP_MAX;
+    if (verbatim) { out.push(e); continue; }
+    const key = `${day(e.t)}|${e.ev}|${e.id || '-'}`;
+    const seen = rolled.get(key);
+    if (seen) { seen.repeats += (e.repeats || 1); seen.until = e.until || e.t; continue; }
+    // `repeats`, not `count`: some real events (objectives_updated) already
+    // carry a `count` that means something else entirely.
+    const entry = { ...e, repeats: e.repeats || 1, until: e.until || e.t, rolledUp: true };
+    rolled.set(key, entry);
+    out.push(entry);
+  }
+  const changed = out.length !== events.length;
+  if (changed) writeFileSync(HISTORY, out.map((o) => JSON.stringify(o)).join('\n') + '\n');
+  return { before: events.length, after: out.length, changed };
+}
+
+// Compact when the file is over budget, but only once per HISTORY_GROW_BYTES of
+// new growth: a file that is legitimately large (all real events) must not
+// re-scan itself on every single append.
+function maybeCompactHistory() {
+  let size = 0;
+  try { size = statSync(HISTORY).size; } catch { return; }
+  if (size <= HISTORY_MAX_BYTES) return;
+  const last = readStatus().historyCompact;
+  if (last && typeof last.size === 'number' && size < last.size + HISTORY_GROW_BYTES) return;
+  compactHistory();
+  try { writeStatus({ historyCompact: { at: now(), size: statSync(HISTORY).size } }); } catch { /* status is advisory */ }
+}
+
 export function readHistory() {
   try {
     return readFileSync(HISTORY, 'utf8').split('\n').filter(Boolean).map((l) => {
@@ -71,8 +131,46 @@ export function findTask(id) {
 export function saveTask(task) {
   const { file, ...body } = task;
   body.updated = now();
+  if (Array.isArray(body.log)) body.log = trimLog(body.log);
   writeJSON(file, body);
   return { ...body, file };
+}
+
+// ---- task logs --------------------------------------------------------------
+// A task log is a story a human reads on the dashboard, so it has to stay
+// readable no matter how badly the loop misbehaves. On 2026-08-23 one task was
+// claimed and reset 2,757 times and its log grew to 5,515 entries / 556KB,
+// which the dashboard then had to fetch and render on every poll. Two guards:
+// identical consecutive notes collapse into one counted entry, and the array is
+// capped with the middle elided (the opening entries and the recent ones are
+// the parts anyone actually reads).
+export const LOG_MAX = 120;       // entries kept in a task's log
+export const LOG_KEEP_HEAD = 20;  // oldest entries kept when the middle is elided
+
+export function trimLog(log) {
+  if (!Array.isArray(log) || log.length <= LOG_MAX) return log;
+  const tailCount = LOG_MAX - LOG_KEEP_HEAD - 1;
+  const head = log.slice(0, LOG_KEEP_HEAD);
+  const tail = log.slice(log.length - tailCount);
+  // Count a previous elision marker as the entries it stood for, so the number
+  // stays truthful across repeated trims instead of resetting each time.
+  const dropped = log.slice(LOG_KEEP_HEAD, log.length - tailCount)
+    .reduce((n, e) => n + (e && e.elided ? e.elided : 1), 0);
+  return [...head, { t: now(), note: `... ${dropped} earlier entries elided`, elided: dropped }, ...tail];
+}
+
+// Append a note, coalescing an immediate repeat into `count` + `since` rather
+// than a new line. Every writer in this file goes through here.
+export function appendLog(task, note) {
+  const log = [...(task.log || [])];
+  const last = log[log.length - 1];
+  if (last && last.note === note) {
+    log[log.length - 1] = { ...last, t: now(), since: last.since || last.t, count: (last.count || 1) + 1 };
+  } else {
+    log.push({ t: now(), note });
+  }
+  task.log = trimLog(log);
+  return task;
 }
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).replace(/^-+|-+$/g, '') || 'task';
@@ -112,7 +210,7 @@ export function setPriority(id, priority) {
   const dest = join(TASKS, priority, basename(t.file));
   renameSync(t.file, dest);
   const moved = { ...t, priority, file: dest };
-  moved.log = [...(moved.log || []), { t: now(), note: `priority ${t.priority} -> ${priority}` }];
+  appendLog(moved, `priority ${t.priority} -> ${priority}`);
   saveTask(moved);
   appendEvent('task_reprioritized', { id, from: t.priority, to: priority });
   return moved;
@@ -124,7 +222,7 @@ export function setSeq(id, seq) {
   if (!t) throw new Error(`no task ${id}`);
   const from = t.seq;
   t.seq = seq;
-  t.log = [...(t.log || []), { t: now(), note: `seq ${from ?? 'none'} -> ${seq}` }];
+  appendLog(t, `seq ${from ?? 'none'} -> ${seq}`);
   saveTask(t);
   appendEvent('task_resequenced', { id, from, to: seq });
   return t;
@@ -138,7 +236,7 @@ export function setStatus(id, status, note = '') {
   // Moving a parked task anywhere else un-parks it and gives it a clean slate,
   // so the dashboard's "put it back in the queue" really is a fresh start.
   if (t.parked && status !== 'blocked') { t.parked = false; t.parkReason = ''; t.failures = 0; }
-  if (note) t.log = [...(t.log || []), { t: now(), note }];
+  if (note) appendLog(t, note);
   if (status === 'done') t.completed = now();
   saveTask(t);
   appendEvent(`task_${status}`, { id, from: prev, ...(note ? { note } : {}) });
@@ -155,7 +253,7 @@ export function claimNext(pid = null) {
   const t = ready[0];
   t.status = 'in_progress';
   t.started = now();
-  t.log = [...(t.log || []), { t: now(), note: 'claimed by go loop' }];
+  appendLog(t, 'claimed by go loop');
   saveTask(t);
   appendEvent('task_started', { id: t.id, title: t.title, priority: t.priority });
   writeStatus({ state: 'running', task: { id: t.id, title: t.title, priority: t.priority, file: t.file }, note: 'working', pid });
@@ -188,7 +286,7 @@ function parkTask(t, reason) {
   t.status = 'blocked';
   t.parked = true;
   t.parkReason = reason;
-  t.log = [...(t.log || []), { t: now(), note: reason }];
+  appendLog(t, reason);
   saveTask(t);
   appendEvent('task_parked', { id: t.id, reason });
 }
@@ -199,7 +297,7 @@ function unparkTask(id, reason) {
   t.parked = false;
   t.parkReason = '';
   t.failures = 0;
-  t.log = [...(t.log || []), { t: now(), note: reason }];
+  appendLog(t, reason);
   saveTask(t);
   appendEvent('task_unparked', { id, reason });
   return true;
@@ -256,7 +354,7 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
       outcome = 'parked';
     } else {
       task.status = 'pending';
-      task.log = [...(task.log || []), { t: now(), note: `runner failed (exit ${exit}, attempt ${task.failures}): ${message}` }];
+      appendLog(task, `runner failed (exit ${exit}, attempt ${task.failures}): ${message}`);
       saveTask(task);
     }
   }
@@ -277,15 +375,30 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
 // Reset it to pending so the loop retries, and record what happened. Kept as a
 // blunt safety net for anything recordRunnerExit did not cover (a task other
 // than the claimed one left running, a loop restarted mid-task).
+// A runner that exits without finalizing leaves the task in_progress forever.
+// Reset it to pending so the loop retries, and record what happened. Kept as a
+// blunt safety net for anything recordRunnerExit did not cover (a task other
+// than the claimed one left running, a loop restarted mid-task).
+//
+// The reset is NOT a free retry: it counts against the same per-task failure
+// budget recordRunnerExit uses, so a task nothing can finish gets parked here
+// too rather than being handed back to the loop forever.
 export function guardStuck() {
   const stuck = readAllTasks().filter((t) => t.status === 'in_progress');
+  const parked = [];
   for (const t of stuck) {
+    t.failures = (t.failures || 0) + 1;
+    if (t.failures >= MAX_TASK_FAILURES) {
+      parkTask(t, `parked after ${t.failures} runner failures in a row; last runner exited without finalizing the task`);
+      parked.push(t.id);
+      continue;
+    }
     t.status = 'pending';
-    t.log = [...(t.log || []), { t: now(), note: 'runner exited without finalizing; reset to pending' }];
+    appendLog(t, `runner exited without finalizing; reset to pending (attempt ${t.failures})`);
     saveTask(t);
-    appendEvent('task_reset', { id: t.id });
+    appendEvent('task_reset', { id: t.id, attempt: t.failures });
   }
-  return stuck.map((t) => t.id);
+  return { reset: stuck.filter((t) => !parked.includes(t.id)).map((t) => t.id), parked };
 }
 
 // ---- decisions --------------------------------------------------------------
@@ -330,7 +443,7 @@ export function resolveDecision(id, choice, note = '') {
     t.blockedBy = (t.blockedBy || []).filter((b) => b !== id);
     if (!t.blockedBy.length && t.status === 'blocked') t.status = 'pending';
     const chosen = (d.options || []).find((o) => o.id === choice);
-    t.log = [...(t.log || []), { t: now(), note: `decision "${d.question}" resolved: ${chosen ? chosen.label : choice}${note ? ` (${note})` : ''}` }];
+    appendLog(t, `decision "${d.question}" resolved: ${chosen ? chosen.label : choice}${note ? ` (${note})` : ''}`);
     saveTask(t);
     appendEvent('task_unblocked', { id: t.id, decision: id });
   }

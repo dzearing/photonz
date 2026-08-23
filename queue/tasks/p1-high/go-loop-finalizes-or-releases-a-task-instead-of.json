@@ -3,11 +3,11 @@
   "title": "Go loop finalizes or releases a task instead of reclaiming it in a tight cycle",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:29:06.070Z",
-  "updated": "2026-08-23T14:29:06.071Z",
+  "updated": "2026-08-23T14:51:04.942Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Between 2026-08-23T07:44Z and 14:22Z the loop claimed 'video-app-pages-conform-to-shared-timeline-selec' and exited without finalizing 2757 times, writing 5515 log entries into the task file (556KB) and 5516 events into queue/history.jsonl, while the finished work sat uncommitted in the working tree. Two things to fix: (1) a runner that exits without setting a terminal status should back off and stop re-claiming the same task rather than retrying every ~6s; (2) repeated claim/reset churn should be rate-limited or coalesced so it cannot balloon a task file the dashboard has to render. Consider capping the log array length in queue-lib.mjs. Epic: unmanned-loop / loop-robustness.",
@@ -16,6 +16,39 @@
     {
       "t": "2026-08-23T14:29:06.071Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T14:42:05.302Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "queue-lib: task logs coalesce identical consecutive notes (count + since) and cap at LOG_MAX=120 with the middle elided into a truthful `... N earlier entries elided` marker; saveTask enforces the cap on every write, including hand-edited files."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "queue-lib: history.jsonl self-compacts past 512KB. Churn events (task_started/task_reset/runner_failed) older than 48h or beyond the most recent 200 roll up to one entry per task per day with repeats + until; every other event is kept forever so the dashboard charts stay exact. New `queue.mjs compact` runs it by hand."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "queue-lib: guardStuck no longer hands out free retries. Its blind reset counts against the same per-task failure budget recordRunnerExit uses, so a task nothing can finalize gets parked there too; it now returns { reset, parked }."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "go-loop.sh: loop.log rotates to loop.log.1 past 32MB so a loop left running cannot fill the disk."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "New drill queue/bin/churn-drill.mjs (27 checks, all passing) replays the incident: 500 claim/reset rounds, a runner that exits 0 without finalizing, and a 3,000-event storm. Verified the clean-exit case parks after 3 attempts with 30s/120s/300s backoff instead of re-claiming every ~6s."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "One-time repair: the real history.jsonl went 8,114 events / 1.27MB -> 397 events / 83KB, with the dashboard chart series byte-identical before and after."
+    },
+    {
+      "t": "2026-08-23T14:51:04.942Z",
+      "note": "Verified: churn-drill 27/27, failure-drill 13/13 still green, Scripts/test.sh 932 tests pass."
     }
-  ]
+  ],
+  "started": "2026-08-23T14:42:05.302Z"
 }
