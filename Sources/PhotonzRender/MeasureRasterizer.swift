@@ -54,6 +54,14 @@ public enum MeasureRasterizer {
 
         let g = measure.caliperGeometry()
 
+        // An alignment check draws a dashed guide with tick marks and a verdict
+        // chip instead of the squared-U caliper.
+        if measure.alignment != nil {
+            drawAlignmentCheck(measure, geometry: g, pixelScale: pixelScale,
+                               color: color, chipColor: chipColor, in: context)
+            return context.makeImage()
+        }
+
         // Chip footprint + the head-line gap it needs (0 when the label is off).
         let labelText = measure.label(pixelScale: pixelScale)
         var chipSize = CGSize.zero
@@ -83,6 +91,78 @@ public enum MeasureRasterizer {
         }
 
         return context.makeImage()
+    }
+
+    /// An alignment check (§9, decision D1): a dashed guide along the feet
+    /// line, a short solid tick where each aligned element crosses it, the
+    /// outlier's ACTUAL edge drawn beside the guide with a connector showing
+    /// the gap, and the verdict chip ("aligned" / "off 4 px") at the midpoint.
+    private static func drawAlignmentCheck(_ measure: MeasureContent, geometry g: CaliperGeometry,
+                                           pixelScale: CGFloat, color: CGColor,
+                                           chipColor: CGColor, in context: CGContext) {
+        guard let check = measure.alignment else { return }
+        let labelText = measure.label(pixelScale: pixelScale)
+        var chipSize = CGSize.zero
+        var gapHalf: CGFloat = 0
+        if measure.showLabel {
+            chipSize = chipFootprint(for: labelText, fontSize: measure.labelPointSize,
+                                     padding: measure.labelPadding)
+            gapHalf = min(measure.chipAxisHalfExtent(chipSize: chipSize) + MeasureContent.chipLineGap,
+                          measure.rawDistance / 2)
+        }
+
+        // Dashed guide, split around the chip. `labelAnchor` is the feet-line
+        // midpoint (alignment guides carry headOffset 0).
+        let mid = g.labelAnchor
+        func gapEdge(toward p: CGPoint) -> CGPoint {
+            let dx = p.x - mid.x, dy = p.y - mid.y
+            let len = hypot(dx, dy)
+            guard len > 0, gapHalf > 0 else { return mid }
+            return CGPoint(x: mid.x + dx / len * gapHalf, y: mid.y + dy / len * gapHalf)
+        }
+        context.setLineDash(phase: 0, lengths: [6, 4])
+        for foot in [g.footA, g.footB] {
+            let inner = gapEdge(toward: foot)
+            context.move(to: foot)
+            context.addLine(to: inner)
+            context.strokePath()
+        }
+        context.setLineDash(phase: 0, lengths: [])
+
+        let vertical = measure.mode == .vertical
+        let guidePos = vertical ? g.footA.x : g.footA.y
+        let outlier = check.verdict?.outlierIndex
+        let tick = MeasureBuilder.alignmentTickHalf
+        for (index, item) in check.items.enumerated() {
+            let spanMid = (item.spanStart + item.spanEnd) / 2
+            if index == outlier {
+                // The outlier's real edge across its span, plus a connector
+                // from the guide so the gap itself is visible.
+                context.move(to: point(cross: item.edge, along: item.spanStart, vertical: vertical))
+                context.addLine(to: point(cross: item.edge, along: item.spanEnd, vertical: vertical))
+                context.strokePath()
+                context.move(to: point(cross: guidePos, along: spanMid, vertical: vertical))
+                context.addLine(to: point(cross: item.edge, along: spanMid, vertical: vertical))
+                context.strokePath()
+            } else {
+                // A short perpendicular tick where the element crosses the guide.
+                context.move(to: point(cross: guidePos - tick, along: spanMid, vertical: vertical))
+                context.addLine(to: point(cross: guidePos + tick, along: spanMid, vertical: vertical))
+                context.strokePath()
+            }
+        }
+
+        if measure.showLabel {
+            drawPill(labelText, at: mid, chipSize: chipSize, fontSize: measure.labelPointSize,
+                     borderWidth: measure.strokeWidth, fill: chipColor, border: color,
+                     textColorHex: measure.textColorHex, in: context)
+        }
+    }
+
+    /// A point from guide-relative coordinates: `cross` is the guide's own axis
+    /// position (x for a vertical guide), `along` the span axis.
+    private static func point(cross: CGFloat, along: CGFloat, vertical: Bool) -> CGPoint {
+        vertical ? CGPoint(x: cross, y: along) : CGPoint(x: along, y: cross)
     }
 
     /// The chip's footprint = measured text (at `fontSize`) + padding on all sides.

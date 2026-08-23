@@ -27,9 +27,12 @@ extension Layer {
     }
 
     /// Lines/arrows and measures edit by dragging their two endpoints.
+    /// Alignment guides don't: their items were scanned for the drawn span, so
+    /// the guide is redrawn rather than stretched (a stale scan would lie).
     public var hasEndpointHandles: Bool {
         if let a = annotation { return a.shape == .line || a.shape == .arrow }
-        return measure != nil
+        if let m = measure { return m.alignment == nil }
+        return false
     }
 
     /// A measure reference point's position in document coordinates.
@@ -46,7 +49,10 @@ extension Layer {
     public var allowsFrameResize: Bool {
         switch content {
         case .text: true
-        case .annotation, .measure: !hasEndpointHandles
+        case .annotation: !hasEndpointHandles
+        // Calipers edit via endpoint handles; alignment guides not at all
+        // (move/delete only) — neither offers the eight frame handles.
+        case .measure: false
         case .image, .zoomCallout, .collage: true
         }
     }

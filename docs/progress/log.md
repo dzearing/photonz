@@ -3733,3 +3733,48 @@ the Measure tool is active until the document's first caliper lands
 Verified: full suite green (871 tests), dev app builds, launches, and opens a
 document cleanly. Not verified visually (no screen-capture in this session):
 the on-canvas look of the hover chrome — worth a glance next manned session.
+
+## 2026-08-22 (later) — Next Measure: alignment checks (§9, decision D1 shipped)
+
+Queue task `next-measure-alignment-checks-blocked-on-decisio`. The dashboard
+decision resolved to "Draw an alignment guide yourself", so §9 went from
+gated-concept to shipped, all behind `next-measure-align` (Next-only, default
+ON, px tolerance parameter, default 1).
+
+Core (TDD, `PhotonzCore/AlignmentCheck.swift`): `AlignmentScan` samples the
+dragged guide every 8px, captures the nearest EdgeMap edge within 12px, and
+merges same-edge runs (±1.5px) into per-element `AlignmentItem`s; jumps and
+block-clean gaps split items, so the misaligned element separates by
+construction. `AlignmentCheck.verdict` derives (never stores) the answer:
+reference = median edge (majority rules), worst deviation beyond tolerance
+names the outlier; <2 items → nil ("no edges"). The check is NOT a new layer
+kind — `MeasureContent.alignment: AlignmentCheck?` (headOffset 0, feet = guide
+ends), hand-coded Codable extended with decodeIfPresent so old docs decode nil.
+Builder re-expresses items layer-local, reserves tick/outlier/chip space, and
+scales items through whole-document resize. Alignment guides expose NO
+endpoint/frame handles (a stretched guide would carry a stale scan): move,
+restyle, rotate, or delete-and-redraw. 21 new core tests + a catalog test.
+
+Render: `MeasureRasterizer` branch — dashed guide split around the chip, ticks
+where aligned elements cross, the outlier's REAL edge beside the guide with a
+connector, verdict chip ("aligned" / "off 4 px", unit-aware). Baked into the
+layer raster so exports carry it. Two pixel tests.
+
+App: Measure toolbar gains a Distance | Alignment chip pair (flag-gated, crop
+options styling). Alignment mode: press-drag draws a dashed leveled preview
+(anchor edge-snapped, snap dot shows the target edge, hover readout
+suppressed), release scans `snappingEdgeMap` and commits one undo step via
+`EditorState.addAlignmentCheck` — the guide settles on the REFERENCE edge, not
+the drawn pixel — then draw-then-select as usual. Esc/tool-switch/mode-switch
+cancel. Hint chip hidden in alignment mode.
+
+Verified: 887 tests green (full suite), dev app builds and launches, and an
+end-to-end script (real bitmap → EdgeMapAnalyzer → scan → builder → renderer)
+produced the expected redline: guide on the majority edge, "off 6 px" chip,
+outlier edge + connector + ticks all pixel-probed. Not verified by hand: the
+live drag feel on a real screenshot — worth a manned pass.
+
+Follow-ups queued for other tasks: §5 roles should treat `alignment != nil`
+as the Align role; §6 panel gets "· N items" from the items count. Chip sits
+at the guide midpoint and can cover the outlier connector when the outlier is
+mid-guide — revisit placement if it annoys in practice.

@@ -52,6 +52,9 @@ struct CanvasView: NSViewRepresentable {
     let textContent: TextContent?
     /// The active measure tool's style, mirrored into the in-flight preview.
     let measureContent: MeasureContent?
+    /// Whether the Measure tool is in its Alignment mode (Next flag
+    /// `next-measure-align`): a drag draws a checking guide, not a caliper.
+    let measureChecksAlignment: Bool
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
@@ -88,6 +91,9 @@ struct CanvasView: NSViewRepresentable {
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
     let onMeasureEndpointPreview: (UUID, CGPoint, CGPoint, CGFloat) -> Void
     let onMeasureEndpointCommit: (UUID, CGPoint, CGPoint, CGFloat) -> Void
+    /// Completed alignment-guide drag: (guide axis, cross-axis position,
+    /// along-axis span), all in document coordinates.
+    let onAlignmentCommit: (MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -121,7 +127,8 @@ struct CanvasView: NSViewRepresentable {
                    multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
-                   measureContent: measureContent, edgeMap: edgeMap,
+                   measureContent: measureContent,
+                   measureChecksAlignment: measureChecksAlignment, edgeMap: edgeMap,
                    isCanvasSelected: isCanvasSelected)
     }
 
@@ -146,6 +153,7 @@ struct CanvasView: NSViewRepresentable {
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onMeasureCommit = onMeasureCommit
+        view.onAlignmentCommit = onAlignmentCommit
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
         view.onMeasureEndpointCommit = onMeasureEndpointCommit
         view.onToolChange = onToolChange
@@ -187,6 +195,7 @@ final class CanvasNSView: NSView {
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
+    var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
@@ -378,6 +387,12 @@ final class CanvasNSView: NSView {
         case secondPlaced(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) // seeking head
     }
     private var measurePlacement: MeasurePlacement?
+    /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
+    /// checking guide, and the in-flight guide drag (document coordinates).
+    private var measureChecksAlignment = false
+    private var alignmentDrag: (anchor: CGPoint, current: CGPoint)?
+    /// Dashed live preview of the guide being dragged.
+    private let alignmentPreviewLayer = CAShapeLayer()
     /// The mouse-down location (view space) of the current measure press, to tell
     /// a click from a press-drag on release.
     private var measurePressDownView: CGPoint?
@@ -486,7 +501,7 @@ final class CanvasNSView: NSView {
     /// The three draggable handles of a placed caliper in document space: the two
     /// feet (the measuring line) and the head (the chip bar's offset point).
     private func measureHandles(_ layer: Layer) -> [(handle: MeasureHandle, point: CGPoint)] {
-        guard let m = layer.measure,
+        guard let m = layer.measure, m.alignment == nil,
               let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
         let g = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e, headOffset: m.headOffset)
         return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
@@ -750,6 +765,15 @@ final class CanvasNSView: NSView {
         hoverWidthCaliperLayer.opacity = 0.85
         hoverHeightCaliperLayer.opacity = 0.85
 
+        // Alignment-guide drag preview: dashed, in the measure ink (set per
+        // refresh), above the composite but under handles/snap chrome.
+        alignmentPreviewLayer.fillColor = nil
+        alignmentPreviewLayer.lineDashPattern = [6, 4]
+        alignmentPreviewLayer.lineCap = .round
+        alignmentPreviewLayer.isHidden = true
+        alignmentPreviewLayer.zPosition = 95
+        layer?.addSublayer(alignmentPreviewLayer)
+
         // Selection handles and the snap dot must sit ABOVE the caliper label
         // pills (which are NSView subviews), so a caliper's third (head) handle
         // isn't hidden behind its own glass chip.
@@ -923,15 +947,67 @@ final class CanvasNSView: NSView {
         refreshOverlays()
     }
 
-    /// Cancels an in-progress placement (⎋ or tool switch).
+    /// Cancels an in-progress placement (⎋, tool switch, or a Measure mode
+    /// switch) — both the caliper draft and any alignment-guide drag.
     private func cancelMeasurePlacement() {
         measurePlacement = nil
         measureFirstFootPress = false
         measurePressDownView = nil
+        alignmentDrag = nil
+        alignmentPreviewLayer.isHidden = true
         snapGuide = nil
         snapDotLayer.isHidden = true
         hideMeasureHoverReadout()
         clearAnnotationPreview()
+    }
+
+    // MARK: Alignment-guide drag (Next, `next-measure-align`)
+
+    /// Draws the dashed guide being dragged, leveled onto the drag's dominant
+    /// axis through the (snapped) anchor.
+    private func refreshAlignmentPreview() {
+        guard let viewport, let drag = alignmentDrag else {
+            alignmentPreviewLayer.isHidden = true
+            return
+        }
+        hideMeasureHoverReadout()
+        let axis = MeasureContent.dominantAxis(from: drag.anchor, to: drag.current)
+        let end = axis == .vertical
+            ? CGPoint(x: drag.anchor.x, y: drag.current.y)
+            : CGPoint(x: drag.current.x, y: drag.anchor.y)
+        let path = CGMutablePath()
+        path.move(to: viewport.viewPoint(fromDocument: drag.anchor))
+        path.addLine(to: viewport.viewPoint(fromDocument: end))
+        let style = measureContent ?? MeasureContent()
+        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        alignmentPreviewLayer.path = path
+        alignmentPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g,
+                                                    blue: rgba.b, alpha: rgba.a)
+        alignmentPreviewLayer.lineWidth = max(1, style.strokeWidth * viewport.zoom)
+        alignmentPreviewLayer.isHidden = false
+        snapDotLayer.isHidden = true
+        CATransaction.commit()
+    }
+
+    /// Mouse-up on an alignment drag: level onto the dominant axis and hand the
+    /// guide (axis, cross-axis position, along-axis span) to the app, which
+    /// scans the edges it crosses and commits the check. A press that never
+    /// really dragged is a quiet no-op — a guide needs a span.
+    private func finishAlignmentDrag(from anchor: CGPoint, to raw: CGPoint) {
+        guard let viewport else { return }
+        let axis = MeasureContent.dominantAxis(from: anchor, to: raw)
+        let alongLength = axis == .vertical ? abs(raw.y - anchor.y) : abs(raw.x - anchor.x)
+        guard alongLength * viewport.zoom > 8 else {
+            refreshMeasureCreation(modifierFlags: [])
+            return
+        }
+        let position = axis == .vertical ? anchor.x : anchor.y
+        let span = axis == .vertical
+            ? min(anchor.y, raw.y)...max(anchor.y, raw.y)
+            : min(anchor.x, raw.x)...max(anchor.x, raw.x)
+        onAlignmentCommit(axis, position, span) // adds, selects, reverts to Select
     }
 
     // MARK: Hover-to-measure element readout (Next, `next-measure-hover`)
@@ -951,6 +1027,7 @@ final class CanvasNSView: NSView {
     /// `EdgeMap.empty` and this stays a no-op, the same gate snapping uses.
     private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
         guard tool == .measure, measurePlacement == nil,
+              !measureChecksAlignment,
               !modifierFlags.contains(.command),
               Experiments.shared.measureHoverEnabled,
               let viewport, let document, let hoverPoint else {
@@ -1053,6 +1130,22 @@ final class CanvasNSView: NSView {
             dots.addEllipse(in: CGRect(x: v.x - r, y: v.y - r, width: 2 * r, height: 2 * r))
         }
         var previewPoints: [CGPoint] = []
+
+        // Alignment mode: only the snap dot (it shows which edge a press would
+        // anchor the guide on); the caliper placement chrome never applies.
+        if measureChecksAlignment {
+            if alignmentDrag == nil, let cursor {
+                addDot(snapMeasureAnchor(cursor, modifiers: modifierFlags))
+            }
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            snapDotLayer.path = dots
+            snapDotLayer.isHidden = dots.isEmpty
+            annotationPreviewLayer.isHidden = true
+            annotationPreviewHeadLayer.path = nil
+            CATransaction.commit()
+            return
+        }
 
         switch measurePlacement {
         case nil:
@@ -1205,6 +1298,14 @@ final class CanvasNSView: NSView {
         // place foot A and remember the down point so mouse-up can tell a click
         // (stay for a foot-B click) from a drag (line done → set the head).
         if tool == .measure {
+            // Alignment mode: the press anchors a guide drag (snapped onto the
+            // nearby edge — the edge you meant, not the pixel you hit).
+            if measureChecksAlignment {
+                let anchor = snapMeasureAnchor(p, modifiers: event.modifierFlags)
+                alignmentDrag = (anchor, anchor)
+                refreshAlignmentPreview()
+                return
+            }
             measurePressDownView = convert(event.locationInWindow, from: nil)
             hoverPoint = measurePressDownView
             if measurePlacement == nil {
@@ -1375,6 +1476,10 @@ final class CanvasNSView: NSView {
             drag.update(to: p)
             annotationDrag = drag
             refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+        } else if var drag = alignmentDrag {
+            drag.current = p
+            alignmentDrag = drag
+            refreshAlignmentPreview()
         } else if tool == .measure {
             // Caliper creation is click-based; a drag between clicks just updates
             // the placement preview (same as moving with the button up).
@@ -1519,6 +1624,13 @@ final class CanvasNSView: NSView {
         guard let viewport else { return }
         // The measure tool advances its placement on mouse-up (click/click) or on
         // a press-drag release (down/drag/release draws the line).
+        if let drag = alignmentDrag {
+            alignmentDrag = nil
+            alignmentPreviewLayer.isHidden = true
+            finishAlignmentDrag(from: drag.anchor,
+                                to: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
+            return
+        }
         if tool == .measure {
             let up = convert(event.locationInWindow, from: nil)
             let down = measurePressDownView ?? up
@@ -1742,7 +1854,7 @@ final class CanvasNSView: NSView {
                 refreshOverlays()
                 return
             }
-            if measurePlacement != nil {
+            if measurePlacement != nil || alignmentDrag != nil {
                 cancelMeasurePlacement()
                 refreshOverlays()
                 return
@@ -1880,7 +1992,8 @@ final class CanvasNSView: NSView {
               selectedLayerID: selectedLayerID, selectedLayerFrame: selectedLayerFrame,
               multiSelectedLayerIDs: multiSelectedLayerIDs,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
-              textContent: textContent, measureContent: measureContent, edgeMap: edgeMap)
+              textContent: textContent, measureContent: measureContent,
+              measureChecksAlignment: measureChecksAlignment, edgeMap: edgeMap)
         onViewportChange(next)
     }
 
@@ -1894,6 +2007,7 @@ final class CanvasNSView: NSView {
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
+               measureChecksAlignment: Bool = false,
                edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
@@ -1904,6 +2018,11 @@ final class CanvasNSView: NSView {
         self.annotationStyle = annotationStyle
         self.textContent = textContent
         self.measureContent = measureContent
+        if measureChecksAlignment != self.measureChecksAlignment {
+            // Switching Measure modes abandons whichever draft was in flight.
+            self.measureChecksAlignment = measureChecksAlignment
+            cancelMeasurePlacement()
+        }
         self.edgeMap = edgeMap
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds
@@ -1916,6 +2035,8 @@ final class CanvasNSView: NSView {
             measureFirstFootPress = false
             measurePressDownView = nil
             measureHandleDrag = nil
+            alignmentDrag = nil
+            alignmentPreviewLayer.isHidden = true
             regionDrag = nil
             regionOutlineDrag = nil
             if regionContentDrag != nil {

@@ -326,6 +326,15 @@ struct FeatureCatalogTests {
             == ElementBounds.defaultMaxRadius)
     }
 
+    @Test func theAlignmentFlagIsNextOnlyAndOnByDefault() {
+        // Section 9 of docs/design/next-measure.md (decision D1): alignment
+        // checks exist only in Next (default on there) with a px tolerance.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureAlignFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureAlignFlag })
+        #expect(FeatureCatalog.defaultSettings(for: .next)
+            .number(FeatureCatalog.measureAlignFlag, FeatureCatalog.measureAlignTolerance) == 1)
+    }
+
     @Test func theToastTimingFlagShipsWithTheBuiltInSeconds() {
         let settings = FeatureCatalog.defaultSettings(for: .current)
         #expect(!settings.isEnabled(FeatureCatalog.captureToastTimingFlag))

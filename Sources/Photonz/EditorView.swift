@@ -182,6 +182,8 @@ struct EditorView: View {
                        annotationStyle: editorState.activeAnnotationStyle,
                        textContent: editorState.activeTextContent,
                        measureContent: editorState.measureStyle,
+                       measureChecksAlignment: editorState.measureChecksAlignment
+                           && Experiments.shared.measureAlignEnabled,
                        edgeMap: editorState.snappingEdgeMap,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
@@ -205,6 +207,7 @@ struct EditorView: View {
                        onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
+                       onAlignmentCommit: { editorState.addAlignmentCheck(axis: $0, position: $1, span: $2) },
                        onToolChange: { editorState.setTool($0) },
                        onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
@@ -372,6 +375,10 @@ struct EditorView: View {
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
             toolButton(.measure, "ruler", "Measure", "i")
+            if editorState.activeTool == .measure && Experiments.shared.measureAlignEnabled {
+                measureOptions
+                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
+            }
             toolButton(.fill, help: "Fill", key: "g") {
                 PaintBucketIcon().frame(width: 22, height: 21)
             }
@@ -450,6 +457,9 @@ struct EditorView: View {
         }
         if editorState.activeTool == .crop {
             cropOptions
+        }
+        if editorState.activeTool == .measure && Experiments.shared.measureAlignEnabled {
+            measureOptions
         }
     }
 
@@ -826,6 +836,35 @@ struct EditorView: View {
                 .frame(width: 22, alignment: .trailing)
         }
         .help("Wand tolerance: how similar a color must be to join the selection")
+    }
+
+    /// Measure mode: a plain distance caliper, or an alignment-checking guide
+    /// (Next `next-measure-align`). Mirrors the crop-aspect chip styling.
+    private var measureOptions: some View {
+        HStack(spacing: 6) {
+            ForEach([false, true], id: \.self) { checksAlignment in
+                let isActive = editorState.measureChecksAlignment == checksAlignment
+                Button {
+                    editorState.measureChecksAlignment = checksAlignment
+                } label: {
+                    Text(checksAlignment ? "Alignment" : "Distance")
+                        .font(.caption.weight(.medium))
+                        .fixedSize()
+                        .foregroundStyle(isActive ? Color.white : Color.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            if isActive {
+                                Capsule().fill(Color.accentColor)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .help(checksAlignment
+                      ? "Alignment: drag a guide along an edge to check everything it crosses"
+                      : "Distance: click two points for a live distance")
+            }
+        }
     }
 
     private var cropOptions: some View {

@@ -139,6 +139,17 @@ extension Experiments {
             ?? ElementBounds.defaultMaxRadius
     }
 
+    /// `next-measure-align`: whether the Measure tool offers its Alignment
+    /// mode (drag a guide along an edge to check everything it crosses).
+    /// Exists only in the Next release's catalog, so Current always reads false.
+    var measureAlignEnabled: Bool { isEnabled(FeatureCatalog.measureAlignFlag) }
+
+    /// `next-measure-align`: how far (px) an edge may sit from the reference
+    /// line and still count as aligned.
+    var measureAlignTolerance: CGFloat {
+        CGFloat(number(FeatureCatalog.measureAlignFlag, FeatureCatalog.measureAlignTolerance) ?? 1)
+    }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

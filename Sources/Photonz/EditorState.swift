@@ -860,6 +860,42 @@ final class EditorState {
         finishCreating(layer.id)
     }
 
+    /// Whether the Measure tool is in its Alignment mode (Next flag
+    /// `next-measure-align`): drags draw a checking guide instead of a caliper.
+    /// Session chrome, never persisted.
+    var measureChecksAlignment = false
+
+    /// Completed alignment-guide drag (`next-measure-align`, decision D1): scan
+    /// the element edges the guide crosses, settle the guide onto the reference
+    /// edge (the median — the drawn drag was the question, the reference is the
+    /// answer), and commit the check as one undoable layer in the caliper's ink.
+    func addAlignmentCheck(axis: MeasureMode, position: CGFloat, span: ClosedRange<CGFloat>) {
+        guard document != nil, Experiments.shared.measureAlignEnabled else { return }
+        let items = AlignmentScan.items(axis: axis, position: position, span: span,
+                                        in: snappingEdgeMap)
+        var content = measureStyle
+        content.mode = axis
+        content.headOffset = 0
+        content.alignment = AlignmentCheck(items: items,
+                                           tolerance: Experiments.shared.measureAlignTolerance)
+        let reference = content.alignment?.verdict?.reference ?? items.first?.edge ?? position
+        let start: CGPoint, end: CGPoint
+        switch axis {
+        case .vertical:
+            start = CGPoint(x: reference, y: span.lowerBound)
+            end = CGPoint(x: reference, y: span.upperBound)
+        case .horizontal:
+            start = CGPoint(x: span.lowerBound, y: reference)
+            end = CGPoint(x: span.upperBound, y: reference)
+        }
+        var layer = MeasureBuilder.layer(content: content, from: start, to: end)
+        layer.style = measureStyles.layerStyle
+        perform { $0.addLayer(layer) }
+        recordRecentColor(hex: content.strokeColorHex)
+        measureHintDismissed = true
+        finishCreating(layer.id)
+    }
+
     /// Once the first caliper lands in this document, the measure hint chip is
     /// gone for good — deleting every measurement doesn't bring it back.
     /// Session-scoped on purpose: hint state is chrome and never persists into
@@ -871,6 +907,7 @@ final class EditorState {
     /// caliper has ever landed in this document.
     var showsMeasureHint: Bool {
         guard activeTool == .measure, !measureHintDismissed,
+              !measureChecksAlignment,
               Experiments.shared.measureHoverEnabled,
               let document else { return false }
         return !document.layers.contains { $0.measure != nil }

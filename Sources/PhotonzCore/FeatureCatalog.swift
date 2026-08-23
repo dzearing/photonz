@@ -31,6 +31,9 @@ public enum FeatureCatalog {
     public static let measureHoverFlag = "next-measure-hover"
     public static let measureHoverRadius = "radius"
 
+    public static let measureAlignFlag = "next-measure-align"
+    public static let measureAlignTolerance = "tolerance"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -86,6 +89,19 @@ public enum FeatureCatalog {
                         FeatureParameter(name: measureHoverRadius, label: "Search radius (px)",
                                          value: .number(ElementBounds.defaultMaxRadius),
                                          bounds: NumberBounds(minimum: 100, maximum: 2000, step: 50)),
+                    ]),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureAlignFlag,
+                    title: "Alignment checks",
+                    description: "Adds an Alignment mode to the Measure tool: drag a guide along an edge and every element it crosses is checked. The guide reads aligned, or calls out the element that is off and by how much.",
+                    isEnabled: false,
+                    parameters: [
+                        FeatureParameter(name: measureAlignTolerance, label: "Tolerance (px)",
+                                         value: .number(1),
+                                         bounds: NumberBounds(minimum: 0, maximum: 8, step: 0.5)),
                     ]),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),

@@ -89,6 +89,11 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// Multiplier on the base label font/pill size, driven by the inspector's
     /// "Label size" slider. 1 = default.
     public var labelScale: CGFloat
+    /// Present when this measure is an **alignment check** (§9): the feet are
+    /// the two ends of a dashed guide line, `headOffset` is 0, and the label
+    /// reads the check's verdict instead of a distance. Nil for plain calipers
+    /// and for every document saved before this field existed.
+    public var alignment: AlignmentCheck?
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -98,7 +103,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 chipOpacity: CGFloat = MeasureContent.defaultChipOpacity,
                 textColorHex: String = MeasureContent.defaultStrokeColorHex,
                 showLabel: Bool = true,
-                unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1) {
+                unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1,
+                alignment: AlignmentCheck? = nil) {
         self.start = start
         self.end = end
         self.headOffset = headOffset
@@ -112,6 +118,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.unit = unit
         self.decimals = decimals
         self.labelScale = labelScale
+        self.alignment = alignment
     }
 
     /// Default caliper ink — the original single measure color.
@@ -126,6 +133,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
+        case alignment
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
@@ -154,6 +162,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(unit, forKey: .unit)
         try c.encode(decimals, forKey: .decimals)
         try c.encode(labelScale, forKey: .labelScale)
+        try c.encodeIfPresent(alignment, forKey: .alignment)
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -179,6 +188,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         unit = try c.decode(MeasureUnit.self, forKey: .unit)
         decimals = try c.decode(Int.self, forKey: .decimals)
         labelScale = try c.decodeIfPresent(CGFloat.self, forKey: .labelScale) ?? 1
+        alignment = try c.decodeIfPresent(AlignmentCheck.self, forKey: .alignment)
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
@@ -239,18 +249,30 @@ extension MeasureContent {
         }
     }
 
-    /// The span in the configured unit. Points divide the raw pixel distance by
-    /// `pixelScale` (≤0 is treated as 1× so a missing scale never divides away
-    /// the value); pixels return the raw distance unchanged.
-    public func displayDistance(pixelScale: CGFloat) -> CGFloat {
+    /// A raw pixel value in the configured unit. Points divide by `pixelScale`
+    /// (≤0 is treated as 1× so a missing scale never divides away the value);
+    /// pixels return it unchanged.
+    public func displayValue(_ raw: CGFloat, pixelScale: CGFloat) -> CGFloat {
         switch unit {
-        case .pixels: rawDistance
-        case .points: rawDistance / (pixelScale > 0 ? pixelScale : 1)
+        case .pixels: raw
+        case .points: raw / (pixelScale > 0 ? pixelScale : 1)
         }
     }
 
-    /// The formatted readout, e.g. "120 px".
+    /// The span in the configured unit.
+    public func displayDistance(pixelScale: CGFloat) -> CGFloat {
+        displayValue(rawDistance, pixelScale: pixelScale)
+    }
+
+    /// The formatted readout: a caliper's distance ("120 px"), or an alignment
+    /// check's verdict ("aligned" / "off 4 px" / "no edges").
     public func label(pixelScale: CGFloat) -> String {
+        if let alignment {
+            guard let verdict = alignment.verdict else { return "no edges" }
+            guard !verdict.isAligned else { return "aligned" }
+            let delta = displayValue(verdict.maxDelta, pixelScale: pixelScale)
+            return String(format: "off %.\(max(0, decimals))f %@", delta, unit.suffix)
+        }
         let value = displayDistance(pixelScale: pixelScale)
         return String(format: "%.\(max(0, decimals))f %@", value, unit.suffix)
     }
@@ -326,8 +348,16 @@ extension MeasureContent {
     /// digit count across units), so it stays stable when the unit/scale changes.
     /// The rasterizer measures the real text and centers within this reservation.
     public var estimatedLabelSize: CGSize {
-        let digits = max(1, String(Int(rawDistance.rounded())).count)
-        let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
+        // Alignment verdicts are words, not distances: "off 120 px" is the
+        // longest realistic form, and a fixed reservation keeps the frame
+        // stable when the verdict text changes.
+        let chars: CGFloat
+        if alignment != nil {
+            chars = 10
+        } else {
+            let digits = max(1, String(Int(rawDistance.rounded())).count)
+            chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
+        }
         let w = chars * labelPointSize * 0.62 + 2 * labelPadding
         let h = labelPointSize * 1.3 + 2 * labelPadding
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
@@ -346,9 +376,14 @@ extension MeasureContent {
 /// the frame. `headOffset` is a delta, so it's translation-invariant.
 public enum MeasureBuilder {
 
+    /// Perpendicular half-length of the small tick drawn where an aligned
+    /// element crosses an alignment guide.
+    public static let alignmentTickHalf: CGFloat = 5
+
     /// The layer a placement whose feet run from `start` to `end` (document
     /// coordinates) creates. Frame = padded bbox (+ chip reservation); feet
-    /// become layer-local.
+    /// become layer-local. An alignment payload's items must arrive in DOCUMENT
+    /// space (like `start`/`end`); they are re-expressed layer-local too.
     public static func layer(content: MeasureContent, from start: CGPoint, to end: CGPoint) -> Layer {
         var content = content
         content.start = start
@@ -364,11 +399,46 @@ public enum MeasureBuilder {
                                    y: g.labelAnchor.y - size.height / 2,
                                    width: size.width, height: size.height))
         }
+        // An alignment check also draws each item's tick (and an outlier's
+        // actual edge, which can sit well off the guide) — reserve that too.
+        if let check = content.alignment {
+            for item in check.items {
+                let reach = alignmentTickHalf + pad
+                switch content.mode {
+                case .vertical:
+                    box = box.union(CGRect(x: item.edge - reach, y: item.spanStart - pad,
+                                           width: reach * 2,
+                                           height: max(item.spanEnd - item.spanStart, 1) + pad * 2))
+                case .horizontal:
+                    box = box.union(CGRect(x: item.spanStart - pad, y: item.edge - reach,
+                                           width: max(item.spanEnd - item.spanStart, 1) + pad * 2,
+                                           height: reach * 2))
+                }
+            }
+        }
         box.size.width = max(box.size.width, 1)
         box.size.height = max(box.size.height, 1)
         content.start = CGPoint(x: start.x - box.minX, y: start.y - box.minY)
         content.end = CGPoint(x: end.x - box.minX, y: end.y - box.minY)
-        return Layer(name: "Measure", content: .measure(content), frame: box)
+        if var check = content.alignment {
+            check.items = check.items.map { item in
+                var item = item
+                switch content.mode {
+                case .vertical:
+                    item.edge -= box.minX
+                    item.spanStart -= box.minY
+                    item.spanEnd -= box.minY
+                case .horizontal:
+                    item.edge -= box.minY
+                    item.spanStart -= box.minX
+                    item.spanEnd -= box.minX
+                }
+                return item
+            }
+            content.alignment = check
+        }
+        let name = content.alignment == nil ? "Measure" : "Alignment"
+        return Layer(name: name, content: .measure(content), frame: box)
     }
 
     private static func boundingBox(of points: [CGPoint]) -> CGRect {
@@ -384,8 +454,34 @@ public enum MeasureBuilder {
     /// Redraw a caliper whose feet run between document-space `start` and `end`:
     /// identity, name, style, and `headOffset` survive; the frame is rebuilt.
     public static func updating(_ layer: Layer, start: CGPoint, end: CGPoint) -> Layer {
-        guard let m = layer.measure else { return layer }
-        let rebuilt = self.layer(content: m, from: start, to: end)
+        guard var m = layer.measure else { return layer }
+        // `layer(content:from:to:)` expects alignment items in document space;
+        // the stored ones are layer-local to the CURRENT frame.
+        if var check = m.alignment {
+            check.items = check.items.map { item in
+                var item = item
+                switch m.mode {
+                case .vertical:
+                    item.edge += layer.frame.minX
+                    item.spanStart += layer.frame.minY
+                    item.spanEnd += layer.frame.minY
+                case .horizontal:
+                    item.edge += layer.frame.minY
+                    item.spanStart += layer.frame.minX
+                    item.spanEnd += layer.frame.minX
+                }
+                return item
+            }
+            m.alignment = check
+        }
+        return rebuilding(layer, content: m, start: start, end: end)
+    }
+
+    /// Rebuild from content whose alignment items (if any) are ALREADY in
+    /// document space — the shared tail of `updating` and `resized`.
+    private static func rebuilding(_ layer: Layer, content: MeasureContent,
+                                   start: CGPoint, end: CGPoint) -> Layer {
+        let rebuilt = self.layer(content: content, from: start, to: end)
         var updated = layer
         updated.frame = rebuilt.frame
         updated.content = rebuilt.content
@@ -417,11 +513,27 @@ public enum MeasureBuilder {
         let ratio = m.mode == .horizontal ? frame.height / layer.frame.height
                                           : frame.width / layer.frame.width
         m.headOffset *= ratio
+        // Alignment items scale into the new frame's document space alongside
+        // the feet (remap() maps a layer-local point there directly, so the
+        // shared `rebuilding` tail must not convert them again).
+        if var check = m.alignment {
+            check.items = check.items.map { item in
+                switch m.mode {
+                case .vertical:
+                    let a = remap(CGPoint(x: item.edge, y: item.spanStart))
+                    let b = remap(CGPoint(x: item.edge, y: item.spanEnd))
+                    return AlignmentItem(edge: a.x, spanStart: a.y, spanEnd: b.y)
+                case .horizontal:
+                    let a = remap(CGPoint(x: item.spanStart, y: item.edge))
+                    let b = remap(CGPoint(x: item.spanEnd, y: item.edge))
+                    return AlignmentItem(edge: a.y, spanStart: a.x, spanEnd: b.x)
+                }
+            }
+            m.alignment = check
+        }
         // remap() maps a layer-local point into the new frame's document space.
         let startDoc = remap(m.start), endDoc = remap(m.end)
-        var updated = layer
-        updated.content = .measure(m)
-        return updating(updated, start: startDoc, end: endDoc)
+        return rebuilding(layer, content: m, start: startDoc, end: endDoc)
     }
 
     /// Style/readout edit on an existing measure: feet stay anchored in document

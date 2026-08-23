@@ -1,12 +1,12 @@
 {
   "id": "next-measure-alignment-checks-blocked-on-decisio",
-  "title": "Next Measure: alignment checks (blocked on decision)",
+  "title": "Next Measure: alignment checks",
   "priority": "p2-normal",
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.423Z",
-  "updated": "2026-08-22T23:49:53.293Z",
+  "updated": "2026-08-22T23:57:49.966Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 9. The redline mock shows an alignment check (dashed guide, aligned tag, Align role) but the creation gesture is unshown and 16.6 alignment guides were rejected. Await the attached decision before any code.",
@@ -23,7 +23,24 @@
     {
       "t": "2026-08-22T23:49:53.293Z",
       "note": "decision \"When you are redlining a screenshot, how should checking alignment work?\" resolved: Draw an alignment guide yourself"
+    },
+    {
+      "t": "2026-08-22T23:57:49.966Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T00:20:00.000Z",
+      "note": "title groomed: status words removed, status lives in the status field"
+    },
+    {
+      "t": "2026-08-23T00:21:00.000Z",
+      "note": "Decision honored: drag-a-guide alignment checks. Core AlignmentScan/verdict/payload TDD (21 tests), MeasureRasterizer dashed-guide branch (2 pixel tests), next-measure-align flag (Next-only, default on, tolerance param), Distance|Alignment toolbar mode + canvas drag gesture. Guides settle on the median reference edge; no stretch handles (stale scan); exports bake the check."
+    },
+    {
+      "t": "2026-08-23T00:21:00.000Z",
+      "note": "Verified: 887 tests green, app builds+launches, e2e real-bitmap script probed guide/ticks/outlier-edge/connector/chip pixels. Spec section 9 rewritten as shipped; D1 marked resolved. Left for the roles/panel tasks: treat alignment payloads as the Align role; panel item counts."
     }
   ],
-  "seq": 50
+  "seq": 50,
+  "started": "2026-08-22T23:57:49.965Z"
 }

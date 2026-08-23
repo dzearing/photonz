@@ -37,6 +37,7 @@ scoped to the `next` release only, default ON in next** (`experiments.md`):
 | `next-measure-roles` | § 5 roles, legend, show filter |
 | `next-measure-panel` | § 6 Measurements panel, count pill, § 7 export surface |
 | `next-measure-center-snap` | § 8 centers snapping option |
+| `next-measure-align` | § 9 alignment checks |
 
 - No `Release` branching anywhere (the flags ARE the gate); no forked files
   expected — every surface is additive to the shared editor. Fork per
@@ -195,31 +196,55 @@ scored below a real edge at equal distance so an edge always wins a tie. Core
 TDD alongside the existing snapping tests. Default follows the mock: Edges and
 centers. ⌘ bypass covers both.
 
-## 9. Alignment checks — concept covered, gated on decision D1
+## 9. Alignment checks — `next-measure-align` (decision D1: resolved)
 
 Mock: `redline.html` dashed guide spanning four left edges with an `aligned`
 tag, the legend's Alignment row, the Measurements row "Left edge alignment ·
 4 items", and the `Align` option in the Role control.
 
-The concept: an alignment **check** is a measurement object whose value is a
-verdict — the elements it spans either share an edge (tag: `aligned`) or do
-not (the useful redline: tag the outlier and its delta). It would render as the
-mock's dashed guide with a tag chip, list in the panel with an item count, and
-carry the third `MeasureRole`.
+**D1 resolved 2026-08-22: "Draw an alignment guide yourself."** You drag a
+guide along the edge you care about; every element the line crosses gets
+checked, and the guide reads aligned or points at the one that is off. The
+16.6 history (draggable guides rejected as busywork) is answered by the
+difference the decision named: this guide answers a question, it is not a
+snapping ruler.
 
-It is **not specced further** because (a) the mock never shows the creation
-gesture, and (b) phase 16.6 shipped draggable alignment guides and the user
-rejected them ("I don't know when I'd use a guide") — this is a check with a
-verdict, not a snapping guide, but that history makes the value question the
-user's call, not a guess (see also the 16.7 auto-inspect spike, which could
-subsume it). Filed as queue decision **D1**; the model (§ 5) is shaped to
-absorb the role if it lands.
+Shipped shape (all behind `next-measure-align`, Next-only, default ON, with a
+px `tolerance` parameter, default 1):
+
+- **Creation.** The Measure tool gains a two-chip mode control (Distance |
+  Alignment) in the toolbar, shown only when the flag is on. In Alignment
+  mode, press-drag draws a dashed guide leveled onto the drag's dominant axis;
+  the anchor edge-snaps like a caliper foot (⌘ = free). Release scans; a
+  click without a real drag is a quiet no-op. Esc cancels.
+- **Scan (core, TDD).** `AlignmentScan.items(axis:position:span:in:)`
+  (`PhotonzCore/AlignmentCheck.swift`) samples the guide every 8px, captures
+  the nearest `EdgeMap` edge within 12px of the drawn line, and merges
+  consecutive samples seeing the same edge (±1.5px) into per-element
+  `AlignmentItem`s (edge position + along-axis span). Block-summed resolution
+  caveat: stacked elements with sub-block gaps can merge — harmless, since
+  merged items agreed with each other.
+- **Verdict (derived, never stored).** `AlignmentCheck.verdict`: reference =
+  median of item edges (the majority defines aligned), worst deviation beyond
+  `tolerance` names the outlier. Fewer than two items → no verdict
+  ("no edges").
+- **Model.** Not a new layer kind: `MeasureContent.alignment: AlignmentCheck?`
+  (headOffset 0, feet = guide ends). Old documents decode with nil; the § 5
+  role model can treat `alignment != nil` as the Align role when it lands.
+  The committed guide settles on the reference edge, one undo step, then
+  draw-then-select as usual. No endpoint/frame handles (a stretched guide
+  would carry a stale scan) — move, restyle, or delete and redraw.
+- **Render.** `MeasureRasterizer` branch: dashed guide split around the chip,
+  a small tick where each aligned element crosses, the outlier's REAL edge
+  drawn beside the guide with a connector, and the verdict chip ("aligned" /
+  "off 4 px", unit-aware) at the guide midpoint. Baked into the layer raster,
+  so exports carry it (16.15 rule).
 
 ## 10. Decision index (open questions → queue, not this doc)
 
 | # | Question | Queue task holding the decision |
 | --- | --- | --- |
-| D1 | Build alignment checks (and how are they created), fold into the 16.7 auto-inspect spike, or skip? | `next-measure-alignment-checks-blocked-on-decisio` |
+| D1 | ~~Build alignment checks (and how are they created), fold into the 16.7 auto-inspect spike, or skip?~~ **Resolved: draw the guide yourself (§ 9, shipped)** | `next-measure-alignment-checks-blocked-on-decisio` |
 | D2 | Two-point measure: stay H/V-only (16.12 decision) or offer the mock's free-angle caliper? | `next-measure-free-angle-two-point-measure-blocke` |
 | D3 | Measurement names: derived defaults + rename, or OCR semantic names like the mock's "Save Changes · width"? | `next-measure-measurement-naming-blocked-on-decis` |
 | D4 | The mock's "Describe specs" agent action: omit, script-surface only, or build? | `next-measure-describe-specs-agent-action-blocked` |
@@ -254,5 +279,11 @@ absorb the role if it lands.
 - `next-measure-center-snap`: with centers enabled a foot drag lands on the
   midpoint between two rows when nearer than either edge; edges win ties;
   option persists with the tool's styles.
+- `next-measure-align`: with the Measure tool in Alignment mode, dragging
+  along a shared edge commits a dashed guide reading "aligned"; a 4px-off
+  element gets its real edge drawn with a connector and the chip reads
+  "off 4 px"; the guide settles on the majority edge even when drawn a few px
+  away; scan/verdict/builder/label unit tests and a rasterizer pixel test
+  cover it; exports bake the guide.
 - All of it: flags appear only in the Next release's Experiments list; Current
   behavior is byte-identical with flags absent/off; `Scripts/test.sh` green.

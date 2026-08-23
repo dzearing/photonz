@@ -67,6 +67,41 @@ struct MeasureRenderingTests {
                        textColorHex: "#FF0000", showLabel: showLabel)
     }
 
+    /// A vertical alignment guide at x=100 (y 30…210) over two aligned
+    /// elements and one 12px outlier (spans y 40…80, 112…152, 184…224).
+    private func alignmentContent(showLabel: Bool) -> MeasureContent {
+        var c = MeasureContent(headOffset: 0, mode: .vertical, strokeWidth: 6,
+                               strokeColorHex: "#FF0000", textColorHex: "#FF0000",
+                               showLabel: showLabel)
+        c.alignment = AlignmentCheck(
+            items: [AlignmentItem(edge: 100, spanStart: 40, spanEnd: 80),
+                    AlignmentItem(edge: 112, spanStart: 112, spanEnd: 152),
+                    AlignmentItem(edge: 100, spanStart: 184, spanEnd: 224)],
+            tolerance: 1)
+        return c
+    }
+
+    @Test func alignmentGuideDrawsDashesTicksAndTheOutliersRealEdge() {
+        let out = render(alignmentContent(showLabel: false),
+                         from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        #expect(anyPixel(out, xs: 98...102, ys: 35...55, where: isRedInk),
+                "the dashed guide strokes along x=100")
+        #expect(anyPixel(out, xs: 94...106, ys: 58...62, where: isRedInk),
+                "an aligned element gets a tick at its span midpoint (y=60)")
+        #expect(anyPixel(out, xs: 110...114, ys: 115...150, where: isRedInk),
+                "the outlier's REAL edge is drawn at x=112")
+        #expect(anyPixel(out, xs: 103...109, ys: 130...134, where: isRedInk),
+                "a connector bridges the guide to the outlier at its midpoint")
+        #expect(isWhite(pixel(out, x: 160, y: 60)), "away from the guide is untouched")
+    }
+
+    @Test func alignmentVerdictChipRendersAtTheGuideMidpoint() {
+        let out = render(alignmentContent(showLabel: true),
+                         from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        #expect(anyPixel(out, xs: 70...130, ys: 105...135, where: isRedInk),
+                "the verdict pill draws guide-colored ink at the midpoint")
+    }
+
     // Feet run at y=130 from x=20..240; head sits +28 below at y=158.
 
     @Test func caliperStrokesTheLegsAndHeadLine() {
