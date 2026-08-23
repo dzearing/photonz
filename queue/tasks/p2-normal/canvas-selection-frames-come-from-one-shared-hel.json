@@ -4,11 +4,11 @@
   "goal": "When a mock page shows something selected on the canvas, the selection outline, its corner handles and its size tag are hand-drawn again on every page, and five pages this cycle described a selection in their caption while drawing nothing at all. This makes a page declare that something is selected and get the standard selection drawn for it, and adds a check that catches a page whose words and picture disagree.",
   "priority": "p2-normal",
   "seq": 320,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:24:52.004Z",
-  "updated": "2026-08-23T17:31:31.671Z",
+  "updated": "2026-08-23T17:46:55.280Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Recurring finding: five separate tasks this cycle each fixed the same defect by hand (walk, composites, img-retouch-wt, icon-gradient-wt, and the six video walkthroughs all promised a selection in copy but drew no ring on canvas). The markup is identical every time: .selwrap > .sel-ring + 4 .handle + .mtag. Extract it into a shared helper (a data-attribute the shell honors, like data-sel-frame on the target, mirroring how data-shell builds chrome) so a page declares selection instead of retyping it, and add an audit gate that fails any page whose copy claims a selection while the canvas has no ring. Acceptance: helper shipped in shared/components, at least three pages converted to it with identical rendering, and the audit gate catches a deliberately broken page.",
@@ -37,7 +37,12 @@
     {
       "t": "2026-08-23T17:45:54.470Z",
       "note": "Gate shipped: shared/check-selection.mjs. Gate A - a canvas page whose walkthrough lights a Layers row (.lrow) must draw a frame. Gate B - copy that names the ring on the canvas must draw one, with narrow phrasing so a spec page discussing selection owes nothing. Gate C - ratchet on hand-drawn frames (81, may only go down). Validated against history: it CATCHES walk@4c3242d^ and composites@a1ecfb1^ (the two real defects) and passes both after their fixes. --self-test runs it over shared/fixtures/, including a deliberately broken page."
+    },
+    {
+      "t": "2026-08-23T17:46:55.279Z",
+      "note": "data-sel-frame ships in shared/components/selection.js: a page declares the selection on the object's box and the ring, four corner grabs and size tag are built for it (data-sel-parts adds edges/rotate, or none for a bare ring; an authored .mtag keeps its id so data-set retagging still works). Four pages converted, seven frames, 29 hand-written elements deleted: walk, composites, img-retouch-wt, icon-gradient-wt. Rendering verified identical in Chrome before vs after on all seven frames (rects, computed border/radius/position, data-sel bucket, data-mtag side, child order), and every walkthrough stepped end to end plus Reset with frames showing, hiding and retagging exactly as before. New gate shared/check-selection.mjs fails a canvas page whose walkthrough lights a Layers row or whose copy names the ring while drawing nothing, plus a ratchet on hand-drawn frames (81, downward only); run against history it catches walk@4c3242d^ and composites@a1ecfb1^ and passes both after their fixes, and --self-test proves it on shared/fixtures/ including a page built to be wrong. Full-study browser sweep over 90 pages clean; elevation and state gates green. Commits 34816dc + 7223661 pushed to main. Follow-up filed: the-multi-selection-specimen-draws-its-own-group."
     }
   ],
-  "started": "2026-08-23T17:31:31.670Z"
+  "started": "2026-08-23T17:31:31.670Z",
+  "completed": "2026-08-23T17:46:55.280Z"
 }
