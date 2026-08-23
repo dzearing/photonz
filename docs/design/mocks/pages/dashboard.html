@@ -121,7 +121,10 @@
   #dashboard .db-addform .notes{grid-column:1/-1}
   @media (max-width:700px){#dashboard .db-addform{grid-template-columns:1fr}}
   /* details view: one shared column template so header and rows always align */
-  #dashboard .db-tt{--tt-cols:64px 92px minmax(0,1fr) 104px 72px 120px 32px}
+  /* The title is the thing you actually read, so everything else is squeezed to
+     a glyph or a two-character chip and the title takes the rest. Editing
+     controls live in the detail dialog, not in the row. */
+  #dashboard .db-tt{--tt-cols:20px 40px 28px minmax(0,1fr) 66px}
   #dashboard .db-ttbar{display:flex;align-items:center;gap:var(--gap-sm)}
   #dashboard .db-ttbar .input.search{width:220px}
   #dashboard .db-tthead,#dashboard .db-ttrow{display:grid;grid-template-columns:var(--tt-cols);gap:var(--gap-sm);align-items:center;min-width:0}
@@ -134,9 +137,21 @@
   #dashboard .db-ttrow{padding:var(--s2) var(--pad);border-bottom:1px solid var(--line-soft)}
   #dashboard .db-ttrow:last-child{border-bottom:0}
   #dashboard .db-ttrow:hover{background:var(--state-hover)}
-  #dashboard .db-ttrow .seq{width:56px}
-  #dashboard .db-ttrow .seq>input{text-align:left}
-  #dashboard .db-ttrow .db-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);white-space:nowrap}
+  #dashboard .db-ttrow .db-sicon{display:grid;place-items:center;width:20px}
+  #dashboard .db-ttrow .db-sicon>.ic{width:14px;height:14px}
+  #dashboard .db-sicon.s-pending>.ic{color:var(--faint)}
+  #dashboard .db-sicon.s-in_progress>.ic{color:var(--accent)}
+  #dashboard .db-sicon.s-blocked>.ic,#dashboard .db-sicon.s-parked>.ic{color:var(--warn)}
+  #dashboard .db-sicon.s-done>.ic{color:var(--good)}
+  #dashboard .db-sicon.s-dropped>.ic{color:var(--line-strong)}
+  #dashboard .db-ttrow .db-seq{font-family:var(--mono);font-size:10px;color:var(--faint);text-align:right}
+  /* the priority chip is two characters wide on purpose: P1 is the whole message */
+  #dashboard .db-pri{display:inline-grid;place-items:center;width:26px;height:16px;border-radius:5px;
+    font-size:9.5px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  #dashboard .db-pri.p0{color:var(--crit);background:color-mix(in srgb,var(--crit) 14%,transparent)}
+  #dashboard .db-pri.p1{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+  #dashboard .db-pri.p2{color:var(--accent);background:var(--accent-soft)}
+  #dashboard .db-pri.p3{color:var(--faint);background:var(--panel-2)}
   #dashboard .db-ttempty{padding:var(--gap-lg) var(--pad);text-align:center;font-size:11.5px;color:var(--faint)}
 
   /* ---- data tab ---- */
@@ -150,6 +165,8 @@
   #dashboard .db-chart svg{display:block;width:100%;height:auto}
   #dashboard .db-legend{display:flex;gap:var(--gap);align-items:center;font-size:10.5px;color:var(--dim);margin-bottom:var(--s2)}
   #dashboard .db-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:var(--s1);vertical-align:-1px}
+  /* a line series gets a line swatch, not a square: the legend mark matches the mark */
+  #dashboard .db-legend i.line{width:14px;height:2px;border-radius:1px;vertical-align:3px}
   #dashboard .db-hbar{display:grid;grid-template-columns:88px 1fr 32px;align-items:center;gap:var(--gap-sm);padding:var(--s2) 0}
   #dashboard .db-hbar .l{font-size:11px;color:var(--dim);font-weight:560}
   #dashboard .db-hbar .t{height:14px;border-radius:4px;background:var(--panel-2);position:relative;overflow:hidden}
@@ -162,6 +179,39 @@
   #dashboard .db-tip{position:fixed;z-index:50;pointer-events:none;background:var(--chrome-solid);border:1px solid var(--line);
     border-radius:var(--r2);padding:var(--s1) var(--gap-sm);font-size:10.5px;color:var(--ink);box-shadow:var(--lg-shadow);display:none}
   #dashboard .db-tip b{font-variant-numeric:tabular-nums}
+
+  /* ---- task detail overlay: the DS dialog, scoped to a full page ----
+     .dlg-scrim is absolute because it normally lives inside a .win mock; this
+     page IS the window, so it goes fixed. Everything else is the DS component. */
+  #dashboard .dlg-scrim{position:fixed}
+  #dashboard .db-detail{width:min(760px,calc(100% - var(--s7)));max-height:84vh;
+    transform:scale(.97) translateY(6px);opacity:0;
+    transition:transform var(--dur-3) var(--ease-decel), opacity var(--dur-2) var(--ease-standard)}
+  #dashboard .dlg-scrim.on .db-detail{transform:none;opacity:1}
+  #dashboard .db-detail .dlg-h{align-items:flex-start}
+  #dashboard .db-detail .dlg-h b{line-height:1.35}
+  #dashboard .db-detail .dlg-h .db-hmeta{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+  #dashboard .db-detail .dlg-h .db-x{margin-left:auto;flex:none}
+  #dashboard .db-detail .dlg-b{overflow:auto;display:flex;flex-direction:column;gap:var(--gap-lg)}
+  #dashboard .db-dsec>.mlabel{margin-bottom:var(--s2)}
+  #dashboard .db-dsec p{margin:0;font-size:12px;line-height:1.6;color:var(--dim);white-space:pre-wrap}
+  #dashboard .db-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--s3)}
+  #dashboard .db-fact .k{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700}
+  #dashboard .db-fact .v{display:block;font-size:12px;color:var(--ink);font-weight:560;margin-top:2px}
+  #dashboard .db-fact .v.mono{font-family:var(--mono);font-size:10.5px;font-weight:400;color:var(--dim);word-break:break-all}
+  #dashboard .db-acc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
+  #dashboard .db-acc li{position:relative;padding-left:22px;font-size:12px;line-height:1.5;color:var(--dim)}
+  #dashboard .db-acc li::before{content:"";position:absolute;left:4px;top:6px;width:6px;height:6px;border-radius:2px;
+    border:1px solid var(--line-strong)}
+  #dashboard .db-acc li.met::before{background:var(--good);border-color:var(--good)}
+  #dashboard .db-deps{display:flex;flex-wrap:wrap;gap:var(--s2)}
+  #dashboard .db-log{display:flex;flex-direction:column;gap:var(--s2);max-height:260px;overflow:auto;
+    padding-right:var(--s2)}
+  #dashboard .db-logrow{display:grid;grid-template-columns:92px 1fr;gap:var(--s3);align-items:baseline}
+  #dashboard .db-logrow .t{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap}
+  #dashboard .db-logrow .n{font-size:11.5px;line-height:1.5;color:var(--dim);white-space:pre-wrap}
+  #dashboard .db-ttrow{cursor:pointer}
+  #dashboard .db-ttrow .input,#dashboard .db-ttrow .select,#dashboard .db-ttrow .btn{cursor:auto}
 
   /* ---- objectives tab ---- */
   #dashboard .db-ob{list-style:none;margin:0;padding:0}
@@ -225,7 +275,7 @@
 <script>
 (function () {
   'use strict';
-  var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {};
+  var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {}, detailId = null;
   var body = document.getElementById('db-body');
   var tip = document.getElementById('db-tip');
   var PRIOS = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
@@ -233,8 +283,9 @@
   var PRIO_BADGE = { 'p0-critical': 'badge crit', 'p1-high': 'badge warn', 'p2-normal': 'badge accent', 'p3-low': 'badge' };
   var STATUS_DOT = { pending: 'dot', in_progress: 'dot accent', blocked: 'dot warn', done: 'dot good', dropped: 'dot' };
   var STATUS_LABEL = { pending: 'pending', in_progress: 'in progress', blocked: 'blocked', done: 'done', dropped: 'dropped' };
+  var STATUS_ICON = { pending: 'ic-circle', in_progress: 'ic-play', blocked: 'ic-warning', done: 'ic-check-circle', dropped: 'ic-x-circle', parked: 'ic-pause' };
   // Chart series pair, validated for CVD + contrast on both light and dark surfaces.
-  var C_CREATED = '#4c6fff', C_COMPLETED = '#b7791f';
+  var C_OPENED = '#b7791f', C_DONE = '#4c6fff';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function rel(iso) {
@@ -256,7 +307,9 @@
       var typing = document.activeElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
       var editingObjectives = tab === 'objectives' && (obDirty || obDragId);
       var briefOpen = !!document.querySelector('.db-brief.on');
-      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen) { lastJSON = j; render(); }
+      // a re-render would rebuild the open dialog under the pointer and reset
+      // its scroll, so live updates wait until it closes
+      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen && !detailId) { lastJSON = j; render(); }
       var r = document.getElementById('db-refresh');
       if (r) r.textContent = 'live · updated ' + rel(data.generated);
     }).catch(function () {
@@ -570,17 +623,21 @@
     h += header();
     h += '<div id="db-tt-body">' + rows() + '</div>';
     h += '</div>';
+    h += renderDetail();
     return h;
 
     function header() {
-      var cols = [['seq', 'Seq'], ['priority', 'Priority'], ['title', 'Task'], ['status', 'Status'], ['updated', 'Updated']];
+      var cols = [['status', '', 'Sort by status'], ['seq', 'Seq', 'Sort by sequence'],
+        ['priority', 'Pri', 'Sort by priority'], ['title', 'Task', 'Sort by title'], ['updated', 'Updated', 'Sort by last update']];
       var s = '<div class="db-tthead">';
       cols.forEach(function (c) {
         var on = tSort.key === c[0];
-        s += '<button data-tsort="' + c[0] + '" class="' + (on ? 'on' : '') + '">' + c[1] +
-          (on ? '<i class="ic xs ' + (tSort.dir === 1 ? 'ic-chevron-up' : 'ic-chevron-down') + '"></i>' : '') + '</button>';
+        // the status column is one glyph wide, so its header is the same glyph
+        var label = c[0] === 'status' ? '<i class="ic xs ic-circle"></i>' : c[1];
+        s += '<button data-tsort="' + c[0] + '" class="' + (on ? 'on' : '') + '" title="' + c[2] + '">' + label +
+          (on && c[0] !== 'status' ? '<i class="ic xs ' + (tSort.dir === 1 ? 'ic-chevron-up' : 'ic-chevron-down') + '"></i>' : '') + '</button>';
       });
-      s += '<span></span><span></span></div>';
+      s += '</div>';
       return s;
     }
   }
@@ -611,22 +668,109 @@
     var list = taskRowsData();
     if (!list.length) return '<div class="db-ttempty">No tasks match. Change the filter above or queue one.</div>';
     return list.map(function (t) {
-      var open = OPEN_STATUSES.indexOf(t.status) >= 0;
-      var h = '<div class="db-ttrow" data-key="tt-' + esc(t.id) + '" title="' + esc(t.notes || '') + '">';
-      h += '<label class="input sm mono seq"><input name="seq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
-      h += '<span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span>';
+      var st = t.parked ? 'parked' : t.status;
+      var h = '<div class="db-ttrow" data-act="detail" data-id="' + esc(t.id) + '" data-key="tt-' + esc(t.id) + '" title="' + esc(statusWord(t) + ' · ' + (t.notes || 'no notes')) + '">';
+      h += '<span class="db-sicon s-' + esc(st) + '"><i class="ic ' + STATUS_ICON[st] + '"></i></span>';
+      h += '<span class="db-seq">' + (t.seq != null ? t.seq : '') + '</span>';
+      h += '<span class="db-pri ' + t.priority.slice(0, 2) + '">' + t.priority.slice(0, 2).toUpperCase() + '</span>';
       h += '<span class="db-title">' + esc(t.title) + (lastNote(t) ? '<span class="db-sub">' + esc(lastNote(t)) + '</span>' : '') + '</span>';
-      h += '<span class="db-status"><span class="' + STATUS_DOT[t.status] + '"></span>' + esc(t.parked ? 'parked' : STATUS_LABEL[t.status]) + '</span>';
       h += '<span class="db-meta">' + rel(t.completed || t.updated) + '</span>';
-      h += '<select class="select sm block" name="prio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '">' + PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
-      h += t.parked
-        ? '<button class="btn icon sm ghost" data-act="unpark" data-id="' + esc(t.id) + '" title="Put this task back in the queue"><i class="ic ic-refresh"></i></button>'
-        : open && t.status === 'pending'
-          ? '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>'
-          : '<span></span>';
       h += '</div>';
       return h;
     }).join('');
+  }
+  function statusWord(t) { return t.parked ? 'parked' : STATUS_LABEL[t.status]; }
+
+  // ---- task detail overlay ----------------------------------------------
+  // Everything the queue knows about one task, plus the controls that used to
+  // crowd every row. Composes the DS dialog (dialog.css), not a bespoke panel.
+  function absTime(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function linkify(text) {
+    return esc(text).replace(/(https?:\/\/[^\s<)"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+  function renderDetail() {
+    if (!detailId) return '';
+    var t = (S.tasks || []).find(function (x) { return x.id === detailId; });
+    if (!t) return '';
+    var st = t.parked ? 'parked' : t.status;
+    var h = '<div class="dlg-scrim center on" data-act="detail-scrim"><div class="dlg db-detail" role="dialog" aria-modal="true" aria-label="Task detail">';
+
+    h += '<div class="dlg-h"><span class="db-sicon s-' + esc(st) + '"><i class="ic ' + STATUS_ICON[st] + '"></i></span><div style="min-width:0">';
+    h += '<b>' + esc(t.title) + '</b>';
+    h += '<div class="db-hmeta"><span class="db-pri ' + t.priority.slice(0, 2) + '">' + t.priority.slice(0, 2).toUpperCase() + '</span>' +
+      '<span class="db-meta">' + esc(statusWord(t)) + '</span>' +
+      '<span class="db-meta">seq ' + (t.seq != null ? t.seq : 'none') + '</span>' +
+      '<span class="db-meta">' + esc(t.release || 'next') + ' release</span></div>';
+    h += '</div><button class="btn icon sm ghost db-x" data-act="detail-close" title="Close"><i class="ic ic-close"></i></button></div>';
+
+    h += '<div class="dlg-b">';
+
+    // why it exists, in its own words
+    h += '<div class="db-dsec"><div class="mlabel">Goal and context</div><p>' +
+      (t.notes ? linkify(t.notes) : 'No notes were written for this task.') + '</p></div>';
+
+    if ((t.acceptance || []).length) {
+      h += '<div class="db-dsec"><div class="mlabel">Done when</div><ul class="db-acc">' +
+        t.acceptance.map(function (a) { return '<li' + (t.status === 'done' ? ' class="met"' : '') + '>' + linkify(a) + '</li>'; }).join('') +
+        '</ul></div>';
+    }
+
+    // dependencies and what is holding it
+    var deps = t.deps || [], blocked = t.blockedBy || [];
+    if (deps.length || blocked.length) {
+      h += '<div class="db-dsec"><div class="mlabel">Dependencies</div><div class="db-deps">';
+      deps.forEach(function (id) {
+        var dep = (S.tasks || []).find(function (x) { return x.id === id; });
+        h += '<span class="badge sm soft" title="' + esc(id) + '">' + esc(dep ? dep.title : id) +
+          (dep ? ' · ' + esc(statusWord(dep)) : ' · unknown') + '</span>';
+      });
+      blocked.forEach(function (id) {
+        h += '<span class="badge sm soft warn" title="' + esc(id) + '">waiting on a decision</span>';
+      });
+      h += '</div></div>';
+    }
+
+    h += '<div class="db-dsec"><div class="mlabel">Facts</div><div class="db-facts">';
+    [['Opened', absTime(t.created)], ['Last update', absTime(t.updated)],
+     ['Started', absTime(t.started)], ['Completed', absTime(t.completed)],
+     ['Area', t.area], ['Failures', t.failures ? String(t.failures) : null]
+    ].forEach(function (f) {
+      if (!f[1]) return;
+      h += '<div class="db-fact"><span class="k">' + f[0] + '</span><span class="v">' + esc(f[1]) + '</span></div>';
+    });
+    h += '<div class="db-fact"><span class="k">Task id</span><span class="v mono">' + esc(t.id) + '</span></div>';
+    h += '</div></div>';
+
+    // the story, newest last, exactly as the runners wrote it
+    var log = t.log || [];
+    if (log.length) {
+      h += '<div class="db-dsec"><div class="mlabel">Activity</div><div class="db-log">' +
+        log.map(function (e) {
+          return '<div class="db-logrow"><span class="t">' + esc(absTime(e.t) || '') + '</span><span class="n">' +
+            linkify(e.note || '') + (e.count > 1 ? ' <b>×' + e.count + '</b>' : '') + '</span></div>';
+        }).join('') + '</div></div>';
+    }
+
+    h += '</div>';
+
+    // the row controls live here now
+    h += '<div class="dlg-f">';
+    if (t.parked) h += '<button class="btn sm secondary" data-act="unpark" data-id="' + esc(t.id) + '"><i class="ic ic-refresh"></i>Requeue</button>';
+    else if (t.status === 'pending') h += '<button class="btn sm danger" data-act="drop" data-id="' + esc(t.id) + '"><i class="ic ic-trash"></i>Drop</button>';
+    h += '<span style="flex:1"></span>';
+    h += '<label class="input sm mono" style="width:86px" title="Sequence within its priority"><span class="k">Seq</span>' +
+      '<input name="dseq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
+    h += '<select class="select sm" name="dprio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '" title="Priority">' +
+      PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
+    h += '<button class="btn sm primary" data-act="detail-close">Done</button>';
+    h += '</div>';
+
+    h += '</div></div>';
+    return h;
   }
   function refreshRows() {
     var el = document.getElementById('db-tt-body');
@@ -645,8 +789,8 @@
     h += '</div>';
 
     h += '<div class="db-charts">';
-    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Open tasks over time</h3><span class="k">end of day</span></div><div class="db-card-b" id="db-line"></div></div>';
-    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Created vs completed by day</h3></div><div class="db-card-b" id="db-bars"></div></div>';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Total opened vs completed</h3><span class="k">running totals, the gap is open work</span></div><div class="db-card-b" id="db-line"></div></div>';
+    h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Opened vs completed by day</h3><span class="k">daily intake and outtake</span></div><div class="db-card-b" id="db-bars"></div></div>';
     h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Open by priority</h3></div><div class="db-card-b" id="db-prio-chart"></div></div>';
     h += '<div class="db-card db-chart"><div class="db-card-h"><h3>Status mix</h3><span class="k">every task ever filed</span></div><div class="db-card-b" id="db-stack"></div></div>';
     h += '</div>';
@@ -670,24 +814,40 @@
     return out.slice(-maxDays);
   }
 
+  // Running totals, accumulated over ALL history before the display window is
+  // sliced, so a 14-day view still shows true totals rather than a window sum.
+  function cumulative(days) {
+    var o = 0, c = 0;
+    return days.map(function (d) {
+      o += d.created; c += d.completed;
+      return { day: d.day, created: d.created, completed: d.completed, open: d.open, openedTotal: o, doneTotal: c };
+    });
+  }
+
   function wireCharts() {
-    var days = contDays(S.series, 21);
-    drawLine(document.getElementById('db-line'), days);
-    drawBars(document.getElementById('db-bars'), days.slice(-14));
+    var all = cumulative(contDays(S.series, 400));
+    drawLine(document.getElementById('db-line'), all.slice(-21));
+    drawBars(document.getElementById('db-bars'), all.slice(-14));
     drawPrio(document.getElementById('db-prio-chart'));
     drawStack(document.getElementById('db-stack'));
   }
 
-  // line: open tasks over time (single series, accent, crosshair tooltip)
+  // Two running totals on one axis: everything opened, everything completed.
+  // Same measure, same scale, so the GAP between the lines is the open backlog,
+  // and the two slopes read as intake rate against completion rate.
   function drawLine(el, days) {
     if (!el) return;
     if (days.length < 2) { el.innerHTML = '<div class="db-empty">Charts fill in once the loop has a day or two of history.</div>'; return; }
-    var W = 560, H = 190, P = { l: 30, r: 10, t: 12, b: 24 };
-    var max = Math.max.apply(null, days.map(function (d) { return d.open; }).concat([4]));
+    var W = 560, H = 190, P = { l: 32, r: 10, t: 12, b: 24 };
+    var max = Math.max.apply(null, days.map(function (d) { return d.openedTotal; }).concat([4]));
     var x = function (i) { return P.l + (W - P.l - P.r) * i / (days.length - 1); };
     var y = function (v) { return P.t + (H - P.t - P.b) * (1 - v / max); };
-    var line = days.map(function (d, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(d.open).toFixed(1); }).join(' ');
-    var area = line + ' L' + x(days.length - 1).toFixed(1) + ' ' + y(0) + ' L' + x(0).toFixed(1) + ' ' + y(0) + ' Z';
+    var path = function (key) {
+      return days.map(function (d, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(d[key]).toFixed(1); }).join(' ');
+    };
+    var openedLine = path('openedTotal'), doneLine = path('doneTotal');
+    var h = '<div class="db-legend"><span><i class="line" style="background:' + C_OPENED + '"></i>Total opened</span>' +
+      '<span><i class="line" style="background:' + C_DONE + '"></i>Total completed</span></div>';
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" id="db-line-svg">';
     [0, .5, 1].forEach(function (f) {
       var v = Math.round(max * f);
@@ -697,34 +857,46 @@
     days.forEach(function (d, i) {
       if (i === 0 || i === days.length - 1 || i % Math.ceil(days.length / 6) === 0) s += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--faint)">' + dayLabel(d.day) + '</text>';
     });
-    s += '<path d="' + area + '" fill="var(--accent)" opacity="0.10"/>';
-    s += '<path d="' + line + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-    s += '<circle cx="' + x(days.length - 1) + '" cy="' + y(days[days.length - 1].open) + '" r="3.5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>';
+    // the band between the lines is the open backlog, drawn faintly so the gap
+    // reads as a quantity rather than as empty space: opened forward, completed back
+    var fwd = days.map(function (d, i) { return x(i).toFixed(1) + ' ' + y(d.openedTotal).toFixed(1); });
+    var back = days.map(function (d, i) { return x(i).toFixed(1) + ' ' + y(d.doneTotal).toFixed(1); }).reverse();
+    s += '<path d="M' + fwd.join(' L') + ' L' + back.join(' L') + ' Z" fill="' + C_OPENED + '" opacity="0.07"/>';
+    s += '<path d="' + doneLine + '" fill="none" stroke="' + C_DONE + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s += '<path d="' + openedLine + '" fill="none" stroke="' + C_OPENED + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    var last = days[days.length - 1];
+    s += '<circle cx="' + x(days.length - 1) + '" cy="' + y(last.doneTotal) + '" r="3.5" fill="' + C_DONE + '" stroke="var(--panel)" stroke-width="2"/>';
+    s += '<circle cx="' + x(days.length - 1) + '" cy="' + y(last.openedTotal) + '" r="3.5" fill="' + C_OPENED + '" stroke="var(--panel)" stroke-width="2"/>';
     s += '<line id="db-cross" y1="' + P.t + '" y2="' + (H - P.b) + '" stroke="var(--line-strong)" stroke-width="1" visibility="hidden"/>';
-    s += '<circle id="db-crossdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>';
+    s += '<circle id="db-crossdot" r="4" fill="' + C_OPENED + '" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>';
+    s += '<circle id="db-crossdot2" r="4" fill="' + C_DONE + '" stroke="var(--panel)" stroke-width="2" visibility="hidden"/>';
     s += '</svg>';
-    el.innerHTML = s;
+    el.innerHTML = h + s;
     var svg = el.querySelector('svg');
     svg.addEventListener('mousemove', function (e) {
       var r = svg.getBoundingClientRect();
       var i = Math.round((e.clientX - r.left) / r.width * (days.length - 1) * (W / (W - P.l - P.r)) - P.l / (W - P.l - P.r) * (days.length - 1));
       i = Math.max(0, Math.min(days.length - 1, i));
-      var cx = x(i), cy = y(days[i].open);
+      var cx = x(i), d = days[i];
       svg.querySelector('#db-cross').setAttribute('x1', cx);
       svg.querySelector('#db-cross').setAttribute('x2', cx);
       svg.querySelector('#db-cross').setAttribute('visibility', 'visible');
-      var dot = svg.querySelector('#db-crossdot');
-      dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('visibility', 'visible');
-      showTip(e, dayLabel(days[i].day) + ' · <b>' + days[i].open + '</b> open');
+      var dot = svg.querySelector('#db-crossdot'), dot2 = svg.querySelector('#db-crossdot2');
+      dot.setAttribute('cx', cx); dot.setAttribute('cy', y(d.openedTotal)); dot.setAttribute('visibility', 'visible');
+      dot2.setAttribute('cx', cx); dot2.setAttribute('cy', y(d.doneTotal)); dot2.setAttribute('visibility', 'visible');
+      showTip(e, dayLabel(d.day) + ' · opened <b>' + d.openedTotal + '</b> · completed <b>' + d.doneTotal +
+        '</b> · open <b>' + (d.openedTotal - d.doneTotal) + '</b>');
     });
     svg.addEventListener('mouseleave', function () {
       svg.querySelector('#db-cross').setAttribute('visibility', 'hidden');
       svg.querySelector('#db-crossdot').setAttribute('visibility', 'hidden');
+      svg.querySelector('#db-crossdot2').setAttribute('visibility', 'hidden');
       hideTip();
     });
   }
 
-  // paired bars: created vs completed (two validated series colors + legend + per-bar tooltip)
+  // Daily intake vs outtake: two bars per day, side by side. Per-day counts, not
+  // totals, so a day where more came in than went out is visible at a glance.
   function drawBars(el, days) {
     if (!el) return;
     if (!days.length) { el.innerHTML = '<div class="db-empty">No history yet.</div>'; return; }
@@ -732,7 +904,8 @@
     var max = Math.max.apply(null, days.map(function (d) { return Math.max(d.created, d.completed); }).concat([4]));
     var slot = (W - P.l - P.r) / days.length, bw = Math.min(14, (slot - 8) / 2);
     var y = function (v) { return P.t + (H - P.t - P.b) * (1 - v / max); };
-    var h = '<div class="db-legend"><span><i style="background:' + C_CREATED + '"></i>Created</span><span><i style="background:' + C_COMPLETED + '"></i>Completed</span></div>';
+    var h = '<div class="db-legend"><span><i style="background:' + C_OPENED + '"></i>Opened</span>' +
+      '<span><i style="background:' + C_DONE + '"></i>Completed</span></div>';
     var s = '<svg viewBox="0 0 ' + W + ' ' + H + '">';
     [0, .5, 1].forEach(function (f) {
       var v = Math.round(max * f);
@@ -742,10 +915,10 @@
     days.forEach(function (d, i) {
       var cx = P.l + slot * i + slot / 2;
       if (i === 0 || i === days.length - 1 || i % Math.ceil(days.length / 6) === 0) s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--faint)">' + dayLabel(d.day) + '</text>';
-      [['created', C_CREATED, cx - bw - 1], ['completed', C_COMPLETED, cx + 1]].forEach(function (spec) {
-        var v = d[spec[0]], by = y(v), bh = Math.max(0, y(0) - by);
+      [['opened', 'created', C_OPENED, cx - bw - 1], ['completed', 'completed', C_DONE, cx + 1]].forEach(function (spec) {
+        var v = d[spec[1]], by = y(v), bh = Math.max(0, y(0) - by);
         if (v > 0 && bh < 3) { bh = 3; by = y(0) - 3; }
-        s += '<rect data-day="' + d.day + '" data-kind="' + spec[0] + '" data-v="' + v + '" x="' + spec[2] + '" y="' + (v ? by : y(0) - 1) + '" width="' + bw + '" height="' + (v ? bh : 1) + '" rx="2.5" fill="' + spec[1] + '"' + (v ? '' : ' opacity="0.25"') + '/>';
+        s += '<rect data-day="' + d.day + '" data-kind="' + spec[0] + '" data-v="' + v + '" x="' + spec[3] + '" y="' + (v ? by : y(0) - 1) + '" width="' + bw + '" height="' + (v ? bh : 1) + '" rx="2.5" fill="' + spec[2] + '"' + (v ? '' : ' opacity="0.25"') + '/>';
       });
     });
     s += '</svg>';
@@ -902,11 +1075,16 @@
       t.value = ''; n.value = '';
     }
     if (b.dataset.act === 'drop') {
+      detailId = null;
       post('/api/task/update', { id: b.dataset.id, status: 'dropped', note: 'dropped from the dashboard' });
     }
     if (b.dataset.act === 'unpark') {
       post('/api/task/update', { id: b.dataset.id, status: 'pending', note: 'put back in the queue from the dashboard' });
     }
+    // a row opens its detail; the scrim closes it, the dialog itself does not
+    if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
+    if (b.dataset.act === 'detail-close') { detailId = null; render(); return; }
+    if (b.dataset.act === 'detail-scrim' && e.target === b) { detailId = null; render(); return; }
     // real anchor: let modified clicks (new tab, download) do their normal
     // thing, and handle a plain click in place so the iframe does not reload.
     if (b.dataset.act === 'digest') {
@@ -953,6 +1131,9 @@
   if (q && ['summary', 'objectives', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
   load();
   setInterval(function () { if (!document.hidden) load(); }, 4000);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && detailId) { detailId = null; render(); }
+  });
 })();
 </script>
 </body>
