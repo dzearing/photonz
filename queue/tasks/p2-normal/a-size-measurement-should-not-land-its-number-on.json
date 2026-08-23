@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:02:56.531Z",
-  "updated": "2026-08-23T22:28:52.943Z",
+  "updated": "2026-08-23T22:30:36.825Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.subjectRects only covers the measuring line for a plain caliper. EditorState.addElementSize and the Size hover preview in CanvasView both already know the element rect and could feed it to MeasureLabelPlanner.plan as an avoid rect (or a real subject). Watch the interaction with the shortened head from clearingHeadOffset: near an edge there may be nowhere clear, so the planner needs a sane last resort rather than a jump.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-08-23T22:28:52.943Z",
       "note": "Shipped. Core: MeasureLabelPlanner.plan gained a 'describing' list (the element Size mode just measured is treated as a subject, never covered) and an off-the-picture cost that now outranks covering the subject, so the last resort is the readable one. Core: ElementBounds.neighbors probes the four sides at two distances (touching, and as far out as the number itself travels) and drops containers and boxes that overlap the element. App: the canvas reads neighbours once per pick (memoized) and hands the same list to the hover preview and the commit, so nothing shifts on click. Verified: 1045 tests green, a 3456-position sweep of the audit capture finds zero readouts on their own element (it found them before), and rendered before/after proofs are in queue/audits."
+    },
+    {
+      "t": "2026-08-23T22:30:36.824Z",
+      "note": "Size mode's readouts now know the element they measured: it goes to the planner as a subject (never covered), neighbours read off the capture are steered around when there is room, and off-the-picture now costs more than covering the subject so the last resort stays readable instead of jumping. Shipped in Sources/PhotonzCore/MeasureLabelPlacement.swift + ElementBounds.swift, wired through CanvasView/EditorState. Verified: full suite green (1045), a 3456-position sweep of the audit capture finds zero readouts on their own element (it found them before the change), rendered before/after proofs in queue/audits/2026-08-23-size-readout-placement.json. Committed 3e653b8, pushed to main."
     }
   ],
-  "started": "2026-08-23T22:03:52.638Z"
+  "started": "2026-08-23T22:03:52.638Z",
+  "completed": "2026-08-23T22:30:36.825Z"
 }
