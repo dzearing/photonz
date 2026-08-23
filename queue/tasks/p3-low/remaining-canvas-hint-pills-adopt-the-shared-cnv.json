@@ -1,0 +1,21 @@
+{
+  "id": "remaining-canvas-hint-pills-adopt-the-shared-cnv",
+  "title": "Remaining canvas hint pills adopt the shared .cnv-hint",
+  "priority": "p3-low",
+  "seq": 160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T15:45:10.429Z",
+  "updated": "2026-08-23T15:45:10.430Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The 2026-08-23 draw/icon pass promoted .cnv-hint to shared/components/canvas.css (the dark glass pill on the artboard that names the gesture) and adopted it on draw, draw-boolean and vector-wt. Eight pages still hand-roll the same pill under their own name: image, img-bg-remove, img-grade-wt, img-masking (x2), img-retouch-wt, video-audio, video-compositing, video-transitions. Swap each local rule for the shared class, keeping only the page's own top/bottom as a scoped refinement. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T15:45:10.430Z",
+      "note": "created (manual)"
+    }
+  ]
+}
