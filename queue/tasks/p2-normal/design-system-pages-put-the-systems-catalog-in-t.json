@@ -3,11 +3,11 @@
   "title": "Design-system pages put the systems catalog in the Library and fix chrome",
   "priority": "p2-normal",
   "seq": 300,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:34:07.529Z",
-  "updated": "2026-08-23T06:34:07.530Z",
+  "updated": "2026-08-23T17:01:30.379Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Components / design-system family'). Pages: components, ds-switch, dsys, color, capture-wt, walk, ds-modes. Key items: ds-switch renders the five systems as the Library dgrp at scope Systems with libgrid/libtile instead of the bespoke .dss-pick dock group, and gains a Library rail tab (high); components strips app chrome from its two lesson-title specimen windows (high); delete legacy titlebar/toolbar/.cmdk on components/ds-switch/dsys/color; ds-modes stops using ic-eye/ic-eye-off for Light/Dark; capture-wt Redact wears ic-blur not ic-eye-off x4; walk ic-swatch for save-as-style + distinct Open glyph; standardize Cmd-Shift-H shortcut order (capture-wt, walk); add missing space in data-shell identity (ds-switch, dsys). Verify 200 + audit-sweep.",
@@ -16,6 +16,52 @@
     {
       "t": "2026-08-23T06:34:07.530Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T16:44:41.729Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "ds-switch: the five systems now render as the Library panel group at scope Systems (.seg.scopeseg + .libtools + .libgrid/.libtile), the bespoke .dss-pick dock group and its CSS are gone, and the rail tab is Library (ic-library). Each tile paints that system's own surface, accent and corner radius, so the thumbnail previews what applying it does. Scope switch swaps body + header count + search placeholder; clicking a tile still re-themes the canvas and now also updates the title-bar status chip."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "components/ds-switch/dsys/color: hand-authored .titlebar/.toolbar/.cmdk deleted. Identity moved to data-shell, readouts to data-status, page commands to a .popover.menu.cmdpop inside .edit, and the real controls (Reset, History, Browse systems, Design system) to .cnv-act tools."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "components: the two lesson-title specimen windows are now shared .spec cards (no traffic lights, no fake title bar), per PRODUCT-MODEL 4c Kind-2."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "ds-modes: Light/Dark/Brand lost the ic-eye/ic-eye-off miscue. They carry the same coloured dot as their column in the token map instead; every candidate glyph already means something else in the one icon library."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "capture-wt: Redact wears ic-blur in all four places (menu, canvas tag, tool, Layers row). walk: Save as a Style is ic-swatch, Open is ic-external so it stops sharing ic-pen with Edit."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "Shortcut order: walk's menu-bar Show History moved to the corpus spelling used by 59 pages. The corpus is genuinely split two ways (and macOS's own Shift-Cmd-4 argues the other way), which is a sweep, not a per-page call, so it is queued as keyboard-shortcuts-read-in-one-modifier-order-ac."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "data-shell separator spacing fixed on ds-switch and dsys; no page is missing the space now."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "AGENTS.md glyph mapping gained redact->blur, open-in-editor->external, save-as-style->swatch."
+    },
+    {
+      "t": "2026-08-23T17:01:03.337122Z",
+      "note": "Verified: 7/7 HTTP 200; browser audit-sweep over all 89 pages, 0 findings; the 7 touched pages clean again at 1280, 880 and 620 and in the light theme; check-elevation and check-states pass; vr6-strip finds nothing new; components' place/reset demo, ds-switch's apply and scope switch, walk's 15 steps and both command menus exercised live; no console errors."
+    },
+    {
+      "t": "2026-08-23T17:01:30.378Z",
+      "note": "Systems catalog is now the Library group at scope Systems on ds-switch (scopeseg + libgrid/libtile + Library rail tab); hand-authored titlebar/toolbar/cmdk deleted on components, ds-switch, dsys and color with their real controls moved to data-status and .cnv-act; components' two fake specimen windows are .spec cards; Redact wears ic-blur x4, walk uses ic-swatch for save-as-style and ic-external for Open, ds-modes drops the eye glyphs; data-shell spacing fixed. Verified 7/7 HTTP 200, browser audit-sweep 0 findings across 89 pages, clean at 1280/880/620 and in light theme, check-elevation + check-states pass, demos exercised live. Committed 438e240."
     }
-  ]
+  ],
+  "started": "2026-08-23T16:44:41.728Z",
+  "completed": "2026-08-23T17:01:30.378Z"
 }
