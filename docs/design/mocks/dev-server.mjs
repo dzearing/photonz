@@ -6,7 +6,10 @@ import { watch } from 'node:fs';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const ROOT = dirname(fileURLToPath(import.meta.url)); // docs/design/mocks
-const TYPES = { '.html': 'text/html;charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json' };
+const TYPES = { '.html': 'text/html;charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
+// An audit's screenshots live beside its markdown in queue/audits/, outside
+// ROOT, so the Ready to try tab needs its own route to reach them. Images only.
+const AUDIT_ASSETS = join(ROOT, '..', '..', '..', 'queue', 'audits');
 // dev livereload: poll a change counter and reload when it moves.
 //
 // This used to be an SSE stream, and that is what made mock pages "hang on
@@ -143,6 +146,15 @@ const server = http.createServer(async (req, res) => {
   if (url === '/__rev') {
     res.writeHead(200, { 'content-type': 'text/plain', 'cache-control': 'no-store' });
     return res.end(String(rev));
+  }
+  if (url.startsWith('/audits/')) {
+    const name = decodeURIComponent(url.slice('/audits/'.length));
+    if (!/^[a-z0-9._-]+\.(png|jpe?g|webp|gif)$/i.test(name)) { res.writeHead(400); return res.end('no'); }
+    try {
+      const buf = await readFile(join(AUDIT_ASSETS, name));
+      res.writeHead(200, { 'content-type': TYPES[extname(name).toLowerCase()], 'cache-control': 'no-store' });
+      return res.end(buf);
+    } catch { res.writeHead(404); return res.end('not found'); }
   }
   try {
     let p = decodeURIComponent(url); if (p === '/') p = '/index.html';

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:40:08.412Z",
-  "updated": "2026-08-23T17:40:08.412Z",
+  "updated": "2026-08-23T18:04:24.711836Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Flags (all Next, default on): next-measure-hover, next-measure-align, next-measure-center-snap, next-measure-roles, next-measure-panel, next-arrow-captions. Catalog: Sources/PhotonzCore/FeatureCatalog.swift. Spec: docs/design/next-measure.md. Build: Scripts/build-app.sh then open dist/Photonz Dev.app, choose release Next in the Experiments window. Take screenshots with the app itself where possible. Audit format is specified in queue/bin/runner-prompt.md.",
@@ -24,6 +24,43 @@
     {
       "t": "2026-08-23T17:40:08.412Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T17:47:23.487Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Adversarial review, before touching anything: the six features assume a first-time user already knows (a) that the Measure tool exists and is on 'i', (b) that a 'role' is a thing and that they should set one after drawing, and (c) that the toolbar hides a second mode behind a chip. The hint chip only appears on an empty document, so anyone opening a capture that already has a measurement gets no orientation at all. The Show filter is the most ceremonial control in the set: on a real sheet of four measurements nobody needs to filter, and it is a view-only state that silently disagrees with what an export contains. The shortest version of this feature is calipers + roles + copy-as-spec-list; hover, the Show filter and the count pill are all additions that have to earn their place."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Verification method: this session had no Screen Recording or Accessibility grant (screencapture and System Events both refused), so the app could not be driven or window-grabbed. Instead every flag was exercised through the SHIPPING code paths (EdgeMapAnalyzer, ElementBounds, EdgeSnapping, AlignmentScan, AlignmentCheck, MeasureStyles, MeasureBuilder, MeasureRasterizer, DocumentRenderer, MeasureSpecList, AnnotationBuilder) over a real 2x screenshot of a settings pane whose true CSS geometry was read out of the browser, so every accuracy claim is checked against ground truth. The dev app WAS built and launched (pid confirmed). Canvas output is fully pictured; the toolbar/panel/inspector chrome was verified by reading its wiring and by the unit tests, and is called out as unverified-by-eye in the audit."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Result per flag. next-measure-hover: FAILS its own done-when on a real capture. Empty field 218x24 (true 220x26); Save Changes button and Reset button read NOTHING; a toggle reads 12x12 (true 42x24); a settings row reads 490x42 (true 624x44); flat background correctly reads nothing. Cause: nearest-edge-per-direction stops on glyph strokes, and over text the probe-side landings invert so detect() returns nil. Not fixed here: strongest-edge-per-direction nails the button exactly but makes a row grab its whole card, so this needs a signal the edge map does not carry. Filed as hover-to-measure-should-outline-the-button-or-ro (p0)."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "next-measure-roles, next-measure-panel, next-measure-center-snap, next-arrow-captions: all correct. Distances matched ground truth exactly (button width 124, button gap 12, row height 44, card gap 20 logical px). Role ink is right (#FF3B30/#8C201A size, #0A84FF/#1B3A66 spacing) and the two-colour sheet reads well. Centre snapping lands 191.5 against a true row centre of 192 from 5.5px away, and edges-only correctly finds nothing there. Spec list renders the pinned format. Arrow captions are genuinely good and need no work."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "next-measure-align: FIXED one real defect. The verdict reference was a plain median, so with four crossed edges (two agreeing at 97.5, two at 106 and 108) it averaged the two middle values and settled the guide at 101.8, a line no element sits on, and reported 'off 3 px'. AlignmentCheck.verdict now clusters edges within tolerance, weighs each cluster by the guide length its elements occupy, and takes the heaviest cluster's mean; a genuine tie still splits the difference so the existing two-item behaviour is unchanged. Two tests added, full suite 934 green. The guide now settles exactly on the two labels that agree."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Named, not fixed: the chip still reads 'off 5 px' where the truth is 4 (the scan invents a spurious 2-sample run at x=108 under the label, which wins worst-offender over the real edge at 106); the verdict chip sits at the guide midpoint and so covers the element it is accusing; the aligned ticks are 5px hairlines that read as nothing and the panel row carries no item count. Filed as an-alignment-guide-should-report-the-real-offset (p1). Separately, a caliper measured against the right or bottom edge of a capture has its chip clipped by the canvas: filed as a-measurement-near-the-edge-of-a-capture-should (p2)."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Dashboard: audits could not actually carry screenshots. The Ready to try renderer had no image support at all (a ![]() line rendered as literal text) and the server only serves docs/design/mocks, so queue/audits/*.png was unreachable. Added an /audits/ image route to dev-server.mjs and image + ordered-list support to the dashboard markdown renderer, then verified the report end to end in a browser: 12 numbered steps, 6 images, all 200. Small foundational change, taken because this task's own acceptance depended on it."
+    },
+    {
+      "t": "2026-08-23T18:04:24.711836Z",
+      "note": "Audit written: queue/audits/2026-08-23-measure-redline.md, with the test capture and five real renders beside it. Verified rendering on the dashboard Ready to try tab."
     }
-  ]
+  ],
+  "started": "2026-08-23T17:47:23.486Z"
 }

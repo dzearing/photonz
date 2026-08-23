@@ -276,10 +276,18 @@ px `tolerance` parameter, default 1):
   `AlignmentItem`s (edge position + along-axis span). Block-summed resolution
   caveat: stacked elements with sub-block gaps can merge — harmless, since
   merged items agreed with each other.
-- **Verdict (derived, never stored).** `AlignmentCheck.verdict`: reference =
-  median of item edges (the majority defines aligned), worst deviation beyond
-  `tolerance` names the outlier. Fewer than two items → no verdict
-  ("no edges").
+- **Verdict (derived, never stored).** `AlignmentCheck.verdict`: the reference
+  is the edge the MAJORITY of the crossed elements agree on, and the worst
+  deviation beyond `tolerance` names the outlier. Fewer than two items → no
+  verdict ("no edges"). Majority means the heaviest CLUSTER (edges grouped
+  within `tolerance`), weighed by the guide length its elements occupy rather
+  than by item count — corrected 2026-08-23 after the playtest audit found the
+  original plain median settling the guide between two clusters, on a line no
+  element sat on, whenever the item count was even or the scan split one label
+  into two runs. A genuine tie (two edges, nothing to break it) still falls back
+  to the median and splits the difference. Known residual, filed: the scan can
+  emit a spurious short run that then wins the outlier callout, so a 4 px offset
+  can read "off 5 px" (`an-alignment-guide-should-report-the-real-offset`).
 - **Model.** Not a new layer kind: `MeasureContent.alignment: AlignmentCheck?`
   (headOffset 0, feet = guide ends). Old documents decode with nil; the § 5
   role model can treat `alignment != nil` as the Align role when it lands.

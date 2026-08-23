@@ -1,0 +1,28 @@
+{
+  "id": "an-alignment-guide-should-report-the-real-offset",
+  "title": "An alignment guide should report the real offset and not cover the element it is accusing",
+  "goal": "When you drag an alignment guide down a column of elements, the verdict pill lands in the middle of the guide, which on a real screenshot means it sits on top of the very element it is calling out. It also over-reports the offset: on a label that is 4 px out it says 5 px, because the scan invents an extra edge just below the text. Make the number right and put the pill somewhere you can still see what it is talking about.",
+  "epic": "alignment-checks",
+  "priority": "p1-high",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T18:03:57.229Z",
+  "updated": "2026-08-23T18:03:57.229Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "See queue/audits/2026-08-23-measure-redline.md. AlignmentCheck.verdict was fixed 2026-08-23 to use the span-weighted heaviest cluster as the reference (was a plain median that invented a line between two clusters). What remains: (1) AlignmentScan.items produces a spurious 2-sample run at x=108 spanning y 602-610 just under the File name prefix label, which beats the real edge at x=106 for worst-offender, so the chip reads 5 instead of 4. Fix in the scan: a run that no element accounts for should not become an item. (2) MeasureRasterizer puts the verdict chip at the guide midpoint; move it perpendicular, away from the outlier. (3) The aligned ticks are MeasureBuilder.alignmentTickHalf = 5 px and read as nothing; the mock also showed an item count (Left edge alignment, 4 items) that the panel row does not carry.",
+  "acceptance": [
+    "Dragging a guide down the three labels in queue/audits/2026-08-23-measure-00-capture.png reads off 4 px, not off 5 px",
+    "The verdict pill no longer overlaps the element it names, on that same capture",
+    "The outlier element is called out legibly at 100 percent zoom, not with a 5 px hairline tick",
+    "Scan and rasterizer unit tests cover both the number and the pill placement"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T18:03:57.229Z",
+      "note": "created (manual)"
+    }
+  ]
+}

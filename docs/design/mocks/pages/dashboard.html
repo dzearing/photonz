@@ -1211,23 +1211,35 @@
   }
   // minimal markdown: headings, lists, bold, code, links. Digests are our own format.
   function md(src) {
-    var out = [], para = [], inList = false;
+    var out = [], para = [], listTag = null;
     function flushPara() { if (para.length) { out.push('<p>' + para.join(' ') + '</p>'); para = []; } }
+    function closeList() { if (listTag) { out.push('</' + listTag + '>'); listTag = null; } }
+    // A list item can wrap onto following indented lines; they belong to the
+    // item, not to a new paragraph.
+    function appendToItem(text) { out[out.length - 1] = out[out.length - 1].replace(/<\/li>$/, ' ' + text + '</li>'); }
     function inline(s) {
       return esc(s)
         .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // An audit's screenshots sit beside its markdown in queue/audits/, so a
+        // bare relative name resolves through the server's /audits/ route.
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function (_, alt, src) {
+          var url = /^(https?:|\/)/.test(src) ? src : '/audits/' + src.replace(/^\.\//, '');
+          return '<img src="' + url + '" alt="' + alt + '" loading="lazy">';
+        })
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
         .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
         .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
     }
     String(src || '').split('\n').forEach(function (line) {
       var m;
-      if ((m = line.match(/^(#{1,3})\s+(.*)/))) { flushPara(); if (inList) { out.push('</ul>'); inList = false; } out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); return; }
-      if ((m = line.match(/^\s*[-*]\s+(.*)/))) { flushPara(); if (!inList) { out.push('<ul>'); inList = true; } out.push('<li>' + inline(m[1]) + '</li>'); return; }
-      if (!line.trim()) { flushPara(); if (inList) { out.push('</ul>'); inList = false; } return; }
+      if ((m = line.match(/^(#{1,3})\s+(.*)/))) { flushPara(); closeList(); out.push('<h' + m[1].length + '>' + inline(m[2]) + '</h' + m[1].length + '>'); return; }
+      if ((m = line.match(/^\s*\d+[.)]\s+(.*)/))) { flushPara(); if (listTag !== 'ol') { closeList(); out.push('<ol>'); listTag = 'ol'; } out.push('<li>' + inline(m[1]) + '</li>'); return; }
+      if ((m = line.match(/^\s*[-*]\s+(.*)/))) { flushPara(); if (listTag !== 'ul') { closeList(); out.push('<ul>'); listTag = 'ul'; } out.push('<li>' + inline(m[1]) + '</li>'); return; }
+      if (listTag && !para.length && /^\s+\S/.test(line)) { appendToItem(inline(line.trim())); return; }
+      if (!line.trim()) { flushPara(); closeList(); return; }
       para.push(inline(line));
     });
-    flushPara(); if (inList) out.push('</ul>');
+    flushPara(); closeList();
     return out.join('\n');
   }
 

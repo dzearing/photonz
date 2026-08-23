@@ -1,0 +1,27 @@
+{
+  "id": "a-measurement-near-the-edge-of-a-capture-should",
+  "title": "A measurement near the edge of a capture should keep its number on the picture",
+  "goal": "Measuring something against the right or bottom edge of a screenshot pushes the caliper head outside the image, so the number gets cut in half by the canvas edge and you have to drag it back inward by hand. The readout should stay on the picture without the user having to fix it.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 350,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T18:03:57.258Z",
+  "updated": "2026-08-23T18:03:57.258Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Visible in queue/audits/2026-08-23-measure-03-roles.png: the 44 px height caliper on the right edge is clipped. MeasureBuilder.layer pads the frame for the chip but nothing clamps the head offset to the canvas, and the layer frame is allowed to extend past canvasSize. Likely fix: flip the head to the inward side when the outward one would leave the canvas, the way a popover flips.",
+  "acceptance": [
+    "Measuring the height of the right-most element in queue/audits/2026-08-23-measure-00-capture.png leaves the whole chip visible inside the canvas",
+    "The same is true against the bottom edge",
+    "A caliper with room on both sides is unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T18:03:57.258Z",
+      "note": "created (manual)"
+    }
+  ]
+}

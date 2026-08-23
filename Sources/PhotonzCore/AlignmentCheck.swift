@@ -37,9 +37,9 @@ public struct AlignmentCheck: Hashable, Codable, Sendable {
     }
 }
 
-/// What an alignment check found: the reference line (the median of the item
-/// edges, so the majority defines "aligned" and one bad element can't drag the
-/// line off), the worst deviation, and — beyond tolerance — which item is off.
+/// What an alignment check found: the reference line (the edge the majority of
+/// the crossed elements agree on, so one bad element can't drag the line off),
+/// the worst deviation, and — beyond tolerance — which item is off.
 public struct AlignmentVerdict: Hashable, Sendable {
     public var reference: CGFloat
     public var maxDelta: CGFloat
@@ -55,12 +55,47 @@ public struct AlignmentVerdict: Hashable, Sendable {
 }
 
 extension AlignmentCheck {
+    /// The line the majority of the crossed elements agree on — the reference
+    /// an "aligned" verdict is measured against.
+    ///
+    /// The edges are grouped into clusters (each edge within `tolerance` of its
+    /// cluster's running mean) and each cluster is weighed by how much GUIDE
+    /// LENGTH its elements occupy, not by how many items it holds: an element
+    /// the guide runs down for 100px is more of a majority than two it clips
+    /// for 8px, and a scan that splits one label into two runs can't outvote a
+    /// pair that really agrees. The heaviest cluster's span-weighted mean is
+    /// the reference, so the guide always settles on an edge something actually
+    /// sits on. A genuine tie (two edges, two clusters of equal weight) has no
+    /// majority to find, so it falls back to the median and splits the
+    /// difference.
+    private var referenceEdge: CGFloat {
+        let sorted = items.sorted { $0.edge < $1.edge }
+        var clusters: [(sum: CGFloat, weight: CGFloat)] = []
+        for item in sorted {
+            // Length the guide spends on this element; a zero-length run still
+            // counts as one sample's worth of evidence, never nothing.
+            let weight = max(abs(item.spanEnd - item.spanStart), 1)
+            if let last = clusters.last, abs(item.edge - last.sum / last.weight) <= tolerance {
+                clusters[clusters.count - 1] = (last.sum + item.edge * weight,
+                                                last.weight + weight)
+            } else {
+                clusters.append((item.edge * weight, weight))
+            }
+        }
+        let heaviest = clusters.max { $0.weight < $1.weight }
+        let isTie = clusters.filter { $0.weight == heaviest?.weight }.count > 1
+        if let heaviest, !isTie { return heaviest.sum / heaviest.weight }
+        // No majority: the median, which for two disagreeing edges is the
+        // midpoint — neither is more right than the other.
+        let edges = sorted.map(\.edge)
+        let mid = edges.count / 2
+        return edges.count % 2 == 1 ? edges[mid] : (edges[mid - 1] + edges[mid]) / 2
+    }
+
     /// The check's result, nil when there are fewer than two edges to compare.
     public var verdict: AlignmentVerdict? {
         guard items.count >= 2 else { return nil }
-        let sorted = items.map(\.edge).sorted()
-        let mid = sorted.count / 2
-        let reference = sorted.count % 2 == 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+        let reference = referenceEdge
         var worstIndex = 0
         var worstDelta: CGFloat = 0
         for (index, item) in items.enumerated() {

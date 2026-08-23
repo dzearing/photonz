@@ -138,6 +138,30 @@ struct AlignmentVerdictTests {
         #expect(AlignmentCheck(items: [item(100)], tolerance: 1).verdict == nil)
     }
 
+    @Test func theHeaviestClusterDefinesTheReferenceWhenTheCountIsEven() {
+        // Two edges agree at 100, two disagree at 106 and 108: a plain median
+        // would average the two middle values and settle the guide at 103 —
+        // a line no element sits on. The agreeing pair is the majority.
+        let check = AlignmentCheck(items: [item(100), item(100), item(106), item(108)],
+                                   tolerance: 1)
+        let v = check.verdict
+        #expect(v.map { abs($0.reference - 100) < 0.001 } == true)
+        #expect(v?.isAligned == false)
+        #expect(v?.outlierIndex == 3)
+        #expect(v.map { abs($0.maxDelta - 8) < 0.001 } == true)
+    }
+
+    @Test func aLongCrossingOutweighsTwoGrazes() {
+        // One element the guide runs down for 100px against two it clips for
+        // 8px each: the long one is what the guide is measuring against, even
+        // though the short pair outnumbers it.
+        let check = AlignmentCheck(items: [item(100, span: 0...100),
+                                           item(104, span: 0...8),
+                                           item(107, span: 0...8)],
+                                   tolerance: 1)
+        #expect(check.verdict.map { abs($0.reference - 100) < 0.001 } == true)
+    }
+
     @Test func twoItemsSplitTheDifference() {
         let check = AlignmentCheck(items: [item(100), item(104)], tolerance: 1)
         let v = check.verdict

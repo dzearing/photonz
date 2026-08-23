@@ -3925,3 +3925,33 @@ behind `next-measure-panel` (Next-only, default ON; Current byte-identical).
 - `shared/fixtures/` is new: the smallest pages that make and break the promise, so `--self-test` can prove the gate still bites in both directions. A gate nobody has watched fail is a gate nobody knows works.
 - Verified across the whole study: browser sweep over all 90 pages at 1280×900 — no overflow, no zero-size canvas, no duplicate ring, no declared frame left unbuilt, 88 live rings. Elevation and interaction-state gates green, zero console errors on the four converted pages.
 - Queued: the multi-selection specimen on `lang-selection` draws its group frame with a page-local `.lx-group` and hand-offset handles instead of `.selwrap.multi` — the one orphan handle set the sweep found, and the page teaching the rule is the page breaking it (p3).
+
+## 2026-08-23 — Measure and redline: playtest audit
+
+Reviewed and audited the six Next measure/redline flags by running the shipping
+code over a real 2x settings-pane screenshot with known CSS geometry, since this
+session had no Screen Recording or Accessibility grant to drive the app's
+windows. The dev app was built and launched; canvas output is fully pictured,
+the toolbar and panel chrome is verified by wiring and unit tests only and is
+flagged as such in the report.
+
+Calipers, roles, centre snapping, the spec list and arrow captions are all
+accurate — every distance matched ground truth exactly. Two real defects found:
+
+- `next-measure-hover` fails its own done-when on a real capture. It only reads
+  empty elements; a button reads nothing, a toggle reads a 12×12 sliver of its
+  knob. Cause is nearest-edge-per-direction stopping on glyph strokes. Not
+  fixable by tuning (strongest-edge fixes buttons and breaks nested rows), so it
+  is filed as its own p0 with the measured counterexamples.
+- `next-measure-align`'s verdict reference was a plain median, which settled the
+  guide on a line no element sat on whenever the count was even. Fixed:
+  span-weighted heaviest cluster, with the two-item tie still splitting the
+  difference. Two tests added, 934 green.
+
+Also gave the dashboard's Ready to try tab what an audit needs: the markdown
+renderer had no image or ordered-list support and the server could not reach
+`queue/audits/*.png`. Both added and verified in a browser.
+
+Report: `queue/audits/2026-08-23-measure-redline.md`.
+Next: the three filed follow-ups (hover detection p0, alignment offset + chip
+placement p1, edge-clipped caliper chip p2).

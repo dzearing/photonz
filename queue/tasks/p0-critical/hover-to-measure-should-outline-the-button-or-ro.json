@@ -1,0 +1,28 @@
+{
+  "id": "hover-to-measure-should-outline-the-button-or-ro",
+  "title": "Hover to measure should outline the button or row you are pointing at, not the text inside it",
+  "goal": "With the Measure tool, hovering an element on a screenshot is supposed to outline it and show its width and height. Today it only works when the element is empty: hovering a button reads nothing, hovering a toggle reads a 12 by 12 sliver of its knob, and hovering a settings row stops at the label text. Make hovering read the element a person would say they are pointing at.",
+  "epic": "hover-measure",
+  "priority": "p0-critical",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T18:03:40.300Z",
+  "updated": "2026-08-23T18:03:40.300Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Diagnosis in queue/audits/2026-08-23-measure-redline.md. ElementBounds.detect walks outward and takes the NEAREST accepted EdgeMap candidate per direction, so glyph strokes win over the element boundary; over text the probe-side landings invert (minY > maxY) and it returns nil, which is why buttons read nothing. Measured counterexamples: strongest-edge-per-direction nails the button (233/480/755/815 -> 124x30 exactly) but makes a settings row grab its whole card (card bottom strength 1.0 beats the hairline divider at 0.795). Nearest-with-strength-threshold at 0.8 of the walk max fixes the button and still breaks the row. Likely needs a signal the edge map alone does not carry (uniformity beyond the candidate edge, or reusing FloodFill/ContourTracer from the wand). PhotonzCore has no image access today, so this may mean moving detection or passing a sampler in. Spec: docs/design/next-measure.md section 3.",
+  "acceptance": [
+    "On the audit capture at queue/audits/2026-08-23-measure-00-capture.png, hovering the Save Changes button reads 124 by 30 logical px",
+    "Hovering a toggle reads 42 by 24, and hovering a settings row reads 624 by 44",
+    "Hovering a flat background area still shows nothing at all",
+    "A fixture-based unit test pins all four of those cases so the heuristic cannot regress silently"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T18:03:40.300Z",
+      "note": "created (manual)"
+    }
+  ]
+}
