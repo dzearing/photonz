@@ -3,11 +3,11 @@
   "title": "Agent and document pages revive dead demos and finish selection routing",
   "priority": "p2-normal",
   "seq": 290,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:39.888Z",
-  "updated": "2026-08-23T06:33:39.889Z",
+  "updated": "2026-08-23T16:44:06.322Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Agent / editor / documents family'). Pages: agent, agent-edit, agent-variations, agent-generate-wt, editor, documents, export-share, composites. Key items: documents saving/versions demo is dead at runtime (dstate lived in stripped titlebar; 0 version rows, inert quick-edit; also fix data-shell 'Launch poster.phzSaved' to name + dims with save state in data-status) (high); agent deletes the deprecated .cpal so there is one Ask/Cmd-K surface, adds Library groups + canvas selection grammar; agent-edit rebuilds its bespoke agent panel on DS .chat + .work/.step; agent-variations Properties tracks the kept pick + .vsel to .sel-ring; export-share syncs .lrow.sel (3-place selection), rebuilds export dialog on .dlg + .prog, ic-copy/ic-share replace ic-clone/ic-import; restore history-sheet openers in .cnv-act (editor med, documents/composites/agent-generate-wt low); documents ic-history/ic-restore. Verify 200 + audit-sweep.",
@@ -16,6 +16,44 @@
     {
       "t": "2026-08-23T06:33:39.889Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T16:16:52.074Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "documents: both windows drop the authored titlebar/toolbar/.cmdk; data-shell is now 'Launch poster.phz · 1080 × 1350' with the save state + autosave sentence in data-status, so #dstate survives and the whole saving/versions module runs again (3 version rows seed, quick-edit dirties, Save pins a snapshot, Restore lands an unsaved change). Save/Export/History are .cnv-act tools, the two popovers moved into .cnv (#cmdMenu as the .cmdpop), the harvested Brand chip became a Properties row, Restore wears ic-restore and the History rail tab ic-history."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "agent: the deprecated .cpal is gone. Direction A now shows the shell's own Ask overlay (.askpal hosting .chat with a collapsed .work card of the four commands), so ⌘K, the Ask launcher and the panel are one surface. All three windows lose their chrome, gain a Library group + rail tab, and A/B gain canvas selection grammar (.selwrap/.sel-ring/.handle/.mtag) wired to a .lrow.sel row and a Properties group."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "agent-edit: the bespoke .apanel/.diffcard/.promptbox/.apiline/.statuspill set is deleted. The Agent group is the DS .chat: .askseed starts, .msg.u/.msg.a transcript, a .work card whose .step rows are the diff (pending -> done), the shared composer, and agent.js's collapse, After/Before and step-to-layer selection. Added a Library group; supporting groups ship collapsed so the composer stays on screen."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "agent-variations: Properties tracks the kept pick (Version letter, accent + swatch, layout, seed) and shows the DS empty state when nothing is kept; the hand-rolled .vsel became .selwrap + .sel-ring; .apiline became .codeblk; the 4-up grid stopped overflowing (minmax(0,1fr) + a container query in place of a viewport one)."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "export-share: the hand-rolled specimen card is the DS .spec, the export surface is a real .dlg.sheet on its own .dlg-scrim over an .ex-stage standing in for the window, with Cancel/Export in .dlg-f in macOS order; .exbar became .prog driven by --pv. Selection now lands in all three places (Layers rows gained data-el and select both ways). ic-clone -> ic-copy x7, ic-import -> ic-share x2."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "editor / composites / agent-generate-wt: history sheet openers restored in .cnv-act; editor also drops its titlebar/toolbar/.cmdk with #cmdMenu moved into .cnv as the .cmdpop plus a Capture history command."
+    },
+    {
+      "t": "2026-08-23T16:43:43.696967Z",
+      "note": "Verified: 8/8 HTTP 200; audit-sweep at 1280x900 returns 0 findings with extra gates for surviving .cmdk/.cpal/.toolbar, a missing shell title bar, data-shell separator spacing and orphan history sheets; no overflow and a live canvas at 880 and 620; check-elevation, check-states and vr6-strip all clean; both walkthroughs anchor 8/8 cues and their history sheets open; every rewired demo exercised in the browser (documents save/restore, agent-edit propose/accept/undo/step-select/before-after, agent-variations keep/regenerate, export-share progress 0-100 and two-way selection); documents re-checked in light theme."
+    },
+    {
+      "t": "2026-08-23T16:44:06.321Z",
+      "note": "Shipped in c352bb1. documents: chrome stripped, data-shell fixed to name + dims with save state in data-status, so the saving/versions module runs again (versions seed, quick-edit dirties, Save pins, Restore=ic-restore); Save/Export/History are .cnv-act tools. agent: deprecated .cpal deleted, direction A shows the shell's own .askpal (one Ask/CmdK surface), all 3 windows gain a Library group and A/B gain canvas selection grammar + Properties. agent-edit: bespoke agent panel rebuilt on DS .chat/.work/.step + Library. agent-variations: Properties tracks the kept pick, .vsel -> .sel-ring, .apiline -> .codeblk, 4-up grid no longer overflows. export-share: DS .spec + .dlg sheet + .prog, 3-place selection wired both ways, ic-copy/ic-share replace ic-clone/ic-import. History openers restored in .cnv-act on editor, composites, agent-generate-wt. Verified: 8/8 200, audit-sweep 0 findings at 1280x900 with extra family gates, clean at 880 and 620, check-elevation/check-states/vr6-strip pass, both walkthroughs anchor 8/8 cues, every demo exercised in the browser, light theme re-checked."
     }
-  ]
+  ],
+  "started": "2026-08-23T16:16:52.073Z",
+  "completed": "2026-08-23T16:44:06.322Z"
 }
