@@ -2,11 +2,11 @@
   "id": "next-measure-alignment-checks-blocked-on-decisio",
   "title": "Next Measure: alignment checks",
   "priority": "p2-normal",
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.423Z",
-  "updated": "2026-08-22T23:57:49.966Z",
+  "updated": "2026-08-23T00:22:30.370Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 9. The redline mock shows an alignment check (dashed guide, aligned tag, Align role) but the creation gesture is unshown and 16.6 alignment guides were rejected. Await the attached decision before any code.",
@@ -39,8 +39,13 @@
     {
       "t": "2026-08-23T00:21:00.000Z",
       "note": "Verified: 887 tests green, app builds+launches, e2e real-bitmap script probed guide/ticks/outlier-edge/connector/chip pixels. Spec section 9 rewritten as shipped; D1 marked resolved. Left for the roles/panel tasks: treat alignment payloads as the Align role; panel item counts."
+    },
+    {
+      "t": "2026-08-23T00:22:30.369Z",
+      "note": "Shipped drag-a-guide alignment checks per the resolved decision: Alignment mode in the Measure tool (next-measure-align flag, Next-only, default on). Core scan/verdict/model in PhotonzCore/AlignmentCheck.swift + MeasureContent.alignment, dashed-guide rendering in MeasureRasterizer, toolbar Distance|Alignment toggle + canvas drag in EditorView/CanvasView. Verified: 887 tests green (24 new), app builds+launches, e2e real-bitmap render pixel-probed. Commit 5c8d702."
     }
   ],
   "seq": 50,
-  "started": "2026-08-22T23:57:49.965Z"
+  "started": "2026-08-22T23:57:49.965Z",
+  "completed": "2026-08-23T00:22:30.370Z"
 }
