@@ -3,11 +3,11 @@
   "title": "Audit sweep: truncated dock-seg chips on 30 pages (Media·Comp·Styles·Assets et al)",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T00:40:00.718Z",
-  "updated": "2026-08-23T00:40:00.719Z",
+  "updated": "2026-08-23T07:43:42.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Pre-existing before the shared-DS primitives batch (verified by stash + resweep on 2026-08-23: identical failures with and without the batch). audit-sweep.js reports 'truncated chip' + 'uneven chips' for .seg controls inside .pdock/.dgrp-b on ~30 pages at 1280x900, e.g. the Library scope seg. Either the seg auto-fit --segmin measurement regressed after the July rebuild or the sweep measures before photonz-ds.js sets --segmin in iframes. Reproduce with shared/audit-sweep.js, then fix whichever is broken (component or sweep timing).",
@@ -16,6 +16,28 @@
     {
       "t": "2026-08-23T00:40:00.719Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T07:37:42.727Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T07:55:00.000Z",
+      "note": "Reproduction attempt: ran shared/audit-sweep.js verbatim in Chrome over all 90 pages at 1280x900 (three batches of 30). Result: zero issues, 74 dock/panel segs measured. The failure does not reproduce."
+    },
+    {
+      "t": "2026-08-23T07:58:00.000Z",
+      "note": "Root cause of the stale report: commit 9b72976 (Aug 22 23:35, 'dock segs stop ellipsizing labels') both rewrote the dock seg geometry (natural-width minmax(0,max-content) columns in segmented.css, collapse-to-menu in segmented.js) and rewrote audit-sweep.js (dropped the 'uneven chips' check since unequal widths are now by design, added the visibility filter). The ~30-page failure list this task cites came from the pre-9b72976 sweep. Spot-checked the named Library scope seg on ds-build-wt/brush-library/components: all labels render whole, clip=0; brush-library's 7-chip catseg correctly collapses to its menu."
+    },
+    {
+      "t": "2026-08-23T08:00:00.000Z",
+      "note": "Cleanup shipped: dock.js still measured every dock seg's widest label into --segmin, but nothing consumes that var anymore (verified repo-wide grep) and it is exactly what misled this task's hypothesis. Removed the dead block, corrected the stale --segmin paragraph in AGENTS.md VR6, rebuilt shared/dist. Re-swept 20 seg-heaviest pages after the change: still zero issues."
+    },
+    {
+      "t": "2026-08-23T07:43:42.220Z",
+      "note": "Does not reproduce: full 90-page sweep at 1280x900 returns zero issues (74 segs). Fixed by 9b72976 (natural-width dock seg columns + collapse-to-menu + sweep rewrite) before this task was filed from a stale sweep run. Shipped cleanup: removed dead --segmin measurement from dock.js, fixed stale AGENTS.md VR6 text, rebuilt dist; re-swept 20 pages after, still clean."
     }
-  ]
+  ],
+  "started": "2026-08-23T07:37:42.727Z",
+  "completed": "2026-08-23T07:43:42.220Z"
 }

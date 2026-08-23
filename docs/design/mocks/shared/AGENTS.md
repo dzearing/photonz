@@ -906,16 +906,16 @@ These came from reviewing real screenshots. Each one is a rule, not a preference
    ~268px dock it wraps to two rows and looks broken. Use a `.select`/menu, or a
    wrapping chip list, for scope switching in a panel.
 
-   *Implemented.* Any `.seg` inside `.pdock`/`.dgrp-b` IS the wrapping chip
-   list now - applied by LOCATION, so no page opts in and none can opt out.
-   It is a grid, not a wrapping flex row: with flex a 6-item scope wrapped
-   4 + 2 and the two survivors stretched to 115px, which read as an accident;
-   equal auto-fit columns line row two up under row one. The column floor is
-   `--segmin`, which photonz-ds.js measures from the widest label in that
-   control (a fixed floor either truncated "Intersect" or pushed a 3-item
-   scope onto two rows). SEVEN pages had each invented the same
-   `display:flex;width:100%` + `button{flex:1}` workaround; all seven are
-   deleted. Do not write an eighth.
+   *Implemented.* Any `.seg` inside `.pdock`/`.dgrp-b` gets the dock form
+   automatically - applied by LOCATION (segmented.css), so no page opts in
+   and none can opt out. It is a one-row grid of NATURAL-WIDTH columns
+   (`minmax(0,max-content)` spread with `space-between`), so each label gets
+   exactly the width it needs; nothing ever wraps. When the whole label set
+   genuinely cannot fit the track, segmented.js collapses the control to a
+   menu trigger (`.collapsed`) instead of letting labels ellipsize. SEVEN
+   pages had each invented the same `display:flex;width:100%` +
+   `button{flex:1}` workaround; all seven are deleted. Do not write an
+   eighth.
 
 7. **Do not mix inputs and buttons on one skinny row.** A search field next to an
    Import button in a dock truncates the field to nonsense ("Search cor"). Stack

@@ -89,32 +89,10 @@
     dock.appendChild(bar);
   });
 
-  /* ---- 1c · panel scope controls size to their own labels (VISUAL RULE 6) ----
-     The CSS lays a scope control out as an auto-fit grid; only JS can know how
-     wide its widest label actually is. Measured once, from text, so a splitter
-     drag never needs to re-measure - the dock width decides how many of these
-     columns fit, the labels decide how wide a column has to be. */
-  all('.pdock .seg, .dgrp-b .seg').forEach(function (seg) {
-    var btns = all('button', seg);
-    if (!btns.length) return;
-    var w = 0;
-    btns.forEach(function (b) {
-      // Measure with width:max-content, NOT scrollWidth. scrollWidth returns
-      // max(content, clientWidth), so it reports the chip's CURRENT box once
-      // that box is wider than its text - which fed the measurement back into
-      // itself: chips got wider, --segmin grew to match, and a 4-chip scope
-      // that fitted one row wrapped to two. max-content is the intrinsic text
-      // width and cannot drift with layout.
-      var prev = b.style.width;
-      b.style.width = 'max-content';
-      w = Math.max(w, Math.ceil(b.getBoundingClientRect().width));
-      b.style.width = prev;
-    });
-    if (!w) return;
-    // +2 for sub-pixel rounding; the clamp stops one long label from forcing a
-    // single column, and short ones from collapsing to nothing.
-    seg.style.setProperty('--segmin', Math.min(132, Math.max(52, w + 2)) + 'px');
-  });
+  /* (There used to be a 1c here: measuring the widest label into `--segmin`
+     for an auto-fit seg grid. segmented.css now owns dock seg geometry with
+     natural-width columns and segmented.js owns the collapse-to-menu, so
+     nothing consumes `--segmin` and the measurement is gone.) */
 
   /* ---- 2 · resizable panes ----
      .splitter.v resizes the dock to its right (drag left to grow).
