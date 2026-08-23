@@ -65,47 +65,25 @@
   <div class="wt" id="wtVec">
 
     <div class="wt-stage">
-      <div class="win tall cq shell" id="vecWin" data-shell="sketch-sheet · 1200 × 630" data-ws="image">
-
-        <!-- TITLE BAR · document identity only. The lesson title lives in
-             .scen-head above, never here. -->
-        <div class="titlebar">
-          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>sketch-sheet</b><span class="meta"> · 1200 × 630</span></div>
-          <div class="wsw" role="tablist" aria-label="Workspace">
-            <button class="wsw-seg on" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-            <button class="wsw-seg" role="tab" data-target="editor"><i class="ic sm ic-frame"></i> UI</button>
-            <button class="wsw-seg" role="tab" data-target="video"><i class="ic sm ic-play"></i> Video</button>
-          </div>
-          <div class="tbtns">
-            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-            <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-          </div>
-        </div>
-
-        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-        <div class="toolbar">
-          <button class="tool" title="Commands" data-menu="#vCmd"><i class="ic sm ic-more"></i></button>
-          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-          <span class="tsep"></span>
-          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history · the global overlay"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-          <span class="tspacer"></span>
-          <span class="chip"><i class="ic xs ic-pen"></i> <span id="vbReadout">Pen · no path yet</span></span>
-          <div style="position:relative">
-            <div class="popover menu pop" id="vCmd" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
-              <div class="mlabel">Path</div>
-              <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
-              <div class="menuitem"><i class="ic ic-boolean-union"></i> Close path <span class="sc">⌘⇧J</span></div>
-              <div class="menu-sep"></div>
-              <div class="mlabel">Stroke</div>
-              <div class="menuitem" data-target="brush-library"><i class="ic ic-brush"></i> Pick a brush <span class="sc">B</span></div>
-              <div class="menuitem" id="miSaveStyle" data-target="dsys"><i class="ic ic-library"></i> Save as a Style</div>
-            </div>
-          </div>
-        </div>
+      <!-- The title bar, the Ask launcher and the `…` command surface are all
+           built by the shell component from data-shell/data-ws/data-status. -->
+      <div class="win tall cq shell" id="vecWin" data-shell="sketch-sheet · 1200 × 630" data-ws="image"
+           data-status='<span id="vbReadout">Pen · no path yet</span>'>
 
         <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
         <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` button that
+             opens it is built by the shell component, into .cnv-act. -->
+        <div class="popover menu pop cmdpop" id="vCmd">
+          <div class="mlabel">Path</div>
+          <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+          <div class="menuitem"><i class="ic ic-boolean-union"></i> Close path <span class="sc">⌘⇧J</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Stroke</div>
+          <div class="menuitem" data-target="brush-library"><i class="ic ic-brush"></i> Pick a brush <span class="sc">B</span></div>
+          <div class="menuitem" id="miSaveStyle" data-target="dsys"><i class="ic ic-library"></i> Save as a Style</div>
+        </div>
 
           <div class="cnv">
             <div class="canvas">
@@ -507,7 +485,7 @@
         <div class="wt-cap img">
           <span class="wt-n">9</span>
           <p class="wt-do"><b>Save as a Style</b></p>
-          <p class="wt-where">the command surface, the more button at the left of the toolbar</p>
+          <p class="wt-where">the command surface, the more button at the top right of the canvas</p>
           <p class="wt-res">the fill and the brushed stroke become one named <b>Style</b> in the Library, so the next path you draw wears the same mark in one click. Every step here was a single command, which is why an agent can draw the same thing with exact coordinates and still get a hand-drawn surface.</p>
         </div>
       </li>
@@ -524,7 +502,7 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>A path's <b>stroke can be a Brush</b>, so the usual choice between precise-but-sterile and organic-but-unrepeatable goes away. The geometry is exact and re-editable; the mark is expressive. Closing the path gives you a Paint <b>fill</b> as well, so one object carries both. <span data-target="dsys" style="color:var(--accent);cursor:pointer">Open the design system →</span></p></div>
+    <div class="c"><div class="lab">The idea</div><p>A path's <b>stroke can be a Brush</b>, so the usual choice between precise-but-sterile and organic-but-unrepeatable goes away. The geometry is exact and re-editable; the mark is expressive. Closing the path gives you a Paint <b>fill</b> as well, so one object carries both, and saving the pair as a Style files it in the <span data-target="dsys" style="color:var(--accent);cursor:pointer">design system</span>.</p></div>
     <div class="c"><div class="lab g2">Why it matters for the agent</div><p>An agent emits exact bezier control points, which is what makes its output diffable and re-editable. Brushed strokes let it draw with those exact curves and still get a hand-made surface, and you can restyle everything it drew by swapping one brush.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Should a brushed stroke stay live forever, or offer a "bake to raster" once you are happy, so a very heavy illustration stops re-stamping on every nudge? And should the agent offer to clean a rough sketch into evenly spaced anchors?</p></div>
   </div>

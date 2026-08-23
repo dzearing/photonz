@@ -363,6 +363,12 @@ competing panels and keeps the mental model flat. Each scope has the same shape
 tile drives the Properties group. Do NOT promote a scope to its own dock or
 window.
 
+Brush-driven surfaces (draw, the brush library and editor, brushed vector
+strokes) show **Brushes** in the row where Components sits: PRODUCT-MODEL
+"Vector strokes are brushes" defines picking a brush from the Library with
+scope = Brushes, and those scenarios have no component story. That is the one
+sanctioned swap; a page must not invent any other scope name.
+
 ### D3 — No fake menu bar. Compact command surface + Ask (still holds)
 
 > **Enforced (2026-07-26).** The title bar, the Ask launcher and the `…` command

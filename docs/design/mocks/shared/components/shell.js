@@ -111,7 +111,7 @@
       : '<button class="btn primary sm"><i class="ic ic-chat"></i> Ask</button>';
     return '<div class="chat-in"><div class="composer">' +
       '<div class="ask-atts"></div>' +
-      '<textarea class="box" rows="1" placeholder="' +
+      '<textarea class="box" name="ask-composer" rows="1" placeholder="' +
       (busy ? 'Steer it, you don\'t have to wait' : 'Ask for a change, or type / for a command') +
       '" aria-label="Ask the agent"></textarea>' +
       '<div class="composer-f">' +

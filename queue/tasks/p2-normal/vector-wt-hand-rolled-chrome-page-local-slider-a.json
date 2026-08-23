@@ -3,11 +3,11 @@
   "title": "vector-wt: hand-rolled chrome, page-local slider, arrow glyph",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:08.096Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-23T02:55:54.808Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: icon-svg > icon-vector (plus design-system zero drift). Checklist sweep fails: (1) gate 8: page-local .rng range control (~lines 45-52) styles three real Properties sliders (Fill opacity, Size, Flow) instead of the DS .slider/.slrow the same page already uses for zoom; also carries a deprecated .cmdk (~106). (2) gate 7: clickable caption affordance uses a unicode arrow glyph ('Open the design system' + arrow, ~544), explicitly banned; overlaps existing task icon-conformance-audit-across-mock-pages. (3) gate 1 warn: hand-authors .titlebar/.toolbar/.wsw (~89-122) that shell.js deletes and rebuilds; author via data-shell like every other page. (4) gate 3 warn: Library scope row is Media/Brushes/Styles/Assets, replacing the fixed D2 'Components' scope with a page-invented 'Brushes'. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -24,6 +24,24 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T02:48:56.515Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:05:00.000Z",
+      "note": "Item 1 (.rng sliders) was already fixed by an earlier pass: Fill opacity/Size/Flow use shared .slrow/.slider, no .rng or page-local range CSS remains. Item 2 (arrow glyph): caption link reworded so the phrase 'design system' is the inline link, arrow dropped; page-wide grep confirms zero unicode arrow glyphs. Item 3 (hand-rolled chrome): deleted the authored .titlebar (with .wsw + Share/Export .tbtns), .toolbar and .cmdk; #vbReadout moved into data-status on the shell, #vCmd authored as the .cmdpop, History button dropped (sheet stays; canonical invocation is global, same as icon-gradient-wt/img-retouch-wt); step 9 wt-where copy updated to point at the canvas top-right more button."
+    },
+    {
+      "t": "2026-08-23T03:06:00.000Z",
+      "note": "Item 4 (Brushes scope) resolved by the approved product model, no decision needed: PRODUCT-MODEL 'Vector strokes are brushes' explicitly picks a brush from Library scope = Brushes, and brush-library/brush-editor/draw already use the same row. UX-PATTERNS D2 amended to record Brushes as the one sanctioned swap for Components on brush-driven surfaces, so sweeps stop flagging it. The fourth-tab (Assets vs Systems) question stays with the open ds-build-wt decision. Bonus: shell.js composer textarea got a name attribute, clearing a devtools form-field issue on every shell page. Verified in Chrome: title bar/Ask/… built by shell, all 9 steps drive, readout live in .wstatus, step 9 popover + cue + toast + Library at Brushes, Reset restores, check-states and check-elevation pass."
+    },
+    {
+      "t": "2026-08-23T02:55:54.807Z",
+      "note": "vector-wt now authors its shell via data-shell (hand-rolled titlebar/toolbar/cmdk/wsw deleted, readout in data-status, #vCmd as the .cmdpop), the caption arrow glyph is gone, sliders were already the shared primitives, and the Brushes Library scope is documented as product-model-sanctioned in UX-PATTERNS D2. Verified live in Chrome (all 9 steps, reset, Ask, popover) plus check-states/check-elevation."
     }
-  ]
+  ],
+  "started": "2026-08-23T02:48:56.515Z",
+  "completed": "2026-08-23T02:55:54.808Z"
 }
