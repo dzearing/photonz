@@ -15,9 +15,20 @@ Read `queue/objectives.json` first: it is the user's ordered epic tree, and it s
 - Groom: rewrite vague titles/notes so any future runner can execute without archaeology. Ensure every pending task has at least one concrete acceptance item. Titles name the OUTCOME and never encode status ("blocked", "in progress", "done" in a title is a bug; status lives in the status field and the dashboard renders it).
 - Record one history event summarizing the pass: `node queue/bin/queue.mjs event triage '{"summary":"<counts: merged, moved, reset, groomed>"}'`.
 
-## 2. Write the digest
+## 2. Design review pass (evidence, then judgment)
 
-Create `queue/digests/<YYYY-MM-DD>.md` (today's date) with exactly these three sections:
+Before writing the digest, do a real design review of the last 24 hours. Evidence first: read the task logs of everything completed or blocked, the decisions opened and resolved, and skim `shared/UX-PATTERNS.md` and `shared/AGENTS.md` against what actually got built. Then answer four questions:
+
+- **Is the IA sound?** Did any surface this cycle have to bend the shell/dock/navigation vocabulary (UX-PATTERNS sections 1 to 3) to get its job done? A rule that had to bend is a finding.
+- **Are we missing components or guidance?** What did runners hand-roll that the design system should own? Anything built twice is an extraction candidate: queue a task for it.
+- **What UX issues keep recurring?** Patterns across audits, decisions, and fixes (control misuse, spacing drift, unclear affordances, copy problems). Name the pattern and the pages it hit, not one-offs.
+- **Do the documented rules need a scrub?** Where reality has moved past a rule, or a rule keeps getting violated because it is unclear, queue a scrub task for that document (AGENTS.md, UX-PATTERNS.md, docs/design/*.md) and say which rule and why.
+
+Strong findings become queued tasks, and the review cites its evidence (page names, task ids); no vibes-only claims.
+
+## 3. Write the digest
+
+Create `queue/digests/<YYYY-MM-DD>.md` (today's date) with exactly these four sections:
 
 ```
 # Daily digest <YYYY-MM-DD>
@@ -28,11 +39,14 @@ What happened in the last 24 hours: tasks completed (with one line each on what 
 ## Reflections
 Forward-looking and honest: feature ideas worth queueing, ways to improve this process (loop, queue, dashboard), and ways to improve the Photonz app itself. When an idea is strong, actually queue it (`queue.mjs add`) and reference the task id here.
 
+## Design review
+The findings from the design review pass, with evidence: IA soundness (what bent, if anything), missing components or guidance (what got hand-rolled, what was queued for extraction), recurring UX issues (the pattern and where it hit), and rule scrubs queued (which document, which rule, why). If the day was genuinely clean, say so and name what was checked.
+
 ## Triage review
 What the triage pass changed and why: merges, priority moves, resets, grooming. Include the before/after open-task counts per priority.
 ```
 
-## 3. Finish
+## 4. Finish
 
 - `node queue/bin/queue.mjs event digest '{"file":"<YYYY-MM-DD>.md"}'`
 - Commit the digest and any triaged task files to main with message `queue: daily digest + triage <date>`, then push: `git pull --rebase --autostash origin main && git push origin main` (on rebase conflict: abort, leave the commit local, note it in the digest).

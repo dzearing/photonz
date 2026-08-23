@@ -49,8 +49,10 @@ Q busy "starting up"
 while :; do
   TODAY=$(date +%F)
 
-  # Daily digest + triage: once per calendar day, before picking new work.
-  if [[ ! -f "queue/digests/$TODAY.md" ]]; then
+  # Daily digest + triage: once per calendar day, at or after 05:00 so it reads
+  # as a morning report rather than a midnight one. (10# forces base-10: date
+  # prints 08/09 and zsh arithmetic would otherwise read those as bad octal.)
+  if [[ ! -f "queue/digests/$TODAY.md" && $((10#$(date +%H))) -ge 5 ]]; then
     echo "[go-loop] $(date +%T) generating digest + triage for $TODAY" | tee -a "$LOG"
     Q busy "running daily digest + triage"
     banner "**Go loop** running daily digest + triage for $TODAY"
