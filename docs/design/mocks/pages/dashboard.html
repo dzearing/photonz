@@ -345,11 +345,14 @@
   var renderKeys = null;
   var TAB_TITLE = { summary: 'Summary', objectives: 'Objectives', tasks: 'Tasks', data: 'Data', digest: 'Digest' };
   function render() {
-    if (!S) return;
-    // the page names itself after the section you are in; the rail already said
-    // which project this is, so repeating it here only cost vertical space
+    // The page names itself after the section you are in, and it knows that
+    // from the URL, not from the data. This ran BELOW the `!S` guard, so the
+    // static "Summary" in the markup stayed on screen for the whole first
+    // fetch: clicking Objectives showed the wrong title until the payload
+    // landed. The heading is free, so it is painted first, every time.
     var titleEl = document.getElementById('db-title');
     if (titleEl) titleEl.textContent = TAB_TITLE[tab] || 'Summary';
+    if (!S) return;
     var slot = document.getElementById('db-headslot');
     if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : '';
     if (tab === 'summary') body.innerHTML = renderSummary();
@@ -1211,6 +1214,17 @@
       try { parent.postMessage({ photonzDashTab: t, photonzDigest: t === 'digest' ? digestSel : null }, '*'); } catch (err) {}
     }
   }
+
+  // the shell switches sections in place rather than reloading this document
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (!d.photonzSetTab) return;
+    if (d.photonzDigest) digestSel = d.photonzDigest;
+    setTab(d.photonzSetTab, false);
+    // keep this document's own URL truthful, so reload and copy-link still work
+    var url = d.photonzSetTab === 'digest' && digestSel ? digestURL(digestSel) : '?tab=' + d.photonzSetTab;
+    try { history.replaceState(null, '', url); } catch (err) {}
+  });
 
   var params = new URLSearchParams(location.search);
   var q = params.get('tab');

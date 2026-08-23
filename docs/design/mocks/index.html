@@ -227,15 +227,31 @@
   }
   // id may carry a dashboard tab as "dashboard@tasks", and a tab may carry a
   // sub-address as "digest/2026-08-23.md" so every digest has its own URL
+  var loadedPage = null;
   function go(id, tab) {
     if (!id) return;
     if (id.indexOf('@') > -1) { var p = id.split('@'); id = p[0]; tab = tab || p[1]; }
     var sub = '';
     if (tab && tab.indexOf('/') > -1) { var t = tab.split('/'); tab = t[0]; sub = t.slice(1).join('/'); }
-    frame.src = '/pages/' + id + '.html' + (tab ? '?tab=' + tab + (sub ? '&d=' + encodeURIComponent(sub) : '') : '');
+    // Switching sections of a page the frame ALREADY has is a tab change, not a
+    // navigation. Reassigning src reloaded the whole document for it: re-parsing
+    // both DS bundles and re-fetching the state payload before anything could
+    // paint, which is what made a rail click feel heavy. Ask the live page to
+    // switch instead, and it is instant because its data is already in memory.
+    if (loadedPage === id && frame.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({ photonzSetTab: tab || 'summary', photonzDigest: sub || null }, '*');
+      } catch (e) { frame.src = pageURL(id, tab, sub); }
+    } else {
+      frame.src = pageURL(id, tab, sub);
+      loadedPage = id;
+    }
     paintActive(id, tab);
     expandGroupFor(id);
-    try { history.replaceState(null, '', '#' + id + (tab ? '@' + tab : '')); } catch (e) {}
+    try { history.replaceState(null, '', '#' + id + (tab ? '@' + tab + (sub ? '/' + sub : '') : '')); } catch (e) {}
+  }
+  function pageURL(id, tab, sub) {
+    return '/pages/' + id + '.html' + (tab ? '?tab=' + tab + (sub ? '&d=' + encodeURIComponent(sub) : '') : '');
   }
   navs.forEach(function (n) { n.addEventListener('click', function () { go(n.dataset.page, n.dataset.tab); }); });
   document.querySelectorAll('.gtoggle').forEach(function (t) {
