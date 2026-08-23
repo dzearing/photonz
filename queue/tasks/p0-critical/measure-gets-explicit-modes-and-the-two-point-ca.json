@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:27:02.626Z",
-  "updated": "2026-08-23T18:27:02.626Z",
+  "updated": "2026-08-23T18:57:07.880Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Direct playtest feedback, 2026-08-23: hover-to-measure is janky and unclear, the old hover-a-point-then-measure-two-points flow was better, and the suggestion is modes: (1) two-point caliper as today, (2) auto-measure a component under the pointer, (3) a whitespace measurer where clicking between two elements measures the gap. next-measure-hover has already been defaulted OFF in FeatureCatalog.swift as a stopgap; do not simply turn it back on. Detection code is ElementBounds (PhotonzCore) and it works, the problem is that it fires continuously and speculatively rather than on an explicit act. Run the adversarial review from the runner contract on each proposed mode before building, and open a decision if the mode switcher UI is a real UX choice rather than an obvious one.",
@@ -25,6 +25,40 @@
     {
       "t": "2026-08-23T18:27:02.626Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T18:30:42.229Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T18:33:56.834Z",
+      "note": "Adversarial review, before building. (1) Naming: the modes should be named for what you GET, not what the app does. Distance / Size / Gap reads to a first-timer; Element / Whitespace does not. Alignment stays a fourth mode behind its flag. (2) The real risk is that Size mode inherits the detector that the last audit proved wrong: a button reads nothing, a toggle reads a 12x12 sliver, a row stops at its label text. Shipping a mode on top of that just relabels a bad answer. Fix inside this task: detection returns an ORDERED LIST of nested candidates instead of one guess, and [ / ] grow and shrink the pick. A wrong first guess stops being a dead end, and the level-0 miss over text (inverted landings) is skipped instead of returning nothing, so buttons stop reading nothing. The full accuracy work stays its own task (hover-to-measure-should-outline-the-button-or-ro)."
+    },
+    {
+      "t": "2026-08-23T18:33:56.834Z",
+      "note": "Adversarial review, continued. (3) Flicker was the loudest complaint and a mode alone does not cure it: any live preview redraws as you move. What a mode does cure is the two real problems, that chrome appeared without being asked for and that you could not tell what was being measured. Distance mode now draws nothing under the pointer at all, and Size mode outlines exactly the rect it will commit. (4) Cut: no new combined W x H badge. Acceptance says every mode shares one callout, so Size commits a width caliper and a height caliper in ONE undo step, both the standard caliper. One clean result for the element, no per-mode look. (5) Gap is the mode most likely to be right, because whitespace is flat and flat is where this detector already works. Its rule is the shorter of the two spans through the click point wins, which is what a person means by the gap. (6) Shortest version: no new panel, no new overlay family. The mode chips are the same chips Distance/Alignment already used, so the switcher is the established pattern rather than a UX choice, and no decision is opened for it. (7) next-measure-hover is deleted rather than defaulted off: Size mode supersedes it and a dead flag is a trap."
+    },
+    {
+      "t": "2026-08-23T18:56:56.365Z",
+      "note": "Built. MeasureToolMode + ElementBounds.candidates/gap + MeasureBuilder.clearingHeadOffset in PhotonzCore (TDD); mode chips in the Measure tool options; click-to-commit and [ / ] in CanvasView; addElementSize and addGapMeasure in EditorState. next-measure-hover deleted; the modes ride next-measure-modes, Next-only and on by default, so Current keeps the plain caliper. 954 tests green."
+    },
+    {
+      "t": "2026-08-23T18:56:56.365Z",
+      "note": "Adversarial review, after building, against the real audit capture with the shipping code. Gap is the strongest of the three: 12 px between Reset and Save Changes (true 12), and it now reads the band between two stacked cards, which it could not before because the old four-sided rule demanded left and right edges that whitespace does not have. Size reads the empty field exactly (218x24 vs true 220x26) and gets button heights right, but a button width comes out 116 vs 124 and five presses of ] out, and the toggle and the settings row are still wrong. That is the queued detection task, not this one, and the mode makes the wrong guess visible and correctable rather than asserted."
+    },
+    {
+      "t": "2026-08-23T18:56:56.365Z",
+      "note": "Two clumsy things found by looking at the rendered output and fixed: the readout pill parked on top of the very gap it measured (calipers placed by a mode now stand off by half the chip plus clearance), and a readout hanging off the canvas edge for an element flush right (the head flips side rather than fall off the image). One thing not fixed: on a 12 px gap the pill is still wider than the caliper. Also made the canvas take first responder when you pick Size, or [ and ] would go nowhere until you had clicked the image once."
+    },
+    {
+      "t": "2026-08-23T18:56:56.365Z",
+      "note": "Acceptance: 1 to 5 verified. 6 (the user has tried all three modes and confirmed each is clearer) cannot be done by an unmanned run. All three were exercised end to end against the real capture through the shipping code and the numbers and rendered output are in queue/audits/2026-08-23-measure-modes.json with two screenshots; the confirmation is the user's to give there."
+    },
+    {
+      "t": "2026-08-23T18:57:07.879Z",
+      "note": "Measure now has modes you pick in the tool options: Distance (the two-point caliper, the default, draws nothing until you click), Size (one click commits the element's width and height, [ and ] grow or shrink the pick), Gap (one click in whitespace becomes one spacing caliper), plus Alignment. next-measure-hover is deleted; the modes ride next-measure-modes, Next-only, on by default. Core work is TDD in PhotonzCore (MeasureToolMode, ElementBounds.candidates/gap, MeasureBuilder.clearingHeadOffset), 954 tests green, and all three modes were run end to end over the real audit capture with the shipping code: Gap reads 12 px between the buttons against a true 12. Size's detection is still wrong on buttons, toggles and rows and stays queued as its own task. Audit: queue/audits/2026-08-23-measure-modes.json."
     }
-  ]
+  ],
+  "started": "2026-08-23T18:30:42.228Z",
+  "completed": "2026-08-23T18:57:07.880Z"
 }

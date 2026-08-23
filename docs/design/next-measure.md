@@ -33,7 +33,7 @@ scoped to the `next` release only, default ON in next** (`experiments.md`):
 
 | Flag | Carries |
 | --- | --- |
-| `next-measure-hover` | § 3 hover-to-measure size readout |
+| `next-measure-modes` | § 3 measure modes: Distance, Size, Gap |
 | `next-measure-roles` | § 5 roles, legend, show filter |
 | `next-measure-panel` | § 6 Measurements panel, count pill, § 7 export surface |
 | `next-measure-center-snap` | § 8 centers snapping option |
@@ -51,46 +51,69 @@ scoped to the `next` release only, default ON in next** (`experiments.md`):
 - Tool shortcut stays **i** (Photoshop parity: PS groups its Ruler under I; the
   mock's M is PS's marquee and is not adopted).
 
-## 3. Hover-to-measure: element size readout — `next-measure-hover`
+## 3. Measure modes: Distance, Size, Gap — `next-measure-modes`
 
-Mock: `redline.html` `.rl-hover` red outline + the two `hoverc` calipers
-(width below, height right), driven by hovering a `.hit` element; hint chip
-"Measure mode: click two points for a live distance".
+Supersedes the old `next-measure-hover` spec. Hover-to-measure shipped as an
+always-on readout, playtested badly (2026-08-23) and has been removed: the flag
+is gone and the outline only appears in a mode you pick. The modes themselves
+ride a Next-only flag, default on there, so Current keeps the plain two-point
+caliper.
 
-The Measure tool's idle hover today shows only a snap **dot**. In Next, hovering
-also reads the **element under the pointer**:
+The Measure tool has **modes**, shown as chips in the tool options and visible at
+all times. `MeasureToolMode` (`PhotonzCore`) is the single source of truth for
+what each one does:
 
-- While the Measure tool is active, no drag/placement in progress, and the
-  pointer rests over the image: detect the element rect at the pointer and show
-  a tinted outline over it plus two **transient size calipers** — width along
-  the bottom edge, height along the right edge — labeled in the current unit.
-- Pointer moves to another element → readout follows. Leaving the image,
-  starting a click/drag placement, Esc, or switching tools clears it. Holding
-  **⌘** suppresses it (same key that bypasses snapping today).
-- **Detection is core, TDD** — `ElementBounds.detect(at:in:) -> CGRect?`
-  (`PhotonzCore`): from the probe point, walk each of the four directions for
-  the nearest accepted edge using the existing windowed `EdgeMap` queries
-  (`horizontalEdges(inXRange:)` / `verticalEdges(inYRange:)`, absolute floor,
-  luma landings on the element side), the perpendicular window centered on the
-  probe. All four sides found within a max radius (default 600 image px, a flag
-  parameter) → that rect; any side missing → `nil` and **no highlight** (a
-  quiet miss, never a wrong box). Nested hits resolve to the innermost rect
-  (nearest edges win by construction).
-- **Overlay chrome only.** The readout is canvas overlay layers in
-  `CanvasNSView` (like the snap dot and guides) styled from the size-role
-  colors (§ 5) at reduced opacity — it never enters the document, makes no
-  history entries, and triggers no composite re-render.
-- Perf: queries hit the block-summed fields; budget < 1 ms per mouse-move,
-  and hover is a no-op until the edge map has finished computing (same gate
-  snapping uses).
-- The **hint chip** from the mock ships with this flag: a small glass pill
-  ("Click two points for a live distance") shown while the Measure tool is
-  active and the document has no measurements yet; it disappears forever once
-  the first caliper lands (per document).
+- **Distance** (default) — the shipped two-point caliper: click a point, click
+  another, click to place the head. It is the ONLY mode that draws nothing
+  under an idle pointer, which is the point of it being the default.
+- **Size** — the element under the pointer, outlined with the width and height
+  calipers a click would leave behind. The click commits BOTH calipers in one
+  undo step. `[` and `]` shrink and grow the pick.
+- **Gap** — the whitespace under the pointer as one caliper, tagged Spacing when
+  roles (§ 5) are on, since a gap between two elements is a spacing callout by
+  definition.
+- **Alignment** — unchanged, still gated on `next-measure-align` (§ 9).
 
-Committing a measurement stays exactly the shipped flow (click-click or drag,
-then head placement). The mock shows hover as a **readout only** — no
-click-to-stamp is shown, so none is specced.
+Every mode produces the same caliper. No mode has a look of its own, which is
+why Size commits two standard calipers instead of a combined "124 × 30" badge.
+
+**Detection is core, TDD** — `ElementBounds` (`PhotonzCore`):
+
+- `candidates(at:in:)` returns the nested LADDER of element rects, innermost
+  first, walked outward one edge at a time from the same windowed `EdgeMap`
+  queries snapping uses (luma landings on the probe side). A flat bitmap has no
+  element tree, so the innermost rect is a guess; the ladder is what makes a
+  wrong guess a keypress to fix rather than a dead end. Two ladders are merged:
+  one off the NEAREST edges (right for a field, wrong inside a button where
+  every rung is a glyph) and one off the BOLDEST edges each direction offers
+  (which is what a border is). Rungs that barely differ are thinned so each
+  press visibly changes the pick.
+- `detect(at:in:)` is the first rung, unchanged in meaning.
+- `gap(at:in:)` needs only ONE axis: the space between two stacked cards has a
+  top and a bottom and no sides, and the shorter span wins when both read.
+- Perf budget unchanged: under 1 ms per mouse-move, and a no-op until the edge
+  map has finished computing (the same gate snapping uses).
+
+**Placement.** Modes that place their own calipers use
+`MeasureBuilder.clearingHeadOffset`, which stands the readout off far enough to
+clear what it measures and flips to the other side rather than hang off the
+canvas. A 12 px gap with a 90 px pill parked on it tells you nothing.
+
+**Overlay chrome only.** The Size/Gap preview is canvas overlay layers in
+`CanvasNSView` (like the snap dot and guides), rasterized through the real
+caliper pipeline so the preview and the commit cannot disagree. It never enters
+the document and makes no history entries.
+
+**Hint chip.** A small glass pill saying what a click does in the current mode,
+shown while the Measure tool is active and the document has no measurements
+yet; it disappears forever once the first measurement lands (per document).
+
+**Known gap.** Detection accuracy is still the weak link: on the audit capture,
+Size reads an empty field exactly and gets a button's width, a toggle and a
+settings row wrong. That is tracked as its own task
+(`hover-to-measure-should-outline-the-button-or-ro`) with fixture-pinned
+acceptance; the modes ship without waiting on it because the preview shows you
+the answer before you commit to it.
 
 Not specced here: the mock's live caliper rotates to any angle between the two
 clicked points; the shipped caliper is deliberately H/V-only (16.12). That
@@ -324,10 +347,14 @@ px `tolerance` parameter, default 1):
 
 ## 12. Done when (per flag)
 
-- `next-measure-hover`: hovering a settings-style capture with the Measure tool
-  outlines the row/button/field under the pointer with width + height readouts;
-  a fully flat region shows nothing; ⌘ suppresses; no history entries appear;
-  `ElementBounds` unit tests cover found/partial/nested/radius-capped cases.
+- `next-measure-modes`: the tool options always show Distance, Size and
+  Gap and which one is active; Distance draws nothing on the canvas until you
+  click; Size outlines the pick and one click commits its width and height as
+  one undo step, with `[` and `]` changing the pick; Gap turns a click in
+  whitespace into one spacing caliper; a fully flat region shows nothing at
+  all; no preview makes a history entry; `ElementBounds` unit tests cover
+  found/partial/nested/radius-capped cases, the candidate ladder, and a gap
+  that has only one axis to read.
 - `next-measure-roles`: a caliper can be re-roled between Size and Spacing with
   the role's colors applied and remembered per role; legend appears in measure
   mode listing only present roles; Show filter hides the other role on canvas

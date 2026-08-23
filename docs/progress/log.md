@@ -3955,3 +3955,34 @@ renderer had no image or ordered-list support and the server could not reach
 Report: `queue/audits/2026-08-23-measure-redline.md`.
 Next: the three filed follow-ups (hover detection p0, alignment offset + chip
 placement p1, edge-clipped caliper chip p2).
+
+## 2026-08-23 — Measure gets explicit modes; hover to measure is gone
+
+Playtest feedback killed hover to measure outright: chrome nobody asked for,
+flickering between guesses, and it buried the two-point caliper people actually
+reach for. The replacement is modes you pick, shown as chips in the tool options
+at all times: **Distance** (the shipped caliper, the default, and the only mode
+that draws nothing under an idle pointer), **Size** (the element under the
+pointer, one click commits its width and height as one undo step), **Gap** (a
+click in whitespace becomes one spacing caliper), plus **Alignment** where its
+flag is on. `next-measure-hover` is deleted, not defaulted off.
+
+New in `PhotonzCore`: `MeasureToolMode` (what each mode does, one source of
+truth for the canvas and the tool options), `ElementBounds.candidates` (the
+nested LADDER of element rects, so `[` and `]` shrink and grow the pick instead
+of leaving you with one wrong number), `ElementBounds.gap` (needs only the axis
+it measures, so the space between two stacked cards reads), and
+`MeasureBuilder.clearingHeadOffset` (a mode-placed readout stands off far enough
+to clear what it measures and flips side rather than hang off the canvas).
+
+Detection accuracy is NOT fixed and was not this task. Measured on the audit
+capture with the shipping code: the empty field reads 218×24 against a true
+220×26, a button's height reads right but its width reads 116 against 124 and
+only five presses of `]` out, and the toggle and the settings row are still
+wrong. Two ladders (nearest edges and boldest edges) are merged to make the
+button reachable at all. The real fix stays queued as
+`hover-to-measure-should-outline-the-button-or-ro`.
+
+Spec rewritten: `docs/design/next-measure.md` § 3. 953 tests green.
+Audit: `queue/audits/2026-08-23-measure-modes.json`.
+Next: the detection task, then whether Size should commit one caliper or two.

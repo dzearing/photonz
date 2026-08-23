@@ -127,17 +127,10 @@ extension Experiments {
             ?? FeatureCatalog.captureToastHoldSeconds
     }
 
-    /// `next-measure-hover`: whether the Measure tool's idle hover reads the
-    /// element under the pointer (outline + transient size calipers). Exists
-    /// only in the Next release's catalog, so Current always reads false.
-    var measureHoverEnabled: Bool { isEnabled(FeatureCatalog.measureHoverFlag) }
-
-    /// `next-measure-hover`: how far (image px) the element-bounds walk reaches
-    /// before a side counts as missing.
-    var measureHoverMaxRadius: Double {
-        number(FeatureCatalog.measureHoverFlag, FeatureCatalog.measureHoverRadius)
-            ?? ElementBounds.defaultMaxRadius
-    }
+    /// `next-measure-modes`: whether the Measure tool offers Distance, Size and
+    /// Gap as modes you pick. Exists only in the Next release's catalog, so
+    /// Current always reads false and keeps the plain two-point caliper.
+    var measureModesEnabled: Bool { isEnabled(FeatureCatalog.measureModesFlag) }
 
     /// `next-measure-align`: whether the Measure tool offers its Alignment
     /// mode (drag a guide along an edge to check everything it crosses).

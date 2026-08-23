@@ -405,6 +405,36 @@ public enum MeasureBuilder {
     public static let defaultName = "Measure"
     public static let defaultAlignmentName = "Alignment"
 
+    /// The perpendicular reach a caliper needs so its readout sits CLEAR of the
+    /// thing it measures, rather than on top of it. The chip centers on the head
+    /// line, so the head has to stand off by at least half the chip's cross-axis
+    /// extent, plus the gap the head line already leaves and a little margin.
+    ///
+    /// Modes that measure something they can see (the size of an element, the
+    /// space between two of them) place their own calipers, so they use this
+    /// instead of the bare default reach — a 12 px gap with a 90 px readout
+    /// parked on it tells you nothing about which gap you measured.
+    /// Pass `canvas` and the head also picks its SIDE: outward (down for a width
+    /// caliper, right for a height one) unless the readout would fall off the
+    /// image there, in which case it flips to the other side. A measurement
+    /// half off the canvas is not a measurement.
+    public static func clearingHeadOffset(content: MeasureContent,
+                                          from start: CGPoint, to end: CGPoint,
+                                          canvas: CGSize? = nil) -> CGFloat {
+        var probe = content
+        probe.start = start
+        probe.end = end
+        let chip = probe.estimatedLabelSize
+        let half = (content.mode == .horizontal ? chip.height : chip.width) / 2
+        let reach = max(MeasureContent.defaultHeadOffset,
+                        half + MeasureContent.chipLineGap + 6)
+        guard let canvas else { return reach }
+        let feet = content.mode == .horizontal ? start.y : start.x
+        let limit = content.mode == .horizontal ? canvas.height : canvas.width
+        if feet + reach + half <= limit { return reach }
+        return feet - reach - half >= 0 ? -reach : reach
+    }
+
     /// The layer a placement whose feet run from `start` to `end` (document
     /// coordinates) creates. Frame = padded bbox (+ chip reservation); feet
     /// become layer-local. An alignment payload's items must arrive in DOCUMENT

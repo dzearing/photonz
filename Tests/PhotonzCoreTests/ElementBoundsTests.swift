@@ -135,4 +135,107 @@ struct ElementBoundsTests {
         #expect(rect?.minY == 52)
         #expect(rect?.maxY == 120)
     }
+
+    // MARK: Candidate list (explicit Size mode: [ and ] grow/shrink the pick)
+
+    @Test func candidatesGrowOutwardFromTheInnermost() {
+        var s = Scene(w: 500, h: 400)
+        s.addBox(CGRect(x: 20, y: 20, width: 440, height: 330))   // card
+        s.addBox(CGRect(x: 100, y: 100, width: 200, height: 100)) // button
+        let list = ElementBounds.candidates(at: CGPoint(x: 150, y: 150), in: s.map)
+        #expect(list.first == CGRect(x: 100, y: 100, width: 200, height: 100))
+        #expect(list.contains(CGRect(x: 20, y: 20, width: 440, height: 330)))
+        // Strictly nested, innermost first.
+        for (inner, outer) in zip(list, list.dropFirst()) {
+            #expect(outer.contains(inner))
+        }
+    }
+
+    @Test func detectIsTheFirstCandidate() {
+        var s = Scene(w: 500, h: 400)
+        s.addBox(CGRect(x: 20, y: 20, width: 440, height: 330))
+        s.addBox(CGRect(x: 100, y: 100, width: 200, height: 100))
+        let probe = CGPoint(x: 150, y: 150)
+        #expect(ElementBounds.detect(at: probe, in: s.map)
+                == ElementBounds.candidates(at: probe, in: s.map).first)
+    }
+
+    @Test func aProbeOverTextStillReachesTheButtonByGrowing() {
+        // The exact failure the last audit measured: two glyph strokes inside a
+        // button win the nearest-edge walk, so the first guess is a sliver of
+        // text. Growing the pick must reach the button itself.
+        var s = Scene(w: 500, h: 400)
+        let button = CGRect(x: 100, y: 100, width: 200, height: 60)
+        s.addBox(button)
+        s.addVerticalEdge(col: 190, y0: 120, y1: 140)
+        s.addVerticalEdge(col: 200, y0: 120, y1: 140)
+        let list = ElementBounds.candidates(at: CGPoint(x: 195, y: 130), in: s.map)
+        #expect(list.first != button)      // the sliver is still the first guess
+        #expect(list.contains(button))     // but the button is one press away
+    }
+
+    @Test func flatBackgroundOffersNoCandidates() {
+        let s = Scene(w: 400, h: 300)
+        #expect(ElementBounds.candidates(at: CGPoint(x: 200, y: 150), in: s.map).isEmpty)
+    }
+
+    @Test func candidateListStaysShort() {
+        // Deeply nested boxes must not hand the UI an endless ladder.
+        var s = Scene(w: 900, h: 900)
+        for i in 0..<12 {
+            let inset = CGFloat(i) * 30
+            s.addBox(CGRect(x: 20 + inset, y: 20 + inset,
+                            width: 860 - inset * 2, height: 860 - inset * 2))
+        }
+        let list = ElementBounds.candidates(at: CGPoint(x: 450, y: 450), in: s.map)
+        #expect(!list.isEmpty)
+        #expect(list.count <= ElementBounds.candidateLimit)
+    }
+
+    // MARK: Gap mode (click in the space between two elements)
+
+    @Test func gapReadsTheShorterSpanThroughTheClick() {
+        // Two buttons side by side inside a tall card: clicking between them
+        // must measure the 40 px horizontal gap, not the card's height.
+        var s = Scene(w: 600, h: 500)
+        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
+        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
+        s.addBox(CGRect(x: 260, y: 150, width: 120, height: 60))
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map)
+        #expect(gap?.axis == .horizontal)
+        #expect(gap?.length == 40)
+        #expect(gap?.start == CGPoint(x: 220, y: 180))
+        #expect(gap?.end == CGPoint(x: 260, y: 180))
+    }
+
+    @Test func gapReadsAVerticalStackToo() {
+        var s = Scene(w: 600, h: 500)
+        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
+        s.addBox(CGRect(x: 100, y: 100, width: 400, height: 60))
+        s.addBox(CGRect(x: 100, y: 184, width: 400, height: 60))
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), in: s.map)
+        #expect(gap?.axis == .vertical)
+        #expect(gap?.length == 24)
+        #expect(gap?.start == CGPoint(x: 300, y: 160))
+        #expect(gap?.end == CGPoint(x: 300, y: 184))
+    }
+
+    @Test func gapOnFlatBackgroundIsAQuietMiss() {
+        let s = Scene(w: 400, h: 300)
+        #expect(ElementBounds.gap(at: CGPoint(x: 200, y: 150), in: s.map) == nil)
+    }
+
+    @Test func gapNeedsOnlyTheAxisItMeasures() {
+        // Two stacked cards with nothing to their left or right: the space
+        // between them has a top and a bottom and no sides at all. Refusing to
+        // measure it would fail the most ordinary gap there is.
+        var s = Scene(w: 600, h: 500)
+        s.addHorizontalEdge(row: 200, x0: 0, x1: 599)
+        s.addHorizontalEdge(row: 240, x0: 0, x1: 599)
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 220), in: s.map)
+        #expect(gap?.axis == .vertical)
+        #expect(gap?.length == 40)
+        // The element reading still needs all four sides, so it stays quiet.
+        #expect(ElementBounds.detect(at: CGPoint(x: 300, y: 220), in: s.map) == nil)
+    }
 }

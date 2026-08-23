@@ -28,8 +28,7 @@ public enum FeatureCatalog {
     public static let captureToastHoldSeconds: Double = 7
     public static let captureToastFadeSeconds: Double = 3
 
-    public static let measureHoverFlag = "next-measure-hover"
-    public static let measureHoverRadius = "radius"
+    public static let measureModesFlag = "next-measure-modes"
 
     public static let measureAlignFlag = "next-measure-align"
     public static let measureAlignTolerance = "tolerance"
@@ -89,22 +88,13 @@ public enum FeatureCatalog {
                 enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
-                    name: measureHoverFlag,
-                    title: "Hover to measure (experimental)",
-                    description: "While the Measure tool is idle, hovering outlines the element under the pointer with its width and height. Hold Command to suppress it. Off by default: detection on a flat screenshot is a guess, so the outline flickers between candidates and it is not clear what is being measured. Being redesigned as an explicit mode.",
+                    name: measureModesFlag,
+                    title: "Measure modes",
+                    description: "The Measure tool gets modes you pick in the tool options: Distance is the two-point caliper and draws nothing until you click, Size measures the element under the pointer in one click (with [ and ] to grow or shrink the pick), and Gap turns a click in the space between two elements into one spacing measurement. Off means the Measure tool is the plain two-point caliper.",
                     isEnabled: false,
-                    parameters: [
-                        FeatureParameter(name: measureHoverRadius, label: "Search radius (px)",
-                                         value: .number(ElementBounds.defaultMaxRadius),
-                                         bounds: NumberBounds(minimum: 100, maximum: 2000, step: 50)),
-                    ]),
+                    parameters: []),
                 releases: [.next],
-                // OFF by default. Shipped on, and playtesting found it made the
-                // Measure tool worse: constant hover chrome over a screenshot
-                // reads as noise, and the two-point caliper it sits beside is
-                // the interaction people actually want. Still available in the
-                // Experiments window for anyone who wants to try it.
-                enabledByDefaultIn: []),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: measureAlignFlag,

@@ -5,11 +5,11 @@
   "epic": "hover-measure",
   "priority": "p0-critical",
   "seq": 12,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:03:40.300Z",
-  "updated": "2026-08-23T18:05:50.814Z",
+  "updated": "2026-08-23T18:30:36.655Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Diagnosis in queue/audits/2026-08-23-measure-redline.md. ElementBounds.detect walks outward and takes the NEAREST accepted EdgeMap candidate per direction, so glyph strokes win over the element boundary; over text the probe-side landings invert (minY > maxY) and it returns nil, which is why buttons read nothing. Measured counterexamples: strongest-edge-per-direction nails the button (233/480/755/815 -> 124x30 exactly) but makes a settings row grab its whole card (card bottom strength 1.0 beats the hairline divider at 0.795). Nearest-with-strength-threshold at 0.8 of the walk max fixes the button and still breaks the row. Likely needs a signal the edge map alone does not carry (uniformity beyond the candidate edge, or reusing FloodFill/ContourTracer from the wand). PhotonzCore has no image access today, so this may mean moving detection or passing a sampler in. Spec: docs/design/next-measure.md section 3.",
@@ -27,7 +27,12 @@
     {
       "t": "2026-08-23T18:05:50.814Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T18:30:36.654Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
     }
   ],
-  "started": "2026-08-23T18:05:50.813Z"
+  "started": "2026-08-23T18:05:50.813Z",
+  "failures": 1
 }

@@ -181,9 +181,9 @@ struct EditorView: View {
                        annotationContent: editorState.activeAnnotationContent,
                        annotationStyle: editorState.activeAnnotationStyle,
                        textContent: editorState.activeTextContent,
-                       measureContent: editorState.measureStyle,
-                       measureChecksAlignment: editorState.measureChecksAlignment
-                           && Experiments.shared.measureAlignEnabled,
+                       measureContent: editorState.measureStyleForActiveMode,
+                       measureToolMode: editorState.measureToolMode,
+                       measureCandidateLevel: editorState.measureCandidateLevel,
                        measureSnapsToCenters: editorState.measureSnapsToCenters
                            && Experiments.shared.measureCenterSnapEnabled,
                        edgeMap: editorState.snappingEdgeMap,
@@ -210,6 +210,9 @@ struct EditorView: View {
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
                        onAlignmentCommit: { editorState.addAlignmentCheck(axis: $0, position: $1, span: $2) },
+                       onElementSizeCommit: { editorState.addElementSize($0) },
+                       onGapCommit: { editorState.addGapMeasure($0) },
+                       onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
                        onToolChange: { editorState.setTool($0) },
                        onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
                        onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
@@ -290,10 +293,11 @@ struct EditorView: View {
         .frame(width: 16, alignment: .leading)
     }
 
-    /// First-run hint for the Measure tool (Next, `next-measure-hover`): a
-    /// small glass pill that lives until the document's first caliper lands.
+    /// First-run hint for the Measure tool: a small glass pill saying what a
+    /// click does in the current mode, which lives until the document's first
+    /// measurement lands.
     private var measureHintChip: some View {
-        Text("Click two points for a live distance")
+        Text(editorState.measureHintText)
             .font(.callout)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
@@ -534,7 +538,7 @@ struct EditorView: View {
 
     /// Whether the Measure tool has any options row to show (any Next flag).
     private var hasMeasureOptions: Bool {
-        Experiments.shared.measureAlignEnabled || Experiments.shared.measureCenterSnapEnabled
+        Experiments.shared.measureModesEnabled || Experiments.shared.measureCenterSnapEnabled
             || Experiments.shared.measureRolesEnabled
     }
 
@@ -913,35 +917,35 @@ struct EditorView: View {
         .help("Wand tolerance: how similar a color must be to join the selection")
     }
 
-    /// Measure mode: a plain distance caliper, or an alignment-checking guide
-    /// (Next `next-measure-align`). Mirrors the crop-aspect chip styling.
+    /// What the Measure tool does when you click, as always-visible chips:
+    /// Distance (the two-point caliper, the default), Size (the element under
+    /// the pointer), Gap (the space between two elements), and Alignment when
+    /// its flag is on. Mirrors the crop-aspect chip styling.
     /// Trailing Snap control (Next `next-measure-center-snap`): what measure
     /// points magnetize to — edges only, or edges plus element/gap centers.
     private var measureOptions: some View {
         HStack(spacing: 6) {
-            if Experiments.shared.measureAlignEnabled {
-                ForEach([false, true], id: \.self) { checksAlignment in
-                    let isActive = editorState.measureChecksAlignment == checksAlignment
-                    Button {
-                        editorState.measureChecksAlignment = checksAlignment
-                    } label: {
-                        Text(checksAlignment ? "Alignment" : "Distance")
-                            .font(.caption.weight(.medium))
-                            .fixedSize()
-                            .foregroundStyle(isActive ? Color.white : Color.primary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background {
-                                if isActive {
-                                    Capsule().fill(Color.accentColor)
-                                }
+            ForEach(Experiments.shared.measureModesEnabled
+                ? MeasureToolMode.available(alignmentEnabled: Experiments.shared.measureAlignEnabled)
+                : [], id: \.self) { mode in
+                let isActive = editorState.measureToolMode == mode
+                Button {
+                    editorState.measureToolMode = mode
+                } label: {
+                    Text(mode.title)
+                        .font(.caption.weight(.medium))
+                        .fixedSize()
+                        .foregroundStyle(isActive ? Color.white : Color.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background {
+                            if isActive {
+                                Capsule().fill(Color.accentColor)
                             }
-                    }
-                    .buttonStyle(.plain)
-                    .help(checksAlignment
-                          ? "Alignment: drag a guide along an edge to check everything it crosses"
-                          : "Distance: click two points for a live distance")
+                        }
                 }
+                .buttonStyle(.plain)
+                .help(mode.help)
             }
             if Experiments.shared.measureCenterSnapEnabled {
                 measureSnapOption

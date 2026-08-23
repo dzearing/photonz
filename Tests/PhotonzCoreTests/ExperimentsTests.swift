@@ -316,19 +316,20 @@ struct FeatureCatalogTests {
             .string(FeatureCatalog.releaseTagFlag, FeatureCatalog.releaseTagLabel) == Release.next.title)
     }
 
-    @Test func theHoverMeasureFlagIsNextOnlyAndOffByDefault() {
-        // Section 3 of docs/design/next-measure.md put the readout in Next,
-        // default on. Playtesting reversed the default: hover detection on a
-        // flat screenshot is a guess, so the outline flickers between
-        // candidates and the constant chrome buries the two-point caliper that
-        // people actually reach for. The flag stays, so it can still be turned
-        // on in the Experiments window, but Next no longer ships with it.
-        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureHoverFlag))
-        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.measureHoverFlag })
-        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureHoverFlag })
-        #expect(FeatureCatalog.defaultSettings(for: .next)
-            .number(FeatureCatalog.measureHoverFlag, FeatureCatalog.measureHoverRadius)
-            == ElementBounds.defaultMaxRadius)
+    @Test func theMeasureModesFlagIsNextOnlyAndOnByDefault() {
+        // Distance, Size and Gap are how the Measure tool works in Next. Current
+        // never sees them, so the tool there stays the plain two-point caliper.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureModesFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.measureModesFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureModesFlag })
+    }
+
+    @Test func theHoverMeasureFlagIsGoneNowThatMeasureHasModes() {
+        // Hover-to-measure was an always-on readout that nobody asked for, and
+        // playtesting killed it. Its successor is not a flag: Size is one of the
+        // Measure tool's explicit modes, so there is nothing left to toggle.
+        #expect(!FeatureCatalog.flags(for: .next).contains { $0.name == "next-measure-hover" })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == "next-measure-hover" })
     }
 
     @Test func theAlignmentFlagIsNextOnlyAndOnByDefault() {

@@ -1,0 +1,30 @@
+{
+  "feature": "Measure modes: Distance, Size, Gap",
+  "epic": "measure-redline",
+  "summary": "Measuring is modal now. Distance is the two-point caliper you already had and it leaves the canvas alone until you click. Size measures the element under the pointer with one click, and Gap turns a click in the space between two things into a single spacing caliper.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on: Measure modes ships on. Hover to measure is gone, flag and all.",
+  "try": [
+    { "do": "Open queue/audits/2026-08-23-measure-00-capture.png and press i for the Measure tool." },
+    { "do": "Move the pointer around the image without clicking. Nothing should appear except the snap dot." },
+    { "do": "Click the Gap chip in the tool options, then click in the space between the Reset and Save Changes buttons. It should read 12 px, which is the true gap.", "shot": "2026-08-23-measure-modes-gap.png" },
+    { "do": "Still in Gap, click in the empty band between the two white cards. It reads a vertical gap without needing anything to its left or right." },
+    { "do": "Click the Size chip, then point at the empty Save captures to field. Click once: you get its width and its height as two calipers, one undo away.", "shot": "2026-08-23-measure-modes-size.png" },
+    { "do": "Point at the Save Changes button. The first guess is a sliver of the text. Press ] a few times and watch the pick grow to the button." },
+    { "do": "Press [ back down to a smaller pick, then Command Z twice and switch back to the Distance chip." }
+  ],
+  "evaluate": [
+    "Is Distance drawing nothing under an idle pointer the right default, or do you miss having a readout there?",
+    "Do the three names say what you get? Would Element read better than Size, or Spacing better than Gap?",
+    "Is one click giving you two calipers right for Size, or did you want just the one you were pointing at?",
+    "Are [ and ] to grow and shrink the pick discoverable enough, or does that need to be on screen?",
+    "Should a gap always come out blue as Spacing, or should it inherit whatever role you last used?"
+  ],
+  "rough": [
+    "Size mode's detection is still the weak link, and this task did not fix it. On the audit capture it reads the empty field exactly (218 by 24 against a true 220 by 26) and reads a button's height right, but a button's width comes out 116 instead of 124 and only after five presses of ], a toggle never reaches its true 42 by 24, and a settings row still stops at its label text. The fix needs a signal the edge map alone does not carry and is queued as its own task.",
+    "What did change is that a wrong guess is now visible before you commit to it and correctable with one key, instead of a number asserted at you.",
+    "On a very small gap the readout pill is wider than the caliper it labels, so you mostly see the pill. The caliper now stands off far enough to clear the gap, but it is still a 90 px label on a 24 px measurement.",
+    "The pick level is remembered as you move between elements. If you grew it for one button, the next one starts grown. That felt better than resetting, but it is a guess.",
+    "Changed from the mock on purpose: no combined 124 x 30 badge. Every mode has to produce the same caliper, so Size commits two of them.",
+    "The mode switcher is chips in the tool options, the same control the Distance and Alignment pair already used, so no decision was opened for it."
+  ]
+}

@@ -919,10 +919,90 @@ final class EditorState {
         finishCreating(layer.id)
     }
 
+    /// Size mode's click: the element under the pointer becomes a width caliper
+    /// and a height caliper in ONE undo step, both the same caliper every other
+    /// mode produces. Two layers rather than a combined badge on purpose — a
+    /// mode that invented its own callout would be the only one with a look of
+    /// its own, and each caliper stays individually movable and deletable.
+    /// The heads point outward, away from the element, so neither sits on it.
+    func addElementSize(_ rect: CGRect) {
+        guard rect.width > 0, rect.height > 0, let canvas = document?.canvasSize else { return }
+        let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
+        let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
+        var width = measureStyle
+        width.mode = .horizontal
+        width.headOffset = MeasureBuilder.clearingHeadOffset(content: width, from: widthFeet.0,
+                                                             to: widthFeet.1, canvas: canvas)
+        var height = measureStyle
+        height.mode = .vertical
+        height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: heightFeet.0,
+                                                              to: heightFeet.1, canvas: canvas)
+        var widthLayer = MeasureBuilder.layer(content: width, from: widthFeet.0, to: widthFeet.1)
+        var heightLayer = MeasureBuilder.layer(content: height, from: heightFeet.0, to: heightFeet.1)
+        widthLayer.style = measureStyles.layerStyle
+        heightLayer.style = measureStyles.layerStyle
+        perform {
+            $0.addLayer(widthLayer)
+            $0.addLayer(heightLayer)
+        }
+        recordRecentColor(hex: width.strokeColorHex)
+        measureHintDismissed = true
+        finishCreating(widthLayer.id)
+    }
+
+    /// The style the canvas should preview the active Measure mode in. Gap mode
+    /// previews in the Spacing ink it will actually commit, so what you see
+    /// under the pointer is what lands.
+    var measureStyleForActiveMode: MeasureContent {
+        guard measureToolMode == .gap, Experiments.shared.measureRolesEnabled else {
+            return measureStyle
+        }
+        return measureStyles.content(for: .spacing)
+    }
+
+    /// Gap mode's click: one caliper across the whitespace, tagged Spacing when
+    /// roles are on, because a gap between two elements is by definition a
+    /// spacing callout and making the user set that by hand is busywork.
+    func addGapMeasure(_ gap: GapMeasurement) {
+        guard gap.length > 0, let canvas = document?.canvasSize else { return }
+        var content = measureStyleForActiveMode
+        content.mode = gap.axis
+        // The head reaches far enough that the readout sits clear of the gap
+        // itself — a pill parked on a 12 px space hides the very thing measured.
+        content.headOffset = MeasureBuilder.clearingHeadOffset(content: content, from: gap.start,
+                                                               to: gap.end, canvas: canvas)
+        var layer = MeasureBuilder.layer(content: content, from: gap.start, to: gap.end)
+        layer.style = measureStyles.layerStyle
+        perform { $0.addLayer(layer) }
+        recordRecentColor(hex: content.strokeColorHex)
+        measureHintDismissed = true
+        finishCreating(layer.id)
+    }
+
+    /// What the Measure tool does when you click (Next): the two-point caliper,
+    /// the size of the element under the pointer, the gap under the pointer, or
+    /// an alignment guide. Always visible in the tool options, session chrome,
+    /// never persisted. Distance is the default and the only mode that draws
+    /// nothing on the canvas until you act.
+    var measureToolMode: MeasureToolMode {
+        get { Experiments.shared.measureModesEnabled ? storedMeasureToolMode : .distance }
+        set {
+            guard newValue != storedMeasureToolMode else { return }
+            storedMeasureToolMode = newValue
+            measureCandidateLevel = 0
+        }
+    }
+    private var storedMeasureToolMode: MeasureToolMode = .distance
+
+    /// Which rung of the detected element ladder Size mode is showing, moved by
+    /// `[` and `]`. Session chrome; clamped against the live candidate list by
+    /// the canvas, so a level that outruns a simpler element just pins to its
+    /// outermost rung.
+    var measureCandidateLevel: Int = 0
+
     /// Whether the Measure tool is in its Alignment mode (Next flag
     /// `next-measure-align`): drags draw a checking guide instead of a caliper.
-    /// Session chrome, never persisted.
-    var measureChecksAlignment = false
+    var measureChecksAlignment: Bool { measureToolMode == .alignment }
 
     /// The Measure tool's Snap option (Next flag `next-measure-center-snap`):
     /// true = "Edges and centers" (the mock's default), false = "Edges".
@@ -969,16 +1049,18 @@ final class EditorState {
     /// the document.
     private var measureHintDismissed = false
 
-    /// Whether the Measure tool's first-run hint chip ("Click two points for a
-    /// live distance") shows: Next's hover flag on, Measure tool active, and no
-    /// caliper has ever landed in this document.
+    /// Whether the Measure tool's first-run hint chip shows: the Measure tool is
+    /// active and no measurement has ever landed in this document. It tells you
+    /// what a click does in the mode you are in, which is the one thing a mode
+    /// switcher costs you.
     var showsMeasureHint: Bool {
         guard activeTool == .measure, !measureHintDismissed,
-              !measureChecksAlignment,
-              Experiments.shared.measureHoverEnabled,
               let document else { return false }
         return !document.layers.contains { $0.measure != nil }
     }
+
+    /// That chip's line, for the current mode.
+    var measureHintText: String { measureToolMode.hint }
 
     // MARK: - Measure styling
 

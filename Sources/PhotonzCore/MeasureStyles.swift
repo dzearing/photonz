@@ -223,7 +223,11 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// The template a new caliper starts from: the last-used role, drawn in that
     /// role's remembered ink. Axis, feet, and head offset are set per placement,
     /// so the geometry here is placeholder.
-    public var content: MeasureContent {
+    public var content: MeasureContent { content(for: role) }
+
+    /// The same template forced to a specific role — how Gap mode gets a
+    /// Spacing callout without disturbing the remembered last-used role.
+    public func content(for role: MeasureRole) -> MeasureContent {
         let ink = colors(for: role)
         return MeasureContent(mode: .horizontal, strokeWidth: strokeWidth,
                               strokeColorHex: ink.strokeColorHex, chipColorHex: ink.chipColorHex,

@@ -52,9 +52,13 @@ struct CanvasView: NSViewRepresentable {
     let textContent: TextContent?
     /// The active measure tool's style, mirrored into the in-flight preview.
     let measureContent: MeasureContent?
-    /// Whether the Measure tool is in its Alignment mode (Next flag
-    /// `next-measure-align`): a drag draws a checking guide, not a caliper.
-    let measureChecksAlignment: Bool
+    /// What the Measure tool does when you click (Next): the two-point caliper,
+    /// the element under the pointer, the gap under the pointer, or an
+    /// alignment guide. Only Size and Gap draw anything before you click.
+    let measureToolMode: MeasureToolMode
+    /// Which rung of the detected element ladder Size mode shows, moved by
+    /// `[` and `]`.
+    let measureCandidateLevel: Int
     /// The Measure tool's Snap option (Next flag `next-measure-center-snap`):
     /// measure points also magnetize to element/gap centers, not just edges.
     let measureSnapsToCenters: Bool
@@ -97,6 +101,12 @@ struct CanvasView: NSViewRepresentable {
     /// Completed alignment-guide drag: (guide axis, cross-axis position,
     /// along-axis span), all in document coordinates.
     let onAlignmentCommit: (MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void
+    /// Size mode's click: the element rect to turn into width + height calipers.
+    let onElementSizeCommit: (CGRect) -> Void
+    /// Gap mode's click: the whitespace reading to turn into one caliper.
+    let onGapCommit: (GapMeasurement) -> Void
+    /// `[` / `]` moved Size mode's pick to a different rung.
+    let onCandidateLevelChange: (Int) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
@@ -134,7 +144,8 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
-                   measureChecksAlignment: measureChecksAlignment,
+                   measureToolMode: measureToolMode,
+                   measureCandidateLevel: measureCandidateLevel,
                    measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    isCanvasSelected: isCanvasSelected)
     }
@@ -161,6 +172,9 @@ struct CanvasView: NSViewRepresentable {
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
+        view.onElementSizeCommit = onElementSizeCommit
+        view.onGapCommit = onGapCommit
+        view.onCandidateLevelChange = onCandidateLevelChange
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
         view.onMeasureEndpointCommit = onMeasureEndpointCommit
         view.onToolChange = onToolChange
@@ -206,6 +220,9 @@ final class CanvasNSView: NSView {
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
+    var onElementSizeCommit: ((CGRect) -> Void) = { _ in }
+    var onGapCommit: ((GapMeasurement) -> Void) = { _ in }
+    var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onMeasureEndpointCommit: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
     var onToolChange: ((Tool) -> Void) = { _ in }
@@ -400,9 +417,19 @@ final class CanvasNSView: NSView {
         case secondPlaced(foot1: CGPoint, foot2: CGPoint, mode: MeasureMode) // seeking head
     }
     private var measurePlacement: MeasurePlacement?
+    /// What the Measure tool does when you click (Next). Distance is the only
+    /// mode that draws nothing under an idle pointer.
+    private var measureToolMode: MeasureToolMode = .distance
+    /// Which rung of the element ladder Size mode shows (`[` / `]`).
+    private var measureCandidateLevel = 0
+    /// The rect Size mode is previewing right now — exactly what a click
+    /// commits, so what you see and what you get can never disagree.
+    private var measureElementPreview: CGRect?
+    /// The gap Gap mode is previewing right now, same contract.
+    private var measureGapPreview: GapMeasurement?
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
     /// checking guide, and the in-flight guide drag (document coordinates).
-    private var measureChecksAlignment = false
+    private var measureChecksAlignment: Bool { measureToolMode == .alignment }
     /// Snap option (Next `next-measure-center-snap`): measure snapping also
     /// offers element/gap centers, echoed from EditorState via the wrapper.
     private var measureSnapsToCenters = false
@@ -1034,46 +1061,76 @@ final class CanvasNSView: NSView {
         onAlignmentCommit(axis, position, span) // adds, selects, reverts to Select
     }
 
-    // MARK: Hover-to-measure element readout (Next, `next-measure-hover`)
+    // MARK: Size / Gap mode preview (Next)
 
-    /// Hides every hover-to-measure layer (a miss, ⌘, placement, tool switch).
+    /// Hides every mode-preview layer (a miss, a placement, a tool switch).
     private func hideMeasureHoverReadout() {
         hoverBoundsLayer.isHidden = true
         hoverWidthCaliperLayer.isHidden = true
         hoverHeightCaliperLayer.isHidden = true
+        measureElementPreview = nil
+        measureGapPreview = nil
     }
 
-    /// Draws (or hides) the hover-to-measure readout for the current pointer:
-    /// detect the element rect under the probe with `ElementBounds` and outline
-    /// it with transient width/height calipers in the current unit. Misses are
-    /// quiet (no chrome at all), ⌘ suppresses — the same key that bypasses
-    /// snapping — and until the edge map has finished computing, detection sees
-    /// `EdgeMap.empty` and this stays a no-op, the same gate snapping uses.
+    /// Draws (or hides) what a click would commit in the current mode.
+    ///
+    /// Only Size and Gap draw here at all: Distance leaves the canvas untouched
+    /// until you click, which is the whole reason it is the default. A miss is
+    /// quiet (no chrome), and until the edge map has finished computing,
+    /// detection sees `EdgeMap.empty` and this stays a no-op — the same gate
+    /// snapping uses. Whatever is drawn is stashed, so mouse-up commits exactly
+    /// the thing you were looking at.
     private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
+        measureElementPreview = nil
+        measureGapPreview = nil
         guard tool == .measure, measurePlacement == nil,
-              !measureChecksAlignment,
-              !modifierFlags.contains(.command),
-              Experiments.shared.measureHoverEnabled,
+              measureToolMode.previewsUnderPointer,
               let viewport, let document, let hoverPoint else {
             hideMeasureHoverReadout()
             return
         }
         let probe = viewport.documentPoint(fromView: hoverPoint)
-        guard CGRect(origin: .zero, size: document.canvasSize).contains(probe),
-              let rect = ElementBounds.detect(at: probe, in: edgeMap,
-                                              maxRadius: Experiments.shared.measureHoverMaxRadius) else {
+        guard CGRect(origin: .zero, size: document.canvasSize).contains(probe) else {
             hideMeasureHoverReadout()
             return
         }
-
         let style = measureContent ?? MeasureContent()
-        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        switch measureToolMode {
+        case .size:
+            let ladder = ElementBounds.candidates(at: probe, in: edgeMap)
+            guard let rect = ladder.isEmpty
+                    ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
+                hideMeasureHoverReadout()
+                return
+            }
+            measureElementPreview = rect
+            drawElementPreview(rect, style: style, viewport: viewport,
+                               pixelScale: document.pixelScale, canvas: document.canvasSize)
+        case .gap:
+            guard let gap = ElementBounds.gap(at: probe, in: edgeMap) else {
+                hideMeasureHoverReadout()
+                return
+            }
+            measureGapPreview = gap
+            drawGapPreview(gap, style: style, viewport: viewport,
+                           pixelScale: document.pixelScale, canvas: document.canvasSize)
+        case .distance, .alignment:
+            hideMeasureHoverReadout()
+        }
+    }
 
+    /// Size mode's preview: the picked element outlined in the measure ink, with
+    /// the width and height calipers a click would leave behind.
+    private func drawElementPreview(_ rect: CGRect, style: MeasureContent,
+                                    viewport: Viewport, pixelScale: CGFloat, canvas: CGSize) {
+        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         defer { CATransaction.commit() }
 
-        // Element outline: the measure ink at reduced opacity + a whisper of fill.
+        // Element outline: the measure ink at reduced opacity + a whisper of
+        // fill, so there is never any doubt about WHAT is being measured — the
+        // complaint that sank the old always-on version.
         let corners = [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
                        CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)]
             .map { viewport.viewPoint(fromDocument: $0) }
@@ -1086,20 +1143,48 @@ final class CanvasNSView: NSView {
         hoverBoundsLayer.isHidden = false
 
         // Width caliper along the bottom edge, height caliper along the right,
-        // both heads pointing outward.
-        let reach = MeasureContent.defaultHeadOffset / 2
+        // both heads reaching outward far enough to clear the element — the same
+        // placement the click commits, so the preview never lies.
+        let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
+        let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
+        var widthStyle = style
+        widthStyle.mode = .horizontal
+        var heightStyle = style
+        heightStyle.mode = .vertical
         layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
                            style: style, mode: .horizontal,
-                           from: CGPoint(x: rect.minX, y: rect.maxY),
-                           to: CGPoint(x: rect.maxX, y: rect.maxY),
-                           headOffset: reach, viewport: viewport,
-                           pixelScale: document.pixelScale)
+                           from: widthFeet.0, to: widthFeet.1,
+                           headOffset: MeasureBuilder.clearingHeadOffset(
+                               content: widthStyle, from: widthFeet.0, to: widthFeet.1,
+                               canvas: canvas),
+                           viewport: viewport, pixelScale: pixelScale)
         layoutHoverCaliper(hoverHeightCaliperLayer, sprite: &hoverHeightSprite,
                            style: style, mode: .vertical,
-                           from: CGPoint(x: rect.maxX, y: rect.minY),
-                           to: CGPoint(x: rect.maxX, y: rect.maxY),
-                           headOffset: reach, viewport: viewport,
-                           pixelScale: document.pixelScale)
+                           from: heightFeet.0, to: heightFeet.1,
+                           headOffset: MeasureBuilder.clearingHeadOffset(
+                               content: heightStyle, from: heightFeet.0, to: heightFeet.1,
+                               canvas: canvas),
+                           viewport: viewport, pixelScale: pixelScale)
+    }
+
+    /// Gap mode's preview: one caliper across the whitespace, no outline — there
+    /// is no element to outline, and the caliper's own feet already show which
+    /// two edges are being measured to.
+    private func drawGapPreview(_ gap: GapMeasurement, style: MeasureContent,
+                                viewport: Viewport, pixelScale: CGFloat, canvas: CGSize) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        defer { CATransaction.commit() }
+        hoverBoundsLayer.isHidden = true
+        hoverHeightCaliperLayer.isHidden = true
+        var ink = style
+        ink.mode = gap.axis
+        layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
+                           style: style, mode: gap.axis,
+                           from: gap.start, to: gap.end,
+                           headOffset: MeasureBuilder.clearingHeadOffset(
+                               content: ink, from: gap.start, to: gap.end, canvas: canvas),
+                           viewport: viewport, pixelScale: pixelScale)
     }
 
     /// Positions one transient caliper layer, rasterizing through the same
@@ -1328,6 +1413,14 @@ final class CanvasNSView: NSView {
                 let anchor = snapMeasureAnchor(p, modifiers: event.modifierFlags)
                 alignmentDrag = (anchor, anchor)
                 refreshAlignmentPreview()
+                return
+            }
+            // Size and Gap commit on the click itself, so the press only tracks
+            // the pointer; mouse-up does the work.
+            if measureToolMode.commitsOnClick {
+                measurePressDownView = convert(event.locationInWindow, from: nil)
+                hoverPoint = measurePressDownView
+                refreshMeasureCreation(modifierFlags: event.modifierFlags)
                 return
             }
             measurePressDownView = convert(event.locationInWindow, from: nil)
@@ -1663,6 +1756,22 @@ final class CanvasNSView: NSView {
                                 to: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
             return
         }
+        if tool == .measure, measureToolMode.commitsOnClick {
+            let up = convert(event.locationInWindow, from: nil)
+            measurePressDownView = nil
+            hoverPoint = up
+            // Commit exactly what the preview was showing. A miss stays a quiet
+            // no-op rather than dropping a caliper somewhere arbitrary.
+            refreshMeasureCreation(modifierFlags: event.modifierFlags)
+            if let rect = measureElementPreview {
+                hideMeasureHoverReadout()
+                onElementSizeCommit(rect)
+            } else if let gap = measureGapPreview {
+                hideMeasureHoverReadout()
+                onGapCommit(gap)
+            }
+            return
+        }
         if tool == .measure {
             let up = convert(event.locationInWindow, from: nil)
             let down = measurePressDownView ?? up
@@ -1821,6 +1930,19 @@ final class CanvasNSView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
+        // Size mode: [ shrinks the pick, ] grows it. A flat screenshot has no
+        // element tree, so the first guess is a guess — these two keys are what
+        // make a wrong guess a half-second correction instead of a dead end.
+        if tool == .measure, measureToolMode.picksAmongCandidates,
+           event.modifierFlags.intersection([.command, .option, .control]).isEmpty,
+           let characters = event.charactersIgnoringModifiers,
+           characters == "[" || characters == "]" {
+            let level = max(0, measureCandidateLevel + (characters == "]" ? 1 : -1))
+            measureCandidateLevel = level
+            onCandidateLevelChange(level)
+            refreshMeasureCreation(modifierFlags: event.modifierFlags)
+            return
+        }
         if tool == .crop, event.keyCode == 36 || event.keyCode == 76 { // ⏎ / keypad ⏎
             cropDrag = nil
             onCropCommit()
@@ -2029,7 +2151,7 @@ final class CanvasNSView: NSView {
               multiSelectedLayerIDs: multiSelectedLayerIDs,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent, measureContent: measureContent,
-              measureChecksAlignment: measureChecksAlignment,
+              measureToolMode: measureToolMode, measureCandidateLevel: measureCandidateLevel,
               measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap)
         onViewportChange(next)
     }
@@ -2044,7 +2166,8 @@ final class CanvasNSView: NSView {
                dragPreview: DragPreview?, tool: Tool, annotationContent: AnnotationContent?,
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
-               measureChecksAlignment: Bool = false,
+               measureToolMode: MeasureToolMode = .distance,
+               measureCandidateLevel: Int = 0,
                measureSnapsToCenters: Bool = false,
                edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
@@ -2056,10 +2179,18 @@ final class CanvasNSView: NSView {
         self.annotationStyle = annotationStyle
         self.textContent = textContent
         self.measureContent = measureContent
-        if measureChecksAlignment != self.measureChecksAlignment {
+        if measureToolMode != self.measureToolMode {
             // Switching Measure modes abandons whichever draft was in flight.
-            self.measureChecksAlignment = measureChecksAlignment
+            self.measureToolMode = measureToolMode
             cancelMeasurePlacement()
+            // Picking a mode in the tool options leaves the focus on a button, so
+            // the canvas takes it back: otherwise `[` and `]` would go nowhere
+            // until you had clicked the image at least once.
+            if measureToolMode.picksAmongCandidates { window?.makeFirstResponder(self) }
+        }
+        if measureCandidateLevel != self.measureCandidateLevel {
+            self.measureCandidateLevel = measureCandidateLevel
+            refreshMeasureCreation(modifierFlags: [])
         }
         self.measureSnapsToCenters = measureSnapsToCenters
         self.edgeMap = edgeMap
