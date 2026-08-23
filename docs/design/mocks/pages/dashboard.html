@@ -131,9 +131,18 @@
   #dashboard .db-tthead{padding:var(--s2) var(--pad);border-bottom:1px solid var(--line);
     background:color-mix(in srgb,var(--panel-2) 55%, transparent)}
   #dashboard .db-tthead button{display:flex;align-items:center;gap:3px;border:0;background:transparent;padding:2px 0;
-    font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);cursor:pointer;text-align:left}
+    font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);cursor:pointer}
   #dashboard .db-tthead button:hover{color:var(--dim)}
   #dashboard .db-tthead button.on{color:var(--accent)}
+  /* Column alignment is declared ONCE per column and applied to the header and
+     the row cells together, so a header can never drift off its own data:
+     status centered on its glyph, seq right (numbers compare on their last
+     digit), pri centered on its chip, task left, updated right. */
+  #dashboard .db-tthead>*:nth-child(1),#dashboard .db-ttrow>*:nth-child(1){justify-self:center}
+  #dashboard .db-tthead>*:nth-child(2),#dashboard .db-ttrow>*:nth-child(2){justify-self:end;text-align:right}
+  #dashboard .db-tthead>*:nth-child(3),#dashboard .db-ttrow>*:nth-child(3){justify-self:center}
+  #dashboard .db-tthead>*:nth-child(4),#dashboard .db-ttrow>*:nth-child(4){justify-self:stretch;text-align:left}
+  #dashboard .db-tthead>*:nth-child(5),#dashboard .db-ttrow>*:nth-child(5){justify-self:end;text-align:right}
   #dashboard .db-ttrow{padding:var(--s2) var(--pad);border-bottom:1px solid var(--line-soft)}
   #dashboard .db-ttrow:last-child{border-bottom:0}
   #dashboard .db-ttrow:hover{background:var(--state-hover)}
