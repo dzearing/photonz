@@ -1,0 +1,27 @@
+{
+  "id": "the-tool-bar-claims-more-room-than-it-draws-once",
+  "title": "The tool bar claims more room than it draws once a measurement exists",
+  "goal": "With a measurement in the document and a narrow window, the floating tool bar still looks like one row but reports itself about four times taller. If that taller area is really there, it would quietly swallow clicks on the lower part of the picture, which is exactly where you often want to measure. Find out whether it is real, and if it is, stop it.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T23:51:25.773Z",
+  "updated": "2026-08-23T23:51:25.773Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Observed 2026-08-23 with a temporary env-gated geometry probe while fixing the measure hint chip. onGeometryChange on the GlassEffectContainer wrapping `toolbar` in EditorView reported h 48 in every state EXCEPT after EditorState.addMeasure in a 700pt-wide window, where it settled at h 200 with the bottom still pinned (544..744 in a 760pt canvas), i.e. it grew upward. Most likely benign: GlassEffectContainer reserves a morph region around newly inserted glass shapes, and the measureCountPill appears exactly then. Verify by hit-testing, not by reading frames: the container has no allowsHitTesting(false). Cannot affect the measure hint chip (that only shows while the document holds no measurements).",
+  "acceptance": [
+    "Clicking anywhere in the bottom strip of the picture, just above the tool bar, reaches the picture and not the bar",
+    "The tool bar occupies only the row it draws, in a narrow window and a wide one, with and without measurements in the document",
+    "Whatever is found is written down, including the case where the answer is that nothing is wrong"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T23:51:25.773Z",
+      "note": "created (manual)"
+    }
+  ]
+}

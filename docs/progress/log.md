@@ -2,6 +2,45 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-08-23 (pm) — The Measure hint comes out from behind the tool bar
+
+Queue task `the-measure-hint-line-is-readable-not-hidden-beh` (epic
+`measure-redline`). Spotted-but-unverified last session; reproduced first with a
+temporary env-gated probe (geometry through `onGeometryChange`, window through
+`cacheDisplay`) rather than taken on trust.
+
+**Before:** hint ink 635..666, tool bar ink 616..664, in a canvas 680 tall. The
+chip lived entirely inside the bar's band, and the bar is the outer overlay so
+it wins every overlap. The capture shows "Click two points for a live distance"
+running straight through the crop and keyboard glyphs. The line has never been
+readable, in either release, in either bar form.
+
+**Fix:** `EditorChromeLayout` now carries the bar's real band — `toolBarInset`
+16, `toolBarHeight` 48, `toolBarStackGap` 12, and `aboveToolBar` = 76 — the bar
+itself floats at `toolBarInset` (so the constant is true by construction), and
+both bottom-centered canvas overlays read `aboveToolBar`: the measure hint chip
+and the crop Cancel/Crop pill, whose hand-written 76 is gone. Tests first, in
+`EditorChromeLayoutTests`.
+
+**After, measured the same way:** wide, hint 573..604 under a bar at 616..664;
+narrow (700pt window, bar in its overflow form), hint 653..684 under a bar at
+696..744. 12pt gap, no overlap, both forms. The hint still leaves on its own —
+the probe committed a measurement and `showsMeasureHint` went false with the
+chip animating out.
+
+Shared file on purpose, so Current gets it too: forking `EditorView` over a
+padding value would be worse than the bug, and a hint nobody can read is not
+behaviour Current wants to keep.
+
+1055 tests green. Audit: `queue/audits/2026-08-23-measure-hint.json`.
+Open question, filed as its own task and NOT chased here: once a document holds
+a measurement, the tool bar's `GlassEffectContainer` reports itself ~200pt tall
+in a narrow window while still drawing as one row (bottom pinned, grows upward,
+survives a 6s settle). Most likely the container's morph region around the newly
+inserted count pill, but if the area is real it swallows clicks on the lower
+part of the picture. Verify by hit-testing, not by reading frames.
+Next: back to the queue.
+
 ## 2026-08-23 (pm) — A size measurement no longer parks its number on what it measured
 
 Queue task `a-size-measurement-should-not-land-its-number-on` (epic

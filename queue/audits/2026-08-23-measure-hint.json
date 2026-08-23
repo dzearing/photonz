@@ -1,0 +1,26 @@
+{
+  "feature": "The Measure hint is readable",
+  "epic": "measure-redline",
+  "summary": "Picking up the Measure tool now shows its one-line hint just above the floating tool bar instead of behind it. Until today that line was drawn inside the bar's own band, so nobody had ever read it.",
+  "setup": "Photonz Dev, release Next (the fix is in shared code, so Current gets it too). Open any screenshot. No flag needed.",
+  "try": [
+    { "do": "Press I for Measure and read the line that appears above the tool bar.", "shot": "2026-08-23-measure-hint-2-after.png" },
+    { "do": "Compare with how it used to look, where the same line ran through the tool glyphs.", "shot": "2026-08-23-measure-hint-1-before.png" },
+    { "do": "Press and hold the Measure button, pick Size, and check the longer hint still reads cleanly." },
+    { "do": "Narrow the window until the tool bar drops tools into its overflow menu, and check the hint is still clear of it.", "shot": "2026-08-23-measure-hint-3-narrow.png" },
+    { "do": "Click two points and place the readout, then check the hint has left." },
+    { "do": "Press ⌘Z to remove that measurement and confirm the hint stays gone (it is first-run only, by design)." },
+    { "do": "Press C for Crop and drag a rect: the Cancel and Crop pill sits at the same height the hint used." }
+  ],
+  "evaluate": [
+    "Is just above the tool bar where your eye goes after you pick a tool, or would you rather the hint sat at the top of the canvas?",
+    "Does the pill read as a hint you can ignore, or as a control you are meant to click?",
+    "Size mode's hint is a long line (it also explains [ and ]). Too much to read at that size?",
+    "The hint never comes back once your first measurement lands, even after undo. Right call?"
+  ],
+  "rough": [
+    "The two screenshots are taken by the app itself, because screen capture is blocked on this machine, and that camera does not draw the glass capsule. On screen the line sits on a glass pill; in the shots it is bare text on the picture.",
+    "The hint and the crop pill now share one clearance value, so if the tool bar's height ever changes, both move together. Nothing measures the bar live: the value is pinned to the 48pt the bar measured in the running app, and a test guards the arithmetic, not the bar.",
+    "While the probe was open: once a document holds a measurement, the tool bar's glass container reports itself about 200pt tall in a narrow window, though it still draws as one row. Not chased here, filed separately, and it cannot affect the hint (the hint only exists before the first measurement)."
+  ]
+}

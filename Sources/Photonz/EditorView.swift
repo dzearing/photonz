@@ -63,7 +63,9 @@ struct EditorView: View {
                             toolbar
                         }
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
+                        // The one inset the bar floats at, shared with whatever
+                        // stacks above it (EditorChromeLayout.aboveToolBar).
+                        .padding(.bottom, EditorChromeLayout.toolBarInset)
                         .background(GeometryReader { proxy in
                             Color.clear.preference(key: ToolbarContentWidthKey.self,
                                                    value: proxy.size.width)
@@ -321,7 +323,10 @@ struct EditorView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .glassEffect(.regular, in: .capsule)
-            .padding(.bottom, 14)
+            // Above the tool bar, not behind it: it used to sit 14pt off the
+            // bottom, inside the bar's own band, so the one line telling you
+            // what a click does was covered by the bar you had just used.
+            .padding(.bottom, EditorChromeLayout.aboveToolBar)
             .allowsHitTesting(false)
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
@@ -1011,9 +1016,9 @@ struct EditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
-        // Clear of the floating tool bar (48pt tall, 16pt off the bottom), so
-        // the two read as a stack rather than one covering the other.
-        .padding(.bottom, 76)
+        // Clear of the floating tool bar, so the two read as a stack rather
+        // than one covering the other.
+        .padding(.bottom, EditorChromeLayout.aboveToolBar)
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

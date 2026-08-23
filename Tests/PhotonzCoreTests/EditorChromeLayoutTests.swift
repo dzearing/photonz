@@ -22,6 +22,29 @@ struct EditorChromeLayoutTests {
         #expect(EditorChromeLayout.shouldAutoCollapseInspector(windowWidth: t - 1) == true)
     }
 
+    // MARK: Clearing the floating tool bar
+
+    @Test func anOverlayAboveTheToolBarClearsIt() {
+        // The bar's own band, measured off the running app: 48pt of bar sitting
+        // 16pt off the bottom, so anything bottom-centered with less than 64pt
+        // of padding is drawn BEHIND it (the measure hint chip was, at 14pt).
+        #expect(EditorChromeLayout.aboveToolBar
+                > EditorChromeLayout.toolBarInset + EditorChromeLayout.toolBarHeight)
+    }
+
+    @Test func theStackKeepsAVisibleGap() {
+        // Clearing is not enough: the two must read as a stack, not as one
+        // resting on the other.
+        let gap = EditorChromeLayout.aboveToolBar
+            - (EditorChromeLayout.toolBarInset + EditorChromeLayout.toolBarHeight)
+        #expect(gap >= 8)
+    }
+
+    @Test func theBarBandIsTheOneMeasuredInTheApp() {
+        #expect(EditorChromeLayout.toolBarInset == 16)
+        #expect(EditorChromeLayout.toolBarHeight == 48)
+    }
+
     @Test func windowFloorIsSaneAndBelowTheCollapseThreshold() {
         // The responsive behavior must be able to kick in ABOVE the floor, so
         // the auto-collapse threshold must sit strictly above the floor.

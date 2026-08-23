@@ -12,7 +12,7 @@
   "updated": "2026-08-23T23:27:50.088Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Spotted while placing the crop action pill, not verified. EditorView.measureHintChip is an .overlay(alignment: .bottom) on the canvas with .padding(.bottom, 14); the tool bar is an .overlay(alignment: .bottom) on that same canvas with .padding(.bottom, 16) and roughly 48pt of height. The crop action pill solved the same problem with .padding(.bottom, 76); if the chip is indeed behind the bar, the same clearance (better: one shared constant both read) is the fix. Screenshots are blocked on this machine — use the in-app cacheDisplay probe described in the 2026-08-23 crop/wand log entry, and remember it does not draw accent fills.",
+  "notes": "Spotted while placing the crop action pill, not verified. EditorView.measureHintChip is an .overlay(alignment: .bottom) on the canvas with .padding(.bottom, 14); the tool bar is an .overlay(alignment: .bottom) on that same canvas with .padding(.bottom, 16) and roughly 48pt of height. The crop action pill solved the same problem with .padding(.bottom, 76); if the chip is indeed behind the bar, the same clearance (better: one shared constant both read) is the fix. Screenshots are blocked on this machine \u2014 use the in-app cacheDisplay probe described in the 2026-08-23 crop/wand log entry, and remember it does not draw accent fills.",
   "acceptance": [
     "With the Measure tool in hand, the hint line is fully visible on screen and not covered by the tool bar",
     "The hint still leaves on its own once the first measurement lands",
@@ -26,6 +26,34 @@
     {
       "t": "2026-08-23T23:27:50.088Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "Pre-build review. The hint is one line of first-run instruction for a mode, and the moment you need it is the moment you pick the tool up, when your eye is on the tool bar. So bottom center, stacked directly above the bar, is the right home rather than the top of the canvas: same place the crop pill already claimed, right over the tool button you just pressed. Nothing else competes for that spot: the crop pill belongs to a different tool, and the measure legend only appears once the document HOLDS measurements, which is exactly when the hint is gone. Shortest version that delivers the value: give both overlays one clearance value instead of two magic numbers."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "Reproduced with numbers before touching anything, using a temporary env-gated probe in the app (geometry reported through onGeometryChange, window captured with cacheDisplay). Before: hint ink 635..666, tool bar ink 616..664, in a canvas 680 tall. The chip was covered end to end, and the capture shows the words running straight through the crop and keyboard glyphs. Same in the narrow overflow form."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "Fix: EditorChromeLayout gained the bar's real band (toolBarInset 16, toolBarHeight 48, toolBarStackGap 12) and aboveToolBar = 76, and the bar itself now floats at toolBarInset, so the constant is true by construction. The measure hint chip and the crop Cancel/Crop pill both read aboveToolBar; the pill's hand-written 76 is gone. Tests first, in PhotonzCoreTests."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "After, measured the same way: wide, hint 573..604 against a bar at 616..664, gap 12, no overlap. Narrow (700pt window, bar in its overflow form), hint 653..684 against a bar at 696..744, gap 12, no overlap. Acceptance 1 and 3 verified by measurement."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "Acceptance 2 verified in the running app, not by reading the code: the probe committed a measurement and showsMeasureHint went false with the chip animating out. It stays gone after undo, which is the documented intent (first-run only)."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "The change is in a shared file, so Current gets it too. Deliberate: forking EditorView for a padding value would be worse than the bug, the repo rules say a file only moves into a release folder when a release needs it DIFFERENT, and a hint nobody can read is not behaviour Current wants to keep. Nothing about the fix is Next-specific."
+    },
+    {
+      "t": "2026-08-23T23:51:47.178247Z",
+      "note": "Probe removed before commit. 1055 tests green. Audit: queue/audits/2026-08-23-measure-hint.json. One unverified side observation filed separately (the tool bar's glass container reports itself 200pt tall once a measurement exists in a narrow window, though it draws as one row)."
     }
   ],
   "started": "2026-08-23T23:27:50.088Z"

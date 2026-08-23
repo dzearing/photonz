@@ -25,6 +25,24 @@ public enum EditorChromeLayout {
     /// toolbar without the two fighting for space.
     public static let minWindowHeight: CGFloat = 400
 
+    // MARK: Floating tool bar
+
+    /// How far the floating tool bar floats off the bottom of the canvas.
+    public static let toolBarInset: CGFloat = 16
+    /// The bar's own height. Measured off the running app rather than guessed:
+    /// the glass capsule around its 28pt controls comes out at 48pt.
+    public static let toolBarHeight: CGFloat = 48
+    /// The breathing room between the bar and whatever stacks on top of it, so
+    /// the two read as two surfaces rather than one sitting on the other.
+    public static let toolBarStackGap: CGFloat = 12
+
+    /// Bottom padding for anything the canvas floats at bottom center — the
+    /// Measure hint, the crop's Cancel/Crop pill — so it lands ABOVE the
+    /// floating tool bar instead of behind it. The bar is drawn last and wins
+    /// every overlap, so an overlay that does not clear this is simply
+    /// invisible: the hint chip spent its life at 14pt, fully covered.
+    public static let aboveToolBar: CGFloat = toolBarInset + toolBarHeight + toolBarStackGap
+
     // MARK: Inspector auto-collapse
 
     /// Below this window width the docked inspector hides itself so the canvas
