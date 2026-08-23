@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-22T23:59:05.124Z",
+  "updated": "2026-08-23T00:00:56.523Z",
   "epics": [
     {
       "id": "measure-redline",
@@ -175,6 +175,68 @@
         {
           "id": "image-paint",
           "title": "Drawing and painting with real brushes",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "agent-drivable",
+      "title": "Make Photonz completely drivable by an AI agent",
+      "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
+      "children": [
+        {
+          "id": "agent-api",
+          "title": "One command surface: everything the UI does is one API call",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "agent-mcp",
+          "title": "MCP plugin: the full command surface as agent tools",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "agent-skills",
+          "title": "Skills for real workflows: capture, measure, spec, export",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "agent-ask",
+          "title": "Ask in-app: chat and command palette issue the same calls",
+          "note": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "local-model",
+      "title": "Easy local model driving for UX exploration",
+      "note": "A local model (for example Qwen via an on-device runtime) drives generate/variations/edit scenarios from inside Photonz: no account, no network, one-time setup. The agent automation mocks (Prompt to design, Generate variations, Agent-assisted edit) define the experience.",
+      "children": [
+        {
+          "id": "local-setup",
+          "title": "One-time local model setup that just works",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "local-explore",
+          "title": "Prompt to design: explore UX directions in place",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "local-variations",
+          "title": "Generate and compare variations of a selection",
+          "note": "",
+          "children": []
+        },
+        {
+          "id": "local-edit",
+          "title": "Model-assisted edits through the same command API",
           "note": "",
           "children": []
         }
