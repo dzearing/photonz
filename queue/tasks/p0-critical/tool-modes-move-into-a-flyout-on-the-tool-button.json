@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:05:04.152Z",
-  "updated": "2026-08-23T22:57:25.307935Z",
+  "updated": "2026-08-23T22:57:51.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23: horizontal space in the toolbar is scarce and the measure options row is eating it. Reference behaviour is the Photoshop tool flyout. Current code: EditorView.measureOptions builds the chip row plus measureSnapOption and measureShowOption, gated by hasMeasureOptions; contextualToolOptions is where per-tool rows are added, so wand and crop options are the same pattern and should follow once measure proves it. The rule is written up as UX-PATTERNS D15, including the mode-versus-setting test: if it changes what the pointer does it can be a mode, if it changes how the result looks it is a setting. Build the flyout as a shared control, not a measure-only one, since shape, marquee and brush all need it next.",
@@ -37,7 +37,12 @@
     {
       "t": "2026-08-23T22:57:25.307935Z",
       "note": "Built and verified in the RUNNING app, since screenshots are blocked on this machine. Bar width, measured by a temporary env-gated task that walked every tool and logged the real measured width: before, select 934 and measure 1356; after, select 960 and measure 960, matching Fill, Zoom Callout and both marquees exactly. The always-present chevron costs 26pt in every state, which is the trade for not spending 422pt on one tool. Crop (1167) and Wand (1112.5) still grow it and are not flag-gated, so they are queued separately rather than changing Current. A second probe synthesized key events through performKeyEquivalent and dumped the window accessibility tree: I picks Measure up then walks distance to size to gap to alignment; with next-measure-modes off the slot is a plain ruler button with no chevron and I only picks the tool up. The inspector reads Measure Tool with Mode, Snap and Show, and the tool bar carries no measure chips. That probe caught a real bug reasoning would have missed: a keyboard shortcut's action is registered once, so the isActive captured in it went stale and I re-picked Measure forever instead of cycling. The key action now reads live state from EditorState. Also gave the button an accessibility label (it reached VoiceOver as an unnamed pop-up) and made the inspector splice newly-added sections in at their canonical position instead of the bottom of everyone's saved order."
+    },
+    {
+      "t": "2026-08-23T22:57:51.220Z",
+      "note": "Measure's four modes moved into its tool button (shared ToolModeButton, built on the platform pull-down the selection slot already uses); Snap and Show moved to a new Measure Tool inspector section. Verified in the running app, not assumed: bar width for Measure went 1356pt to 960pt, exactly matching Select/Fill/Zoom Callout/marquees; a synthesized-key probe confirms I picks Measure up then cycles distance/size/gap/alignment, and that with the modes flag off the slot is a plain button with no chevron. 1049 tests green, pushed as 6d8f63c. Crop (+207pt) and Wand (+152pt) still grow the bar and are queued separately since neither is flag-gated. Audit: queue/audits/2026-08-23-tool-mode-flyout.json"
     }
   ],
-  "started": "2026-08-23T22:31:06.097Z"
+  "started": "2026-08-23T22:31:06.097Z",
+  "completed": "2026-08-23T22:57:51.220Z"
 }
