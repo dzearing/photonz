@@ -3,11 +3,11 @@
   "title": "Go loop surfaces runner failures instead of spinning silently",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:24:51.973Z",
-  "updated": "2026-08-23T14:30:11.574Z",
+  "updated": "2026-08-23T14:41:35.714Z",
   "deps": [],
   "blockedBy": [],
   "notes": "On 2026-08-23 the monthly spend limit killed every runner instantly; the loop claimed, failed, reset, and re-claimed 3,959 times over 13 hours while the dashboard showed Running the whole time. Fix three things: (1) treat a runner that exits non-zero without finalizing its task as a FAILURE, recording the exit code and the last stderr line into status.json so the dashboard can show it; (2) back off exponentially and stop re-claiming the same task after N consecutive failures, parking it with a clear reason; (3) show a loop-unhealthy state on the dashboard Summary hero (consecutive failures, last error) so a stalled loop never reads as Running. Acceptance: simulate a runner that always exits non-zero and confirm the dashboard says unhealthy with the error text, the loop stops hot-retrying, and history records one failure event per attempt rather than 3,959 resets.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-08-23T14:41:31.000Z",
       "note": "Scripts/test.sh green (932 tests). Note: the live loop is running the pre-change go-loop.sh from memory, so the new failure handling takes effect on the next /go restart."
+    },
+    {
+      "t": "2026-08-23T14:41:35.713Z",
+      "note": "Runner failures are now recorded, backed off (30s to 30m), and parked after 3 solo failures; the dashboard Summary hero shows Loop unhealthy with the runner's own error. Verified by queue/bin/failure-drill.sh (real loop vs an always-failing runner, 13/13 checks) and by rendering the unhealthy hero + parked row in a browser. Scripts/test.sh green."
     }
   ],
-  "started": "2026-08-23T14:30:11.573Z"
+  "started": "2026-08-23T14:30:11.573Z",
+  "completed": "2026-08-23T14:41:35.714Z"
 }
