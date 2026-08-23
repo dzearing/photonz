@@ -3,11 +3,11 @@
   "title": "icon-gradient-wt: no canvas selection and an em dash placeholder",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:08.068Z",
-  "updated": "2026-08-23T02:43:34.581Z",
+  "updated": "2026-08-23T02:48:30.025Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: icon-svg (plus interaction-foundations > found-selection). Checklist sweep fails: (1) gate 4: zero canvas selection representation (no .sel-ring/.handle/.mtag/.cring); selection exists only in Layers and Properties; #gxHandle is gradient geometry, not a selection ring, and is hidden on several steps. (2) copy rule: the Angle field renders an em dash as its empty-value placeholder (#pAngle, line ~355 plus two data-set strings ~478/~494); em dashes are banned in user-facing copy, use a different empty marker. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -32,7 +32,12 @@
     {
       "t": "2026-08-23T02:48:18.000Z",
       "note": "Added the selection.css frame family to the canvas: .selwrap around both plates, three wt-off frames (#selPlate, #selGlyph, #selSib) each with .sel-ring + 4 corner handles + .mtag naming the layer. Steps 1-6 show the Plate frame, 7-9 the Glyph frame, 10-11 the cloud-download Plate frame, swapped via data-show/data-hide so canvas, Layers and Properties agree on every step. Replaced the em dash Angle placeholder with 'none' in the baseline markup and both data-set strings. Verified in Chrome at steps 1, 3, 7, 10: frames render, selection.js stamps md, layers row matches, zero em dashes remain."
+    },
+    {
+      "t": "2026-08-23T02:48:30.025Z",
+      "note": "Canvas now shows selection on every step: .sel-ring + handles + .mtag frames on the plate, the glyph, and the cloud-download plate, swapped by the steps so canvas/Layers/Properties agree. Angle placeholder em dash replaced with 'none' (markup + both data-set strings). Verified live in Chrome at steps 1, 3, 7, 10 on http://127.0.0.1:8791/pages/icon-gradient-wt.html; zero em dashes remain in the file."
     }
   ],
-  "started": "2026-08-23T02:43:34.580Z"
+  "started": "2026-08-23T02:43:34.580Z",
+  "completed": "2026-08-23T02:48:30.025Z"
 }
