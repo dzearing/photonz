@@ -208,9 +208,15 @@ the dock, or a `.sheet.down` overlay.
   component instance selected = instance props + overrides + variant. Multi-select
   = shared properties only. This is the pattern users learn: *look right to see
   what the current selection can do.*
-- **Selection is shown in one consistent way**: `.sel-ring` + handles on canvas,
-  the matching `.lrow.sel` in Layers, and a selection label. One object selected
-  in three places reads as one selection.
+- **Selection is shown in one consistent way**: the frame on canvas, the matching
+  `.lrow.sel` in Layers, and a selection label. One object selected in three
+  places reads as one selection.
+- **Declare the canvas frame, never draw it**: `data-sel-frame="Hero · 220 × 120"`
+  on the object's own box, and `selection.js` builds the ring, the four corner
+  grabs and the size tag. Hand-writing that markup is how five pages ended up
+  claiming a selection in their copy and drawing nothing on canvas.
+  `node shared/check-selection.mjs` fails any page that makes the claim and
+  breaks the promise.
 - Tools are global; the *tool options* are contextual to the active tool (shown
   in the options bar or the top of the Inspector).
 
@@ -302,7 +308,8 @@ Every editor/scenario page must satisfy:
 - [ ] Library/media/catalog is the Library group in the right dock (or the same
       content as an overlay), with an add/import affordance.
 - [ ] Selection drives the Properties group; selection shown consistently on
-      canvas + in Layers.
+      canvas + in Layers. If the copy says something is selected, the canvas
+      draws the frame — declared with `data-sel-frame`, never hand-written.
 - [ ] **Responsive**: the `.win` carries `.cq`, and the page renders sensibly
       narrowed (dock rails or overlays, tool bar overflows).
 - [ ] **Bounded panels**: every long list is inside a `.dgrp-b` with its own

@@ -28,6 +28,15 @@
        .sel-ring         the bounds frame
        .handle.tl/tr/bl/br   corner grabs
        .mtag             the measurement tag
+
+   You do not write that anatomy. A page DECLARES the selection and selection.js
+   builds it, the way data-shell builds the title bar:
+
+     <div class="selwrap" data-sel-frame="Frame · 268 x 95"></div>
+
+   Everything below is what that declaration renders. Read selection.js for the
+   attribute, and shared/check-selection.mjs for the gate that fails a page whose
+   copy claims a selection the canvas never draws.
 */
 
 .selwrap { position: relative }

@@ -25,6 +25,18 @@
     {
       "t": "2026-08-23T17:31:31.671Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T17:45:54.470Z",
+      "note": "Helper shipped: data-sel-frame in shared/components/selection.js builds .sel-ring + 4 corner .handles + .mtag in the canonical order, idempotently, and re-runs on mutation so walkthrough-created selections are upgraded too. Value is the tag text; an authored .mtag inside the host is kept (and moved last) so pages that retag by id via data-set still work. data-sel-parts takes edges / rotate / none. Deliberately does NOT touch positioning: seven pages hang the frame on an empty wrapper inside the object box, and adding .selwrap there would have moved every one of those rings."
+    },
+    {
+      "t": "2026-08-23T17:45:54.470Z",
+      "note": "Converted 4 pages (7 frames): walk (#selCallout), composites (#selFrame, #selList), img-retouch-wt (#selFrame), icon-gradient-wt (#selPlate,#selGlyph,#selSib). 29 hand-written .handle/.mtag elements deleted. Rendering verified identical in Chrome: ring/handle/tag rects relative to the host, computed border+radius+position, data-sel bucket, data-mtag side and child order all byte-identical before vs after across all 7 frames."
+    },
+    {
+      "t": "2026-08-23T17:45:54.470Z",
+      "note": "Gate shipped: shared/check-selection.mjs. Gate A - a canvas page whose walkthrough lights a Layers row (.lrow) must draw a frame. Gate B - copy that names the ring on the canvas must draw one, with narrow phrasing so a spec page discussing selection owes nothing. Gate C - ratchet on hand-drawn frames (81, may only go down). Validated against history: it CATCHES walk@4c3242d^ and composites@a1ecfb1^ (the two real defects) and passes both after their fixes. --self-test runs it over shared/fixtures/, including a deliberately broken page."
     }
   ],
   "started": "2026-08-23T17:31:31.670Z"

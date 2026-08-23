@@ -1,0 +1,27 @@
+{
+  "id": "the-multi-selection-specimen-draws-its-own-group",
+  "title": "The multi-selection specimen draws its own group frame",
+  "goal": "On the page that teaches how selection looks, the picture showing two objects selected at once draws its group outline with its own one-off code instead of the standard one, so the page breaks the rule it is teaching. This makes that picture use the shared frame like everything else.",
+  "epic": "",
+  "priority": "p3-low",
+  "seq": 230,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T17:46:03.451Z",
+  "updated": "2026-08-23T17:46:03.451Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "pages/lang-selection.html around line 396: the multi-select specimen uses a page-local .lx-group div plus four .handle spans with inline left/top/right/bottom offsets, and no .sel-ring. selection.css already ships .selwrap.multi (dashed .sel-ring, handles suppressed) for exactly this case, so the specimen should be .selwrap.multi with data-sel-frame and the .lx-group rule deleted. Note the caption says the group frame KEEPS its handles while .selwrap.multi drops them (you transform the group, not a member) - reconcile the copy with the component rather than re-adding handles. Found by the browser sweep in canvas-selection-frames-come-from-one-shared-hel: it is the only orphan handle set left in the study.",
+  "acceptance": [
+    "The two-objects-selected picture on the selection language page uses the standard multi-selection frame",
+    "The corner grabs sit where the shared frame puts them, with no hand-set offsets",
+    "The page still reads the same: a thin outline per object, one frame around both, and a count"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T17:46:03.451Z",
+      "note": "created (manual)"
+    }
+  ]
+}

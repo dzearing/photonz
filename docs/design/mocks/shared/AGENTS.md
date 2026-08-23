@@ -240,7 +240,25 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   inline element would fragment a multi-line snippet across line boxes.
 - **Walkthrough:** `.wt` (see "Usage walkthroughs" below). The old
   `.wsteps`>`.wstep` slideshow is **legacy**; do not author new pages with it.
-- **Selection:** `.selwrap` › `.sel-ring` + `.handle` + `.mtag`. **The frame shows
+- **Selection: DECLARE it, do not draw it.** `data-sel-frame` on the object's own
+  box and `selection.js` builds the whole frame — ring, four corner grabs, size
+  tag — in the canonical order:
+
+  ```html
+  <div class="selwrap" data-sel-frame="Frame · 268 × 95"></div>
+  ```
+
+  The value is the `.mtag` text; leave it empty for a frame with no tag. If the
+  tag carries page state (a walkthrough retags it by id), author the `.mtag`
+  yourself inside the host and this leaves its text alone. `data-sel-parts`
+  takes `edges` (the four midpoints), `rotate` (the knob), `none` (ring only).
+  The parts are absolutely positioned, so the host must be the POSITIONED box
+  the frame should hug — `.selwrap` is that and nothing more
+  (`position:relative`). Retyping the four lines by hand is how five separate
+  pages ended up promising a selection in their copy and drawing nothing;
+  `node shared/check-selection.mjs` now fails a page that does, and ratchets the
+  count of hand-written frames downward. The anatomy it builds, for reading the
+  CSS: `.selwrap` › `.sel-ring` + `.handle` + `.mtag`. **The frame shows
   BOUNDS, never the object's shape** — a rectangle with a constant 2px radius,
   hugging the bounds, on a circle exactly as on a card. Never set `border-radius`
   or `inset` on a `.sel-ring`: a shape-tracing frame needs a big radius for

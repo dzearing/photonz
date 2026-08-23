@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture · claims a selection and draws none</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+</head>
+<body>
+<!-- DELIBERATELY BROKEN. This is the defect check-selection.mjs exists to
+     catch, in the smallest page that can hold it: the copy promises the ring,
+     the walkthrough lights the Layers row, and the canvas draws nothing. Do not
+     "fix" it — claims-selection-draws-it.html is the fixed one. -->
+<div class="win shell" data-shell="hero · 1200 × 630" data-ws="ui">
+  <div class="edit lean">
+    <div class="cnv">
+      <div class="canvas">
+        <div class="wobj" id="hero" style="position:absolute;left:80px;top:60px;width:220px;height:120px"></div>
+      </div>
+    </div>
+    <div class="pdock">
+      <div class="dgrp">
+        <div class="lrow sel" id="lrHero"><span class="nm">Hero</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wt">
+  <ol class="wt-steps">
+    <li class="wt-step" data-title="Pick the hero" data-select="#lrHero">
+      <div class="wt-cap">
+        <p class="wt-do">the <b>Hero</b> layer</p>
+        <p class="wt-where">the canvas</p>
+        <p class="wt-res">the ring on the canvas, the row in <b>Layers</b> and the group in <b>Properties</b> all name the same layer.</p>
+      </div>
+    </li>
+  </ol>
+</div>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

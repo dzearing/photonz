@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture · claims a selection and draws it</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+</head>
+<body>
+<!-- THE SAME PAGE, KEEPING ITS PROMISE. One attribute on the object's own box
+     is the whole difference: selection.js builds the ring, the four corner
+     grabs and the size tag from it. -->
+<div class="win shell" data-shell="hero · 1200 × 630" data-ws="ui">
+  <div class="edit lean">
+    <div class="cnv">
+      <div class="canvas">
+        <div class="wobj selwrap" id="hero" data-sel-frame="Hero · 220 × 120"
+             style="position:absolute;left:80px;top:60px;width:220px;height:120px"></div>
+      </div>
+    </div>
+    <div class="pdock">
+      <div class="dgrp">
+        <div class="lrow sel" id="lrHero"><span class="nm">Hero</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wt">
+  <ol class="wt-steps">
+    <li class="wt-step" data-title="Pick the hero" data-select="#lrHero">
+      <div class="wt-cap">
+        <p class="wt-do">the <b>Hero</b> layer</p>
+        <p class="wt-where">the canvas</p>
+        <p class="wt-res">the ring on the canvas, the row in <b>Layers</b> and the group in <b>Properties</b> all name the same layer.</p>
+      </div>
+    </li>
+  </ol>
+</div>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>
