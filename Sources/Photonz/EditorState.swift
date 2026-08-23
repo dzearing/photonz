@@ -865,6 +865,14 @@ final class EditorState {
     /// Session chrome, never persisted.
     var measureChecksAlignment = false
 
+    /// The Measure tool's Snap option (Next flag `next-measure-center-snap`):
+    /// true = "Edges and centers" (the mock's default), false = "Edges".
+    /// Persisted with the tool's styles, so it stays how you left it.
+    var measureSnapsToCenters: Bool {
+        get { measureStyles.snapsToCenters }
+        set { updateMeasureStyles { $0.snapsToCenters = newValue } }
+    }
+
     /// Completed alignment-guide drag (`next-measure-align`, decision D1): scan
     /// the element edges the guide crosses, settle the guide onto the reference
     /// edge (the median — the drawn drag was the question, the reference is the

@@ -41,15 +41,24 @@ public enum EdgeSnapping {
     /// when pixel precision matters most. ⌘ bypasses when it gets in the way.
     public static let minimumImageTolerance: CGFloat = 4
 
+    /// A midpoint candidate scores at this fraction of its pair's fainter
+    /// strength, so a real edge at equal distance always wins the tie and
+    /// midpoints of antialiasing-ghost pairs stay too weak to steal a snap.
+    public static let centerScoreFactor: Double = 0.5
+
     /// Snaps `point` against locally detected edges.
     /// - xSpan: x-range of the horizontal line the point moves (drives y-snap).
     /// - ySpan: y-range of the vertical line the point moves (drives x-snap).
     /// - zoom: canvas zoom; tolerance is `screenTolerance / zoom` in image space.
+    /// - includeCenters: also offer the midpoint between each pair of adjacent
+    ///   accepted edges — element centers and gap centers fall out of the same
+    ///   rule (`next-measure-center-snap`, "Edges and centers").
     /// - snapToPixelGrid: when no edge captures an axis, round it to whole pixels.
     public static func snap(_ point: CGPoint, edges: EdgeMap, zoom: CGFloat,
                             xSpan: ClosedRange<CGFloat>? = nil,
                             ySpan: ClosedRange<CGFloat>? = nil,
                             screenTolerance: CGFloat = 8,
+                            includeCenters: Bool = false,
                             snapToPixelGrid: Bool = true) -> Snap {
         let tolerance = max(zoom > 0 ? screenTolerance / zoom : screenTolerance,
                             minimumImageTolerance)
@@ -57,14 +66,14 @@ public enum EdgeSnapping {
         let xWindow = ySpan ?? (point.y - defaultSpanRadius)...(point.y + defaultSpanRadius)
         let vertical = edges.verticalEdges(
             inYRange: Double(xWindow.lowerBound)...Double(xWindow.upperBound))
-        let x = snapAxis(point.x, candidates: vertical,
-                         tolerance: tolerance, pixelGrid: snapToPixelGrid)
+        let x = snapAxis(point.x, candidates: vertical, tolerance: tolerance,
+                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
 
         let yWindow = xSpan ?? (point.x - defaultSpanRadius)...(point.x + defaultSpanRadius)
         let horizontal = edges.horizontalEdges(
             inXRange: Double(yWindow.lowerBound)...Double(yWindow.upperBound))
-        let y = snapAxis(point.y, candidates: horizontal,
-                         tolerance: tolerance, pixelGrid: snapToPixelGrid)
+        let y = snapAxis(point.y, candidates: horizontal, tolerance: tolerance,
+                         includeCenters: includeCenters, pixelGrid: snapToPixelGrid)
 
         return Snap(point: CGPoint(x: x.value, y: y.value), guideX: x.guide, guideY: y.guide)
     }
@@ -79,7 +88,8 @@ public enum EdgeSnapping {
     /// and text-run clusters only expose the boundary lines on the pointer's
     /// side. Returns the captured position as the guide (nil for grid/free).
     private static func snapAxis(_ value: CGFloat, candidates: [EdgeCandidate],
-                                 tolerance: CGFloat, pixelGrid: Bool) -> (value: CGFloat, guide: CGFloat?) {
+                                 tolerance: CGFloat, includeCenters: Bool,
+                                 pixelGrid: Bool) -> (value: CGFloat, guide: CGFloat?) {
         var best: (position: CGFloat, score: Double)?
         for candidate in approachSideFiltered(candidates, pointer: Double(value)) {
             // Approaching from below/right uses the element's after-side landing;
@@ -94,6 +104,23 @@ public enum EdgeSnapping {
             let score = candidate.strength / (1.0 + Double(distance) / 4.0)
             if score > (best?.score ?? 0) {
                 best = (position, score)
+            }
+        }
+        // Midpoints between adjacent accepted edges: element centers and gap
+        // centers fall out of the same rule. Built from the UNFILTERED list —
+        // the approach-side rule is about which side of a text run an edge snap
+        // may land on, while a center is a target of its own. Running after the
+        // edge loop with a strict `>` means a real edge keeps any exact tie.
+        if includeCenters {
+            for (a, b) in zip(candidates, candidates.dropFirst()) {
+                let position = CGFloat(a.position + b.position) / 2
+                let distance = abs(position - value)
+                guard distance <= tolerance else { continue }
+                let score = centerScoreFactor * min(a.strength, b.strength)
+                    / (1.0 + Double(distance) / 4.0)
+                if score > (best?.score ?? 0) {
+                    best = (position, score)
+                }
             }
         }
         if let best {

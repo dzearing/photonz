@@ -3778,3 +3778,17 @@ Follow-ups queued for other tasks: §5 roles should treat `alignment != nil`
 as the Align role; §6 panel gets "· N items" from the items count. Chip sits
 at the guide midpoint and can cover the outlier connector when the outlier is
 mid-guide — revisit placement if it annoys in practice.
+
+## 2026-08-23 — Next Measure: centers snapping option (go loop)
+
+- Shipped `next-measure-center-snap` (§8 of docs/design/next-measure.md):
+  `EdgeSnapping.snap(includeCenters:)` offers midpoints between adjacent
+  accepted edges (element + gap centers, one rule), scored at half the pair's
+  fainter strength so a real edge wins ties and ghost-pair midpoints stay weak.
+  8 new core tests in EdgeSnappingTests.
+- Snap control (Edges / Edges and centers, default Edges and centers) in the
+  Measure tool options row, shown only with the flag on (Next-only, default on).
+  Option persists in `MeasureStyles.snapsToCenters` (3 new tests). Covers
+  caliper feet + alignment-guide anchor; region-select tools stay edges-only.
+- `Scripts/test.sh` green: 896 tests.
+- Next: remaining next-measure flags per the queue (roles, panel).

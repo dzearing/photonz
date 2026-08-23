@@ -184,7 +184,7 @@ list"; `capture-wt.html` step 11 (Copy image, ⌘C).
 - **Describe specs** (the mock's agent button) is NOT specced — queue decision
   **D4**.
 
-## 8. Snapping option: centers — `next-measure-center-snap`
+## 8. Snapping option: centers — `next-measure-center-snap` (shipped)
 
 Mock: `redline.html` tool options row `Snap: Edges and centers`.
 
@@ -195,6 +195,16 @@ query window (element centers and gap centers fall out of the same rule),
 scored below a real edge at equal distance so an edge always wins a tie. Core
 TDD alongside the existing snapping tests. Default follows the mock: Edges and
 centers. ⌘ bypass covers both.
+
+Shipped shape (2026-08-23): `EdgeSnapping.snap(includeCenters:)` builds the
+midpoints from the UNFILTERED accepted list (the approach-side rule governs
+which side of a text run an EDGE snap may land on; a center is its own
+target) and scores them at `centerScoreFactor` (0.5) of the pair's FAINTER
+strength, so ghost-pair midpoints stay too weak to steal a snap. The option
+rides in `MeasureStyles.snapsToCenters` (persisted with the tool's styles);
+the Snap menu shows in the Measure options row only when the flag is on, and
+center snapping covers the caliper feet and the alignment-guide anchor — the
+region-select tools stay edges-only.
 
 ## 9. Alignment checks — `next-measure-align` (decision D1: resolved)
 

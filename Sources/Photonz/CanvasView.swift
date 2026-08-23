@@ -55,6 +55,9 @@ struct CanvasView: NSViewRepresentable {
     /// Whether the Measure tool is in its Alignment mode (Next flag
     /// `next-measure-align`): a drag draws a checking guide, not a caliper.
     let measureChecksAlignment: Bool
+    /// The Measure tool's Snap option (Next flag `next-measure-center-snap`):
+    /// measure points also magnetize to element/gap centers, not just edges.
+    let measureSnapsToCenters: Bool
     /// Detected UI edges for snapping measure corners (empty unless a measure is
     /// active/selected).
     let edgeMap: EdgeMap
@@ -128,7 +131,8 @@ struct CanvasView: NSViewRepresentable {
                    tool: tool, annotationContent: annotationContent,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
-                   measureChecksAlignment: measureChecksAlignment, edgeMap: edgeMap,
+                   measureChecksAlignment: measureChecksAlignment,
+                   measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap,
                    isCanvasSelected: isCanvasSelected)
     }
 
@@ -390,6 +394,9 @@ final class CanvasNSView: NSView {
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
     /// checking guide, and the in-flight guide drag (document coordinates).
     private var measureChecksAlignment = false
+    /// Snap option (Next `next-measure-center-snap`): measure snapping also
+    /// offers element/gap centers, echoed from EditorState via the wrapper.
+    private var measureSnapsToCenters = false
     private var alignmentDrag: (anchor: CGPoint, current: CGPoint)?
     /// Dashed live preview of the guide being dragged.
     private let alignmentPreviewLayer = CAShapeLayer()
@@ -883,7 +890,8 @@ final class CanvasNSView: NSView {
     /// Snaps the FIRST foot to a nearby edge (small window; ⌘ = free).
     private func snapMeasureAnchor(_ doc: CGPoint, modifiers: NSEvent.ModifierFlags) -> CGPoint {
         guard let viewport, !modifiers.contains(.command) else { return doc }
-        return EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom).point
+        return EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
+                                 includeCenters: measureSnapsToCenters).point
     }
 
     /// Snaps the SECOND foot along the measuring line from foot1 (edge magnetize +
@@ -895,7 +903,8 @@ final class CanvasNSView: NSView {
         if let viewport, !modifiers.contains(.command) {
             p = axisGated(EdgeSnapping.snap(doc, edges: edgeMap, zoom: viewport.zoom,
                                             xSpan: min(foot1.x, doc.x)...max(foot1.x, doc.x),
-                                            ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y)),
+                                            ySpan: min(foot1.y, doc.y)...max(foot1.y, doc.y),
+                                            includeCenters: measureSnapsToCenters),
                           raw: doc).point
         }
         let mode = MeasureContent.dominantAxis(from: foot1, to: p)
@@ -1499,7 +1508,8 @@ final class CanvasNSView: NSView {
                 let snap = axisGated(
                     EdgeSnapping.snap(p, edges: edgeMap, zoom: viewport.zoom,
                                       xSpan: min(fixed.x, p.x)...max(fixed.x, p.x),
-                                      ySpan: min(fixed.y, p.y)...max(fixed.y, p.y)),
+                                      ySpan: min(fixed.y, p.y)...max(fixed.y, p.y),
+                                      includeCenters: measureSnapsToCenters),
                     raw: p)
                 drag.current = snap.point
                 snapGuide = (snap.guideX, snap.guideY)
@@ -1993,7 +2003,8 @@ final class CanvasNSView: NSView {
               multiSelectedLayerIDs: multiSelectedLayerIDs,
               dragPreview: dragPreview, tool: tool, annotationContent: annotationContent,
               textContent: textContent, measureContent: measureContent,
-              measureChecksAlignment: measureChecksAlignment, edgeMap: edgeMap)
+              measureChecksAlignment: measureChecksAlignment,
+              measureSnapsToCenters: measureSnapsToCenters, edgeMap: edgeMap)
         onViewportChange(next)
     }
 
@@ -2008,6 +2019,7 @@ final class CanvasNSView: NSView {
                annotationStyle: LayerStyle? = nil,
                textContent: TextContent?, measureContent: MeasureContent?,
                measureChecksAlignment: Bool = false,
+               measureSnapsToCenters: Bool = false,
                edgeMap: EdgeMap, isCanvasSelected: Bool = false) {
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
         if self.isCanvasSelected != isCanvasSelected {
@@ -2023,6 +2035,7 @@ final class CanvasNSView: NSView {
             self.measureChecksAlignment = measureChecksAlignment
             cancelMeasurePlacement()
         }
+        self.measureSnapsToCenters = measureSnapsToCenters
         self.edgeMap = edgeMap
         self.cropAspect = cropAspect
         self.cropBounds = cropBounds

@@ -75,8 +75,10 @@ struct MeasureStylesTests {
         s.labelSizePx = 32
         s.unit = .pixels
         s.decimals = 1
+        s.snapsToCenters = false
         let back = try JSONDecoder().decode(MeasureStyles.self, from: JSONEncoder().encode(s))
         #expect(back == s)
+        #expect(!back.snapsToCenters)
     }
 
     @Test func aPrefsBlobFromAnOlderBuildFillsInTheNewFields() throws {
@@ -88,6 +90,12 @@ struct MeasureStylesTests {
         #expect(back.strokeWidth == MeasureStyles().strokeWidth)
         #expect(back.labelSizePx == MeasureStyles().labelSizePx)
         #expect(back.layerStyle == LayerStyle())
+        #expect(back.snapsToCenters, "older prefs adopt the mock's default")
+    }
+
+    @Test func snapOptionDefaultsToEdgesAndCenters() {
+        // The mock's tool options row reads `Snap: Edges and centers`.
+        #expect(MeasureStyles().snapsToCenters)
     }
 
     @Test func opacityAndLabelSizeAreClampedToTheirRanges() {

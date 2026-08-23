@@ -184,6 +184,8 @@ struct EditorView: View {
                        measureContent: editorState.measureStyle,
                        measureChecksAlignment: editorState.measureChecksAlignment
                            && Experiments.shared.measureAlignEnabled,
+                       measureSnapsToCenters: editorState.measureSnapsToCenters
+                           && Experiments.shared.measureCenterSnapEnabled,
                        edgeMap: editorState.snappingEdgeMap,
                        onViewSizeChange: { editorState.canvasViewSizeChanged($0) },
                        onViewportChange: { editorState.setViewport($0) },
@@ -375,7 +377,7 @@ struct EditorView: View {
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
             toolButton(.measure, "ruler", "Measure", "i")
-            if editorState.activeTool == .measure && Experiments.shared.measureAlignEnabled {
+            if editorState.activeTool == .measure && hasMeasureOptions {
                 measureOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
@@ -458,9 +460,14 @@ struct EditorView: View {
         if editorState.activeTool == .crop {
             cropOptions
         }
-        if editorState.activeTool == .measure && Experiments.shared.measureAlignEnabled {
+        if editorState.activeTool == .measure && hasMeasureOptions {
             measureOptions
         }
+    }
+
+    /// Whether the Measure tool has any options row to show (either Next flag).
+    private var hasMeasureOptions: Bool {
+        Experiments.shared.measureAlignEnabled || Experiments.shared.measureCenterSnapEnabled
     }
 
     /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
@@ -840,30 +847,64 @@ struct EditorView: View {
 
     /// Measure mode: a plain distance caliper, or an alignment-checking guide
     /// (Next `next-measure-align`). Mirrors the crop-aspect chip styling.
+    /// Trailing Snap control (Next `next-measure-center-snap`): what measure
+    /// points magnetize to — edges only, or edges plus element/gap centers.
     private var measureOptions: some View {
         HStack(spacing: 6) {
-            ForEach([false, true], id: \.self) { checksAlignment in
-                let isActive = editorState.measureChecksAlignment == checksAlignment
-                Button {
-                    editorState.measureChecksAlignment = checksAlignment
-                } label: {
-                    Text(checksAlignment ? "Alignment" : "Distance")
-                        .font(.caption.weight(.medium))
-                        .fixedSize()
-                        .foregroundStyle(isActive ? Color.white : Color.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background {
-                            if isActive {
-                                Capsule().fill(Color.accentColor)
+            if Experiments.shared.measureAlignEnabled {
+                ForEach([false, true], id: \.self) { checksAlignment in
+                    let isActive = editorState.measureChecksAlignment == checksAlignment
+                    Button {
+                        editorState.measureChecksAlignment = checksAlignment
+                    } label: {
+                        Text(checksAlignment ? "Alignment" : "Distance")
+                            .font(.caption.weight(.medium))
+                            .fixedSize()
+                            .foregroundStyle(isActive ? Color.white : Color.primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background {
+                                if isActive {
+                                    Capsule().fill(Color.accentColor)
+                                }
                             }
-                        }
+                    }
+                    .buttonStyle(.plain)
+                    .help(checksAlignment
+                          ? "Alignment: drag a guide along an edge to check everything it crosses"
+                          : "Distance: click two points for a live distance")
                 }
-                .buttonStyle(.plain)
-                .help(checksAlignment
-                      ? "Alignment: drag a guide along an edge to check everything it crosses"
-                      : "Distance: click two points for a live distance")
             }
+            if Experiments.shared.measureCenterSnapEnabled {
+                measureSnapOption
+            }
+        }
+    }
+
+    /// The mock's `Snap: Edges and centers` control, as a compact labeled menu.
+    private var measureSnapOption: some View {
+        HStack(spacing: 4) {
+            Text("Snap")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Menu {
+                Picker("Snap", selection: Binding(
+                    get: { editorState.measureSnapsToCenters },
+                    set: { editorState.measureSnapsToCenters = $0 })) {
+                    Text("Edges").tag(false)
+                    Text("Edges and centers").tag(true)
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } label: {
+                Text(editorState.measureSnapsToCenters ? "Edges and centers" : "Edges")
+                    .font(.caption.weight(.medium))
+                    .fixedSize()
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("What measure points magnetize to. Hold Command to drag free.")
         }
     }
 

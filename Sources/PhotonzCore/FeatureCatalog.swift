@@ -34,6 +34,8 @@ public enum FeatureCatalog {
     public static let measureAlignFlag = "next-measure-align"
     public static let measureAlignTolerance = "tolerance"
 
+    public static let measureCenterSnapFlag = "next-measure-center-snap"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -103,6 +105,15 @@ public enum FeatureCatalog {
                                          value: .number(1),
                                          bounds: NumberBounds(minimum: 0, maximum: 8, step: 0.5)),
                     ]),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureCenterSnapFlag,
+                    title: "Snap to centers",
+                    description: "Adds a Snap option to the Measure tool. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    isEnabled: false,
+                    parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
         ]

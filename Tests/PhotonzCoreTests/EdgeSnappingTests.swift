@@ -158,6 +158,113 @@ struct EdgeSnappingTests {
     }
 }
 
+// MARK: - Center candidates (`next-measure-center-snap`)
+
+@Suite("Edge snapping centers")
+struct EdgeSnappingCenterTests {
+
+    @Test func midpointDoesNotCaptureWhenCentersAreOff() {
+        // Element between rows 100 and 140; pointer 1px from its center. With
+        // the default (edges only), nothing captures — both edges are far away.
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 100, x0: 100, x1: 300)
+        f.addHorizontalEdge(row: 140, x0: 100, x1: 300)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 121), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, snapToPixelGrid: false)
+        #expect(snap.point.y == 121)
+        #expect(snap.guideY == nil)
+    }
+
+    @Test func elementCenterCapturesWithCentersOn() {
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 100, x0: 100, x1: 300)
+        f.addHorizontalEdge(row: 140, x0: 100, x1: 300)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 121), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 120)
+        #expect(snap.guideY == 120)
+    }
+
+    @Test func verticalCentersUseTheSameRule() {
+        var f = Field(w: 400, h: 800)
+        f.addVerticalEdge(col: 80, y0: 100, y1: 300)
+        f.addVerticalEdge(col: 120, y0: 100, y1: 300)
+        let snap = EdgeSnapping.snap(CGPoint(x: 98, y: 200), edges: f.map, zoom: 1,
+                                     ySpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.x == 100)
+        #expect(snap.guideX == 100)
+    }
+
+    @Test func edgeBeatsCenterAtEqualDistance() {
+        // Edges at 100 and 116 put the center at 108. Pointer at 104 is 4px from
+        // both the edge and the center — the real edge must win the tie.
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 100, x0: 100, x1: 300)
+        f.addHorizontalEdge(row: 116, x0: 100, x1: 300)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 104), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 100)
+    }
+
+    @Test func gapCenterFallsOutOfTheSameRule() {
+        // Two stacked elements (A: 40–60, B: 100–120). The midpoint between the
+        // adjacent edges 60 and 100 IS the gap center — no special casing.
+        var f = Field(w: 800, h: 400)
+        for row in [40, 60, 100, 120] {
+            f.addHorizontalEdge(row: row, x0: 100, x1: 300)
+        }
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 78), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 80)
+        #expect(snap.guideY == 80)
+    }
+
+    @Test func smallElementCenterWinsAtItsExactMidpoint() {
+        // A 12px-tall element keeps both edges inside tolerance from its center.
+        // At the exact midpoint the center (distance 0, half strength) must beat
+        // the edges (distance 6, full strength).
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 100, x0: 100, x1: 300)
+        f.addHorizontalEdge(row: 112, x0: 100, x1: 300)
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 106), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 106)
+        #expect(snap.guideY == 106)
+    }
+
+    @Test func centersRespectTolerance() {
+        var f = Field(w: 800, h: 400)
+        f.addHorizontalEdge(row: 100, x0: 100, x1: 300)
+        f.addHorizontalEdge(row: 140, x0: 100, x1: 300)
+        // 10px from the center (and both edges) with an 8px tolerance — free.
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 110), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 110)
+        #expect(snap.guideY == nil)
+    }
+
+    @Test func ghostPairMidpointStaysWeakerThanTheRealEdge() {
+        // An antialiasing ghost near a baseline forms a pair whose midpoint must
+        // not out-score the strong real edge: the FAINTER member sets the
+        // midpoint's strength.
+        var f = Field(w: 800, h: 800)
+        f.addHorizontalEdge(row: 716, x0: 100, x1: 300, magnitude: 0.3)  // ghost
+        f.addHorizontalEdge(row: 722, x0: 100, x1: 300, magnitude: 2.0)  // baseline
+        // Pointer at 719: midpoint (719, distance 0) vs baseline (distance 3).
+        // Midpoint score 0.5·0.3 = 0.15; baseline 2.0/1.75 ≈ 1.14 — edge wins.
+        let snap = EdgeSnapping.snap(CGPoint(x: 200, y: 719), edges: f.map, zoom: 1,
+                                     xSpan: 100...300, includeCenters: true,
+                                     snapToPixelGrid: false)
+        #expect(snap.point.y == 722)
+    }
+}
+
 // MARK: - Landing refinement & approach side
 
 /// Builds a map from a 1-D luma row profile replicated across the width, with

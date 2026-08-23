@@ -2,11 +2,11 @@
   "id": "next-measure-centers-snapping-option",
   "title": "Next Measure: centers snapping option",
   "priority": "p1-high",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:11:40.868Z",
-  "updated": "2026-08-23T00:27:39.521Z",
+  "updated": "2026-08-23T01:16:54.293Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > hover-measure. Implement docs/design/next-measure.md section 8 behind flag next-measure-center-snap: Snap tool option (Edges / Edges and centers, default per mock), midpoint candidates between adjacent accepted edges in EdgeSnapping scored below a real edge at equal distance, Cmd bypass covers both. Core TDD next to the existing snapping tests.",
@@ -27,7 +27,29 @@
     {
       "t": "2026-08-23T00:27:39.521Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T01:07:31.199Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T01:20:00.000Z",
+      "note": "Core TDD: 8 new EdgeSnapping center tests (element center, gap center, edge-wins-tie, tolerance, ghost-pair weakness, off-by-default) written first, then includeCenters implemented — midpoints of adjacent accepted edges at 0.5x the pair's fainter strength."
+    },
+    {
+      "t": "2026-08-23T01:32:00.000Z",
+      "note": "Flag next-measure-center-snap added (Next-only, default on). Snap menu (Edges / Edges and centers) in the Measure options row; option persisted in MeasureStyles.snapsToCenters per the spec's done-when (3 more tests). Wired into caliper foot A/B, foot handle drags, and the alignment-guide anchor. Region-select snapping deliberately left edges-only: the option is a Measure tool option. Cmd bypass already skips the snap call, covering both."
+    },
+    {
+      "t": "2026-08-23T01:35:00.000Z",
+      "note": "swift build clean, Scripts/test.sh green (896 tests). Design doc section 8 updated with the shipped shape."
+    },
+    {
+      "t": "2026-08-23T01:16:54.293Z",
+      "note": "Shipped next-measure-center-snap: EdgeSnapping center candidates (TDD, 8 tests), Snap option persisted in MeasureStyles (3 tests), Snap menu in Measure tool options, wired to caliper feet + alignment anchor. swift build clean, Scripts/test.sh green (896 tests)."
     }
   ],
-  "seq": 20
+  "seq": 20,
+  "started": "2026-08-23T01:07:31.198Z",
+  "completed": "2026-08-23T01:16:54.293Z"
 }

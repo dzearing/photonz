@@ -36,6 +36,10 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// a drop shadow you add in Effects carries to the next measure. Same deal
     /// `AnnotationStyles` gives each shape.
     public var layerStyle: LayerStyle
+    /// The Snap tool option (`next-measure-center-snap`): true = "Edges and
+    /// centers" (measure points also magnetize to element/gap centers), false =
+    /// "Edges". Rides with the styles so it stays how you left it.
+    public var snapsToCenters: Bool
 
     public init(strokeColorHex: String = "#FF3B30",
                 chipColorHex: String = "#8C201A",
@@ -48,7 +52,9 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                 // pixels read double that.
                 unit: MeasureUnit = .points,
                 decimals: Int = 0,
-                layerStyle: LayerStyle = LayerStyle()) {
+                layerStyle: LayerStyle = LayerStyle(),
+                // The mock's default: `Snap: Edges and centers`.
+                snapsToCenters: Bool = true) {
         self.strokeColorHex = strokeColorHex
         self.chipColorHex = chipColorHex
         self.chipOpacity = min(max(chipOpacity, 0), 1)
@@ -58,6 +64,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         self.unit = unit
         self.decimals = decimals
         self.layerStyle = layerStyle
+        self.snapsToCenters = snapsToCenters
     }
 
     private static func clampedLabelSize(_ value: CGFloat) -> CGFloat {
@@ -81,7 +88,9 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             labelSizePx: try c.decodeIfPresent(CGFloat.self, forKey: .labelSizePx) ?? d.labelSizePx,
             unit: try c.decodeIfPresent(MeasureUnit.self, forKey: .unit) ?? d.unit,
             decimals: try c.decodeIfPresent(Int.self, forKey: .decimals) ?? d.decimals,
-            layerStyle: try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? d.layerStyle)
+            layerStyle: try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? d.layerStyle,
+            snapsToCenters: try c.decodeIfPresent(Bool.self, forKey: .snapsToCenters)
+                ?? d.snapsToCenters)
     }
 
     /// The label scale (`MeasureContent.labelScale`) this pixel size means.

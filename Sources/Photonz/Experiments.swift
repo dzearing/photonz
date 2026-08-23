@@ -150,6 +150,11 @@ extension Experiments {
         CGFloat(number(FeatureCatalog.measureAlignFlag, FeatureCatalog.measureAlignTolerance) ?? 1)
     }
 
+    /// `next-measure-center-snap`: whether the Measure tool offers its Snap
+    /// option (Edges / Edges and centers) and center snapping at all. Exists
+    /// only in the Next release's catalog, so Current always reads false.
+    var measureCenterSnapEnabled: Bool { isEnabled(FeatureCatalog.measureCenterSnapFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {
