@@ -36,6 +36,8 @@ public enum FeatureCatalog {
 
     public static let measureCenterSnapFlag = "next-measure-center-snap"
 
+    public static let arrowCaptionsFlag = "next-arrow-captions"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -105,6 +107,15 @@ public enum FeatureCatalog {
                                          value: .number(1),
                                          bounds: NumberBounds(minimum: 0, maximum: 8, step: 0.5)),
                     ]),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: arrowCaptionsFlag,
+                    title: "Arrow captions",
+                    description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip. Double-click an arrow to add or edit its caption.",
+                    isEnabled: false,
+                    parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
             Definition(

@@ -3792,3 +3792,27 @@ mid-guide — revisit placement if it annoys in practice.
   caliper feet + alignment-guide anchor; region-select tools stay edges-only.
 - `Scripts/test.sh` green: 896 tests.
 - Next: remaining next-measure flags per the queue (roles, panel).
+
+## 2026-08-23 — Arrow captions: pill labels like the measure chip (go loop)
+
+- Shipped `next-arrow-captions` (epic-uehjr1): pointing with the arrow tool now
+  makes labeling one-keystroke-easy. Drawing an arrow (flag on, Next-only,
+  default on) opens a single-line inline editor centered where the pill lands;
+  Return commits, Esc or empty leaves the arrow plain. Double-click an arrow
+  (or use the new Caption field in AnnotationInspector) to add/edit later.
+- Model: `AnnotationContent.caption` + `captionFontSize` (decodeIfPresent,
+  legacy-safe), pill geometry (`captionAnchor`, `estimatedCaptionSize`) and the
+  ×0.55 chip-tone rule (#FF3B30 → #8C201A, matching the measure pair) all in
+  core with 12 new tests. Builder reserves chip + shadow room like
+  MeasureBuilder; chip footprint is hittable.
+- Render: extracted the measure chip's pill into a shared `PillRasterizer`
+  (measure tests untouched and green) and added an optional drop shadow, used
+  by the caption for legibility over any screenshot. 4 new pixel tests
+  (fill tone, glyphs, shadow direction, captionless byte-cleanliness).
+- App: `EditorState.editingCaptionLayerID` suppresses just the pill while the
+  editor overlay stands in; caption commits are one undo step via
+  `AnnotationBuilder.restyled(caption:)`.
+- `Scripts/test.sh` green: 912 tests. Dev app bundle builds.
+- Not verified by hand: the live entry feel (type-after-draw) — worth a manned
+  pass. Caption font size is fixed at 20px for now; a size slider is a cheap
+  follow-up if wanted.

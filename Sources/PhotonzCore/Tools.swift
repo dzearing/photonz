@@ -125,6 +125,20 @@ public enum AnnotationBuilder {
         var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
             .insetBy(dx: -pad, dy: -pad)
+        // Reserve room for the caption pill (plus its shadow) hanging off an
+        // arrow's tail, so the label never clips at the frame edge — mirrors
+        // MeasureBuilder's chip reservation.
+        if content.hasCaption {
+            var probe = content
+            probe.start = start
+            probe.end = end
+            let size = probe.estimatedCaptionSize
+            let anchor = probe.captionAnchor()
+            let slack = AnnotationContent.captionShadowPadding
+            box = box.union(CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
+                                   width: size.width, height: size.height)
+                .insetBy(dx: -slack, dy: -slack))
+        }
         // The rasterizer needs at least one pixel each way (a perfectly
         // horizontal highlight drag would otherwise collapse).
         box.size.width = max(box.size.width, 1)

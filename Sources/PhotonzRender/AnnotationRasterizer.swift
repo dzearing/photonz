@@ -60,6 +60,9 @@ public enum AnnotationRasterizer {
             context.addLines(between: head)
             context.closePath()
             context.fillPath()
+            if annotation.hasCaption {
+                drawCaption(annotation, border: color, in: context)
+            }
 
         case .rectangle:
             // Inset by half the stroke so the outline stays inside start..end.
@@ -101,6 +104,29 @@ public enum AnnotationRasterizer {
         }
 
         return context.makeImage()
+    }
+
+    /// The caption pill at the arrow's tail: the measure chip's legibility
+    /// treatment (dark tone of the arrow's ink, white text, bordered capsule)
+    /// plus a soft drop shadow so the label reads over any screenshot. Baked
+    /// into the layer raster like the measure chip, so exports carry it and
+    /// layer effects reach it.
+    private static func drawCaption(_ annotation: AnnotationContent, border: CGColor,
+                                    in context: CGContext) {
+        let text = (annotation.caption ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let chipSize = PillRasterizer.footprint(for: text, fontSize: annotation.captionFontSize,
+                                                padding: annotation.captionPadding)
+        let tone = annotation.captionChipColor
+        let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
+                           alpha: AnnotationContent.captionChipOpacity)
+        // The pill border reads as the arrow's ink but stays a hairline next to
+        // the (thicker) shaft, like the measure chip next to its caliper.
+        let borderWidth = min(max(1.5, annotation.strokeWidth / 2), 3)
+        PillRasterizer.draw(text, at: annotation.captionAnchor(), chipSize: chipSize,
+                            fontSize: annotation.captionFontSize, borderWidth: borderWidth,
+                            fill: fill, border: border, textColorHex: "#FFFFFF",
+                            shadow: PillRasterizer.Shadow(), in: context)
     }
 
     /// The interior fill for box shapes, nil when the shape is outline-only.

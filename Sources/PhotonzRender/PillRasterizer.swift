@@ -1,0 +1,75 @@
+import CoreGraphics
+import Foundation
+import PhotonzCore
+
+/// Draws the shared label pill — the measure chip and the arrow caption are the
+/// same capsule: a rounded fill, a border in the owning object's ink, and
+/// upright text blitted from `TextRasterizer`. Extracted from
+/// `MeasureRasterizer` so every tool's readout keeps one legibility treatment.
+enum PillRasterizer {
+
+    /// A drop shadow behind the pill's fill. `offset.height` is visual: positive
+    /// moves the shadow DOWN in the flipped (top-left) space the rasterizers
+    /// draw in.
+    struct Shadow {
+        var blur: CGFloat = 4
+        var offset = CGSize(width: 0, height: 2)
+        var color = CGColor(gray: 0, alpha: 0.35)
+    }
+
+    /// The pill's footprint = measured text (at `fontSize`) + padding all sides.
+    static func footprint(for text: String, fontSize: CGFloat, padding: CGFloat) -> CGSize {
+        let size = TextRasterizer.naturalSize(
+            TextContent(string: text, fontName: "SF Pro", fontSize: fontSize))
+        return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
+    }
+
+    /// Draws the pill centered at `anchor`: the `fill`, a border in `border`,
+    /// and text in `textColorHex` — each independently colorable. Glyphs come
+    /// from `TextRasterizer` (the proven-upright path) and are blitted in —
+    /// drawing CoreText directly into the already-flipped context renders the
+    /// text upside down. An optional `shadow` sits behind the fill only, so the
+    /// border and text stay crisp.
+    static func draw(_ string: String, at anchor: CGPoint, chipSize: CGSize,
+                     fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
+                     border: CGColor, textColorHex: String, shadow: Shadow? = nil,
+                     in context: CGContext) {
+        let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
+                          width: chipSize.width, height: chipSize.height)
+        let radius = chipSize.height / 2
+        let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        context.saveGState()
+        if let shadow {
+            // Shadow offsets ignore the CTM, so the flip to top-left space
+            // negates the visual y direction.
+            context.setShadow(offset: CGSize(width: shadow.offset.width,
+                                             height: -shadow.offset.height),
+                              blur: shadow.blur, color: shadow.color)
+        }
+        context.setFillColor(fill)
+        context.addPath(pill)
+        context.fillPath()
+        context.restoreGState()
+        // Border at the stroke color's FULL strength (it used to be softened to
+        // 0.7α to sit politely under a hardcoded white chip). Now that the chip
+        // can be any color — transparent included — the border is often the only
+        // thing closing the head line's gap, so it must read as the same line as
+        // the caliper it interrupts.
+        context.setStrokeColor(border)
+        context.setLineWidth(max(1, borderWidth))
+        context.addPath(pill)
+        context.strokePath()
+
+        let text = TextContent(string: string, fontName: "SF Pro",
+                               fontSize: fontSize, colorHex: textColorHex)
+        let textSize = TextRasterizer.naturalSize(text)
+        guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
+        let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
+                              width: textSize.width, height: textSize.height)
+        context.saveGState()
+        context.translateBy(x: textRect.minX, y: textRect.maxY)
+        context.scaleBy(x: 1, y: -1)
+        context.draw(glyphs, in: CGRect(origin: .zero, size: textRect.size))
+        context.restoreGState()
+    }
+}

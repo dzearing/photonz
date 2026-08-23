@@ -126,7 +126,9 @@ extension AnnotationBuilder {
                                 strokeWidth: CGFloat? = nil,
                                 arrowheadScale: CGFloat? = nil,
                                 cornerRadius: CGFloat? = nil,
-                                fillColorHex: String?? = nil) -> Layer {
+                                fillColorHex: String?? = nil,
+                                caption: String?? = nil,
+                                captionFontSize: CGFloat? = nil) -> Layer {
         guard var a = layer.annotation,
               let start = layer.annotationEndpoint(.start),
               let end = layer.annotationEndpoint(.end) else { return layer }
@@ -135,6 +137,8 @@ extension AnnotationBuilder {
         if let arrowheadScale { a.arrowheadScale = arrowheadScale }
         if let cornerRadius { a.cornerRadius = cornerRadius }
         if let fillColorHex { a.fillColorHex = fillColorHex }
+        if let caption { a.caption = caption }
+        if let captionFontSize { a.captionFontSize = captionFontSize }
         var updated = layer
         updated.content = .annotation(a)
         return updating(updated, start: start, end: end)

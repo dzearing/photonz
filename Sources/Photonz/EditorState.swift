@@ -121,6 +121,9 @@ final class EditorState {
     /// The text layer being re-edited inline. Hidden from renders while the
     /// canvas's editor overlay visually replaces it.
     private(set) var editingTextLayerID: UUID?
+    /// The arrow whose caption is being edited inline. Its pill (not the
+    /// arrow) is suppressed from renders while the editor overlay stands in.
+    private(set) var editingCaptionLayerID: UUID?
     /// The layer targeted by click-to-select / drag-to-move. Nil = none.
     /// Any change to the primary selection dissolves a marquee multi-selection —
     /// the two never coexist.
@@ -352,6 +355,7 @@ final class EditorState {
         previewMove = nil
         dragPreview = nil
         editingTextLayerID = nil
+        editingCaptionLayerID = nil
         stylePreview = nil
         thumbnailCache = [:]
         dragPreviewGeneration += 1
@@ -808,16 +812,71 @@ final class EditorState {
     }
 
     /// Completed drag-to-create from the canvas (document coords, ⇧ already
-    /// applied). Adds one annotation layer as a single undo step.
-    func addAnnotation(from start: CGPoint, to end: CGPoint) {
+    /// applied). Adds one annotation layer as a single undo step. Returns the
+    /// created layer when the canvas should immediately offer caption entry
+    /// (a fresh arrow with the Next captions flag on), nil otherwise.
+    @discardableResult
+    func addAnnotation(from start: CGPoint, to end: CGPoint) -> Layer? {
         guard let shape = activeTool.annotationShape,
-              let content = activeAnnotationContent else { return }
+              let content = activeAnnotationContent else { return nil }
         var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
         // Inherit this shape's last non-destructive effects (e.g. a drop shadow
         // added to the previous arrow carries to the next).
         layer.style = annotationStyles.layerStyle(forShape: shape)
         perform { $0.addLayer(layer) }
         finishCreating(layer.id)
+        guard shape == .arrow, Experiments.shared.arrowCaptionsEnabled else { return nil }
+        return layer
+    }
+
+    /// A caption edit session opened on `layerID`'s arrow. While it's open the
+    /// composite renders that arrow WITHOUT its pill — the inline editor
+    /// overlay stands in for it, like the text tool's editor stands in for its
+    /// layer.
+    func beginCaptionEdit(layerID: UUID) {
+        guard let layer = document?.layer(id: layerID),
+              layer.annotation?.shape == .arrow else { return }
+        editingCaptionLayerID = layerID
+        if let document { submit(document) }
+    }
+
+    /// Caption entry finished. Whitespace-only text clears the caption (or
+    /// leaves a fresh arrow plain); anything else lands as one undo step.
+    /// Newlines collapse to spaces — the pill is a single line.
+    func commitCaptionEdit(layerID: UUID, string: String) {
+        editingCaptionLayerID = nil
+        let text = string.replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let layer = document?.layer(id: layerID),
+              let annotation = layer.annotation else {
+            rerender()
+            return
+        }
+        let newCaption: String? = text.isEmpty ? nil : text
+        guard annotation.caption != newCaption else {
+            rerender() // un-suppress the pill
+            return
+        }
+        perform { document in
+            guard let current = document.layer(id: layerID) else { return }
+            let restyled = AnnotationBuilder.restyled(current, caption: .some(newCaption))
+            document.updateLayer(id: layerID) {
+                $0.content = restyled.content
+                $0.frame = restyled.frame
+            }
+        }
+    }
+
+    /// Caption entry abandoned (Esc): the arrow keeps whatever caption it had.
+    func cancelCaptionEdit() {
+        editingCaptionLayerID = nil
+        rerender()
+    }
+
+    /// Docked-inspector caption edit: same semantics as a committed inline
+    /// session (empty clears), without any canvas session.
+    func setAnnotationCaption(layerID: UUID, _ caption: String) {
+        commitCaptionEdit(layerID: layerID, string: caption)
     }
 
     /// What every draw tool does the moment its object exists: hand the editor
@@ -2618,6 +2677,7 @@ final class EditorState {
             previewMove = nil
             dragPreview = nil
             editingTextLayerID = nil
+            editingCaptionLayerID = nil
             stylePreview = nil
             thumbnailCache = [:]
             return
@@ -2655,6 +2715,9 @@ final class EditorState {
         if let id = editingTextLayerID, document.layer(id: id) == nil {
             editingTextLayerID = nil
         }
+        if let id = editingCaptionLayerID, document.layer(id: id) == nil {
+            editingCaptionLayerID = nil
+        }
         submit(document)
     }
 
@@ -2664,6 +2727,15 @@ final class EditorState {
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
             document.updateLayer(id: id) { $0.isVisible = false }
+        }
+        // A caption edit suppresses just the pill; the arrow stays visible.
+        if let id = editingCaptionLayerID {
+            document.updateLayer(id: id) { layer in
+                if var a = layer.annotation {
+                    a.caption = nil
+                    layer.content = .annotation(a)
+                }
+            }
         }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store) { [weak self] image in

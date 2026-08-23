@@ -25,7 +25,25 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 - **Tool stickiness (one-shot by default):** drawing tools commit one shape, then revert to `.select` and select the new shape so it can be tweaked immediately (`EditorState.toolLocked == false`). **Double-clicking** a toolbar tool sets `toolLocked` (a white inner ring marks it) so it stays active for repeated drawing until the tool changes. `setTool(_:locked:)` / `lockTool`.
 - **Rectangle corner radius:** `cornerRadius` rounds the rectangle's *own stroke* — `AnnotationRasterizer` strokes a `CGPath(roundedRect:)` (clamped to a capsule) — rather than relying on the layer-level `LayerStyle.cornerRadius`, whose rounded mask would clip the sharp stroke corners away (the "rectangle borders disappear when rounded" bug). Edited via a "Corner Radius" slider in the `AnnotationInspector` (rectangles only). Rectangles stroke with **MITER joins** (2026-07-03): the old round joins made a thick stroke fake a corner radius the inspector read as 0 — radius 0 must be truly sharp; a real `cornerRadius` curves the path itself.
 - **Arrows (Phase 10 redesign):** bold proportioned head via `Geometry.arrowhead(…, scale:)`; head size is driven by `arrowheadScale` (a user-facing multiplier). Per Phase 10.4 it must be made **independent of stroke width** so the thickness control doesn't grow the head, and the default scale is **1.0**. `Geometry.arrowShaftEnd` stops the shaft *inside* the head so the round line cap never pokes past the sharp tip (used by both the rasterizer and the live `CanvasView` preview). `Geometry.arrowheadHalfWidth` stays in lockstep with the wing math so frame render-padding can't drift. CURVED-arrow variant + tail flair + arrow style set are **deferred to Phase 14**.
-- Highlight: multiply-blended translucent fill.
+- **Arrow captions (Next-only, `next-arrow-captions`, 2026-08-22):** an arrow can
+  carry a `caption` — a label rendered as a **pill at the arrow's tail** with the
+  measure chip's legibility treatment (capsule, border in the arrow's ink, white
+  text) plus a soft drop shadow, drawn by the shared `PillRasterizer`
+  (`PhotonzRender`) that the measure chip also uses. The pill's fill tone is the
+  arrow color darkened ×0.55 (`captionChipColor` — the same ratio that pairs the
+  measure defaults' #FF3B30 ink with its #8C201A chip), so any arrow color yields
+  a legible pill. Geometry (`captionAnchor`, `estimatedCaptionSize`,
+  `captionPadding`) lives on `AnnotationContent`; the builder reserves frame room
+  (chip + shadow slack) exactly like `MeasureBuilder`'s chip reservation, and the
+  chip footprint is hittable. Entry: with the flag on, **drawing an arrow
+  immediately opens a single-line inline editor** centered where the pill lands
+  (Return commits, Esc or an empty commit leaves the arrow plain);
+  **double-click an arrow** adds/edits its caption; the `AnnotationInspector`
+  has a Caption field. While a caption edit is open the composite suppresses
+  just the pill (`EditorState.editingCaptionLayerID`), the arrow stays. Caption
+  is non-destructive (baked at render time into the layer raster, so exports and
+  layer effects carry it). Current release: flag absent, no entry points; a
+  Next-authored document with captions still renders them (document fidelity).
 - Rendered by a CoreGraphics rasterizer in `PhotonzRender` (pixel-tested), then composited like any image layer.
 - **Styling & per-object editing:** `AnnotationStyles` holds the per-shape defaults new annotations get — color, stroke width, `arrowheadScale`, `cornerRadius`, and `fillColorHex` — and persists to UserDefaults. EVERY inspector commit writes back to the shape's defaults, so "the next rectangle reuses the last-touched rectangle's settings" holds for all of them (corner radius was missing from `ShapeDefaults` entirely until 2026-07-03 — a user-reported bug). Two surfaces edit annotations: the toolbar **style popover** (color swatches + Width/Arrowhead sliders) sets defaults / restyles the selected one, and the Layers-panel **AnnotationInspector** gives per-object Color / Thickness / Head Size. Both preview live via `EditorState.previewAnnotationRestyle` (no history) and commit one undo step on release via `setAnnotationStrokeWidth` / `setAnnotationArrowheadScale`. (`AppState` was split into per-window `EditorState` + resident `AppCoordinator` in Phase 11.1 — see `capture.md`.) Endpoint-drag/resize remap goes through `AnnotationBuilder.restyled`/`updating`/`resized`.
 

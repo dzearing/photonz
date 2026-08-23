@@ -744,6 +744,7 @@ struct AnnotationInspector: View {
     @State private var widthDraft: CGFloat?
     @State private var headDraft: CGFloat?
     @State private var radiusDraft: CGFloat?
+    @State private var captionDraft: String = ""
 
     private var annotation: AnnotationContent? {
         editorState.document?.layer(id: layer.id)?.annotation
@@ -792,6 +793,22 @@ struct AnnotationInspector: View {
                                                                    strokeWidth: (widthDraft ?? a.strokeWidth).rounded())
                                   widthDraft = nil
                               })
+                }
+                if a.shape == .arrow, Experiments.shared.arrowCaptionsEnabled {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Caption").font(.caption).foregroundStyle(.secondary)
+                        TextField("Add a caption", text: $captionDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .controlSize(.small)
+                            .onSubmit {
+                                editorState.setAnnotationCaption(layerID: layer.id, captionDraft)
+                            }
+                    }
+                    // Track the model (initially, after undo, on layer switch);
+                    // typing edits only the draft until Return commits.
+                    .onChange(of: a.caption ?? "", initial: true) { _, new in
+                        captionDraft = new
+                    }
                 }
                 if a.shape == .arrow {
                     sliderRow("Head Size", value: headDraft ?? a.arrowheadScale,

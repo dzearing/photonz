@@ -3,11 +3,11 @@
   "title": "Arrow tool captions: legible pill labels like the measure tool",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T00:26:48.303Z",
-  "updated": "2026-08-23T00:27:18.872Z",
+  "updated": "2026-08-23T01:17:25.448Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > epic-uehjr1 (user epic: using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool). Next release. When the user points at something with the arrow tool, offer a caption rendered as a pill with a shadow, matching the legibility treatment the measure tool captions ship with, so redline callouts read cleanly over any screenshot. Start from the measure caption styling (docs/design/next-measure.md) for visual consistency; keep it non-destructive (styling applied at render time). Open a UX decision if caption entry/placement behavior is ambiguous beyond what the epic sentence settles.",
@@ -20,6 +20,27 @@
     {
       "t": "2026-08-23T00:27:18.872Z",
       "note": "seq 40 -> 30"
+    },
+    {
+      "t": "2026-08-23T01:17:25.448Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T01:45:00.000Z",
+      "note": "Design settled from the epic sentence: drawing an arrow immediately offers a single-line caption (Return commits, Esc or empty skips), pill at the tail with the measure chip treatment + drop shadow; double-click or inspector field to edit later. No UX decision needed."
+    },
+    {
+      "t": "2026-08-23T02:05:00.000Z",
+      "note": "Core TDD done: caption fields on AnnotationContent (legacy-safe decode), captionAnchor/estimatedCaptionSize geometry, x0.55 chip tone (#FF3B30 -> #8C201A), builder frame reservation, hittable chip, restyled(caption:). 12 tests."
+    },
+    {
+      "t": "2026-08-23T02:20:00.000Z",
+      "note": "Render: measure pill extracted to shared PillRasterizer (+ optional drop shadow), caption drawn at the tail by AnnotationRasterizer. 4 pixel tests incl. shadow direction; measure suite untouched and green."
+    },
+    {
+      "t": "2026-08-23T02:35:00.000Z",
+      "note": "App: next-arrow-captions flag (Next-only, default on), inline caption session reusing the text editor overlay (single-line, centered on the pill anchor, chip-tinted), editingCaptionLayerID pill suppression, double-click entry, inspector Caption field. Full suite green: 912 tests. Dev bundle builds."
     }
-  ]
+  ],
+  "started": "2026-08-23T01:17:25.447Z"
 }

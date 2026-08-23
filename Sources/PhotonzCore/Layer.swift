@@ -74,10 +74,16 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// Rectangle/ellipse-only: interior fill color. Nil = no fill (the classic
     /// outline-only redline). Highlight ignores it (its color IS the fill).
     public var fillColorHex: String?
+    /// Arrow-only: label text rendered as a pill at the arrow's tail, matching
+    /// the measure tool's readout treatment. Nil = plain arrow.
+    public var caption: String?
+    /// Arrow-only: the caption's text size in image pixels.
+    public var captionFontSize: CGFloat
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
-                cornerRadius: CGFloat = 0, fillColorHex: String? = nil) {
+                cornerRadius: CGFloat = 0, fillColorHex: String? = nil,
+                caption: String? = nil, captionFontSize: CGFloat = Self.captionFontSizeDefault) {
         self.shape = shape
         self.strokeWidth = strokeWidth
         self.colorHex = colorHex
@@ -86,6 +92,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.arrowheadScale = arrowheadScale
         self.cornerRadius = cornerRadius
         self.fillColorHex = fillColorHex
+        self.caption = caption
+        self.captionFontSize = captionFontSize
     }
 
     public init(from decoder: Decoder) throws {
@@ -101,6 +109,76 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         // `fillColorHex` postdates both; legacy shapes are outline-only.
         fillColorHex = try c.decodeIfPresent(String.self, forKey: .fillColorHex)
+        // Captions postdate everything above; legacy arrows are caption-free.
+        caption = try c.decodeIfPresent(String.self, forKey: .caption)
+        captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
+            ?? Self.captionFontSizeDefault
+    }
+}
+
+extension AnnotationContent {
+    /// Default caption text size (image pixels) — the measure label's default.
+    public static let captionFontSizeDefault: CGFloat = 20
+    /// Clearance between the arrow's tail and the caption pill's near edge.
+    public static let captionGap: CGFloat = 6
+    /// Extra frame slack around the chip reservation so the pill's drop shadow
+    /// never clips at the layer edge.
+    public static let captionShadowPadding: CGFloat = 12
+
+    /// Whether this annotation renders a caption pill: arrows only, and only
+    /// when the caption has real text.
+    public var hasCaption: Bool {
+        guard shape == .arrow, let caption else { return false }
+        return !caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Padding inside the caption pill, each side — the measure chip's
+    /// proportions (8px of padding per 18px of text) at the caption's size.
+    public var captionPadding: CGFloat {
+        captionFontSize * MeasureContent.labelPadding / MeasureContent.labelFontSize
+    }
+
+    /// The pill's fill tone: the arrow color darkened the way the measure
+    /// defaults pair #FF3B30 ink with a #8C201A chip, so any arrow color gets
+    /// a matching dark pill that white text stays legible on.
+    public var captionChipColor: RGBA {
+        let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        return RGBA(r: rgba.r * 0.55, g: rgba.g * 0.55, b: rgba.b * 0.55)
+    }
+
+    /// The pill's fill opacity — the measure chip's default translucency.
+    public static let captionChipOpacity: Double = 0.92
+
+    /// A generous estimate of the caption pill's footprint, used for frame
+    /// reservation and hit-testing. The rasterizer measures the real text and
+    /// centers the (smaller) pill at the same anchor, so geometry derived from
+    /// this estimate never disagrees with what gets drawn.
+    public var estimatedCaptionSize: CGSize {
+        let chars = CGFloat(max(caption?.count ?? 0, 1) + 1)
+        let w = chars * captionFontSize * 0.75 + 2 * captionPadding
+        let h = captionFontSize * 1.3 + 2 * captionPadding
+        return CGSize(width: w.rounded(.up), height: h.rounded(.up))
+    }
+
+    /// Where the caption pill centers (same coordinate space as `start`/`end`):
+    /// past the arrow's tail, along the shaft away from the head, clear of the
+    /// tail by `captionGap`. A zero-length arrow anchors above the point.
+    public func captionAnchor() -> CGPoint {
+        let size = estimatedCaptionSize
+        var dx = start.x - end.x
+        var dy = start.y - end.y
+        let length = hypot(dx, dy)
+        if length > 0 {
+            dx /= length
+            dy /= length
+        } else {
+            dx = 0
+            dy = -1
+        }
+        // Support extent of the pill rect along the shaft direction.
+        let extent = (abs(dx) * size.width + abs(dy) * size.height) / 2
+        let distance = Self.captionGap + extent
+        return CGPoint(x: start.x + dx * distance, y: start.y + dy * distance)
     }
 }
 
@@ -330,7 +408,20 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)
             let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
             let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
-            return Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance
+            if Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance {
+                return true
+            }
+            // The caption pill hangs off the tail with no stroke of its own, so
+            // its footprint is hittable too — same rule as the measure chip.
+            if a.hasCaption {
+                let anchor = a.captionAnchor()
+                let size = a.estimatedCaptionSize
+                let chip = CGRect(x: frame.minX + anchor.x - size.width / 2,
+                                  y: frame.minY + anchor.y - size.height / 2,
+                                  width: size.width, height: size.height)
+                if chip.insetBy(dx: -tolerance, dy: -tolerance).contains(p) { return true }
+            }
+            return false
         }
         if var m = measure {
             // Hit near the drawn strokes (the squared-U outline), not the padded

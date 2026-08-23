@@ -167,9 +167,7 @@ public enum MeasureRasterizer {
 
     /// The chip's footprint = measured text (at `fontSize`) + padding on all sides.
     private static func chipFootprint(for text: String, fontSize: CGFloat, padding: CGFloat) -> CGSize {
-        let size = TextRasterizer.naturalSize(
-            TextContent(string: text, fontName: "SF Pro", fontSize: fontSize))
-        return CGSize(width: size.width + 2 * padding, height: size.height + 2 * padding)
+        PillRasterizer.footprint(for: text, fontSize: fontSize, padding: padding)
     }
 
     /// One caliper leg: `foot → (rounded corner at head) → toward` (the head-line
@@ -193,40 +191,13 @@ public enum MeasureRasterizer {
 
     /// Draws the flattened readout centered at `anchor`: the chip `fill`, a
     /// border in the caliper's stroke color, and text in the readout color — the
-    /// three independently editable measure colors. Glyphs come from
-    /// `TextRasterizer` (the proven-upright path) and are blitted in — drawing
-    /// CoreText directly into this already-flipped context renders the text
-    /// upside down.
+    /// three independently editable measure colors. The capsule itself is the
+    /// shared `PillRasterizer` (arrow captions draw the same pill).
     private static func drawPill(_ string: String, at anchor: CGPoint, chipSize: CGSize,
                                  fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
                                  border: CGColor, textColorHex: String, in context: CGContext) {
-        let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
-                          width: chipSize.width, height: chipSize.height)
-        let radius = chipSize.height / 2
-        let pill = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
-        context.setFillColor(fill)
-        context.addPath(pill)
-        context.fillPath()
-        // Border at the stroke color's FULL strength (it used to be softened to
-        // 0.7α to sit politely under a hardcoded white chip). Now that the chip
-        // can be any color — transparent included — the border is often the only
-        // thing closing the head line's gap, so it must read as the same line as
-        // the caliper it interrupts.
-        context.setStrokeColor(border)
-        context.setLineWidth(max(1, borderWidth))
-        context.addPath(pill)
-        context.strokePath()
-
-        let text = TextContent(string: string, fontName: "SF Pro",
-                               fontSize: fontSize, colorHex: textColorHex)
-        let textSize = TextRasterizer.naturalSize(text)
-        guard let glyphs = TextRasterizer.rasterize(text, size: textSize) else { return }
-        let textRect = CGRect(x: anchor.x - textSize.width / 2, y: anchor.y - textSize.height / 2,
-                              width: textSize.width, height: textSize.height)
-        context.saveGState()
-        context.translateBy(x: textRect.minX, y: textRect.maxY)
-        context.scaleBy(x: 1, y: -1)
-        context.draw(glyphs, in: CGRect(origin: .zero, size: textRect.size))
-        context.restoreGState()
+        PillRasterizer.draw(string, at: anchor, chipSize: chipSize, fontSize: fontSize,
+                            borderWidth: borderWidth, fill: fill, border: border,
+                            textColorHex: textColorHex, in: context)
     }
 }

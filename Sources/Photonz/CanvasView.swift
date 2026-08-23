@@ -88,7 +88,7 @@ struct CanvasView: NSViewRepresentable {
     let onFrameCommit: (UUID, CGRect) -> Void
     let onTransformPreview: (UUID, LayerTransform) -> Void
     let onTransformCommit: (UUID, LayerTransform) -> Void
-    let onAnnotationCommit: (CGPoint, CGPoint) -> Void
+    let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
     let onMeasureCommit: (CGPoint, CGPoint, MeasureMode, CGFloat) -> Void
@@ -101,6 +101,9 @@ struct CanvasView: NSViewRepresentable {
     let onTextEditBegin: (UUID?) -> Void
     let onTextCommit: (UUID?, CGPoint, String, CGFloat) -> Void
     let onTextCancel: () -> Void
+    let onCaptionEditBegin: (UUID) -> Void
+    let onCaptionCommit: (UUID, String) -> Void
+    let onCaptionCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
     let onDropImageURL: (URL) -> Void
@@ -164,6 +167,9 @@ struct CanvasView: NSViewRepresentable {
         view.onTextEditBegin = onTextEditBegin
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
+        view.onCaptionEditBegin = onCaptionEditBegin
+        view.onCaptionCommit = onCaptionCommit
+        view.onCaptionCancel = onCaptionCancel
         view.onDeleteLayer = onDeleteLayer
         view.onDeleteLayers = onDeleteLayers
         view.onDropImageURL = onDropImageURL
@@ -195,7 +201,7 @@ final class CanvasNSView: NSView {
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onTransformPreview: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
-    var onAnnotationCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
+    var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
@@ -206,6 +212,9 @@ final class CanvasNSView: NSView {
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
+    var onCaptionEditBegin: ((UUID) -> Void) = { _ in }
+    var onCaptionCommit: ((UUID, String) -> Void) = { _, _ in }
+    var onCaptionCancel: (() -> Void) = {}
     var onDeleteLayer: ((UUID) -> Void) = { _ in }
     var onDeleteLayers: (([UUID]) -> Void) = { _ in }
     /// A file (image) dropped onto the canvas — e.g. a history-overlay thumbnail
@@ -521,12 +530,18 @@ final class CanvasNSView: NSView {
     /// live when the font picker changes it. The string field is ignored.
     private var textContent: TextContent?
 
-    /// In-progress inline text edit.
+    /// In-progress inline text edit (or arrow caption entry, which reuses the
+    /// same editor overlay).
     private struct TextEditSession {
-        /// Nil while placing a new text block; set when re-editing a layer.
+        /// Nil while placing a new text block; set when re-editing a layer
+        /// (or always, for a caption session).
         let layerID: UUID?
-        /// The text frame's top-left in document coordinates.
+        /// The text frame's top-left in document coordinates — or, for a
+        /// caption session, the pill's CENTER (the editor stays centered on it).
         let origin: CGPoint
+        /// Non-nil marks this as an arrow-caption session and carries the
+        /// caption's fixed style (white text at the caption font size).
+        var captionStyle: TextContent?
     }
     private var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.
@@ -1345,6 +1360,13 @@ final class CanvasNSView: NSView {
             beginTextSession(layerID: hit.id, at: hit.frame.origin)
             return
         }
+        // Double-click an arrow to add or edit its caption (Next flag).
+        if event.clickCount == 2, Experiments.shared.arrowCaptionsEnabled,
+           let hit = document?.hitTest(p, zoom: viewport.zoom),
+           hit.annotation?.shape == .arrow {
+            beginCaptionSession(layer: hit)
+            return
+        }
         // Handles take priority over moves: they extend past the layer's frame.
         // Lines/arrows expose their endpoints; everything else (that resizes)
         // gets the eight frame handles.
@@ -1673,8 +1695,12 @@ final class CanvasNSView: NSView {
                 // (which includes the new layer) lands — no flash.
                 annotationCommitImage = image
                 let shape = tool.annotationShape ?? .line
-                onAnnotationCommit(drag.anchor,
-                                   drag.end(constrained: event.modifierFlags.contains(.shift), shape: shape))
+                let created = onAnnotationCommit(drag.anchor,
+                                                 drag.end(constrained: event.modifierFlags.contains(.shift),
+                                                          shape: shape))
+                // A fresh arrow immediately offers its caption (Next flag):
+                // type to label it, Esc or an empty commit leaves it plain.
+                if let created { beginCaptionSession(layer: created) }
             }
         } else if let drag = measureHandleDrag {
             measureHandleDrag = nil
@@ -2907,6 +2933,55 @@ final class CanvasNSView: NSView {
         }
         textSession = TextEditSession(layerID: layerID, origin: origin)
 
+        let editor = makeInlineEditor()
+        editor.string = string
+        addSubview(editor)
+        textEditor = editor
+        textEditorZoom = 0 // force the style pass below to apply
+        styleTextEditor(with: style)
+        window?.makeFirstResponder(editor)
+        editor.setSelectedRange(NSRange(location: string.utf16.count, length: 0))
+        onTextEditBegin(layerID)
+        refreshOverlays()
+    }
+
+    /// Opens the inline caption editor on an arrow (Next `next-arrow-captions`):
+    /// a single-line field centered where the pill renders, tinted with the
+    /// pill's tone so the draft is legible over any image. Return commits, Esc
+    /// abandons, clicking elsewhere commits — an empty commit means no caption.
+    /// `layer` is passed in whole because the freshly created arrow may not
+    /// have reached this view's `document` snapshot yet.
+    func beginCaptionSession(layer: Layer) {
+        guard textSession == nil, let viewport,
+              let a = layer.annotation, a.shape == .arrow else { return }
+        let anchor = a.captionAnchor()
+        let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
+        let style = TextContent(string: "", fontName: "SF Pro",
+                                fontSize: a.captionFontSize, colorHex: "#FFFFFF")
+        textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style)
+
+        let editor = makeInlineEditor()
+        editor.commitsOnPlainReturn = true
+        let tone = a.captionChipColor
+        editor.drawsBackground = true
+        editor.backgroundColor = NSColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
+                                         alpha: AnnotationContent.captionChipOpacity)
+        editor.layer?.masksToBounds = true
+        editor.layer?.cornerRadius = 6 * viewport.zoom
+        editor.string = a.caption ?? ""
+        addSubview(editor)
+        textEditor = editor
+        textEditorZoom = 0 // force the style pass below to apply
+        styleTextEditor(with: style)
+        window?.makeFirstResponder(editor)
+        editor.setSelectedRange(NSRange(location: 0, length: editor.string.utf16.count))
+        onCaptionEditBegin(layer.id)
+        refreshOverlays()
+    }
+
+    /// The inline editor overlay both text and caption sessions share, before
+    /// their session-specific styling.
+    private func makeInlineEditor() -> InlineTextView {
         let editor = InlineTextView()
         editor.onCommit = { [weak self] in self?.commitTextSession() }
         editor.isRichText = false
@@ -2929,15 +3004,7 @@ final class CanvasNSView: NSView {
         editor.layer?.borderWidth = 1
         editor.layer?.cornerRadius = 2
         editor.delegate = self
-        editor.string = string
-        addSubview(editor)
-        textEditor = editor
-        textEditorZoom = 0 // force the style pass below to apply
-        styleTextEditor(with: style)
-        window?.makeFirstResponder(editor)
-        editor.setSelectedRange(NSRange(location: string.utf16.count, length: 0))
-        onTextEditBegin(layerID)
-        refreshOverlays()
+        return editor
     }
 
     /// Applies font/color to the editor, scaled to the current zoom so the
@@ -3000,14 +3067,25 @@ final class CanvasNSView: NSView {
             contentWidth = min(capView, max(minView, ceil(used.width) + 3))
             height = max(height, used.height + 2)
         }
-        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+        if session.captionStyle != nil {
+            // A caption session's origin is the pill CENTER: keep the editor
+            // centered there so the draft sits where the pill will render.
+            editor.frame = CGRect(x: (topLeft.x - contentWidth / 2).rounded(),
+                                  y: (topLeft.y - ceil(height) / 2).rounded(),
+                                  width: contentWidth, height: ceil(height))
+        } else {
+            editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+        }
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and
     /// restyles it when the font picker changes the style mid-edit.
     private func refreshTextEditorDisplay() {
-        guard textSession != nil, let viewport else { return }
-        if let content = textContent, content != textEditorContent || viewport.zoom != textEditorZoom {
+        guard let session = textSession, let viewport else { return }
+        // Caption sessions keep their fixed style; text sessions track the
+        // font picker's live style.
+        let desired = session.captionStyle ?? textContent
+        if let content = desired, content != textEditorContent || viewport.zoom != textEditorZoom {
             styleTextEditor(with: content)
         } else {
             layoutTextEditor()
@@ -3017,6 +3095,11 @@ final class CanvasNSView: NSView {
     private func commitTextSession() {
         guard let session = textSession, let editor = textEditor else { return }
         let string = editor.string
+        if session.captionStyle != nil, let layerID = session.layerID {
+            teardownTextSession()
+            onCaptionCommit(layerID, string)
+            return
+        }
         // Same wrap cap the live editor used, so layout doesn't shift on commit.
         let maxWidth = textWrapWidth(origin: session.origin)
         teardownTextSession()
@@ -3024,9 +3107,13 @@ final class CanvasNSView: NSView {
     }
 
     private func cancelTextSession() {
-        guard textSession != nil else { return }
+        guard let session = textSession else { return }
         teardownTextSession()
-        onTextCancel()
+        if session.captionStyle != nil {
+            onCaptionCancel()
+        } else {
+            onTextCancel()
+        }
     }
 
     private func teardownTextSession() {
@@ -3070,9 +3157,13 @@ extension CanvasNSView: NSTextViewDelegate {
 /// leaving plain Return to insert a line break.
 private final class InlineTextView: NSTextView {
     var onCommit: () -> Void = {}
+    /// Caption entry is single-line: plain Return commits instead of inserting
+    /// a newline. Text blocks keep Return-as-newline and commit on ⌘Return.
+    var commitsOnPlainReturn = false
 
     override func keyDown(with event: NSEvent) {
-        if (event.keyCode == 36 || event.keyCode == 76), event.modifierFlags.contains(.command) {
+        if (event.keyCode == 36 || event.keyCode == 76),
+           commitsOnPlainReturn || event.modifierFlags.contains(.command) {
             onCommit()
             return
         }

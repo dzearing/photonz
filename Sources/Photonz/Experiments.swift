@@ -155,6 +155,11 @@ extension Experiments {
     /// only in the Next release's catalog, so Current always reads false.
     var measureCenterSnapEnabled: Bool { isEnabled(FeatureCatalog.measureCenterSnapFlag) }
 
+    /// `next-arrow-captions`: whether drawing an arrow offers an inline caption
+    /// (and arrows are double-clickable to edit one). Exists only in the Next
+    /// release's catalog, so Current always reads false.
+    var arrowCaptionsEnabled: Bool { isEnabled(FeatureCatalog.arrowCaptionsFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {
