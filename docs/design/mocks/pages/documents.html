@@ -12,14 +12,23 @@
    instead of bespoke side panels. Version history and undo history are new
    PANEL GROUPS, not new chrome. Page-local classes are namespaced under
    #documents. 4pt tokens only. */
-#documents .win.shell{height:680px;min-height:0}/* ---- dirty / saved state, inside the title bar next to the name ---- */
-#documents .dstate{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:580;margin-left:var(--s2);font-variant-numeric:tabular-nums}
+#documents .win.shell{height:680px;min-height:0}
+
+/* ---- dirty / saved state. It rides in the title bar's `.wstatus` readout
+       (data-status), NOT glued to the file name: "Launch poster.phzSaved" was
+       the bug. Mono/faint is the readout's own voice; the state word keeps its
+       semantic color so Edited is visible at a glance. ---- */
+#documents .dstate{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11px;font-weight:580;font-variant-numeric:tabular-nums;vertical-align:-1px}
 #documents .dstate .ddot{width:7px;height:7px;border-radius:50%;flex:none;transition:background .18s ease}
 #documents .dstate.saved{color:var(--good)} #documents .dstate.saved .ddot{background:var(--good)}
 #documents .dstate.edited{color:var(--warn)} #documents .dstate.edited .ddot{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
 #documents .dext{color:var(--faint);font-weight:520}
-#documents .autoread{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--faint)}
-#documents .autoread .adot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+#documents .cnv-act #saveBtn.dirty{color:var(--warn)}
+
+/* ---- the export menu hangs off its .cnv-act tool, on the same line the
+       shared command popover drops from (dock.css owns that geometry) ---- */
+#documents .cnv>#exMenu{position:absolute;z-index:13;width:236px;
+  top:calc(var(--s3) + var(--ctl-h-sm) + var(--s1));right:calc(var(--s3) + 34px)}
 
 /* ---- export menu size presets ---- */
 #documents .szrow{display:flex;gap:var(--s1);padding:var(--s1) var(--s2) var(--s2);flex-wrap:wrap}
@@ -116,42 +125,44 @@
        KIND 1 · AN APP SCREEN · saving, autosave, versions, export.
        Title bar carries document identity: name, extension, save state.
        ============================================================ -->
-  <div class="win tall cq shell" data-shell="Launch poster.phzSaved" data-ws="ui">
+  <div class="win tall cq shell" data-ws="ui"
+       data-shell="Launch poster.phz · 1080 × 1350"
+       data-status="<span class='dstate saved' id='dstate'><span class='ddot'></span><span id='dstateT'>Saved</span></span> · <span id='autoRead'>Autosave on · saved just now</span>">
+    <div class="edit lean" id="shellA" data-dock="open">
 
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>Launch poster</b><span class="dext">.phz</span><span class="dstate saved" id="dstate"><span class="ddot"></span><span id="dstateT">Saved</span></span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm" id="exportBtn" data-menu="#exMenu"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tsep"></span>
-      <button class="btn secondary sm" id="saveBtn"><i class="ic ic-save"></i> Save <span class="kbd">⌘S</span></button>
-      <span class="autoread"><span class="adot"></span><span id="autoRead">Autosave on · saved just now</span></span>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:220px;z-index:12">
-          <div class="mlabel">File</div>
-          <div class="menuitem"><i class="ic ic-save"></i> Save <span class="sc">⌘S</span></div>
-          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⇧⌘S</span></div>
-          <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⇧⌘E</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+      <div class="cnv">
+        <div class="canvas">
+          <div class="artboard-label">1080 × 1350 · Launch poster</div>
+          <div class="poster">
+            <div class="part" id="posterArt" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)">
+              <div class="pkick" id="posterKick">New · 2026</div>
+              <div class="phead" id="posterH">Ship it faster.</div>
+            </div>
+            <div class="pfoot"><i class="ic sm ic-image"></i><span class="ppath">~/Photonz/Launch poster.phz</span></div>
+          </div>
         </div>
-        <div class="popover menu pop" id="exMenu" role="menu" style="position:absolute;right:0;top:26px;width:236px;z-index:13">
+
+        <div class="cnv-act">
+          <button class="tool" id="saveBtn" title="Save (⌘S)" disabled><i class="ic sm ic-save"></i></button>
+          <button class="tool" id="exportBtn" data-menu="#exMenu" aria-haspopup="menu" title="Export (⇧⌘E)"><i class="ic sm ic-export"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool on" data-dock-toggle="#shellA" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+        </div>
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">File</div>
+        <div class="menuitem"><i class="ic ic-save"></i> Save <span class="sc">⌘S</span></div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⇧⌘S</span></div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⇧⌘E</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Edit</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+        <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
+        <div class="popover menu pop" id="exMenu" role="menu">
           <div class="mlabel">Image</div>
           <div class="menuitem" data-export="PNG"><i class="ic ic-image"></i> PNG <span class="exfmt">.png · lossless</span></div>
           <div class="menuitem" data-export="JPG"><i class="ic ic-image"></i> JPG <span class="exfmt">.jpg · photo</span></div>
@@ -169,26 +180,6 @@
             <button class="chip" data-size="1080p">1080p</button>
             <button class="chip" data-size="story">Story</button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="edit lean" id="shellA" data-dock="open">
-
-      <div class="cnv">
-        <div class="canvas">
-          <div class="artboard-label">1080 × 1350 · Launch poster</div>
-          <div class="poster">
-            <div class="part" id="posterArt" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)">
-              <div class="pkick" id="posterKick">New · 2026</div>
-              <div class="phead" id="posterH">Ship it faster.</div>
-            </div>
-            <div class="pfoot"><i class="ic sm ic-image"></i><span class="ppath">~/Photonz/Launch poster.phz</span></div>
-          </div>
-        </div>
-
-        <div class="cnv-act">
-          <button class="tool on" data-dock-toggle="#shellA" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
         </div>
 
         <div class="tbar">
@@ -300,6 +291,9 @@
               <div class="sec-h">File</div>
               <div class="irow"><span class="rl">Format</span><span class="val">.phz · document</span></div>
               <div class="irow"><span class="rl">Size</span><span class="val">4.2 MB</span></div>
+              <div class="irow"><span class="rl">Style system</span>
+                <span class="chip style" data-target="dsys"><span class="sw"></span>Brand</span>
+              </div>
             </div>
           </div>
         </div>
@@ -356,36 +350,6 @@
 
   <div class="win tall cq shell" data-shell="untitled-1 · 1200 × 630" data-ws="ui">
 
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>untitled-1</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenuB"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheetB" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <button class="pill ai" data-target="agent" title="Ask the agent to make this change"><i class="ic sm ic-sparkle"></i> Ask agent</button>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenuB" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
-          <div class="mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
-        </div>
-      </div>
-    </div>
-
     <div class="edit lean" id="shellB" data-dock="open">
 
       <div class="cnv">
@@ -415,8 +379,19 @@
         </div>
 
         <div class="cnv-act">
+          <button class="tool" data-sheet="#histSheetB" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
           <button class="tool on" data-dock-toggle="#shellB" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-          <button class="tool" data-sheet="#histSheetB" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <div class="popover menu pop cmdpop" id="cmdMenuB">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-redo"></i> Redo <span class="sc">⇧⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
         </div>
 
         <div class="tbar">
@@ -514,7 +489,7 @@
       <div class="drail">
         <button class="drailtab" data-group="#gLayersB" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gPropsB" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
-        <button class="drailtab" data-group="#gHistory" title="History"><i class="ic sm ic-undo"></i><span class="lb">History</span></button>
+        <button class="drailtab" data-group="#gHistory" title="History"><i class="ic sm ic-history"></i><span class="lb">History</span></button>
       </div>
 
       <div class="popover menu pop" id="layerMenuB" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
@@ -591,7 +566,7 @@
                 : v.tag === "auto" ? '<span class="vtag auto">Auto</span>' : '';
         el.innerHTML =
           '<div class="vmeta"><div class="vnm">'+v.name+tag+'</div><div class="vtm">'+v.time+'</div></div>'+
-          (v.kind==="cur" ? '' : '<button class="btn ghost sm" data-restore="'+v.name+'"><i class="ic ic-undo"></i> Restore</button>');
+          (v.kind==="cur" ? '' : '<button class="btn ghost sm" data-restore="'+v.name+'"><i class="ic ic-restore"></i> Restore</button>');
         vhist.appendChild(el);
       });
       verCount.textContent = versions.length + " versions";
@@ -602,10 +577,11 @@
       state.classList.toggle("edited", on);
       state.classList.toggle("saved", !on);
       stateT.textContent = on ? "Edited" : "Saved";
+      // Save is an icon tool in the canvas action cluster now, so its state is
+      // the glyph's color plus disabled, not a .primary/.secondary swap.
       saveBtn.disabled = !on;
-      saveBtn.classList.toggle("primary", on);
-      saveBtn.classList.toggle("secondary", !on);
-      if(on){ autoRead.textContent = "Autosave on · unsaved change kept"; }
+      saveBtn.classList.toggle("dirty", on);
+      if(on && autoRead){ autoRead.textContent = "Autosave on · unsaved change kept"; }
     }
 
     function makeEdit(){
@@ -646,7 +622,7 @@
       if(!dirty) return;
       saveNo++;
       setDirty(false);
-      autoRead.textContent = "Autosave on · saved just now";
+      if(autoRead) autoRead.textContent = "Autosave on · saved just now";
       versions.forEach(function(v){ if(v.kind==="cur"){ v.kind=""; v.tag="auto"; v.time="just now"; v.name="Snapshot v"+(saveNo-1); } });
       versions.unshift({name:"Working copy", tag:"now", time:"now", kind:"cur"});
       if(versions.length>7) versions.pop();
@@ -661,7 +637,7 @@
       versions.forEach(function(v){ v.kind = (v.name===nm) ? "restored" : (v.kind==="restored"?"":v.kind); });
       renderVersions();
       setDirty(true);
-      autoRead.textContent = "Restored " + nm + " · review and save";
+      if(autoRead) autoRead.textContent = "Restored " + nm + " · review and save";
     });
 
     // export menu: the shared popover opens it, this only handles the choices
@@ -678,9 +654,13 @@
         }
         if(fmt){
           var label = fmt.getAttribute("data-export");
-          exportBtn.innerHTML = '<i class="ic ic-check"></i> Exported '+label;
+          exportBtn.innerHTML = '<i class="ic sm ic-check"></i>';
+          exportBtn.setAttribute("title", "Exported " + label);
           exMenu.classList.remove("on");
-          setTimeout(function(){ exportBtn.innerHTML = '<i class="ic ic-export"></i> Export'; }, 1400);
+          setTimeout(function(){
+            exportBtn.innerHTML = '<i class="ic sm ic-export"></i>';
+            exportBtn.setAttribute("title", "Export (\u21e7\u2318E)");
+          }, 1400);
         }
       });
     }

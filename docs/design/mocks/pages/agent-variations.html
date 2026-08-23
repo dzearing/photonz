@@ -48,8 +48,8 @@
   .vstage.gen .vwrap{display:flex}
 
   /* the grid of variation specimens */
-  .vgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
-  @media (max-width:860px){.vgrid{grid-template-columns:repeat(2,1fr)}}
+  .vgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap)}
+  @container shell (max-width:880px){ .vgrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 
   .vcell{display:flex;flex-direction:column;gap:var(--gap-sm);animation:vpop .34s cubic-bezier(.2,.7,.3,1) both}
   .vcell:nth-child(2){animation-delay:.05s}
@@ -99,14 +99,19 @@
   .lay-d .vcta{align-self:center;margin-top:var(--gap-sm)}
 
   /* selection ring + kept badge */
-  .vsel{position:absolute;inset:0;border-radius:var(--r-lg);border:2px solid #fff;box-shadow:0 0 0 3px var(--accent);pointer-events:none;opacity:0;transition:opacity .16s ease;z-index:2}
-  .vcell.kept .vsel{opacity:1}
+  /* the kept option is SELECTED, so it wears `.sel-ring` from selection.css.
+     Only its visibility is page business: never its radius or inset. */
+  #agent-variations .vcard>.sel-ring{opacity:0;transition:opacity .16s ease;z-index:2}
+  #agent-variations .vcell.kept .vcard>.sel-ring{opacity:1}
   .vcell.kept .vcard{outline-color:var(--accent)}
   .vkept{position:absolute;top:var(--gap-sm);right:var(--gap-sm);display:none;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);padding:4px 9px;border-radius:999px;z-index:3;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)}
   .vcell.kept .vkept{display:inline-flex}
+  /* Kept supersedes New: both are generation markers in the same corner, and in
+     the centered and poster layouts they landed on top of each other. */
+  #agent-variations .vcell.kept .vbadge{visibility:hidden}
 
   /* footer row under each specimen */
-  .vfoot{display:flex;align-items:center;gap:var(--gap-sm)}
+  .vfoot{display:flex;align-items:center;gap:var(--gap-sm);flex-wrap:wrap}
   .vlabel{font-size:11px;font-weight:620;color:var(--ink)}
   .vmeta{font-family:var(--mono);font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums}
   .vfoot .sp{flex:1}
@@ -117,8 +122,6 @@
   .vactions .sp{flex:1;min-width:12px}
 
   /* API line */
-  .apiline{font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--dim);background:var(--artboard);border:1px solid #20263a;border-radius:var(--r2);padding:10px 12px;overflow-x:auto;white-space:nowrap}
-  .apiline .fn{color:#7f9bff}.apiline .s{color:#7fd7a6}.apiline .p{color:#e0a5ff}.apiline .n{color:#e6b877}
 </style>
 </head>
 <body class="page">
@@ -131,37 +134,7 @@
          only) › command surface › canvas + floating tool bar › splitter › the
          one right dock, where Agent is a panel group › the rail.
          ===================================================================== -->
-    <div class="win tall cq shell" data-shell="launch-poster· 1200 × 630" data-ws="ui">
-
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>launch-poster</b><span class="meta">· 1200 × 630</span></div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#avCmd"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#avHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="avCmd" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
-            <div class="av-mlabel">Agent</div>
-            <div class="menuitem"><i class="ic ic-grid"></i> Generate variations <span class="sc">⌘⌥G</span></div>
-            <div class="menuitem"><i class="ic ic-redo"></i> Regenerate set <span class="sc">⌘⌥R</span></div>
-            <div class="menu-sep"></div>
-            <div class="av-mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="win tall cq shell" data-shell="launch-poster · 1200 × 630" data-ws="ui">
 
       <div class="edit lean" id="avShell" data-dock="open">
         <div class="cnv">
@@ -182,8 +155,8 @@
           <div class="vgrid" id="grid">
             <!-- Version A -->
             <div class="vcell" data-i="0">
-              <div class="vcard">
-                <span class="vsel"></span>
+              <div class="vcard selwrap">
+                <span class="sel-ring"></span>
                 <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
                 <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
                 <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
@@ -198,8 +171,8 @@
             </div>
             <!-- Version B -->
             <div class="vcell" data-i="1">
-              <div class="vcard">
-                <span class="vsel"></span>
+              <div class="vcard selwrap">
+                <span class="sel-ring"></span>
                 <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
                 <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
                 <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
@@ -214,8 +187,8 @@
             </div>
             <!-- Version C -->
             <div class="vcell" data-i="2">
-              <div class="vcard">
-                <span class="vsel"></span>
+              <div class="vcard selwrap">
+                <span class="sel-ring"></span>
                 <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
                 <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
                 <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
@@ -230,8 +203,8 @@
             </div>
             <!-- Version D -->
             <div class="vcell" data-i="3">
-              <div class="vcard">
-                <span class="vsel"></span>
+              <div class="vcard selwrap">
+                <span class="sel-ring"></span>
                 <span class="vkept"><i class="ic ic-check xs"></i> Kept</span>
                 <span class="vbadge"><i class="ic ic-sparkle xs"></i> New</span>
                 <div class="vbody"><div class="vh">Ship it faster.</div><p class="vsub">Capture, design, and automate in one place.</p></div>
@@ -253,14 +226,24 @@
             <button class="btn primary" id="keepDoneBtn" disabled><i class="ic ic-check"></i> Keep selected</button>
           </div>
 
-          <div class="apiline"><span class="fn">agent.variations</span>(design, {count:<span class="n">4</span>, vary:[<span class="s">"accent"</span>, <span class="s">"layout"</span>]})</div>
+          <div class="codeblk"><span class="k">agent.variations</span>(design, {count:<span class="p">4</span>, vary:[<span class="s">"accent"</span>, <span class="s">"layout"</span>]})</div>
         </div><!-- /#wrap -->
         </div><!-- /.vstage -->
         </div><!-- /.canvas -->
 
           <div class="cnv-act">
+            <button class="tool" data-sheet="#avHist" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
             <button class="tool on" data-dock-toggle="#avShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-            <button class="tool" data-sheet="#avHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          </div>
+
+          <div class="popover menu pop cmdpop" id="avCmd">
+            <div class="av-mlabel">Agent</div>
+            <div class="menuitem"><i class="ic ic-grid"></i> Generate variations <span class="sc">⌘⌥G</span></div>
+            <div class="menuitem"><i class="ic ic-redo"></i> Regenerate set <span class="sc">⌘⌥R</span></div>
+            <div class="menu-sep"></div>
+            <div class="av-mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
           </div>
 
           <!-- FLOATING TOOL BAR · D4 UI inventory -->
@@ -339,7 +322,7 @@
                 <div class="vrow2">
                   <button class="btn secondary sm" id="regenBtn" disabled><i class="ic ic-redo"></i> Regenerate</button>
                 </div>
-                <div class="apiline" style="font-size:10px;white-space:normal"><span class="fn">agent.variations</span>(design, {count:<span class="n">4</span>, vary:[<span class="s">"accent"</span>,<span class="s">"layout"</span>]})</div>
+                <div class="codeblk" style="font-size:10px"><span class="k">agent.variations</span>(design, {count:<span class="p">4</span>, vary:[<span class="s">"accent"</span>,<span class="s">"layout"</span>]})</div>
                 <p class="note" style="margin:0">Model-agnostic. A local <b>Qwen</b> (MLX) runs it privately by default; a <b>frontier model via MCP</b> when you want more. Same safe, undoable commands.</p>
               </div>
             </div>
@@ -347,17 +330,26 @@
 
           <div class="splitter h" data-min="90" data-max="320"></div>
 
-          <div class="dgrp" id="avProps" style="--gh:170px">
-            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Poster</span></div>
+          <!-- Properties reads the SELECTION. Nothing is picked until you keep
+               one, so it shows the empty state rather than a fixed set of values
+               that belong to no option on the board. -->
+          <div class="dgrp" id="avProps" data-grp="props" data-gh="md">
+            <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propsCnt">Nothing kept</span></div>
             <div class="dgrp-b">
-              <div class="section">
-                <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
-                <div class="irow"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Poster</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
-              </div>
-              <div class="section" style="border-bottom:0">
-                <div class="sec-h">Varies</div>
-                <div class="irow"><span class="rl">Accent</span><span class="select"><span class="lead">color/accent</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                <div class="irow"><span class="rl">Layout</span><span class="select"><span class="lead">layout/preset</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="empty" id="propsEmpty"><span class="g"><i class="ic lg ic-cursor"></i></span>Keep one of the options and its real values land here, the same as clicking any layer.</div>
+              <div id="propsBody" style="display:none">
+                <div class="section">
+                  <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
+                  <div class="irow"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Poster</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
+                </div>
+                <div class="section" style="border-bottom:0">
+                  <div class="sec-h">Varies</div>
+                  <div class="irow"><span class="rl">Accent</span>
+                    <span class="select"><span class="lead"><span class="sw" id="propAccentSw"></span> <span id="propAccent">violet</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                  </div>
+                  <div class="irow"><span class="rl">Layout</span><span class="select"><span class="lead" id="propLayout">editorial</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                  <div class="irow"><span class="rl">Seed</span><span class="val" id="propSeed">#1042</span></div>
+                </div>
               </div>
             </div>
           </div>
@@ -418,9 +410,17 @@
   var seedVal = document.getElementById('seedVal');
   var countVal = document.getElementById('countVal');
   var statusVal = document.getElementById('statusVal');
+  var propsCnt = document.getElementById('propsCnt');
+  var propsEmpty = document.getElementById('propsEmpty');
+  var propsBody = document.getElementById('propsBody');
+  var propAccent = document.getElementById('propAccent');
+  var propAccentSw = document.getElementById('propAccentSw');
+  var propLayout = document.getElementById('propLayout');
+  var propSeed = document.getElementById('propSeed');
 
   var ACCENTS = ['v-violet', 'v-cyan', 'v-rose', 'v-indigo'];
   var ANAMES  = ['violet', 'cyan', 'rose', 'indigo'];
+  var ASWATCH = ['#7c4dff', '#12c2e9', '#ff5d8f', '#5b6bff'];
   var LAYOUTS = ['lay-a', 'lay-b', 'lay-c', 'lay-d'];
   var LNAMES  = ['editorial', 'centered', 'stacked', 'poster'];
   var ALL = ACCENTS.concat(LAYOUTS);
@@ -448,6 +448,26 @@
     seedVal.innerHTML = '<i class="ic ic-sparkle xs"></i> seed #' + seed;
   }
 
+  // Properties is not a caption on this page: it is the inspector, so it shows
+  // the kept option's real accent, layout and seed, or the empty state.
+  function syncProps() {
+    if (kept === null) {
+      propsCnt.textContent = 'Nothing kept';
+      propsEmpty.style.display = '';
+      propsBody.style.display = 'none';
+      return;
+    }
+    var ai = (kept + offset) % 4;
+    var li = (kept + offset * 2 + Math.floor(kept / 2)) % 4;
+    propsCnt.textContent = 'Version ' + 'ABCD'[kept];
+    propAccent.textContent = ANAMES[ai];
+    propAccentSw.style.background = ASWATCH[ai];
+    propLayout.textContent = LNAMES[li];
+    propSeed.textContent = '#' + seed;
+    propsEmpty.style.display = 'none';
+    propsBody.style.display = '';
+  }
+
   function setKept(i) {
     kept = i;
     cells.forEach(function (c, k) { c.classList.toggle('kept', k === i); });
@@ -461,6 +481,7 @@
     });
     keepDoneBtn.disabled = (i === null);
     statusVal.textContent = (i === null) ? 'pick one' : 'Version ' + 'ABCD'[i] + ' kept';
+    syncProps();
   }
 
   function generate() {
@@ -509,6 +530,7 @@
     countVal.textContent = '0 variations';
     seedVal.innerHTML = '<i class="ic ic-sparkle xs" style="opacity:.6"></i> seed idle';
     statusVal.textContent = 'ready';
+    syncProps();
   }
 
   // wire the specimens: card click and Keep button both pick; dismiss removes.
@@ -526,6 +548,8 @@
     if (kept === null) return;
     statusVal.textContent = 'Version ' + 'ABCD'[kept] + ' saved';
   });
+
+  syncProps();
 })();
 </script>
 </body>

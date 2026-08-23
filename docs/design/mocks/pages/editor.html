@@ -21,43 +21,6 @@
 
   <div class="win tall cq shell" data-shell="hero-card · 1200 × 630" data-ws="ui">
 
-    <!-- TITLE BAR · document · workspace lens · document actions -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>hero-card</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar is
-         the real command surface; the mock never draws a fake one. -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
-          <div class="mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-          <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-        </div>
-      </div>
-    </div>
-
     <!-- EDITOR ROW: canvas dominant, one dock on the right -->
     <div class="edit lean" id="shell" data-dock="open">
 
@@ -82,8 +45,26 @@
         </div>
 
         <div class="cnv-act">
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
           <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
         </div>
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+            <div class="mlabel">Edit</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+            <div class="menuitem"><i class="ic ic-copy"></i> Duplicate <span class="sc">⌘D</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Layer</div>
+            <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+            <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">Window</div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+            <div class="menu-sep"></div>
+            <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⇧⌘H</span></div>
+          </div>
 
         <!-- FLOATING TOOL BAR · D4 UI inventory · overflow folds into more -->
         <div class="tbar">

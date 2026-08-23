@@ -23,19 +23,25 @@
    throws. */
 #export-share{--rail:320px}
 
-/* ---------- KIND 2 specimen card ---------- */
-#export-share .ex-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
-  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
-  box-shadow:inset 0 1px 0 var(--edge-hi);overflow:hidden}
-#export-share .ex-blk-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);
-  border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
-#export-share .ex-blk-h h3{margin:0;font-size:13.5px;font-weight:640;letter-spacing:-.01em}
-#export-share .ex-blk-h .ex-kind{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
-  font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
-#export-share .ex-blk-h .ex-sp{flex:1}
+/* ---------- KIND 2 specimen: the shared `.spec` card, and inside it the
+     shared `.dlg` sheet on its own scrim. Export IS a decision about THIS
+     document, which is the sheet's exact job (dialog.css), so the page no
+     longer draws a card that merely looks like one. `.ex-stage` stands in for
+     the editor window the sheet drops out of. ---------- */
+#export-share .ex-stage{position:relative;min-height:700px;border-radius:var(--r3);overflow:hidden;
+  background:var(--artboard);border:1px solid var(--edge-lo)}
+/* the export sheet carries a preview beside its controls, so it takes the wider
+   of the two DS widths: 320 of rail plus a preview you can actually judge */
+#export-share .dlg.wide{width:min(760px, calc(100% - var(--s7)))}
+#export-share .ex-stage .ex-behind{position:absolute;inset:0;display:grid;place-items:center;
+  font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+#export-share .ex-stage .dlg-scrim{position:absolute}
+#export-share .ex-stage .dlg.sheet{margin-top:0}
+#export-share .dlg-b{padding:0}
+#export-share .spec-h .ex-sp{flex:1}
 
 /* ---------- KIND 1 app screen: definite height so the dock is bounded ---------- */
-#export-share .win.shell{height:600px;min-height:0}#export-share .canvas>.hoscreen{width:min(320px,calc(100% - var(--s7)))}
+#export-share .win.shell{height:660px;min-height:0}#export-share .canvas>.hoscreen{width:min(320px,calc(100% - var(--s7)))}
 
 /* ---------- shared small bits ---------- */
 .eyebrow{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
@@ -44,7 +50,7 @@
 .copied{color:var(--good)!important}
 
 /* ---------- EXPORT window ---------- */
-.exgrid{display:grid;grid-template-columns:1fr var(--rail);min-height:360px}
+.exgrid{display:grid;grid-template-columns:minmax(0,1fr) var(--rail);min-height:360px}
 /* the preview IS the canvas (VISUAL RULE 5): shared .canvas.mini, retuned glow */
 .expreview{--artboard-glow:560px 380px;padding:var(--inset);border-right:1px solid var(--edge-lo);border-radius:0}
 .expreview .ex-tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.42);font-family:var(--mono)}
@@ -67,8 +73,6 @@
 .exsum .r .k{color:var(--faint);font-size:10.5px;width:64px;flex:none}
 .exsum .r .v{margin-left:auto;text-align:right}
 .exsum .r .note2{color:var(--faint);font-size:9.5px;font-family:var(--mono)}
-.exbar{height:8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);overflow:hidden;position:relative}
-.exbar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--comp) 60%,var(--accent)));transition:width .12s linear}
 .progline{display:flex;align-items:center;justify-content:space-between;font-size:10.5px}
 .exactions{display:flex;align-items:center;gap:var(--gap-sm)}
 
@@ -135,15 +139,22 @@
   <!-- ============================================================
        PART A · EXPORT: pick a format + scale, watch the output, ship a file
        ============================================================ -->
-  <!-- KIND 2 · SPECIMEN. Export is a document dialog, not a window. -->
-  <div class="ex-blk">
-    <div class="ex-blk-h">
-      <span class="ex-kind">Specimen</span>
-      <h3>Export · document dialog</h3>
-      <span class="val">opens over the editor window · ⌘⇧E</span>
+  <!-- KIND 2 · SPECIMEN. Export is a document SHEET, not a window: it drops
+       out of the title bar of the document it belongs to, so the rest of the
+       app stays alive. `.ex-stage` is the window it drops onto. -->
+  <div class="spec wide">
+    <div class="spec-h">Specimen <span class="sub">Export · a document sheet</span>
       <span class="ex-sp"></span>
       <button class="btn ghost sm" id="resetBtn"><i class="ic sm ic-undo"></i>Reset</button>
+      <span class="tag">⇧⌘E</span>
     </div>
+    <div class="spec-b">
+    <div class="ex-stage">
+      <div class="ex-behind">launch-poster · 1200 × 630</div>
+      <div class="dlg-scrim on">
+      <div class="dlg sheet wide" role="dialog" aria-label="Export">
+        <div class="dlg-h"><i class="ic ic-export"></i><b>Export launch-poster</b></div>
+        <div class="dlg-b">
 
     <div class="exgrid">
       <div class="canvas mini expreview" id="exPreview">
@@ -189,11 +200,10 @@
           <div class="r"><span class="k">Est.</span><span class="v val" id="sEst">~2.5 MB</span></div>
         </div>
 
-        <div class="exbar"><i id="progFill"></i></div>
-        <div class="progline"><span class="val" id="progLabel">Ready to export</span><span class="val" id="progPct"></span></div>
-
-        <div class="exactions">
-          <button class="btn primary" id="exportBtn" style="flex:1"><i class="ic ic-export"></i>Export</button>
+        <div class="progrow">
+          <span class="rl" id="progLabel">Ready to export</span>
+          <span class="val" id="progPct"></span>
+          <div class="prog lg" id="progBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
         </div>
       </div>
     </div>
@@ -207,7 +217,17 @@
         <button data-access="comment">Comment</button>
         <button data-access="edit"><i class="ic xs ic-pen"></i>Edit</button>
       </div>
-      <button class="btn secondary" id="copyLinkBtn"><i class="ic ic-clone"></i>Copy link</button>
+      <button class="btn secondary" id="copyLinkBtn"><i class="ic ic-copy"></i>Copy link</button>
+    </div>
+
+        </div>
+        <div class="dlg-f">
+          <button class="btn ghost" data-dialog-close>Cancel</button>
+          <button class="btn primary" id="exportBtn"><i class="ic ic-export"></i>Export</button>
+        </div>
+      </div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -231,40 +251,7 @@
        with the Measure tool active and a Specs group in the one dock. The
        title bar carries document identity only.
        ===================================================================== -->
-  <div class="win tall cq shell" data-shell="pricing-screen· 1200 × 750" data-ws="ui">
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>pricing-screen</b><span class="meta">· 1200 × 750</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#hoCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#hoHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="hoCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-          <div class="ex-mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-clone"></i> Copy CSS <span class="sc">⌘⌥C</span></div>
-          <div class="menuitem"><i class="ic ic-ruler"></i> Measure tool <span class="sc">M</span></div>
-          <div class="menu-sep"></div>
-          <div class="ex-mlabel">Document</div>
-          <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘⇧E</span></div>
-          <div class="menuitem"><i class="ic ic-import"></i> Share link…</div>
-          <div class="menu-sep"></div>
-          <div class="ex-mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-        </div>
-      </div>
-    </div>
-
+  <div class="win tall cq shell" data-shell="pricing-screen · 1200 × 750" data-ws="ui">
     <div class="edit lean" id="hoShell" data-dock="open">
       <div class="cnv">
         <div class="canvas" id="hoCanvas">
@@ -299,8 +286,21 @@
         </div>
 
         <div class="cnv-act">
+          <button class="tool" data-sheet="#hoHist" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
           <button class="tool on" data-dock-toggle="#hoShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-          <button class="tool" data-sheet="#hoHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+        </div>
+
+        <div class="popover menu pop cmdpop" id="hoCmd">
+          <div class="ex-mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy CSS <span class="sc">⌘⌥C</span></div>
+          <div class="menuitem"><i class="ic ic-ruler"></i> Measure tool <span class="sc">M</span></div>
+          <div class="menu-sep"></div>
+          <div class="ex-mlabel">Document</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⇧⌘E</span></div>
+          <div class="menuitem"><i class="ic ic-share"></i> Share link…</div>
+          <div class="menu-sep"></div>
+          <div class="ex-mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
         </div>
 
         <!-- FLOATING TOOL BAR · Measure is the active tool for hand-off -->
@@ -366,20 +366,20 @@
       <div class="pdock">
         <div class="dgrp grow" id="hoSpecs">
           <div class="dgrp-h"><span class="ttl" id="specTitle">Specs</span><span class="cnt val" id="specSub">nothing selected</span>
-            <button class="btn ghost icon sm" title="Copy all specs"><i class="ic ic-clone"></i></button>
+            <button class="btn ghost icon sm" title="Copy all specs"><i class="ic ic-copy"></i></button>
           </div>
           <div class="dgrp-b" id="specBody">
             <div class="spec-empty"><span class="g"><i class="ic lg ic-cursor"></i></span>Select an element on the canvas to read its measurements, colors, and tokens. Everything here is ready to copy straight into code.</div>
           </div>
         </div>
-        <div class="dgrp collapsed" id="hoLayers" style="--gh:150px">
+        <div class="dgrp" id="hoLayers" data-grp="layers">
           <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">5</span></div>
           <div class="dgrp-b">
-            <div class="lrow"><i class="ic ic-frame"></i><span class="nm">Plan card</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Bright ideas.</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
+            <div class="lrow" data-el="card" tabindex="0" role="button"><i class="ic ic-frame"></i><span class="nm">Plan card</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child" data-el="heading" tabindex="0" role="button"><i class="ic ic-text"></i><span class="nm">Bright ideas.</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child" data-el="badge" data-sel-class="selc" tabindex="0" role="button"><i class="ic ic-component"></i><span class="nm">Badge</span><i class="ic sm ic-component cmark"></i></div>
             <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Design once.</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-component"></i><span class="nm">Get started</span><i class="ic sm ic-component cmark"></i></div>
+            <div class="lrow child" data-el="cta" data-sel-class="selc" tabindex="0" role="button"><i class="ic ic-component"></i><span class="nm">Get started</span><i class="ic sm ic-component cmark"></i></div>
           </div>
         </div>
       </div>
@@ -416,7 +416,13 @@
     var qualLead = document.getElementById("qualLead");
     var exportBtn= document.getElementById("exportBtn");
     var resetBtn = document.getElementById("resetBtn");
-    var progFill = document.getElementById("progFill");
+    var progBar  = document.getElementById("progBar");
+    // `.prog` is driven by --pv (0..1), not by a width on an inner element
+    function setProg(pct){
+      if(!progBar) return;
+      progBar.style.setProperty("--pv", (pct/100).toFixed(3));
+      progBar.setAttribute("aria-valuenow", String(Math.round(pct)));
+    }
     var progLabel= document.getElementById("progLabel");
     var progPct  = document.getElementById("progPct");
     var preview  = document.getElementById("exPreview");
@@ -480,7 +486,7 @@
     }
 
     function resetProgress(){
-      if(progFill) progFill.style.width="0%";
+      setProg(0);
       progLabel.textContent="Ready to export";
       progPct.textContent="";
       exportBtn.disabled=false;
@@ -515,7 +521,7 @@
         p+=Math.max(4, Math.round((100-p)*0.14));
         if(p>=100){
           p=100; clearInterval(timer); timer=null;
-          progFill.style.width="100%";
+          setProg(100);
           progPct.textContent="100%";
           progLabel.textContent="Saved to ~/Photonz/exports";
           exportBtn.disabled=false;
@@ -525,7 +531,7 @@
           setTimeout(function(){ if(!timer){ resetProgress(); } }, 2200);
           return;
         }
-        progFill.style.width=p+"%";
+        setProg(p);
         progPct.textContent=p+"%";
       }, 120);
     });
@@ -567,7 +573,7 @@
       clearTimeout(copyLinkBtn._t);
       copyLinkBtn._t=setTimeout(function(){
         copyLinkBtn.classList.remove("copied");
-        copyLinkBtn.innerHTML='<i class="ic ic-clone"></i>Copy link';
+        copyLinkBtn.innerHTML='<i class="ic ic-copy"></i>Copy link';
       }, 1800);
     });
 
@@ -637,7 +643,7 @@
       }).join("");
       body.innerHTML=
         '<div class="section"><div class="sec-h"><i class="ic sm ic-ruler"></i>Measurements'+
-          '<button class="btn ghost sm" data-copy="measure" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          '<button class="btn ghost sm" data-copy="measure" style="margin-left:auto"><i class="ic sm ic-copy"></i>Copy</button></div>'+
           '<div class="specrow"><span class="k">Size</span><span class="v">'+s.size+'</span></div>'+
           '<div class="specrow"><span class="k">Position</span><span class="v">'+s.pos+'</span></div>'+
           '<div class="specrow"><span class="k">Padding</span><span class="v">'+s.pad+'</span></div>'+
@@ -645,16 +651,16 @@
           '<div class="specrow"><span class="k">Gap</span><span class="v">'+s.gap+'</span></div>'+
         '</div>'+
         '<div class="section"><div class="sec-h"><i class="ic sm ic-swatch"></i>Colors'+
-          '<button class="btn ghost sm" data-copy="color" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          '<button class="btn ghost sm" data-copy="color" style="margin-left:auto"><i class="ic sm ic-copy"></i>Copy</button></div>'+
           '<div class="specrow">'+swBlock(s.fill)+'<span class="k">Fill</span><span class="v">'+s.fill.hex+'</span></div>'+
           '<div class="specrow">'+swBlock(s.text)+'<span class="k">Text</span><span class="v">'+s.text.hex+'</span></div>'+
         '</div>'+
         '<div class="section"><div class="sec-h"><i class="ic sm ic-component"></i>Tokens'+
-          '<button class="btn ghost sm" data-copy="token" style="margin-left:auto"><i class="ic sm ic-clone"></i>Copy</button></div>'+
+          '<button class="btn ghost sm" data-copy="token" style="margin-left:auto"><i class="ic sm ic-copy"></i>Copy</button></div>'+
           tokRows+
         '</div>'+
         '<div class="section"><div class="sec-h"><i class="ic sm ic-pen"></i>CSS <span class="val" style="margin-left:auto">ready to paste</span></div>'+
-          '<div class="codecopy"><button class="btn secondary sm cp" data-copy="css"><i class="ic sm ic-clone"></i>Copy</button>'+
+          '<div class="codecopy"><button class="btn secondary sm cp" data-copy="css"><i class="ic sm ic-copy"></i>Copy</button>'+
           '<div class="codeblk">'+escapeHtml(s.code)+'</div></div>'+
         '</div>';
     }
@@ -672,15 +678,33 @@
       return s.code;
     }
 
+    // Selection shows in THREE places at once: the ring on the canvas, the row
+    // in Layers, and the Specs group. Layers rows were the missing third, so a
+    // click on the canvas left the panel disagreeing with the artboard.
+    var layerRows = document.querySelectorAll("#hoLayers .lrow[data-el]");
+
     function select(id){
       sel=id;
       canvas.querySelectorAll(".hoel").forEach(function(w){ w.classList.toggle("sel", w.getAttribute("data-el")===id); });
+      layerRows.forEach(function(r){
+        var on = r.getAttribute("data-el")===id;
+        // a component instance selects in the component colour, a layer in the
+        // accent: same selection, the row's own kind decides which class
+        r.classList.toggle(r.getAttribute("data-sel-class") || "sel", on);
+      });
       renderSpecs();
     }
 
     canvas.addEventListener("click", function(e){
       var w=e.target.closest(".hoel"); if(!w) return;
       select(w.getAttribute("data-el"));
+    });
+    // and it works the other way: clicking the row selects on the canvas
+    layerRows.forEach(function(r){
+      r.addEventListener("click", function(){ select(r.getAttribute("data-el")); });
+      r.addEventListener("keydown", function(e){
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(r.getAttribute("data-el")); }
+      });
     });
     canvas.querySelectorAll(".hoel").forEach(function(w){
       w.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(w.getAttribute("data-el")); } });
