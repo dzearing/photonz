@@ -1,0 +1,25 @@
+{
+  "feature": "Size mode: where the number lands",
+  "epic": "measure-redline",
+  "summary": "Measuring an element with one click no longer parks its number on the element it just measured, and both numbers steer around whatever sits next to it when there is room to.",
+  "setup": "Photonz Dev, Experiments window, release Next, Measure modes on. Open any screenshot, press i, set the mode chip to Size.",
+  "try": [
+    { "do": "Hover the Reset button at the bottom of the test capture and click once.", "shot": "2026-08-23-size-readout-2-neighbour-after.png" },
+    { "do": "Compare with what the same click used to give you: the height number sat on top of Save Changes.", "shot": "2026-08-23-size-readout-1-neighbour-before.png" },
+    { "do": "Hover an element that touches the bottom edge of the picture and click. The number used to land inside it.", "shot": "2026-08-23-size-readout-4-edge-after.png" },
+    { "do": "Hover a settings row in the first card and click.", "shot": "2026-08-23-size-readout-5-row.png" },
+    { "do": "Hover an element with open space around it and click: nothing about the placement should have changed." },
+    { "do": "Watch the preview while you hover, then click: the numbers must not shift between the two." }
+  ],
+  "evaluate": [
+    "When the number moves out of the way, does it still read as belonging to the measurement it came from?",
+    "For the Reset button, is dropping the height number below the buttons better than the old spot on Save Changes?",
+    "On a stack of full width settings rows there is nowhere clear, so the number stays under the row and lands in the row below. Is that the right last resort, or would you rather it went into the side margin even at the cost of hanging off the picture?",
+    "Does the pick still feel instant while you sweep the pointer across elements?"
+  ],
+  "rough": [
+    "The full width row case is unimproved: a 106 px number does not fit the 96 px margin, and rows touch, so every spot is on something. It keeps the classic on the line spot rather than jumping.",
+    "How far a number is willing to travel is a fixed rule right now: it steers around anything within reach of where it would land. On a very dense capture that could mean more travel than you want.",
+    "Only Size mode knows what it measured. A two point caliper you draw by hand still only protects its own line, because nothing tells it what the two feet were on."
+  ]
+}

@@ -183,6 +183,78 @@ struct MeasureLabelPlacementTests {
         #expect(!rect.intersects(firstRect))
     }
 
+    // MARK: - What Size mode adds: the element being measured
+
+    /// Size mode's width caliper for an element flush with the bottom of the
+    /// picture. `clearingHeadOffset` has already turned the head round over the
+    /// element (there is no margin below to reach into), so the classic
+    /// on-the-line spot is on top of the very thing being measured.
+    @Test func plannerKeepsTheReadoutOffTheElementItMeasured() {
+        let element = CGRect(x: 100, y: 320, width: 300, height: 80)
+        var m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
+                               end: CGPoint(x: element.maxX, y: element.maxY),
+                               headOffset: -31, mode: .horizontal)
+        let canvas = CGSize(width: 800, height: 400)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element])
+        m.labelPlacement = plan.placement
+        m.labelNudge = plan.nudge
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(!rect.intersects(element), "the readout sits on the element it measured: \(rect)")
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect))
+    }
+
+    /// The neighbour case: a row with another row directly below it. The head
+    /// stands clear of the measured row, but lands in the row underneath.
+    @Test func plannerSteersTheReadoutAroundTheNeighbourBelow() {
+        let element = CGRect(x: 100, y: 100, width: 300, height: 80)
+        let below = CGRect(x: 100, y: 180, width: 300, height: 80)
+        var m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
+                               end: CGPoint(x: element.maxX, y: element.maxY),
+                               headOffset: 31, mode: .horizontal)
+        let canvas = CGSize(width: 800, height: 400)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, avoiding: [below],
+                                            describing: [element])
+        m.labelPlacement = plan.placement
+        m.labelNudge = plan.nudge
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(!rect.intersects(below), "the readout sits on the neighbour: \(rect)")
+        #expect(!rect.intersects(element))
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect))
+    }
+
+    /// And the promise this must not break: a measurement with room around it
+    /// keeps the placement it has today, element or no element.
+    @Test func plannerLeavesAMeasurementWithOpenSpaceExactlyWhereItWas() {
+        let element = CGRect(x: 100, y: 100, width: 300, height: 80)
+        let m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
+                               end: CGPoint(x: element.maxX, y: element.maxY),
+                               headOffset: 31, mode: .horizontal)
+        let canvas = CGSize(width: 800, height: 400)
+        let before = MeasureLabelPlanner.plan(for: m, canvas: canvas)
+        let after = MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element])
+        #expect(after.placement == before.placement)
+        #expect(after.nudge == before.nudge)
+        #expect(after.placement == .onLine)
+    }
+
+    /// A full-bleed element flush with the bottom has nowhere clear at all:
+    /// every spot is either on the element or off the picture. The last resort
+    /// is the one you can still read - the number stays whole and on the
+    /// picture, exactly where it is today, rather than jumping off the edge.
+    @Test func aReadoutWithNowhereClearStaysWholeAndOnThePicture() {
+        let canvas = CGSize(width: 800, height: 400)
+        let element = CGRect(x: 0, y: 300, width: 800, height: 100)
+        var m = MeasureContent(start: CGPoint(x: element.minX, y: element.maxY),
+                               end: CGPoint(x: element.maxX, y: element.maxY),
+                               headOffset: -31, mode: .horizontal)
+        let plan = MeasureLabelPlanner.plan(for: m, canvas: canvas, describing: [element])
+        m.labelPlacement = plan.placement
+        m.labelNudge = plan.nudge
+        let rect = m.labelRect(chipSize: m.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: canvas).contains(rect), "the readout ran off the picture: \(rect)")
+        #expect(plan.placement == .onLine, "it jumped instead of staying put: \(plan.placement)")
+    }
+
     // MARK: - Moving a label never moves the measurement (D14 rule 5)
 
     @Test func relocatingTheReadoutLeavesTheGeometryUntouched() {

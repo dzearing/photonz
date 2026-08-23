@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:02:56.531Z",
-  "updated": "2026-08-23T22:03:52.639Z",
+  "updated": "2026-08-23T22:28:52.943Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.subjectRects only covers the measuring line for a plain caliper. EditorState.addElementSize and the Size hover preview in CanvasView both already know the element rect and could feed it to MeasureLabelPlanner.plan as an avoid rect (or a real subject). Watch the interaction with the shortened head from clearingHeadOffset: near an edge there may be nowhere clear, so the planner needs a sane last resort rather than a jump.",
@@ -26,6 +26,22 @@
     {
       "t": "2026-08-23T22:03:52.639Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T22:12:03.817Z",
+      "note": "Reproduced on the audit capture (Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png) before touching anything. Two real failures: (1) measuring the width of a settings row puts the 106x40 readout at y 246-286, squarely inside the row below (234-323); (2) for any element flush with the bottom or right of the picture the head flips inward (clearingHeadOffset last resort) and the readout lands ON the element it just measured - a sweep of 3456 element positions found this all along the bottom border."
+    },
+    {
+      "t": "2026-08-23T22:12:13.704Z",
+      "note": "Adversarial review before building. (a) The notes suggest an avoid rect; the element you just measured deserves the stronger promise, so it goes in as a real subject (never cover what you are describing), not a soft avoid. (b) Steering around the NEIGHBOUR is only possible when there is somewhere to go: a full-bleed settings row has rows touching it above and below and 96 px margins that a 106 px chip does not fit in, so the honest answer there is to stay put rather than jump into the margin half off the picture. Fallback rule: never off the picture > never on the measured element > clear of neighbours and other readouts > cover as few pixels as possible. (c) Nothing new is drawn: no new chrome, no new gesture. (d) Preview and commit must agree, so the neighbour list is computed once in the canvas and handed to both."
+    },
+    {
+      "t": "2026-08-23T22:18:07.184Z",
+      "note": "First cut of neighbour avoidance was too eager: probing below a switch on the audit capture picks up a band that overlaps the switch by 5 px (a detection artefact, not a real neighbour), and the width readout slid 93 px sideways to dodge something invisible. Tightened the rule: a neighbour has to actually start on the side it was probed from, so boxes that overlap the element are dropped rather than steered around."
+    },
+    {
+      "t": "2026-08-23T22:28:52.943Z",
+      "note": "Shipped. Core: MeasureLabelPlanner.plan gained a 'describing' list (the element Size mode just measured is treated as a subject, never covered) and an off-the-picture cost that now outranks covering the subject, so the last resort is the readable one. Core: ElementBounds.neighbors probes the four sides at two distances (touching, and as far out as the number itself travels) and drops containers and boxes that overlap the element. App: the canvas reads neighbours once per pick (memoized) and hands the same list to the hover preview and the commit, so nothing shifts on click. Verified: 1045 tests green, a 3456-position sweep of the audit capture finds zero readouts on their own element (it found them before), and rendered before/after proofs are in queue/audits."
     }
   ],
   "started": "2026-08-23T22:03:52.638Z"

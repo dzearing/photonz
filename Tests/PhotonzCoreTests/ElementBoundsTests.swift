@@ -213,6 +213,66 @@ struct ElementBoundsTests {
         #expect((ContinuousClock.now - start) / 100 < .milliseconds(10))
     }
 
+    // MARK: The neighbours (what a readout has to steer around)
+
+    /// Three settings rows stacked in a card. Measuring the middle row, the
+    /// rows touching it above and below are what a readout must not park on.
+    @Test func neighborsFindTheRowsTouchingTheOneMeasured() {
+        var c = Capture(w: 700, h: 400)
+        c.box(CGRect(x: 40, y: 40, width: 620, height: 264), border: 200, width: 1)
+        c.rule(y: 128, x0: 70, x1: 630, tone: 220)
+        c.rule(y: 216, x0: 70, x1: 630, tone: 220)
+        let middle = CGRect(x: 70, y: 128, width: 560, height: 88)
+        let found = ElementBounds.neighbors(of: middle, in: c.map, luma: c.luma)
+        #expect(found.contains { abs($0.minY - 216) <= 4 }, "no row below in \(found)")
+        #expect(found.contains { abs($0.maxY - 128) <= 4 }, "no row above in \(found)")
+    }
+
+    /// The card AROUND the row is not a neighbour: a readout cannot steer out
+    /// of a box it is standing inside, and treating it as one would only push
+    /// the number somewhere arbitrary.
+    @Test func neighborsIgnoreTheContainerTheElementSitsIn() {
+        var c = Capture(w: 700, h: 400)
+        c.box(CGRect(x: 40, y: 40, width: 620, height: 264), border: 200, width: 1)
+        c.rule(y: 128, x0: 70, x1: 630, tone: 220)
+        c.rule(y: 216, x0: 70, x1: 630, tone: 220)
+        let middle = CGRect(x: 70, y: 128, width: 560, height: 88)
+        let found = ElementBounds.neighbors(of: middle, in: c.map, luma: c.luma)
+        #expect(found.allSatisfy { !$0.contains(middle) }, "a container came back: \(found)")
+    }
+
+    @Test func neighborsOfSomethingAloneInTheOpenAreEmpty() {
+        var c = Capture(w: 400, h: 300)
+        let button = CGRect(x: 60, y: 50, width: 140, height: 70)
+        c.box(button, border: 90)
+        #expect(ElementBounds.neighbors(of: button, in: c.map, luma: c.luma).isEmpty)
+    }
+
+    /// Neighbours are read while the pointer moves, so they ride the same
+    /// budget the pick does: eight probes, and only when the pick changes.
+    @Test func readingTheNeighboursStaysInsideTheMouseMoveBudget() {
+        var c = Capture(w: 2000, h: 1500)
+        c.box(CGRect(x: 900, y: 700, width: 400, height: 200), border: 90)
+        c.box(CGRect(x: 900, y: 900, width: 400, height: 200), border: 90)
+        let map = c.map
+        let luma = c.luma
+        let element = CGRect(x: 900, y: 700, width: 400, height: 200)
+        let start = ContinuousClock.now
+        for _ in 0..<20 {
+            _ = ElementBounds.neighbors(of: element, in: map, luma: luma,
+                                        reaches: [ElementBounds.neighborProbeReach, 90])
+        }
+        // 29 ms unoptimized for eight probes on a 3-megapixel scene, and only
+        // when the pick changes (the canvas keeps the last answer), so a
+        // release build stays well under a mouse move.
+        #expect((ContinuousClock.now - start) / 20 < .milliseconds(50))
+    }
+
+    @Test func neighborsOfAnUnanalyzedImageAreEmpty() {
+        #expect(ElementBounds.neighbors(of: CGRect(x: 10, y: 10, width: 40, height: 40),
+                                        in: .empty, luma: .empty).isEmpty)
+    }
+
     // MARK: The ladder ([ and ] grow and shrink the pick)
 
     @Test func candidatesGrowOutwardFromTheInnermost() {

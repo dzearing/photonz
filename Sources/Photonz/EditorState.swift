@@ -915,12 +915,13 @@ final class EditorState {
     /// covers the thing it is measuring (UX-PATTERNS D14). `start`/`end` and any
     /// alignment items on `content` must be in document space.
     private func planReadout(_ content: inout MeasureContent, from start: CGPoint, to end: CGPoint,
-                             avoiding extra: [CGRect] = []) {
+                             avoiding extra: [CGRect] = [], describing subjects: [CGRect] = []) {
         var probe = content
         probe.start = start
         probe.end = end
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: document?.canvasSize,
-                                            avoiding: placedReadoutRects() + extra)
+                                            avoiding: placedReadoutRects() + extra,
+                                            describing: subjects)
         content.labelPlacement = plan.placement
         content.labelNudge = plan.nudge
     }
@@ -949,8 +950,14 @@ final class EditorState {
     /// mode produces. Two layers rather than a combined badge on purpose — a
     /// mode that invented its own callout would be the only one with a look of
     /// its own, and each caliper stays individually movable and deletable.
-    /// The heads point outward, away from the element, so neither sits on it.
-    func addElementSize(_ rect: CGRect) {
+    /// The heads point outward, away from the element, so neither sits on it —
+    /// and both readouts are told what the element IS, so the one case the head
+    /// cannot solve (an element flush with the edge of the picture, where the
+    /// head has to double back over it) still lands its number somewhere clear.
+    /// `neighbors` are the elements touching this one, read off the capture by
+    /// the canvas: a number parked in the next row down reads as that row's
+    /// number, so the readouts steer around them when there is room to.
+    func addElementSize(_ rect: CGRect, neighbors: [CGRect] = []) {
         guard rect.width > 0, rect.height > 0, let canvas = document?.canvasSize else { return }
         let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
         let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
@@ -962,13 +969,16 @@ final class EditorState {
         height.mode = .vertical
         height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: heightFeet.0,
                                                               to: heightFeet.1, canvas: canvas)
-        planReadout(&width, from: widthFeet.0, to: widthFeet.1)
+        planReadout(&width, from: widthFeet.0, to: widthFeet.1,
+                    avoiding: neighbors, describing: [rect])
         var widthLayer = MeasureBuilder.layer(content: width, from: widthFeet.0, to: widthFeet.1)
         // The height readout also dodges the width readout that just landed —
         // they meet at the element's corner, so they are the likeliest pair in
         // the whole app to stack.
         planReadout(&height, from: heightFeet.0, to: heightFeet.1,
-                    avoiding: [MeasureBuilder.readoutRect(of: widthLayer)].compactMap { $0 })
+                    avoiding: neighbors + [MeasureBuilder.readoutRect(of: widthLayer)]
+                        .compactMap { $0 },
+                    describing: [rect])
         var heightLayer = MeasureBuilder.layer(content: height, from: heightFeet.0, to: heightFeet.1)
         widthLayer.style = measureStyles.layerStyle
         heightLayer.style = measureStyles.layerStyle

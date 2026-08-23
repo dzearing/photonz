@@ -2,6 +2,48 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-08-23 (pm) — A size measurement no longer parks its number on what it measured
+
+Queue task `a-size-measurement-should-not-land-its-number-on` (epic
+`measure-redline`, Next). Reproduced first on the audit capture
+(`Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png`): a plain caliper's
+only subject is its own thin measuring line, so Size mode's two calipers knew
+nothing about the box they were quoting. A sweep of 3456 element positions found
+readouts sitting on their own element all along the bottom border (where
+`clearingHeadOffset` has to double the head back), and the Reset button's height
+number landed square on Save Changes.
+
+- `MeasureLabelPlanner.plan` takes `describing:` — extra subject rects the
+  caller knows about. `EditorState.addElementSize` passes the element itself.
+- The off-the-picture cost now outranks covering the subject (500 vs 400): a
+  number you cannot read is not a measurement, which is the order
+  `clearingHeadOffset` already used. That also makes the last resort sane —
+  when a full-bleed element leaves nowhere clear, everything scores the same
+  and the classic on-the-line spot wins, so nothing jumps.
+- `ElementBounds.neighbors(of:in:luma:reaches:)` reads what is around the pick:
+  four side probes at two distances (touching, and as far out as the number
+  travels), dropping containers and boxes that bleed back over the element. A
+  first cut without that filter steered a switch's number 93 px sideways to
+  dodge a detection artefact.
+- `CanvasNSView` reads neighbours once per pick (memoized) and gives the SAME
+  list to the hover preview and the commit; the preview's height readout now
+  also dodges the preview's width readout, which the commit already did.
+
+Tests: 4 planner cases in `MeasureLabelPlacementTests`, 5 in
+`ElementBoundsTests` (including an eight-probe budget guard), 3 on the real
+capture in `MeasureCalloutClearanceTests`, and the existing 3456-position sweep
+now also asserts no readout lands on its own element. Full suite green (1045).
+
+Still rough, and in the audit: a stack of full-width settings rows has nowhere
+clear at all (a 106 px number, 96 px margins, touching rows), so the width
+number keeps its spot under the row and lands in the blank part of the row
+below. Whether that or the margin is the better last resort is a question for
+the user.
+
+Audit: `queue/audits/2026-08-23-size-readout-placement.json` with rendered
+before/after proofs.
+Next: back to the queue.
+
 ## 2026-07-19 — Release v0.12.0
 
 Cut **v0.12.0** via the release skill. Preflight green (739 tests, `build-app.sh --dmg` clean). Stamped VERSION/CHANGELOG/`site/version.json`, committed `275ab37`, tagged `v0.12.0`, pushed. Release + Deploy site + CI workflows all green. Verified end-to-end: `gh release view v0.12.0` shows `Photonz.dmg`; `releases/latest/download/Photonz.dmg` returns HTTP 200; `dzearing.github.io/photonz/version.json` reports 0.12.0.

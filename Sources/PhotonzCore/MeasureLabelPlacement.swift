@@ -138,12 +138,16 @@ extension MeasureContent {
 /// the way.
 public enum MeasureLabelPlanner {
 
+    /// Running off the picture is the worst thing a readout can do: a number
+    /// you cannot read is not a measurement at all, so this outranks even
+    /// covering the subject — the same order `clearingHeadOffset` already uses
+    /// when it turns a head round rather than hang the chip off the edge.
+    private static let offCanvasPenalty: CGFloat = 500
     /// A readout that covers what it is describing is disqualifying.
     private static let subjectPenalty: CGFloat = 400
-    /// Covering another readout is bad, but not as bad as covering the subject.
+    /// Covering another readout, or a neighbouring element, is bad, but not as
+    /// bad as covering the subject.
     private static let overlapPenalty: CGFloat = 120
-    /// Falling off the canvas costs more than any relocation.
-    private static let offCanvasPenalty: CGFloat = 60
     /// Each step down the preference order.
     private static let rankPenalty: CGFloat = 4
     /// Each nudge step away from centre.
@@ -157,11 +161,20 @@ public enum MeasureLabelPlanner {
     /// The placement for `content`, whose feet, alignment items and `others`
     /// must all be in the same coordinate space (document space at placement
     /// time). `canvas` is that space's bounds; pass nil to skip the edge check.
+    ///
+    /// `describing` is what this measurement is ABOUT, when the caller knows
+    /// more than the geometry does. A caliper on its own only knows its thin
+    /// measuring line, so Size mode hands it the element it just measured and
+    /// the readout treats that whole box the way it treats the line: never sit
+    /// on it. `avoiding` is the softer list — other readouts, neighbouring
+    /// elements — steered around when there is room and tolerated when there
+    /// is not.
     public static func plan(for content: MeasureContent, canvas: CGSize? = nil,
-                            avoiding others: [CGRect] = []) -> Plan {
+                            avoiding others: [CGRect] = [],
+                            describing extraSubjects: [CGRect] = []) -> Plan {
         let chip = content.estimatedLabelSize
         guard content.showLabel else { return (.onLine, 0) }
-        let subjects = content.subjectRects
+        let subjects = content.subjectRects + extraSubjects
         let bounds = canvas.map { CGRect(origin: .zero, size: $0) }
         let step = content.chipAxisHalfExtent(chipSize: chip) + MeasureContent.chipLineGap
 

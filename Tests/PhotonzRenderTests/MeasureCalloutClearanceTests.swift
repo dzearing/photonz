@@ -91,8 +91,12 @@ struct MeasureCalloutClearanceTests {
     }
 
     /// Size mode's two calipers for an element, placed exactly the way
-    /// `EditorState.addElementSize` places them.
-    private func elementSize(_ rect: CGRect) -> (width: MeasureContent, height: MeasureContent) {
+    /// `EditorState.addElementSize` places them: each readout knows the element
+    /// it is describing, both steer around the neighbours the canvas read off
+    /// the capture, and the height one also dodges the width one.
+    private func elementSize(_ rect: CGRect,
+                             neighbors: [CGRect]? = nil) -> (width: MeasureContent,
+                                                             height: MeasureContent) {
         let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
         let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
         func caliper(_ mode: MeasureMode, _ feet: (CGPoint, CGPoint),
@@ -102,15 +106,88 @@ struct MeasureCalloutClearanceTests {
                                                              canvas: Self.canvas)
             c.start = feet.0
             c.end = feet.1
-            let plan = MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, avoiding: others)
+            let plan = MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, avoiding: others,
+                                                describing: [rect])
             c.labelPlacement = plan.placement
             c.labelNudge = plan.nudge
             return c
         }
-        let w = caliper(.horizontal, widthFeet, avoiding: [])
+        let around = neighbors ?? []
+        let w = caliper(.horizontal, widthFeet, avoiding: around)
         let h = caliper(.vertical, heightFeet,
-                        avoiding: [w.labelRect(chipSize: w.estimatedLabelSize)])
+                        avoiding: around + [w.labelRect(chipSize: w.estimatedLabelSize)])
         return (w, h)
+    }
+
+    /// What the canvas hands the planner: the elements touching the pick, plus
+    /// whatever sits as far out as a number would travel. Mirrors
+    /// `CanvasView.neighbors(of:reach:)`.
+    private func neighbors(of rect: CGRect) -> [CGRect] {
+        var w = MeasureContent(mode: .horizontal, unit: .points)
+        w.start = CGPoint(x: rect.minX, y: rect.maxY)
+        w.end = CGPoint(x: rect.maxX, y: rect.maxY)
+        var h = MeasureContent(mode: .vertical, unit: .points)
+        h.start = CGPoint(x: rect.maxX, y: rect.minY)
+        h.end = CGPoint(x: rect.maxX, y: rect.maxY)
+        let wHead = MeasureBuilder.clearingHeadOffset(content: w, from: w.start, to: w.end,
+                                                      canvas: Self.canvas)
+        let hHead = MeasureBuilder.clearingHeadOffset(content: h, from: h.start, to: h.end,
+                                                      canvas: Self.canvas)
+        let reach = max(abs(wHead) + w.estimatedLabelSize.height / 2,
+                        abs(hHead) + h.estimatedLabelSize.width / 2)
+        return ElementBounds.neighbors(of: rect, in: Self.analysis.edges, luma: Self.analysis.luma,
+                                       reaches: [ElementBounds.neighborProbeReach, Double(reach)])
+    }
+
+    /// The element the pointer lands on at `point`, read off the capture the
+    /// same way Size mode reads it.
+    private func element(at point: CGPoint) -> CGRect? {
+        ElementBounds.candidates(at: point, in: Self.analysis.edges,
+                                 luma: Self.analysis.luma).first
+    }
+
+    // MARK: - Size mode: the number never lands on what it just measured
+
+    /// Point at a settings row, press once: neither number may sit on the row.
+    @Test func theSizeOfASettingsRowKeepsBothNumbersOffTheRow() {
+        guard let row = element(at: CGPoint(x: 700, y: 192)) else {
+            Issue.record("no row detected on the capture")
+            return
+        }
+        let pair = elementSize(row, neighbors: neighbors(of: row))
+        for c in [pair.width, pair.height] {
+            let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+            #expect(!chip.intersects(row), "the \(c.mode) readout sits on the row: \(chip)")
+            #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip))
+        }
+    }
+
+    /// The Reset button, with Save Changes 25 px to its right: the height
+    /// number reaches out over the neighbour unless it is told to steer.
+    @Test func theHeightOfAButtonKeepsItsNumberOffTheButtonBesideIt() {
+        guard let reset = element(at: CGPoint(x: 136, y: 786)) else {
+            Issue.record("no button detected on the capture")
+            return
+        }
+        let around = neighbors(of: reset)
+        #expect(around.contains { $0.minX > reset.maxX }, "the button beside it was not seen")
+        let height = elementSize(reset, neighbors: around).height
+        let chip = height.labelRect(chipSize: height.estimatedLabelSize)
+        for neighbor in around {
+            #expect(!chip.intersects(neighbor), "the readout sits on a neighbour: \(chip)")
+        }
+        #expect(!chip.intersects(reset))
+    }
+
+    /// And the promise that keeps this from being a nuisance: measuring
+    /// something with room around it does not move the number at all.
+    @Test func anElementWithRoomAroundItKeepsThePlacementItAlwaysHad() {
+        let button = CGRect(x: 400, y: 400, width: 248, height: 60)
+        let pair = elementSize(button, neighbors: neighbors(of: button))
+        #expect(pair.width.labelPlacement == .onLine)
+        #expect(pair.width.labelNudge == 0)
+        #expect(pair.height.labelPlacement == .onLine)
+        #expect(pair.height.labelNudge == 0)
     }
 
     /// The right-most element on the capture: the settings card, whose edge is
@@ -169,7 +246,7 @@ struct MeasureCalloutClearanceTests {
     }
 
     /// Every element Size mode can be pointed at, anywhere on the capture,
-    /// keeps its whole number on the picture. The edge cases are not a handful
+    /// keeps its whole number on the picture and off the element itself. The edge cases are not a handful
     /// of positions, they are a whole border, so this sweeps it.
     @Test func noElementAnywhereOnTheCaptureHangsItsNumberOffTheEdge() {
         let bounds = CGRect(origin: .zero, size: Self.canvas)
@@ -185,14 +262,20 @@ struct MeasureCalloutClearanceTests {
                     let pair = elementSize(rect)
                     for c in [pair.width, pair.height] {
                         let chip = c.labelRect(chipSize: c.estimatedLabelSize)
-                        if !bounds.contains(chip) && offenders.count < 8 {
+                        // A full-bleed element leaves nowhere clear at all, and
+                        // a number you can read beats a number that is out of
+                        // the way: those keep the classic spot on the line.
+                        let boxedIn = rect.width >= Self.canvas.width - 8
+                            || rect.height >= Self.canvas.height - 8
+                        let bad = !bounds.contains(chip) || (!boxedIn && chip.intersects(rect))
+                        if bad && offenders.count < 8 {
                             offenders.append("\(rect) \(c.mode) head=\(c.headOffset) chip=\(chip)")
                         }
                     }
                 }
             }
         }
-        #expect(offenders.isEmpty, "readouts off the canvas: \(offenders)")
+        #expect(offenders.isEmpty, "readouts off the canvas or on their own element: \(offenders)")
     }
 
     /// Size mode drops a width and a height caliper on the same element; their

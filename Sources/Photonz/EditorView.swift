@@ -211,7 +211,7 @@ struct EditorView: View {
                        onMeasureEndpointPreview: { editorState.previewMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
                        onMeasureEndpointCommit: { editorState.commitMeasureEndpoints(id: $0, start: $1, end: $2, headOffset: $3) },
                        onAlignmentCommit: { editorState.addAlignmentCheck(axis: $0, position: $1, span: $2) },
-                       onElementSizeCommit: { editorState.addElementSize($0) },
+                       onElementSizeCommit: { editorState.addElementSize($0, neighbors: $1) },
                        onGapCommit: { editorState.addGapMeasure($0) },
                        onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
                        onToolChange: { editorState.setTool($0) },

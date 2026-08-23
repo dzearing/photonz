@@ -109,6 +109,27 @@ from the image edge has room for the number in its margin, and the older
 straight-to-flip rule parked that number on the switch it had just measured.
 `canvasEdgeGap` keeps the pill from kissing the edge.
 
+When even that leaves the head over the element — an element flush with the
+picture's edge — the head has done all it can and the readout planner finishes
+the job. `MeasureLabelPlanner.plan(..., describing:)` takes the rects a
+measurement is ABOUT, and Size mode hands it the element it just measured: a
+caliper on its own only knows its thin measuring line, so without this the
+number happily sits on the box it is quoting. The planner's costs run, worst
+first: off the picture (a number you cannot read is not a measurement), on the
+subject, on a neighbour or another readout, then rank and travel. That order is
+what makes the last resort sane — when a full-bleed element leaves nowhere
+clear, every option is equally bad and the classic on-the-line spot wins, so
+nothing jumps.
+
+**Neighbours.** `ElementBounds.neighbors(of:in:luma:reaches:)` probes the middle
+of each side at two distances — one close enough to catch what is touching the
+element, one as far out as the number itself travels — and drops anything that
+swallows the element or bleeds back over it (a container is not something a
+readout can steer out of, and a band read off the picture is not a neighbour).
+`CanvasNSView` reads them once per pick, keeps the answer while the pointer
+stays inside that element, and hands the SAME list to the hover preview and to
+`EditorState.addElementSize`, so the numbers cannot shift on click.
+
 **Overlay chrome only.** The Size/Gap preview is canvas overlay layers in
 `CanvasNSView` (like the snap dot and guides), rasterized through the real
 caliper pipeline so the preview and the commit cannot disagree. It never enters

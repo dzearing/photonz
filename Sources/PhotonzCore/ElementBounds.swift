@@ -211,6 +211,72 @@ public enum ElementBounds {
         return outward ? hits.map(\.bound).min() : hits.map(\.bound).max()
     }
 
+    /// How far past an element's edge the neighbour probe stands. Far enough
+    /// to be properly inside whatever is touching it (`probeMargin` is 4), close
+    /// enough that it reads the row against this one rather than something
+    /// across the page.
+    public static let neighborProbeReach: Double = 12
+
+    /// What is immediately AROUND `rect`: the row under a row, the button beside
+    /// a button. Size mode hands these to the readout planner, because a number
+    /// parked in the next row down reads as that row's number even when the
+    /// pixels underneath it happen to be blank.
+    ///
+    /// One probe just past the middle of each side, at each distance in
+    /// `reaches`, innermost pick only. Two distances is the usual call: one
+    /// close enough to find what is touching the element, one as far out as the
+    /// number itself will travel, so a button 30 px away is still seen.
+    /// Anything that swallows the element — its card, the window behind it — is
+    /// dropped: a readout cannot steer out of a box it is standing inside, and
+    /// pretending otherwise would only push the number somewhere arbitrary.
+    public static func neighbors(of rect: CGRect, in edges: EdgeMap, luma: LumaField,
+                                 maxRadius: Double = defaultMaxRadius,
+                                 spanRadius: Double = defaultSpanRadius,
+                                 minElement: Double = defaultMinElement,
+                                 reaches: [Double] = [neighborProbeReach]) -> [CGRect] {
+        guard !edges.isEmpty, !luma.isEmpty, rect.width > 0, rect.height > 0 else { return [] }
+        let slack = CGFloat(probeSlack)
+        var found: [CGRect] = []
+        for reach in reaches {
+            probe(rect, reach: CGFloat(reach), slack: slack, into: &found, in: edges, luma: luma,
+                  maxRadius: maxRadius, spanRadius: spanRadius, minElement: minElement)
+        }
+        return found
+    }
+
+    /// The four probes at one distance, appending whatever is new to `found`.
+    private static func probe(_ rect: CGRect, reach r: CGFloat, slack: CGFloat,
+                              into found: inout [CGRect], in edges: EdgeMap, luma: LumaField,
+                              maxRadius: Double, spanRadius: Double, minElement: Double) {
+        // Each probe carries the test for what a neighbour on THAT side looks
+        // like: it has to begin where the element ends. A box that reaches back
+        // across the element is a band read off the picture, not the row next
+        // door, and steering a number around something invisible is worse than
+        // leaving it where it belongs.
+        let probes: [(point: CGPoint, beyond: (CGRect) -> Bool)] = [
+            (CGPoint(x: rect.midX, y: rect.minY - r), { $0.maxY <= rect.minY + slack }),
+            (CGPoint(x: rect.midX, y: rect.maxY + r), { $0.minY >= rect.maxY - slack }),
+            (CGPoint(x: rect.minX - r, y: rect.midY), { $0.maxX <= rect.minX + slack }),
+            (CGPoint(x: rect.maxX + r, y: rect.midY), { $0.minX >= rect.maxX - slack }),
+        ]
+        for probe in probes {
+            guard probe.point.x >= 0, probe.point.y >= 0,
+                  Double(probe.point.x) < Double(edges.width),
+                  Double(probe.point.y) < Double(edges.height),
+                  let hit = detect(at: probe.point, in: edges, luma: luma, maxRadius: maxRadius,
+                                   spanRadius: spanRadius, minElement: minElement),
+                  probe.beyond(hit),
+                  !found.contains(where: { $0.insetBy(dx: -slack, dy: -slack).contains(hit) })
+            else { continue }
+            found.append(hit)
+        }
+    }
+
+    /// How far a neighbour may bleed back over the element before it stops
+    /// being a neighbour. A painted border has two flanks and detection can
+    /// name either, so a couple of pixels of slop is the picture, not a nest.
+    private static let probeSlack: Double = 3
+
     /// The gap under `point`: the two facing edges of whatever sits on either
     /// side of it, across the tighter of the two axes. Nil when neither axis has
     /// a pair of edges to read.

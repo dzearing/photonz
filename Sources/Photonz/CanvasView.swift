@@ -105,8 +105,10 @@ struct CanvasView: NSViewRepresentable {
     /// Completed alignment-guide drag: (guide axis, cross-axis position,
     /// along-axis span), all in document coordinates.
     let onAlignmentCommit: (MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void
-    /// Size mode's click: the element rect to turn into width + height calipers.
-    let onElementSizeCommit: (CGRect) -> Void
+    /// Size mode's click: the element rect to turn into width + height
+    /// calipers, plus the elements touching it, which the two readouts steer
+    /// around so neither number reads as the neighbour's.
+    let onElementSizeCommit: (CGRect, [CGRect]) -> Void
     /// Gap mode's click: the whitespace reading to turn into one caliper.
     let onGapCommit: (GapMeasurement) -> Void
     /// `[` / `]` moved Size mode's pick to a different rung.
@@ -224,7 +226,7 @@ final class CanvasNSView: NSView {
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
-    var onElementSizeCommit: ((CGRect) -> Void) = { _ in }
+    var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
     var onGapCommit: ((GapMeasurement) -> Void) = { _ in }
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat) -> Void) = { _, _, _, _ in }
@@ -429,6 +431,11 @@ final class CanvasNSView: NSView {
     /// The rect Size mode is previewing right now — exactly what a click
     /// commits, so what you see and what you get can never disagree.
     private var measureElementPreview: CGRect?
+    /// The elements touching that rect, read off the capture. Detection costs
+    /// real milliseconds and the pick only changes when the pointer crosses
+    /// into another element, so the answer is kept until it does.
+    private var measureElementNeighbors: [CGRect] = []
+    private var measureNeighborCache: (rect: CGRect, reach: CGFloat, neighbors: [CGRect])?
     /// The gap Gap mode is previewing right now, same contract.
     private var measureGapPreview: GapMeasurement?
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
@@ -1074,6 +1081,7 @@ final class CanvasNSView: NSView {
         hoverWidthCaliperLayer.isHidden = true
         hoverHeightCaliperLayer.isHidden = true
         measureElementPreview = nil
+        measureElementNeighbors = []
         measureGapPreview = nil
     }
 
@@ -1087,6 +1095,7 @@ final class CanvasNSView: NSView {
     /// the thing you were looking at.
     private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
         measureElementPreview = nil
+        measureElementNeighbors = []
         measureGapPreview = nil
         guard tool == .measure, measurePlacement == nil,
               measureToolMode.previewsUnderPointer,
@@ -1128,6 +1137,23 @@ final class CanvasNSView: NSView {
         }
     }
 
+    /// The elements around the picked one, so the two readouts can steer around
+    /// them: what is touching it, and what sits as far out as the number itself
+    /// will travel, since a button half a chip away is just as much in the way.
+    /// Detection costs milliseconds per probe and the pick holds still while
+    /// the pointer wanders inside one element, so the last answer is reused
+    /// until the pick actually changes.
+    private func neighbors(of rect: CGRect, reach: CGFloat) -> [CGRect] {
+        if let cached = measureNeighborCache, cached.rect == rect, cached.reach == reach {
+            return cached.neighbors
+        }
+        let found = ElementBounds.neighbors(of: rect, in: edgeMap, luma: lumaField,
+                                            reaches: [ElementBounds.neighborProbeReach,
+                                                      Double(reach)])
+        measureNeighborCache = (rect, reach, found)
+        return found
+    }
+
     /// Size mode's preview: the picked element outlined in the measure ink, with
     /// the width and height calipers a click would leave behind.
     private func drawElementPreview(_ rect: CGRect, style: MeasureContent,
@@ -1160,20 +1186,32 @@ final class CanvasNSView: NSView {
         widthStyle.mode = .horizontal
         var heightStyle = style
         heightStyle.mode = .vertical
-        layoutHoverCaliper(hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
-                           style: style, mode: .horizontal,
-                           from: widthFeet.0, to: widthFeet.1,
-                           headOffset: MeasureBuilder.clearingHeadOffset(
-                               content: widthStyle, from: widthFeet.0, to: widthFeet.1,
-                               canvas: canvas),
-                           viewport: viewport, pixelScale: pixelScale)
-        layoutHoverCaliper(hoverHeightCaliperLayer, sprite: &hoverHeightSprite,
-                           style: style, mode: .vertical,
-                           from: heightFeet.0, to: heightFeet.1,
-                           headOffset: MeasureBuilder.clearingHeadOffset(
-                               content: heightStyle, from: heightFeet.0, to: heightFeet.1,
-                               canvas: canvas),
-                           viewport: viewport, pixelScale: pixelScale)
+        let widthHead = MeasureBuilder.clearingHeadOffset(content: widthStyle, from: widthFeet.0,
+                                                          to: widthFeet.1, canvas: canvas)
+        let heightHead = MeasureBuilder.clearingHeadOffset(content: heightStyle, from: heightFeet.0,
+                                                           to: heightFeet.1, canvas: canvas)
+        // Both readouts are told the element itself is off limits, and steer
+        // around whatever sits within reach of where a number would land; the
+        // height number also dodges the width number, exactly the order the
+        // commit uses, so nothing shifts between the preview and the click.
+        let widthChip = widthStyle.estimatedLabelSize
+        let heightChip = heightStyle.estimatedLabelSize
+        let reach = max(abs(widthHead) + widthChip.height / 2,
+                        abs(heightHead) + heightChip.width / 2)
+        let neighbors = neighbors(of: rect, reach: reach)
+        measureElementNeighbors = neighbors
+        let widthReadout = layoutHoverCaliper(
+            hoverWidthCaliperLayer, sprite: &hoverWidthSprite,
+            style: style, mode: .horizontal,
+            from: widthFeet.0, to: widthFeet.1, headOffset: widthHead,
+            viewport: viewport, pixelScale: pixelScale,
+            avoiding: neighbors, describing: [rect])
+        layoutHoverCaliper(
+            hoverHeightCaliperLayer, sprite: &hoverHeightSprite,
+            style: style, mode: .vertical,
+            from: heightFeet.0, to: heightFeet.1, headOffset: heightHead,
+            viewport: viewport, pixelScale: pixelScale,
+            avoiding: neighbors + [widthReadout].compactMap { $0 }, describing: [rect])
     }
 
     /// Gap mode's preview: one caliper across the whitespace, no outline — there
@@ -1200,10 +1238,13 @@ final class CanvasNSView: NSView {
     /// `MeasureBuilder`/`MeasureRasterizer` pipeline a committed caliper uses so
     /// the readout (chip, unit, decimals, ink) matches a real measure exactly.
     /// The raster is cached until the measured span or style actually changes.
+    @discardableResult
     private func layoutHoverCaliper(_ caliperLayer: CALayer, sprite: inout HoverCaliperSprite?,
                                     style: MeasureContent, mode: MeasureMode,
                                     from start: CGPoint, to end: CGPoint, headOffset: CGFloat,
-                                    viewport: Viewport, pixelScale: CGFloat) {
+                                    viewport: Viewport, pixelScale: CGFloat,
+                                    avoiding extra: [CGRect] = [],
+                                    describing subjects: [CGRect] = []) -> CGRect? {
         var content = style
         content.mode = mode
         content.headOffset = headOffset
@@ -1214,9 +1255,13 @@ final class CanvasNSView: NSView {
         probe.start = start
         probe.end = end
         let plan = MeasureLabelPlanner.plan(for: probe, canvas: viewport.documentSize,
-                                            avoiding: placedReadoutRects())
+                                            avoiding: placedReadoutRects() + extra,
+                                            describing: subjects)
         content.labelPlacement = plan.placement
         content.labelNudge = plan.nudge
+        probe.labelPlacement = plan.placement
+        probe.labelNudge = plan.nudge
+        let readout = probe.labelRect(chipSize: probe.estimatedLabelSize)
         let built = MeasureBuilder.layer(content: content, from: start, to: end)
         let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
             + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
@@ -1228,17 +1273,18 @@ final class CanvasNSView: NSView {
                                                           pixelScale: pixelScale) else {
                 sprite = nil
                 caliperLayer.isHidden = true
-                return
+                return nil
             }
             sprite = HoverCaliperSprite(key: key, image: image, frame: built.frame)
         }
-        guard let sprite else { return }
+        guard let sprite else { return nil }
         caliperLayer.contents = sprite.image
         let origin = viewport.viewPoint(fromDocument: sprite.frame.origin)
         caliperLayer.frame = CGRect(x: origin.x, y: origin.y,
                                     width: sprite.frame.width * viewport.zoom,
                                     height: sprite.frame.height * viewport.zoom)
         caliperLayer.isHidden = false
+        return readout
     }
 
     /// Every readout already on the canvas, in document space — what a hovered
@@ -1789,8 +1835,11 @@ final class CanvasNSView: NSView {
             // no-op rather than dropping a caliper somewhere arbitrary.
             refreshMeasureCreation(modifierFlags: event.modifierFlags)
             if let rect = measureElementPreview {
+                // Grab what the preview steered around before the preview goes:
+                // the commit has to place the readouts against the same picture.
+                let around = measureElementNeighbors
                 hideMeasureHoverReadout()
-                onElementSizeCommit(rect)
+                onElementSizeCommit(rect, around)
             } else if let gap = measureGapPreview {
                 hideMeasureHoverReadout()
                 onGapCommit(gap)
