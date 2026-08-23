@@ -67,7 +67,17 @@
 /* --- micro section label (35 pages) ------------------------------------
    The 9px uppercase caption above a group of rows inside a panel or menu.
    Smaller and quieter than .dgrp-h; it labels a run of rows, not a group. */
-.mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 10px 3px}
+/* A CAPTION ALIGNS WITH WHAT IT CAPTIONS, so it does not carry a horizontal
+   inset of its own. It used to hard-code 10px, which was a guess about the
+   container: an off-scale value that matched nothing. Its commonest companion,
+   .menuitem, insets by --pad-sm (12), so the label sat 2px left of every menu
+   row it labelled; and in any container WITHOUT row padding (a dialog section,
+   a facts grid) it stuck out to the right of its own content, which is how the
+   bug was finally noticed. Now it inherits its container's edge, and the two
+   contexts that pad their rows restate that padding so label and row share one
+   left edge. */
+.mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 0 3px}
+.menu>.mlabel,.popover>.mlabel{padding-left:var(--pad-sm);padding-right:var(--pad-sm)}
 
 /* --- inspector row label (8 pages) -------------------------------------
    `.rl` was already defined twice here, but only as `.row .rl` and
