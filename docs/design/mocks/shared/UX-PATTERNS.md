@@ -927,3 +927,36 @@ is.
 **Leaving is immediate.** The crosshair, the dots, and the readout all disappear
 the moment the pointer leaves the plot: a stale crosshair pointing at a value
 you are no longer asking about is worse than none.
+
+---
+
+### D14 — A callout never covers what it is talking about
+
+An annotation on the canvas exists to explain something in the picture. The
+moment it sits on top of that something, it has destroyed the evidence for its
+own claim. This is not a polish item: an alignment chip reading "off 5 px" was
+drawn at the midpoint of its own guide, which is exactly where the misaligned
+label was, so the one element you needed to look at was the one hidden.
+
+The rule is the same one the tooltip placement law states (D12), applied to the
+canvas, and it governs every annotation the measure tools draw: the alignment
+verdict, caliper value chips, gap labels, hover outlines and the role legend.
+
+1. **Never overlap the subject.** The elements being measured, checked or
+   compared stay fully visible. If the only place a label fits is on top of its
+   subject, the label moves; the subject does not.
+2. **Prefer the empty side.** Put the callout in whitespace: outside the span of
+   the checked elements, beyond the end of a guide, or on the side of a caliper
+   where nothing is drawn. Whitespace is where a label costs nothing.
+3. **Stay attached.** A callout that has moved must still read as belonging to
+   its subject: a leader line, a tick, or simple adjacency. Moving it is not
+   permission to orphan it.
+4. **Never cover another annotation either.** Two measurements close together
+   nudge their labels apart rather than stacking, because two overlapping
+   numbers are worse than one.
+5. **Keep the geometry honest.** Moving a label must never move what it
+   describes. The guide, the ticks and the connector stay exactly where the
+   measurement is; only the readout relocates.
+
+The test for any annotation: cover the callout with your thumb, and the picture
+should still show everything the callout is claiming.
