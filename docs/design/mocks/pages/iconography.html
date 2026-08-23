@@ -19,22 +19,13 @@
     padding:var(--gap-sm) var(--pad-sm);margin:0 calc(var(--pad-sm) * -1);
     background:var(--glass-thick);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
     border-bottom:1px solid var(--line);border-radius:var(--r3)}
-  #iconography .sfield{position:relative;flex:1;min-width:0;display:flex;align-items:center}
-  #iconography .sfield>.ic{position:absolute;left:10px;color:var(--faint);pointer-events:none}
-  #iconography .sfield input{width:100%;font-family:var(--sans);font-size:12.5px;color:var(--ink);
-    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r2);
-    padding:7px 30px 7px 30px;outline:none}
-  #iconography .sfield input::placeholder{color:var(--faint)}
-  #iconography .sfield input:focus{border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
-  #iconography .sclear{position:absolute;right:6px;display:none;border:0;background:transparent;color:var(--faint);
-    padding:4px;border-radius:var(--r1);cursor:pointer;line-height:0}
-  #iconography .sclear:hover{color:var(--ink);background:var(--panel)}
-  #iconography .finder.has .sclear{display:block}
-  #iconography .sizeseg{display:flex;gap:2px;background:var(--panel-2);border:1px solid var(--line);
-    border-radius:var(--r2);padding:2px;flex:none}
-  #iconography .sizeseg button{border:0;background:transparent;color:var(--dim);font-family:var(--mono);
-    font-size:10.5px;font-weight:600;padding:4px 8px;border-radius:calc(var(--r2) - 3px);cursor:pointer}
-  #iconography .sizeseg button.on{background:var(--panel);color:var(--ink);box-shadow:var(--shadow-sm)}
+  /* The finder used to hand-roll its search box and its size switch. Both are DS
+     controls (`.input.search` in input.css, `.seg.sm` in segmented.css), so they
+     are used directly now and the page only refines what is genuinely local:
+     the field takes the leftover width, and the size chips are numbers, so they
+     read in the mono face like every other measurement in the study. */
+  #iconography .finder>.input.search{flex:1;min-width:0}
+  #iconography .sizeseg>button{font-family:var(--mono);font-variant-numeric:tabular-nums}
   #iconography .fcount{font-family:var(--mono);font-size:10.5px;color:var(--faint);flex:none;
     font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
 
@@ -137,13 +128,14 @@
   #iconography .ctxrow{display:flex;align-items:center;gap:var(--gap);flex-wrap:wrap}
   #iconography .ctxlab{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
     font-weight:660;width:74px;flex:none}
-  /* the real floating tool bar, borrowed from .cnv > .tbar so the specimen is
-     the surface these glyphs actually ship on */
-  #iconography .faketbar{display:flex;align-items:center;gap:var(--s1);padding:var(--s1) var(--s2);
-    border:1px solid var(--edge-lo);border-radius:999px;background:var(--glass-chrome);
-    backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
-    box-shadow:inset 0 1px 0 var(--edge-hi), var(--lg-shadow)}
-  #iconography .faketbar .tool{border-radius:50%;width:30px}
+  /* The tool bar here used to be a hand-drawn copy of `.cnv > .tbar` that also
+     reshaped `.tool` into a circle, so the one place the library says "judge a
+     glyph next to its real neighbours" was showing a control the app does not
+     have. It is the real thing now: a slice of canvas (`.cnv > .canvas`) with
+     the real floating bar over it, exactly as `lang-toolbars` does it. */
+  #iconography .icx-plinth{height:132px;width:min(420px,100%);border-radius:var(--r3);
+    overflow:hidden;border:1px solid var(--edge-lo);flex:none}
+  #iconography .icx-plinth .canvas{min-height:0;flex:1 1 auto}
   #iconography .fauxlist{width:220px;border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
 
   /* 4 · weight comparison */
@@ -170,12 +162,12 @@
 
     <!-- ============ THE LIBRARY ============ -->
     <div class="finder" id="finder">
-      <label class="sfield">
+      <label class="input search">
         <i class="ic sm ic-search"></i>
-        <input id="isearch" type="search" placeholder="Search icons by name, meaning or keyword" autocomplete="off" spellcheck="false">
-        <button class="sclear" id="iclear" aria-label="Clear search"><i class="ic sm ic-x"></i></button>
+        <input id="isearch" type="search" name="icon-search" placeholder="Search icons by name, meaning or keyword" autocomplete="off" spellcheck="false">
+        <button class="clr" id="iclear" type="button" aria-label="Clear search"><i class="ic ic-x"></i></button>
       </label>
-      <div class="sizeseg" id="isize">
+      <div class="seg sm sizeseg" id="isize" data-radio="button" role="radiogroup" aria-label="Icon size">
         <button data-size="12">12</button>
         <button data-size="16">16</button>
         <button data-size="22" class="on">22</button>
@@ -574,20 +566,27 @@
         <div class="ctx">
           <div class="ctxrow">
             <span class="ctxlab">Tool bar</span>
-            <div class="faketbar">
-              <button class="tool on" title="Select"><i class="ic ic-cursor"></i></button>
-              <button class="tool" title="Marquee"><i class="ic ic-marquee-rect"></i></button>
-              <button class="tool" title="Pen"><i class="ic ic-pen"></i></button>
-              <button class="tool" title="Brush"><i class="ic ic-brush"></i></button>
-              <button class="tool" title="Text"><i class="ic ic-text"></i></button>
-              <button class="tool" title="Crop"><i class="ic ic-crop"></i></button>
-              <button class="tool" title="Measure"><i class="ic ic-ruler"></i></button>
+            <div class="cnv icx-plinth">
+              <div class="canvas"></div>
+              <div class="tbar">
+                <span class="tstrip" data-radio=".tool">
+                  <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+                  <button class="tool" title="Marquee (M)"><i class="ic sm ic-marquee-rect"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Crop (C)"><i class="ic sm ic-crop"></i></button>
+                  <button class="tool" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                  <button class="tool" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
+                  <button class="tool" title="Text (T)"><i class="ic sm ic-text"></i></button>
+                  <span class="tsep"></span>
+                  <button class="tool" title="Measure (M)"><i class="ic sm ic-ruler"></i></button>
+                </span>
+              </div>
             </div>
           </div>
           <div class="ctxrow">
             <span class="ctxlab">Buttons</span>
             <button class="btn"><i class="ic ic-import"></i> Place</button>
-            <button class="btn prim"><i class="ic ic-export"></i> Export</button>
+            <button class="btn primary"><i class="ic ic-export"></i> Export</button>
             <button class="btn sm"><i class="ic ic-sparkle"></i> Ask the agent</button>
             <button class="btn icon" title="More"><i class="ic ic-more"></i></button>
           </div>
@@ -626,7 +625,6 @@
 
   var input = document.getElementById('isearch');
   var clear = document.getElementById('iclear');
-  var finder = document.getElementById('finder');
   var countEl = document.getElementById('icount');
   var cells = [].slice.call(page.querySelectorAll('.icell'));
   var rows = [].slice.call(page.querySelectorAll('.arow'));
@@ -641,7 +639,8 @@
      term must match, which makes "align top" behave the way it reads. */
   function filter() {
     var q = input.value.trim().toLowerCase();
-    finder.classList.toggle('has', q.length > 0);
+    // `.input.search` reveals its own clear button off the `filled` class
+    input.closest('.input').classList.toggle('filled', q.length > 0);
     var terms = q ? q.split(/\s+/) : [];
     var shown = 0;
 
@@ -689,10 +688,10 @@
   /* Size segment retargets every cell at once: the set is judged together. */
   var seg = document.getElementById('isize');
   seg.addEventListener('click', function (e) {
+    // the shared segmented control owns the `.on` state (data-radio="button");
+    // this page only reacts to which one won.
     var b = e.target.closest('button[data-size]');
-    if (!b) return;
-    [].slice.call(seg.children).forEach(function (x) { x.classList.toggle('on', x === b); });
-    page.setAttribute('data-size', b.getAttribute('data-size'));
+    if (b) page.setAttribute('data-size', b.getAttribute('data-size'));
   });
   page.setAttribute('data-size', '22');
 

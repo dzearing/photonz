@@ -327,8 +327,11 @@
   bottom:var(--gap-sm);width:min(320px,72%);
   border:1px solid var(--edge-lo);border-radius:var(--r4);
   box-shadow:var(--lg-shadow);z-index:22}
-.cdock-scrim{position:absolute;inset:0;z-index:21;background:transparent}
-.edit:not(:has(.cdock.as-overlay))>.cdock-scrim{display:none}
+/* the soft-dismiss catcher, only while the dock is floating over the content.
+   Keyed off its own sibling rather than off `.edit`, so it behaves the same in a
+   document-less window (`.shell-body`) as it does in an editor row. */
+.cdock-scrim{display:none;position:absolute;inset:0;z-index:21;background:transparent}
+.cdock-scrim:has(~ .cdock.as-overlay){display:block}
 
 @media (prefers-reduced-motion:reduce){
   .step,.work-h,.work-h>.chev,.composer{transition:none}

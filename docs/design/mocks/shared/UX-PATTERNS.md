@@ -458,6 +458,12 @@ does not restate the conversation UI, it **hosts the shared `.chat` component**,
 the overlay and the Agent panel group in the dock are the same conversation in two
 places.
 
+**Every window has the launcher, including the ones with no document.** The front
+door has no canvas and no dock, so its content row is `.shell-body` rather than
+`.edit.lean`; the shell component treats the two the same and puts the title bar
+and the overlay on both. A window without a document is still a window you can
+ask.
+
 **One field, two modes.** The composer takes plain language ("make the headline
 bigger") or, when it starts with `/`, becomes the command palette: a filtered
 `.cplist` of `.cpx` rows appears inline above the composer, each showing its real

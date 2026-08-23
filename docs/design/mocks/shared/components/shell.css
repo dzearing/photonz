@@ -73,6 +73,24 @@
 .libtile .nm{font-size:10.5px;font-weight:560;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .libtile .mt{font-size:9px;color:var(--faint);font-family:var(--mono);letter-spacing:.02em;white-space:nowrap}
 
+/* ============================================================
+   .shell-body — the content row of a window that has NO editor row
+   ============================================================
+   Almost every window in the study is a document window, so its content row is
+   `.edit.lean` (canvas + dock). The FRONT DOOR is not: it holds no document, so
+   it has no canvas, no tool bar and no dock. It still needs everything else a
+   window has — the title bar, and above all the Ask launcher, because the agent
+   is reachable from every window and not only from a document.
+
+   So a document-less window marks its body `.shell-body` and the shell
+   component treats it exactly as it treats `.edit.lean`: it builds the title bar
+   from data-shell and hosts the agent-chat overlay here. The overlay's scrim
+   covers this box, which is why the box is the positioning root — the body dims
+   and the title bar stays lit, the same as in an editor window.
+   Like `.edit.lean` it is a ROW, so the conversation can dock beside the
+   content instead of stacking on top of it. */
+.shell-body{position:relative;flex:1 1 auto;min-height:0;min-width:0;display:flex}
+
 /* DEPRECATED (D6 revised) — the old ⌘K *search well* in the title bar. It is
    replaced by .askbtn + .askpal below: one launcher that opens the agent chat,
    which subsumes the command palette. Kept only until every page is swept.

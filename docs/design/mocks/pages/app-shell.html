@@ -15,18 +15,21 @@
   .leg .li{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim)}
   .leg .li b{color:var(--ink);font-weight:600}
   /* spec cards come from the shared DS (shared/components/spec.css) */
-  .pglead{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0}  /* the reference shell is taller than the default .win.tall so all four
-     dock groups are visible at once */
+  /* `.pglead` is a DS class (visual-rules.css) and this page used to restate it
+     with margin:0, which is a SHADOW, not a refinement: every lead paragraph on
+     the page lost its bottom margin. The DS rule now stands on its own. */
   /* Windows get a DEFINITE height so the dock is bounded and each group's own
-     scroller does the work (rather than a long list stretching the window). */
-  #app-shell .win.shell{height:660px;min-height:0}  #app-shell .specwin{height:340px;min-height:0}
-  #app-shell .specwin .canvas{min-height:0}
+     scroller does the work (rather than a long list stretching the window).
+     Every window on this page is now a `.shell`, so the reference shell is
+     addressed through the redline frame it lives in rather than by `.win.shell`
+     (which would out-specify each specimen's own height). The canvas floor is
+     released by the shared `.win.shell .canvas` rule, so no page-local copy. */
+  #app-shell .rl-frame > .win{height:660px;min-height:0}
+  #app-shell .specwin{height:340px;min-height:0}
   #app-shell .vidwin{height:430px;min-height:0}
-  #app-shell .vidwin .canvas{min-height:0}
   /* the narrow specimen is deliberately small so the container query fires */
   .narrowwrap{max-width:420px}
   .narrowwrap .win{height:400px;min-height:0}
-  .narrowwrap .canvas{min-height:0}
   .hc-cta .ic{width:14px;height:14px}
   /* The two GLOBAL shell surfaces need a screen to float over. The .desk plate,
      the .mbar strip, the menu and the toasts are all shared DS; only the plate
@@ -87,6 +90,25 @@
            data-dock = open | closed (railed) | overlay (narrow) -->
       <div class="edit lean" id="shell" data-dock="open">
 
+        <!-- 2 · COMMAND SURFACE (D3): the page authors its own command ITEMS.
+             The `…` button that opens them is chrome, so the shell component
+             builds it into the canvas action cluster, and it appends the
+             trailing Home item. The native macOS menu bar is the real command
+             surface in the shipping app; this is the mock's compact stand-in. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Edit</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Copy <span class="sc">⌘C</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
+          <div class="menuitem"><i class="ic ic-frame"></i> Frame selection <span class="sc">⌥⌘G</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
+
         <!-- 6 · CANVAS COLUMN: the document plus everything that floats over it -->
         <div class="cnv">
           <div class="canvas">
@@ -104,10 +126,10 @@
             </div>
           </div>
 
-          <!-- CANVAS TOP-RIGHT ACTIONS: capture history. The panel-dock toggle
-               (region 9) now lives in the command-bar corner, above the rail. -->
-          <div class="cnv-act">
-          </div>
+          <!-- CANVAS TOP-RIGHT ACTIONS (.cnv-act) are built by the shell
+               component: it puts the `…` command button there, and dock.js
+               puts the panel toggle on the dock itself. The page authors an
+               empty cluster only if it has a real action of its own. -->
 
           <!-- 3 · FLOATING BOTTOM TOOL BAR: tools · color · zoom, with overflow -->
           <div class="tbar">
@@ -166,7 +188,7 @@
                   <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                     <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                     <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                   </span>
@@ -177,7 +199,7 @@
                   <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                     <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                     <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                   </span>
@@ -187,7 +209,7 @@
                   <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                     <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                     <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                   </span>
@@ -198,7 +220,7 @@
                   <span class="cap"><span class="nm">Hover states</span><span class="ago">Yesterday</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                     <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                     <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                   </span>
@@ -208,7 +230,7 @@
                   <span class="cap"><span class="nm">Empty state</span><span class="ago">Yesterday</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                     <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                     <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                   </span>
@@ -369,8 +391,9 @@
     <!-- redline callouts: the page declares the TARGET, the shared component
          measures it and places the marker, the line and the card. Numbers come
          from DOM order. See shared/components/redline.{css,js}. -->
-    <span class="rl-co" data-rl-for=".titlebar" data-rl-side="l" data-rl-x="left" data-rl-dx="8"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Title bar</b>Document name + the workspace lens (Image / UI / Video). No actions live here.</span></span>
+    <span class="rl-co" data-rl-for=".titlebar" data-rl-side="l" data-rl-x="left" data-rl-dx="8"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Title bar</b>Traffic lights, the document's name and size, an optional status readout, and Ask. No document actions, and no workspace switcher.</span></span>
     <span class="rl-co" data-rl-for=".askbtn" data-rl-side="r" data-rl-x="right"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Ask</b>Opens the agent chat over the canvas. ⌘K opens the same surface, and typing "/" in it filters commands, so there is one entry point, not two. The native macOS menu bar is still the real command surface.</span></span>
+    <span class="rl-co" data-rl-for=".cnv-act" data-rl-side="r" data-rl-x="right" data-rl-y="bottom" data-rl-dy="8"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Canvas actions</b>Top-right of the canvas, floating over the document. The <code>…</code> opens this window's command menu, which is the same list Ask answers to. Page-specific actions join it here.</span></span>
     <span class="rl-co" data-rl-for=".tbar" data-rl-side="l" data-rl-x="left"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Floating tool bar</b>Tools · color · zoom. Overflow tools collapse into a "more" menu.</span></span>
     <span class="rl-co" data-rl-for=".pdock" data-rl-side="r" data-rl-x="left" data-rl-dx="44" data-rl-y="top" data-rl-dy="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Right dock</b>Stacked panel groups (Layers, Properties, Library).</span></span>
     <span class="rl-co" data-rl-for=".canvas" data-rl-side="l" data-rl-x="left" data-rl-dx="48"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Canvas</b>Selection lives here, and it dominates the shell.</span></span>
@@ -542,13 +565,9 @@
       <div class="spec wide">
         <div class="spec-h"><i class="ic sm ic-history"></i> History overlay <span class="sub">(⌘⇧H · the front door · slides over the canvas)</span></div>
         <div class="spec-b">
-          <div class="win cq specwin" style="display:flex;flex-direction:column">
-            <div class="titlebar" style="height:34px">
-              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-              <div class="wtitle"><b>Photonz</b></div>
-              <div class="tbtns"><button class="btn ghost sm" data-sheet="#histSheet2"><i class="ic ic-history"></i> History</button></div>
-            </div>
-            <div class="edit lean" data-dock="closed" style="flex:1">
+          <div class="win cq specwin shell" data-shell="Photonz · no document open" data-ws="none"
+               style="display:flex;flex-direction:column">
+            <div class="edit lean" id="histShell" data-dock="closed" style="flex:1">
               <div class="cnv">
                 <div class="canvas">
                   <div class="empty"><i class="ic lg ic-history"></i>No document open. Pick a capture above, or drop a file on the canvas.</div>
@@ -569,7 +588,7 @@
                         <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
                         <span class="acts">
                           <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                           <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                           <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                         </span>
@@ -579,7 +598,7 @@
                         <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
                         <span class="acts">
                           <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                           <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                           <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                         </span>
@@ -589,7 +608,7 @@
                         <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
                         <span class="acts">
                           <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                           <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                           <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                         </span>
@@ -599,7 +618,7 @@
                         <span class="cap"><span class="nm">Hover states</span><span class="ago">Yesterday</span></span>
                         <span class="acts">
                           <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                           <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                           <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                         </span>
@@ -609,7 +628,7 @@
                         <span class="cap"><span class="nm">Release notes</span><span class="ago">2 days ago</span></span>
                         <span class="acts">
                           <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                           <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                           <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                         </span>
@@ -634,19 +653,13 @@
       <div class="spec wide">
         <div class="spec-h"><i class="ic sm ic-play"></i> Video document <span class="sub">(transport bar, and the timeline dock only when the document has time)</span></div>
         <div class="spec-b">
-          <div class="win cq vidwin" style="display:flex;flex-direction:column">
-            <div class="titlebar" style="height:34px">
-              <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-              <div class="wtitle"><b>onboarding-run</b> · 1920 × 1080 · 0:12</div>
-              <div class="tbtns"><button class="btn sm"><i class="ic ic-export"></i> Export</button></div>
-            </div>
+          <div class="win cq vidwin shell" data-shell="onboarding-run · 1920 × 1080 · 0:12"
+               data-ws="video" data-status="1080p · 30 fps"
+               style="display:flex;flex-direction:column">
             <div class="edit lean" id="vshell" data-dock="open" style="flex:1">
               <div class="cnv">
                 <div class="canvas">
                   <div class="vframe" style="width:250px;height:140px"></div>
-                </div>
-                <div class="cnv-act">
-                  <button class="tool on" data-dock-toggle="#vshell" title="Show or hide the panel dock" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
                 </div>
                 <div class="tbar">
                   <span class="tstrip" data-radio=".tool">
@@ -669,19 +682,45 @@
                 </div>
               </div>
               <div class="splitter v" data-min="180" data-max="360"></div>
+              <!-- NO LAYERS GROUP: this document has time, so the timeline below
+                   IS the layer list (same objects, same order, plus when each
+                   one starts and stops). The dock carries what the timeline
+                   cannot: the selected clip's values, and the media pool. -->
               <div class="pdock" style="--dock-w:220px">
-                <div class="dgrp grow" style="--gh:150px">
-                  <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
+                <div class="dgrp grow" data-grp="props" id="vProps">
+                  <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Title</span></div>
                   <div class="dgrp-b">
-                    <div class="lrow sel"><i class="ic ic-text"></i><span class="nm">Ship it faster</span><i class="ic sm ic-eye eye"></i></div>
-                    <div class="lrow"><i class="ic ic-component"></i><span class="nm">Lower third</span><i class="ic sm ic-eye eye"></i></div>
-                    <div class="lrow"><i class="ic ic-image"></i><span class="nm">Screen recording</span><i class="ic sm ic-eye eye"></i></div>
-                    <div class="lrow"><i class="ic ic-audio"></i><span class="nm">Voice over</span><i class="ic sm ic-eye eye"></i></div>
+                    <div class="section">
+                      <div class="row"><span class="rl">Text</span><span class="field">Ship it faster</span></div>
+                      <div class="grid2">
+                        <div class="row"><span class="rl">Size</span><span class="field">64</span></div>
+                        <div class="row"><span class="rl">Tracking</span><span class="field">-2</span></div>
+                      </div>
+                      <div class="row"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
+                      <div class="row"><span class="rl">In · Out</span><span class="field">0:02 · 0:09</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="splitter h" data-min="90" data-max="300"></div>
+
+                <!-- LIBRARY · the media pool is this group at scope Media (D1) -->
+                <div class="dgrp collapsed" data-grp="library" id="vLib">
+                  <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Media</span></div>
+                  <div class="dgrp-b">
+                    <div class="libtools">
+                      <span class="srch"><i class="ic sm ic-search"></i><input name="app-shell-media" placeholder="Search media" aria-label="Search media"></span>
+                    </div>
+                    <div class="libgrid">
+                      <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span><span class="cap"><span class="nm">intro.mov</span><span class="mt">0:06</span></span></div>
+                      <div class="libtile" tabindex="0"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">vo.wav</span><span class="mt">0:12</span></span></div>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="drail">
-                <button class="drailtab" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
+                <button class="drailtab" data-group="#vProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+                <button class="drailtab" data-group="#vLib" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
               </div>
             </div>
 
@@ -710,10 +749,11 @@
               <div class="playhead" style="left:34%"></div>
             </div>
           </div>
-          <p class="note">The same document, the same layers, the same dock. Time is the only thing that changed, so the
+          <p class="note">The same shell, the same dock, the same tool bar. Time is the only thing that changed, so the
             <b>transport bar</b> and the <b>timeline dock</b> appear. Volume, skip back, play, skip forward, a scrubber with in and out
-            marks and timecodes, then the edit actions. Narrow the window and the edit actions drop their labels while the scrubber keeps
-            its width.</p>
+            marks and timecodes, then the edit actions. And because the document has time, there is <b>no Layers group</b>: the timeline
+            is the layer list, so the dock holds the selected clip's <b>Properties</b> and the media <b>Library</b> instead. Narrow the
+            window and the edit actions drop their labels while the scrubber keeps its width.</p>
         </div>
       </div>
 
@@ -722,20 +762,15 @@
         <div class="spec-h"><i class="ic sm ic-maximize"></i> Narrow window <span class="sub">(live)</span></div>
         <div class="spec-b">
           <div class="narrowwrap">
-            <div class="win cq" style="display:flex;flex-direction:column">
-              <div class="titlebar" style="height:32px">
-                <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-                <div class="wtitle"><b>settings-capture</b></div>
-                <div class="tbtns" style="min-width:0"><button class="btn primary sm">Done</button></div>
-              </div>
+            <div class="win cq shell" data-shell="settings-capture · 1280 × 800" data-ws="image"
+                 style="display:flex;flex-direction:column">
               <div class="edit lean" id="nshell" data-dock="open" style="flex:1">
                 <div class="cnv">
                   <div class="canvas">
                     <div class="vframe" style="width:180px;height:110px"></div>
                   </div>
                   <div class="cnv-act">
-                    <button class="tool" data-dock-toggle="#nshell" title="Show or hide the panel dock"><i class="ic sm ic-sidebar"></i></button>
-                    <button class="tool" data-sheet="#nHist" title="Capture history"><i class="ic sm ic-history"></i></button>
+                    <button class="tool" data-sheet="#nHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
                   </div>
                   <div class="tbar">
                     <span class="tstrip" data-radio=".tool">
@@ -777,7 +812,7 @@
                           <span class="cap"><span class="nm">Settings</span><span class="ago">2 min ago</span></span>
                           <span class="acts">
                             <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                            <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                            <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                             <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                           </span>
                         </div>
@@ -786,7 +821,7 @@
                           <span class="cap"><span class="nm">Pricing</span><span class="ago">1 hr ago</span></span>
                           <span class="acts">
                             <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                            <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                            <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
                             <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                           </span>
                         </div>

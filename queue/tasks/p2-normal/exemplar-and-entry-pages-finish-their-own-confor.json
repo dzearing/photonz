@@ -7,7 +7,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:34:07.617Z",
-  "updated": "2026-08-23T17:02:08.269Z",
+  "updated": "2026-08-23T17:24:39.377938Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Top-level pages'). Pages: app-shell, redline, home, foundations, iconography, dashboard. Key items: app-shell's two editor specimens adopt data-shell instead of hand-authored titlebars (the exemplar must be beyond reproach), delete dead data-dock-toggle buttons + empty .cnv-act, scope the .pglead override, ic-pencil for Edit on filmcards, consider Properties/Library groups in the video specimen dock; redline drops the superseded .wsw switcher + authored chrome and renames its .sw collisions; home gains the .askbtn Cmd-K launcher, .cq on the window, and renders Recent with the shared .filmstrip so the landing window and history overlay agree; foundations replaces remaining unicode arrows in body copy; iconography uses real .tbar/.input.search/.seg.sm and fixes btn prim to btn primary; dashboard namespaces .ttl/.sub/.grip/.seq. Verify 200 + audit-sweep.",
@@ -20,6 +20,42 @@
     {
       "t": "2026-08-23T17:02:08.269Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "app-shell: three specimen windows (history overlay, video document, narrow window) now declare data-shell instead of hand-authoring a .titlebar; the exemplar also gained the D3 command menu it never had, a callout for the canvas action cluster, and its stale title-bar callout copy (which still named a workspace lens) was rewritten."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "app-shell: the unscoped .pglead override is gone (DS owns it), the empty .cnv-act and both dead [data-dock-toggle] buttons are gone (dock.js deletes them at runtime), and the video specimen's dock is Properties + Library, not Layers, because a document with a timeline has no Layers group."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "redline: dropped the authored .titlebar and .toolbar (with its deprecated .cmdk); identity is data-shell, the measurement count is data-status, the page's commands are a .cmdpop, and Copy + History are .cnv-act tools. Renamed three reserved-name shadows: .sw twice (.rdl-chip / .rdl-key) and .rl-frame (.rdl-stage), which belongs to the shared callout component."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "home: the window is .cq and a data-shell shell, so it gets the one title bar and the Ask / Cmd-K launcher; Recent is the shared .filmstrip so the front door and the history overlay agree. Needed one small foundation addition: .shell-body, the content row of a window with no editor row, so a document-less window still gets chrome and the chat overlay (shell.css + shell.js + agent.js host lookup; agent.css's .cdock-scrim rule is now host-agnostic). Documented in AGENTS.md, UX-PATTERNS.md D6 and the reserved-names list."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "iconography: .faketbar (which also reshaped DS tools into circles) is the real .cnv > .tbar over a canvas slice; .sfield is .input.search with the DS clear button; .sizeseg is .seg.sm with data-radio; 'btn prim' is 'btn primary'."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "foundations: the three arrows inside the interactive .prim rows are ic-arrow-right. The arrows in the thesis, the tier tiles and the captions are left as text: AGENTS.md iconography carve-out 2 says a typographic mark in running prose is not an icon, and 16 other pages rely on that."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "dashboard: .grip / .ttl / .sub in the objectives row are .db-grip / .db-obttl / .db-obsub. .seq was already .db-seq."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "Verified: 90/90 pages HTTP 200; browser audit-sweep across all 90 pages, 0 findings; the six touched pages clean at 1280/880/620 and in the light theme; a shell regression sweep over 30 shell-bearing pages (one built title bar each, Ask present, no leftover .toolbar/.cmdk, cdock scrim not eating clicks) came back empty; check-elevation, check-states and vr6-strip all pass; command menus, Ask, chat docking, icon search/clear/size and the objectives tree all exercised in the browser with no console errors."
+    },
+    {
+      "t": "2026-08-23T17:24:39.377938Z",
+      "note": "Queued, not done here: the ic-pen -> ic-pencil Edit sweep across the other 50 pages + entry.js; the history-overlay specimen still wearing a .sheet-h instead of history.css's .sheet.down.hist shape; ui-entry-wt's Recent still on the bespoke .recents grid."
     }
   ],
   "started": "2026-08-23T17:02:08.268Z"

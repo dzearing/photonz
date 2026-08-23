@@ -399,6 +399,14 @@ What stays page-authored is **content**: the `.cmpop` menu items for this
 scenario, the canvas, the dock groups, the tool strip. The `…` button that opens
 the command menu is chrome and is built into `.cnv-act` automatically.
 
+**A window with no document still gets that chrome.** The front door (New /
+Open / Recent) holds no document, so it has no canvas, no tool bar and no dock —
+but the agent is reachable from every window, not only from a document. So it
+marks its content row `.shell-body` instead of `.edit.lean` and declares
+`data-shell` as usual; the component builds the title bar and hosts the chat
+overlay there, and the scrim dims the body while the title bar stays lit.
+Canonical page: `pages/home.html`. Do NOT hand-author an `.askpal`.
+
 Canonical composition (chrome marked ⚙ is built, not written):
 
 ```

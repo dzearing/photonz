@@ -165,7 +165,8 @@
      Space comes from the right dock, which rails itself, so the canvas keeps
      its width. On a constrained shell the left dock floats over the canvas and
      soft-dismisses instead of eating layout width. */
-  function editOf(pal) { return pal.closest('.edit') || pal.parentNode; }
+  // the chat's host: an editor row, or the body of a document-less window
+  function editOf(pal) { return pal.closest('.edit, .shell-body') || pal.parentNode; }
 
   function ensureCdock(edit) {
     var c = edit.querySelector('.cdock');

@@ -150,7 +150,12 @@
 
   var askSeq = 0;
   all('[data-shell]').forEach(function (win) {
-    var edit = win.querySelector('.edit.lean') || win.querySelector('.edit');
+    /* The host for everything this component builds inside the window. Normally
+       the editor row; for a window with no document (the front door: New, Open,
+       Recent) it is the plain `.shell-body`, so that window still gets the title
+       bar and the Ask launcher. The agent is reachable from every window. */
+    var edit = win.querySelector('.edit.lean') || win.querySelector('.edit') ||
+               win.querySelector('.shell-body');
     if (!edit) return;
 
     // 1 · HARVEST, then drop. The old header rows mix chrome with real content:
