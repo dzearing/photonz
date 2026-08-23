@@ -8,6 +8,7 @@
 //   node queue/bin/queue.mjs note <msg>      update the live status note (shown on the dashboard)
 //   node queue/bin/queue.mjs status <id> <pending|in_progress|blocked|done|dropped> [note]
 //   node queue/bin/queue.mjs add <title> [priority] [notes]
+//   node queue/bin/queue.mjs addjson '<json>'   preferred: carries goal + acceptance checklist
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
@@ -51,6 +52,12 @@ try {
       break;
     case 'add':
       out(q.addTask({ title: args[0], priority: args[1] || 'p2-normal', notes: args.slice(2).join(' ') }).id);
+      break;
+    // the structured form, and the one to prefer: it can carry the plain-language
+    // goal and the acceptance checklist, which the positional form cannot.
+    //   queue.mjs addjson '{"title":"...","goal":"...","acceptance":["..."],"priority":"p2-normal","notes":"..."}'
+    case 'addjson':
+      out(q.addTask(JSON.parse(args[0])).id);
       break;
     case 'priority':
       out(q.setPriority(args[0], args[1]).id);

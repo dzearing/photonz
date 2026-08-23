@@ -9,7 +9,18 @@ You are one iteration of the Photonz go loop, executing exactly ONE task, unmann
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.
-- One task per run. Do not claim or start other tasks. If you discover new work, add it to the queue instead: `node queue/bin/queue.mjs add "<title>" <priority> "<notes>"`.
+- One task per run. Do not claim or start other tasks. If you discover new work, add it to the queue with the structured form so it is legible to a human:
+  `node queue/bin/queue.mjs addjson '{"title":"...","goal":"...","acceptance":["...","..."],"priority":"p2-normal","notes":"..."}'`
+
+### Every task must be readable before it is implementable
+
+A task carries three kinds of writing and they are not interchangeable:
+
+- **`goal`** — one or two sentences of PLAIN LANGUAGE, written for someone who has never seen this codebase. Say what changes and for whom. No file names, no class names, no page ids, no shorthand like "ds-switch renders the five systems as the Library dgrp". If a person cannot tell from the goal whether they would want this done, it is not a goal yet.
+- **`acceptance`** — the checklist that decides done. One verifiable item per entry, phrased so it can be checked off: "Every clickthrough page returns 200", not "verify pages". Two to five items is usually right.
+- **`notes`** — your working detail. Be as technical as you like here: it is read last, by an agent, and it is where file names and class names belong.
+
+This applies to tasks you CREATE and to the task you are running: if the task you claimed has no `goal` or an empty `acceptance`, write them into the task file as your first act, from what you learn reading it. The dashboard renders goal first, checklist second, detail last, so a queue full of jargon blobs is a queue nobody can steer.
 - Commit your work to main with a clear message when the task completes, then push: `git pull --rebase --autostash origin main && git push origin main`. If the rebase conflicts, abort it (`git rebase --abort`), leave your commit local, and record the situation in the task log; never force-push and never resolve someone else's conflict blind.
 - Task titles name the outcome. Never put status words (blocked, in progress) in a title; status lives in the status field.
 

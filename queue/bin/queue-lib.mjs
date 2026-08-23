@@ -175,7 +175,15 @@ export function appendLog(task, note) {
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).replace(/^-+|-+$/g, '') || 'task';
 
-export function addTask({ title, priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
+// A task carries THREE kinds of writing, and they are not interchangeable:
+//   goal       one or two plain sentences a human reads first: what changes,
+//              and for whom. No file names, no class names, no jargon.
+//   acceptance the checklist that decides done. One verifiable item per line.
+//   notes      the runner's working detail. May be as technical as it likes,
+//              because it is read last and by an agent.
+// The dashboard renders them in that order, so a task is legible before it is
+// implementable.
+export function addTask({ title, goal = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
   ensureDirs();
   if (!PRIORITIES.includes(priority)) priority = 'p2-normal';
   const all = readAllTasks();
@@ -191,7 +199,7 @@ export function addTask({ title, priority = 'p2-normal', notes = '', release = '
     seq = peers.length ? Math.max(...peers.map((t) => t.seq)) + 10 : 10;
   }
   const task = {
-    id, title, priority, seq, status: 'pending', release, area,
+    id, title, goal, priority, seq, status: 'pending', release, area,
     created: now(), updated: now(), deps: [], blockedBy: [],
     notes, acceptance, log: [{ t: now(), note: `created (${source})` }],
     file: join(TASKS, priority, `${id}.json`),

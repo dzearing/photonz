@@ -1,0 +1,27 @@
+{
+  "id": "rewrite-every-task-with-a-plain-language-goal-an",
+  "title": "Rewrite every task with a plain-language goal and a real checklist",
+  "goal": "Right now most tasks in the queue are unreadable unless you already know the codebase: the detail field is full of file names and shorthand, and there is no one-line statement of what the task actually achieves. This rewrites all of them so opening a task tells you what changes and for whom, and shows a checklist of what has to be true before it counts as done.",
+  "priority": "p0-critical",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-08-23T17:03:13.388Z",
+  "updated": "2026-08-23T17:03:13.389Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Schema: tasks now carry goal (plain language), acceptance (checklist), notes (runner detail). See the contract in queue/bin/runner-prompt.md. Work through queue/tasks/*/*.json for every task whose status is not done or dropped. Read each task title, notes and log to infer the real intent; when the intent is genuinely unclear, say so in the goal rather than inventing one. Do not change titles, ids, priority or seq. Commit as one change.",
+  "acceptance": [
+    "Every open task has a goal field of one or two plain sentences with no file names, class names or page ids",
+    "Every open task has at least two acceptance items, each one verifiable by looking or running something",
+    "The original technical text is preserved in the notes field, not deleted",
+    "Opening any task on the dashboard shows the goal first, the checklist second, and the working detail collapsed last"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T17:03:13.389Z",
+      "note": "created (manual)"
+    }
+  ]
+}

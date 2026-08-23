@@ -212,6 +212,11 @@
   #dashboard .db-detail .dlg-b{overflow:auto;display:flex;flex-direction:column;gap:var(--gap-lg)}
   #dashboard .db-dsec>.mlabel{margin-bottom:var(--s2)}
   #dashboard .db-dsec p{margin:0;font-size:12px;line-height:1.6;color:var(--dim);white-space:pre-wrap}
+  /* the goal is the sentence a person reads first, so it is ink, not dim */
+  #dashboard .db-goal{color:var(--ink);font-size:12.5px;line-height:1.6;max-width:62em}
+  #dashboard .db-nogoal{color:var(--faint);font-style:italic}
+  /* working detail is for the runner: quieter, monospace-adjacent, behind a toggle */
+  #dashboard .db-tnotes{font-size:11.5px;line-height:1.6;color:var(--dim);padding-top:var(--s2)}
   #dashboard .db-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--s3)}
   #dashboard .db-fact .k{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700}
   #dashboard .db-fact .v{display:block;font-size:12px;color:var(--ink);font-weight:560;margin-top:2px}
@@ -784,14 +789,31 @@
 
     h += '<div class="dlg-b">';
 
-    // why it exists, in its own words
-    h += '<div class="db-dsec"><div class="mlabel">Goal and context</div><p>' +
-      (t.notes ? linkify(t.notes) : 'No notes were written for this task.') + '</p></div>';
+    // Goal first, in plain language. The old version printed `notes` here, which
+    // is the runner's working detail: a wall of file names and class names that
+    // told a reader nothing about whether they wanted this done.
+    h += '<div class="db-dsec"><div class="mlabel">Goal</div>';
+    if (t.goal) h += '<p class="db-goal">' + linkify(t.goal) + '</p>';
+    else h += '<p class="db-goal db-nogoal">No plain-language goal yet. The next triage pass writes one.</p>';
+    h += '</div>';
 
+    // the checklist that decides done
+    h += '<div class="db-dsec"><div class="mlabel">Done when</div>';
     if ((t.acceptance || []).length) {
-      h += '<div class="db-dsec"><div class="mlabel">Done when</div><ul class="db-acc">' +
-        t.acceptance.map(function (a) { return '<li' + (t.status === 'done' ? ' class="met"' : '') + '>' + linkify(a) + '</li>'; }).join('') +
-        '</ul></div>';
+      var met = t.status === 'done';
+      h += '<ul class="db-acc">' + t.acceptance.map(function (a) {
+        return '<li class="' + (met ? 'met' : '') + '">' + linkify(a) + '</li>';
+      }).join('') + '</ul>';
+    } else {
+      h += '<p class="db-goal db-nogoal">No acceptance checklist yet.</p>';
+    }
+    h += '</div>';
+
+    // The technical detail, last and collapsed: it is written for the runner, so
+    // it should not be the first or the largest thing a person sees.
+    if (t.notes) {
+      h += '<div class="db-dsec"><button class="btn sm ghost db-brieftoggle" data-act="task-detail-notes">Working detail<i class="ic ic-chevron-down"></i></button>' +
+        '<div class="db-brief" data-notesfor="' + esc(t.id) + '"><div><p class="db-tnotes">' + linkify(t.notes) + '</p></div></div></div>';
     }
 
     // dependencies and what is holding it
@@ -1172,6 +1194,15 @@
     }
     if (b.dataset.act === 'dec-prev') { decStep(-1); return; }
     if (b.dataset.act === 'dec-next') { decStep(1); return; }
+    // the working-detail disclosure inside the task dialog
+    if (b.dataset.act === 'task-detail-notes') {
+      var wrapN = b.parentNode.querySelector('.db-brief');
+      if (!wrapN) return;
+      var openingN = !wrapN.classList.contains('on');
+      wrapN.classList.toggle('on', openingN);
+      b.classList.toggle('on', openingN);
+      return;
+    }
     if (b.dataset.act === 'dec-brief') {
       var wrap = document.querySelector('[data-brieffor="' + b.dataset.id + '"]');
       if (!wrap) return;
