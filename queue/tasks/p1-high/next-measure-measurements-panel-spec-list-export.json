@@ -2,11 +2,11 @@
   "id": "next-measure-measurements-panel-spec-list-export",
   "title": "Next Measure: Measurements panel + spec list export",
   "priority": "p1-high",
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:11:40.845Z",
-  "updated": "2026-08-23T01:52:13.003Z",
+  "updated": "2026-08-23T02:05:05.899Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > measurements-panel + spec-export. Implement docs/design/next-measure.md sections 6-7 behind flag next-measure-panel: dock group as a filtered view of measure layers sharing the app selection, per-row eye, Show all / Hide all / Clear (one undo step each), toolbar count pill, From/To/Distance/Units read-only grid, Export buttons, and MeasureSpecList.render in PhotonzCore (TDD, pinned format). Best run after the roles task so rows have swatches; also picks up whatever the naming decision chose. Decisions resolved 2026-08-22: naming = derived automatic names (rows name themselves like \"Width 128 px\", double-click to rename; no OCR); describe-specs = omit (ship the copyable text spec list and export buttons only, no agent button).",
@@ -43,8 +43,13 @@
     {
       "t": "2026-08-23T02:40:00.000Z",
       "note": "verified: Scripts/test.sh green (932 tests), dev app bundle builds and launches; manned look/feel pass still worthwhile (TCC blocks unmanned capture)"
+    },
+    {
+      "t": "2026-08-23T02:05:05.899Z",
+      "note": "Shipped behind next-measure-panel (Next, default ON): Measurements dock group (filtered layer view, shared selection, per-row eye, derived names + rename), header count badge + panel menu with Show All / Hide All / Copy as Spec List / Clear (one undo step each), toolbar count pill that reveals the panel, Measure menu in the menu bar, inspector From/To/Distance/Units grid + Copy Image / Export PNG buttons, and MeasureSpecList.render in PhotonzCore with the pinned text format. Verified: 9 new core tests, full suite green (932), dev app builds and launches. Commit a34aa6f pushed to main."
     }
   ],
   "seq": 50,
-  "started": "2026-08-23T01:52:13.002Z"
+  "started": "2026-08-23T01:52:13.002Z",
+  "completed": "2026-08-23T02:05:05.899Z"
 }
