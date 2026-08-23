@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T20:48:06.539Z",
-  "updated": "2026-08-23T21:28:03.510Z",
+  "updated": "2026-08-23T21:29:22.432Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23, screenshot attached to the feedback. Root cause: MeasureRasterizer.drawAlignmentCheck places the chip at g.labelAnchor, the feet-line midpoint, which for an edge-alignment guide is by construction on top of the elements being checked. The guide is drawn split around the chip, so the geometry already assumes the chip sits ON the line. Options worth weighing in the adversarial review: place the chip just beyond the guide end that has canvas room; or offset it perpendicular to the guide, away from the side the checked elements occupy. The principle now lives in shared/UX-PATTERNS.md D14 and covers all annotations, not just this chip, so fix the family rather than the instance. Do not regress the split-guide look if the chip moves off the line: it may no longer need splitting.",
@@ -57,7 +57,12 @@
     {
       "t": "2026-08-23T21:28:03.510Z",
       "note": "Release note: the fix lives in shared code (Measure.swift, MeasureRasterizer.swift, EditorState), not in Releases/Next, because the measure rasterizer is one shared object. Current gets the same correctness fix automatically, which is the shared-file mechanism working as designed; nothing Next-only leaked into Current."
+    },
+    {
+      "t": "2026-08-23T21:29:22.432Z",
+      "note": "Every measure readout now picks a spot in whitespace instead of covering its subject. MeasureLabelPlacement + MeasureLabelPlanner in PhotonzCore choose on the line, past either end, or clear to either side; the rasterizer splits the line only while the pill rides it and draws a leader when it has moved further than adjacency carries; the builder reserves the frame where the pill actually lands; EditorState plans on every placement path, on endpoint commit and on label-size commit, and the hover preview plans too so nothing jumps on click. The legend walks to a free corner. Verified end to end on the real audit capture (settings-pane-2x.png) with before/after/crowded renders in queue/audits, 1012 tests green, and each new render test checked against the old behaviour. Audit: queue/audits/2026-08-23-callout-clearance.json. Commit a726ec4, pushed to main."
     }
   ],
-  "started": "2026-08-23T21:01:02.956Z"
+  "started": "2026-08-23T21:01:02.956Z",
+  "completed": "2026-08-23T21:29:22.432Z"
 }
