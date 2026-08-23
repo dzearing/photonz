@@ -305,8 +305,9 @@ may contain markup, so a walkthrough can drive a live readout by id.
 Share/Export/Done (the native menu bar owns those) and **no segmented control**:
 three workspace tabs up there read as app-level navigation, which is the opposite
 of what "one document, surfaces are lenses" is trying to say. `data-ws` still
-records which lens the page is in, for the tool strip. The component deletes any
-`.wsw` it finds inside `[data-shell]`.
+records the document's kind, for the tool strip. The workspace switcher itself
+is gone from the study entirely (PRODUCT-MODEL.md §4f): no page authors one,
+and there is no shared class for it. Do not reintroduce a lens toggle.
 
 **Panel-group height is a role, not a number.** Every page used to hand-pick
 `--gh`, so the same panel expanded to a different height nearly everywhere:
@@ -504,10 +505,11 @@ and the specimen stays honest (PRODUCT-MODEL §4c: a specimen wears no app chrom
   a permanent options-bar row of tools (tools live in `.tbar`).
 - **`.cmdk`** — DEPRECATED. The old ⌘K search well. Do not add it to a page; it
   survives only until every page is swept onto `.askbtn`.
-- **`.wsw` › `.wsw-seg`** — the **workspace switcher** (lens selector) in the title
-  bar: Image · UI · Video over ONE document (PRODUCT-MODEL.md §1). Switching swaps
-  the tool strip to that workspace's D4 inventory and shows the transport +
-  timeline only in Video ("timeline when time"). One `.wsw-seg.on`.
+- **`.wsw`** — REMOVED. The workspace switcher (an Image · UI · Video lens
+  toggle in the title bar) is superseded by PRODUCT-MODEL.md §4f: a workspace is
+  only a starting template at New. The title bar carries document identity; the
+  tool strip follows the document's kind; the timeline appears when the document
+  has time. Never add a lens toggle to any chrome.
 - **`.lrow.adj` + `.clipmark`** — an **adjustment / filter layer**, a first-class
   layer type. Renders in Layers with the `ic-sliders` glyph and a `.clipmark`
   showing it clips to the layers below. Its properties open in the Properties
@@ -580,7 +582,7 @@ always exact. Nothing is animated into place by hand.
 | attribute | effect |
 | --- | --- |
 | `data-tool="#tBlade"` | exclusive `.on` among the `.tool`s in that tool's `.tstrip` |
-| `data-activate="#wsVideo"` | exclusive `.on` among an element's like-classed siblings (workspace switcher, any one-of-N) |
+| `data-activate="#wsVideo"` | exclusive `.on` among an element's like-classed siblings (any one-of-N segmented control) |
 | `data-open` / `data-collapse` | un-collapse / collapse `.dgrp` panel groups (comma list) |
 | `data-dock="open\|closed\|overlay"` | the `.edit.lean` dock state |
 | `data-scope="media"` | Library scope: `.on` the `[data-scope]` button, reveal `[data-scope-body="media"]`, set `[data-scope-label]` from `data-scope-name` |

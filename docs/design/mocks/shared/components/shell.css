@@ -1,7 +1,7 @@
 /* ============================================================
    RESTORED: app-shell primitives that the icon generator's splice
    removed along with the old inline icon block (.dnav .srch .libtools
-   .libgrid .libtile .cmdk .wsw .lrow.adj .clipmark). They live below
+   .libgrid .libtile .cmdk .lrow.adj .clipmark). They live below
    the generated fence now, so a re-run cannot take them again.
    ============================================================ */
 /* ============================================================

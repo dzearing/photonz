@@ -1,10 +1,9 @@
 /* THE TITLE BAR'S RESPONSIVE CONTRACT.
    The dock, rail and tool bar already respond at these breakpoints; the title bar
    used to just clip (measured: editor 504>370, app-shell 566>370, ui-nested
-   536>370 at a 420px page). Now it degrades in a defined order: the lens and the
-   size drop first, then the buttons compact, and the name ellipses last. */
+   536>370 at a 420px page). Now it degrades in a defined order: the
+   size detail drops first, then the buttons compact, and the name ellipses last. */
 @container shell (max-width:880px){
-  .win.cq .titlebar .wsw{display:none}
   .win.cq .titlebar .wtitle .meta{display:none}
 }
 @container shell (max-width:620px){

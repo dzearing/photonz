@@ -38,21 +38,24 @@ shipping app is deliberately **lean and canvas-first**, and it must stay that wa
 as scope grows. The resolution is **one scalable dock system that grows by
 collapsing, resizing, and scrolling, never by inventing new chrome per feature**.
 
-**Image · UI · Video are not separate apps; they are workspaces (lenses) over the
-same document and layer stack**, selected from the **workspace switcher**
-(`.wsw`) in the title bar. Switching a workspace re-arranges the chrome, never the
-engine: the **tool strip** swaps to that workspace's tool inventory (D4) and its
-**foregrounded panel groups** change, while the canvas, layer model, Library, and
-Inspector stay the same. The **timeline dock and transport bar appear only when
-the document has time** (the Video workspace), "timeline when time". A layer type
-therefore works in every workspace, so an adjustment/filter layer grades a UI
-frame exactly as it grades a photo.
+**Image · UI · Video are not separate apps, and they are not modes you toggle**
+(PRODUCT-MODEL.md §4f). A workspace exists only as a **starting template chosen
+at New**; once you are in a document there is no lens switcher anywhere in the
+chrome. What varies follows the **document itself**: the **tool strip** carries
+the inventory for the document's kind (D4), **tools and Properties are
+contextual to the selected layer** (select a raster layer and brush/heal/clone
+apply; select a frame and auto-layout appears), and the **timeline dock and
+transport bar appear only when the document has time**, "timeline when time".
+The canvas, layer model, Library, and Inspector are the same everywhere, so an
+adjustment/filter layer grades a UI frame exactly as it grades a photo. You do
+not switch experiences mid-document; you open a different document.
 
 ### The regions, always in the same place
 
-1. **Title bar** (`.titlebar`) — traffic lights, document name + context
-   ("settings-capture · 2560 x 1440"), the **workspace switcher**, and
-   right-aligned document actions (Share, Export, Done).
+1. **Title bar** (`.titlebar`) — traffic lights, **document identity** (name +
+   context: "settings-capture · 2560 x 1440"), an optional status readout, and
+   the right-aligned **Ask launcher**. Nothing else: no document actions (the
+   native menu bar owns Share/Export) and no workspace switcher.
 2. **Command surface** — the **native macOS menu bar is the real command
    surface** in the shipping app (File, Edit, Select, Layer, Type, Effect, View,
    Window, Help), and it is the literal expression of "everything the UI does is

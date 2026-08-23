@@ -78,7 +78,7 @@
          it does not draw chrome. That is the whole point: this page is the
          spec, and it must not be a hand-authored copy of its own spec, or the
          other pages have nothing to conform to. What the component emits:
-         lights · title · the .wsw lens · Ask. What it refuses to emit: any
+         lights · title · status · Ask. What it refuses to emit: any
          Share/Export/Done, any command strip, any ⌘K search well.
          Everything below is real page content, not chrome. -->
     <div class="win tall cq shell" data-shell="marketing-site · 1440 × 1024" data-ws="ui">
@@ -137,7 +137,13 @@
               <input class="zslider" type="range" name="zoom" min="25" max="400" value="100" aria-label="Zoom">
               <span class="val zval">100%</span>
             </span>
-            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12"></div>
+            <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:176px;z-index:12">
+              <div class="menuitem"><i class="ic ic-square"></i> Shape <span class="sc">R</span></div>
+              <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+              <div class="menuitem"><i class="ic ic-text"></i> Text <span class="sc">T</span></div>
+              <div class="menu-sep"></div>
+              <div class="menuitem"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
+            </div>
           </div>
 
           <!-- 5 · SLIDE-DOWN HISTORY OVERLAY (⌘⇧H): the app's front door.
@@ -352,7 +358,7 @@
       </div>
 
       <!-- BOTTOM DOCK - the timeline, shown only when the document has time
-           (Video workspace). "Timeline when time." -->
+           (a timed document). "Timeline when time." -->
       <div class="timeline" id="timelineDock" style="min-height:120px;display:none">
         <div class="ruler"><span>0s</span><span>1s</span><span>2s</span><span>3s</span><span>4s</span><span>5s</span></div>
         <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span><div class="lane"><div class="clip v1" style="width:52%">skyline</div><div class="clip v2" style="width:30%">card</div></div></div>
@@ -860,16 +866,16 @@
       <div class="c"><div class="lab g2">Direction</div><p>The three moves that make it scale are collapse, resize, and scroll. Each group
         has its own bounded height and its own scroller, which is why one long list can never crowd its siblings. When the window narrows,
         the same markup rails the dock, turns it into an overlay, and folds the overflow tools into a <b>more</b> menu.</p></div>
-      <div class="c"><div class="lab g2">Open question</div><p>The dock currently remembers one size per document. Should a workspace lens
-        also carry its own dock layout, so switching to Video restores the panel set you last used there, or does that break the promise
-        that a lens only re-arranges chrome around the same document?</p></div>
+      <div class="c"><div class="lab g2">Open question</div><p>The dock currently remembers one size per document. Should the starting
+        template chosen at New also seed a default dock layout (a photo document foregrounds Adjustments, a timed document opens with the
+        timeline tall), or is one default arrangement plus per-document memory enough?</p></div>
     </div>
   </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-  // Page-local wiring: the workspace lens. Everything else (collapse, resize,
-  // rail, overlay, overflow, selection) is the shared DS behavior.
+  // Page-local wiring: Library scope + tile selection demos. Everything else
+  // (collapse, resize, rail, overlay, overflow, selection) is shared DS behavior.
   (function () {
     // Redline callouts (numbering, positioning, the explainer cards) are the
     // shared `redline` component now. This page only declares the targets.
@@ -895,100 +901,6 @@
       });
     });
 
-    // WORKSPACE SWITCHER (lens selector). Switching a workspace re-arranges the
-    // chrome around the SAME document: it swaps the floating tool bar's strip
-    // (D4 per-app inventory) and shows the timeline dock only when the document
-    // has time (Video). Tools marked ovf collapse into the "more" menu when the
-    // window is narrow, and the menu is generated from the same list.
-    var SEP = { sep: true };
-    var STRIPS = {
-      ui: [
-        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
-        { i: 'frame', t: 'Frame', k: 'F' },
-        { i: 'component', t: 'Component insert', k: 'C', tint: true },
-        { i: 'square', t: 'Shape', k: 'R', ovf: true },
-        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
-        { i: 'text', t: 'Text', k: 'T', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ],
-      image: [
-        { i: 'cursor', t: 'Select', k: 'V', on: true },
-        { i: 'lasso', t: 'Lasso', k: 'L' },
-        { i: 'wand', t: 'Select subject', k: 'W' }, SEP,
-        { i: 'crop', t: 'Crop', k: 'C' },
-        { i: 'brush', t: 'Brush', k: 'B' },
-        { i: 'eraser', t: 'Eraser', k: 'E', ovf: true },
-        { i: 'heal', t: 'Heal', k: 'J', ovf: true },
-        { i: 'clone', t: 'Clone', k: 'S', ovf: true },
-        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
-        { i: 'text', t: 'Text', k: 'T', ovf: true },
-        { i: 'square', t: 'Shape', k: 'U', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ],
-      video: [
-        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
-        { i: 'blade', t: 'Blade / split', k: 'B' },
-        { i: 'text', t: 'Title / Text', k: 'T', ovf: true },
-        { i: 'square', t: 'Shape', k: 'R', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ]
-    };
-
-    function stripHTML(list) {
-      return list.map(function (x) {
-        if (x.sep) return '<span class="tsep' + (x.ovf ? ' ovf' : '') + '"></span>';
-        return '<button class="tool' + (x.on ? ' on' : '') + (x.ovf ? ' ovf' : '') +
-          '" title="' + x.t + ' (' + x.k + ')"' + (x.tint ? ' style="color:var(--comp)"' : '') +
-          '><i class="ic sm ic-' + x.i + '"></i></button>';
-      }).join('');
-    }
-    function menuHTML(list) {
-      return list.filter(function (x) { return x.ovf && !x.sep; }).map(function (x) {
-        return '<div class="menuitem"><i class="ic ic-' + x.i + '"></i> ' + x.t +
-          ' <span class="sc">' + x.k + '</span></div>';
-      }).join('');
-    }
-
-    var toolStrip = document.getElementById('toolStrip');
-    var toolOvf = document.getElementById('toolOvf');
-    var timeline = document.getElementById('timelineDock');
-    var wsw = document.getElementById('wsw');
-
-    function wireStrip() {
-      var tools = [].slice.call(toolStrip.querySelectorAll('.tool'));
-      tools.forEach(function (t) {
-        t.addEventListener('click', function () {
-          tools.forEach(function (x) { x.classList.remove('on'); });
-          t.classList.add('on');
-        });
-      });
-    }
-    function setWorkspace(ws) {
-      var list = STRIPS[ws];
-      if (!list) return;
-      toolStrip.innerHTML = stripHTML(list);
-      if (toolOvf) toolOvf.innerHTML = menuHTML(list);
-      wireStrip();
-      [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
-        var on = b.getAttribute('data-ws') === ws;
-        b.classList.toggle('on', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      // Timeline when time: only the Video workspace has a time dimension.
-      if (timeline) timeline.style.display = (ws === 'video') ? '' : 'none';
-    }
-    if (wsw && toolStrip) {
-      [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
-        b.addEventListener('click', function () { setWorkspace(b.getAttribute('data-ws')); });
-      });
-      setWorkspace('ui'); // default lens: UI (still one document, no timeline)
-    }
   })();
 </script>
 </body>

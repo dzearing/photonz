@@ -876,12 +876,12 @@
       "id": "supersede-workspace-switcher",
       "area": "foundation",
       "priority": "P0",
-      "status": "queued",
+      "status": "done",
       "deps": [],
       "title": "Remove/repurpose the persistent workspace switcher (.wsw Image·UI·Video lens) now superseded by PRODUCT-MODEL §4f: UI and image are NOT different apps and there is no live mode toggle. Replace with document identity in the title bar, tools/Properties contextual to the SELECTED LAYER, and the timeline appearing only when the document has time",
       "notes": "The .wsw was built during foundation-adjust and has since been adopted across ~25 conformed pages, so this is a sweep. Keep a workspace concept ONLY as a starting template chosen at New (menu-bar New Window / New from Clipboard / Open…), never as a live switcher. Also revert the UX-PATTERNS §1 text that describes workspaces as a lens you toggle.",
       "queue": "remove-the-workspace-switcher-from-the-mock-shel",
-      "triage": "Verified still live 2026-08-22: .wsw in dock.css and 43 pages."
+      "triage": "Done 2026-08-23 by the queue task: 43 authored .wsw blocks deleted, component CSS/JS removed, docs reverted, sweep clean 88/88."
     },
     {
       "id": "fix-canvas-child-sizing",

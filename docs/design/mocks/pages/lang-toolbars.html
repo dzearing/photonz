@@ -170,7 +170,7 @@
         </div>
 
         <div class="lt-leg">
-          <div class="lt-li"><span class="lt-pin">1</span><span><b>Tool strip</b> · one active tool at a time, single-key shortcuts, fixed order per workspace. <code>.tstrip</code></span></div>
+          <div class="lt-li"><span class="lt-pin">1</span><span><b>Tool strip</b> · one active tool at a time, single-key shortcuts, fixed order per document kind. <code>.tstrip</code></span></div>
           <div class="lt-li"><span class="lt-pin">2</span><span><b>Separator</b> · groups the clusters (select · create · measure · view) without drawing a box. <code>.tsep</code></span></div>
           <div class="lt-li"><span class="lt-pin">3</span><span><b>Overflow</b> · tools marked <code>.ovf</code> hide when the window narrows and reappear in the <b>more</b> menu, never re-slotted. <code>.tbar-more</code></span></div>
           <div class="lt-li"><span class="lt-pin">4</span><span><b>Colour pair</b> · foreground over background with a swap affordance. Photoshop muscle memory, X to swap. <code>.swpair</code></span></div>
@@ -222,13 +222,12 @@
       </div>
     </div>
 
-    <!-- 4 · VARIANTS · D4 per-workspace inventories -->
+    <!-- 4 · VARIANTS · D4 per-document-kind inventories -->
     <div class="lt-blk">
       <div class="lt-blk-h"><span class="lt-n">03</span><h3>Variants · the canonical tool inventories</h3><span class="lt-sub">Decision D4 · shared tools keep glyph and slot</span></div>
       <div class="lt-blk-b">
         <p class="lt-cap" style="margin:0">The strip order is fixed: <b>Select → create and edit cluster → measure and crop → Hand → Zoom</b>.
-          Shared tools keep the <b>same glyph and the same relative slot in every workspace</b>, so switching lenses never makes you hunt.
-          A workspace that lacks a shared tool omits it; it never re-slots the ones it has. Tools marked <code>.ovf</code> fold into
+          The inventory belongs to the <b>document kind</b>, chosen once at New: an image document carries the image tools, a UI document the frame and component tools, a timed document the blade. Shared tools keep the <b>same glyph and the same relative slot in every kind</b>, so moving between documents never makes you hunt. A kind that lacks a shared tool omits it; it never re-slots the ones it has. Tools marked <code>.ovf</code> fold into
           <b>more</b> when the window narrows.</p>
 
         <div class="lt-inv">
@@ -306,7 +305,7 @@
 
         <div class="lt-grid">
           <div class="spec">
-            <div class="spec-h">UI workspace strip<span class="tag">frames &amp; components</span></div>
+            <div class="spec-h">UI document strip<span class="tag">frames &amp; components</span></div>
             <div class="spec-b">
               <div class="cnv lt-plinth short">
                 <div class="canvas"><div class="artboard-label">1200 × 630 · Brand tokens</div></div>
@@ -330,7 +329,7 @@
             </div>
           </div>
           <div class="spec">
-            <div class="spec-h">Video workspace strip<span class="tag">the same six shared tools</span></div>
+            <div class="spec-h">Video document strip<span class="tag">the same six shared tools</span></div>
             <div class="spec-b">
               <div class="cnv lt-plinth short">
                 <div class="canvas"><div class="artboard-label">1920 × 1080 · 0:18</div></div>
@@ -353,7 +352,7 @@
           </div>
         </div>
         <p class="lt-cap">Select is always first and Hand and Zoom are always last, in both strips. Only the middle changes, because only
-          the middle is what this lens is for.</p>
+          the middle is what that kind of document is for.</p>
       </div>
     </div>
 
@@ -376,19 +375,14 @@
       </div>
     </div>
 
-    <!-- 6 · LIVE EXAMPLE · a complete app screen, lens-driven -->
+    <!-- 6 · LIVE EXAMPLE · a complete app screen, an image document -->
     <div class="lt-blk">
-      <div class="lt-blk-h"><span class="lt-n">05</span><h3>Live example</h3><span class="lt-sub">App screen · switch the lens and watch the strip swap</span></div>
+      <div class="lt-blk-h"><span class="lt-n">05</span><h3>Live example</h3><span class="lt-sub">App screen · an image document carries the image strip</span></div>
       <div class="lt-blk-b">
         <div class="win tall cq lt-app" data-shell="settings-capture · 2560 × 1440" data-ws="image">
           <div class="titlebar">
             <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
             <div class="wtitle"><b>settings-capture</b> · 2560 × 1440</div>
-            <div class="wsw" id="ltWsw" role="tablist" aria-label="Workspace">
-              <button class="wsw-seg on" data-ws="image" role="tab" aria-selected="true"><i class="ic sm ic-image"></i> Image</button>
-              <button class="wsw-seg" data-ws="ui" role="tab" aria-selected="false"><i class="ic sm ic-frame"></i> UI</button>
-              <button class="wsw-seg" data-ws="video" role="tab" aria-selected="false"><i class="ic sm ic-play"></i> Video</button>
-            </div>
             <div class="tbtns">
               <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
               <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
@@ -516,9 +510,9 @@
             </div>
           </div>
         </div>
-        <p class="lt-cap">Click <b>Image</b>, <b>UI</b>, or <b>Video</b> in the title bar. The strip swaps to that workspace's D4 inventory,
-          Select stays first, Hand and Zoom stay last, and the document, the layers and the dock never move. That is what "a workspace is a
-          lens, not an app" means in practice.</p>
+        <p class="lt-cap">This is an image document, so the strip is the image inventory: Select first, Hand and Zoom last, the retouch
+          cluster in the middle. There is no strip toggle to find, because the strip follows the document. Open a UI or video document
+          and its own inventory is simply there, in the same order, with the shared tools in the same slots.</p>
       </div>
     </div>
 
@@ -662,7 +656,7 @@
       <div class="lt-blk-h"><span class="lt-n">08</span><h3>Rules</h3><span class="lt-sub">Do / Don't</span></div>
       <div class="lt-blk-b">
         <div class="lt-dd">
-          <span class="lt-do">Keep the order Select → create → measure → Hand → Zoom, in every workspace.</span>
+          <span class="lt-do">Keep the order Select → create → measure → Hand → Zoom, in every document kind.</span>
           <span class="lt-no">Re-slot or re-glyph a shared tool because a page needed room.</span>
           <span class="lt-do">Split clusters with a thin separator, never a box.</span>
           <span class="lt-no">Add a permanent options-bar row. Tool options lead the Properties group.</span>
@@ -684,7 +678,7 @@
           <div class="lt-r"><code>run("tool.crop")</code><span>Picks a tool. The strip highlights it, the cursor changes, and the <b>Tool options</b> section swaps.</span></div>
           <div class="lt-r"><code>tool.active</code><span>Reads back the current tool, so an agent can restore it after doing its own work.</span></div>
           <div class="lt-r"><code>tool.options</code><span>The active tool's option set. The same values the Properties group shows.</span></div>
-          <div class="lt-r"><code>workspace.set("video")</code><span>Swaps the strip to that workspace's D4 inventory. Same document, different lens.</span></div>
+          <div class="lt-r"><code>document.kind</code><span>Reads the document's kind, fixed at New. The strip and panels follow it; there is no live mode to set.</span></div>
           <div class="lt-r"><code>view.zoom = 1.0</code><span>The zoom control. <code>"fit"</code> and <code>"100%"</code> are named values.</span></div>
           <div class="lt-r"><code>palette.open()</code><span>Raises ⌘K, the fourth equal way to reach any of the above.</span></div>
         </div>
@@ -696,7 +690,7 @@
 
     <div class="caption">
       <div class="c"><div class="lab">The idea</div><p>One small floating bar holds the tools, the colour pair, and zoom, and it floats so it costs the document nothing. Learn it once on a screenshot and it reads the same on a component or a video clip, because the same command drives every button.</p></div>
-      <div class="c"><div class="lab g2">A direction</div><p>The strip could be <b>user-pinnable</b>: promote the two tools you reach for most in a given workspace out of <b>more</b> and into the strip, remembered per document, without ever changing the order of the shared tools around them.</p></div>
+      <div class="c"><div class="lab g2">A direction</div><p>The strip could be <b>user-pinnable</b>: promote the two tools you reach for most in a given document kind out of <b>more</b> and into the strip, remembered per document, without ever changing the order of the shared tools around them.</p></div>
       <div class="c"><div class="lab g2">Open question</div><p>When several objects of different types are selected, the tool options are unambiguous but the selection properties are not. Does Properties show the intersection, the union with disabled extras, or a plain "mixed selection" summary?</p></div>
     </div>
 
@@ -704,49 +698,29 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-  /* Page-local: the workspace lens drives the D4 tool inventory (decision D4).
-     Everything else on this page (collapse, resize, rail, overlay, overflow,
-     tool selection, zoom) is shared DS behavior. */
+  /* Page-local: the live example is an IMAGE document, so its strip is the
+     image inventory (decision D4), built from the same list the overflow menu
+     is. The strip is fixed for the life of the document; there is no lens to
+     switch. Everything else on this page (collapse, resize, rail, overlay,
+     overflow, tool selection, zoom) is shared DS behavior. */
   (function () {
     var SEP = { sep: true };
-    var STRIPS = {
-      image: [
-        { i: 'cursor', t: 'Select', k: 'V' },
-        { i: 'lasso', t: 'Lasso', k: 'L' },
-        { i: 'wand', t: 'Select subject', k: 'W' }, SEP,
-        { i: 'crop', t: 'Crop', k: 'C', on: true },
-        { i: 'brush', t: 'Brush', k: 'B' },
-        { i: 'eraser', t: 'Eraser', k: 'E', ovf: true },
-        { i: 'heal', t: 'Heal', k: 'J', ovf: true },
-        { i: 'clone', t: 'Clone', k: 'S', ovf: true },
-        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
-        { i: 'text', t: 'Text', k: 'T', ovf: true },
-        { i: 'square', t: 'Shape', k: 'U', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ],
-      ui: [
-        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
-        { i: 'frame', t: 'Frame', k: 'F' },
-        { i: 'component', t: 'Component insert', k: 'C', tint: true },
-        { i: 'square', t: 'Shape', k: 'R', ovf: true },
-        { i: 'pen', t: 'Pen', k: 'P', ovf: true },
-        { i: 'text', t: 'Text', k: 'T', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ],
-      video: [
-        { i: 'cursor', t: 'Select', k: 'V', on: true }, SEP,
-        { i: 'blade', t: 'Blade / split', k: 'B' },
-        { i: 'text', t: 'Title / Text', k: 'T', ovf: true },
-        { i: 'square', t: 'Shape', k: 'R', ovf: true },
-        { sep: true, ovf: true },
-        { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
-        { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
-      ]
-    };
+    var IMAGE_STRIP = [
+      { i: 'cursor', t: 'Select', k: 'V' },
+      { i: 'lasso', t: 'Lasso', k: 'L' },
+      { i: 'wand', t: 'Select subject', k: 'W' }, SEP,
+      { i: 'crop', t: 'Crop', k: 'C', on: true },
+      { i: 'brush', t: 'Brush', k: 'B' },
+      { i: 'eraser', t: 'Eraser', k: 'E', ovf: true },
+      { i: 'heal', t: 'Heal', k: 'J', ovf: true },
+      { i: 'clone', t: 'Clone', k: 'S', ovf: true },
+      { i: 'pen', t: 'Pen', k: 'P', ovf: true },
+      { i: 'text', t: 'Text', k: 'T', ovf: true },
+      { i: 'square', t: 'Shape', k: 'U', ovf: true },
+      { sep: true, ovf: true },
+      { i: 'ruler', t: 'Measure', k: 'M', ovf: true }, SEP,
+      { i: 'hand', t: 'Hand', k: 'H' }, { i: 'zoom', t: 'Zoom', k: 'Z' }
+    ];
 
     function stripHTML(list) {
       return list.map(function (x) {
@@ -765,44 +739,27 @@
 
     var strip = document.getElementById('ltStrip');
     var ovf = document.getElementById('ltOvf2');
-    var wsw = document.getElementById('ltWsw');
     var cnt = document.getElementById('ltToolCnt');
     var nm = document.getElementById('ltToolName');
-    if (!strip || !wsw) return;
+    if (!strip) return;
 
     function label(name) {
       if (cnt) cnt.textContent = name;
       if (nm) nm.textContent = name;
     }
-    function wire(items) {
-      var tools = [].slice.call(strip.querySelectorAll('.tool'));
-      tools.forEach(function (t, idx) {
-        t.addEventListener('click', function () {
-          tools.forEach(function (x) { x.classList.remove('on'); });
-          t.classList.add('on');
-          if (items[idx]) label(items[idx].t);
-        });
+    var items = IMAGE_STRIP.filter(function (x) { return !x.sep; });
+    strip.innerHTML = stripHTML(IMAGE_STRIP);
+    if (ovf) ovf.innerHTML = menuHTML(IMAGE_STRIP);
+    var tools = [].slice.call(strip.querySelectorAll('.tool'));
+    tools.forEach(function (t, idx) {
+      t.addEventListener('click', function () {
+        tools.forEach(function (x) { x.classList.remove('on'); });
+        t.classList.add('on');
+        if (items[idx]) label(items[idx].t);
       });
-    }
-    function setWorkspace(ws) {
-      var list = STRIPS[ws];
-      if (!list) return;
-      var items = list.filter(function (x) { return !x.sep; });
-      strip.innerHTML = stripHTML(list);
-      if (ovf) ovf.innerHTML = menuHTML(list);
-      wire(items);
-      [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
-        var on = b.getAttribute('data-ws') === ws;
-        b.classList.toggle('on', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
-      var active = items.filter(function (x) { return x.on; })[0] || items[0];
-      label(active.t);
-    }
-    [].slice.call(wsw.querySelectorAll('.wsw-seg')).forEach(function (b) {
-      b.addEventListener('click', function () { setWorkspace(b.getAttribute('data-ws')); });
     });
-    setWorkspace('image');
+    var active = items.filter(function (x) { return x.on; })[0] || items[0];
+    label(active.t);
   })();
 </script>
 </body>

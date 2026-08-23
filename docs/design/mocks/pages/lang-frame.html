@@ -9,7 +9,7 @@
   /* ============================================================
      Page-local reference scaffolding ONLY. Every window, title bar and
      control on this page is the shared DS (.win/.titlebar/.lights/
-     .wtitle/.wsw/.tbtns/.btn/.edit.lean/.tbar/.pdock). Local names are
+     .wtitle/.tbtns/.btn/.edit.lean/.tbar/.pdock). Local names are
      all prefixed `lf-` so nothing can collide with a DS class
      (bar/btn/card/sw/val/tool/sheet/rail/dock/tbar are all left alone).
      Spacing/radii/colors come from the 4pt tokens.
@@ -47,7 +47,7 @@
   #lang-frame .lf-off .titlebar{background:var(--panel-2)}
   #lang-frame .lf-off .wtitle,#lang-frame .lf-off .wtitle b{color:var(--faint)}
   #lang-frame .lf-off .lf-dot{background:var(--faint);box-shadow:none}
-  #lang-frame .lf-off .btn,#lang-frame .lf-off .wsw{opacity:.5}
+  #lang-frame .lf-off .btn{opacity:.5}
 
   /* edited dot + saved tick, part of document identity */
   #lang-frame .lf-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;

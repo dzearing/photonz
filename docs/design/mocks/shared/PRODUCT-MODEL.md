@@ -325,7 +325,8 @@ bar, it is claiming to be the app, so it must actually be the app:
   the canvas, the floating tool bar, and the dock groups appropriate to its
   workspace. **No arbitrarily missing toolbar. No arbitrarily missing dock.**
 - **Title bar content is fixed** — traffic lights · **document identity** ·
-  workspace switcher · document actions (Share / Export / Done). Document
+  status · the Ask launcher (no workspace switcher, no document actions; the
+  native menu bar owns Share / Export, see §4f). Document
   identity means the document's name plus its context:
   `settings-capture · 2560 x 1440`, `promo-cut · 0:18`, `untitled-1 · 1200 x 630`.
 - **NEVER put a lesson title, feature name, or explanatory phrase in a title

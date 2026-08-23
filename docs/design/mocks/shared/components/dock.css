@@ -52,26 +52,6 @@
 .askseed .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
   font-weight:660;color:var(--faint)}
 
-/* Workspace switcher (the lens selector). Image · UI · Video are workspaces
-   over ONE document (see PRODUCT-MODEL.md §1). Switching a workspace re-arranges
-   the chrome — the tool strip contents and whether the timeline dock is shown —
-   around the same layer stack; it is the visible proof that surfaces are lenses.
-   Capsule Liquid-Glass segmented, 4pt spacing. Compose .wsw > .wsw-seg. */
-.wsw{display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:999px;
-  background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
-  border:1px solid var(--edge-lo);box-shadow:inset 0 1px 0 var(--edge-hi)}
-.wsw-seg{display:inline-flex;align-items:center;gap:6px;height:var(--ctl-h-sm);padding:0 var(--pad-sm);
-  border:0;background:transparent;color:var(--dim);font-family:inherit;font-size:11.5px;font-weight:560;
-  border-radius:999px;white-space:nowrap;cursor:pointer;transition:var(--ctl-tr)}
-.wsw-seg .ic{color:var(--faint);flex:none}
-.wsw-seg:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 60%, transparent)}
-.wsw-seg:active{transform:scale(.97)}
-.wsw-seg:focus-visible{outline:none;box-shadow:var(--ring)}
-.wsw-seg.on{color:var(--accent-ink);
-  background:linear-gradient(180deg, color-mix(in srgb,var(--accent) 88%, white 12%), var(--accent));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), var(--glow-sm)}
-.wsw-seg.on .ic{color:var(--accent-ink)}
-
 /* Adjustment / filter layer — a first-class layer type (PRODUCT-MODEL.md §1).
    A non-destructive effect (hue, grade, blur, curves) that clips to the layers
    BELOW it. Because it is just a layer, it applies to a UI frame exactly as to a

@@ -3,11 +3,11 @@
   "title": "Remove the workspace switcher from the mock shell",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.002Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-23T06:49:11.743Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: creation-vision > editor-surfaces (one-shell model, PRODUCT-MODEL 4f). From study-tasks.json supersede-workspace-switcher (P0 there). PRODUCT-MODEL section 4f: UI and image are NOT different apps; no live lens toggle. .wsw still lives in shared/components/dock.css and 43 pages. Replace with document identity in the title bar, tools/Properties contextual to the selected layer, timeline only when the document has time. Keep workspace only as a starting template at New. Also revert the UX-PATTERNS section 1 text describing workspaces as a toggleable lens.",
@@ -33,6 +33,32 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T06:36:33.117Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T06:50:00.000Z",
+      "note": "survey: all 43 authored .wsw blocks sit inside [data-shell] windows, so shell.js already stripped them at runtime; removal is source cleanup plus two pages whose wsw-keyed scripts were silently broken (app-shell empty More-tools menu, lang-toolbars empty tool strip)"
+    },
+    {
+      "t": "2026-08-23T07:05:00.000Z",
+      "note": "removed 43 .wsw blocks across 40 pages; deleted .wsw CSS from dock.css + titlebar.css responsive rule; shell.js drops its strip line and stale comments; app-shell authors the UI overflow menu statically; lang-toolbars builds the image inventory once and its copy is reframed to document kinds"
+    },
+    {
+      "t": "2026-08-23T07:15:00.000Z",
+      "note": "docs: UX-PATTERNS §1 rewritten (no toggleable lens; title bar = lights · identity · status · Ask), PRODUCT-MODEL §4c title-bar contract updated, AGENTS.md .wsw entry marked REMOVED, study-tasks.json supersede-workspace-switcher marked done"
+    },
+    {
+      "t": "2026-08-23T07:25:00.000Z",
+      "note": "verified in Chrome: grep wsw over pages/ + shared/components/ = 0; audit-sweep 88/88 pages clean, zero live .wsw; all pages 200; app-shell timeline hidden (UI doc), video.html timeline visible with duration in title; dist rebuilt clean"
+    },
+    {
+      "t": "2026-08-23T06:49:11.742Z",
+      "note": "Workspace switcher removed everywhere: 43 authored .wsw blocks deleted across 40 pages, component CSS/JS gone, UX-PATTERNS §1 + PRODUCT-MODEL + AGENTS.md reverted to the one-shell model, and the two pages whose wsw-keyed scripts had silently broken (app-shell More-tools menu, lang-toolbars tool strip) repaired. Verified in Chrome: grep wsw = 0 in pages/ and shared/components/, audit-sweep clean 88/88, all pages 200, timeline only on timed documents."
     }
-  ]
+  ],
+  "started": "2026-08-23T06:36:33.116Z",
+  "completed": "2026-08-23T06:49:11.743Z"
 }

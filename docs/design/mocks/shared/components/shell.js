@@ -21,10 +21,13 @@
          <div class="edit lean" data-dock="open"> … </div>
        </div>
 
-     data-ws: image | ui | video, or "none" to omit the lens selector.
+     data-ws: image | ui | video — a record of the document's KIND (it drives
+     the tool strip), not a live lens: the title bar carries no workspace
+     switcher (PRODUCT-MODEL.md §4f — the workspace is only a starting
+     template at New).
 
-     What it emits is exactly app-shell's title bar — lights · title · the
-     `.wsw` lens · the Ask launcher — plus the agent-chat overlay. What it
+     What it emits is exactly app-shell's title bar — lights · title · status
+     · the Ask launcher — plus the agent-chat overlay. What it
      REMOVES is the chrome the canonical shell does not have: any authored
      `.titlebar` (with its Share/Export/Done `.tbtns`) and any `.toolbar`
      command strip. Nothing is lost with the strip: its `…` command surface and
@@ -230,7 +233,6 @@
     // now the rows hold nothing but chrome, so drop them
     all(':scope > .titlebar', win).forEach(function (t) { t.parentNode.removeChild(t); });
     all(':scope > .toolbar', win).forEach(function (t) { t.parentNode.removeChild(t); });
-    all('.wsw', win).forEach(function (t) { t.parentNode.removeChild(t); });
 
     // 2 · the ask overlay, one per shell, before the title bar needs its id
     // look anywhere in the shell, not just at direct children: a page that
