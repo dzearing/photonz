@@ -1,0 +1,30 @@
+{
+  "id": "tool-modes-move-into-a-flyout-on-the-tool-button",
+  "title": "Tool modes move into a flyout on the tool button, so the tool bar stops growing",
+  "goal": "Picking the Measure tool currently adds six controls to the tool bar: four labelled mode chips, a Snap menu and a Show menu. The bar is a fixed strip that has to survive a narrow window, and every future tool with modes would spread the same way. Modes should live in the tool button itself, opening upward out of the bar the way a pro editor does it, so selecting a tool never changes how wide the bar is.",
+  "epic": "measure-redline",
+  "priority": "p0-critical",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T22:05:04.152Z",
+  "updated": "2026-08-23T22:05:04.152Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Playtest 2026-08-23: horizontal space in the toolbar is scarce and the measure options row is eating it. Reference behaviour is the Photoshop tool flyout. Current code: EditorView.measureOptions builds the chip row plus measureSnapOption and measureShowOption, gated by hasMeasureOptions; contextualToolOptions is where per-tool rows are added, so wand and crop options are the same pattern and should follow once measure proves it. The rule is written up as UX-PATTERNS D15, including the mode-versus-setting test: if it changes what the pointer does it can be a mode, if it changes how the result looks it is a setting. Build the flyout as a shared control, not a measure-only one, since shape, marquee and brush all need it next.",
+  "acceptance": [
+    "Selecting any tool leaves the tool bar exactly the same width, measured before and after",
+    "The Measure tool button shows the active mode as a glyph, with a small marker saying it has more",
+    "Press and hold, or clicking the marker, opens a flyout above the bar listing the modes with names and shortcuts, closing on pick, Escape and outside click",
+    "Pressing the tool key again cycles modes without opening anything",
+    "Snap and Show leave the bar: they are settings, not modes, and live with the tool properties",
+    "A tool with only one mode shows no marker and no flyout"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T22:05:04.152Z",
+      "note": "created (manual)"
+    }
+  ]
+}

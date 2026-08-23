@@ -960,3 +960,38 @@ verdict, caliper value chips, gap labels, hover outlines and the role legend.
 
 The test for any annotation: cover the callout with your thumb, and the picture
 should still show everything the callout is claiming.
+
+---
+
+### D15 — A tool's modes live in the tool, not in a row beside it
+
+The floating tool bar is a fixed, scarce strip: it holds every tool, the colour
+pair and zoom, and it has to survive a narrow window. So its width must not
+grow with the tool you happen to have selected. Picking Measure was adding four
+labelled mode chips plus a Snap menu plus a Show menu, six controls of running
+text, and every future tool with modes would have done the same.
+
+**The tool button owns its modes**, the way a pro editor has always done it:
+
+- The tool button shows the **active mode's glyph**, so the bar says what you
+  are about to do without a word of text.
+- Pressing and holding it, or clicking its corner marker, opens a **flyout that
+  expands upward** out of the bar (the bar sits at the bottom, so up is the only
+  direction with room). The flyout lists the modes with names, glyphs and
+  shortcuts, and it closes on pick, on Escape, and on an outside click.
+- **The keyboard is the fast path.** Pressing the tool's key again cycles its
+  modes, so a mode is never more than a keystroke away and the flyout is for
+  discovery rather than for daily use.
+- A tool with exactly one mode has no flyout and no marker: the affordance
+  appears only when there is a choice.
+
+**Options that are not modes do not belong in the bar at all.** A mode changes
+what a click does; everything else (Snap behaviour, which roles are shown, a
+tolerance) is a setting, and settings live in the Inspector with the rest of the
+tool's properties, or at the foot of the same flyout when they change how the
+next click behaves. The test: if it changes what the pointer does, it can be a
+mode; if it changes how the result looks or what is displayed, it is a setting.
+
+The result the bar must hold to: **selecting any tool leaves the tool bar the
+same width it was**. If a tool needs more room to explain itself, it needs a
+flyout, not a wider bar.

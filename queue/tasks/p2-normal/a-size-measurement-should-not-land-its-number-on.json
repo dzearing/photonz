@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:02:56.531Z",
-  "updated": "2026-08-23T22:02:56.532Z",
+  "updated": "2026-08-23T22:03:52.639Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureContent.subjectRects only covers the measuring line for a plain caliper. EditorState.addElementSize and the Size hover preview in CanvasView both already know the element rect and could feed it to MeasureLabelPlanner.plan as an avoid rect (or a real subject). Watch the interaction with the shortened head from clearingHeadOffset: near an edge there may be nowhere clear, so the planner needs a sane last resort rather than a jump.",
@@ -22,6 +22,11 @@
     {
       "t": "2026-08-23T22:02:56.531Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T22:03:52.639Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-08-23T22:03:52.638Z"
 }
