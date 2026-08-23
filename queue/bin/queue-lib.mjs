@@ -555,6 +555,10 @@ export function aggregateState() {
     next: tasks.filter((t) => t.status === 'pending').sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || '')).slice(0, 8),
     series,
     history: history.slice(-80).reverse(),
-    digests: { list: digestNames, latest: digestNames[0] ? { name: digestNames[0], body: readDigest(digestNames[0]) } : null },
+    // Names only. The body used to ride along on every poll, which put the
+    // whole of today's digest (7KB of markdown) into a payload the dashboard
+    // fetches every 4 seconds and re-parses. The page fetches the one digest it
+    // is showing from /api/digest/<name> instead.
+    digests: { list: digestNames, latest: digestNames[0] || null },
   };
 }

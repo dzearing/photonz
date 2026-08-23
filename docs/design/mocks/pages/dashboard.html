@@ -246,23 +246,18 @@
   #dashboard .db-obrow.drop-into{border-color:var(--accent);background:var(--accent-soft)}
   #dashboard .db-obhint{font-size:10.5px;color:var(--faint);margin:var(--s3) 0 0;line-height:1.5}
 
-  /* ---- digest tab ---- */
-  #dashboard .db-digrid{display:grid;grid-template-columns:170px 1fr;gap:var(--gap)}
-  @media (max-width:700px){#dashboard .db-digrid{grid-template-columns:1fr}}
   @media (prefers-reduced-motion:reduce){
     #dashboard .db-decide{transition:none}
     #dashboard .db-enter{animation:none}
     #dashboard .db-brief{transition:none}
   }
-  #dashboard .db-dilist{display:flex;flex-direction:column;gap:2px}
-  /* each digest is its own URL, so these are real anchors: right-click copies
-     the link, middle-click opens it standalone. Link semantics, list styling. */
-  #dashboard .db-dilist a{display:block;text-align:left;border:0;background:transparent;color:var(--dim);font-size:12px;font-weight:560;
-    padding:var(--s2) var(--s3);border-radius:var(--r2);cursor:pointer;font-variant-numeric:tabular-nums;text-decoration:none}
-  #dashboard .db-dilist a:hover{background:var(--panel-2);color:var(--ink);text-decoration:none}
-  #dashboard .db-dilist a.on{background:var(--accent-soft);color:var(--accent)}
-  #dashboard .db-dilist a:focus-visible{outline:none;box-shadow:var(--ring)}
-  #dashboard .db-md{font-size:12.5px;line-height:1.65;color:var(--dim)}
+
+  /* ---- digest tab ---- */
+  /* The day list used to be a rail down the left. Picking a date is a one-shot
+     choice, not something you scan, so it moved into a select beside the page
+     title and the digest got the reclaimed width. Prose still gets a measure:
+     a 1200px line of body text is unreadable no matter how much room there is. */
+  #dashboard .db-md{font-size:12.5px;line-height:1.65;color:var(--dim);max-width:860px}
   #dashboard .db-md h1{font-size:16px;letter-spacing:-.01em;color:var(--ink);margin:0 0 var(--s3)}
   #dashboard .db-md h2{font-size:13.5px;letter-spacing:-.01em;color:var(--ink);margin:var(--gap-lg) 0 var(--s2);
     padding-bottom:var(--s2);border-bottom:1px solid var(--line-soft)}
@@ -277,8 +272,7 @@
 <body class="page">
 <main class="stage">
   <section class="screen on" id="dashboard">
-    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Project dashboard</h2><span class="k" id="db-refresh"></span></div>
-    <p class="pglead">Photonz is being built by an unmanned loop that executes one task at a time. This page is its front door: what is running, what needs your call, what shipped, and how the numbers move. Resolving a question here feeds straight back into the queue.</p>
+    <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2 id="db-title">Summary</h2><span class="k" id="db-refresh"></span><span id="db-headslot"></span></div>
 
     <div id="db-body"><div class="db-empty">Connecting to the queue…</div></div>
     <div class="db-tip" id="db-tip"></div>
@@ -316,7 +310,10 @@
   function load() {
     fetch('/api/state', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
       S = data;
-      var j = JSON.stringify(data);
+      // `generated` is stamped fresh on every response, so comparing the raw
+      // payload made every poll look like a change and re-rendered the whole
+      // page (charts, markdown and all) every 4 seconds. Compare the CONTENT.
+      var j = JSON.stringify(data, function (k, v) { return k === 'generated' ? undefined : v; });
       var typing = document.activeElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable);
       var editingObjectives = tab === 'objectives' && (obDirty || obDragId);
       var briefOpen = !!document.querySelector('.db-brief.on');
@@ -345,8 +342,15 @@
   // Rows carry data-key; anything whose key was not present in the previous
   // render animates in, so arriving content lands gracefully instead of popping.
   var renderKeys = null;
+  var TAB_TITLE = { summary: 'Summary', objectives: 'Objectives', tasks: 'Tasks', data: 'Data', digest: 'Digest' };
   function render() {
     if (!S) return;
+    // the page names itself after the section you are in; the rail already said
+    // which project this is, so repeating it here only cost vertical space
+    var titleEl = document.getElementById('db-title');
+    if (titleEl) titleEl.textContent = TAB_TITLE[tab] || 'Summary';
+    var slot = document.getElementById('db-headslot');
+    if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : '';
     if (tab === 'summary') body.innerHTML = renderSummary();
     if (tab === 'objectives') { body.innerHTML = renderObjectives(); wireObjectives(); }
     if (tab === 'tasks') body.innerHTML = renderTasks();
@@ -1015,26 +1019,42 @@
   // Every digest is addressable: ?tab=digest&d=2026-08-23.md is a real URL that
   // opens that day standalone, and the shell mirrors it as #dashboard@digest/<name>.
   function digestURL(name) { return '?tab=digest&d=' + encodeURIComponent(name); }
+  // The day picker rides beside the page title, so the digest itself gets the
+  // full width. It is a real <select> because picking one of N dates is exactly
+  // what a select is for, and the dates stay addressable as their own URLs.
+  function digestPicker() {
+    var list = (S && S.digests.list) || [];
+    if (list.length < 2) return '';
+    if (!digestSel || list.indexOf(digestSel) < 0) digestSel = list[0];
+    return '<select class="select sm" id="db-dsel" title="Pick a day">' + list.map(function (n) {
+      return '<option value="' + esc(n) + '"' + (n === digestSel ? ' selected' : '') + '>' +
+        esc(n.replace('.md', '')) + (n === list[0] ? ' · latest' : '') + '</option>';
+    }).join('') + '</select>';
+  }
   function renderDigest() {
     var list = S.digests.list;
-    if (!list.length) return '<div class="db-card"><div class="db-card-b"><div class="db-empty">No digest yet. The go loop writes one on its first pass each day: a summary of the last 24 hours, reflections, and a triage review.</div></div></div>';
+    if (!list.length) return '<div class="db-card"><div class="db-card-b"><div class="db-empty">No digest yet. The go loop writes one on its first pass at or after 5am: what happened in the last day, reflections, a design review, and a triage review.</div></div></div>';
     if (!digestSel || list.indexOf(digestSel) < 0) digestSel = list[0];
-    var h = '<div class="db-digrid"><div class="db-dilist">';
-    list.forEach(function (n) {
-      h += '<a data-act="digest" data-name="' + esc(n) + '" href="' + digestURL(n) + '" class="' + (n === digestSel ? 'on' : '') + '">' + esc(n.replace('.md', '')) + '</a>';
-    });
-    h += '</div><div class="db-card"><div class="db-card-b"><div class="db-md" id="db-md">Loading…</div></div></div></div>';
-    setTimeout(function () { loadDigest(digestSel); }, 0);
+    // exactly one digest is ever in the document; the rest are one fetch away
+    var cached = digestCache[digestSel];
+    var h = '<div class="db-card"><div class="db-card-b"><div class="db-md" id="db-md">' +
+      (cached ? md(cached) : '<p class="db-empty">Loading…</p>') + '</div></div></div>';
+    if (!cached) setTimeout(function () { loadDigest(digestSel); }, 0);
     return h;
   }
   function loadDigest(name) {
     var el = document.getElementById('db-md');
     if (!el) return;
-    if (S.digests.latest && S.digests.latest.name === name) { el.innerHTML = md(S.digests.latest.body); return; }
     if (digestCache[name]) { el.innerHTML = md(digestCache[name]); return; }
     fetch('/api/digest/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
       digestCache[name] = d.body || '';
-      el.innerHTML = md(digestCache[name]);
+      if (digestSel === name) {
+        var cur = document.getElementById('db-md');
+        if (cur) { cur.innerHTML = md(digestCache[name]); cur.classList.add('db-enter'); }
+      }
+    }).catch(function () {
+      var cur = document.getElementById('db-md');
+      if (cur) cur.innerHTML = '<p class="db-empty">That digest could not be loaded.</p>';
     });
   }
   // minimal markdown: headings, lists, bold, code, links. Digests are our own format.
@@ -1140,15 +1160,9 @@
       return;
     }
     if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
-    // real anchor: let modified clicks (new tab, download) do their normal
-    // thing, and handle a plain click in place so the iframe does not reload.
-    if (b.dataset.act === 'digest') {
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-      e.preventDefault();
-      selectDigest(b.dataset.name);
-    }
   });
   document.getElementById('dashboard').addEventListener('change', function (e) {
+    if (e.target.id === 'db-dsel') { selectDigest(e.target.value); return; }
     var s = e.target.closest('select[data-act="prio"]');
     if (s) { post('/api/task/update', { id: s.dataset.id, priority: s.value }); return; }
     var q2 = e.target.closest('input[data-act="seq"]');
