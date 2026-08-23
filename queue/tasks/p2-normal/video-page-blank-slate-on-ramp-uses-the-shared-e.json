@@ -4,11 +4,11 @@
   "goal": "The main video page opens with its own one-off getting-started stepper, while every other surface now teaches the same shared empty-state opening. This replaces the one-off so someone arriving with nothing open sees one consistent way in.",
   "priority": "p2-normal",
   "seq": 330,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:29:06.098Z",
-  "updated": "2026-08-23T14:29:06.098Z",
+  "updated": "2026-08-23T21:49:15.993Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit 2026-08-23 ('Video app pages', med, A), left out of the conformance pass that closed the rest of that section. docs/design/mocks/pages/video.html still opens with a second chrome-less .win containing a bespoke .onramp/.onstep/.onstage stepper (page-local, used nowhere else). Since then blank-slate-entry-clickthrough-per-surface-on-on shipped shared/components/entry.js plus a dedicated video-entry-wt clickthrough, so the on-ramp is now a second, divergent answer to the same question. Either convert it onto the shared entry template or drop it in favour of video-entry-wt. Worth a decision card if dropping changes what the video page teaches.",
@@ -21,6 +21,28 @@
     {
       "t": "2026-08-23T14:29:06.098Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T21:47:41.861Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T21:49:11.124Z",
+      "note": "Triage against queue/objectives.json. This task serves the video mock family (epic video-editing, stage later; the same work also reads as design-system > clickthrough-sweep, stage later under a next parent). The only epic staged now is measure-redline, and this does not unblock it. Runner rule: a task serving a later epic is dropped, not done."
+    },
+    {
+      "t": "2026-08-23T21:49:11.124Z",
+      "note": "Premise re-verified so nothing is lost if the user re-stages. pages/video.html still carries the page-local .onramp/.onsteps/.onstep/.onstage stepper (CSS at lines 26-48, markup 314-327, wiring 699-703), used on no other page. shared/components/entry.js exists and is used by capture-wt, ui-entry-wt and video-entry-wt, so pages/video-entry-wt.html is already the dedicated video getting-started clickthrough. Cheapest correct fix when it is in focus: delete the on-ramp block from video.html and let video-entry-wt own that lesson, which is also what the acceptance allows."
+    },
+    {
+      "t": "2026-08-23T21:49:11.124Z",
+      "note": "Queue observation for the user, not new work: 24 of the 26 open tasks are design-study conformance items in the same position as this one. If the mock study should keep moving, re-stage design-system to now in objectives.json; otherwise the loop will drop them one at a time."
+    },
+    {
+      "t": "2026-08-23T21:49:15.993Z",
+      "note": "Serves the video mock family (epic video-editing, staged later); the only epic staged now is measure-redline and this does not unblock it, so the runner rule says drop rather than do. The premise is still true and recorded in the task log: video.html keeps a page-local .onramp/.onstep stepper used nowhere else, and video-entry-wt.html already teaches the same thing on the shared entry template, so the fix is a deletion whenever the video or design-system epic is staged now. Note for triage: 24 of the 26 open tasks are design-study conformance in the same position."
     }
-  ]
+  ],
+  "started": "2026-08-23T21:47:41.860Z",
+  "epic": "video-editing"
 }
