@@ -3,11 +3,11 @@
   "title": "Video app pages conform to shared timeline/selection primitives",
   "priority": "p2-normal",
   "seq": 250,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:20.603Z",
-  "updated": "2026-08-23T14:22:22.580Z",
+  "updated": "2026-08-23T14:29:38.940Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 (docs/design/mocks/ux-audit-2026-08-23.md, 'Video app pages'). Pages: video, video-audio, video-captions, video-compositing, video-motion, video-speed, video-transitions. Key items: drop Layers dgrp+rail tab from timeline workspaces; video-motion rebuild bespoke .mg-tl* dock on shared timeline primitives (high); video-compositing replace .selring/.seltag with .selwrap/.sel-ring/.handle/.mtag (high); shared .xband/.libtile.tt instead of .xition/.tpi/.tregion; DS .slider for .fader/.vc-slider; add data-tl-summary; delete legacy titlebar/toolbar/.cmdk; icon fixes (ic-captions, ic-loop, ic-mask, ic-volume-off, ic-speed; new Solo glyph). Verify all pages 200 + shared/audit-sweep.js clean.",
@@ -28,7 +28,12 @@
     {
       "t": "2026-08-23T14:40:00.000Z",
       "note": "Recovered the previous run's uncommitted work and verified it rather than redoing it. Browser-verified (not class-grep): all 90 pages HTTP 200; audit-sweep.js run over all 90 in 3 batches, zero findings (74 segs, 79 dock managers measured). Confirmed every bespoke class is gone (mg-tl, mg-stepper, selring, seltag, vc-slider, capring, fader, outclip, tregion, thandle, tpi, xition, cmdk = 0 hits) and that the shared replacements are really styled and laid out, not just renamed. Drove real selection on video.html: clicking a video clip turns on .sel-ring at 442x250 with four 9x9 .handle elements and updates the .mtag; clicking the title clip hands the ring to the title layer instead. All 7 pages run with no JS errors and live data-tl-summary values. Remaining ic-history/ic-component/ic-text/ic-star hits checked in context and are legitimate (capture history, component layers, the Text tool, set-as-default). Left the video.html blank-slate on-ramp alone (outside this task's key items) and queued it as video-page-blank-slate-on-ramp-uses-the-shared-e; queued the loop crash as go-loop-finalizes-or-releases-a-task-instead-of."
+    },
+    {
+      "t": "2026-08-23T14:29:38.939Z",
+      "note": "All 7 video pages (video, -audio, -captions, -compositing, -motion, -speed, -transitions) now use the shared timeline, selection, slider and library primitives; Layers group dropped from timeline workspaces, data-tl-summary added, legacy titlebar/toolbar/.cmdk deleted, icon near-misses fixed, new Solo glyph added to the shared set. Browser-verified: 90/90 pages HTTP 200 and audit-sweep.js clean across all 90 (zero findings); real click-through on video.html draws the shared .sel-ring with its four handles and updates the .mtag; no JS errors on any of the 7. Committed as 1e7250b and pushed to main."
     }
   ],
-  "started": "2026-08-23T14:22:22.580Z"
+  "started": "2026-08-23T14:22:22.580Z",
+  "completed": "2026-08-23T14:29:38.940Z"
 }
