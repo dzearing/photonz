@@ -1075,6 +1075,67 @@ final class EditorState {
         return entries
     }
 
+    // MARK: - Measurements panel (§6-7, `next-measure-panel`)
+
+    /// The Measurements panel's rows: the document's measure layers, top-most
+    /// first. A filtered view of the layer stack — never separate state, so
+    /// selection, visibility, and delete are the layer operations.
+    var measurePanelLayers: [Layer] {
+        guard let document else { return [] }
+        return MeasureSpecList.measureLayers(in: document)
+    }
+
+    /// How many measurements the document holds (the toolbar pill's number).
+    var measurementCount: Int { measurePanelLayers.count }
+
+    /// Panel menu Show all / Hide all: every measure layer's eye, ONE undo
+    /// step. Layers already in the requested state stay untouched, so an
+    /// all-visible "Show all" records nothing.
+    func setAllMeasurementsVisible(_ visible: Bool) {
+        discardDragPreview()
+        let ids = measurePanelLayers.filter { $0.isVisible != visible }.map(\.id)
+        guard !ids.isEmpty else { return }
+        perform { doc in
+            for id in ids { doc.updateLayer(id: id) { $0.isVisible = visible } }
+        }
+    }
+
+    /// Panel menu Clear measurements: every measure layer deleted in one undo
+    /// step. Undo is the safety net — no confirmation dialog (the mock's rule).
+    func clearAllMeasurements() {
+        let ids = measurePanelLayers.map(\.id)
+        guard !ids.isEmpty else { return }
+        deleteLayers(ids: ids)
+    }
+
+    /// The toolbar count pill's click (§6): reveal the docked inspector and
+    /// un-collapse the Measurements group so the rows are on screen.
+    func revealMeasurementsPanel() {
+        setInspectorVisible(true)
+        let key = "inspector.collapsed"
+        let collapsed = UserDefaults.standard.string(forKey: key) ?? ""
+        var set = Set(collapsed.split(separator: ",").map(String.init))
+        if set.remove(InspectorSectionID.measurements.rawValue) != nil {
+            UserDefaults.standard.set(set.sorted().joined(separator: ","), forKey: key)
+        }
+    }
+
+    /// The spec list's header name: the document's own name (no extension),
+    /// never the decorated window title with its release tag.
+    private var specListName: String {
+        (documentURL ?? openedFileURL)?.deletingPathExtension().lastPathComponent ?? untitledName
+    }
+
+    /// Copy as spec list (§7): the pinned plain-text form of the visible
+    /// measurements goes on the clipboard.
+    func copyMeasureSpecList() {
+        guard let document else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(MeasureSpecList.render(document: document, name: specListName),
+                             forType: .string)
+    }
+
     /// The role memory a style edit files under: the SELECTED measurement's
     /// role (§5's absorb rule), or the last-used role when no measure is
     /// selected and the edit only retunes the tool's defaults.

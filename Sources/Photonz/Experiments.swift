@@ -161,6 +161,12 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var measureRolesEnabled: Bool { isEnabled(FeatureCatalog.measureRolesFlag) }
 
+    /// `next-measure-panel`: whether the layers panel grows its Measurements
+    /// group (rows, count pill, panel menu) and the measure inspector its
+    /// From/To/Distance grid and Export section. Exists only in the Next
+    /// release's catalog, so Current always reads false.
+    var measurePanelEnabled: Bool { isEnabled(FeatureCatalog.measurePanelFlag) }
+
     /// `next-arrow-captions`: whether drawing an arrow offers an inline caption
     /// (and arrows are double-clickable to edit one). Exists only in the Next
     /// release's catalog, so Current always reads false.

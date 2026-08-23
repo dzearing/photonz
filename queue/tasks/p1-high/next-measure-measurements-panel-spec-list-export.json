@@ -2,11 +2,11 @@
   "id": "next-measure-measurements-panel-spec-list-export",
   "title": "Next Measure: Measurements panel + spec list export",
   "priority": "p1-high",
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:11:40.845Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T01:52:13.003Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > measurements-panel + spec-export. Implement docs/design/next-measure.md sections 6-7 behind flag next-measure-panel: dock group as a filtered view of measure layers sharing the app selection, per-row eye, Show all / Hide all / Clear (one undo step each), toolbar count pill, From/To/Distance/Units read-only grid, Export buttons, and MeasureSpecList.render in PhotonzCore (TDD, pinned format). Best run after the roles task so rows have swatches; also picks up whatever the naming decision chose. Decisions resolved 2026-08-22: naming = derived automatic names (rows name themselves like \"Width 128 px\", double-click to rename; no OCR); describe-specs = omit (ship the copyable text spec list and export buttons only, no agent button).",
@@ -27,7 +27,24 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T01:52:13.003Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T02:05:00.000Z",
+      "note": "core landed TDD-first: MeasureSpecList (panel order, D3 derived names, pinned spec-list text) + next-measure-panel flag; 9 new tests green"
+    },
+    {
+      "t": "2026-08-23T02:35:00.000Z",
+      "note": "app landed: Measurements dock group (shared selection, eye, rename, ink swatches), header count badge + panel menu (one undo step each), toolbar count pill with reveal, Measure menu in the menu bar, inspector From/To/Distance/Units grid + Export buttons; docs updated (D3/D4 resolved, shipped-shape notes)"
+    },
+    {
+      "t": "2026-08-23T02:40:00.000Z",
+      "note": "verified: Scripts/test.sh green (932 tests), dev app bundle builds and launches; manned look/feel pass still worthwhile (TCC blocks unmanned capture)"
     }
   ],
-  "seq": 50
+  "seq": 50,
+  "started": "2026-08-23T01:52:13.002Z"
 }

@@ -317,6 +317,22 @@ struct EditorCommands: Commands {
             .disabled(selectedID == nil)
         }
 
+        // The mock's Measure command group (§6, `next-measure-panel`): the tool
+        // plus the two whole-document actions. The flag exists only in Next's
+        // catalog, so Current never grows this menu.
+        if Experiments.shared.measurePanelEnabled {
+            CommandMenu("Measure") {
+                let count = editor?.measurementCount ?? 0
+                Button("Measure Tool") { editor?.setTool(.measure) }
+                    .disabled(editor?.document == nil)
+                Divider()
+                Button("Show All Measurements") { editor?.setAllMeasurementsVisible(true) }
+                    .disabled(count == 0)
+                Button("Clear Measurements") { editor?.clearAllMeasurements() }
+                    .disabled(count == 0)
+            }
+        }
+
         CommandGroup(after: .sidebar) {
             let hasDocument = editor?.document != nil
             Button((editor?.isLayersPanelVisible ?? false) ? "Hide Layers" : "Show Layers") {

@@ -45,7 +45,8 @@ struct InspectorPanel: View {
                         dragItem: {
                             dragging = id
                             return NSItemProvider(object: id.rawValue as NSString)
-                        }
+                        },
+                        accessory: sectionAccessory(id)
                     ) {
                         sectionContent(id)
                     }
@@ -88,6 +89,11 @@ struct InspectorPanel: View {
             if layer.collage != nil { set.insert(.collage) }
         }
         if editorState.isCanvasSelected { set.insert(.canvas) }
+        // The Measurements group (§6, `next-measure-panel`): a filtered view of
+        // the layer stack, present whenever the document holds a measurement.
+        if Experiments.shared.measurePanelEnabled, editorState.measurementCount > 0 {
+            set.insert(.measurements)
+        }
         return set
     }
 
@@ -96,11 +102,20 @@ struct InspectorPanel: View {
         return order.filter { available.contains($0) }
     }
 
+    /// Header furniture for sections that carry any: the Measurements group's
+    /// count badge and panel menu (§6).
+    private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
+        guard id == .measurements else { return nil }
+        return AnyView(MeasurementsSectionAccessory())
+    }
+
     @ViewBuilder
     private func sectionContent(_ id: InspectorSectionID) -> some View {
         switch id {
         case .layers:
             LayersListView()
+        case .measurements:
+            MeasurementsListView()
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -162,6 +177,7 @@ struct InspectorPanel: View {
 /// The sections of the inspector, in their default order. `rawValue` persists.
 enum InspectorSectionID: String, CaseIterable {
     case layers
+    case measurements
     case annotation
     case text
     case measure
@@ -173,6 +189,7 @@ enum InspectorSectionID: String, CaseIterable {
     var title: String {
         switch self {
         case .layers: "Layers"
+        case .measurements: "Measurements"
         case .annotation: "Annotation"
         case .text: "Text"
         case .measure: "Measure"
@@ -243,6 +260,9 @@ private struct CollapsibleSection<Content: View>: View {
     let isCollapsed: Bool
     let onToggle: () -> Void
     let dragItem: () -> NSItemProvider
+    /// Optional header furniture between the title and the drag grip — the
+    /// Measurements section puts its count badge and panel menu here.
+    var accessory: AnyView?
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -265,6 +285,7 @@ private struct CollapsibleSection<Content: View>: View {
             Text(title)
                 .font(.subheadline.weight(.semibold))
             Spacer(minLength: 8)
+            if let accessory { accessory }
             Image(systemName: "line.3.horizontal")
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
@@ -550,6 +571,155 @@ struct LayersListView: View {
 
     private func beginRename(_ layer: Layer) {
         renameText = layer.name
+        renamingLayerID = layer.id
+        renameFieldFocused = true
+    }
+
+    private func commitRename(_ layer: Layer) {
+        guard renamingLayerID == layer.id else { return }
+        renamingLayerID = nil
+        editorState.renameLayer(id: layer.id, to: renameText)
+    }
+}
+
+// MARK: - Measurements section (§6, `next-measure-panel`)
+
+/// The Measurements group's header furniture: the count badge and the panel
+/// menu (Show All / Hide All / Copy as Spec List / Clear Measurements). Each
+/// menu action is one undo step; Clear has no confirmation — undo is the
+/// safety net.
+struct MeasurementsSectionAccessory: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("\(editorState.measurementCount)")
+                .font(.caption.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(Capsule().fill(.quaternary))
+            Menu {
+                Button("Show All") { editorState.setAllMeasurementsVisible(true) }
+                Button("Hide All") { editorState.setAllMeasurementsVisible(false) }
+                Divider()
+                Button("Copy as Spec List") { editorState.copyMeasureSpecList() }
+                Divider()
+                Button("Clear Measurements", role: .destructive) {
+                    editorState.clearAllMeasurements()
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Show, hide, copy, or clear every measurement")
+        }
+    }
+}
+
+/// The Measurements rows (§6): a filtered view of the layer stack, top-most
+/// first. Selection is the shared layer selection, the eye is the layer's
+/// visibility, delete is layer delete — the group holds no state of its own.
+struct MeasurementsListView: View {
+    @Environment(EditorState.self) private var editorState
+    @State private var renamingLayerID: UUID?
+    @State private var renameText = ""
+    @FocusState private var renameFieldFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 2) {
+            ForEach(editorState.measurePanelLayers, id: \.id) { layer in
+                row(layer)
+            }
+        }
+        .padding(.horizontal, 8)
+    }
+
+    private var pixelScale: CGFloat { editorState.document?.pixelScale ?? 1 }
+
+    private func row(_ layer: Layer) -> some View {
+        let isSelected = editorState.isLayerSelected(layer.id)
+        let content = layer.measure
+        return HStack(spacing: 8) {
+            swatch(content)
+            if renamingLayerID == layer.id {
+                TextField("Measurement name", text: $renameText)
+                    .textFieldStyle(.plain)
+                    .font(.callout)
+                    .focused($renameFieldFocused)
+                    .onSubmit { commitRename(layer) }
+                    .onChange(of: renameFieldFocused) { _, focused in
+                        if !focused { commitRename(layer) }
+                    }
+            } else {
+                // Rows name themselves (decision D3): axis + role wording until
+                // the user renames one, then the custom name sticks.
+                Text(MeasureSpecList.displayName(for: layer))
+                    .font(.callout)
+                    .lineLimit(1)
+                    .foregroundStyle(layer.isVisible ? .primary : .tertiary)
+                    .onTapGesture(count: 2) { beginRename(layer) }
+            }
+            Spacer(minLength: 4)
+            if let content {
+                Text(content.label(pixelScale: pixelScale))
+                    .font(.callout)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .foregroundStyle(layer.isVisible ? .secondary : .tertiary)
+            }
+            Button {
+                editorState.toggleLayerVisibility(id: layer.id)
+            } label: {
+                Image(systemName: layer.isVisible ? "eye" : "eye.slash")
+                    .font(.system(size: 11))
+                    .foregroundStyle(layer.isVisible ? .primary : .tertiary)
+            }
+            .help(layer.isVisible ? "Hide Measurement" : "Show Measurement")
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.25))
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { editorState.selectLayer(layer.id) }
+        .contextMenu {
+            Button("Rename") { beginRename(layer) }
+            Button(layer.isVisible ? "Hide" : "Show") {
+                editorState.toggleLayerVisibility(id: layer.id)
+            }
+            Divider()
+            Button("Delete", role: .destructive) { editorState.deleteLayer(id: layer.id) }
+        }
+    }
+
+    /// The row's role swatch: the measurement's own ink, so it matches the
+    /// canvas even after a recolor. Alignment guides ring it dashed, like the
+    /// legend.
+    @ViewBuilder private func swatch(_ content: MeasureContent?) -> some View {
+        let color = Color(hex: content?.strokeColorHex ?? MeasureContent.defaultStrokeColorHex)
+        if content?.alignment != nil {
+            Circle()
+                .strokeBorder(color, style: StrokeStyle(lineWidth: 1.5, dash: [2, 2]))
+                .frame(width: 10, height: 10)
+        } else {
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+        }
+    }
+
+    private func beginRename(_ layer: Layer) {
+        renameText = MeasureSpecList.displayName(for: layer)
         renamingLayerID = layer.id
         renameFieldFocused = true
     }
@@ -1033,9 +1203,68 @@ struct MeasureInspector: View {
                 swatchRow("Text", color: Color(hex: c.textColorHex)) {
                     if let hex = $0.hexString { editorState.setMeasureTextColor(hex, commit: true) }
                 }
+                if Experiments.shared.measurePanelEnabled {
+                    geometryGrid(c)
+                    exportSection
+                }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+        }
+    }
+
+    /// The mock's read-only From / To / Distance / Units grid (§6): the feet in
+    /// document coordinates and the span, straight from `caliperGeometry()` —
+    /// no new model state.
+    @ViewBuilder private func geometryGrid(_ c: MeasureContent) -> some View {
+        let frame = editorState.document?.layer(id: layer.id)?.frame ?? layer.frame
+        let g = c.caliperGeometry()
+        let scale = editorState.document?.pixelScale ?? 1
+        Divider().opacity(0.4)
+        VStack(alignment: .leading, spacing: 4) {
+            readoutRow("From", point(g.footA, in: frame, scale: scale))
+            readoutRow("To", point(g.footB, in: frame, scale: scale))
+            readoutRow("Distance", String(format: "%.\(max(0, c.decimals))f %@",
+                                          c.displayDistance(pixelScale: scale), c.unit.suffix))
+            readoutRow("Units", c.unit == .points ? "Logical px" : "Actual px")
+        }
+    }
+
+    /// A document coordinate in the measure's unit, "x, y".
+    private func point(_ p: CGPoint, in frame: CGRect, scale: CGFloat) -> String {
+        guard let c = content else { return "" }
+        let x = c.displayValue(frame.minX + p.x, pixelScale: scale)
+        let y = c.displayValue(frame.minY + p.y, pixelScale: scale)
+        return "\(Int(x.rounded())), \(Int(y.rounded()))"
+    }
+
+    /// One read-only line of the grid: caption left, value right, selectable so
+    /// a number can be copied straight out of the inspector.
+    @ViewBuilder private func readoutRow(_ label: String, _ value: String) -> some View {
+        HStack(spacing: 8) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+                .frame(width: 52, alignment: .leading)
+            Text(value)
+                .font(.caption)
+                .monospacedDigit()
+                .textSelection(.enabled)
+            Spacer(minLength: 0)
+        }
+    }
+
+    /// The mock's Export section (§7): the two existing app-wide actions as
+    /// convenience buttons. The caliper is baked into every export by
+    /// construction, so these need nothing measure-specific.
+    @ViewBuilder private var exportSection: some View {
+        Divider().opacity(0.4)
+        field("Export") {
+            HStack(spacing: 8) {
+                Button("Copy Image") { editorState.copyCompositeToClipboard() }
+                    .help("Copies the flattened image, measurements included")
+                Button("Export PNG") { editorState.exportComposite(format: .png, scale: 1) }
+                    .help("Saves the flattened image as a PNG, measurements included")
+            }
+            .controlSize(.small)
         }
     }
 

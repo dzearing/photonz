@@ -178,6 +178,24 @@ command-menu items (Measure tool / Show all measurements / Clear measurements).
   Units** grid for the selected measurement (values from `caliperGeometry()` —
   no new model state).
 
+Shipped shape (2026-08-23): `InspectorSectionID.measurements` — a dock group in
+the inspector, present whenever the document holds a measure layer. Rows come
+from `MeasureSpecList.measureLayers` (top-most first, a filtered view of the
+stack); each shows the measurement's own ink as its swatch (dashed ring for an
+alignment guide), the D3 derived name (`MeasureSpecList.displayName`: "Width" /
+"Height" / "Gap" / "Alignment" until renamed — double-click renames, custom
+names stick), the formatted value, and the layer's eye. Selection, visibility,
+and delete are the shared layer operations. The section header carries the
+count badge and the panel menu (Show All / Hide All / Copy as Spec List /
+Clear Measurements — one undo step each, no confirmation on Clear). The
+toolbar pill ("7 measurements", glass capsule beside the color bar) shows
+while the count is nonzero; clicking calls `revealMeasurementsPanel()` (opens
+the inspector, un-collapses the group). The menu-bar Measure menu (the app has
+no ⌘K palette) adds Measure Tool / Show All Measurements / Clear Measurements.
+The measure inspector gains the read-only From/To/Distance/Units grid (feet in
+document coordinates from `caliperGeometry()` + the layer frame). All behind
+`next-measure-panel` (Next, default ON).
+
 ## 7. Export: the redline sheet — `next-measure-panel`
 
 Mock: `redline.html` Properties "Export · redline sheet" section (Copy image /
@@ -195,7 +213,18 @@ list"; `capture-wt.html` step 11 (Copy image, ⌘C).
   clipboard. This is the deterministic half of the mock's "the agent can hand
   back the spec list" promise.
 - **Describe specs** (the mock's agent button) is NOT specced — queue decision
-  **D4**.
+  **D4**. (Resolved 2026-08-22: omitted. The copyable spec list and the two
+  export buttons are the whole surface.)
+
+Shipped shape (2026-08-23): `MeasureSpecList.render(document:name:)` in
+`PhotonzCore` (format pinned by `MeasureSpecListTests`): header
+`<name> · <W> × <H> px`, then `- <name>: <value> (<role>)` per visible
+measurement in panel order — the value from `MeasureContent.label` (so an
+alignment guide reads its verdict, role word `alignment`). The panel menu's
+Copy as Spec List puts it on the clipboard via
+`EditorState.copyMeasureSpecList()` (header name = document file name, no
+release tag). The inspector's Export section offers Copy Image
+(`copyCompositeToClipboard`) and Export PNG (`exportComposite(.png, 1)`).
 
 ## 8. Snapping option: centers — `next-measure-center-snap` (shipped)
 
@@ -269,8 +298,8 @@ px `tolerance` parameter, default 1):
 | --- | --- | --- |
 | D1 | ~~Build alignment checks (and how are they created), fold into the 16.7 auto-inspect spike, or skip?~~ **Resolved: draw the guide yourself (§ 9, shipped)** | `next-measure-alignment-checks-blocked-on-decisio` |
 | D2 | Two-point measure: stay H/V-only (16.12 decision) or offer the mock's free-angle caliper? | `next-measure-free-angle-two-point-measure-blocke` |
-| D3 | Measurement names: derived defaults + rename, or OCR semantic names like the mock's "Save Changes · width"? | `next-measure-measurement-naming-blocked-on-decis` |
-| D4 | The mock's "Describe specs" agent action: omit, script-surface only, or build? | `next-measure-describe-specs-agent-action-blocked` |
+| D3 | ~~Measurement names: derived defaults + rename, or OCR semantic names like the mock's "Save Changes · width"?~~ **Resolved 2026-08-22: derived automatic names + double-click rename, no OCR (§ 6, shipped)** | `next-measure-measurement-naming-blocked-on-decis` |
+| D4 | ~~The mock's "Describe specs" agent action: omit, script-surface only, or build?~~ **Resolved 2026-08-22: omitted (§ 7)** | `next-measure-describe-specs-agent-action-blocked` |
 
 ## 11. Shown in the mocks but deliberately out of scope
 

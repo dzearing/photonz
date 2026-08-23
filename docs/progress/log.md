@@ -3843,3 +3843,33 @@ mid-guide — revisit placement if it annoys in practice.
 - `Scripts/test.sh` green: 923 tests. Dev app bundle builds.
 - Not verified by hand: legend/Show filter look on a live canvas — worth a
   manned pass alongside the §6 Measurements panel when it lands.
+
+## 2026-08-22 (evening) — Next Measure: Measurements panel + spec list export (§6–7)
+
+Task `next-measure-measurements-panel-spec-list-export` (go loop). Everything
+behind `next-measure-panel` (Next-only, default ON; Current byte-identical).
+
+- Core (TDD): `MeasureSpecList` in PhotonzCore — `measureLayers` (panel order,
+  top-most first), `derivedName`/`displayName` (decision D3: "Width"/"Height"/
+  "Gap"/"Alignment" until renamed; `MeasureBuilder.defaultName` constants are
+  the not-renamed sentinel), and `render(document:name:)`, the pinned
+  "Copy as spec list" text (`<name> · <W> × <H> px` header + `- <name>:
+  <value> (<role>)` per visible measurement; alignment guides read their
+  verdict). 8 new tests pin the format; 1 new catalog test pins the flag.
+- App: `InspectorSectionID.measurements` dock group — rows are a filtered view
+  of the layer stack (shared selection, layer eye, layer delete), ink swatch
+  (dashed ring for guides), double-click rename. Header accessory: count badge
+  + panel menu (Show All / Hide All / Copy as Spec List / Clear Measurements —
+  one undo step each via one `perform`; Clear has no confirmation, undo is the
+  net). Toolbar glass pill "N measurements" beside the color bar;
+  `revealMeasurementsPanel()` opens the inspector and un-collapses the group.
+  Menu bar gains a Measure menu (Measure Tool / Show All Measurements / Clear
+  Measurements) — the app has no ⌘K palette, per §5 of the spec's shell rule.
+  Measure inspector: read-only From/To/Distance/Units grid (doc coords from
+  `caliperGeometry()` + frame) and an Export section (Copy Image / Export PNG,
+  the existing composite actions).
+- Decisions D3 + D4 marked resolved in `docs/design/next-measure.md` §10;
+  shipped-shape notes added to §6 and §7.
+- `Scripts/test.sh` green: 932 tests. Dev app bundle builds, launches clean.
+- Not verified by hand: panel look/feel on a live canvas (TCC blocks unmanned
+  capture) — worth the same manned pass §5 is queued for.

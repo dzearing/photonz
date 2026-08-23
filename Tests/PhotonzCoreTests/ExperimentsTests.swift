@@ -335,6 +335,13 @@ struct FeatureCatalogTests {
             .number(FeatureCatalog.measureAlignFlag, FeatureCatalog.measureAlignTolerance) == 1)
     }
 
+    @Test func theMeasurePanelFlagIsNextOnlyAndOnByDefault() {
+        // Sections 6-7 of docs/design/next-measure.md: the Measurements panel
+        // and spec-list export exist only in Next, default on there.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measurePanelFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measurePanelFlag })
+    }
+
     @Test func theToastTimingFlagShipsWithTheBuiltInSeconds() {
         let settings = FeatureCatalog.defaultSettings(for: .current)
         #expect(!settings.isEnabled(FeatureCatalog.captureToastTimingFlag))

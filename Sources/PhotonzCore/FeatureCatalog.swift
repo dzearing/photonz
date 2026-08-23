@@ -38,6 +38,8 @@ public enum FeatureCatalog {
 
     public static let measureRolesFlag = "next-measure-roles"
 
+    public static let measurePanelFlag = "next-measure-panel"
+
     public static let arrowCaptionsFlag = "next-arrow-captions"
 
     // MARK: - Definitions
@@ -125,6 +127,15 @@ public enum FeatureCatalog {
                     name: measureRolesFlag,
                     title: "Measurement roles",
                     description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the measure inspector, a legend on the canvas while the tool is active, and a Show filter in the tool options.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measurePanelFlag,
+                    title: "Measurements panel",
+                    description: "Lists every measurement in the layers panel with its own eye, name, and value, adds a count to the toolbar, and puts From, To, Distance, and export shortcuts in the inspector. The panel menu can show, hide, or clear them all, or copy them as a text spec list.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

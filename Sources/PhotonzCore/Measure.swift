@@ -399,6 +399,12 @@ public enum MeasureBuilder {
     /// element crosses an alignment guide.
     public static let alignmentTickHalf: CGFloat = 5
 
+    /// The stock layer names a fresh caliper / alignment guide is born with.
+    /// `MeasureSpecList.displayName` treats these as "never renamed" and shows
+    /// the derived name instead, so they double as that sentinel.
+    public static let defaultName = "Measure"
+    public static let defaultAlignmentName = "Alignment"
+
     /// The layer a placement whose feet run from `start` to `end` (document
     /// coordinates) creates. Frame = padded bbox (+ chip reservation); feet
     /// become layer-local. An alignment payload's items must arrive in DOCUMENT
@@ -456,7 +462,7 @@ public enum MeasureBuilder {
             }
             content.alignment = check
         }
-        let name = content.alignment == nil ? "Measure" : "Alignment"
+        let name = content.alignment == nil ? defaultName : defaultAlignmentName
         return Layer(name: name, content: .measure(content), frame: box)
     }
 
