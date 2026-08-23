@@ -58,7 +58,6 @@
 
   #composites .detachtag{position:absolute;bottom:-11px;right:var(--pad-sm);background:var(--warn);color:#fff;font-size:10px;
     font-weight:640;padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:5px;white-space:nowrap;z-index:5}
-  #composites .cinst.card{inset:-6px}
   #composites .boardh{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:15px}
   #composites .lrow .cmark.warn{color:var(--warn)}
   #composites .child2{padding-left:var(--s6)}
@@ -128,7 +127,7 @@
               <div id="scCard" class="wt-off">
                 <span class="wobj">
                   <div class="cfr" id="cvFrame" style="width:268px">
-                    <div class="frtag"><i class="ic ic-frame xs"></i> <span id="frTagT">Frame · auto-layout</span></div>
+                    <div class="frtag" id="frTag"><i class="ic ic-frame xs"></i> <span id="frTagT">Frame · auto-layout</span></div>
                     <div id="cardGaps" style="display:flex;flex-direction:column;gap:var(--gap);align-items:center">
                       <span class="gaptag">gap 16</span><span class="gaptag">pad 16</span>
                     </div>
@@ -137,9 +136,15 @@
                       <div class="kid"><div class="ktext"><i class="w1"></i><i class="w2"></i></div><span class="kidbadge"><i class="ic ic-component xs"></i> Text</span></div>
                       <div class="kid"><span class="cbtn">Follow</span><span class="kidbadge"><i class="ic ic-component xs"></i> Button</span></div>
                     </div>
+                    <!-- SELECTION, canvas side: ring + handles + measurement, matching the .sel row in Layers -->
+                    <span class="wt-off" id="selFrame" data-mtag="below">
+                      <span class="sel-ring"></span>
+                      <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                      <span class="mtag" id="selFrameMtag">Frame · 268 × 95</span>
+                    </span>
                   </div>
                   <span id="cardComp" class="wt-off">
-                    <span class="cring" style="inset:-9px;border-radius:20px"></span>
+                    <span class="cring"></span>
                     <span class="cbadge" style="top:-26px"><i class="ic xs ic-component"></i> Card · main</span>
                   </span>
                 </span>
@@ -155,11 +160,17 @@
                 </div>
                 <div class="cfr" style="width:280px;gap:var(--pad-sm)">
                   <div class="frtag"><i class="ic ic-frame xs"></i> List · gap 12</div>
-                  <span class="wobj"><div class="ccard" id="lcA"><span class="av"></span><div class="ctxt"><div class="cnm" id="nmA">Ada L.</div><div class="crl" id="rlA">Instance</div></div><span class="cbtn" id="btA">Follow</span></div><span class="cinst card"></span></span>
-                  <span class="wobj"><div class="ccard" id="lcB"><span class="av b"></span><div class="ctxt"><div class="cnm" id="nmB">Grace H.</div><div class="crl" id="rlB">Instance</div></div><span class="cbtn" id="btB">Follow</span></div><span class="cinst card"></span></span>
+                  <span class="wobj"><div class="ccard" id="lcA"><span class="av"></span><div class="ctxt"><div class="cnm" id="nmA">Ada L.</div><div class="crl" id="rlA">Instance</div></div><span class="cbtn" id="btA">Follow</span></div><span class="cinst wt-off" id="ringA"></span></span>
+                  <span class="wobj"><div class="ccard" id="lcB"><span class="av b"></span><div class="ctxt"><div class="cnm" id="nmB">Grace H.</div><div class="crl" id="rlB">Instance</div></div><span class="cbtn" id="btB">Follow</span></div><span class="cinst wt-off" id="ringB"></span></span>
                   <span class="wobj"><div class="ccard" id="lcC"><span class="av c"></span><div class="ctxt"><div class="cnm" id="nmC">Alan T.</div><div class="crl" id="rlC">Instance</div></div><span class="cbtn">Follow</span></div>
-                    <span class="cinst card" id="ringC"></span>
+                    <span class="cinst wt-off" id="ringC"></span>
                     <span class="detachtag wt-off" id="detachTag"><i class="ic ic-warning xs"></i> Detached</span>
+                  </span>
+                  <!-- SELECTION, canvas side: the List frame's bounds when its .sel row is lit -->
+                  <span class="wt-off" id="selList" data-mtag="below">
+                    <span class="sel-ring"></span>
+                    <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                    <span class="mtag">List · 280 × 251</span>
                   </span>
                 </div>
               </div>
@@ -168,15 +179,14 @@
               <div id="scBoard" class="wt-off">
                 <span class="wobj">
                   <div class="cfr comp solid" style="width:300px;gap:var(--pad-sm)">
-                    <div class="frtag"><i class="ic ic-component xs"></i> Team Board · main</div>
                     <div class="boardh">Design team</div>
                     <div class="cfr" style="width:100%;gap:var(--gap-sm);padding:var(--gap-sm);border-radius:10px">
                       <div class="frtag" style="font-size:8px"><i class="ic ic-frame xs"></i> List</div>
-                      <span class="wobj" style="width:100%"><div class="ccard" style="min-width:0"><span class="av sm"></span><div class="ctxt"><div class="cnm" style="font-size:11px">Ada L.</div></div><span class="cbtn" style="padding:4px 9px">Follow</span></div><span class="cinst card"></span></span>
-                      <span class="wobj" style="width:100%"><div class="ccard" style="min-width:0"><span class="av b sm"></span><div class="ctxt"><div class="cnm" style="font-size:11px">Grace H.</div></div><span class="cbtn" style="padding:4px 9px">Follow</span></div><span class="cinst card"></span></span>
+                      <span class="wobj" style="width:100%"><div class="ccard" style="min-width:0"><span class="av sm"></span><div class="ctxt"><div class="cnm" style="font-size:11px">Ada L.</div></div><span class="cbtn" style="padding:4px 9px">Follow</span></div></span>
+                      <span class="wobj" style="width:100%"><div class="ccard" style="min-width:0"><span class="av b sm"></span><div class="ctxt"><div class="cnm" style="font-size:11px">Grace H.</div></div><span class="cbtn" style="padding:4px 9px">Follow</span></div></span>
                     </div>
                   </div>
-                  <span class="cring" style="inset:-10px;border-radius:22px"></span>
+                  <span class="cring"></span>
                   <span class="cbadge" style="top:-26px"><i class="ic xs ic-component"></i> Team Board · main</span>
                 </span>
               </div>
@@ -225,29 +235,55 @@
               </div>
             </div>
 
-            <!-- HISTORY OVERLAY (⌘⇧H) · the front door, never buried -->
-            <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
-              <div class="sheet-h">
-                <span class="ttl"><i class="ic sm ic-history"></i> History</span>
-                <span class="sp"></span>
-                <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
-                <span class="sp"></span>
-                <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
-              </div>
+            <!-- HISTORY OVERLAY (⌘⇧H) · the canonical chromeless pane -->
+            <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
               <div class="sheet-b">
-                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
-                  <div class="filmcard" tabindex="0" role="button">
+                <div class="histbar">
+                  <div class="seg" data-radio="button"><button class="on" id="hsAll">All</button><button id="hsShots">Screenshots</button><button id="hsVids">Videos</button></div>
+                  <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+                </div>
+                <div class="filmstrip" id="histStrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard sel fk-shot" tabindex="0" role="button">
                     <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
-                    <span class="cap"><span class="nm">Team page</span><span class="ago">12 min ago</span></span>
-                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+                    <span class="cap"><span class="nm">team-page</span><span class="ago">12 minutes ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
                   </div>
-                  <div class="filmcard" tabindex="0" role="button">
+                  <div class="filmcard fk-shot" tabindex="0" role="button">
                     <span class="th" style="background:linear-gradient(135deg,#ff9d4d,#ff5d8f)"></span>
-                    <span class="cap"><span class="nm">Roster mock</span><span class="ago">2 hr ago</span></span>
-                    <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Open"><i class="ic ic-pen"></i></button></span>
+                    <span class="cap"><span class="nm">roster-mock</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard fk-clip" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:24</span></span>
+                    <span class="cap"><span class="nm">board-walkthrough</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard fk-shot" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">pricing-page</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
                   </div>
                 </div>
-                <p class="note" style="margin:0">Drop a capture in as a layer and it can go inside a container like anything else.</p>
               </div>
             </div>
           </div>
@@ -276,20 +312,20 @@
 
                 <div id="layB" class="wt-off">
                   <div class="lrow" id="lrList"><i class="ic ic-frame"></i><span class="nm">List</span><i class="ic sm ic-eye eye"></i></div>
-                  <div class="lrow child" id="lrCardA"><i class="ic ic-component"></i><span class="nm">Card · Ada</span><i class="ic sm ic-component cmark"></i></div>
-                  <div class="lrow child" id="lrCardB"><i class="ic ic-component"></i><span class="nm">Card · Grace</span><i class="ic sm ic-component cmark"></i></div>
-                  <div class="lrow child" id="lrCardC"><i class="ic ic-component" id="lrCardCIc"></i><span class="nm" id="lrCardCNm">Card · Alan</span><i class="ic sm ic-component cmark" id="lrCardCMark"></i></div>
+                  <div class="lrow child" id="lrCardA"><i class="ic ic-component"></i><span class="nm">Card · Ada</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child" id="lrCardB"><i class="ic ic-component"></i><span class="nm">Card · Grace</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child" id="lrCardC"><i class="ic ic-component" id="lrCardCIc"></i><span class="nm" id="lrCardCNm">Card · Alan</span><i class="ic sm ic-component cmark" id="lrCardCMark"></i><i class="ic sm ic-eye eye"></i></div>
                 </div>
 
                 <div id="layC" class="wt-off">
-                  <div class="lrow" id="lrBoard"><i class="ic ic-component"></i><span class="nm">Team Board</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow" id="lrBoard"><i class="ic ic-component"></i><span class="nm">Team Board</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
                   <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Heading</span><i class="ic sm ic-eye eye"></i></div>
                   <div class="lrow child"><i class="ic ic-frame"></i><span class="nm">List</span><i class="ic sm ic-eye eye"></i></div>
-                  <div class="lrow child2"><i class="ic ic-component"></i><span class="nm">Card · Ada</span><i class="ic sm ic-component cmark"></i></div>
-                  <div class="lrow child3"><i class="ic sm ic-component"></i><span class="nm">Avatar</span></div>
-                  <div class="lrow child3"><i class="ic sm ic-component"></i><span class="nm">Text</span></div>
-                  <div class="lrow child3"><i class="ic sm ic-component"></i><span class="nm">Button</span></div>
-                  <div class="lrow child2"><i class="ic ic-component"></i><span class="nm">Card · Grace</span><i class="ic sm ic-component cmark"></i></div>
+                  <div class="lrow child2"><i class="ic ic-component"></i><span class="nm">Card · Ada</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child3"><i class="ic ic-component"></i><span class="nm">Avatar</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child3"><i class="ic ic-component"></i><span class="nm">Text</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child3"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-eye eye"></i></div>
+                  <div class="lrow child2"><i class="ic ic-component"></i><span class="nm">Card · Grace</span><i class="ic sm ic-component cmark"></i><i class="ic sm ic-eye eye"></i></div>
                 </div>
               </div>
             </div>
@@ -476,7 +512,7 @@
           data-cue="#cvFrame" data-cue-label="Drag out a frame" data-cue-place="top"
           data-tool="#tFrame"
           data-hide="#scEmpty,#layEmpty,#pEmpty"
-          data-show="#scCard,#layA,#pFrame"
+          data-show="#scCard,#layA,#pFrame,#selFrame"
           data-select="#lrFrame"
           data-set="#layCount=1|#propKind=Frame">
         <div class="wt-cap">
@@ -494,7 +530,7 @@
           data-show="#cardKids,#lrAvatar,#lrText,#lrButton"
           data-hide="#cardGaps"
           data-select="#lrFrame"
-          data-set="#layCount=4">
+          data-set="#layCount=4|#selFrameMtag=Frame · 268 × 162">
         <div class="wt-cap comp">
           <span class="wt-n">3</span>
           <p class="wt-do" data-verb="Drag">the <b>Avatar</b>, <b>Text</b> and <b>Button</b> tiles</p>
@@ -509,9 +545,9 @@
           data-tool="#tSelect"
           data-select="#lrFrame" data-select-class="selc"
           data-show="#cardComp,#lrFrameMark,#libCard,#pComp"
-          data-hide="#pFrame"
+          data-hide="#pFrame,#selFrame,#frTag"
           data-css="#cvFrame=border-color:var(--comp);background:rgba(154,92,255,.06);border-style:solid"
-          data-set="#lrFrameNm=Card|#frTagT=Card · main|#propKind=Component">
+          data-set="#lrFrameNm=Card|#propKind=Component">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
           <p class="wt-do"><b>Make component</b> <code>⌘⌥K</code></p>
@@ -525,7 +561,7 @@
           data-cue="#libCard" data-cue-label="Drag Card in three times" data-cue-place="left"
           data-tool="#tSelect" data-scope="components"
           data-hide="#scCard,#layA,#pComp"
-          data-show="#scList,#layB,#pList"
+          data-show="#scList,#layB,#pList,#selList"
           data-select="#lrList"
           data-set="#layCount=4|#propKind=Frame|#libCardMt=3 instances">
         <div class="wt-cap">
@@ -540,8 +576,8 @@
           data-title="Override one instance"
           data-cue="#pVariant" data-cue-label="Change the variant to Message" data-cue-place="left"
           data-tool="#tSelect"
-          data-hide="#pList"
-          data-show="#pInstance,#detachTag"
+          data-hide="#pList,#selList"
+          data-show="#pInstance,#detachTag,#ringB,#ringC"
           data-select="#lrCardB" data-select-class="selc"
           data-css="#btA=background:linear-gradient(135deg,#7c4dff,#ff5d8f);color:#fff;box-shadow:none|#ringC=border-style:solid;border-color:var(--warn)|#lrCardCIc=color:var(--warn)|#lrCardCMark=color:var(--warn)"
           data-set="#nmA=Ada Lovelace|#rlA=Primary variant|#nmB=Grace Hopper|#rlB=Message · variant|#btB=Message|#nmC=Alan Turing|#rlC=Detached · plain layers|#lrCardCNm=Group · Alan|#propKind=Instance">
@@ -573,8 +609,8 @@
           data-title="Edit the main, the list follows"
           data-cue="#pRadius" data-cue-label="Raise the corner radius" data-cue-place="left"
           data-tool="#tSelect"
-          data-hide="#scBoard,#layC,#pBoard"
-          data-show="#scList,#layB,#pMain,#toastMain"
+          data-hide="#scBoard,#layC,#pBoard,#ringB"
+          data-show="#scList,#layB,#pMain,#toastMain,#ringA"
           data-select="#lrCardA" data-select-class="selc"
           data-css="#lcA=border-radius:18px|#lcB=border-radius:18px|#libCard=outline:2px solid var(--comp)"
           data-set="#layCount=4|#rlA=radius 12 to 18|#rlB=kept its override|#rlC=detached · unchanged|#propKind=Main|#libCardMt=12 instances">
@@ -612,6 +648,17 @@
      history sheet, click cue) is shared DS behavior. */
   (function () {
     'use strict';
+    /* the history scope filter is live (rules in history.css) */
+    var strip = document.getElementById('histStrip');
+    [['hsAll', ''], ['hsShots', 'flt-shot'], ['hsVids', 'flt-vid']].forEach(function (p) {
+      var b = document.getElementById(p[0]);
+      if (!b || !strip) return;
+      b.addEventListener('click', function () {
+        strip.classList.remove('flt-shot', 'flt-vid');
+        if (p[1]) strip.classList.add(p[1]);
+      });
+    });
+
     var seg = document.querySelector('#composites .scopeseg');
     if (!seg) return;
     var btns = [].slice.call(seg.querySelectorAll('[data-scope]'));
