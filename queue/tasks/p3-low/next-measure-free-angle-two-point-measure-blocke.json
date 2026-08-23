@@ -1,6 +1,6 @@
 {
   "id": "next-measure-free-angle-two-point-measure-blocke",
-  "title": "Next Measure: free-angle two-point measure (blocked on decision)",
+  "title": "Next Measure: free-angle two-point measure",
   "priority": "p3-low",
   "status": "pending",
   "release": "next",
@@ -23,6 +23,10 @@
     {
       "t": "2026-08-22T23:50:01.861Z",
       "note": "decision \"When you measure between two points, should the measurement stay straight, or follow the exact angle between them?\" resolved: Straight only"
+    },
+    {
+      "t": "2026-08-23T00:20:00.000Z",
+      "note": "title groomed: status words removed, status lives in the status field"
     }
   ],
   "seq": 20

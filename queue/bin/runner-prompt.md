@@ -10,7 +10,8 @@ You are one iteration of the Photonz go loop, executing exactly ONE task, unmann
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.
 - One task per run. Do not claim or start other tasks. If you discover new work, add it to the queue instead: `node queue/bin/queue.mjs add "<title>" <priority> "<notes>"`.
-- Commit your work to main with a clear message when the task completes. Do not push unless the task says to.
+- Commit your work to main with a clear message when the task completes, then push: `git pull --rebase --autostash origin main && git push origin main`. If the rebase conflicts, abort it (`git rebase --abort`), leave your commit local, and record the situation in the task log; never force-push and never resolve someone else's conflict blind.
+- Task titles name the outcome. Never put status words (blocked, in progress) in a title; status lives in the status field.
 
 ## Status protocol (do these, in this order)
 

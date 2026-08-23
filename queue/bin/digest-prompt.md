@@ -12,7 +12,7 @@ Read `queue/objectives.json` first: it is the user's ordered epic tree, and it s
 - Reprioritize: move tasks whose priority no longer matches reality with `node queue/bin/queue.mjs priority <id> <priority>`. Blocked-on-user tasks stay where they are; decision resolution already requeues them.
 - Resequence: every task carries `seq`, the sort order within its priority (the loop claims lowest first). Decimals exist so a task can slot between two others without touching the rest. During triage, renumber each priority's OPEN tasks back to clean ascending steps of 10 (`node queue/bin/queue.mjs seq <id> <n>`), preserving relative order, and give any task missing a seq one at the end.
 - Repair: any task left `in_progress` with no live runner gets reset (`node queue/bin/queue.mjs guard`). Tasks with unmet or circular deps get fixed or flagged.
-- Groom: rewrite vague titles/notes so any future runner can execute without archaeology. Ensure every pending task has at least one concrete acceptance item.
+- Groom: rewrite vague titles/notes so any future runner can execute without archaeology. Ensure every pending task has at least one concrete acceptance item. Titles name the OUTCOME and never encode status ("blocked", "in progress", "done" in a title is a bug; status lives in the status field and the dashboard renders it).
 - Record one history event summarizing the pass: `node queue/bin/queue.mjs event triage '{"summary":"<counts: merged, moved, reset, groomed>"}'`.
 
 ## 2. Write the digest
@@ -35,4 +35,4 @@ What the triage pass changed and why: merges, priority moves, resets, grooming. 
 ## 3. Finish
 
 - `node queue/bin/queue.mjs event digest '{"file":"<YYYY-MM-DD>.md"}'`
-- Commit the digest and any triaged task files to main with message `queue: daily digest + triage <date>`. Do not push.
+- Commit the digest and any triaged task files to main with message `queue: daily digest + triage <date>`, then push: `git pull --rebase --autostash origin main && git push origin main` (on rebase conflict: abort, leave the commit local, note it in the digest).
