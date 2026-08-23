@@ -3,19 +3,55 @@
   "title": "Go loop surfaces runner failures instead of spinning silently",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:24:51.973Z",
-  "updated": "2026-08-23T14:24:51.973Z",
+  "updated": "2026-08-23T14:30:11.574Z",
   "deps": [],
   "blockedBy": [],
   "notes": "On 2026-08-23 the monthly spend limit killed every runner instantly; the loop claimed, failed, reset, and re-claimed 3,959 times over 13 hours while the dashboard showed Running the whole time. Fix three things: (1) treat a runner that exits non-zero without finalizing its task as a FAILURE, recording the exit code and the last stderr line into status.json so the dashboard can show it; (2) back off exponentially and stop re-claiming the same task after N consecutive failures, parking it with a clear reason; (3) show a loop-unhealthy state on the dashboard Summary hero (consecutive failures, last error) so a stalled loop never reads as Running. Acceptance: simulate a runner that always exits non-zero and confirm the dashboard says unhealthy with the error text, the loop stops hot-retrying, and history records one failure event per attempt rather than 3,959 resets.",
-  "acceptance": [],
+  "acceptance": [
+    "A runner that exits without finalizing its task is recorded as a failure, with exit code and last error line, in status.json and one runner_failed history event per attempt",
+    "The loop backs off 30s/2m/5m/15m/30m instead of hot-retrying",
+    "A task that fails three times in a row on its own is parked with a reason and skipped by claimNext",
+    "Failures spanning more than one task are blamed on the environment; nothing is parked and anything parked in that streak is handed back",
+    "The dashboard Summary hero shows Loop unhealthy with the failure count and the runner's own error text",
+    "queue/bin/failure-drill.sh runs the real loop against an always-failing runner and all checks pass"
+  ],
   "log": [
     {
       "t": "2026-08-23T14:24:51.973Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T14:30:11.574Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "queue-lib: recordRunnerExit classifies every runner exit, records exit code + last error line into status.json (health/consecutiveFailures/lastError), emits one runner_failed event per attempt, backs off 30s/2m/5m/15m/30m, parks a task after 3 solo failures, and blames multi-task streaks on the environment (unparking what it parked)."
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "go-loop.sh: captures the runner's last stderr (stdout as fallback), calls queue.mjs runner-exit, waits out the backoff with an unhealthy banner and window title, resets health on start. New env hooks PHOTONZ_QUEUE_DIR / PHOTONZ_BACKOFF_STEPS / PHOTONZ_MAX_ITERS make the loop testable in a throwaway queue."
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "dashboard.html: Summary hero swaps Running for a red Loop unhealthy pill plus a strip with the failure count, the raw error, and what it means; Tasks tab shows parked tasks as parked with a control to put them back in the queue."
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "Verified: queue/bin/failure-drill.sh runs the REAL loop against a fake claude that always exits 1 (spend-limit message) in a temp queue; all 13 checks pass (6 attempts, 6 runner_failed events, 0 blind resets, unhealthy, growing waits 1-5s, park + environment unpark). Dashboard verified in Chrome against a sandbox server on :8792: hero renders 'Loop unhealthy' + 'Credit balance is too low...'; parked row shows 'parked' + reason, and its retry control returns the task to pending with failures reset."
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "Caught and fixed in review: an unset PHOTONZ_BACKOFF_STEPS parsed to [0], which would have meant no backoff at all."
+    },
+    {
+      "t": "2026-08-23T14:41:31.000Z",
+      "note": "Scripts/test.sh green (932 tests). Note: the live loop is running the pre-change go-loop.sh from memory, so the new failure handling takes effect on the next /go restart."
     }
-  ]
+  ],
+  "started": "2026-08-23T14:30:11.573Z"
 }

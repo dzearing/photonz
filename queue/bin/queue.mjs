@@ -14,6 +14,10 @@
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
 //   node queue/bin/queue.mjs alive           print the live loop's pid, or "no" if none is running
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending
+//   node queue/bin/queue.mjs reset-health   clear the unhealthy flag (the loop does this on start)
+//   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [error]
+//                                            record how a runner ended; prints shell vars
+//                                            (OUTCOME/BACKOFF/FAILURES/HEALTH) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
 import * as q from './queue-lib.mjs';
@@ -67,6 +71,23 @@ try {
     case 'guard':
       out(q.guardStuck());
       break;
+    // A restart is a fresh claim about health: an unhealthy flag from a previous
+    // run should not colour a loop that has not tried anything yet.
+    case 'reset-health':
+      q.writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
+      break;
+    // The go loop evals this, so print shell assignments, not JSON. OUTCOME is
+    // ok|failed|parked, BACKOFF is seconds to wait before claiming again.
+    case 'runner-exit': {
+      const r = q.recordRunnerExit({
+        taskId: args[0] && args[0] !== '-' ? args[0] : null,
+        exit: Number(args[1] || 0),
+        error: args.slice(2).join(' '),
+        kind: args[0] && args[0] !== '-' ? 'task' : 'digest',
+      });
+      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${r.consecutiveFailures >= q.UNHEALTHY_AT ? 'unhealthy' : 'ok'} ENVFAIL=${r.environment ? 1 : 0}`);
+      break;
+    }
     case 'event':
       q.appendEvent(args[0], args[1] ? JSON.parse(args[1]) : {});
       break;

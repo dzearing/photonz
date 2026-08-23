@@ -150,4 +150,8 @@ const server = http.createServer(async (req, res) => {
     res.end(buf);
   } catch (e) { res.writeHead(404); res.end('not found'); }
 });
-server.listen(8791, '127.0.0.1', () => console.log('photonz mock dev server + livereload on http://127.0.0.1:8791/'));
+// Port is fixed at 8791 for the real dashboard; PORT (with PHOTONZ_QUEUE_DIR)
+// lets a second instance serve a throwaway queue beside it, which is how the
+// runner-failure drill checks what the Summary hero actually renders.
+const PORT = Number(process.env.PORT) || 8791;
+server.listen(PORT, '127.0.0.1', () => console.log(`photonz mock dev server + livereload on http://127.0.0.1:${PORT}/`));

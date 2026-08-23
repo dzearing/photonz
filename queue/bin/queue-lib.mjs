@@ -4,10 +4,16 @@
 // survives reboots, is git-diffable, and every writer (loop, server, human,
 // agent) goes through these helpers.
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, appendFileSync, renameSync, statSync } from 'node:fs';
-import { join, dirname, basename } from 'node:path';
+import { join, dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const QUEUE = dirname(dirname(fileURLToPath(import.meta.url))); // queue/
+// The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
+// throwaway copy instead, which is how the runner-failure drill
+// (queue/bin/failure-drill.sh) exercises the real loop without touching the
+// real queue.
+export const QUEUE = process.env.PHOTONZ_QUEUE_DIR
+  ? resolve(process.env.PHOTONZ_QUEUE_DIR)
+  : dirname(dirname(fileURLToPath(import.meta.url))); // queue/
 export const REPO = dirname(QUEUE);
 export const PRIORITIES = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
 const TASKS = join(QUEUE, 'tasks');
@@ -129,6 +135,9 @@ export function setStatus(id, status, note = '') {
   if (!t) throw new Error(`no task ${id}`);
   const prev = t.status;
   t.status = status;
+  // Moving a parked task anywhere else un-parks it and gives it a clean slate,
+  // so the dashboard's "put it back in the queue" really is a fresh start.
+  if (t.parked && status !== 'blocked') { t.parked = false; t.parkReason = ''; t.failures = 0; }
   if (note) t.log = [...(t.log || []), { t: now(), note }];
   if (status === 'done') t.completed = now();
   saveTask(t);
@@ -153,8 +162,121 @@ export function claimNext(pid = null) {
   return t;
 }
 
+// ---- runner failures --------------------------------------------------------
+// On 2026-08-23 the monthly spend limit killed every runner the instant it
+// started. The loop treated "runner exited" as "task finished", reset the task
+// to pending, re-claimed it, and did that 3,959 times in 13 hours while the
+// dashboard read Running the whole way. The rules below make a dead runner a
+// first-class failure: it gets recorded, retried more slowly each time, and
+// eventually stops being retried at all.
+export const MAX_TASK_FAILURES = 3;   // consecutive failures of ONE task before it is parked
+export const UNHEALTHY_AT = 2;        // consecutive failures before the loop reports unhealthy
+const DEFAULT_BACKOFF = [30, 120, 300, 900, 1800]; // seconds before the next claim, per failure
+// Split first, drop blanks, THEN parse: an unset var splits to [''] and Number('')
+// is 0, which would silently mean "no backoff at all" — the exact bug this file exists to fix.
+const ENV_BACKOFF = (process.env.PHOTONZ_BACKOFF_STEPS || '')
+  .split(',').map((n) => n.trim()).filter(Boolean)
+  .map(Number).filter((n) => isFinite(n) && n >= 0);
+export const BACKOFF_STEPS = ENV_BACKOFF.length ? ENV_BACKOFF : DEFAULT_BACKOFF;
+
+const cleanError = (s) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+
+// Park a task: it has failed on its own often enough that retrying it is just
+// burning runners. Blocked keeps it out of claimNext; parked/parkReason say why
+// so the dashboard and the next human can tell it from a decision block.
+function parkTask(t, reason) {
+  t.status = 'blocked';
+  t.parked = true;
+  t.parkReason = reason;
+  t.log = [...(t.log || []), { t: now(), note: reason }];
+  saveTask(t);
+  appendEvent('task_parked', { id: t.id, reason });
+}
+function unparkTask(id, reason) {
+  const t = findTask(id);
+  if (!t || !t.parked) return false;
+  t.status = 'pending';
+  t.parked = false;
+  t.parkReason = '';
+  t.failures = 0;
+  t.log = [...(t.log || []), { t: now(), note: reason }];
+  saveTask(t);
+  appendEvent('task_unparked', { id, reason });
+  return true;
+}
+
+// Called by the go loop after every runner exits. Decides whether that run was
+// a success or a failure, updates the task and the loop health, and returns how
+// long the loop should wait before claiming again.
+//
+//   outcome  ok | failed | parked
+//   backoff  seconds to sleep before the next claim
+export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = 'task' } = {}) {
+  const s = readStatus();
+  const task = taskId ? findTask(taskId) : null;
+  // What counts as failure: for a task run, the runner leaving its task
+  // in_progress (it never finalized, whatever it exited with); for a digest run
+  // there is no task to inspect, so the exit code is all we have. A runner that
+  // finalized its task and then exited non-zero still did the work.
+  const unfinalized = !!task && task.status === 'in_progress';
+  const failed = task ? unfinalized : exit !== 0;
+  if (!failed) {
+    if (task && task.failures) { task.failures = 0; saveTask(task); }
+    writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
+    return { outcome: 'ok', backoff: 0, consecutiveFailures: 0, parked: false };
+  }
+
+  const message = cleanError(error) ||
+    (unfinalized ? `runner exited ${exit} without finalizing the task` : `runner exited ${exit}`);
+  const consecutive = (s.consecutiveFailures || 0) + 1;
+  const prev = (s.failureStreak && typeof s.failureStreak === 'object') ? s.failureStreak : {};
+  const streak = { taskIds: [...(prev.taskIds || [])], parked: [...(prev.parked || [])] };
+  if (taskId && !streak.taskIds.includes(taskId)) streak.taskIds.push(taskId);
+
+  // Failures that span more than one task are the environment's fault (spend
+  // limit, no network, bad credentials), not any task's. Parking the whole
+  // queue one task at a time would be the worst possible response, so back off
+  // instead and hand back anything parked earlier in this same streak.
+  const environment = streak.taskIds.length > 1;
+  const unparked = [];
+  if (environment && streak.parked.length) {
+    for (const id of streak.parked) {
+      if (unparkTask(id, 'unparked: runners are failing regardless of which task runs, so the earlier failures were not this task')) unparked.push(id);
+    }
+    streak.parked = [];
+  }
+
+  let outcome = 'failed';
+  if (task && unfinalized) {
+    task.failures = (task.failures || 0) + 1;
+    task.lastError = { at: now(), exit, message };
+    if (!environment && task.failures >= MAX_TASK_FAILURES) {
+      parkTask(task, `parked after ${task.failures} runner failures in a row; last error: ${message}`);
+      streak.parked.push(task.id);
+      outcome = 'parked';
+    } else {
+      task.status = 'pending';
+      task.log = [...(task.log || []), { t: now(), note: `runner failed (exit ${exit}, attempt ${task.failures}): ${message}` }];
+      saveTask(task);
+    }
+  }
+
+  const backoff = BACKOFF_STEPS[Math.min(consecutive - 1, BACKOFF_STEPS.length - 1)];
+  writeStatus({
+    health: consecutive >= UNHEALTHY_AT ? 'unhealthy' : 'ok',
+    consecutiveFailures: consecutive,
+    lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment },
+    failureStreak: streak,
+    note: `runner failed (exit ${exit}); retrying in ${backoff}s`,
+  });
+  appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, error: message });
+  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment };
+}
+
 // A runner that exits without finalizing leaves the task in_progress forever.
-// Reset it to pending so the loop retries, and record what happened.
+// Reset it to pending so the loop retries, and record what happened. Kept as a
+// blunt safety net for anything recordRunnerExit did not cover (a task other
+// than the claimed one left running, a loop restarted mid-task).
 export function guardStuck() {
   const stuck = readAllTasks().filter((t) => t.status === 'in_progress');
   for (const t of stuck) {
@@ -301,7 +423,14 @@ export function aggregateState() {
   return {
     objectives: readObjectives(),
     generated: now(),
-    loop: { ...status, alive, stale: !alive && status.state === 'running' },
+    loop: {
+      ...status,
+      alive,
+      stale: !alive && status.state === 'running',
+      health: status.health || 'ok',
+      consecutiveFailures: status.consecutiveFailures || 0,
+      lastError: status.lastError || null,
+    },
     tasks,
     counts: {
       byPriority: Object.fromEntries(PRIORITIES.map((p) => [p, tasks.filter((t) => t.priority === p && t.status !== 'done' && t.status !== 'dropped').length])),

@@ -46,3 +46,16 @@ every judgment call that came up waiting as a one-click decision.
    Statuses and history events flow to the dashboard as they happen.
 3. The user resolves decisions on the dashboard whenever convenient; the loop
    picks unblocked work up automatically.
+
+## When runners fail
+
+A loop that cannot run anything must never read as Running. Every runner exit is
+classified: leaving its task `in_progress` is a failure, recorded with the exit
+code and the runner's own last error line. The loop then waits longer after each
+consecutive failure (30s → 30m), reports `unhealthy` in `status.json`, and the
+Summary hero swaps its Running pill for a red **Loop unhealthy** pill above a
+strip carrying the failure count, the raw error, and what it means. A task that
+fails three times in a row on its own is parked and the loop moves on; failures
+that span several tasks are read as an environment problem instead, so nothing
+gets parked and anything parked in that streak is handed back. Details and the
+drill that verifies it: `queue/README.md`.

@@ -34,6 +34,18 @@
   #dashboard .db-state.idle{color:var(--dim);background:var(--panel-2)}
   #dashboard .db-state.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent);background:color-mix(in srgb,var(--warn) 12%,transparent)}
   #dashboard .db-state.off{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent);background:color-mix(in srgb,var(--crit) 10%,transparent)}
+  #dashboard .db-state.bad{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 40%,transparent);background:color-mix(in srgb,var(--crit) 12%,transparent)}
+  /* The failure strip: when runners keep dying the hero has to say so, in the
+     runner's own words, instead of quietly reading Running. */
+  #dashboard .db-herr{display:flex;gap:var(--gap-sm);align-items:flex-start;
+    padding:var(--pad-sm) var(--pad);border-top:1px solid color-mix(in srgb,var(--crit) 25%,transparent);
+    background:color-mix(in srgb,var(--crit) 7%,transparent)}
+  #dashboard .db-herr .ic{color:var(--crit);flex:none;margin-top:1px}
+  #dashboard .db-herr b{display:block;font-size:12px;letter-spacing:-.01em}
+  /* the runner's own words stay mono; our explanation of them does not */
+  #dashboard .db-herr code{display:block;font-family:var(--mono);font-size:10.5px;color:var(--dim);
+    margin-top:var(--s2);white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  #dashboard .db-herr p{margin:var(--s2) 0 0;font-size:11.5px;color:var(--dim);line-height:1.5}
   #dashboard .db-hero .db-what{min-width:0;flex:1}
   #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
@@ -468,6 +480,9 @@
     var L = S.loop;
     if (L.stale) return { cls: 'warn', ic: 'ic-warning', label: 'Loop lost', note: 'A task is marked running but the loop process is gone. Run /go to restart it.' };
     if (!L.alive) return { cls: 'off', ic: 'ic-x-circle', label: 'Loop stopped', note: 'Run /go in a repo session to start the go loop.' };
+    // Runners that keep dying used to read as Running forever. Say unhealthy,
+    // say how many in a row, and let the strip below say why.
+    if (L.health === 'unhealthy') return { cls: 'bad', ic: 'ic-warning', label: 'Loop unhealthy', note: L.consecutiveFailures + ' runner ' + (L.consecutiveFailures === 1 ? 'failure' : 'failures') + ' in a row. Nothing is getting done until this clears.' };
     if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
     return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
   }
@@ -482,7 +497,19 @@
     else h += '<b>' + (st.cls === 'run' ? 'Between tasks' : 'Nothing running') + '</b><span>' + esc(st.note) + '</span>';
     h += '</div>';
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked</div>';
-    h += '</div></div>';
+    h += '</div>';
+    if (L.health === 'unhealthy' && L.lastError) {
+      var LE = L.lastError;
+      h += '<div class="db-herr"><i class="ic ic-warning"></i><div>';
+      h += '<b>' + L.consecutiveFailures + ' runner ' + (L.consecutiveFailures === 1 ? 'failure' : 'failures') + ' in a row' +
+        (LE.exit ? ', last one exited ' + esc(String(LE.exit)) : '') + ' · ' + rel(LE.at) + '</b>';
+      h += '<code>' + esc(LE.message || 'no error text captured') + '</code>';
+      h += '<p>' + (LE.environment
+        ? 'Every task is failing, so this is the environment and not the work. The loop is waiting longer between tries and will pick up on its own once it clears.'
+        : (LE.taskId ? 'Failing task: ' + esc(LE.taskId) + '. After three tries in a row it gets parked and the loop moves on.' : 'The daily digest run failed.')) + '</p>';
+      h += '</div></div>';
+    }
+    h += '</div>';
 
     h += '<div class="db-sumgrid">';
 
@@ -589,12 +616,14 @@
       h += '<label class="input sm mono seq"><input name="seq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
       h += '<span class="' + PRIO_BADGE[t.priority] + ' sm soft">' + esc(PRIO_LABEL[t.priority]) + '</span>';
       h += '<span class="db-title">' + esc(t.title) + (lastNote(t) ? '<span class="db-sub">' + esc(lastNote(t)) + '</span>' : '') + '</span>';
-      h += '<span class="db-status"><span class="' + STATUS_DOT[t.status] + '"></span>' + esc(STATUS_LABEL[t.status]) + '</span>';
+      h += '<span class="db-status"><span class="' + STATUS_DOT[t.status] + '"></span>' + esc(t.parked ? 'parked' : STATUS_LABEL[t.status]) + '</span>';
       h += '<span class="db-meta">' + rel(t.completed || t.updated) + '</span>';
       h += '<select class="select sm block" name="prio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '">' + PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
-      h += open && t.status === 'pending'
-        ? '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>'
-        : '<span></span>';
+      h += t.parked
+        ? '<button class="btn icon sm ghost" data-act="unpark" data-id="' + esc(t.id) + '" title="Put this task back in the queue"><i class="ic ic-refresh"></i></button>'
+        : open && t.status === 'pending'
+          ? '<button class="btn icon sm ghost" data-act="drop" data-id="' + esc(t.id) + '" title="Drop this task"><i class="ic ic-trash"></i></button>'
+          : '<span></span>';
       h += '</div>';
       return h;
     }).join('');
@@ -874,6 +903,9 @@
     }
     if (b.dataset.act === 'drop') {
       post('/api/task/update', { id: b.dataset.id, status: 'dropped', note: 'dropped from the dashboard' });
+    }
+    if (b.dataset.act === 'unpark') {
+      post('/api/task/update', { id: b.dataset.id, status: 'pending', note: 'put back in the queue from the dashboard' });
     }
     // real anchor: let modified clicks (new tab, download) do their normal
     // thing, and handle a plain click in place so the iframe does not reload.
