@@ -2,15 +2,15 @@
   "id": "decide-zoom-semantics-on-mock-canvases",
   "title": "Decide zoom semantics on mock canvases",
   "priority": "p3-low",
-  "seq": 90,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.152Z",
-  "updated": "2026-08-22T23:33:14.954Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json zoom-scales-grid-not-artwork. Zoom changes grid density but artwork stays the same size, so the readout can say 260 percent while the hero card renders at 1x. Honest fix: scale artwork by --zoom and counter-scale selection chrome by 1/--zoom. This changes what zoom means on every editor page: open a UX decision before implementing.",
+  "notes": "Objective: creation-vision > editor-surfaces (needs a UX decision before any implementation). From study-tasks.json zoom-scales-grid-not-artwork. Zoom changes grid density but artwork stays the same size, so the readout can say 260 percent while the hero card renders at 1x. Honest fix: scale artwork by --zoom and counter-scale selection chrome by 1/--zoom. This changes what zoom means on every editor page: open a UX decision before implementing.",
   "acceptance": [
     "A UX decision is opened (and resolved) on whether zoom scales artwork or only grid density",
     "The chosen behavior is implemented in the shared canvas component and verified on at least 3 editor pages at zoom 0.5/1/2 with constant-size selection chrome if artwork scaling is chosen"
@@ -23,6 +23,14 @@
     {
       "t": "2026-08-22T23:33:14.954Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.329Z",
+      "note": "seq 90 -> 10"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

@@ -3,11 +3,11 @@
   "title": "video-transition-wt: Layers never reflects the selected clip",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:21.420Z",
-  "updated": "2026-08-22T23:43:21.421Z",
+  "updated": "2026-08-23T00:26:57.752Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Checklist sweep gate 4 fail: every step selects a timeline/picker element (#cut1, #txDiss, #xband, #clipBlack) while #lrRec/#lrBroll/#lrOutro never get .sel. Shared root cause across all video walkthroughs: steps only pass a .clip id to data-select, and shared/components/walkthrough.js marks exactly one node and strips .sel from every .lrow, so the Layers rows naming the same clips never light up. agent-generate-wt line ~520 shows data-select on a .lrow working. Also D9 warn: the page never sets data-tl-summary, so the injected collapsed-timeline row names nothing; and the play button lacks aria-pressed. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -16,6 +16,10 @@
     {
       "t": "2026-08-22T23:43:21.421Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:26:57.751Z",
+      "note": "merged into video-walkthroughs-clip-selection-lights-up-in-l (2026-08-23 retriage): one shared root cause across all six video walkthroughs, fixed as one sweep"
     }
   ]
 }

@@ -6,10 +6,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.802Z",
-  "updated": "2026-08-22T22:53:08.237Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Scan docs/design/mocks/pages for ascii/unicode/emoji glyphs used as icons and for non ic-* icon styles. Fix by adding missing glyphs to shared/icons.mjs and regenerating. Acceptance: zero ascii icon hits in a grep sweep.",
+  "notes": "Objective: design-system > icon-conformance. Scan docs/design/mocks/pages for ascii/unicode/emoji glyphs used as icons and for non ic-* icon styles. Fix by adding missing glyphs to shared/icons.mjs and regenerating. Acceptance: zero ascii icon hits in a grep sweep.",
   "acceptance": [
     "A grep sweep of docs/design/mocks/pages finds zero ascii, unicode, or emoji glyphs used as icons",
     "Any missing glyphs are added to shared/icons.mjs and regenerated, not inlined per page"
@@ -22,7 +22,15 @@
     {
       "t": "2026-08-22T22:53:08.237Z",
       "note": "triage: filled in concrete acceptance criteria"
+    },
+    {
+      "t": "2026-08-23T00:27:19.405Z",
+      "note": "seq 10 -> 40"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ],
-  "seq": 10
+  "seq": 40
 }

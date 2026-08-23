@@ -2,15 +2,15 @@
   "id": "export-share-vector-filename-keeps-2x",
   "title": "Export-share: vector filename keeps @2x",
   "priority": "p3-low",
-  "seq": 110,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.204Z",
-  "updated": "2026-08-22T23:33:14.955Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json fix-export-share-scale. Verified still live 2026-08-22: picking SVG or PDF disables the scale seg but the scale variable stays 2, so filename() renders launch-poster@2x.svg. Reset scale to 1 (or exclude suffix for vector formats) when a vector format is picked.",
+  "notes": "Objective: design-system > clickthrough-sweep. From study-tasks.json fix-export-share-scale. Verified still live 2026-08-22: picking SVG or PDF disables the scale seg but the scale variable stays 2, so filename() renders launch-poster@2x.svg. Reset scale to 1 (or exclude suffix for vector formats) when a vector format is picked.",
   "acceptance": [
     "Picking SVG or PDF on export-share.html shows a filename without a scale suffix",
     "Switching back to PNG restores the previously selected scale and suffix",
@@ -24,6 +24,14 @@
     {
       "t": "2026-08-22T23:33:14.955Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.530Z",
+      "note": "seq 110 -> 90"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

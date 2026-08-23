@@ -2,11 +2,11 @@
   "id": "next-measure-free-angle-two-point-measure-blocke",
   "title": "Next Measure: free-angle two-point measure",
   "priority": "p3-low",
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.452Z",
-  "updated": "2026-08-22T23:50:01.861Z",
+  "updated": "2026-08-23T00:26:57.880Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 3 (last paragraph). Mock draws a rotated free-angle live caliper; shipped 16.12 caliper is deliberately H/V-only. Await the attached decision.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-08-23T00:20:00.000Z",
       "note": "title groomed: status words removed, status lives in the status field"
+    },
+    {
+      "t": "2026-08-23T00:26:57.879Z",
+      "note": "Decision resolved keep-hv (straight only): the shipped H/V-only caliper is the chosen behavior, so there is nothing to build"
     }
   ],
   "seq": 20

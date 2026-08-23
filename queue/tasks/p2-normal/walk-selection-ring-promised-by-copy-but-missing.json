@@ -2,20 +2,28 @@
   "id": "walk-selection-ring-promised-by-copy-but-missing",
   "title": "walk: selection ring promised by copy but missing on canvas",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:42:55.756Z",
-  "updated": "2026-08-22T23:42:55.756Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Checklist sweep gate 4 fail: no .sel-ring/.handle/.mtag anywhere in walk.html; canvas wrapper is a bare .selwrap (~line 199) while step copy asserts 'selected on the canvas, in Layers, and in Properties at once' (~625) and 'the ring returns on the canvas' (~665). Add the canvas selection ring per img-grade-wt. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "notes": "Objective: creation-vision > capture-clickthrough (plus interaction-foundations > found-selection). Checklist sweep gate 4 fail: no .sel-ring/.handle/.mtag anywhere in walk.html; canvas wrapper is a bare .selwrap (~line 199) while step copy asserts 'selected on the canvas, in Layers, and in Properties at once' (~625) and 'the ring returns on the canvas' (~665). Add the canvas selection ring per img-grade-wt. From sweep-every-clickthrough-page-for-checklist-conf.",
   "acceptance": [],
   "log": [
     {
       "t": "2026-08-22T23:42:55.756Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.305Z",
+      "note": "seq 140 -> 120"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

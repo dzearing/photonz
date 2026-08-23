@@ -3,11 +3,11 @@
   "title": "Retriage queue against objectives",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-08-23T00:02:25.957Z",
-  "updated": "2026-08-23T00:02:25.957Z",
+  "updated": "2026-08-23T00:28:07.601Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.",
@@ -19,6 +19,32 @@
     {
       "t": "2026-08-23T00:02:25.957Z",
       "note": "created (dashboard retriage button)"
+    },
+    {
+      "t": "2026-08-23T00:22:57.163Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T00:28:03.220Z",
+      "note": "read objectives.json (10 epics) and all 30 open tasks; checked queue/decisions: all four measure decisions resolved (alignment=role, naming=derived, two-point=keep-hv, describe-specs=omit)"
+    },
+    {
+      "t": "2026-08-23T00:28:03.220Z",
+      "note": "dropped 9 tasks: 6 video-wt merged into one consolidated selection task, 2 closed by decision outcomes (keep-hv, omit), naming folded into the panel task"
+    },
+    {
+      "t": "2026-08-23T00:28:03.220Z",
+      "note": "added arrow-tool-captions task for objectives epic epic-uehjr1 which had no queue coverage"
+    },
+    {
+      "t": "2026-08-23T00:28:03.220Z",
+      "note": "promoted foundations cleanup + 4 measure tasks to p1; resequenced p1/p2/p3 to steps of 10 in objectives order; groomed 24 task notes to name their objective; recorded triage event"
+    },
+    {
+      "t": "2026-08-23T00:28:07.600Z",
+      "note": "Retriaged all 30 open tasks against the updated objectives tree: 9 dropped (6 video-wt tasks merged into one consolidated task, 3 closed or folded by resolved decisions), 2 added (consolidated video selection task; arrow-tool caption pill covering epic-uehjr1 which had no coverage), measure-redline and foundations work promoted to p1, all sequences renumbered to steps of 10 in objectives order, every open task note now names its objective. Verified by listing the queue: 26 pending tasks, clean steps of 10 per priority. Triage event recorded in history."
     }
-  ]
+  ],
+  "started": "2026-08-23T00:22:57.163Z",
+  "completed": "2026-08-23T00:28:07.601Z"
 }

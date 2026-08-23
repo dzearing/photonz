@@ -2,15 +2,15 @@
   "id": "finish-the-mock-conform-pass-across-all-pages",
   "title": "Finish the mock conform pass across all pages",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:46.951Z",
-  "updated": "2026-08-22T23:33:14.952Z",
+  "updated": "2026-08-23T00:27:39.522Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json conform-pass (was in_progress when the mock loop went dormant) plus the residue of foundation-adjust. The July component rebuild (shared/components/) landed much of the shell; unknown how many of the 88 pages conform. First re-run the ux-audit clusters A-G scan (shared/ux-audit-agent.md, ux-audit-clusters.md) to find what remains, then conform in disjoint batches. Adjustment/filter layer as a first-class layer type in Layers panel + Inspector was never verified landed.",
+  "notes": "Objective: creation-vision > editor-surfaces (one-shell conformance). From study-tasks.json conform-pass (was in_progress when the mock loop went dormant) plus the residue of foundation-adjust. The July component rebuild (shared/components/) landed much of the shell; unknown how many of the 88 pages conform. First re-run the ux-audit clusters A-G scan (shared/ux-audit-agent.md, ux-audit-clusters.md) to find what remains, then conform in disjoint batches. Adjustment/filter layer as a first-class layer type in Layers panel + Inspector was never verified landed.",
   "acceptance": [
     "A fresh ux-audit scan (clusters A-G) over all pages is recorded, listing exactly which pages still fail which cluster",
     "Every failing page is conformed or has its own follow-up queue task filed",
@@ -25,6 +25,14 @@
     {
       "t": "2026-08-22T23:33:14.952Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.204Z",
+      "note": "seq 90 -> 80"
+    },
+    {
+      "t": "2026-08-23T00:27:39.522Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

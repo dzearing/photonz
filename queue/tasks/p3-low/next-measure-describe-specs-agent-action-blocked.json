@@ -2,11 +2,11 @@
   "id": "next-measure-describe-specs-agent-action-blocked",
   "title": "Next Measure: Describe specs agent action",
   "priority": "p3-low",
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:10:59.504Z",
-  "updated": "2026-08-22T23:50:16.351Z",
+  "updated": "2026-08-23T00:26:57.905Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spec: docs/design/next-measure.md section 7. Mock has a Describe specs button handing the spec list to an agent; no agent integration exists in the app. Await the attached decision.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-08-23T00:20:00.000Z",
       "note": "title groomed: status words removed, status lives in the status field"
+    },
+    {
+      "t": "2026-08-23T00:26:57.904Z",
+      "note": "Decision resolved omit (copy as text only, no button): the copyable spec list is already covered by next-measure-measurements-panel-spec-list-export; no agent action ships in the first release"
     }
   ],
   "seq": 30

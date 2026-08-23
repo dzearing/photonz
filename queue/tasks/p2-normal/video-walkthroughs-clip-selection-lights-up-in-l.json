@@ -1,0 +1,25 @@
+{
+  "id": "video-walkthroughs-clip-selection-lights-up-in-l",
+  "title": "Video walkthroughs: clip selection lights up in Layers and on canvas",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T00:26:44.948Z",
+  "updated": "2026-08-23T00:27:19.001Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Objective: video-editing (mock-first video clickthroughs) + interaction-foundations > found-selection (canvas, Layers, and Properties agree). Consolidates six checklist-sweep tasks with one shared root cause: steps pass only a .clip id to data-select, and shared/components/walkthrough.js marks exactly one node and strips .sel from every .lrow, so the Layers rows naming the same clips never light up (agent-generate-wt ~line 520 shows data-select on a .lrow working; fix the shared pattern or each page's step markup). Pages and page-specific items: video-cut-wt (copy says 'its row lights up in Layers' ~342 but #lrRec/#lrRec2 never get .sel; D9 warn: no data-tl-summary). video-transition-wt (steps select #cut1/#txDiss/#xband/#clipBlack; #lrRec/#lrBroll/#lrOutro never .sel; D9 warn: no data-tl-summary). video-title-wt (step 3 claims 'seen three ways' ~433; #lrTitle/#lrArt/#lrL3 never .sel; gate 10 warn: property rows show no animate affordance, no dormant-property catalogue per D10). video-move-wt (all 8 steps select #clipArt, #lrArt never .sel; gate 10 warn: Animate lists Position/Scale/Opacity only, D10 also requires Rotation and Blur; D9 warn: no data-tl-summary). video-zoom-wt (zero .sel-ring in file AND #lrRec never .sel; gate 10 fail: Reframe offers only the keyed Scale/Centre instead of the D10 catalogue). video-freeze-wt (canvas ring only for the arrow; #lrRec/#lrStill/#lrArrow shown/hidden but never .sel; gate 10 warn: no animatable-property rows, dead keyframe CSS ~38-44). Replaces the six per-page tasks dropped in the 2026-08-23 retriage.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T00:26:44.948Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.001Z",
+      "note": "seq 260 -> 10"
+    }
+  ]
+}

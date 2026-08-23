@@ -2,15 +2,15 @@
   "id": "adopt-semantic-icons-where-sweeps-left-stopgaps",
   "title": "Adopt semantic icons where sweeps left stopgaps",
   "priority": "p3-low",
-  "seq": 80,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.127Z",
-  "updated": "2026-08-22T23:33:14.954Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json icon-semantic-refine. Pages are ascii/emoji clean; this is semantic polish: lang-toolbars text-align seg should use ic-align-left/center/right, flip H/V should use ic-flip-horizontal/vertical instead of ic-transition, walkthrough back/next could adopt chevrons. Complements (does not duplicate) the queued icon-conformance-audit task, which hunts ascii glyphs.",
+  "notes": "Objective: design-system > icon-conformance. From study-tasks.json icon-semantic-refine. Pages are ascii/emoji clean; this is semantic polish: lang-toolbars text-align seg should use ic-align-left/center/right, flip H/V should use ic-flip-horizontal/vertical instead of ic-transition, walkthrough back/next could adopt chevrons. Complements (does not duplicate) the queued icon-conformance-audit task, which hunts ascii glyphs.",
   "acceptance": [
     "lang-toolbars uses ic-align-left/center/right and ic-flip-horizontal/vertical",
     "Remaining intentional stopgaps are listed in the task log with a reason each",
@@ -24,6 +24,14 @@
     {
       "t": "2026-08-22T23:33:14.954Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.430Z",
+      "note": "seq 80 -> 50"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

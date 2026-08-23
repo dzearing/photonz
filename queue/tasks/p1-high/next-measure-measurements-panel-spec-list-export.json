@@ -1,0 +1,33 @@
+{
+  "id": "next-measure-measurements-panel-spec-list-export",
+  "title": "Next Measure: Measurements panel + spec list export",
+  "priority": "p1-high",
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-22T23:11:40.845Z",
+  "updated": "2026-08-23T00:27:39.522Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Objective: measure-redline > measurements-panel + spec-export. Implement docs/design/next-measure.md sections 6-7 behind flag next-measure-panel: dock group as a filtered view of measure layers sharing the app selection, per-row eye, Show all / Hide all / Clear (one undo step each), toolbar count pill, From/To/Distance/Units read-only grid, Export buttons, and MeasureSpecList.render in PhotonzCore (TDD, pinned format). Best run after the roles task so rows have swatches; also picks up whatever the naming decision chose. Decisions resolved 2026-08-22: naming = derived automatic names (rows name themselves like \"Width 128 px\", double-click to rename; no OCR); describe-specs = omit (ship the copyable text spec list and export buttons only, no agent button).",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-22T23:11:40.845Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:18.948Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-08-23T00:27:18.974Z",
+      "note": "seq 80 -> 50"
+    },
+    {
+      "t": "2026-08-23T00:27:39.522Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    }
+  ],
+  "seq": 50
+}

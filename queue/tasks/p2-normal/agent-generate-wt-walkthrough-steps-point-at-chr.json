@@ -2,20 +2,28 @@
   "id": "agent-generate-wt-walkthrough-steps-point-at-chr",
   "title": "agent-generate-wt: walkthrough steps point at chrome that no longer exists",
   "priority": "p2-normal",
-  "seq": 250,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:40.856Z",
-  "updated": "2026-08-22T23:43:40.857Z",
+  "updated": "2026-08-23T00:27:39.522Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Checklist sweep gate 2 fail: the two steps teaching how you reach the agent cue dead selectors: data-cue=#cmdk, data-pop=#cmdkPop (~447-460) and data-cue=#miAsk (~459) match nothing in the page or shared components (shell.js removed the .cmdk search well and builds .askbtn/#askPal instead), so those steps highlight nothing. Step 1 copy also places Ask 'in the toolbar, next to History' though the shell puts it in the title bar. Re-point the steps at the real Ask affordance and fix the copy. Minor gate 8 warn: .chg change-row control is page-local (~23-30), not a DS class. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "notes": "Objective: agent-drivable > agent-ask (the Ask affordance the steps must teach). Checklist sweep gate 2 fail: the two steps teaching how you reach the agent cue dead selectors: data-cue=#cmdk, data-pop=#cmdkPop (~447-460) and data-cue=#miAsk (~459) match nothing in the page or shared components (shell.js removed the .cmdk search well and builds .askbtn/#askPal instead), so those steps highlight nothing. Step 1 copy also places Ask 'in the toolbar, next to History' though the shell puts it in the title bar. Re-point the steps at the real Ask affordance and fix the copy. Minor gate 8 warn: .chg change-row control is page-local (~23-30), not a DS class. From sweep-every-clickthrough-page-for-checklist-conf.",
   "acceptance": [],
   "log": [
     {
       "t": "2026-08-22T23:43:40.857Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.179Z",
+      "note": "seq 250 -> 70"
+    },
+    {
+      "t": "2026-08-23T00:27:39.522Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

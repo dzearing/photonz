@@ -2,15 +2,15 @@
   "id": "show-save-and-dirty-state-across-editor-mocks",
   "title": "Show save and dirty state across editor mocks",
   "priority": "p3-low",
-  "seq": 60,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.077Z",
-  "updated": "2026-08-22T23:33:14.954Z",
+  "updated": "2026-08-23T00:27:39.524Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json save-dirty-state (audit finding f-020). documents.html already shows the save/versions/autosave flow; this task carries the dirty-dot + autosave affordance into the editor shells so every editor mock answers where does my work go.",
+  "notes": "Objective: creation-vision > editor-surfaces. From study-tasks.json save-dirty-state (audit finding f-020). documents.html already shows the save/versions/autosave flow; this task carries the dirty-dot + autosave affordance into the editor shells so every editor mock answers where does my work go.",
   "acceptance": [
     "Editor shell mocks show a dirty indicator that clears on save, plus an autosave affordance, consistent with documents.html",
     "The pattern is defined once in shared/components/, not per page",
@@ -24,6 +24,14 @@
     {
       "t": "2026-08-22T23:33:14.954Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.354Z",
+      "note": "seq 60 -> 20"
+    },
+    {
+      "t": "2026-08-23T00:27:39.524Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

@@ -2,15 +2,15 @@
   "id": "remove-the-workspace-switcher-from-the-mock-shel",
   "title": "Remove the workspace switcher from the mock shell",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.002Z",
-  "updated": "2026-08-22T23:33:14.954Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From study-tasks.json supersede-workspace-switcher (P0 there). PRODUCT-MODEL section 4f: UI and image are NOT different apps; no live lens toggle. .wsw still lives in shared/components/dock.css and 43 pages. Replace with document identity in the title bar, tools/Properties contextual to the selected layer, timeline only when the document has time. Keep workspace only as a starting template at New. Also revert the UX-PATTERNS section 1 text describing workspaces as a toggleable lens.",
+  "notes": "Objective: creation-vision > editor-surfaces (one-shell model, PRODUCT-MODEL 4f). From study-tasks.json supersede-workspace-switcher (P0 there). PRODUCT-MODEL section 4f: UI and image are NOT different apps; no live lens toggle. .wsw still lives in shared/components/dock.css and 43 pages. Replace with document identity in the title bar, tools/Properties contextual to the selected layer, timeline only when the document has time. Keep workspace only as a starting template at New. Also revert the UX-PATTERNS section 1 text describing workspaces as a toggleable lens.",
   "acceptance": [
     "grep for wsw across pages/ and shared/components/ returns zero live workspace-switcher usages",
     "Title bar shows document identity; timeline appears only on documents with time",
@@ -25,6 +25,14 @@
     {
       "t": "2026-08-22T23:33:14.954Z",
       "note": "import triage: acceptance criteria and deps filled in from study-tasks.json + 2026-08-22 verification"
+    },
+    {
+      "t": "2026-08-23T00:27:19.229Z",
+      "note": "seq 110 -> 90"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

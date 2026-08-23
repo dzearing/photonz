@@ -1,0 +1,25 @@
+{
+  "id": "arrow-tool-captions-legible-pill-labels-like-the",
+  "title": "Arrow tool captions: legible pill labels like the measure tool",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T00:26:48.303Z",
+  "updated": "2026-08-23T00:27:18.872Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Objective: measure-redline > epic-uehjr1 (user epic: using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool). Next release. When the user points at something with the arrow tool, offer a caption rendered as a pill with a shadow, matching the legibility treatment the measure tool captions ship with, so redline callouts read cleanly over any screenshot. Start from the measure caption styling (docs/design/next-measure.md) for visual consistency; keep it non-destructive (styling applied at render time). Open a UX decision if caption entry/placement behavior is ambiguous beyond what the epic sentence settles.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T00:26:48.303Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:18.872Z",
+      "note": "seq 40 -> 30"
+    }
+  ]
+}

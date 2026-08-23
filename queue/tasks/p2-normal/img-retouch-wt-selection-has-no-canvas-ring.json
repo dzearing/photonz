@@ -2,20 +2,28 @@
   "id": "img-retouch-wt-selection-has-no-canvas-ring",
   "title": "img-retouch-wt: selection has no canvas ring",
   "priority": "p2-normal",
-  "seq": 130,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:42:55.727Z",
-  "updated": "2026-08-22T23:42:55.728Z",
+  "updated": "2026-08-23T00:27:39.523Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Checklist sweep gate 4 fail: .selwrap (line ~126) contains no .sel-ring/.handle/.mtag anywhere; page comments admit 'SELECTION place 2 of 3' and 'place 3 of 3' with no place 1, so selection shows in Layers+Properties but never on canvas. img-grade-wt (sel-ring+handles+mtag, ~line 149) is the reference to copy. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "notes": "Objective: image-editing (plus interaction-foundations > found-selection). Checklist sweep gate 4 fail: .selwrap (line ~126) contains no .sel-ring/.handle/.mtag anywhere; page comments admit 'SELECTION place 2 of 3' and 'place 3 of 3' with no place 1, so selection shows in Layers+Properties but never on canvas. img-grade-wt (sel-ring+handles+mtag, ~line 149) is the reference to copy. From sweep-every-clickthrough-page-for-checklist-conf.",
   "acceptance": [],
   "log": [
     {
       "t": "2026-08-22T23:42:55.728Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.051Z",
+      "note": "seq 130 -> 30"
+    },
+    {
+      "t": "2026-08-23T00:27:39.523Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

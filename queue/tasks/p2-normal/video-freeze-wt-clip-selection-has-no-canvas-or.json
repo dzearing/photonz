@@ -3,11 +3,11 @@
   "title": "video-freeze-wt: clip selection has no canvas or Layers representation",
   "priority": "p2-normal",
   "seq": 230,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:31.027Z",
-  "updated": "2026-08-22T23:43:31.028Z",
+  "updated": "2026-08-23T00:26:57.855Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Checklist sweep gate 4 fail: canvas ring exists only for the arrow (#arrowRing); the clip selected in steps 2-6 has no canvas representation, and #lrRec/#lrStill/#lrArrow are only shown/hidden, never given .sel. Gate 10 warn: clip inspector shows In/Out/Time/Stroke with no animatable-property rows at all; dead keyframe CSS (~38-44) has no consuming markup. Shared root cause: steps pass only a .clip id to data-select and walkthrough.js strips .sel from every .lrow, so Layers never mirrors the selection. Also D9 warn: no data-tl-summary, so the collapsed timeline row names nothing; play button lacks aria-pressed. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -16,6 +16,10 @@
     {
       "t": "2026-08-22T23:43:31.027Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:26:57.854Z",
+      "note": "merged into video-walkthroughs-clip-selection-lights-up-in-l (2026-08-23 retriage): one shared root cause across all six video walkthroughs, fixed as one sweep"
     }
   ]
 }

@@ -2,20 +2,28 @@
   "id": "composites-canvas-selection-layer-row-consistenc",
   "title": "composites: canvas selection, layer-row consistency, history sheet, clipped Library tabs",
   "priority": "p2-normal",
-  "seq": 150,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:42:55.782Z",
-  "updated": "2026-08-22T23:42:55.783Z",
+  "updated": "2026-08-23T00:27:39.522Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Checklist sweep fails: (1) gate 4: no .sel-ring/.handle/.mtag; .cring/.cinst mark component-ness not selection; only Layers rows get .sel. (2) gate 6: three different layer-row shapes in one tree (eye-only rows ~271-278, cmark-no-eye rows ~279-292, bare .child3 rows ~289-291) vs the identical-affordances rule. (3) gate 2 warn: #histSheet lacks .hist and carries a .sheet-h header row (~229-236) unlike the chromeless .sheet.down.hist every sibling page uses. (4) measured in browser: Library scope chips Media/Comp/Styles/Assets clip their labels by 2-4px in the 232px seg. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "notes": "Objective: creation-vision > component-video (plus interaction-foundations > found-selection). Checklist sweep fails: (1) gate 4: no .sel-ring/.handle/.mtag; .cring/.cinst mark component-ness not selection; only Layers rows get .sel. (2) gate 6: three different layer-row shapes in one tree (eye-only rows ~271-278, cmark-no-eye rows ~279-292, bare .child3 rows ~289-291) vs the identical-affordances rule. (3) gate 2 warn: #histSheet lacks .hist and carries a .sheet-h header row (~229-236) unlike the chromeless .sheet.down.hist every sibling page uses. (4) measured in browser: Library scope chips Media/Comp/Styles/Assets clip their labels by 2-4px in the 232px seg. From sweep-every-clickthrough-page-for-checklist-conf.",
   "acceptance": [],
   "log": [
     {
       "t": "2026-08-22T23:42:55.783Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.279Z",
+      "note": "seq 150 -> 110"
+    },
+    {
+      "t": "2026-08-23T00:27:39.522Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }

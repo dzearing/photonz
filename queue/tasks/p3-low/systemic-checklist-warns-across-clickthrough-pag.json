@@ -2,20 +2,28 @@
   "id": "systemic-checklist-warns-across-clickthrough-pag",
   "title": "Systemic checklist warns across clickthrough pages",
   "priority": "p3-low",
-  "seq": 130,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:53.742Z",
-  "updated": "2026-08-22T23:43:53.742Z",
+  "updated": "2026-08-23T00:27:39.524Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Rollup of warns from the checklist sweep that are not page failures but repeat everywhere: (1) .select rows usually lack role/tabindex (present on some pages, absent on video-title-wt, ds-build-wt, others). (2) Play buttons on all video transports lack aria-pressed, and the D8 loop control is absent set-wide including canonical video.html. (3) Layer-row asymmetry pattern: the locked Background row carries ic-lock while sibling rows carry only the eye, and some rows (img-grade-wt #lrRaw) have no eye at all; section 5 says affordances are identical on every row, but canonical image.html has the same variance, so rule or pages need a ruling. (4) walk.html smuggles a span through the data-status shell attribute. From sweep-every-clickthrough-page-for-checklist-conf.",
+  "notes": "Objective: design-system > clickthrough-sweep. Rollup of warns from the checklist sweep that are not page failures but repeat everywhere: (1) .select rows usually lack role/tabindex (present on some pages, absent on video-title-wt, ds-build-wt, others). (2) Play buttons on all video transports lack aria-pressed, and the D8 loop control is absent set-wide including canonical video.html. (3) Layer-row asymmetry pattern: the locked Background row carries ic-lock while sibling rows carry only the eye, and some rows (img-grade-wt #lrRaw) have no eye at all; section 5 says affordances are identical on every row, but canonical image.html has the same variance, so rule or pages need a ruling. (4) walk.html smuggles a span through the data-status shell attribute. From sweep-every-clickthrough-page-for-checklist-conf.",
   "acceptance": [],
   "log": [
     {
       "t": "2026-08-22T23:43:53.742Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T00:27:19.505Z",
+      "note": "seq 130 -> 80"
+    },
+    {
+      "t": "2026-08-23T00:27:39.524Z",
+      "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
   ]
 }
