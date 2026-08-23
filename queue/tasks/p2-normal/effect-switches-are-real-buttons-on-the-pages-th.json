@@ -4,11 +4,11 @@
   "goal": "On nine pages the on/off switch beside an effect only looks like a switch: you cannot click it and a screen reader cannot tell whether it is on. This makes those switches behave like the working ones the rest of the study already uses, and clears out an old command bar style that was retired.",
   "priority": "p2-normal",
   "seq": 340,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T15:22:41.024Z",
-  "updated": "2026-08-23T15:22:41.024Z",
+  "updated": "2026-08-23T21:51:44.852Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from image-family-pages-use-the-real-adjustment-glyph. The DS now says .efx .en is a <button> with aria-pressed (core.js owns the press; canvas.css owns the reset; AGENTS.md 'Effect row enable'). A post-fix browser sweep over all 89 pages found inert span.en left on: editor, language, lang-panels, lang-sections, video, video-audio, video-captions, video-compositing, video-speed. Same sweep also found the deprecated .cmdk still authored on lang-toolbars and language. app-shell, states, typography and draw-boolean are already covered by their own family tasks, so leave those alone. Verify with the browser sweep, not a grep: 200 on every page, audit-sweep.js clean, and zero '.efx span.en' / '.cmdk' on the pages listed here.",
@@ -21,6 +21,32 @@
     {
       "t": "2026-08-23T15:22:41.024Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T21:49:42.495Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T21:52:00.000Z",
+      "note": "Premise re-verified in the corpus before deciding anything, so the fix stays trivially resumable. docs/design/mocks/pages: inert <span class=\"en\"> counts are editor 2, language 2, lang-panels 10, lang-sections 3, video 2, video-audio 2, video-captions 1, video-compositing 2, video-speed 1 = 25 switches, and button.en is 0 on all nine. Retired .cmdk is still authored on lang-toolbars (3), lang-panels (2), lang-sections (1) and language (1); the original note named only lang-toolbars and language, so lang-panels and lang-sections belong in the same sweep."
+    },
+    {
+      "t": "2026-08-23T21:53:00.000Z",
+      "note": "Adversarial review of the idea, not the code: the value here is real but small and it is entirely inside the design study (docs/design/mocks), not the shipping app. Nobody drives these mock switches with a keyboard today; the payoff is that the corpus stops teaching a control that lies about being interactive, which matters when a page is used as a spec. Shortest honest version is a two-line sweep (span.en -> button.en with aria-pressed, delete .cmdk) plus the browser sweep, well under an hour. None of that changes the staging answer below."
+    },
+    {
+      "t": "2026-08-23T21:54:00.000Z",
+      "note": "DROPPED on staging, not on merit. This serves epic design-system (its child clickthrough-sweep), staged later; design-system itself is staged next. queue/objectives.json has focus measure-redline and it is the only epic staged now, and fixing mock-page switches does not unblock any measure or redline work. The runner rule says drop rather than do. Same call the previous iteration made on video-page-blank-slate-on-ramp-uses-the-shared-e."
+    },
+    {
+      "t": "2026-08-23T21:55:00.000Z",
+      "note": "For triage, and this is the last time it can be said cheaply: after this drop the queue holds exactly ONE task in the focus epic, a-measurement-near-the-edge-of-a-capture-should (p2, seq 350, measure-redline). Behind it sit 24 p3 design-study conformance tasks, all serving later epics. Once the loop finishes that one task every remaining iteration will claim a task only to drop it. The fix is a human call, not a runner call: either stage design-system now so the conformance backlog can run, or file new measure-redline work (the epic's own children hover-measure, measurements-panel, alignment-checks, spec-export are all still staged later and hold no tasks)."
+    },
+    {
+      "t": "2026-08-23T21:51:44.852Z",
+      "note": "Serves epic design-system (child clickthrough-sweep, staged later); the only epic staged now is measure-redline and mock-page switches do not unblock it, so the runner rule says drop rather than do. Premise verified and preserved in the task log so the fix is resumable in minutes: 25 inert span.en switches across editor, language, lang-panels, lang-sections, video, video-audio, video-captions, video-compositing, video-speed (button.en is 0 on all nine), and retired .cmdk still authored on lang-toolbars, lang-panels, lang-sections and language (two more pages than the original note listed). TRIAGE: after this drop the queue holds exactly one task in the focus epic; the remaining 24 are p3 design-study conformance serving later epics, so the loop will start claim-and-drop every iteration. Stage design-system now, or file new measure-redline work."
     }
-  ]
+  ],
+  "started": "2026-08-23T21:49:42.494Z",
+  "epic": "design-system"
 }
