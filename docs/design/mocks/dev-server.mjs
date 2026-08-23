@@ -82,12 +82,17 @@ async function handleApi(req, res, url) {
       const tasks = lib.readAllTasks();
       const open = tasks.filter((t) => ['pending', 'in_progress', 'blocked'].includes(t.status)).length;
       const decisions = lib.readDecisions().filter((d) => d.status === 'pending').length;
-      return send(200, { open, decisions });
+      return send(200, { open, decisions, audits: lib.listAudits().length });
     }
     if (req.method === 'GET' && url.startsWith('/api/decision-brief/')) {
       const id = decodeURIComponent(url.slice('/api/decision-brief/'.length));
       const body = lib.readDecisionBrief(id);
       return body === null ? send(404, { error: 'no brief' }) : send(200, { id, body });
+    }
+    if (req.method === 'GET' && url.startsWith('/api/audit/')) {
+      const name = decodeURIComponent(url.slice('/api/audit/'.length));
+      const body = lib.readAudit(name);
+      return body === null ? send(404, { error: 'not found' }) : send(200, { name, body });
     }
     if (req.method === 'GET' && url.startsWith('/api/digest/')) {
       const name = decodeURIComponent(url.slice('/api/digest/'.length));

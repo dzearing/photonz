@@ -6,7 +6,8 @@ You are the daily digest and triage iteration of the Photonz go loop. Produce to
 
 Read `queue/objectives.json` first: it is the user's ordered epic tree, and it steers everything below. Epic order is priority order; nesting is sub-epics. Then read every task under `queue/tasks/` and every decision in `queue/decisions/`, and:
 
-- Align: task priorities and sequences must reflect the objectives ordering. Work serving a higher epic outranks work serving a lower one; work serving no epic at all is a candidate to drop or park at p3.
+- Align to the FOCUS. `queue/objectives.json` names one `focus` epic and stages every epic `now`, `next` or `later`. Work serving the focus outranks everything. Work serving a `next` epic is parked at p3 unless it unblocks the focus, and its goal must say how. Work serving a `later` epic is dropped, not parked: it will be re-created when that epic is staged, and a queue full of someday-work is what stops the app from finishing anything.
+- Tag every task with the `epic` it serves. A task that cannot name one is work for its own sake: drop it and say so.
 
 - Dedupe: merge duplicate or overlapping tasks (keep the better-written one, fold notes in, drop the other with `node queue/bin/queue.mjs status <id> dropped "duplicate of <keeper>"`).
 - Reprioritize: move tasks whose priority no longer matches reality with `node queue/bin/queue.mjs priority <id> <priority>`. Blocked-on-user tasks stay where they are; decision resolution already requeues them.
@@ -26,9 +27,11 @@ Before writing the digest, do a real design review of the last 24 hours. Evidenc
 
 Strong findings become queued tasks, and the review cites its evidence (page names, task ids); no vibes-only claims.
 
+**Judge the focus feature as a user, not as a builder.** Open the audits in `queue/audits/`, and for the feature in focus ask: could someone try this from the audit alone? Is anything in it clumsy, surprising, or ceremonial? The mocks are proposals, so a mock faithfully implemented is not a defence. Findings here become tasks against the focus epic.
+
 ## 3. Write the digest
 
-Create `queue/digests/<YYYY-MM-DD>.md` (today's date) with exactly these four sections:
+Create `queue/digests/<YYYY-MM-DD>.md` (today's date) with exactly these five sections:
 
 ```
 # Daily digest <YYYY-MM-DD>
@@ -41,6 +44,11 @@ Forward-looking and honest: feature ideas worth queueing, ways to improve this p
 
 ## Design review
 The findings from the design review pass, with evidence: IA soundness (what bent, if anything), missing components or guidance (what got hand-rolled, what was queued for extraction), recurring UX issues (the pattern and where it hit), and rule scrubs queued (which document, which rule, why). If the day was genuinely clean, say so and name what was checked.
+
+## Ready to try
+Any feature that became playtestable in the last day, one short paragraph each,
+linking its audit in `queue/audits/`. If nothing became playtestable, say so and
+say what is closest, so the user can see the next thing coming.
 
 ## Triage review
 What the triage pass changed and why: merges, priority moves, resets, grooming. Include the before/after open-task counts per priority.

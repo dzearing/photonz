@@ -52,6 +52,7 @@
         <button class="nav sub" data-page="dashboard" data-tab="summary">Summary</button>
         <button class="nav sub" data-page="dashboard" data-tab="objectives">Objectives</button>
         <button class="nav sub withchip" data-page="dashboard" data-tab="tasks">Tasks<span class="navchip" id="taskschip" hidden></span></button>
+        <button class="nav sub withchip" data-page="dashboard" data-tab="audits">Ready to try<span class="navchip" id="auditchip" hidden></span></button>
         <button class="nav sub" data-page="dashboard" data-tab="data">Data</button>
         <button class="nav sub" data-page="dashboard" data-tab="digest">Digest</button>
       </div>
@@ -286,6 +287,8 @@
       var chip = document.getElementById('taskschip');
       chip.hidden = !c.open;
       chip.textContent = c.open;
+      var a = document.getElementById('auditchip');
+      if (a) { a.hidden = !c.audits; a.textContent = c.audits || ''; }
     }).catch(function () {});
   }
   pollCounts();

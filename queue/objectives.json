@@ -1,27 +1,53 @@
 {
-  "updated": "2026-08-23T00:02:22.874Z",
+  "updated": "2026-08-23T17:37:07.530Z",
+  "focus": "measure-redline",
+  "principles": [
+    "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
+    "One focus at a time. A feature is not done when it compiles, it is done when it is playtestable and has an audit report the user can act on.",
+    "The mocks are proposals, not gospel. Every feature passes an adversarial review before it is built and again before it is called ready: what does not flow, what is confusing, what would a first-time user get wrong.",
+    "Delight and ease are acceptance criteria, not aspirations. If a feature works but feels clumsy, it is not done.",
+    "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built."
+  ],
   "epics": [
     {
-      "id": "unmanned-loop",
-      "title": "Keep the unmanned loop trustworthy",
-      "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality.",
+      "id": "measure-redline",
+      "title": "Make Photonz the best UX redlining tool",
+      "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
+      "stage": "now",
       "children": [
         {
-          "id": "loop-robustness",
-          "title": "Loop robustness: no double starts, clean recovery",
+          "id": "hover-measure",
+          "title": "Hover to measure: instant size and gap readouts",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
-          "id": "dashboard-polish",
-          "title": "Dashboard polish and conformance",
+          "id": "epic-uehjr1",
+          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
-          "id": "digest-quality",
-          "title": "Digests stay honest and useful",
+          "id": "measurements-panel",
+          "title": "Measurements panel: a list you can name, filter, and export",
           "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "alignment-checks",
+          "title": "Alignment checking",
+          "note": "Blocked on a UX decision.",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "spec-export",
+          "title": "Spec export: copy a clean spec list from a capture",
+          "note": "",
+          "stage": "later",
           "children": []
         }
       ]
@@ -30,109 +56,41 @@
       "id": "interaction-foundations",
       "title": "Interaction foundations: the primitives everything sits on",
       "note": "The shared architecture the pillar epics build on top of, so it comes early. Source of truth: shared/UX-PATTERNS.md. A surface that needs chrome outside this vocabulary is a signal to fix the foundation, not to invent locally.",
+      "stage": "next",
       "children": [
         {
           "id": "found-dock",
           "title": "One dock system: panel groups that collapse, resize, and rail",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "found-collapse",
           "title": "One collapse idiom for every section and dock",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "found-overlays",
           "title": "Dialogs, sheets, popovers, and toasts as one overlay family",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "found-selection",
           "title": "One selection model: canvas, layers, and properties agree",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "found-colorpicker",
           "title": "The one color picker, everywhere a color lives",
           "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "measure-redline",
-      "title": "Make Photonz the best UX redlining tool",
-      "note": "The primary real-world use: capture a screenshot, measure it, hand off a spec. Everything here ships in the Next release.",
-      "children": [
-        {
-          "id": "hover-measure",
-          "title": "Hover to measure: instant size and gap readouts",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "epic-uehjr1",
-          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "measurements-panel",
-          "title": "Measurements panel: a list you can name, filter, and export",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "alignment-checks",
-          "title": "Alignment checking",
-          "note": "Blocked on a UX decision.",
-          "children": []
-        },
-        {
-          "id": "spec-export",
-          "title": "Spec export: copy a clean spec list from a capture",
-          "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "video-editing",
-      "title": "Make Photonz the best tool for creating and editing video",
-      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
-      "children": [
-        {
-          "id": "video-cutting",
-          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "video-transitions-motion",
-          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "video-titles-graphics",
-          "title": "Titles, captions, and graphics on the timeline",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "video-audio",
-          "title": "Audio you can see and shape",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "video-share",
-          "title": "Fast, predictable export and share",
-          "note": "",
+          "stage": "later",
           "children": []
         }
       ]
@@ -141,190 +99,41 @@
       "id": "ui-building",
       "title": "Make Photonz the best tool for building UI",
       "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
+      "stage": "next",
       "children": [
         {
           "id": "ui-components",
           "title": "Component design: create once, reuse everywhere, override safely",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "ui-layout",
           "title": "Auto-layout and grids that behave like real UI",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "ui-screens",
           "title": "Build full screens from nothing fast",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "ui-design-systems",
           "title": "Design systems: tokens, styles, and switching them",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "ui-prototyping",
           "title": "Click-through prototyping",
           "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "image-editing",
-      "title": "Make Photonz the best tool for image editing",
-      "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
-      "children": [
-        {
-          "id": "image-retouch",
-          "title": "Retouching: heal, clone, and dodge/burn",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "image-grading",
-          "title": "Color grading with curves, levels, and looks",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "image-masking",
-          "title": "Masking and background removal",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "image-paint",
-          "title": "Drawing and painting with real brushes",
-          "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "icon-svg",
-      "title": "Make Photonz the best platform for building icons and animated SVGs",
-      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar.",
-      "children": [
-        {
-          "id": "icon-grid",
-          "title": "Draw on the icon grid: keylines, snapping, live previews at every size",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "icon-vector",
-          "title": "Vector tools tuned for icons: booleans, strokes, gradient paint",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "icon-animate",
-          "title": "Animate SVG properties on the timeline, keyframes like any layer",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "icon-export",
-          "title": "Export clean SVG, static and animated, that works everywhere",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "icon-sets",
-          "title": "Icon sets as a library scope: one style, one grid, whole families",
-          "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "agent-drivable",
-      "title": "Make Photonz completely drivable by an AI agent",
-      "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
-      "children": [
-        {
-          "id": "agent-api",
-          "title": "One command surface: everything the UI does is one API call",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "agent-mcp",
-          "title": "MCP plugin: the full command surface as agent tools",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "agent-skills",
-          "title": "Skills for real workflows: capture, measure, spec, export",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "agent-ask",
-          "title": "Ask in-app: chat and command palette issue the same calls",
-          "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "local-model",
-      "title": "Easy local model driving for UX exploration",
-      "note": "A local model (for example Qwen via an on-device runtime) drives generate/variations/edit scenarios from inside Photonz: no account, no network, one-time setup. The agent automation mocks (Prompt to design, Generate variations, Agent-assisted edit) define the experience.",
-      "children": [
-        {
-          "id": "local-setup",
-          "title": "One-time local model setup that just works",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "local-explore",
-          "title": "Prompt to design: explore UX directions in place",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "local-variations",
-          "title": "Generate and compare variations of a selection",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "local-edit",
-          "title": "Model-assisted edits through the same command API",
-          "note": "",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "creation-vision",
-      "title": "Advance the creation vision in Next",
-      "note": "One document, layers are everything, surfaces as lenses. Mock-first: a concept graduates from the design study to Next only after its clickthrough is hardened.",
-      "children": [
-        {
-          "id": "capture-clickthrough",
-          "title": "Capture and redline clickthrough hardened",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "editor-surfaces",
-          "title": "Editor surfaces conform to the one-shell model",
-          "note": "",
-          "children": []
-        },
-        {
-          "id": "component-video",
-          "title": "Component and video workspaces validated in mocks",
-          "note": "",
+          "stage": "later",
           "children": []
         }
       ]
@@ -333,23 +142,279 @@
       "id": "design-system",
       "title": "One design system, zero drift",
       "note": "Every page reads as one product: canonical controls, one icon library, control metrics, both themes.",
+      "stage": "next",
       "children": [
         {
           "id": "control-metrics",
           "title": "Control metrics conformance: heights, gaps, light source",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "icon-conformance",
           "title": "Icon conformance across all pages",
           "note": "",
+          "stage": "later",
           "children": []
         },
         {
           "id": "clickthrough-sweep",
           "title": "Checklist sweep of every clickthrough page",
           "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "unmanned-loop",
+      "title": "Keep the unmanned loop trustworthy",
+      "note": "The system that builds everything else: dashboard accuracy, loop robustness, digest quality.",
+      "stage": "next",
+      "children": [
+        {
+          "id": "loop-robustness",
+          "title": "Loop robustness: no double starts, clean recovery",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "dashboard-polish",
+          "title": "Dashboard polish and conformance",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "digest-quality",
+          "title": "Digests stay honest and useful",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "icon-svg",
+      "title": "Make Photonz the best platform for building icons and animated SVGs",
+      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "icon-grid",
+          "title": "Draw on the icon grid: keylines, snapping, live previews at every size",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "icon-vector",
+          "title": "Vector tools tuned for icons: booleans, strokes, gradient paint",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "icon-animate",
+          "title": "Animate SVG properties on the timeline, keyframes like any layer",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "icon-export",
+          "title": "Export clean SVG, static and animated, that works everywhere",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "icon-sets",
+          "title": "Icon sets as a library scope: one style, one grid, whole families",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "image-editing",
+      "title": "Make Photonz the best tool for image editing",
+      "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "image-retouch",
+          "title": "Retouching: heal, clone, and dodge/burn",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-grading",
+          "title": "Color grading with curves, levels, and looks",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-masking",
+          "title": "Masking and background removal",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "image-paint",
+          "title": "Drawing and painting with real brushes",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "agent-drivable",
+      "title": "Make Photonz completely drivable by an AI agent",
+      "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "agent-api",
+          "title": "One command surface: everything the UI does is one API call",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "agent-mcp",
+          "title": "MCP plugin: the full command surface as agent tools",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "agent-skills",
+          "title": "Skills for real workflows: capture, measure, spec, export",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "agent-ask",
+          "title": "Ask in-app: chat and command palette issue the same calls",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "local-model",
+      "title": "Easy local model driving for UX exploration",
+      "note": "A local model (for example Qwen via an on-device runtime) drives generate/variations/edit scenarios from inside Photonz: no account, no network, one-time setup. The agent automation mocks (Prompt to design, Generate variations, Agent-assisted edit) define the experience.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "local-setup",
+          "title": "One-time local model setup that just works",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "local-explore",
+          "title": "Prompt to design: explore UX directions in place",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "local-variations",
+          "title": "Generate and compare variations of a selection",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "local-edit",
+          "title": "Model-assisted edits through the same command API",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "video-editing",
+      "title": "Make Photonz the best tool for creating and editing video",
+      "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "video-cutting",
+          "title": "Cutting and arranging: blade, trim, and place clips with confidence",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "video-transitions-motion",
+          "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "video-titles-graphics",
+          "title": "Titles, captions, and graphics on the timeline",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "video-audio",
+          "title": "Audio you can see and shape",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "video-share",
+          "title": "Fast, predictable export and share",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "creation-vision",
+      "title": "Advance the creation vision in Next",
+      "note": "One document, layers are everything, surfaces as lenses. Mock-first: a concept graduates from the design study to Next only after its clickthrough is hardened.",
+      "stage": "later",
+      "children": [
+        {
+          "id": "capture-clickthrough",
+          "title": "Capture and redline clickthrough hardened",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "editor-surfaces",
+          "title": "Editor surfaces conform to the one-shell model",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "component-video",
+          "title": "Component and video workspaces validated in mocks",
+          "note": "",
+          "stage": "later",
           "children": []
         }
       ]

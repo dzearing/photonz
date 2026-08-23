@@ -243,6 +243,18 @@
   #dashboard .db-ttrow .input,#dashboard .db-ttrow .select,#dashboard .db-ttrow .btn{cursor:auto}
 
   /* ---- objectives tab ---- */
+  #dashboard .db-focus{border-color:var(--accent-line);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  #dashboard .db-focus-t{font-size:15px;font-weight:650;letter-spacing:-.01em;color:var(--ink);margin-top:var(--s1)}
+  #dashboard .db-focus-n{margin:var(--s2) 0 0;font-size:11.5px;line-height:1.55;color:var(--dim);max-width:70em}
+  #dashboard .db-princ{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s2)}
+  #dashboard .db-princ li{position:relative;padding-left:18px;font-size:11.5px;line-height:1.55;color:var(--dim)}
+  #dashboard .db-princ li::before{content:"";position:absolute;left:4px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  /* stage says when an epic is allowed to hold work, so it reads at a glance */
+  #dashboard .db-stage{display:inline-block;margin-left:var(--s2);font-size:8.5px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:1px 6px;border-radius:999px;vertical-align:1px}
+  #dashboard .db-stage.s-now{color:var(--good);background:color-mix(in srgb,var(--good) 15%,transparent)}
+  #dashboard .db-stage.s-next{color:var(--accent);background:var(--accent-soft)}
+  #dashboard .db-stage.s-later{color:var(--faint);background:var(--panel-2)}
   #dashboard .db-ob{list-style:none;margin:0;padding:0}
   #dashboard .db-ob .db-ob{padding-left:28px}
   #dashboard .db-obrow{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s2);
@@ -274,6 +286,9 @@
      title and the digest got the reclaimed width. Prose still gets a measure:
      a 1200px line of body text is unreadable no matter how much room there is. */
   #dashboard .db-md{font-size:12.5px;line-height:1.65;color:var(--dim);max-width:860px}
+  /* a feature report carries screenshots; they sit on the same measure as the prose */
+  #dashboard .db-md img{max-width:100%;height:auto;display:block;margin:var(--s3) 0;
+    border:1px solid var(--line);border-radius:var(--r3)}
   #dashboard .db-md h1{font-size:16px;letter-spacing:-.01em;color:var(--ink);margin:0 0 var(--s3)}
   #dashboard .db-md h2{font-size:13.5px;letter-spacing:-.01em;color:var(--ink);margin:var(--gap-lg) 0 var(--s2);
     padding-bottom:var(--s2);border-bottom:1px solid var(--line-soft)}
@@ -356,7 +371,7 @@
   // Rows carry data-key; anything whose key was not present in the previous
   // render animates in, so arriving content lands gracefully instead of popping.
   var renderKeys = null, shownTab = null;
-  var TAB_TITLE = { summary: 'Summary', objectives: 'Objectives', tasks: 'Tasks', data: 'Data', digest: 'Digest' };
+  var TAB_TITLE = { summary: 'Summary', objectives: 'Objectives', tasks: 'Tasks', audits: 'Ready to try', data: 'Data', digest: 'Digest' };
   // Play the entrance only when the SECTION changed. A poll-driven re-render of
   // the section you are already looking at must not re-animate it, or the page
   // would twitch every 4 seconds.
@@ -375,11 +390,12 @@
     if (titleEl) titleEl.textContent = TAB_TITLE[tab] || 'Summary';
     if (!S) return;
     var slot = document.getElementById('db-headslot');
-    if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : '';
+    if (slot) slot.innerHTML = tab === 'digest' ? digestPicker() : tab === 'audits' ? auditPicker() : '';
     if (tab === 'summary') body.innerHTML = renderSummary();
     if (tab === 'objectives') { body.innerHTML = renderObjectives(); wireObjectives(); }
     if (tab === 'tasks') body.innerHTML = renderTasks();
     if (tab === 'data') { body.innerHTML = renderData(); wireCharts(); }
+    if (tab === 'audits') { body.innerHTML = renderAudits(); }
     if (tab === 'digest') { body.innerHTML = renderDigest(); }
     playViewEnter();
     var seen = {};
@@ -411,7 +427,25 @@
   var obTree = null; // local working copy; survives polling re-renders while dirty
   function renderObjectives() {
     if (!obTree || !obDirty) obTree = obClone();
-    var h = '<div class="db-card"><div class="db-card-h"><i class="ic ic-star"></i><h3>Objectives</h3><span class="k">order is priority, drag to reorder or nest</span>';
+    var meta = S.objectives || {};
+    var h = '';
+    // The focus is the whole point of this page: one feature at a time, and
+    // everything else visibly waiting its turn.
+    if (meta.focus) {
+      var f = (obTree || []).find(function (e) { return e.id === meta.focus; });
+      h += '<div class="db-card db-focus"><div class="db-card-b">' +
+        '<div class="mlabel">In focus now</div>' +
+        '<div class="db-focus-t">' + esc(f ? f.title : meta.focus) + '</div>' +
+        (f && f.note ? '<p class="db-focus-n">' + esc(f.note) + '</p>' : '') +
+        '</div></div>';
+    }
+    if ((meta.principles || []).length) {
+      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-info"></i><h3>How we choose work</h3></div>' +
+        '<div class="db-card-b"><ul class="db-princ">' +
+        meta.principles.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') +
+        '</ul></div></div>';
+    }
+    h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-star"></i><h3>Objectives</h3><span class="k">order is priority, drag to reorder or nest</span>';
     h += '<span style="flex:1"></span>';
     h += '<button class="btn sm secondary" data-act="ob-add-root"><i class="ic ic-plus"></i>New epic</button>';
     h += '<button class="btn sm ' + (obDirty ? 'primary' : 'secondary') + '" data-act="ob-save"' + (obDirty ? '' : ' disabled') + '>Save order</button>';
@@ -422,19 +456,23 @@
     h += '</div></div>';
     return h;
   }
-  function obList(list) {
+  function obList(list, depth) {
+    depth = depth || 0;
     var h = '<ul class="db-ob">';
     list.forEach(function (e) {
       h += '<li data-obid="' + esc(e.id) + '" draggable="true">';
       h += '<div class="db-obrow">';
       h += '<span class="db-grip" title="Drag to reorder or nest"><i class="ic ic-more-vertical"></i></span>';
-      h += '<span class="db-obttl" data-obtitle="' + esc(e.id) + '">' + esc(e.title) + (e.note ? '<span class="db-obsub">' + esc(e.note) + '</span>' : '') + '</span>';
+      h += '<span class="db-obttl" data-obtitle="' + esc(e.id) + '">' + esc(e.title) +
+        // stage is a decision about a whole epic, so a sub-epic never wears one
+        (depth === 0 && e.stage ? ' <span class="db-stage s-' + esc(e.stage) + '">' + esc(e.stage) + '</span>' : '') +
+        (e.note ? '<span class="db-obsub">' + esc(e.note) + '</span>' : '') + '</span>';
       h += '<span class="obact">';
       h += '<button class="btn icon sm ghost" data-act="ob-add-child" data-id="' + esc(e.id) + '" title="Add a sub-epic"><i class="ic ic-plus"></i></button>';
       h += '<button class="btn icon sm ghost" data-act="ob-rename" data-id="' + esc(e.id) + '" title="Rename"><i class="ic ic-pencil"></i></button>';
       h += '<button class="btn icon sm ghost" data-act="ob-delete" data-id="' + esc(e.id) + '" title="Delete"><i class="ic ic-trash"></i></button>';
       h += '</span></div>';
-      if (e.children && e.children.length) h += obList(e.children);
+      if (e.children && e.children.length) h += obList(e.children, depth + 1);
       h += '</li>';
     });
     h += '</ul>';
@@ -1083,6 +1121,52 @@
     return { clientX: r.left + ux * k, clientY: r.top + uy * k };
   }
 
+  // ---- audits: the feature reports a person can act on ----
+  // An audit answers three questions the queue cannot: what is this, how do I
+  // try it, and what should I judge. It is the handoff from the loop to a human.
+  var auditSel = null, auditCache = {};
+  function auditTitle(name) {
+    // 2026-08-23-measure-redline.md -> "measure redline · Aug 23"
+    var m = name.replace('.md', '').match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
+    if (!m) return name.replace('.md', '');
+    return m[2].replace(/-/g, ' ') + ' · ' + dayLabel(m[1]);
+  }
+  function auditPicker() {
+    var list = (S && S.audits) || [];
+    if (list.length < 2) return '';
+    if (!auditSel || list.indexOf(auditSel) < 0) auditSel = list[0];
+    return '<select class="select sm" id="db-asel" title="Pick a feature report">' + list.map(function (n) {
+      return '<option value="' + esc(n) + '"' + (n === auditSel ? ' selected' : '') + '>' + esc(auditTitle(n)) + '</option>';
+    }).join('') + '</select>';
+  }
+  function renderAudits() {
+    var list = (S.audits) || [];
+    if (!list.length) {
+      return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
+        'Nothing to try yet. When the loop finishes a feature it writes a report here: what the feature is, ' +
+        'how to try it in the dev build, what to evaluate, and what its adversarial review found.' +
+        '</div></div></div>';
+    }
+    if (!auditSel || list.indexOf(auditSel) < 0) auditSel = list[0];
+    var cached = auditCache[auditSel];
+    var h = '<div class="db-card"><div class="db-card-b"><div class="db-md" id="db-audit">' +
+      (cached ? md(cached) : '<p class="db-empty">Loading…</p>') + '</div></div></div>';
+    if (!cached) setTimeout(function () { loadAudit(auditSel); }, 0);
+    return h;
+  }
+  function loadAudit(name) {
+    fetch('/api/audit/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
+      auditCache[name] = d.body || '';
+      if (auditSel === name) {
+        var el = document.getElementById('db-audit');
+        if (el) { el.innerHTML = md(auditCache[name]); PZ.view.enter(el); }
+      }
+    }).catch(function () {
+      var el = document.getElementById('db-audit');
+      if (el) el.innerHTML = '<p class="db-empty">That report could not be loaded.</p>';
+    });
+  }
+
   // ---- digest ----
   // Every digest is addressable: ?tab=digest&d=2026-08-23.md is a real URL that
   // opens that day standalone, and the shell mirrors it as #dashboard@digest/<name>.
@@ -1240,6 +1324,7 @@
   });
   document.getElementById('dashboard').addEventListener('change', function (e) {
     if (e.target.id === 'db-dsel') { selectDigest(e.target.value); return; }
+    if (e.target.id === 'db-asel') { auditSel = e.target.value; render(); return; }
     var s = e.target.closest('select[data-act="prio"]');
     if (s) { post('/api/task/update', { id: s.dataset.id, priority: s.value }); return; }
     var q2 = e.target.closest('input[data-act="seq"]');
@@ -1285,7 +1370,7 @@
   var params = new URLSearchParams(location.search);
   var q = params.get('tab');
   if (params.get('d')) digestSel = params.get('d');
-  if (q && ['summary', 'objectives', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
+  if (q && ['summary', 'objectives', 'tasks', 'audits', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
   load();
   setInterval(function () { if (!document.hidden) load(); }, 4000);
 })();

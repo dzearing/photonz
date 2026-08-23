@@ -1,0 +1,29 @@
+{
+  "id": "review-and-audit-the-measure-and-redline-feature",
+  "title": "Review and audit the Measure and redline feature so it can be playtested",
+  "goal": "Six measure and redline features are already built in the Next release but nobody has ever used them as a person would, and there is no way for the user to know what exists or how to try it. Use the app the way a first-time user would, fix or report what feels clumsy, then write a report the user can follow to try the whole feature in about ten minutes and tell us what is good and what is not.",
+  "epic": "measure-redline",
+  "priority": "p0-critical",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T17:40:08.412Z",
+  "updated": "2026-08-23T17:40:08.412Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Flags (all Next, default on): next-measure-hover, next-measure-align, next-measure-center-snap, next-measure-roles, next-measure-panel, next-arrow-captions. Catalog: Sources/PhotonzCore/FeatureCatalog.swift. Spec: docs/design/next-measure.md. Build: Scripts/build-app.sh then open dist/Photonz Dev.app, choose release Next in the Experiments window. Take screenshots with the app itself where possible. Audit format is specified in queue/bin/runner-prompt.md.",
+  "acceptance": [
+    "The dev app has been launched and every one of the six measure flags exercised by hand on a real screenshot",
+    "An adversarial review is written into the task log: what a first-time user would get wrong, what feels ceremonial, what the mock got wrong",
+    "Anything clumsy that can be fixed safely is fixed, and anything not fixed is named in the report",
+    "queue/audits/2026-08-23-measure-redline.md exists with what it is, numbered steps to try it, what to evaluate, review findings, and real screenshots saved beside it",
+    "The report opens correctly on the dashboard Ready to try tab"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T17:40:08.412Z",
+      "note": "created (manual)"
+    }
+  ]
+}

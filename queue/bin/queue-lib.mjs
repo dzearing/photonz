@@ -183,7 +183,7 @@ const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).rep
 //              because it is read last and by an agent.
 // The dashboard renders them in that order, so a task is legible before it is
 // implementable.
-export function addTask({ title, goal = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
+export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null }) {
   ensureDirs();
   if (!PRIORITIES.includes(priority)) priority = 'p2-normal';
   const all = readAllTasks();
@@ -199,7 +199,9 @@ export function addTask({ title, goal = '', priority = 'p2-normal', notes = '', 
     seq = peers.length ? Math.max(...peers.map((t) => t.seq)) + 10 : 10;
   }
   const task = {
-    id, title, goal, priority, seq, status: 'pending', release, area,
+    // `epic` is the objective this serves. A task that cannot name one is work
+    // for its own sake, which is the thing the objectives exist to prevent.
+    id, title, goal, epic, priority, seq, status: 'pending', release, area,
     created: now(), updated: now(), deps: [], blockedBy: [],
     notes, acceptance, log: [{ t: now(), note: `created (${source})` }],
     file: join(TASKS, priority, `${id}.json`),
@@ -477,17 +479,27 @@ export function loopAlive(status = readStatus()) {
 // sub-epics. The dashboard's Objectives tab edits this wholesale.
 const OBJECTIVES = join(QUEUE, 'objectives.json');
 export function readObjectives() {
-  return readJSON(OBJECTIVES, { updated: null, epics: [] });
+  return readJSON(OBJECTIVES, { updated: null, focus: null, principles: [], epics: [] });
 }
-export function writeObjectives(epics) {
+export function writeObjectives(epics, meta = {}) {
   if (!Array.isArray(epics)) throw new Error('epics must be an array');
   const clean = (list) => list.map((e) => ({
     id: String(e.id || slug(e.title)),
     title: String(e.title || 'Untitled'),
     note: e.note ? String(e.note) : '',
+    // now | next | later. Stage is what stops the queue from working on
+    // everything at once: only `now` epics may hold open tasks.
+    stage: ['now', 'next', 'later'].includes(e.stage) ? e.stage : 'later',
     children: Array.isArray(e.children) ? clean(e.children) : [],
   }));
-  const doc = { updated: now(), epics: clean(epics) };
+  const prev = readObjectives();
+  const doc = {
+    updated: now(),
+    // the ONE feature epic the loop is working toward right now
+    focus: meta.focus !== undefined ? meta.focus : (prev.focus || null),
+    principles: meta.principles !== undefined ? meta.principles : (prev.principles || []),
+    epics: clean(epics),
+  };
   writeJSON(OBJECTIVES, doc);
   appendEvent('objectives_updated', { count: doc.epics.length });
   return doc;
@@ -507,6 +519,19 @@ export function requestRetriage() {
     acceptance: ['Every open task priority/sequence is consistent with the objectives ordering', 'A triage history event summarizes the changes'],
   });
   return { queued: true, id: t.id };
+}
+
+// ---- audits -----------------------------------------------------------------
+// An audit is what makes a feature playtestable by a human: what it is, how to
+// try it, and what to judge. Written by the runner that finishes a feature,
+// read on the dashboard's Audit tab.
+const AUDITS = join(QUEUE, 'audits');
+export function listAudits() {
+  try { return readdirSync(AUDITS).filter((f) => f.endsWith('.md')).sort().reverse(); } catch { return []; }
+}
+export function readAudit(name) {
+  if (!/^[a-z0-9._-]+\.md$/i.test(name)) return null;
+  try { return readFileSync(join(AUDITS, name), 'utf8'); } catch { return null; }
 }
 
 // ---- digests ----------------------------------------------------------------
@@ -568,5 +593,6 @@ export function aggregateState() {
     // fetches every 4 seconds and re-parses. The page fetches the one digest it
     // is showing from /api/digest/<name> instead.
     digests: { list: digestNames, latest: digestNames[0] || null },
+    audits: listAudits(),
   };
 }
