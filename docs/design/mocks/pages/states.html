@@ -95,19 +95,14 @@
   #states .starw b{color:var(--dim);font-family:var(--mono);font-size:9px;font-weight:600}
 
   /* ---- inspector: the state list and the override set ---- */
-  #states .stlist{display:flex;flex-direction:column;gap:var(--s1)}
-  #states .strow{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2);border-radius:var(--r2);font-size:11.5px;color:var(--dim);cursor:pointer;border:1px solid transparent}
-  #states .strow:hover{background:var(--panel-2)}
-  #states .strow.sel{background:var(--comp-soft);border-color:var(--comp-line);color:var(--ink)}
-  #states .strow:focus-visible{outline:none;box-shadow:var(--ring)}
-  #states .strow .stdot{width:8px;height:8px;border-radius:50%;flex:none}
-  #states .strow .stnm{font-weight:560}
-  #states .strow .sttg{margin-left:auto;font-size:9px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--faint)}
-  #states .strow.sel .sttg{color:var(--comp)}
-  #states .strow .di{color:var(--comp);font-size:10px}
-  #states .apiline{font-family:var(--mono);font-size:10.5px;color:var(--accent);background:var(--accent-soft);
-           border:1px solid var(--accent-line);border-radius:var(--r2);padding:var(--s2) var(--pad-sm);line-height:1.5;overflow-x:auto}
-  #states .apiline .fn{color:var(--comp)}
+  /* The state list is the shared `.lrow` idiom. All that is page-local is the
+     colour pip that says which kind of state a row is; a pip is not an icon. */
+  #states .stlist{display:flex;flex-direction:column}
+  #states .stlist .lrow{cursor:pointer}
+  #states .stlist .lrow:focus-visible{outline:none;box-shadow:var(--ring)}
+  #states .stlist .stdot{width:8px;height:8px;border-radius:50%;flex:none;margin:0 3px}
+  /* the selected row wears the component accent, so its tag has to follow it */
+  #states .stlist .lrow.selc .rtag{color:var(--comp);background:var(--comp-soft)}
   #states .trigbadge{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px var(--s2);border-radius:999px}
   #states .trigbadge.act{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
   #states .trigbadge.logic{background:var(--panel-2);color:var(--dim);border:1px solid var(--line-strong)}
@@ -142,42 +137,31 @@
          KIND 1 · AN APP SCREEN. Complete shell, document identity in the
          title bar, ⌘K only on the command palette.
          ============================================================ -->
-    <div class="win tall cq shell" data-shell="brand-kit · 1440 × 900" data-ws="ui">
-
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>brand-kit</b> · 1440 × 900</div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip comp" data-target="dsys"><i class="ic xs ic-component"></i> Button · 3 variants · 8 states</span>
-        <button class="pill ai" data-target="agent" title="Ask the agent to add or wire a state"><i class="ic sm ic-sparkle"></i> Ask agent</button>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
-            <div class="mlabel">Component</div>
-            <div class="menuitem"><i class="ic ic-plus"></i> Add state</div>
-            <div class="menuitem"><i class="ic ic-copy"></i> Duplicate state</div>
-            <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Open main component</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Prototype</div>
-            <div class="menuitem"><i class="ic ic-transition"></i> Wire state to a trigger</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="win tall cq shell" data-shell="brand-kit · 1440 × 900" data-ws="ui"
+         data-status="Button · 3 variants · 8 states">
 
       <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+             title bar and Ask are built by the shell component; the native menu
+             bar owns Share and Export, so they sit in here rather than up top. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Component</div>
+          <div class="menuitem"><i class="ic ic-plus"></i> Add state</div>
+          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate state</div>
+          <div class="menuitem" data-target="dsys"><i class="ic ic-component"></i> Open main component</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Prototype</div>
+          <div class="menuitem"><i class="ic ic-transition"></i> Wire state to a trigger</div>
+          <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Ask the agent to wire a state</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">File</div>
+          <div class="menuitem"><i class="ic ic-share"></i> Share a link <span class="sc">⌘⇧S</span></div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘⇧E</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
 
         <div class="cnv">
           <div class="canvas">
@@ -200,6 +184,7 @@
 
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           </div>
 
           <div class="tbar">
@@ -304,14 +289,14 @@
               <div class="section">
                 <div class="sec-h comp">States <span class="mut" style="color:var(--comp)">6 built-in · 2 custom</span></div>
                 <div class="stlist" id="stateList" role="listbox" aria-label="Component states">
-                  <div class="strow" tabindex="0" role="option" data-state="default"><span class="stdot" style="background:var(--dim)"></span><span class="stnm">Default</span><span class="sttg">base</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="hover"><span class="stdot" style="background:var(--accent)"></span><span class="stnm">Hover</span><span class="sttg">interaction</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="focus"><span class="stdot" style="background:var(--accent)"></span><span class="stnm">Focus</span><span class="sttg">interaction</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="press"><span class="stdot" style="background:var(--accent)"></span><span class="stnm">Pressed</span><span class="sttg">interaction</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="dis"><span class="stdot" style="background:var(--faint)"></span><span class="stnm">Disabled</span><span class="sttg">logic</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="load"><span class="stdot" style="background:var(--accent)"></span><span class="stnm">Loading</span><span class="sttg">logic</span></div>
-                  <div class="strow sel" tabindex="0" role="option" aria-selected="true" data-state="ok"><span class="di"><i class="ic xs ic-component"></i></span><span class="stnm">Success</span><span class="sttg">custom</span></div>
-                  <div class="strow" tabindex="0" role="option" data-state="danger"><span class="di"><i class="ic xs ic-component"></i></span><span class="stnm">Destructive</span><span class="sttg">custom</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="default"><span class="stdot" style="background:var(--dim)"></span><span class="nm">Default</span><span class="rtag">base</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="hover"><span class="stdot" style="background:var(--accent)"></span><span class="nm">Hover</span><span class="rtag">interaction</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="focus"><span class="stdot" style="background:var(--accent)"></span><span class="nm">Focus</span><span class="rtag">interaction</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="press"><span class="stdot" style="background:var(--accent)"></span><span class="nm">Pressed</span><span class="rtag">interaction</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="dis"><span class="stdot" style="background:var(--faint)"></span><span class="nm">Disabled</span><span class="rtag">logic</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="load"><span class="stdot" style="background:var(--accent)"></span><span class="nm">Loading</span><span class="rtag">logic</span></div>
+                  <div class="lrow selc" tabindex="0" role="option" aria-selected="true" data-state="ok"><i class="ic sm ic-component"></i><span class="nm">Success</span><span class="rtag">custom</span></div>
+                  <div class="lrow" tabindex="0" role="option" data-state="danger"><i class="ic sm ic-component"></i><span class="nm">Destructive</span><span class="rtag">custom</span></div>
                 </div>
                 <p class="note">Pick a state and the canvas previews it. Hover, focus and pressed fire from input; the rest are set by app logic, by the API, or by the agent.</p>
               </div>
@@ -328,9 +313,8 @@
 
               <div class="section">
                 <div class="sec-h">Address it <span class="mut">one API, same as the UI</span></div>
-                <div class="apiline"><span class="fn">set_state</span>("Button", "success")</div>
-                <div style="height:var(--s2)"></div>
-                <div class="apiline">on "Save" tap: <span class="fn">set_state</span>("loading")<br>&nbsp;&nbsp;await save(): <span class="fn">set_state</span>("success")</div>
+                <div class="codeblk"><span class="k">set_state</span>(<span class="s">"Button"</span>, <span class="s">"success"</span>)</div>
+                <div class="codeblk" style="margin-top:var(--s2)"><span class="c">on "Save" tap:</span> <span class="k">set_state</span>(<span class="s">"loading"</span>)<br><span class="c">&nbsp;&nbsp;await save():</span> <span class="k">set_state</span>(<span class="s">"success"</span>)</div>
                 <div class="irow" style="margin-top:var(--s3)"><span class="rl">Set by</span>
                   <span style="display:flex;gap:var(--s2);flex-wrap:wrap">
                     <span class="trigbadge act">interaction</span>
@@ -509,11 +493,11 @@
         <div class="spec-b">
           <div class="stflow">
             <span class="stnode">Idle</span>
-            <span class="starw"><i class="ic xs ic-chevron-right"></i><b>on tap</b></span>
+            <span class="starw"><i class="ic xs ic-arrow-right"></i><b>on tap</b></span>
             <span class="stnode load"><span class="spin dk sm" style="display:inline-block;vertical-align:-1px;margin-right:var(--s1)"></span>Loading</span>
-            <span class="starw"><i class="ic xs ic-chevron-right"></i><b>save.ok</b></span>
+            <span class="starw"><i class="ic xs ic-arrow-right"></i><b>save.ok</b></span>
             <span class="stnode ok"><i class="ic xs ic-check"></i> Success</span>
-            <span class="starw"><i class="ic xs ic-chevron-right"></i><b>save.err</b></span>
+            <span class="starw"><i class="ic xs ic-arrow-right"></i><b>save.err</b></span>
             <span class="stnode danger">Destructive</span>
           </div>
           <p class="note">Each arrow is one command. The prototype and the shipping app run the same calls, which is why a wired flow is worth more than a click-through map.</p>
@@ -582,11 +566,13 @@
       if (ovLabel) ovLabel.textContent = d.label;
     }
 
-    var rows = [].slice.call(list.querySelectorAll('.strow'));
+    var rows = [].slice.call(list.querySelectorAll('.lrow'));
     function pick(row) {
       rows.forEach(function (x) {
         var on = x === row;
-        x.classList.toggle('sel', on);
+        /* .selc is the component-accent selection: these rows select a state of
+           the one component, so they read in the component colour, not blue. */
+        x.classList.toggle('selc', on);
         x.setAttribute('aria-selected', on ? 'true' : 'false');
       });
       apply(row.getAttribute('data-state'));

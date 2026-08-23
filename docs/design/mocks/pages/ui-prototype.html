@@ -132,16 +132,10 @@
   @keyframes hotpulse{0%{opacity:.9;transform:scale(.96)}70%{opacity:0;transform:scale(1.06)}100%{opacity:0}}
   @media (prefers-reduced-motion:reduce){.viewport.playing .hot::after{animation:none;opacity:.5}}
 
-  /* run status beside the device */
-  .pt-side{display:flex;flex-direction:column;gap:var(--pad-sm);min-width:196px;flex:0 1 220px}
-  .pt-status{display:flex;flex-direction:column;gap:var(--gap-sm);background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.12);border-radius:var(--r4);padding:var(--pad);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
-  .pt-status .sr{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;color:rgba(255,255,255,.62)}
-  .pt-status .sr .k{color:rgba(255,255,255,.45);font-size:10.5px;width:56px}
-  .pt-status .sr .v{color:#fff;font-weight:600;font-family:var(--mono);font-size:11px}
+  /* the run log, inside the Run panel group */
   .pt-log{font-family:var(--mono);font-size:10px;line-height:1.6;color:rgba(255,255,255,.5);background:rgba(0,0,0,.3);
-    border:1px solid rgba(255,255,255,.1);border-radius:var(--r3);padding:var(--gap-sm) var(--pad-sm);max-height:120px;overflow-y:auto}
+    border:1px solid rgba(255,255,255,.1);border-radius:var(--r3);padding:var(--gap-sm) var(--pad-sm);
+    margin-top:var(--gap-sm);max-height:96px;overflow-y:auto}
   .pt-log b{color:#7f9bff;font-weight:600}
   .pt-log .fn{color:#e0a5ff}
 
@@ -179,43 +173,25 @@
     <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Prototyping</h2><span class="k">· wire states together</span></div>
 
     <!-- ============ THE ONE SHELL · UI workspace, a wired flow ============ -->
-    <div class="win tall cq shell" data-shell="aurora · 390 × 844 · 3 frames" data-ws="ui">
-
-      <!-- TITLE BAR -->
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>aurora</b> · 390 × 844 · 3 frames</div>
-        <div class="tbtns">
-          <button class="btn ghost sm" id="btnReset" disabled><i class="ic ic-undo"></i> Reset</button>
-          <button class="btn primary sm" id="btnPlay"><i class="ic ic-play"></i> Play</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The agent is its own path. -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip">3 frames</span>
-        <span class="chip">4 connections</span>
-        <button class="pill ai" data-target="agent"><i class="ic sm ic-sparkle"></i> Ask the agent</button>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:238px;z-index:12">
-            <div class="menuitem"><i class="ic ic-transition"></i> Connect selection <span class="sc">⌘⌥C</span></div>
-            <div class="menuitem"><i class="ic ic-play"></i> Play flow <span class="sc">⌘⏎</span></div>
-            <div class="menuitem" data-target="states"><i class="ic ic-component"></i> Component states</div>
-            <div class="menu-sep"></div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="win tall cq shell" data-shell="aurora · 390 × 844 · 3 frames" data-ws="ui"
+         data-status="3 frames · 4 connections">
 
       <!-- EDITOR ROW: canvas dominant, one dock on the right -->
       <div class="edit lean" id="shellProto" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+             title bar and Ask are built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="menuitem"><i class="ic ic-transition"></i> Connect selection <span class="sc">⌘⌥C</span></div>
+          <div class="menuitem"><i class="ic ic-play"></i> Play flow <span class="sc">⌘⏎</span></div>
+          <div class="menuitem" data-target="states"><i class="ic ic-component"></i> Component states</div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Ask the agent to wire this</div>
+        </div>
 
         <div class="cnv">
           <div class="canvas flowcv" id="canvas">
@@ -256,10 +232,10 @@
                   <span class="selmark"><span class="sel-ring"></span><span class="mtag">Detail</span></span>
                 </button>
 
-                <button class="wchip" data-conn="menu" style="left:47%;top:24%"><span class="tp">tap</span> #menu <i class="ic xs ic-chevron-right"></i> Menu <span class="ms">dissolve 160</span></button>
-                <button class="wchip sel" data-conn="cta" style="left:47%;top:70%"><span class="tp">tap</span> #cta <i class="ic xs ic-chevron-right"></i> Detail <span class="ms">slide 240</span></button>
-                <button class="wchip" data-conn="item" style="left:76%;top:52%"><span class="tp">tap</span> #item <i class="ic xs ic-chevron-right"></i> Detail <span class="ms">slide 220</span></button>
-                <button class="wchip" data-conn="back" style="left:40%;top:93%"><span class="tp">tap</span> #back <i class="ic xs ic-chevron-right"></i> Home <span class="ms">slide 240</span></button>
+                <button class="wchip" data-conn="menu" style="left:47%;top:24%"><span class="tp">tap</span> #menu <i class="ic xs ic-arrow-right"></i> Menu <span class="ms">dissolve 160</span></button>
+                <button class="wchip sel" data-conn="cta" style="left:47%;top:70%"><span class="tp">tap</span> #cta <i class="ic xs ic-arrow-right"></i> Detail <span class="ms">slide 240</span></button>
+                <button class="wchip" data-conn="item" style="left:76%;top:52%"><span class="tp">tap</span> #item <i class="ic xs ic-arrow-right"></i> Detail <span class="ms">slide 220</span></button>
+                <button class="wchip" data-conn="back" style="left:40%;top:93%"><span class="tp">tap</span> #back <i class="ic xs ic-arrow-right"></i> Home <span class="ms">slide 240</span></button>
               </div>
 
               <!-- the live device: real transitions, real hotspots -->
@@ -310,21 +286,15 @@
                 </div>
               </div>
 
-              <!-- run status + log -->
-              <div class="pt-side">
-                <div class="pt-status">
-                  <div class="sr"><span class="k">Frame</span><span class="v" id="stFrame">Default</span></div>
-                  <div class="sr"><span class="k">Menu</span><span class="v" id="stMenu">closed</span></div>
-                  <div class="sr"><span class="k">Last</span><span class="v" id="stLast">idle</span></div>
-                </div>
-                <div class="pt-log" id="ptLog"><b>ready</b> · press Play, then tap a hotspot</div>
-              </div>
             </div>
           </div>
 
           <!-- canvas action cluster -->
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shellProto" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            <button class="tool" id="btnPlay" title="Play the flow (⌘⏎)"><i class="ic sm ic-play"></i></button>
+            <button class="tool" id="btnReset" title="Back to the start of the flow" disabled><i class="ic sm ic-undo"></i></button>
           </div>
 
           <!-- FLOATING BOTTOM TOOL BAR (D4 · UI inventory + the Connect tool) -->
@@ -499,6 +469,20 @@
             </div>
           </div>
 
+          <!-- RUN · what the flow is doing right now. New capability is a new
+               panel group, never a widget parked on the canvas. -->
+          <div class="dgrp" id="gRun" data-gh="sm">
+            <div class="dgrp-h"><span class="ttl">Run</span><span class="cnt" id="runState">idle</span></div>
+            <div class="dgrp-b">
+              <div class="section">
+                <div class="setrow"><span class="rl">Frame</span><span class="val" id="stFrame">Default</span></div>
+                <div class="setrow"><span class="rl">Menu</span><span class="val" id="stMenu">closed</span></div>
+                <div class="setrow"><span class="rl">Last</span><span class="val" id="stLast">idle</span></div>
+                <div class="pt-log" id="ptLog"><b>ready</b> · press Play, then tap a hotspot</div>
+              </div>
+            </div>
+          </div>
+
           <!-- LIBRARY (D1/D2): one surface, four scopes -->
           <div class="dgrp grow" id="gLibrary">
             <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="scopeCnt">Components</span>
@@ -533,6 +517,7 @@
           <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
           <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
           <button class="drailtab" data-group="#gConn" title="Connections"><i class="ic sm ic-transition"></i><span class="lb">Connections</span></button>
+          <button class="drailtab" data-group="#gRun" title="Run"><i class="ic sm ic-play"></i><span class="lb">Run</span></button>
           <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
         </div>
 
@@ -612,6 +597,8 @@
     if (stFrame) stFrame.textContent = frameName();
     if (stMenu) stMenu.textContent = dmenu.classList.contains('open') ? 'open' : 'closed';
     if (lastTxt && stLast) stLast.textContent = lastTxt;
+    var rs = byId('runState');
+    if (rs) rs.textContent = playing ? 'playing' : 'idle';
     syncFrameSelection();
   }
 
@@ -748,10 +735,14 @@
   if (btnPlay) btnPlay.addEventListener('click', function () {
     playing = !playing;
     viewport.classList.toggle('playing', playing);
-    btnPlay.innerHTML = playing
-      ? '<i class="ic ic-pause"></i> Playing'
-      : '<i class="ic ic-play"></i> Play';
+    /* An icon tool in the canvas action cluster says its state with .on and
+       its own glyph, not with a label that changes width under the pointer. */
+    btnPlay.classList.toggle('on', playing);
+    btnPlay.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    btnPlay.innerHTML = '<i class="ic sm ' + (playing ? 'ic-pause' : 'ic-play') + '"></i>';
+    btnPlay.setAttribute('data-tip', playing ? 'Pause the flow (⌘⏎)' : 'Play the flow (⌘⏎)');
     if (playing) { markTouched(); log('<b>play</b> · hotspots live'); }
+    refreshStatus();
   });
   function reset() {
     setMenu(false, 'instant');

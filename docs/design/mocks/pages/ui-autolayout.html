@@ -16,10 +16,6 @@
   #ui-autolayout .win.shell{height:720px;min-height:0}
   /* canvas that hosts the live frame */
   .al-canvas{padding:var(--s6)}
-  .al-status{position:absolute;left:var(--pad);right:var(--pad);bottom:calc(var(--s6) + var(--s7));
-    font-size:11px;line-height:1.45;color:rgba(255,255,255,.62);text-align:center;
-    font-family:var(--sans);pointer-events:none}
-  .al-status b{color:#e6dcff;font-weight:640}
 
   /* the auto-layout frame (a real flex container) */
   .al-frame{display:flex;flex-direction:row;align-items:center;gap:12px;padding:16px;
@@ -63,7 +59,6 @@
   .ctl .cl .cv{font-family:var(--mono);font-size:10.5px;color:var(--dim);font-variant-numeric:tabular-nums}
   /* .ctl .seg override deleted: the shared DS lays every panel scope control
      out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
-  .ua-stepper{display:flex;align-items:center;gap:var(--gap-sm)}
 
   .selname{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:640;
     background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);border-radius:999px;padding:3px 9px}
@@ -75,9 +70,6 @@
   .apiblk .codeblk{margin:0}
   .apiblk p{margin:var(--pad-sm) 0 0;font-size:11.5px;color:var(--dim);line-height:1.55}
   .apiblk p b{color:var(--ink);font-weight:600}
-
-  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
-  @container shell (max-width:880px){ .toolbar .chip{display:none} }
 
   /* KIND 2 · a specimen card (PRODUCT-MODEL §4c). It depicts a PART of the
      model, not the app, so it wears no traffic lights and no title bar:
@@ -99,42 +91,25 @@
   <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Auto-layout</h2><span class="k">· structure that reflows</span></div>
 
   <!-- ============ THE ONE SHELL · UI workspace, live auto-layout frame ============ -->
-  <div class="win tall cq shell" data-shell="aurora-cards · 1200 × 630" data-ws="ui">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>aurora-cards</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm" id="reset"><i class="ic ic-undo"></i> Reset</button>
-        <button class="btn sm" data-target="editor">Open in editor <i class="ic xs ic-chevron-right"></i></button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip comp"><i class="ic xs ic-frame"></i> Auto-layout frame</span>
-      <span class="chip" id="chipCount">3 children</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-          <div class="menuitem"><i class="ic ic-frame"></i> Add auto-layout <span class="sc">⇧A</span></div>
-          <div class="menuitem"><i class="ic ic-flow-horizontal"></i> Direction: row</div>
-          <div class="menuitem"><i class="ic ic-flow-vertical"></i> Direction: column</div>
-          <div class="menu-sep"></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="aurora-cards · 1200 × 630" data-ws="ui"
+       data-status='Auto-layout frame · <span id="chipCount">3 children</span>'>
 
     <!-- EDITOR ROW: canvas dominant, one dock on the right -->
     <div class="edit lean" id="shellAl" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+           title bar and Ask are built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="menuitem"><i class="ic ic-frame"></i> Add auto-layout <span class="sc">⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-flow-horizontal"></i> Direction: row</div>
+        <div class="menuitem"><i class="ic ic-flow-vertical"></i> Direction: column</div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem" data-target="editor"><i class="ic ic-external"></i> Open in editor</div>
+      </div>
 
       <div class="cnv">
         <div class="canvas al-canvas" id="canvas">
@@ -143,12 +118,13 @@
             <div class="al-tag"><i class="ic xs ic-frame"></i> Auto-layout</div>
             <!-- children injected by script -->
           </div>
-          <div class="al-status" id="status"></div>
         </div>
 
         <!-- canvas action cluster: the panel toggle lives with the canvas -->
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#shellAl" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" id="reset" title="Reset the frame"><i class="ic sm ic-undo"></i></button>
         </div>
 
         <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
@@ -268,22 +244,15 @@
                 </div>
               </div>
 
-              <div class="ctl">
-                <div class="cl">Gap <span class="cv" id="gapv">12</span></div>
-                <div class="ua-stepper">
-                  <button class="btn icon sm" id="gapdn" aria-label="Decrease gap"><i class="ic sm ic-minus"></i></button>
-                  <span class="bar" style="flex:1"><i id="gapbar" style="width:30%"></i></span>
-                  <button class="btn icon sm" id="gapup" aria-label="Increase gap"><i class="ic sm ic-plus"></i></button>
-                </div>
-              </div>
-
-              <div class="ctl">
-                <div class="cl">Padding <span class="cv" id="padv">16</span></div>
-                <div class="ua-stepper">
-                  <button class="btn icon sm" id="paddn" aria-label="Decrease padding"><i class="ic sm ic-minus"></i></button>
-                  <span class="bar" style="flex:1"><i id="padbar" style="width:40%"></i></span>
-                  <button class="btn icon sm" id="padup" aria-label="Increase padding"><i class="ic sm ic-plus"></i></button>
-                </div>
+              <div class="numgrid">
+                <span class="stepper sm" data-step="gap"><span class="k">Gap</span>
+                  <input id="gapv" name="gap" type="number" min="0" max="40" step="4" value="12" aria-label="Gap">
+                  <b class="sp"><button aria-label="Increase gap"><i class="ic ic-chevron-up"></i></button><button aria-label="Decrease gap"><i class="ic ic-chevron-down"></i></button></b>
+                </span>
+                <span class="stepper sm" data-step="pad"><span class="k">Pad</span>
+                  <input id="padv" name="padding" type="number" min="0" max="40" step="4" value="16" aria-label="Padding">
+                  <b class="sp"><button aria-label="Increase padding"><i class="ic ic-chevron-up"></i></button><button aria-label="Decrease padding"><i class="ic ic-chevron-down"></i></button></b>
+                </span>
               </div>
 
               <div class="ctl">
@@ -336,16 +305,11 @@
 
               <div class="ctl" style="margin-top:var(--pad-sm)">
                 <div class="cl">Children <span class="cv" id="cnt">3</span></div>
-                <div class="ua-stepper">
-                  <button class="btn sm block" id="add"><i class="ic sm ic-plus"></i> Add item</button>
-                  <button class="btn sm block secondary" id="del"><i class="ic sm ic-minus"></i> Remove</button>
+                <div class="actrow">
+                  <button class="btn sm" id="add"><i class="ic sm ic-plus"></i> Add item</button>
+                  <button class="btn sm secondary" id="del"><i class="ic sm ic-trash"></i> Remove</button>
                 </div>
               </div>
-            </div>
-
-            <div class="section">
-              <div class="sec-h">In the API <span class="mut">one call</span></div>
-              <div class="apiblk"><div class="codeblk" id="apicode"></div></div>
             </div>
           </div>
         </div>
@@ -401,12 +365,19 @@
     </div>
   </div>
 
+  <!-- The live lesson line. It reads the frame's current state, and it lives
+       UNDER the window: the canvas is the document, never a teaching surface. -->
+  <div class="caption">
+    <div class="c"><div class="lab">What the frame is doing</div><p id="status"></p></div>
+  </div>
+
   <!-- ===== KIND 2 · SPECIMEN. Depicts a part of the model, not the app,
-           so it wears no traffic lights and no title bar. ===== -->
+           so it wears no traffic lights and no title bar. This is the ONE
+           place the API echo lives; the dock is an inspector, not a console. ===== -->
   <div class="al-spec">
     <div class="al-spec-h"><span class="al-kind">Specimen</span><h3>Auto-layout in the API</h3><span class="al-sub">Every control in the Properties group is one field on the model</span></div>
     <div class="apiblk" style="padding:var(--pad)">
-      <div class="codeblk"><span class="c">// the Properties group is just a friendly face on the model</span><br><span class="k">frame</span>.layout = { dir: <span class="s">"row"</span>, gap: <span class="p">8</span>, pad: <span class="p">16</span>, align: <span class="s">"center"</span>, distribute: <span class="s">"between"</span> }<br><span class="k">frame</span>.children[<span class="p">1</span>].grow = <span class="s">"fill"</span>&nbsp;&nbsp;<span class="c">// hug · fill · fixed</span><br><span class="k">frame</span>.add(<span class="k">component</span>(<span class="s">"Tag"</span>))&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// frame reflows on its own</span></div>
+      <div class="codeblk" id="apicode"></div>
       <p style="margin:var(--pad-sm) 0 0;font-size:12px;color:var(--dim);line-height:1.55">The same command runs whether you drag a control, script it, or ask the <b style="color:var(--ink)">agent</b>. Auto-layout means you never hand-place a child. You describe the rule once and the frame keeps it, on <b data-target="editor" style="color:var(--accent);cursor:pointer">UI</b>, a photo, or a <b data-target="video" style="color:var(--accent);cursor:pointer">video</b> title card.</p>
     </div>
   </div>
@@ -447,7 +418,7 @@
 
   function byId(id) { return document.getElementById(id); }
   var el = {
-    gapv: byId('gapv'), padv: byId('padv'), gapbar: byId('gapbar'), padbar: byId('padbar'),
+    gapv: byId('gapv'), padv: byId('padv'),
     cnt: byId('cnt'), selname: byId('selname'), selmut: byId('selmut'), status: byId('status'),
     artlabel: byId('artlabel'), apicode: byId('apicode'), layerList: byId('layerList'),
     layerCount: byId('layerCount'), frameMeta: byId('frameMeta'), chipCount: byId('chipCount'),
@@ -537,10 +508,8 @@
     setSeg('dist', state.dist); setSeg('frame', state.frameW);
     setSeg('mode', cur ? cur.mode : 'hug');
 
-    if (el.gapv) el.gapv.textContent = state.gap;
-    if (el.padv) el.padv.textContent = state.pad;
-    if (el.gapbar) el.gapbar.style.width = (state.gap / GAP_MAX * 100) + '%';
-    if (el.padbar) el.padbar.style.width = (state.pad / PAD_MAX * 100) + '%';
+    if (el.gapv && el.gapv !== document.activeElement) el.gapv.value = state.gap;
+    if (el.padv && el.padv !== document.activeElement) el.padv.value = state.pad;
     if (el.cnt) el.cnt.textContent = String(state.items.length);
     if (el.selname) el.selname.textContent = cur ? cur.label : '';
     if (el.selmut) el.selmut.textContent = 'child ' + (state.sel + 1);
@@ -584,9 +553,10 @@
     if (!el.apicode) return;
     var mode = cur ? cur.mode : 'hug';
     el.apicode.innerHTML =
-      '<span class="k">frame</span>.layout = { dir: <span class="s">"' + state.dir + '"</span>, gap: <span class="p">' + state.gap + '</span>, pad: <span class="p">' + state.pad + '</span> }<br>' +
-      '<span class="k">frame</span>.align = <span class="s">"' + state.align + '"</span>&nbsp;&nbsp;<span class="c">// distribute: "' + state.dist + '"</span><br>' +
-      '<span class="k">frame</span>.children[<span class="p">' + state.sel + '</span>].grow = <span class="s">"' + mode + '"</span>';
+      '<span class="c">// the Properties group is just a friendly face on the model</span><br>' +
+      '<span class="k">frame</span>.layout = { dir: <span class="s">"' + state.dir + '"</span>, gap: <span class="p">' + state.gap + '</span>, pad: <span class="p">' + state.pad + '</span>, align: <span class="s">"' + state.align + '"</span>, distribute: <span class="s">"' + state.dist + '"</span> }<br>' +
+      '<span class="k">frame</span>.children[<span class="p">' + state.sel + '</span>].grow = <span class="s">"' + mode + '"</span>&nbsp;&nbsp;<span class="c">// hug · fill · fixed</span><br>' +
+      '<span class="k">frame</span>.add(<span class="k">component</span>(<span class="s">"Tag"</span>))&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// frame reflows on its own</span>';
   }
 
   /* ---------- wire the controls ---------- */
@@ -606,14 +576,24 @@
   });
 
   function wire(id, fn) { var n = byId(id); if (n) n.addEventListener('click', fn); }
-  function bump(prop, delta, max) {
-    state[prop] = Math.max(0, Math.min(max, state[prop] + delta));
+
+  /* The two numeric fields are DS `.stepper`s, so a value can be typed, arrowed,
+     or nudged with the spinners. All three land on the same setter. */
+  function setNum(prop, v, max) {
+    if (isNaN(v)) return;
+    state[prop] = Math.max(0, Math.min(max, Math.round(v)));
     render();
   }
-  wire('gapdn', function () { bump('gap', -STEP, GAP_MAX); });
-  wire('gapup', function () { bump('gap', STEP, GAP_MAX); });
-  wire('paddn', function () { bump('pad', -STEP, PAD_MAX); });
-  wire('padup', function () { bump('pad', STEP, PAD_MAX); });
+  [['gap', el.gapv, GAP_MAX], ['pad', el.padv, PAD_MAX]].forEach(function (f) {
+    var prop = f[0], input = f[1], max = f[2];
+    if (!input) return;
+    input.addEventListener('input', function () { setNum(prop, parseFloat(input.value), max); });
+    var sp = input.parentNode.querySelector('.sp');
+    if (!sp) return;
+    var btns = [].slice.call(sp.querySelectorAll('button'));
+    if (btns[0]) btns[0].addEventListener('click', function () { setNum(prop, state[prop] + STEP, max); });
+    if (btns[1]) btns[1].addEventListener('click', function () { setNum(prop, state[prop] - STEP, max); });
+  });
   wire('add', function () {
     if (state.items.length >= 8) return;
     state.items.push({ label: labels[state.items.length % labels.length], mode: 'hug' });

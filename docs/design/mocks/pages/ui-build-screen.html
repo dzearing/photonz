@@ -112,10 +112,8 @@
     overflow-x:auto;white-space:nowrap}
   .ub-snip .k{color:#7f9bff}.ub-snip .s{color:#7fd7a6}.ub-snip .p{color:#e0a5ff}
 
-  /* narrow: the toolbar sheds its status chip and the device scales down */
-  @container shell (max-width:880px){
-    #ui-build-screen .toolbar .chip{display:none}
-  }
+  /* narrow: the device scales down (the title-bar status readout is hidden by
+     the shared rule in dock.css) */
   @container shell (max-width:620px){
     #ui-build-screen .ub-scr{width:200px;height:356px}
     #ui-build-screen .ub-hero .ub-h{font-size:16px}
@@ -137,56 +135,30 @@
   <div class="wt" id="wtBuild">
 
     <div class="wt-stage">
-      <div class="win tall cq shell" data-shell="store-app · 393 × 852" data-ws="ui">
-
-        <!-- TITLE BAR · document identity only. The lesson title lives in
-             .scen-head and the captions, never here. -->
-        <div class="titlebar">
-          <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-          <div class="wtitle"><b>store-app</b> · 393 × 852</div>
-          <div class="tbtns">
-            <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-            <button class="btn primary sm" id="btnExport" data-menu="#exportPop"><i class="ic ic-export"></i> Export</button>
-          </div>
-        </div>
-
-        <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-        <div class="toolbar">
-          <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-          <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-          <span class="tsep"></span>
-          <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-          <span class="tspacer"></span>
-          <span class="chip"><i class="ic xs ic-frame"></i> <span id="chipDevice">iPhone 15 · 393 × 852</span></span>
-          <div style="position:relative">
-            <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-              <div class="mlabel">Layer</div>
-              <div class="menuitem"><i class="ic ic-frame"></i> New frame from preset <span class="sc">F</span></div>
-              <div class="menuitem"><i class="ic ic-grid"></i> Add auto-layout <span class="sc">⇧A</span></div>
-              <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">C</span></div>
-              <div class="menu-sep"></div>
-              <div class="mlabel">View</div>
-              <div class="menuitem"><i class="ic ic-eye"></i> Preview <span class="sc">⌘P</span></div>
-              <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            </div>
-            <!-- Export sheet, anchored to the title-bar Export button -->
-            <div class="popover pop" id="exportPop" style="position:absolute;right:0;top:26px;width:248px;z-index:12;padding:var(--pad-sm)">
-              <div class="mlabel" style="padding:0 0 var(--s2)">Export</div>
-              <div class="ub-block">
-                <div class="ub-pl">Format</div>
-                <div class="seg" role="group" aria-label="Export format"><button class="on">PNG @3x</button><button>PDF</button><button>SVG</button></div>
-              </div>
-              <div class="irow"><span class="rl">Scope</span><span class="select"><span class="lead">Frame · Home</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-              <div class="irow"><span class="rl">Specs</span><span class="chip" style="margin:0" data-target="redline"><i class="ic xs ic-ruler"></i> Redline sheet</span></div>
-              <button class="btn primary block sm" id="btnDoExport" style="margin-top:var(--gap-sm)"><i class="ic ic-export"></i> Export screen</button>
-              <p class="note" style="margin:var(--gap-sm) 0 0">Same result from one call, so an agent can ship it too.</p>
-              <div class="ub-snip"><span class="k">export</span>(frame=<span class="s">"Home"</span>, <span class="p">fmt</span>=<span class="s">"png@3x"</span>)</div>
-            </div>
-          </div>
-        </div>
+      <div class="win tall cq shell" data-shell="store-app · 393 × 852" data-ws="ui"
+           data-status='<span id="chipDevice">iPhone 15 · 393 × 852</span>'>
 
         <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
         <div class="edit lean" id="shell" data-dock="open">
+
+          <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it,
+               the title bar and Ask are built by the shell component. Share and
+               Export live here because the native menu bar owns document
+               actions; the title bar carries identity only. -->
+          <div class="popover menu pop cmdpop" id="cmdMenu">
+            <div class="mlabel">Layer</div>
+            <div class="menuitem"><i class="ic ic-frame"></i> New frame from preset <span class="sc">F</span></div>
+            <div class="menuitem"><i class="ic ic-grid"></i> Add auto-layout <span class="sc">⇧A</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">C</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">File</div>
+            <div class="menuitem"><i class="ic ic-share"></i> Share a link <span class="sc">⌘⇧S</span></div>
+            <div class="menuitem" id="miExport" data-menu="#exportPop"><i class="ic ic-export"></i> Export <span class="sc">⌘⇧E</span></div>
+            <div class="menu-sep"></div>
+            <div class="mlabel">View</div>
+            <div class="menuitem"><i class="ic ic-eye"></i> Preview <span class="sc">⌘P</span></div>
+            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          </div>
 
           <div class="cnv">
             <div class="canvas">
@@ -263,7 +235,26 @@
 
             <div class="cnv-act">
               <button class="tool" id="btnPreview" title="Preview (⌘P)" aria-pressed="false"><i class="ic sm ic-eye"></i></button>
+              <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
               <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            </div>
+
+            <!-- The export sheet the File > Export command opens. It sits beside
+                 the command menu, at the same top edge, so the path from menu
+                 item to sheet reads as one gesture. -->
+            <div class="popover pop" id="exportPop"
+                 style="position:absolute;z-index:13;width:248px;padding:var(--pad-sm);
+                        top:calc(var(--s3) + var(--ctl-h-sm) + var(--s1));right:calc(var(--s3) + 244px)">
+              <div class="mlabel" style="padding:0 0 var(--s2)">Export</div>
+              <div class="ub-block">
+                <div class="ub-pl">Format</div>
+                <div class="seg" role="group" aria-label="Export format"><button class="on">PNG @3x</button><button>PDF</button><button>SVG</button></div>
+              </div>
+              <div class="irow"><span class="rl">Scope</span><span class="select"><span class="lead">Frame · Home</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Specs</span><span class="chip" style="margin:0" data-target="redline"><i class="ic xs ic-ruler"></i> Redline sheet</span></div>
+              <button class="btn primary block sm" id="btnDoExport" style="margin-top:var(--gap-sm)"><i class="ic ic-export"></i> Export screen</button>
+              <p class="note" style="margin:var(--gap-sm) 0 0">Same result from one call, so an agent can ship it too.</p>
+              <div class="ub-snip"><span class="k">export</span>(frame=<span class="s">"Home"</span>, <span class="p">fmt</span>=<span class="s">"png@3x"</span>)</div>
             </div>
 
             <!-- FLOATING TOOL BAR · D4 UI inventory, fixed order -->
@@ -609,14 +600,14 @@
 
       <li class="wt-step"
           data-title="Hand it off"
-          data-cue="#btnExport" data-cue-label="Click Export" data-cue-place="bottom"
-          data-dock="open" data-pop="#exportPop"
+          data-cue="#miExport" data-cue-label="Commands · Export" data-cue-place="bottom"
+          data-dock="open" data-pop="#cmdMenu,#exportPop"
           data-show="#ubArt,#ubSel,#ubToast"
           data-hide="#ubPrevflag">
         <div class="wt-cap comp">
           <span class="wt-n">7</span>
           <p class="wt-do"><b>Export</b>, then pick <b>PNG @3x</b></p>
-          <p class="wt-where">the title bar, in the document actions</p>
+          <p class="wt-where">the command surface, top right of the canvas</p>
           <p class="wt-res">the frame goes out as PNG, PDF, or a redline sheet for engineering. It is one call, <code>export(frame="Home", fmt="png@3x")</code>, so an agent can ship the same screen.</p>
         </div>
       </li>

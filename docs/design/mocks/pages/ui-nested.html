@@ -76,8 +76,6 @@
   .ib .cbadge{top:-23px;left:50%;transform:translateX(-50%);font-size:9px;padding:2px 6px}
   .toolbar-mini .cring{inset:-3px}
 
-  .linknote{font-size:10.5px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5;margin-top:var(--gap-sm)}
-  .linknote b{color:#d9c4ff;font-weight:600}
   .pv-tint{color:rgba(255,255,255,.4);font-size:10px;font-family:var(--mono);letter-spacing:.04em;text-align:center}
   .pv-tint b{color:rgba(255,255,255,.72);font-weight:600}
 
@@ -124,42 +122,23 @@
     override is edited in Properties. Select any level on the canvas or in Layers to see what it can override.</p>
 
   <!-- ============ THE ONE SHELL · UI workspace, a nested instance tree ============ -->
-  <div class="win tall cq shell" data-shell="aurora-appbar · 1440 × 900" data-ws="ui">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>aurora-appbar</b> · 1440 × 900</div>
-      <div class="tbtns">
-        <button class="btn ghost sm" id="resetAll" title="Clear every override, relink every instance"><i class="ic ic-undo"></i> Reset overrides</button>
-        <button class="btn sm" id="revealLib" title="Reveal the Library group in the dock"><i class="ic ic-library"></i> Open library</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip comp"><i class="ic xs ic-component"></i> 3 levels deep</span>
-      <span class="chip" id="chipOv">No overrides</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
-          <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
-          <div class="menuitem"><i class="ic ic-import"></i> Push override to main</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Reset overrides <span class="sc">⌘⌥R</span></div>
-          <div class="menu-sep"></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="aurora-appbar · 1440 × 900" data-ws="ui"
+       data-status='3 levels deep · <span id="chipOv">No overrides</span>'>
 
     <!-- EDITOR ROW: canvas dominant, one dock on the right -->
     <div class="edit lean" id="shellNest" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+           title bar and Ask are built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Push override to main</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Reset overrides <span class="sc">⌘⌥R</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas nestcv" id="canvas">
@@ -170,7 +149,7 @@
             <div class="nc-spectag"><i class="ic xs ic-component"></i> AppBar <span class="k">· composed instance</span></div>
             <div class="appbar tint-accent" id="appbar" data-sel="appbar" tabindex="0" role="button" aria-label="AppBar instance">
               <div class="brand"><i class="ic sm ic-component"></i></div>
-              <div class="toolbar-mini" id="toolbar" data-sel="toolbar" tabindex="0" role="button" aria-label="Toolbar instance">
+              <div class="toolbar-mini" id="ncToolbar" data-sel="toolbar" tabindex="0" role="button" aria-label="Toolbar instance">
                 <span class="tb-title" id="tbTitle">Library</span>
                 <div class="tb-btns">
                   <button class="ib" data-ib="search" data-sel="ib-search" title="Search"><i class="ic sm ic-search"></i>
@@ -203,8 +182,6 @@
                 </div>
               </div>
             </div>
-            <div class="linknote">Editing the <b>IconButton main</b> reshapes every button in <b>both</b> rows.
-              Overriding <b>toolbar.title</b> on the AppBar changes only the row above.</div>
           </div>
 
           <div class="pv-tint" id="mainState">IconButton main · radius <b>9</b> · tint <b>accent</b> · 3 linked instances</div>
@@ -213,6 +190,9 @@
         <!-- canvas action cluster -->
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#shellNest" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" id="revealLib" title="Open the Library group"><i class="ic sm ic-library"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" id="resetAll" title="Clear every override, relink every instance"><i class="ic sm ic-undo"></i></button>
         </div>
 
         <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
@@ -442,10 +422,6 @@
               </div>
             </div>
 
-            <div class="section">
-              <div class="sec-h">In the API <span class="mut">one call each</span></div>
-              <div class="codeblk" id="apicode" style="font-size:10px"></div>
-            </div>
           </div>
         </div>
 
@@ -539,7 +515,15 @@
 <span class="c">// clear a level's overrides · re-link it to the main</span>
 <span class="k">appBar</span>.<span class="p">resetOverrides</span>(<span class="s">"toolbar.title"</span>)
       </div>
+      <p class="lead" style="margin-top:var(--pad)">And this is what the document above is running <b>right now</b>. Every control in the Properties group writes one of these lines.</p>
+      <div class="codeblk" id="apicode"></div>
     </div>
+  </div>
+
+  <!-- The lesson lines that used to sit on the canvas. The canvas is the
+       document, so what it teaches is said under the window instead. -->
+  <div class="caption">
+    <div class="c"><div class="lab">How the two rows relate</div><p>Editing the <b>IconButton main</b> reshapes every button in <b>both</b> rows. Overriding <b>toolbar.title</b> on the AppBar changes only the composed row at the top, because an override is stored on the instance you address and never on the main it points at.</p></div>
   </div>
 
   <div class="caption">

@@ -45,38 +45,13 @@
   .pmcell:active{transform:scale(.98)}
   .pmcell.on{border-color:var(--comp);background:rgba(154,92,255,.22);box-shadow:0 0 0 1px rgba(154,92,255,.3)}
 
-  /* Properties controls the shared system does not ship */
-  .prop{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:var(--s3);margin:var(--s3) 0}
-  .prop>.pl{color:var(--faint);font-size:10.5px;display:flex;align-items:center;gap:var(--s1)}
-  .prop>.pl .di{color:var(--comp);font-size:10px}
-  /* .prop .seg override deleted: the shared DS lays every panel scope control
-     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
-  /* a three-option seg needs the full dock width, so its label sits above */
-  .prop.stack{grid-template-columns:1fr;gap:var(--s2)}
+  /* The Properties rows use the shared `.irow` / `.switch` / `.input` /
+     `.seg.stack`; the only thing left here is the icon-swap menu, which the
+     DS has no equivalent for. */
 
-  /* boolean prop: a real focusable switch with every interaction state */
-  .pswitch{width:38px;height:22px;border-radius:999px;background:var(--line-strong);border:1px solid var(--edge-lo);
-    position:relative;padding:0;flex:none;transition:var(--ctl-tr);box-shadow:var(--ctl-gloss)}
-  .pswitch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;
-    box-shadow:0 1px 2px rgba(0,0,0,.32);transition:left .15s ease}
-  .pswitch[aria-checked="true"]{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));border-color:transparent}
-  .pswitch[aria-checked="true"]::after{left:18px}
-  .pswitch:hover{filter:brightness(1.06);box-shadow:var(--ctl-gloss),0 2px 6px -3px rgba(20,24,40,.4)}
-  .pswitch:active{transform:scale(.96)}
-  .pswitch:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
-  .pswitch[disabled],.pswitch.disabled{opacity:.42;pointer-events:none}
-  .switchrow{display:flex;align-items:center;gap:var(--s2)}
-  .switchrow .st{font-size:11px;font-weight:560;color:var(--dim);font-variant-numeric:tabular-nums}
-
-  /* text prop: a real editable field with hover/focus */
-  .ptext{display:flex;align-items:center;gap:var(--s2);height:var(--ctl-h);padding:0 10px;border-radius:var(--r2);
-    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
-    border:1px solid var(--edge-lo);box-shadow:var(--ctl-gloss);transition:var(--ctl-tr)}
-  .ptext input{flex:1;min-width:0;border:0;background:transparent;outline:none;font-family:var(--sans);font-size:12px;color:var(--ink)}
-  .ptext input::placeholder{color:var(--faint)}
-  .ptext:hover{border-color:color-mix(in srgb,var(--accent) 26%,var(--edge-lo))}
-  .ptext:focus-within{border-color:transparent;box-shadow:var(--ctl-gloss),var(--ring)}
-  .ptext .di{color:var(--faint);flex:none}
+  /* the swapped icon's state word rides inside the shared switch */
+  #ui-variants .switch #swState{color:var(--dim);font-variant-numeric:tabular-nums}
+  #ui-variants .switch.disabled{opacity:.42;pointer-events:none}
 
   /* instance-swap prop: a .select that opens a real icon menu */
   .swapwrap{position:relative}
@@ -88,10 +63,7 @@
   .iconmenu .menuitem.sel .ck{display:inline-flex}
   .iconmenu .menuitem.sel{color:var(--comp)}
 
-  @media (prefers-reduced-motion:reduce){.iconmenu.open{animation:none}.pswitch::after{transition:none}}
-
-  /* narrow: the toolbar sheds its status chips, the same way the transport sheds labels */
-  @container shell (max-width:880px){ .toolbar .chip{display:none} }
+  @media (prefers-reduced-motion:reduce){.iconmenu.open{animation:none}}
 </style>
 </head>
 <body class="page">
@@ -100,43 +72,26 @@
     <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Variants and properties</h2><span class="k">· one component, many forms</span></div>
 
     <!-- ============ THE ONE SHELL · UI workspace, the Button sheet ============ -->
-    <div class="win tall cq shell" data-shell="button-sheet · 1200 × 720" data-ws="ui">
-
-      <!-- TITLE BAR -->
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>button-sheet</b> · 1200 × 720</div>
-        <div class="tbtns">
-          <button class="btn ghost sm" id="reset" title="Restore the main defaults"><i class="ic ic-undo"></i> Reset</button>
-          <button class="btn sm" data-target="dsys">Design system <i class="ic xs ic-chevron-right"></i></button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The agent is a separate path. -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip comp"><i class="ic xs ic-component"></i> Button</span>
-        <span class="chip" id="chipState">Primary · Medium</span>
-        <button class="pill ai" data-target="agent"><i class="ic sm ic-sparkle"></i> Ask the agent</button>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
-            <div class="menuitem"><i class="ic ic-component"></i> Add variant <span class="sc">⌘⌥V</span></div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add property</div>
-            <div class="menuitem"><i class="ic ic-undo"></i> Reset to main <span class="sc">⌘⌥R</span></div>
-            <div class="menu-sep"></div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="win tall cq shell" data-shell="button-sheet · 1200 × 720" data-ws="ui"
+         data-status='Button · <span id="chipState">Primary · Medium</span>'>
 
       <!-- EDITOR ROW: canvas dominant, one dock on the right -->
       <div class="edit lean" id="shellVar" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+             title bar and Ask are built by the shell component. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="menuitem"><i class="ic ic-component"></i> Add variant <span class="sc">⌘⌥V</span></div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add property</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset to main <span class="sc">⌘⌥R</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          <div class="menu-sep"></div>
+          <div class="menuitem" data-target="dsys"><i class="ic ic-swatch"></i> Open the design system</div>
+          <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Ask the agent to set these props</div>
+        </div>
 
         <div class="cnv">
           <div class="canvas sheetcv" id="canvas">
@@ -180,6 +135,8 @@
           <!-- canvas action cluster -->
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shellVar" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            <button class="tool" id="reset" title="Restore the main defaults"><i class="ic sm ic-undo"></i></button>
           </div>
 
           <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
@@ -295,45 +252,37 @@
               <div class="section">
                 <div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
                 <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
-                <div class="prop stack">
-                  <span class="pl">Variant</span>
-                  <div class="seg" id="segVariant">
-                    <button data-v="primary" class="on">Primary</button>
-                    <button data-v="secondary">Secondary</button>
-                    <button data-v="ghost">Ghost</button>
-                  </div>
+                <div class="mlabel">Variant</div>
+                <div class="seg stack" id="segVariant">
+                  <button data-v="primary" class="on">Primary</button>
+                  <button data-v="secondary">Secondary</button>
+                  <button data-v="ghost">Ghost</button>
                 </div>
-                <div class="prop stack">
-                  <span class="pl">Size</span>
-                  <div class="seg" id="segSize">
-                    <button data-s="sm">Small</button>
-                    <button data-s="md" class="on">Medium</button>
-                    <button data-s="lg">Large</button>
-                  </div>
+                <div class="mlabel">Size</div>
+                <div class="seg stack" id="segSize">
+                  <button data-s="sm">Small</button>
+                  <button data-s="md" class="on">Medium</button>
+                  <button data-s="lg">Large</button>
                 </div>
               </div>
 
               <div class="section">
                 <div class="sec-h comp">Instance properties <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i></span></div>
 
-                <div class="prop">
-                  <span class="pl"><span class="di"><i class="ic xs ic-eye"></i></span> Show icon</span>
-                  <div class="switchrow">
-                    <button class="pswitch" id="swIcon" role="switch" aria-checked="true" aria-label="Show icon"></button>
-                    <span class="st" id="swState">On</span>
-                  </div>
+                <div class="irow">
+                  <span class="rl">Show icon</span>
+                  <label class="switch"><input type="checkbox" id="swIcon" name="show-icon" checked><i></i><span id="swState">On</span></label>
                 </div>
 
-                <div class="prop">
-                  <span class="pl"><span class="di"><i class="ic xs ic-text"></i></span> Label</span>
-                  <label class="ptext">
-                    <span class="di"><i class="ic sm ic-text"></i></span>
+                <div class="irow">
+                  <span class="rl">Label</span>
+                  <label class="input"><i class="ic sm ic-text"></i>
                     <input id="txtLabel" type="text" value="Get Photonz" autocomplete="off" spellcheck="false" aria-label="Label text" placeholder="Button label">
                   </label>
                 </div>
 
-                <div class="prop">
-                  <span class="pl"><span class="di"><i class="ic xs ic-component"></i></span> Icon</span>
+                <div class="irow">
+                  <span class="rl">Icon</span>
                   <div class="swapwrap">
                     <button class="select comp" id="iconTrigger" aria-haspopup="menu" aria-expanded="false">
                       <span class="lead"><i class="ic sm ic-sparkle" id="iconLead"></i><span id="iconName">Sparkle</span></span>
@@ -484,8 +433,9 @@
 
     if (swState) swState.textContent = state.showIcon ? 'On' : 'Off';
     if (swIcon) {
-      swIcon.setAttribute('aria-checked', state.showIcon ? 'true' : 'false');
-      swIcon.classList.toggle('disabled', state.icon === 'none');
+      swIcon.checked = !!state.showIcon;
+      var swWrap = swIcon.closest('.switch');
+      if (swWrap) swWrap.classList.toggle('disabled', state.icon === 'none');
     }
 
     if (segVariant) [].forEach.call(segVariant.querySelectorAll('button'), function (b) {
@@ -526,12 +476,9 @@
     b.addEventListener('click', function () { state.size = b.getAttribute('data-s'); render(); });
   });
 
-  if (swIcon) {
-    swIcon.addEventListener('click', function () { state.showIcon = !state.showIcon; render(); });
-    swIcon.addEventListener('keydown', function (e) {
-      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); state.showIcon = !state.showIcon; render(); }
-    });
-  }
+  /* The shared `.switch` wraps a real checkbox, so keyboard, focus order and
+     VoiceOver come for free and the page only listens for `change`. */
+  if (swIcon) swIcon.addEventListener('change', function () { state.showIcon = swIcon.checked; render(); });
 
   if (txtLabel) txtLabel.addEventListener('input', function () { state.label = txtLabel.value; render(); });
 

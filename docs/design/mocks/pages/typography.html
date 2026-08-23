@@ -50,9 +50,8 @@
   #typography .tmetr .field{padding:4px 8px}
 
   /* ---- inspector helpers ---- */
-  #typography .taxis{margin:var(--s3) 0}
-  #typography .taxis .tp{display:flex;align-items:baseline;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-bottom:5px}
-  #typography .taxis .tp b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  /* the axis rows are the shared .slrow, given room for a two-word label */
+  #typography .slrow.stack{--slrow-l:1fr}
   #typography .tot{display:flex;flex-wrap:wrap;gap:var(--gap-sm)}
   /* OpenType feature toggles: selected look comes from the shared .chip.on */
   #typography .tot .chip{padding:4px 9px}
@@ -91,45 +90,33 @@
          KIND 1 · AN APP SCREEN. Title bar carries document identity only.
          Type controls live in the dock, not in an options-bar row.
          ============================================================ -->
-    <div class="win tall cq shell" data-shell="brand-poster · 1200 × 630" data-ws="ui">
-
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>brand-poster</b> · 1200 × 630</div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). No fake menu bar, and no
-           permanent options-bar row: type controls belong in Properties. -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
-            <div class="mlabel">Type</div>
-            <div class="menuitem"><i class="ic ic-bold"></i> Bold <span class="sc">⌘B</span></div>
-            <div class="menuitem"><i class="ic ic-italic"></i> Italic <span class="sc">⌘I</span></div>
-            <div class="menuitem"><i class="ic ic-text-align-center"></i> Align center <span class="sc">⇧⌘C</span></div>
-            <div class="menuitem"><i class="ic ic-swatch"></i> Save as text style</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Layer</div>
-            <div class="menuitem" data-target="paint"><i class="ic ic-swatch"></i> Edit fill paint</div>
-            <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="win tall cq shell" data-shell="brand-poster · 1200 × 630" data-ws="ui"
+         data-status="Brand system · New York + SF">
 
       <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+             title bar and Ask are built by the shell component. There is no
+             options-bar row either: type controls belong in Properties. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Type</div>
+          <div class="menuitem"><i class="ic ic-bold"></i> Bold <span class="sc">⌘B</span></div>
+          <div class="menuitem"><i class="ic ic-italic"></i> Italic <span class="sc">⌘I</span></div>
+          <div class="menuitem"><i class="ic ic-text-align-center"></i> Align center <span class="sc">⇧⌘C</span></div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Save as text style</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem" data-target="paint"><i class="ic ic-swatch"></i> Edit fill paint</div>
+          <div class="menuitem" data-target="effects"><i class="ic ic-sparkle"></i> Add effect</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">File</div>
+          <div class="menuitem" data-target="dsys"><i class="ic ic-swatch"></i> Open the Brand system</div>
+          <div class="menuitem"><i class="ic ic-share"></i> Share a link <span class="sc">⌘⇧S</span></div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘⇧E</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        </div>
 
         <div class="cnv">
           <div class="canvas">
@@ -150,6 +137,7 @@
 
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           </div>
 
           <!-- FLOATING TOOL BAR · D4 UI inventory · Text is the active tool -->
@@ -264,19 +252,19 @@
 
               <div class="section">
                 <div class="sec-h">Metrics</div>
-                <div class="irow"><span class="rl">Size</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:70%"></i></span><span class="val">46</span></span></div>
-                <div class="irow"><span class="rl">Weight</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:78%"></i></span><span class="val">700</span></span></div>
-                <div class="irow"><span class="rl">Tracking</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:36%"></i></span><span class="val">-.025</span></span></div>
-                <div class="irow"><span class="rl">Leading</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:20%"></i></span><span class="val">1.0</span></span></div>
-                <div class="irow"><span class="rl">¶ Space</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:33%"></i></span><span class="val">12</span></span></div>
+                <div class="slrow"><span class="rl">Size</span><span class="slider sm"><input id="tySize" name="type-size" type="range" min="8" max="120" step="1" value="46" aria-label="Size"></span><span class="num">46</span></div>
+                <div class="slrow"><span class="rl">Weight</span><span class="slider sm"><input id="tyWeight" name="type-weight" type="range" min="100" max="900" step="50" value="700" aria-label="Weight"></span><span class="num">700</span></div>
+                <div class="slrow"><span class="rl">Tracking</span><span class="slider sm" data-dp="3"><input id="tyTrack" name="type-tracking" type="range" min="-0.08" max="0.16" step="0.005" value="-0.025" aria-label="Tracking"></span><span class="num">-0.025</span></div>
+                <div class="slrow"><span class="rl">Leading</span><span class="slider sm" data-dp="2"><input id="tyLead" name="type-leading" type="range" min="0.8" max="2" step="0.05" value="1" aria-label="Leading"></span><span class="num">1.00</span></div>
+                <div class="slrow"><span class="rl">Paragraph</span><span class="slider sm"><input id="tyPara" name="paragraph-space" type="range" min="0" max="48" step="1" value="12" aria-label="Paragraph space"></span><span class="num">12</span></div>
                 <div class="irow"><span class="rl">Wrap</span><span class="select"><span class="lead">Balanced</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
               </div>
 
               <div class="section">
                 <div class="sec-h">Variable axes <span class="mut">live</span></div>
-                <div class="taxis"><div class="tp"><span>Weight · wght</span><b>700</b></div><span class="bar"><i style="width:78%"></i></span></div>
-                <div class="taxis"><div class="tp"><span>Optical · opsz</span><b>52 auto</b></div><span class="bar"><i style="width:70%"></i></span></div>
-                <div class="taxis"><div class="tp"><span>Width · wdth</span><b>100</b></div><span class="bar"><i style="width:50%"></i></span></div>
+                <div class="slrow stack"><span class="rl">Weight · wght</span><span class="slider sm"><input id="axWght" name="axis-wght" type="range" min="100" max="900" step="1" value="700" aria-label="Weight axis"></span><span class="num">700</span></div>
+                <div class="slrow stack"><span class="rl">Optical · opsz</span><span class="slider sm"><input id="axOpsz" name="axis-opsz" type="range" min="12" max="96" step="1" value="52" aria-label="Optical size axis"></span><span class="num">52</span></div>
+                <div class="slrow stack"><span class="rl">Width · wdth</span><span class="slider sm"><input id="axWdth" name="axis-wdth" type="range" min="62" max="125" step="1" value="100" aria-label="Width axis"></span><span class="num">100</span></div>
               </div>
 
               <div class="section">
