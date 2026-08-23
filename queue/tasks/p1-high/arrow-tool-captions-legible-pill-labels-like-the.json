@@ -3,11 +3,11 @@
   "title": "Arrow tool captions: legible pill labels like the measure tool",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T00:26:48.303Z",
-  "updated": "2026-08-23T01:17:25.448Z",
+  "updated": "2026-08-23T01:38:40.402Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > epic-uehjr1 (user epic: using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool). Next release. When the user points at something with the arrow tool, offer a caption rendered as a pill with a shadow, matching the legibility treatment the measure tool captions ship with, so redline callouts read cleanly over any screenshot. Start from the measure caption styling (docs/design/next-measure.md) for visual consistency; keep it non-destructive (styling applied at render time). Open a UX decision if caption entry/placement behavior is ambiguous beyond what the epic sentence settles.",
@@ -40,7 +40,12 @@
     {
       "t": "2026-08-23T02:35:00.000Z",
       "note": "App: next-arrow-captions flag (Next-only, default on), inline caption session reusing the text editor overlay (single-line, centered on the pill anchor, chip-tinted), editingCaptionLayerID pill suppression, double-click entry, inspector Caption field. Full suite green: 912 tests. Dev bundle builds."
+    },
+    {
+      "t": "2026-08-23T01:38:40.401Z",
+      "note": "Shipped next-arrow-captions (Next-only, default on): drawing an arrow opens single-line caption entry (Return commits, Esc/empty skips); caption renders as a bordered pill with drop shadow at the arrow tail, chip tone derived from the arrow color like the measure defaults pair. Double-click or inspector Caption field to edit. Core geometry/model TDD (12 tests), shared PillRasterizer + 4 pixel tests (incl. shadow direction), full suite green at 912 tests, dev bundle builds. Committed 7d8f6da, pushed to main."
     }
   ],
-  "started": "2026-08-23T01:17:25.447Z"
+  "started": "2026-08-23T01:17:25.447Z",
+  "completed": "2026-08-23T01:38:40.402Z"
 }
