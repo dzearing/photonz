@@ -348,7 +348,7 @@
               <div class="section">
                 <div class="sec-h">In the API <span class="mut">one call, agent-ready</span></div>
                 <div class="codeblk"><span class="c">// mask the adjustment, non-destructive</span>
-<span class="k">layer</span>.<span class="k">mask</span>({ <span class="p">type</span>: <span class="s" id="apiType">"ai"</span>, <span class="p">target</span>: <span class="s" id="apiTarget">"sky"</span>, <span class="p">feather</span>: <span id="apiFeather">8</span> })
+<span class="k">layer</span>.<span class="k">mask</span>({ <span class="p">type</span>: <span class="s" id="apiType">"agent"</span>, <span class="p">target</span>: <span class="s" id="apiTarget">"sky"</span>, <span class="p">feather</span>: <span id="apiFeather">8</span> })
 <span class="c">// strength = adjustment opacity through the mask</span>
 <span class="k">layer</span>.<span class="k">set</span>({ <span class="p">opacity</span>: <span id="apiAmount">0.72</span> })</div>
                 <p class="note">Every control here is one call, so the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span> can build the same mask from a plain sentence.</p>
@@ -574,7 +574,7 @@
     // readouts + live API
     var fv = $("featherV"); if (fv) fv.textContent = state.feather + "px";
     var av = $("amountV"); if (av) av.textContent = state.amount + "%";
-    var aT = $("apiType"); if (aT) aT.textContent = '"' + t + '"';
+    var aT = $("apiType"); if (aT) aT.textContent = '"' + (t === "ai" ? "agent" : t) + '"';
     var aTg = $("apiTarget"); if (aTg) aTg.textContent = '"' + (t === "ai" ? "sky" : t === "luminosity" ? tg : "full") + '"';
     var aF = $("apiFeather"); if (aF) aF.textContent = state.feather;
     var aA = $("apiAmount"); if (aA) aA.textContent = (state.amount / 100).toFixed(2);

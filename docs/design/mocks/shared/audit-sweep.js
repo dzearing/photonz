@@ -42,13 +42,20 @@ async function sweep(pages) {
       if (b.width < 40 || b.height < 20) iss.push('dock manager collapsed');
     });
 
+    /* Segs: judge only what the user can see. `.seg-plate` (the sliding
+       selection plate) and `.seg-alt` (the collapse-to-menu trigger) are not
+       chips; a collapsed seg keeps its chip buttons in the layout but hides
+       them with `visibility`, so measuring those reported truncation nobody
+       can see. And the dock default is now NATURAL-WIDTH columns (segmented
+       .css, the scopeseg geometry), so unequal chip widths are by design —
+       the failure worth flagging is a visible label that still clips. */
     [...d.querySelectorAll('.dgrp-b .seg,.pdock .seg')].filter(vis).forEach(s => {
       stats.segs++;
       if (w.getComputedStyle(s).display !== 'grid') iss.push('panel seg is not the shared grid');
-      const ws = [...s.children].map(b => Math.round(box(b).width));
-      const t = [...s.children].filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent.trim());
+      const chips = [...s.querySelectorAll(':scope > button')]
+        .filter(b => w.getComputedStyle(b).visibility !== 'hidden');
+      const t = chips.filter(b => b.scrollWidth > b.clientWidth + 1).map(b => b.textContent.trim());
       if (t.length) iss.push('truncated chip ' + t.join('|'));
-      if (Math.max(...ws) - Math.min(...ws) > 1) iss.push('uneven chips ' + ws.join('/'));
     });
 
     [...d.querySelectorAll('.dgrp-h .cnt')].filter(vis).forEach(c => {

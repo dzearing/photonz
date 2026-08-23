@@ -1,0 +1,21 @@
+{
+  "id": "language-spec-pages-demo-the-real-ds-controls-in",
+  "title": "Language spec pages demo the real DS controls instead of lookalikes",
+  "priority": "p3-low",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:34:07.561Z",
+  "updated": "2026-08-23T06:34:07.562Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Lang family'). Pages: language, lang-color, lang-elevation, lang-keyboard, lang-motion, lang-overlays, lang-selection, lang-spacing (+ do/don't label standardization incl lang-resize). Key items: lang-color and lang-elevation fake app windows (inline traffic dots, left-sidebar Layers) become real shells or bare specimens (high); states ladders and buttons use real .btn not .obtn/.lg-obtn; dialogs use .dlg (language .lg-modal, lang-overlays .lo-dlg); lang-overlays .lo-pal to .cpal; lang-keyboard keycaps from DS .kbd/.sc; lang-motion animates real DS components + renames .rail collision; language dock specimen gains the Library group its copy names; lang-spacing renames .rrow .bar collision; lang-selection removes em dashes x5; standardize do/don't label on Don't across the family. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:34:07.562Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "exemplar-and-entry-pages-finish-their-own-confor",
+  "title": "Exemplar and entry pages finish their own conformance",
+  "priority": "p2-normal",
+  "seq": 310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:34:07.617Z",
+  "updated": "2026-08-23T06:34:07.618Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Top-level pages'). Pages: app-shell, redline, home, foundations, iconography, dashboard. Key items: app-shell's two editor specimens adopt data-shell instead of hand-authored titlebars (the exemplar must be beyond reproach), delete dead data-dock-toggle buttons + empty .cnv-act, scope the .pglead override, ic-pencil for Edit on filmcards, consider Properties/Library groups in the video specimen dock; redline drops the superseded .wsw switcher + authored chrome and renames its .sw collisions; home gains the .askbtn Cmd-K launcher, .cq on the window, and renders Recent with the shared .filmstrip so the landing window and history overlay agree; foundations replaces remaining unicode arrows in body copy; iconography uses real .tbar/.input.search/.seg.sm and fixes btn prim to btn primary; dashboard namespaces .ttl/.sub/.grip/.seq. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:34:07.618Z",
+      "note": "created (manual)"
+    }
+  ]
+}

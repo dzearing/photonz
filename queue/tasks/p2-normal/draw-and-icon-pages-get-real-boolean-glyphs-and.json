@@ -1,0 +1,21 @@
+{
+  "id": "draw-and-icon-pages-get-real-boolean-glyphs-and",
+  "title": "Draw and icon pages get real boolean glyphs and shared color slots",
+  "priority": "p2-normal",
+  "seq": 270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:33:39.833Z",
+  "updated": "2026-08-23T06:33:39.833Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Draw / brush / icon family'). Pages: draw, draw-boolean, brush-editor, brush-library, icon-draw-wt, icon-gradient-wt, vector-wt. Key items: draw-boolean uses ic-boolean-union for all four ops though subtract/intersect/exclude glyphs exist (high); Close path stops wearing ic-boolean-union (draw + vector-wt; pick/add a path-close glyph); color slots to .cpick-btn + shared .cpick (draw .sw-btn, brush-editor, draw-boolean, vector-wt Paint slot); brush-editor .tgl to DS .switch (drop the span.sw collision); icon-draw-wt one-glyph-per-command across its two menus + ic-snap; icon-gradient-wt colour to color x6; promote .actrow or drop copies; delete legacy titlebar/toolbar/.cmdk; vector-wt tool strip adds Eraser. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:33:39.833Z",
+      "note": "created (manual)"
+    }
+  ]
+}

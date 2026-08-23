@@ -1,0 +1,21 @@
+{
+  "id": "agent-and-document-pages-revive-dead-demos-and-f",
+  "title": "Agent and document pages revive dead demos and finish selection routing",
+  "priority": "p2-normal",
+  "seq": 290,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:33:39.888Z",
+  "updated": "2026-08-23T06:33:39.889Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Agent / editor / documents family'). Pages: agent, agent-edit, agent-variations, agent-generate-wt, editor, documents, export-share, composites. Key items: documents saving/versions demo is dead at runtime (dstate lived in stripped titlebar; 0 version rows, inert quick-edit; also fix data-shell 'Launch poster.phzSaved' to name + dims with save state in data-status) (high); agent deletes the deprecated .cpal so there is one Ask/Cmd-K surface, adds Library groups + canvas selection grammar; agent-edit rebuilds its bespoke agent panel on DS .chat + .work/.step; agent-variations Properties tracks the kept pick + .vsel to .sel-ring; export-share syncs .lrow.sel (3-place selection), rebuilds export dialog on .dlg + .prog, ic-copy/ic-share replace ic-clone/ic-import; restore history-sheet openers in .cnv-act (editor med, documents/composites/agent-generate-wt low); documents ic-history/ic-restore. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:33:39.889Z",
+      "note": "created (manual)"
+    }
+  ]
+}

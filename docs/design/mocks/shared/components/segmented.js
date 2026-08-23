@@ -186,27 +186,19 @@
      states, rather than a proxy for it. Collapsing does not change the
      segments' layout — they keep their boxes and only lose `visibility` — so
      this stays measurable in both forms and cannot feed back on itself. */
-  /* HOW MUCH CLIPPING IS TOO MUCH. Not any at all: the ellipsis glyph is
-     10.2px at 11.5px/560, while an average character in these labels is 6.3px.
-     So drawing `…` costs about two characters — a label overflowing by 2px
-     loses ~12px of text to say so. Below one ellipsis of overflow the clip is
-     cosmetically trivial and collapsing the whole control would be the larger
-     loss; at or above it the label is genuinely losing words.
-
-     Measured from the segment's own computed font rather than hard-coded, so
-     `.sm` and `.lg` get their own thresholds and a font change cannot silently
-     move the boundary. */
-  function ellipsisWidth(btn) {
-    var ctx = ellipsisWidth.ctx ||
-      (ellipsisWidth.ctx = document.createElement('canvas').getContext('2d'));
-    var cs = getComputedStyle(btn);
-    ctx.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
-    return ctx.measureText('…').width;
-  }
-
+  /* HOW MUCH CLIPPING IS TOO MUCH. Any real overflow at all. An earlier
+     version tolerated clips smaller than one ellipsis glyph (~10px) as
+     "cosmetically trivial", but `text-overflow:ellipsis` draws the `…` for
+     ANY overflow, so a 3px clip still rendered `Subtrac…` — permanently,
+     because it sat under the threshold and never collapsed. And now that
+     dock segs use natural-width columns (segmented.css), a button only
+     overflows when the whole label set genuinely does not fit the track —
+     the one-label-slightly-long case the tolerance was protecting no longer
+     exists. The 1px allowance absorbs integer rounding of scroll/client
+     width, nothing more. */
   function isCramped(seg) {
     return buttons(seg).some(function (b) {
-      return b.scrollWidth - b.clientWidth > ellipsisWidth(b);
+      return b.scrollWidth - b.clientWidth > 1;
     });
   }
 

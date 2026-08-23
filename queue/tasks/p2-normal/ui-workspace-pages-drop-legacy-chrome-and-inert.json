@@ -1,0 +1,21 @@
+{
+  "id": "ui-workspace-pages-drop-legacy-chrome-and-inert",
+  "title": "UI workspace pages drop legacy chrome and inert hand-rolled controls",
+  "priority": "p2-normal",
+  "seq": 280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:33:39.861Z",
+  "updated": "2026-08-23T06:33:39.861Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('UI family'). Pages: ui-autolayout, ui-build-screen, ui-grid, ui-nested, ui-prototype, ui-variants, states, typography. Key items: delete hand-authored titlebar/toolbar/.cmdk on all 8 (shell builds chrome from data-shell); DS .stepper/.slider replace .ua-stepper/.ug-stepper and typography's inert .bar meters; ui-variants .pswitch/.ptext/.prop to .switch/.input/.irow; move lesson prose off canvas HUDs (ui-autolayout .al-status, ui-grid .gc-status + in-dock teaching prose, ui-nested .linknote); drop in-dock 'In the API' codeblk duplicates; ui-prototype run panel to a dgrp or sheet; icons (ic-trash for remove, ic-arrow-right for transitions, drop unicode pilcrow). Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:33:39.861Z",
+      "note": "created (manual)"
+    }
+  ]
+}

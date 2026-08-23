@@ -1,5 +1,11 @@
 # UX audit — clustered findings (all 63 pages)
 
+> **SUPERSEDED by the 2026-08-23 rescan.** A fresh clusters A-G scan over all
+> 88 pages lives in `ux-audit-2026-08-23.md`; most findings below are fixed
+> (the component rebuild landed the shell everywhere). Remaining work is
+> queued as ten family-scoped conform tasks. Keep this file for the cluster
+> definitions and history.
+
 > **TARGET UPDATED (read this first).** These findings were written against the
 > older *docked* shell (left dock with Layers|Library tabs, a top options bar with
 > a left tool strip). That shell is **superseded**. The real shipping app is lean

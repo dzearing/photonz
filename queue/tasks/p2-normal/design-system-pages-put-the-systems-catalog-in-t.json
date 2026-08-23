@@ -1,0 +1,21 @@
+{
+  "id": "design-system-pages-put-the-systems-catalog-in-t",
+  "title": "Design-system pages put the systems catalog in the Library and fix chrome",
+  "priority": "p2-normal",
+  "seq": 300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:34:07.529Z",
+  "updated": "2026-08-23T06:34:07.530Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Components / design-system family'). Pages: components, ds-switch, dsys, color, capture-wt, walk, ds-modes. Key items: ds-switch renders the five systems as the Library dgrp at scope Systems with libgrid/libtile instead of the bespoke .dss-pick dock group, and gains a Library rail tab (high); components strips app chrome from its two lesson-title specimen windows (high); delete legacy titlebar/toolbar/.cmdk on components/ds-switch/dsys/color; ds-modes stops using ic-eye/ic-eye-off for Light/Dark; capture-wt Redact wears ic-blur not ic-eye-off x4; walk ic-swatch for save-as-style + distinct Open glyph; standardize Cmd-Shift-H shortcut order (capture-wt, walk); add missing space in data-shell identity (ds-switch, dsys). Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:34:07.530Z",
+      "note": "created (manual)"
+    }
+  ]
+}

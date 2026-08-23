@@ -26,7 +26,7 @@
 <section class="screen on" id="foundations">
         <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Foundations</h2><span class="k">· primitives, the API, and the reuse tier</span></div>
         <div class="thesis">
-          Design order (not build order): <b>Primitives → API → UI</b>. A scriptable command model can't be vague, so defining it <i>forces</i> a shared vocabulary. That serialized model <b>is</b> the design system · the thing that keeps every scenario (UI, image, video) predictable and lets <b>Agent drive all of it</b>.
+          Design order (not build order): <b>Primitives → API → UI</b>. A scriptable command model can't be vague, so defining it <i>forces</i> a shared vocabulary. That serialized model <b>is</b> the design system · the thing that keeps every scenario (UI, image, video) predictable and lets <b>the agent drive all of it</b>.
         </div>
         <!-- KIND 2 · SPECIMEN. A concept diagram, so it wears no app chrome. -->
         <div class="fo-blk">
@@ -41,16 +41,16 @@
               <div class="prim" data-target="dsys"><span class="d" style="background:#e0a53a"></span>Type · ramp, weight, tracking</div>
               <div class="prim" data-target="dsys"><span class="d" style="background:#f0685c"></span>Tokens · spacing/radius/color</div>
             </div>
-            <div class="farrow">→</div>
+            <div class="farrow"><i class="ic ic-chevron-right"></i></div>
             <div class="fcol">
               <h3>API</h3>
-              <p class="sub">Primitives serialized into one IPC command surface. Agent and the app both speak it.</p>
+              <p class="sub">Primitives serialized into one IPC command surface. The agent and the app both speak it.</p>
               <div class="codeblk"><span class="c">// same commands the UI calls</span><br><span class="k">create_layer</span>({<br>&nbsp;kind:<span class="s">"instance"</span>, of:<span class="s">"Button"</span>,<br>&nbsp;fill:<span class="p">style</span>(<span class="s">"Brand/gradient"</span>),<br>&nbsp;effects:[<span class="p">style</span>(<span class="s">"Card glow"</span>)]<br>})</div>
             </div>
-            <div class="farrow">→</div>
+            <div class="farrow"><i class="ic ic-chevron-right"></i></div>
             <div class="fcol">
               <h3>UI</h3>
-              <p class="sub">Every panel &amp; tool is a thin client over the API. Nothing the UI does, Agent can't.</p>
+              <p class="sub">Every panel &amp; tool is a thin client over the API. Nothing the UI does, the agent can't.</p>
               <div class="prim" data-target="editor"><i class="ic ic-brush"></i> Inspector → edit fill/effects</div>
               <div class="prim" data-target="dsys"><i class="ic ic-component"></i> Design system → styles &amp; components</div>
               <div class="prim" data-target="agent"><i class="ic ic-sparkle"></i> Agent → drive by prompt</div>
@@ -66,7 +66,7 @@
 
         <div class="caption">
           <div class="c"><div class="lab">The idea</div><p>Five primitives, plus a <b>design-system tier</b> on top: Tokens → Styles → <b>Components</b>. This is how creation stays consistent instead of sprawling.</p></div>
-          <div class="c"><div class="lab g2">Reuse, like Figma</div><p>A <b>Style</b> is a named primitive; a <b>Component</b> is a reusable, paintable layer tree. Both are first-class in the API, so Agent composes with them too.</p></div>
+          <div class="c"><div class="lab g2">Reuse, like Figma</div><p>A <b>Style</b> is a named primitive; a <b>Component</b> is a reusable, paintable layer tree. Both are first-class in the API, so the agent composes with them too.</p></div>
           <div class="c"><div class="lab g2">Try it</div><p>Click a <b>primitive</b> to jump to its surface, or open the <b>Design system</b>.</p></div>
         </div>
       </section>

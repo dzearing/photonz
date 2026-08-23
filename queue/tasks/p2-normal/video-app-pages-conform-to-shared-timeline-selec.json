@@ -1,0 +1,21 @@
+{
+  "id": "video-app-pages-conform-to-shared-timeline-selec",
+  "title": "Video app pages conform to shared timeline/selection primitives",
+  "priority": "p2-normal",
+  "seq": 250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:33:20.603Z",
+  "updated": "2026-08-23T06:33:20.604Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 (docs/design/mocks/ux-audit-2026-08-23.md, 'Video app pages'). Pages: video, video-audio, video-captions, video-compositing, video-motion, video-speed, video-transitions. Key items: drop Layers dgrp+rail tab from timeline workspaces; video-motion rebuild bespoke .mg-tl* dock on shared timeline primitives (high); video-compositing replace .selring/.seltag with .selwrap/.sel-ring/.handle/.mtag (high); shared .xband/.libtile.tt instead of .xition/.tpi/.tregion; DS .slider for .fader/.vc-slider; add data-tl-summary; delete legacy titlebar/toolbar/.cmdk; icon fixes (ic-captions, ic-loop, ic-mask, ic-volume-off, ic-speed; new Solo glyph). Verify all pages 200 + shared/audit-sweep.js clean.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:33:20.604Z",
+      "note": "created (manual)"
+    }
+  ]
+}

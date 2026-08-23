@@ -1,0 +1,21 @@
+{
+  "id": "image-family-pages-use-the-real-adjustment-glyph",
+  "title": "Image family pages use the real adjustment glyphs and the one color picker",
+  "priority": "p2-normal",
+  "seq": 260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:33:39.807Z",
+  "updated": "2026-08-23T06:33:39.807Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit rescan 2026-08-23 ('Image family'). Pages: image, img-bg-remove, img-masking, img-grade-wt, img-retouch-wt, effects, paint. Key items: adjustment/effect glyphs to ic-curves/ic-levels/ic-blur/ic-shadow/ic-noise/ic-glow/ic-border/ic-saturation/ic-exposure; ic-mask for mask concepts; ic-compare for before/after on both retouch and masking; .rmtag scoping bug renders unstyled on img-bg-remove + img-masking (fix scope); inert span.en toggles to buttons with aria-pressed; color slots to .cpick-btn + shared .cpick (img-grade-wt stwheel, effects/paint rows, bg-remove .bgsw); paint editor stack belongs in .cpick per D7; delete legacy titlebar/toolbar/.cmdk; dedupe repeated Option-Command-L shortcut. Verify 200 + audit-sweep.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:33:39.807Z",
+      "note": "created (manual)"
+    }
+  ]
+}

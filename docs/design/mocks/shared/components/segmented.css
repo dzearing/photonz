@@ -190,11 +190,19 @@
 /* icon-only segments are square inside the capsule, so they stay circular */
 .seg.icons>button{padding:0;width:calc(var(--seg-h) - 4px)}
 
-/* Inside a panel body or a dock the control is asked to fill the column, so
-   it takes the equal-column form automatically. It still never wraps: below
-   about 44px a segment the labels ellipsize, and that is the signal to the
-   author that this should have been a `.select`. */
-.pdock .seg,.dgrp-b .seg,.cpick .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
+/* Inside a panel body or a dock the control fills the column with
+   NATURAL-WIDTH segments spread across the track — the scopeseg geometry
+   below, promoted to the dock default. Equal `1fr` columns used to be the
+   default here, and they quietly ellipsized any label a few px longer than
+   its siblings ("Textured", "Lower third", "Columns" all rendered with a
+   permanent `…` at the dock's default width) while staying under the
+   collapse-to-menu threshold, so the clip never healed. Label-width columns
+   give each label exactly what it needs; `minmax(0,…)` keeps them
+   shrinkable so collapse-to-menu still takes over at the dock's true
+   minimum. Icon-only segs keep their square-button form. */
+.pdock .seg:not(.icons),.dgrp-b .seg:not(.icons),.cpick .seg:not(.icons){display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,max-content);justify-content:space-between;gap:0;width:100%}
+.pdock .seg:not(.icons)>button,.dgrp-b .seg:not(.icons)>button,.cpick .seg:not(.icons)>button{padding:0 calc(var(--s2) - 1px)}
+.pdock .seg.icons,.dgrp-b .seg.icons,.cpick .seg.icons{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;width:100%}
 
 /* THE LIBRARY SCOPE ROW (`.seg.scopeseg`, D2). Four scopes in a ~230px dock
    column: equal columns give each segment ~37px of text space, so the longer
