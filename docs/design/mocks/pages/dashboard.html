@@ -10,6 +10,10 @@
      which aggregates queue/ at the repo root. Local classes are db- prefixed. */
   #dashboard{max-width:1180px;margin:0 auto}
   #dashboard #db-body{margin-top:var(--gap-lg)}
+  /* the page-level control slot sits at the far end of the title row, opposite
+     the title, so it reads as "this page's control" rather than part of the name */
+  #dashboard #db-headslot{margin-left:auto;display:flex;align-items:center;gap:var(--gap-sm)}
+  #dashboard #db-headslot:empty{display:none}
   /* things that arrive get a soft entrance; reduced-motion turns it off below */
   @keyframes db-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
   #dashboard .db-enter{animation:db-in var(--dur-3) var(--ease-decel) both}
