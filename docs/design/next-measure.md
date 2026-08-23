@@ -136,6 +136,19 @@ Measurements row, and blue gap calipers vs red size calipers on the canvas.
   eye-off) without touching the model — never persisted, and exports always
   include every visible layer regardless of the filter.
 
+Shipped shape (2026-08-23): `MeasureRole { size, spacing }` on `MeasureContent`
+(decode default `.size`, encoded always; `MeasureBuilder.restyled(role:)`).
+`MeasureStyles` keeps a `MeasureRoleColors` set per role (`sizeColors` red /
+`spacingColors` blue, flat accessors read the active role; pre-roles prefs seed
+the Size memory, and the active set mirrors to the flat keys for older builds).
+Color edits absorb into the SELECTED measure's role memory; `setMeasureRole`
+applies the target role's ink in one undo step and makes it the creation
+default. The Show filter lives in `EditorState.measureShowFilter` and is
+applied in `submit()` plus both drag-preview underlays; alignment guides are
+neither role, so they always show. The legend swatches each kind with the
+top-most measurement's actual ink and lists Alignment (dashed) when a check
+exists. All UI behind `next-measure-roles` (Next, default ON).
+
 ## 6. The Measurements panel — `next-measure-panel`
 
 Mock: `redline.html` dock group "Measurements" (count badge, rows with role

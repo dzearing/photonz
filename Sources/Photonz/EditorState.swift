@@ -989,6 +989,113 @@ final class EditorState {
         return layer
     }
 
+    /// The Measure tool's Show display filter (§5, `next-measure-roles`):
+    /// which measurement roles the interactive canvas draws.
+    enum MeasureShowFilter: String, CaseIterable {
+        case all, size, spacing
+
+        /// Whether the interactive canvas draws this measurement. Alignment
+        /// guides are neither Size nor Spacing, so they always show.
+        func shows(_ measure: MeasureContent) -> Bool {
+            switch self {
+            case .all: true
+            case .size: measure.alignment != nil || measure.role == .size
+            case .spacing: measure.alignment != nil || measure.role == .spacing
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .all: "All"
+            case .size: "Size"
+            case .spacing: "Spacing"
+            }
+        }
+    }
+
+    /// The tool options' Show filter. Session chrome like a temporary eye-off:
+    /// never persisted, never in the model, and exports render the document
+    /// itself so every visible layer stays in them regardless.
+    private(set) var measureShowFilter: MeasureShowFilter = .all
+
+    func setMeasureShowFilter(_ filter: MeasureShowFilter) {
+        guard measureShowFilter != filter else { return }
+        measureShowFilter = filter
+        discardDragPreview()
+        if let document { submit(document) }
+    }
+
+    /// The document as the INTERACTIVE canvas should draw it: measure layers
+    /// the Show filter excludes become invisible, exactly like an eye-off.
+    /// Export and pasteboard paths render the document directly, so the filter
+    /// can never leak into what leaves the app.
+    private func displayFiltered(_ document: PhotonzDocument) -> PhotonzDocument {
+        guard measureShowFilter != .all,
+              Experiments.shared.measureRolesEnabled else { return document }
+        var document = document
+        for layer in document.layers {
+            if let m = layer.measure, !measureShowFilter.shows(m) {
+                document.updateLayer(id: layer.id) { $0.isVisible = false }
+            }
+        }
+        return document
+    }
+
+    /// One row of the canvas legend (§5): a measurement kind present in the
+    /// document, with the ink to swatch it in.
+    struct MeasureLegendEntry: Equatable, Identifiable {
+        let label: String
+        let colorHex: String
+        let isDashed: Bool
+        var id: String { label }
+    }
+
+    /// The canvas legend (§5, `next-measure-roles`): shown while the Measure
+    /// tool is active, listing only the kinds the document actually contains.
+    /// Swatches take the top-most measurement of each kind's ink, so the legend
+    /// matches the canvas even after per-measure recolors. Pure chrome, drawn
+    /// as a SwiftUI overlay — never part of an export.
+    var measureLegendEntries: [MeasureLegendEntry] {
+        guard activeTool == .measure, Experiments.shared.measureRolesEnabled,
+              let document else { return [] }
+        let measures = document.layers.compactMap(\.measure)
+        var entries: [MeasureLegendEntry] = []
+        if let m = measures.last(where: { $0.alignment == nil && $0.role == .size }) {
+            entries.append(MeasureLegendEntry(label: "Size", colorHex: m.strokeColorHex,
+                                              isDashed: false))
+        }
+        if let m = measures.last(where: { $0.alignment == nil && $0.role == .spacing }) {
+            entries.append(MeasureLegendEntry(label: "Spacing", colorHex: m.strokeColorHex,
+                                              isDashed: false))
+        }
+        if let m = measures.last(where: { $0.alignment != nil }) {
+            entries.append(MeasureLegendEntry(label: "Alignment", colorHex: m.strokeColorHex,
+                                              isDashed: true))
+        }
+        return entries
+    }
+
+    /// The role memory a style edit files under: the SELECTED measurement's
+    /// role (§5's absorb rule), or the last-used role when no measure is
+    /// selected and the edit only retunes the tool's defaults.
+    private var editedMeasureRole: MeasureRole {
+        selectedMeasureLayer?.measure?.role ?? measureStyles.role
+    }
+
+    /// The Role control (§5, `next-measure-roles`): switching the selected
+    /// measurement's role applies that role's remembered ink in ONE undo step,
+    /// and the role becomes what the next caliper starts as.
+    func setMeasureRole(_ role: MeasureRole) {
+        updateMeasureStyles { $0.role = role }
+        let ink = measureStyles.colors(for: role)
+        applyMeasureRestyle {
+            MeasureBuilder.restyled($0, strokeColorHex: ink.strokeColorHex,
+                                    chipColorHex: ink.chipColorHex,
+                                    chipOpacity: ink.chipOpacity,
+                                    textColorHex: ink.textColorHex, role: role)
+        }
+    }
+
     /// The unit shown by new measures and the selected one. Each setter restyles
     /// the selected measure (re-padding its frame via the builder) in one undo step.
     func setMeasureUnit(_ unit: MeasureUnit) {
@@ -1025,9 +1132,12 @@ final class EditorState {
         applyMeasureRestyle { MeasureBuilder.restyled($0, labelScale: scale) }
     }
 
-    /// The caliper's ink: legs, head line, and the chip's border.
+    /// The caliper's ink: legs, head line, and the chip's border. Absorbs into
+    /// the edited measurement's ROLE memory (§5), so retuning a Spacing caliper
+    /// never repaints what the next Size caliper starts as.
     func setMeasureStrokeColor(_ hex: String, commit: Bool) {
-        updateMeasureStyles { $0.strokeColorHex = hex }
+        let role = editedMeasureRole
+        updateMeasureStyles { $0.updateColors(for: role) { $0.strokeColorHex = hex } }
         applyMeasureRestyle { MeasureBuilder.restyled($0, strokeColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
@@ -1035,7 +1145,10 @@ final class EditorState {
     /// The label chip's fill — color and alpha together, because the inspector
     /// picks both from one swatch (its opacity slider IS the chip's alpha).
     func setMeasureChipColor(_ hex: String, opacity: CGFloat, commit: Bool) {
-        updateMeasureStyles { $0.chipColorHex = hex; $0.chipOpacity = opacity }
+        let role = editedMeasureRole
+        updateMeasureStyles {
+            $0.updateColors(for: role) { $0.chipColorHex = hex; $0.chipOpacity = opacity }
+        }
         applyMeasureRestyle {
             MeasureBuilder.restyled($0, chipColorHex: hex, chipOpacity: opacity)
         }
@@ -1044,7 +1157,8 @@ final class EditorState {
 
     /// The numeric readout's color.
     func setMeasureTextColor(_ hex: String, commit: Bool) {
-        updateMeasureStyles { $0.textColorHex = hex }
+        let role = editedMeasureRole
+        updateMeasureStyles { $0.updateColors(for: role) { $0.textColorHex = hex } }
         applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
@@ -1581,7 +1695,7 @@ final class EditorState {
         clearPreviewAfterNextFrame = false
         dragPreviewGeneration += 1
         let generation = dragPreviewGeneration
-        var underlayDoc = document
+        var underlayDoc = displayFiltered(document)
         var tempRef: ImageRef?
         if !copy {
             let holedRef = store.register(holed)
@@ -2545,8 +2659,9 @@ final class EditorState {
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer
         let store = store
+        let displayDoc = displayFiltered(doc)
         Task.detached(priority: .userInitiated) {
-            let underlay = renderer.render(doc, store: store, hiding: id)
+            let underlay = renderer.render(displayDoc, store: store, hiding: id)
             let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding)
             await MainActor.run { [weak self] in
                 guard let self, self.dragPreviewGeneration == generation,
@@ -2723,7 +2838,9 @@ final class EditorState {
 
     /// Hands a document (committed or move-preview) to the render scheduler.
     private func submit(_ document: PhotonzDocument) {
-        var document = document
+        // The measure Show filter shapes the INTERACTIVE render only; export
+        // paths rasterize the document directly and never pass through here.
+        var document = displayFiltered(document)
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
             document.updateLayer(id: id) { $0.isVisible = false }

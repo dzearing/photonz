@@ -36,6 +36,8 @@ public enum FeatureCatalog {
 
     public static let measureCenterSnapFlag = "next-measure-center-snap"
 
+    public static let measureRolesFlag = "next-measure-roles"
+
     public static let arrowCaptionsFlag = "next-arrow-captions"
 
     // MARK: - Definitions
@@ -114,6 +116,15 @@ public enum FeatureCatalog {
                     name: arrowCaptionsFlag,
                     title: "Arrow captions",
                     description: "Right after you draw an arrow, type a label and it lands in a pill at the arrow's tail, styled like the measure readout. Press Esc to skip. Double-click an arrow to add or edit its caption.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: measureRolesFlag,
+                    title: "Measurement roles",
+                    description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the measure inspector, a legend on the canvas while the tool is active, and a Show filter in the tool options.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

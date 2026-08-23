@@ -242,10 +242,52 @@ struct EditorView: View {
                 .overlay(alignment: .bottom) {
                     if editorState.showsMeasureHint { measureHintChip }
                 }
+                .overlay(alignment: .topLeading) {
+                    let entries = editorState.measureLegendEntries
+                    if !entries.isEmpty { measureLegend(entries) }
+                }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
         } else {
             emptyState
         }
+    }
+
+    /// The mock's glass legend (§5, `next-measure-roles`): while the Measure
+    /// tool is active, the measurement kinds present in the document, each
+    /// swatched in its canvas ink (Alignment as a dashed line). Chrome only —
+    /// it can never appear in an export.
+    private func measureLegend(_ entries: [EditorState.MeasureLegendEntry]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(entries) { entry in
+                HStack(spacing: 8) {
+                    legendSwatch(color: Color(hex: entry.colorHex), dashed: entry.isDashed)
+                    Text(entry.label)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        .padding(10)
+        .allowsHitTesting(false)
+        .transition(.opacity)
+    }
+
+    /// A short line of the entry's ink: solid for a role, dashed for Alignment.
+    private func legendSwatch(color: Color, dashed: Bool) -> some View {
+        HStack(spacing: 2) {
+            if dashed {
+                ForEach(0..<3, id: \.self) { _ in
+                    Capsule().fill(color).frame(width: 4, height: 3)
+                }
+            } else {
+                Capsule().fill(color).frame(width: 16, height: 3)
+            }
+        }
+        .frame(width: 16, alignment: .leading)
     }
 
     /// First-run hint for the Measure tool (Next, `next-measure-hover`): a
@@ -468,9 +510,10 @@ struct EditorView: View {
         }
     }
 
-    /// Whether the Measure tool has any options row to show (either Next flag).
+    /// Whether the Measure tool has any options row to show (any Next flag).
     private var hasMeasureOptions: Bool {
         Experiments.shared.measureAlignEnabled || Experiments.shared.measureCenterSnapEnabled
+            || Experiments.shared.measureRolesEnabled
     }
 
     /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
@@ -881,6 +924,40 @@ struct EditorView: View {
             if Experiments.shared.measureCenterSnapEnabled {
                 measureSnapOption
             }
+            if Experiments.shared.measureRolesEnabled {
+                measureShowOption
+            }
+        }
+    }
+
+    /// The mock's `Show` display filter (§5, `next-measure-roles`): which
+    /// measurement roles the canvas draws. A temporary eye-off, never saved —
+    /// exports always include every visible measurement.
+    private var measureShowOption: some View {
+        HStack(spacing: 4) {
+            Text("Show")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+            Menu {
+                Picker("Show", selection: Binding(
+                    get: { editorState.measureShowFilter },
+                    set: { editorState.setMeasureShowFilter($0) })) {
+                    ForEach(EditorState.MeasureShowFilter.allCases, id: \.self) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } label: {
+                Text(editorState.measureShowFilter.title)
+                    .font(.caption.weight(.medium))
+                    .fixedSize()
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .help("Which measurements the canvas shows. A view filter only: exports "
+                  + "always include every visible measurement.")
         }
     }
 

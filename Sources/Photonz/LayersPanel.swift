@@ -952,6 +952,23 @@ struct MeasureInspector: View {
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
+                // The mock's Role control (§5, `next-measure-roles`): Size vs
+                // Spacing, each with its own remembered color set. Alignment
+                // guides are their own kind, so they don't offer it.
+                if Experiments.shared.measureRolesEnabled, c.alignment == nil {
+                    field("Role") {
+                        Picker("Role", selection: Binding(
+                            get: { c.role },
+                            set: { editorState.setMeasureRole($0) })) {
+                            Text("Size").tag(MeasureRole.size)
+                            Text("Spacing").tag(MeasureRole.spacing)
+                        }
+                        .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                        .help("What this measurement calls out. Switching applies that "
+                              + "role's remembered colors, and new measurements start "
+                              + "with the last-used role.")
+                    }
+                }
                 field("Unit") {
                     Picker("Unit", selection: Binding(
                         get: { c.unit },

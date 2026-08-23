@@ -484,3 +484,48 @@ struct DocumentPixelScaleTests {
         #expect(back.pixelScale == 1)
     }
 }
+
+// MARK: - Measurement roles (§5, next-measure-roles)
+
+@Suite("Measure roles")
+struct MeasureRoleTests {
+
+    private func placed(_ m: MeasureContent) -> MeasureContent {
+        var m = m
+        m.start = .zero
+        m.end = CGPoint(x: 100, y: 0)
+        return m
+    }
+
+    @Test func aFreshCaliperIsASizeMeasurement() {
+        #expect(MeasureContent().role == .size)
+    }
+
+    @Test func roleRoundTripsThroughCodable() throws {
+        var m = placed(MeasureContent(mode: .horizontal))
+        m.role = .spacing
+        let back = try JSONDecoder().decode(MeasureContent.self, from: JSONEncoder().encode(m))
+        #expect(back.role == .spacing)
+        #expect(back == m)
+    }
+
+    @Test func aPayloadWithoutARoleDecodesAsSize() throws {
+        // Every caliper saved before roles existed keeps decoding unchanged.
+        var obj = try #require(try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(placed(MeasureContent(mode: .horizontal)))) as? [String: Any])
+        obj.removeValue(forKey: "role")
+        let back = try JSONDecoder().decode(MeasureContent.self,
+                                            from: JSONSerialization.data(withJSONObject: obj))
+        #expect(back.role == .size)
+    }
+
+    @Test func restyledCanSwitchTheRole() {
+        let layer = MeasureBuilder.layer(content: MeasureContent(mode: .horizontal),
+                                         from: .zero, to: CGPoint(x: 100, y: 0))
+        let switched = MeasureBuilder.restyled(layer, role: .spacing)
+        #expect(switched.measure?.role == .spacing)
+        // Feet stay anchored: a role switch is styling, not geometry.
+        #expect(switched.measureEndpoint(.start) == layer.measureEndpoint(.start))
+        #expect(switched.measureEndpoint(.end) == layer.measureEndpoint(.end))
+    }
+}

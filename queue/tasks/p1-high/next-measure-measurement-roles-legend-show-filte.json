@@ -2,11 +2,11 @@
   "id": "next-measure-measurement-roles-legend-show-filte",
   "title": "Next Measure: measurement roles, legend, show filter",
   "priority": "p1-high",
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:11:40.821Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T01:51:35.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: measure-redline > measurements-panel. Implement docs/design/next-measure.md section 5 behind flag next-measure-roles: MeasureRole {size, spacing} on MeasureContent (decodeIfPresent default size, round-trip + legacy tests), per-role MeasureStyles defaults (size keeps shipped red set; spacing gets the blue set), Role control in the measure inspector, canvas legend while the tool is active, Show display filter in EditorState (exports unaffected).",
@@ -27,7 +27,17 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T01:39:10.141Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T01:51:35.002Z",
+      "note": "Shipped §5 behind next-measure-roles (Next, default ON): MeasureRole {size,spacing} on MeasureContent (legacy-safe decode, 4 core tests), per-role MeasureStyles color memory (size red / spacing blue, pre-roles prefs seed size, 7 tests), Role control in the measure inspector with one-undo role switch applying remembered ink, canvas glass legend while the tool is active, Show All/Size/Spacing display filter in tool options applied to interactive renders only (exports untouched). Verified: Scripts/test.sh green (923 tests), swift build clean, dev app bundle builds."
     }
   ],
-  "seq": 40
+  "seq": 40,
+  "started": "2026-08-23T01:39:10.140Z",
+  "completed": "2026-08-23T01:51:35.002Z"
 }

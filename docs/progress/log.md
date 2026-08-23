@@ -3816,3 +3816,30 @@ mid-guide — revisit placement if it annoys in practice.
 - Not verified by hand: the live entry feel (type-after-draw) — worth a manned
   pass. Caption font size is fixed at 20px for now; a size slider is a cheap
   follow-up if wanted.
+
+## 2026-08-23 — Next Measure: measurement roles, legend, Show filter (§5, go loop)
+
+- Task `next-measure-measurement-roles-legend-show-filte`: §5 of
+  `docs/design/next-measure.md` behind `next-measure-roles` (Next, default ON).
+- Model: `MeasureRole { size, spacing }` on `MeasureContent` — decodeIfPresent
+  defaulting `.size` so every existing document decodes unchanged; encoded
+  always; `MeasureBuilder.restyled(role:)`. 4 new core tests.
+- Styles: `MeasureStyles` colors are now per-role (`MeasureRoleColors`): Size
+  keeps the shipped red set, Spacing defaults to the mock's blue set
+  (#0A84FF / #1B3A66 / white). Flat accessors read/write the ACTIVE role so
+  existing call sites and tests stayed untouched; pre-roles prefs seed the
+  Size memory, and encode mirrors the active set to the flat keys so an older
+  build still reads sensible colors. `absorb` files colors under the content's
+  role. 7 new style tests.
+- App: Role segmented control in the measure inspector (plain calipers only —
+  alignment guides are their own kind); `setMeasureRole` applies the role's
+  remembered ink in one undo step and makes it the creation default; color
+  edits absorb into the SELECTED measure's role memory. Canvas glass legend
+  (top-left, while Measure is active) lists only the kinds present, swatched
+  with the top-most measurement's actual ink, Alignment dashed. `Show`
+  (All/Size/Spacing) menu in tool options — an `EditorState` display filter
+  applied in `submit()` and both drag-preview underlays; exports and
+  pasteboard copies rasterize the document directly and never see it.
+- `Scripts/test.sh` green: 923 tests. Dev app bundle builds.
+- Not verified by hand: legend/Show filter look on a live canvas — worth a
+  manned pass alongside the §6 Measurements panel when it lands.

@@ -24,6 +24,16 @@ public enum MeasureUnit: String, CaseIterable, Hashable, Codable, Sendable {
     public var suffix: String { "px" }
 }
 
+/// What a measurement is calling out — the mock legend's Size (red) vs Spacing
+/// (blue) distinction (§5, `next-measure-roles`). Each role keeps its own
+/// remembered color set in `MeasureStyles`. Alignment checks are a separate
+/// payload (`AlignmentCheck` on the content), but this type is written to
+/// absorb an `alignment` case should it ever become a role.
+public enum MeasureRole: String, CaseIterable, Hashable, Codable, Sendable {
+    case size
+    case spacing
+}
+
 /// The drawable geometry of a caliper: the two **feet** on the measured space
 /// (the measuring line), the two **head** corners (the closed, perpendicular
 /// outer end offset from the feet), and the label anchor at the head midpoint.
@@ -89,6 +99,10 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// Multiplier on the base label font/pill size, driven by the inspector's
     /// "Label size" slider. 1 = default.
     public var labelScale: CGFloat
+    /// Size vs Spacing (§5, `next-measure-roles`). Purely semantic — rendering
+    /// reads the color fields, which the role's remembered set feeds at
+    /// creation/switch time. Every document saved before roles decodes `.size`.
+    public var role: MeasureRole
     /// Present when this measure is an **alignment check** (§9): the feet are
     /// the two ends of a dashed guide line, `headOffset` is 0, and the label
     /// reads the check's verdict instead of a distance. Nil for plain calipers
@@ -104,6 +118,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 textColorHex: String = MeasureContent.defaultStrokeColorHex,
                 showLabel: Bool = true,
                 unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1,
+                role: MeasureRole = .size,
                 alignment: AlignmentCheck? = nil) {
         self.start = start
         self.end = end
@@ -118,6 +133,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.unit = unit
         self.decimals = decimals
         self.labelScale = labelScale
+        self.role = role
         self.alignment = alignment
     }
 
@@ -133,6 +149,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
+        case role
         case alignment
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         // Legacy keys from the pre-caliper measure model (decode-only) and the
@@ -162,6 +179,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(unit, forKey: .unit)
         try c.encode(decimals, forKey: .decimals)
         try c.encode(labelScale, forKey: .labelScale)
+        try c.encode(role, forKey: .role)
         try c.encodeIfPresent(alignment, forKey: .alignment)
     }
 
@@ -188,6 +206,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         unit = try c.decode(MeasureUnit.self, forKey: .unit)
         decimals = try c.decode(Int.self, forKey: .decimals)
         labelScale = try c.decodeIfPresent(CGFloat.self, forKey: .labelScale) ?? 1
+        role = try c.decodeIfPresent(MeasureRole.self, forKey: .role) ?? .size
         alignment = try c.decodeIfPresent(AlignmentCheck.self, forKey: .alignment)
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
@@ -542,7 +561,8 @@ public enum MeasureBuilder {
                                 chipColorHex: String? = nil, chipOpacity: CGFloat? = nil,
                                 textColorHex: String? = nil, strokeWidth: CGFloat? = nil,
                                 showLabel: Bool? = nil, unit: MeasureUnit? = nil, decimals: Int? = nil,
-                                mode: MeasureMode? = nil, labelScale: CGFloat? = nil) -> Layer {
+                                mode: MeasureMode? = nil, labelScale: CGFloat? = nil,
+                                role: MeasureRole? = nil) -> Layer {
         guard var m = layer.measure,
               let start = layer.measureEndpoint(.start),
               let end = layer.measureEndpoint(.end) else { return layer }
@@ -556,6 +576,7 @@ public enum MeasureBuilder {
         if let decimals { m.decimals = decimals }
         if let mode { m.mode = mode }
         if let labelScale { m.labelScale = labelScale }
+        if let role { m.role = role }
         var updated = layer
         updated.content = .measure(m)
         return updating(updated, start: start, end: end)

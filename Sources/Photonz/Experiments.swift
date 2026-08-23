@@ -155,6 +155,12 @@ extension Experiments {
     /// only in the Next release's catalog, so Current always reads false.
     var measureCenterSnapEnabled: Bool { isEnabled(FeatureCatalog.measureCenterSnapFlag) }
 
+    /// `next-measure-roles`: whether measurements carry Size/Spacing roles —
+    /// the inspector's Role control, per-role remembered colors, the canvas
+    /// legend, and the tool options' Show filter. Exists only in the Next
+    /// release's catalog, so Current always reads false.
+    var measureRolesEnabled: Bool { isEnabled(FeatureCatalog.measureRolesFlag) }
+
     /// `next-arrow-captions`: whether drawing an arrow offers an inline caption
     /// (and arrows are double-clickable to edit one). Exists only in the Next
     /// release's catalog, so Current always reads false.
