@@ -3,11 +3,11 @@
   "title": "img-retouch-wt: selection has no canvas ring",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:42:55.727Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-23T02:43:10.025Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: image-editing (plus interaction-foundations > found-selection). Checklist sweep gate 4 fail: .selwrap (line ~126) contains no .sel-ring/.handle/.mtag anywhere; page comments admit 'SELECTION place 2 of 3' and 'place 3 of 3' with no place 1, so selection shows in Layers+Properties but never on canvas. img-grade-wt (sel-ring+handles+mtag, ~line 149) is the reference to copy. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -24,6 +24,16 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T02:37:47.673Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T02:43:10.025Z",
+      "note": "Canvas selection frame added to img-retouch-wt: .sel-ring + 4 handles + .mtag inside .selwrap (place 1 of 3), toggled per step via data-show/#selFrame with mtag text tracking the selected layer via data-set. Verified in Chrome across all 9 steps + reset: tag text equals the selected .lrow name at every step (Heal · spots / Clone · texture / Freq · color / Dodge & burn), ring hugs portrait bounds, selection.js stamps md. check-states + check-elevation pass. Commit 4c47b99."
     }
-  ]
+  ],
+  "started": "2026-08-23T02:37:47.673Z",
+  "completed": "2026-08-23T02:43:10.025Z"
 }
