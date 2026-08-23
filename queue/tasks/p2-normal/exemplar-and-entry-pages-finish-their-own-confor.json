@@ -3,11 +3,11 @@
   "title": "Exemplar and entry pages finish their own conformance",
   "priority": "p2-normal",
   "seq": 310,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:34:07.617Z",
-  "updated": "2026-08-23T17:24:39.377938Z",
+  "updated": "2026-08-23T17:25:20.512Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Top-level pages'). Pages: app-shell, redline, home, foundations, iconography, dashboard. Key items: app-shell's two editor specimens adopt data-shell instead of hand-authored titlebars (the exemplar must be beyond reproach), delete dead data-dock-toggle buttons + empty .cnv-act, scope the .pglead override, ic-pencil for Edit on filmcards, consider Properties/Library groups in the video specimen dock; redline drops the superseded .wsw switcher + authored chrome and renames its .sw collisions; home gains the .askbtn Cmd-K launcher, .cq on the window, and renders Recent with the shared .filmstrip so the landing window and history overlay agree; foundations replaces remaining unicode arrows in body copy; iconography uses real .tbar/.input.search/.seg.sm and fixes btn prim to btn primary; dashboard namespaces .ttl/.sub/.grip/.seq. Verify 200 + audit-sweep.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-08-23T17:24:39.377938Z",
       "note": "Queued, not done here: the ic-pen -> ic-pencil Edit sweep across the other 50 pages + entry.js; the history-overlay specimen still wearing a .sheet-h instead of history.css's .sheet.down.hist shape; ui-entry-wt's Recent still on the bespoke .recents grid."
+    },
+    {
+      "t": "2026-08-23T17:25:20.511Z",
+      "note": "app-shell's three specimen windows, redline, home, foundations, iconography and dashboard all conform. Exemplar: specimens adopt data-shell, dead dock toggles and the empty .cnv-act deleted, .pglead shadow removed, the missing D3 command menu added with a callout, stale title-bar copy fixed, and the video specimen's dock is Properties + Library since a timed document has no Layers group. redline drops its authored titlebar/toolbar/.cmdk and renames three reserved-name shadows. home is .cq + data-shell with the Ask / Cmd-K launcher and a shared .filmstrip Recent, which needed one foundation addition (.shell-body, the content row of a window with no editor row, documented in AGENTS.md + UX-PATTERNS D6). iconography uses the real .tbar, .input.search and .seg.sm and btn primary; foundations converts the arrows inside interactive rows; dashboard namespaces .grip/.ttl/.sub. Verified: 90/90 HTTP 200, browser audit-sweep 0 findings across all 90 pages, six pages clean at 1280/880/620 and in light theme, a 30-page shell regression sweep empty, check-elevation + check-states + vr6-strip pass, no console errors. Commit 7f815e8, pushed."
     }
   ],
-  "started": "2026-08-23T17:02:08.268Z"
+  "started": "2026-08-23T17:02:08.268Z",
+  "completed": "2026-08-23T17:25:20.512Z"
 }
