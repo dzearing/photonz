@@ -285,11 +285,11 @@
               <button class="btn ghost icon sm" title="Import" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
             </div>
             <div class="dgrp-b">
-              <div style="padding:var(--gap-sm) var(--pad-sm) 0"><div class="seg" id="scopeSeg">
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0"><div class="seg scopeseg" id="scopeSeg">
                 <button class="on" data-scope="media">Media</button>
                 <button data-scope="components">Comp</button>
                 <button data-scope="styles">Styles</button>
-                <button data-scope="assets">Assets</button>
+                <button data-scope="systems">Systems</button>
               </div></div>
               <div class="libtools">
                 <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search media" aria-label="Search media"></span>
@@ -874,7 +874,7 @@
     // Redline callouts (numbering, positioning, the explainer cards) are the
     // shared `redline` component now. This page only declares the targets.
 
-    // Library scope switch (Media · Components · Styles · Assets) - visual state.
+    // Library scope switch (Media · Components · Styles · Systems) - visual state.
     var seg = document.getElementById('scopeSeg');
     if (seg) {
       var btns = [].slice.call(seg.querySelectorAll('button'));

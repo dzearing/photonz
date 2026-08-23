@@ -1,0 +1,21 @@
+{
+  "id": "non-library-seg-rows-clip-their-labels-across-14",
+  "title": "Non-Library seg rows clip their labels across ~14 pages",
+  "priority": "p3-low",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T06:14:46.156Z",
+  "updated": "2026-08-23T06:14:46.157Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Browser-measured while verifying the Systems scope rollout: several non-Library .seg rows ellipsize labels (scrollWidth > clientWidth). Worst: brush-library category chips (Sketch:17px, Texture:18px, Custom:19px), paint fill-type seg (Angular:17px), img-masking (Gradient:17px), draw-boolean (Intersect:12px, Subtract:11px), video-speed (Slow-mo:11px), redline (Spacing:13px x2), ui-autolayout (Between:8px), color (Document:4px x3), typography, ui-grid, ui-variants, video-captions, video-motion, draw, brush-editor. Same bug class the .scopeseg fix solved for the Library row (segmented.css natural-width columns + border-compensated padding); these rows likely want .scopeseg geometry or the collapse-to-select treatment. Measure each in the browser before and after.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T06:14:46.157Z",
+      "note": "created (manual)"
+    }
+  ]
+}

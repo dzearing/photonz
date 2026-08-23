@@ -118,10 +118,10 @@ not by drawing a separate small mock.
 Rule: **surfaces dock; they do not pop into unexplained new windows.** For each
 surface the mock shows, it must make the entry+exit legible:
 
-- **Media pool / Assets / Component catalog / Style library**: these are the SAME
-  surface family — a **Library** panel group (`.dgrp`) in the **right dock**, or
-  the same content as a slide-down overlay when it needs room to browse. Inside
-  Library, a **scope switch** (segmented: Media · Components · Styles · Assets)
+- **Media pool / Component catalog / Style library / Design system**: these are
+  the SAME surface family — a **Library** panel group (`.dgrp`) in the **right
+  dock**, or the same content as a slide-down overlay when it needs room to
+  browse. Inside Library, a **scope switch** (Media · Components · Styles · Systems)
   picks which reusable content you are browsing (D1/D2, amended). You reveal it
   from the canvas **panel toggle**, its **rail tab**, `⌥⌘L`, or the command
   palette; you add to it via the group's own "+ Import" affordance, drag-drop onto
@@ -296,7 +296,7 @@ Every editor/scenario page must satisfy:
 - [ ] Answers "how did I get here": the active tool/mode is visible; the surface
       shown (Library/media pool/tool) is a panel group or an overlay, reachable
       via a visible affordance, not teleported in.
-- [ ] Library/assets/catalog is the Library group in the right dock (or the same
+- [ ] Library/media/catalog is the Library group in the right dock (or the same
       content as an overlay), with an add/import affordance.
 - [ ] Selection drives the Properties group; selection shown consistently on
       canvas + in Layers.
@@ -354,14 +354,22 @@ page:
 > "the right dock has stacked panel groups". Layers and Library are two of those
 > groups, not two tabs. Everything else stands.
 
-Component catalog, style library, media pool, and assets are the SAME surface.
-Inside the Library group, a **segmented scope switch** picks the content family:
-**Media · Components · Styles · Assets**. Rationale: they are all "reusable content
-you browse and drag onto the canvas"; one location + one scope switch beats four
-competing panels and keeps the mental model flat. Each scope has the same shape
-(search, grid of tiles, + affordance, right-click "Add to Library"). Selecting any
-tile drives the Properties group. Do NOT promote a scope to its own dock or
-window.
+Component catalog, style library, media pool, and the design system are the SAME
+surface. Inside the Library group, a **segmented scope switch** picks the content
+family: **Media · Components · Styles · Systems**. Rationale: they are all
+"reusable content you browse and drag onto the canvas"; one location + one scope
+switch beats four competing panels and keeps the mental model flat. Each scope has
+the same shape (search, grid of tiles, + affordance, right-click "Add to
+Library"). Selecting any tile drives the Properties group. Do NOT promote a scope
+to its own dock or window.
+
+**Systems** is the fourth scope (decision, 2026-08-23: it replaced the older
+Assets scope). It holds the document's named design system — draft or published —
+and later a catalog of systems you can browse and apply (see ds-build-wt for the
+system card and publish flow, dsys for the catalog overlay). It completes the
+ladder the product teaches: tokens → styles → components → system. Flat reusable
+files (clip art, icon sets, logo marks) live under **Media**; there is no generic
+Assets drawer.
 
 Brush-driven surfaces (draw, the brush library and editor, brushed vector
 strokes) show **Brushes** in the row where Components sits: PRODUCT-MODEL

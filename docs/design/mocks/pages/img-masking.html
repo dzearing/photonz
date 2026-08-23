@@ -363,11 +363,11 @@
             </div>
             <div class="dgrp-b">
               <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-                <div class="seg" id="scopeSeg">
+                <div class="seg scopeseg" id="scopeSeg">
                   <button data-scope="media">Media</button>
                   <button data-scope="components">Comp</button>
                   <button class="on" data-scope="styles">Styles</button>
-                  <button data-scope="assets">Assets</button>
+                  <button data-scope="systems">Systems</button>
                 </div>
               </div>
               <div class="libtools">
@@ -648,7 +648,7 @@
   if (seg) {
     var btns = [].slice.call(seg.querySelectorAll("button"));
     var label = document.querySelector("#gLibrary .dgrp-h .cnt");
-    var names = { media: "Media", components: "Components", styles: "Styles", assets: "Assets" };
+    var names = { media: "Media", components: "Components", styles: "Styles", systems: "Systems" };
     btns.forEach(function (b) {
       b.addEventListener("click", function () {
         btns.forEach(function (x) { x.classList.toggle("on", x === b); });

@@ -206,9 +206,13 @@
    columns shrinkable, so at the dock's true minimum the labels clip again and
    the collapse-to-menu above still takes over. The fixed 2px gap goes too —
    space-between already separates the segments, and those 6px are exactly the
-   margin the longest label set needs at the dock's default width. */
+   margin the longest label set needs at the dock's default width. The -1px on
+   the padding pays for the button's 1px transparent border: grid max-content
+   sizing measures the button without it, so each column lands exactly 2px
+   short of the border-box and the longest labels clip by that much unless the
+   padding hands the pixels back. */
 .seg.scopeseg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,max-content);justify-content:space-between;gap:0;width:100%}
-.seg.scopeseg>button{padding:0 var(--s2)}
+.seg.scopeseg>button{padding:0 calc(var(--s2) - 1px)}
 
 /* ---- MULTI: INDEPENDENT TOGGLES ON ONE TRACK ---------------------------
    `.seg.multi` is not a radio group. Each segment is its own on/off switch

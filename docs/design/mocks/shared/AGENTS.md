@@ -480,7 +480,7 @@ and the specimen stays honest (PRODUCT-MODEL §4c: a specimen wears no app chrom
 ### Still true
 
 - **Library scope switch** — reuse the existing **`.seg`** (Media · Components ·
-  Styles · Assets) inside the **Library panel group**. One Library surface, four
+  Styles · Systems) inside the **Library panel group**. One Library surface, four
   scopes; do not promote a scope to its own dock or window. The video "media pool"
   is this group with scope = Media (D1, amended: it is a **right-dock group or an
   overlay**, never a left dock).

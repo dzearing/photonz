@@ -110,7 +110,7 @@ photo or a button with the same Measure tool.
 - **Extract a system from a website** → an agent command (`system.extract(url)`)
   reads a URL, infers tokens (color/type/space/radius) + component patterns, and
   produces a named Design System.
-- **Pick a system from a catalog** → the **Library panel, scope = Styles/Systems**
+- **Pick a system from a catalog** → the **Library panel, scope = Systems**
   — a browsable catalog you apply to the document.
 - **AI applies different systems to the same components** → because components
   bind semantic slots, applying a foreign system re-themes them; the agent maps

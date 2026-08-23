@@ -69,7 +69,7 @@ collision and recommend namespacing the local class.
 2. **Wayfinding** — can the page answer "how did I get here / where is this
    surface / how do I get back"? Flag surfaces (media pool, catalog, tool UI)
    that appear with no dock, no open affordance, no back path.
-3. **Library/assets** — is the component catalog / media pool the left-dock
+3. **Library scopes** — is the component catalog / media pool the left-dock
    Library tab with add/import, or a one-off widget? Flag one-offs.
 4. **Selection model** — does the right-dock Inspector track selection? Is
    selection shown consistently on canvas + Layers? Flag global/contextual

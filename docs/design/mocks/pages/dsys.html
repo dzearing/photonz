@@ -327,11 +327,11 @@
           </div>
           <div class="dgrp-b">
             <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-              <div class="seg" id="dsScope">
+              <div class="seg scopeseg" id="dsScope">
                 <button data-scope="media">Media</button>
                 <button class="on" data-scope="components">Comp</button>
                 <button data-scope="styles">Styles</button>
-                <button data-scope="assets">Assets</button>
+                <button data-scope="systems">Systems</button>
               </div>
             </div>
             <div class="libtools">
@@ -563,21 +563,25 @@ system.<span class="p">apply</span>(<span class="s">"Brand v2"</span>)</div>
       { id:"grain", nm:"grain.png", mt:"512 × 512", th:"linear-gradient(135deg,#5c6680,#20242f)",
         kind:"media", uses:"3 uses", plabel:"media · grain.png",
         spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#5c6680,#20242f)"></span>',
-        desc:"A texture used by the Charcoal brush and the Grain effect." }
-    ],
-    assets: [
+        desc:"A texture used by the Charcoal brush and the Grain effect." },
       { id:"logo", nm:"Wordmark", mt:"svg", th:"linear-gradient(135deg,#7c4dff,#ffb057)",
-        kind:"asset", uses:"7 uses", plabel:"asset · Wordmark",
+        kind:"asset", uses:"7 uses", plabel:"media · Wordmark",
         spec:'<span style="font-family:var(--serif);font-weight:700;font-size:38px;color:#fff">Photonz</span>',
         desc:"A vector asset. Drop it anywhere and it stays crisp, because it is still a vector Layer." },
       { id:"mark", nm:"Sunset mark", mt:"svg", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
-        kind:"asset", uses:"4 uses", plabel:"asset · Sunset mark",
+        kind:"asset", uses:"4 uses", plabel:"media · Sunset mark",
         spec:'<span class="big" style="display:block;border-radius:22px;background:linear-gradient(180deg,#7c4dff,#ff5d8f 55%,#ffb057)"></span>',
         desc:"The mark from the vector walkthrough, saved back into the system." }
+    ],
+    systems: [
+      { id:"brand", nm:"Brand", mt:"v2.3.0 · active", th:"linear-gradient(135deg,#7c4dff,#ff5d8f)",
+        kind:"system", uses:"active", plabel:"system · Brand",
+        spec:'<span class="big" style="display:block;background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>',
+        desc:"The document's design system: tokens, styles, and components versioned together. Open the Systems overlay to browse and apply another." }
     ]
   };
 
-  var SCOPE_NAMES = { media:"Media", components:"Components", styles:"Styles", assets:"Assets" };
+  var SCOPE_NAMES = { media:"Media", components:"Components", styles:"Styles", systems:"Systems" };
   var scope = "components";
   var selId = "button";
   var search = "";

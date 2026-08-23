@@ -50,7 +50,7 @@
   box-shadow:inset 0 1px 0 var(--edge-hi), var(--ring)}
 
 /* Library tile grid + draggable-looking thumbnail tiles (every scope
-   shares this shape: Media · Components · Styles · Assets). */
+   shares this shape: Media · Components · Styles · Systems). */
 /* VISUAL RULE 8: a tile has to still read as a CARD. repeat(3,1fr) was a
    fixed column count, so in a 268px dock the tiles came out 76px wide - a
    sliver with a 46px thumb and an ellipsised name. auto-fill with a 96px

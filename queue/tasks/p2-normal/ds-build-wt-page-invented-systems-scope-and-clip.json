@@ -3,11 +3,11 @@
   "title": "ds-build-wt: page-invented Systems scope and clipped scope tab",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "blocked",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:40.825Z",
-  "updated": "2026-08-23T02:36:57.325Z",
+  "updated": "2026-08-23T05:59:57.016Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: ui-building > ui-design-systems (plus design-system conformance). Checklist sweep: (1) gate 3 warn: Library scope row is Media/Comp/Styles/Systems, replacing the fixed D2 fourth scope 'Assets' with a page-invented 'Systems' (grep: only this file uses data-scope=systems); decide whether design systems live under Assets or the scope set changes everywhere. (2) measured in browser: the 'Systems' chip clips 10px (scrollWidth 63 vs clientWidth 53) in the 232px seg; 'Styles' also clips slightly. (3) minor: fill value uses a unicode arrow (#pFillVal '#7C4DFF -> #FF5D8F' rendered with an arrow glyph); .select rows lack role/tabindex. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -40,7 +40,23 @@
     {
       "t": "2026-08-23T02:36:57.324Z",
       "note": "Clip and a11y fixes shipped and verified in Chrome; the fourth-scope question (Assets vs Systems) is a filed decision with a brief, recommended: Systems replaces Assets everywhere."
+    },
+    {
+      "t": "2026-08-23T04:34:09.019Z",
+      "note": "decision \"The Library panel has four tabs. Should the fourth tab be Assets, or Systems, the home of your published design system?\" resolved: Systems replaces Assets"
+    },
+    {
+      "t": "2026-08-23T05:59:57.016Z",
+      "note": "go loop crash-looped: claimed and reset 1225 times between 2026-08-23T04:34:10.613Z and 2026-08-23T05:59:57.016Z without a runner finalizing"
+    },
+    {
+      "t": "2026-08-23T06:15:04.792Z",
+      "note": "Decision answer (a: Systems replaces Assets) applied everywhere: 49 mock pages now show Media/Comp|Components|Brushes/Styles/Systems in the Library scope row. File-like content that lived under Assets moved to Media per the decision mitigation (icon-draw-wt glyph set, video-title-wt + 4 video pages clip art, icon-gradient-wt glyph, dsys Wordmark/Sunset mark). dsys gained a real Systems scope tile (Brand v2.3.0); empty pages show a No system yet state (ic-library). Walkthrough steps rewired: icon-draw-wt step 12 targets Media; video-title-wt step 6 retitled Switch the Library back to Media. Docs: UX-PATTERNS nav + D2 (with a Systems scope definition), AGENTS.md, ux-audit-agent, ux-audit-clusters, PRODUCT-MODEL scope note, shell.css comment, dist rebuilt. Every Library seg got the .scopeseg natural-width geometry, and segmented.css compensates the 1px button border that grid max-content sizing ignores (was clipping Systems/Brushes 2px, lang-panels 5px). Verified in Chrome: seg labels whole on all 49 pages, scope switching works on icon-draw-wt/video-title-wt/dsys, zero console errors. Scripts/test.sh green (932 tests). Pre-existing non-Library seg clips filed as non-library-seg-rows-clip-their-labels-across-14."
+    },
+    {
+      "t": "2026-08-23T06:15:04.793Z",
+      "note": "log compressed: crash-loop claim/reset spam collapsed into summary lines"
     }
   ],
-  "started": "2026-08-23T02:23:25.058Z"
+  "started": "2026-08-23T05:59:57.015Z"
 }

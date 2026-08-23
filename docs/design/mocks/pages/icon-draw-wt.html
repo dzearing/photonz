@@ -441,23 +441,20 @@
 
             <!-- LIBRARY · one surface, four scopes (D1/D2) -->
             <div class="dgrp grow collapsed" id="gLibrary">
-              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Assets</span>
+              <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
                 <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
               </div>
               <div class="dgrp-b">
                 <div style="padding:var(--gap-sm) var(--pad-sm) 0">
                   <div class="seg scopeseg">
-                    <button data-scope="media" data-scope-name="Media">Media</button>
+                    <button class="on" data-scope="media" data-scope-name="Media">Media</button>
                     <button data-scope="components" data-scope-name="Components">Comp</button>
                     <button data-scope="styles" data-scope-name="Styles">Styles</button>
-                    <button class="on" data-scope="assets" data-scope-name="Assets">Assets</button>
+                    <button data-scope="systems" data-scope-name="Systems">Systems</button>
                   </div>
                 </div>
                 <div class="libtools">
                   <span class="srch"><i class="ic sm ic-search"></i><input name="library-search" placeholder="Search the set" aria-label="Search the set"></span>
-                </div>
-                <div data-scope-body="media" class="wt-off">
-                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media in this document</div>
                 </div>
                 <div data-scope-body="components" class="wt-off">
                   <div class="libgrid">
@@ -470,7 +467,7 @@
                     <div class="styrow"><span class="sw" style="background:#4a5068"></span><span class="nm">Glyph / muted</span><span class="use">12 uses</span></div>
                   </div>
                 </div>
-                <div data-scope-body="assets">
+                <div data-scope-body="media">
                   <div class="libgrid">
                     <div class="libtile wt-off" id="tileNew" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg></span><span class="cap"><span class="nm">cloud-upload</span><span class="mt">new</span></span></div>
                     <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 16.2a4.2 4.2 0 0 1 1.3-8.1 5.6 5.6 0 0 1 10.7-1.1 4.6 4.6 0 0 1 .9 9.2z"/></svg></span><span class="cap"><span class="nm">cloud</span><span class="mt">24 × 24</span></span></div>
@@ -478,6 +475,9 @@
                     <div class="libtile" tabindex="0"><span class="th glyphth"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.4V5.2M6.4 14.8 12 20.4l5.6-5.6"/></svg></span><span class="cap"><span class="nm">download</span><span class="mt">24 × 24</span></span></div>
                   </div>
                   <p class="note" style="padding:0 var(--pad-sm)">199 glyphs, one grid, one weight. A new one joins by matching numbers, not by looking about right.</p>
+                </div>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
                 </div>
               </div>
             </div>
@@ -696,7 +696,7 @@
           data-title="Add it to the set"
           data-cue="#miAddSet" data-cue-label="Click Add drawing to the set" data-cue-place="left"
           data-open="#gLibrary" data-collapse="#gGrid,#gProps" data-tool="#tSelect"
-          data-pop="#libMenu" data-scope="assets"
+          data-pop="#libMenu" data-scope="media"
           data-show="#igLive,#igKeys,#igCloud,#igArrow,#lrCloud,#lrArrow,#propsShape,#secStroke,#secFit,#igSizes,#tileNew" data-hide="#layersEmpty,#propsEmpty,#igRect,#igBig,#igLeft,#igRight,#lrRect,#lrBig,#lrLeft,#lrRight,#secBool,#igGrid,#igDots,#igSel,#igSnapCue,#igMezL,#igMezR,#igMezT,#igMezB"
           data-class="#shLive=on|#shKeys=on|#snGrid=on|#snKeys=on|#snGeo=on|#igCloud=-hair"
           data-set="#chipGrid=24 grid|#chipSnap=snap 1u|#layerCnt=2|#propKind=Glyph|#pFitBounds=12 × 16|#pFitMargins=4 · 2 · 4 · 2">
@@ -704,7 +704,7 @@
           <span class="wt-n">12</span>
           <p class="wt-do"><b>Add drawing to the set</b>, or press <code>⇧⌘A</code></p>
           <p class="wt-where">the <b>Library</b> group header, on the <code>+</code> menu</p>
-          <p class="wt-res"><b>cloud-upload</b> joins the Assets scope beside cloud, upload and download, and exports as a 24 × 24 template SVG with the stroke left as a stroke rather than outlined, so whoever consumes it can still restyle it. The set is 200 glyphs and every one of them still agrees about the grid.</p>
+          <p class="wt-res"><b>cloud-upload</b> joins the Media scope beside cloud, upload and download, and exports as a 24 × 24 template SVG with the stroke left as a stroke rather than outlined, so whoever consumes it can still restyle it. The set is 200 glyphs and every one of them still agrees about the grid.</p>
         </div>
       </li>
 

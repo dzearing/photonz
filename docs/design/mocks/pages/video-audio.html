@@ -270,11 +270,11 @@
           </div>
           <div class="dgrp-b">
             <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-              <div class="seg" id="scopeSeg">
+              <div class="seg scopeseg" id="scopeSeg">
                 <button class="on" data-scope="media">Media</button>
                 <button data-scope="components">Comp</button>
                 <button data-scope="styles">Styles</button>
-                <button data-scope="assets">Assets</button>
+                <button data-scope="systems">Systems</button>
               </div>
             </div>
             <div class="libtools">
@@ -867,7 +867,7 @@
   (function(){
     var seg=document.getElementById("scopeSeg");
     var label=document.getElementById("libScope");
-    var names={media:"Media",components:"Components",styles:"Styles",assets:"Assets"};
+    var names={media:"Media",components:"Components",styles:"Styles",systems:"Systems"};
     if(seg){
       var btns=[].slice.call(seg.querySelectorAll("button"));
       btns.forEach(function(b){

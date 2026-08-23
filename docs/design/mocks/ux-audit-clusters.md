@@ -50,7 +50,7 @@ Pages: editor, image, img-bg-remove, img-retouch-wt, img-grade-wt, img-masking,
 draw, brush-editor, states, ui-variants, ui-autolayout, ui-grid, agent, video-*
 (no left dock at all), lang-panels (taxonomy omits Library).
 Fix: left dock = `.dnav` (Layers | Library) + Library body (`.seg` scope Media·
-Components·Styles·Assets + `.libtools` + `.libgrid`/`.libtile`), per app-shell.
+Components·Styles·Systems + `.libtools` + `.libgrid`/`.libtile`), per app-shell.
 
 ## Cluster D — Media pool / catalog / library built as a bespoke widget (D1/D2)
 Severity: high. The single biggest coherence break.

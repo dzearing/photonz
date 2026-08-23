@@ -284,7 +284,7 @@
             </div>
 
             <!-- LIBRARY · one surface, four scopes (D1/D2). Titles take Styles,
-                 clip art is Assets, the lower third is a Component. -->
+                 clip art is Media, the lower third is a Component. -->
             <div class="dgrp grow collapsed" id="gLibrary">
               <div class="dgrp-h" id="gLibraryH"><span class="ttl">Library</span><span class="cnt" data-scope-label>Media</span>
                 <button class="btn ghost icon sm" title="Add to library" data-menu="#libMenu"><i class="ic ic-plus"></i></button>
@@ -295,7 +295,7 @@
                     <button class="on" data-scope="media" data-scope-name="Media" id="scopeMedia">Media</button>
                     <button data-scope="components" data-scope-name="Components" id="scopeComp">Comp</button>
                     <button data-scope="styles" data-scope-name="Styles" id="scopeStyles">Styles</button>
-                    <button data-scope="assets" data-scope-name="Assets" id="scopeAssets">Assets</button>
+                    <button data-scope="systems" data-scope-name="Systems" id="scopeSystems">Systems</button>
                   </div>
                 </div>
                 <div class="libtools">
@@ -306,7 +306,12 @@
                   <div class="libgrid">
                     <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(135deg,#ff9d5c,#ff5d8f)"></span><span class="cap"><span class="nm">b-roll.mov</span><span class="mt">0:07</span></span></div>
                     <div class="libtile" tabindex="0" title="Drag onto a track"><span class="th" style="background:linear-gradient(180deg,#26463a,#1c3a30)"></span><span class="cap"><span class="nm">music.wav</span><span class="mt">0:42</span></span></div>
+                    <div class="libtile" id="artSparkle" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-cursor"></i></span><span class="cap"><span class="nm">Cursor</span><span class="mt">svg</span></span></div>
+                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-circle"></i></span><span class="cap"><span class="nm">Dot</span><span class="mt">svg</span></span></div>
                   </div>
+                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">Flat art lives here beside your footage: svg, png, a logo. It keeps its own scale, so blowing one up on a 4K frame stays crisp.</p>
                 </div>
 
                 <div data-scope-body="components" class="wt-off">
@@ -326,14 +331,8 @@
                   <p class="note" style="margin:0 var(--pad-sm) var(--pad)">The same type styles your UI documents use. One system, so a title in a cut and a heading in a screen cannot drift apart.</p>
                 </div>
 
-                <div data-scope-body="assets" class="wt-off">
-                  <div class="libgrid">
-                    <div class="libtile" id="artSparkle" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-sparkle"></i></span><span class="cap"><span class="nm">Sparkle</span><span class="mt">svg</span></span></div>
-                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-star"></i></span><span class="cap"><span class="nm">Star</span><span class="mt">svg</span></span></div>
-                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-cursor"></i></span><span class="cap"><span class="nm">Cursor</span><span class="mt">svg</span></span></div>
-                    <div class="libtile" tabindex="0" title="Drag onto the frame"><span class="th art"><i class="ic lg ic-circle"></i></span><span class="cap"><span class="nm">Dot</span><span class="mt">svg</span></span></div>
-                  </div>
-                  <p class="note" style="margin:0 var(--pad-sm) var(--pad)">Assets are flat art: svg, png, a logo. They keep their own scale, so blowing one up on a 4K frame stays crisp.</p>
+                <div data-scope-body="systems" class="wt-off">
+                  <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-library"></i></span>No system yet</div>
                 </div>
               </div>
             </div>
@@ -475,18 +474,18 @@
       </li>
 
       <li class="wt-step"
-          data-title="Switch the Library to Assets"
-          data-cue="#scopeAssets" data-cue-label="Click Assets" data-cue-place="left"
+          data-title="Switch the Library back to Media"
+          data-cue="#scopeMedia" data-cue-label="Click Media" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
           data-show="#cvTitle,#trackTitle,#clipTitle,#propsText" data-hide="#propsEmpty"
-          data-open="#gLibrary" data-scope="assets" data-select="#clipTitle"
+          data-open="#gLibrary" data-scope="media" data-select="#clipTitle"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
           data-set="#tcCur=0:04|#propKind=Text layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pStyle=Display / 48|#pSize=48|#pWeight=Bold">
         <div class="wt-cap vid">
           <span class="wt-n">6</span>
-          <p class="wt-do"><b>Assets</b></p>
+          <p class="wt-do"><b>Media</b></p>
           <p class="wt-where">the Library scope switch</p>
-          <p class="wt-res">the same panel, a different scope. Clip art is not a separate browser with its own rules, it is the Library holding flat art: svg, png, a logo you dropped in last week.</p>
+          <p class="wt-res">back where the footage lives. Clip art is not a separate browser with its own rules, it is the Library holding flat art beside your clips: svg, png, a logo you dropped in last week.</p>
         </div>
       </li>
 
@@ -495,13 +494,13 @@
           data-cue="#artSparkle" data-cue-label="Drag Sparkle onto the frame" data-cue-place="left"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
           data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em"
           data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag"><b>Sparkle</b> onto the frame</p>
-          <p class="wt-where">Library at scope Assets, over to the canvas</p>
+          <p class="wt-where">Library at scope Media, over to the canvas</p>
           <p class="wt-res">the art lands where you dropped it, selected, with handles. A <b>Gfx</b> track appears under the Title track carrying its clip, so the thing you see on the frame and the thing you see on the timeline are one layer, never two objects to keep in sync.</p>
         </div>
       </li>
@@ -511,7 +510,7 @@
           data-cue="#artH2" data-cue-label="Drag the corner handle" data-cue-place="right"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
           data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px"
           data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104">
         <div class="wt-cap vid">
@@ -527,7 +526,7 @@
           data-cue="#clipArt" data-cue-label="Drag the clip's right edge to 0:07" data-cue-place="top"
           data-tool="#tSelect" data-class="#cvTitle=-caret"
           data-show="#cvTitle,#trackTitle,#clipTitle,#cvArt,#trackGfx,#clipArt,#propsArt,#artRing,#artH1,#artH2" data-hide="#propsEmpty,#propsText"
-          data-open="#gLibrary" data-scope="assets" data-select="#clipArt"
+          data-open="#gLibrary" data-scope="media" data-select="#clipArt"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22|#cvTitle=font-family:var(--serif);font-size:29px;font-weight:700;letter-spacing:-.01em|#cvArt=left:60%;top:26%;width:52px;height:52px|#clipArt=width:17%"
           data-set="#tcCur=0:04|#propKind=Asset layer|#cvTitle=Ship it faster|#pText=Ship it faster|#clipTitle=Ship it faster|#pX=1180|#pY=300|#pW=104|#pH=104|#pArtTime=0:04 to 0:07|#pArtLen=3.0s|#pArtNote=Both clips now start and end together. Drag either edge to change it, or select both and trim them as one.">
         <div class="wt-cap vid">

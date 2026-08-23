@@ -215,8 +215,8 @@
                     </div>
                     <div class="dgrp-b">
                       <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-                        <div class="seg" data-radio="button">
-                          <button>Media</button><button class="on">Comp</button><button>Styles</button><button>Assets</button>
+                        <div class="seg scopeseg" data-radio="button">
+                          <button>Media</button><button class="on">Comp</button><button>Styles</button><button>Systems</button>
                         </div>
                       </div>
                       <div class="libgrid">
@@ -238,7 +238,7 @@
             <div class="lp-li"><span class="lp-pin">4</span><span><b>Vertical splitter</b> · the dock's own width, dragged from the canvas edge. Sizes persist for the session. <code>.splitter.v</code></span></div>
             <div class="lp-li"><span class="lp-pin">5</span><span><b>Grow group</b> · one group takes the leftover height. Library is usually the one, because browsing wants room. <code>.dgrp.grow</code></span></div>
             <div class="lp-li"><span class="lp-pin">6</span><span><b>Rail</b> · what the whole dock collapses to. A tab restores the dock and reveals that group. <code>.drail</code> › <code>.drailtab</code></span></div>
-            <div class="lp-li"><span class="lp-pin">·</span><span><b>Library</b> is a group, not a surface of its own: one Library with a scope switch for Media · Components · Styles · Assets. The video "media pool" is this group with scope set to Media.</span></div>
+            <div class="lp-li"><span class="lp-pin">·</span><span><b>Library</b> is a group, not a surface of its own: one Library with a scope switch for Media · Components · Styles · Systems. The video "media pool" is this group with scope set to Media.</span></div>
           </div>
         </div>
       </div>
@@ -309,8 +309,8 @@
                 </div>
                 <div class="dgrp-b">
                   <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-                    <div class="seg" data-radio="button">
-                      <button class="on">Media</button><button>Comp</button><button>Styles</button><button>Assets</button>
+                    <div class="seg scopeseg" data-radio="button">
+                      <button class="on">Media</button><button>Comp</button><button>Styles</button><button>Systems</button>
                     </div>
                   </div>
                   <div class="libtools">
@@ -323,7 +323,7 @@
                   </div>
                 </div>
               </div>
-            </div><p class="lp-cap">Media, Components, Styles and Assets are the same surface with a scope switch, never four competing panels.</p></div>
+            </div><p class="lp-cap">Media, Components, Styles and Systems are the same surface with a scope switch, never four competing panels.</p></div>
           </div>
         </div>
 
@@ -555,11 +555,11 @@
                 </div>
                 <div class="dgrp-b">
                   <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-                    <div class="seg" id="lpScope">
+                    <div class="seg scopeseg" id="lpScope">
                       <button data-scope="Media">Media</button>
                       <button class="on" data-scope="Components">Comp</button>
                       <button data-scope="Styles">Styles</button>
-                      <button data-scope="Assets">Assets</button>
+                      <button data-scope="Systems">Systems</button>
                     </div>
                   </div>
                   <div class="libtools">
@@ -704,7 +704,7 @@
           <div class="lp-r"><code>group("Library").reveal()</code><span>What a rail tab does: restore the dock and scroll that group into view.</span></div>
           <div class="lp-r"><code>group("Layers").height = 240</code><span>What dragging a horizontal splitter does. Bounded by the group's min and max.</span></div>
           <div class="lp-r"><code>dock.width = 300</code><span>What dragging the vertical splitter does. Sizes persist for the session.</span></div>
-          <div class="lp-r"><code>library.scope = "media"</code><span>The Library scope switch: media, components, styles, assets.</span></div>
+          <div class="lp-r"><code>library.scope = "media"</code><span>The Library scope switch: media, components, styles, systems.</span></div>
         </div>
         <p class="lp-cap">A layout you can build by hand an <b data-target="agent">agent</b> can build for you, because it is the same set of
           calls. See the dock in the whole shell in <b class="backchip" data-target="app-shell">App shell</b>, or working in

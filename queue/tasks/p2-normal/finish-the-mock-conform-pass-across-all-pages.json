@@ -7,7 +7,7 @@
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:46.951Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T04:34:04.839Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: creation-vision > editor-surfaces (one-shell conformance). From study-tasks.json conform-pass (was in_progress when the mock loop went dormant) plus the residue of foundation-adjust. The July component rebuild (shared/components/) landed much of the shell; unknown how many of the 88 pages conform. First re-run the ux-audit clusters A-G scan (shared/ux-audit-agent.md, ux-audit-clusters.md) to find what remains, then conform in disjoint batches. Adjustment/filter layer as a first-class layer type in Layers panel + Inspector was never verified landed.",
@@ -33,6 +33,3935 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T03:17:56.049Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:17.421Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:25:23.032Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:25.808Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:25:31.507Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:34.105Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:25:39.723Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:42.432Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:25:48.048Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:50.694Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:25:56.419Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:25:59.022Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:04.708Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:07.339Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:13.010Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:15.578Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:21.150Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:23.745Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:29.460Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:32.149Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:37.740Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:40.351Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:45.978Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:48.587Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:26:54.332Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:26:57.100Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:02.775Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:05.346Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:10.958Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:13.584Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:19.265Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:21.918Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:27.521Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:30.256Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:35.845Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:38.423Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:44.025Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:46.643Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:27:52.225Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:27:54.803Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:00.352Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:03.041Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:08.721Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:11.324Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:16.907Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:19.594Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:25.205Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:27.869Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:33.503Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:36.102Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:41.795Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:44.484Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:50.094Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:28:53.060Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:28:58.753Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:01.294Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:06.999Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:09.667Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:15.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:18.078Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:23.687Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:26.905Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:32.561Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:35.202Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:40.753Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:43.500Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:49.093Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:29:51.724Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:29:57.289Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:00.069Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:05.782Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:08.354Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:13.967Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:16.610Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:22.185Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:24.951Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:30.563Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:33.443Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:39.047Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:41.659Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:47.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:50.343Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:30:56.057Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:30:58.660Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:04.273Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:06.854Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:12.484Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:15.132Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:21.051Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:23.670Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:29.293Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:31.880Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:37.531Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:40.120Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:45.824Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:48.325Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:31:54.021Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:31:56.728Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:02.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:05.636Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:11.194Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:13.901Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:19.483Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:22.183Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:27.813Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:30.752Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:36.522Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:39.099Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:44.814Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:47.518Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:32:53.107Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:32:56.758Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:02.417Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:05.124Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:10.698Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:13.292Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:18.916Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:21.791Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:27.393Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:30.348Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:36.015Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:38.597Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:44.314Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:47.014Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:33:53.008Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:33:55.615Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:01.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:04.164Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:09.932Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:12.586Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:18.211Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:20.819Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:26.498Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:29.194Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:34.889Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:38.072Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:43.677Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:46.484Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:34:52.102Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:34:55.009Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:00.574Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:03.297Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:08.990Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:11.617Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:17.279Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:19.976Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:25.566Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:28.361Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:33.980Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:36.628Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:42.276Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:44.893Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:50.573Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:35:53.245Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:35:58.838Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:01.392Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:06.983Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:09.642Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:15.356Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:17.937Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:23.635Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:26.344Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:31.941Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:34.642Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:40.447Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:43.218Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:48.834Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:51.369Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:36:56.949Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:36:59.552Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:05.223Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:08.206Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:13.825Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:16.353Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:22.017Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:24.681Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:30.273Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:32.982Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:38.813Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:41.719Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:47.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:50.321Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:37:56.012Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:37:58.652Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:04.620Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:07.313Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:13.013Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:15.617Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:21.243Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:23.822Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:29.398Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:34.353Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:40.020Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:43.058Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:48.755Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:38:51.672Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:38:57.344Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:00.030Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:05.838Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:08.521Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:14.107Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:16.788Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:22.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:25.017Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:30.639Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:33.651Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:39.276Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:41.955Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:47.525Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:50.082Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:39:55.662Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:39:58.298Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:03.917Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:06.624Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:12.312Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:14.951Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:20.598Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:23.313Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:28.879Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:31.621Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:37.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:39.926Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:45.588Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:48.259Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:40:53.893Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:40:56.498Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:02.084Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:04.760Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:10.340Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:13.284Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:18.908Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:21.425Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:27.025Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:29.792Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:35.574Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:38.476Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:44.172Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:46.821Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:41:52.771Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:41:55.871Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:01.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:04.439Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:10.538Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:13.309Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:18.944Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:22.198Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:27.941Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:30.882Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:36.468Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:39.300Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:44.988Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:48.418Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:42:54.219Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:42:57.611Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:03.309Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:06.129Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:11.930Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:14.939Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:20.626Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:23.663Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:29.729Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:32.437Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:38.139Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:40.797Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:46.385Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:49.319Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:43:54.933Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:43:57.578Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:03.234Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:06.128Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:11.684Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:14.395Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:20.019Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:22.731Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:28.359Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:31.077Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:36.815Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:39.498Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:45.111Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:47.916Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:44:53.514Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:44:56.164Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:01.811Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:04.585Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:10.210Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:12.824Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:18.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:21.311Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:26.981Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:29.680Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:35.260Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:37.913Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:43.457Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:46.065Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:51.674Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:45:54.321Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:45:59.968Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:02.596Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:08.160Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:11.064Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:16.671Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:19.541Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:25.129Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:28.483Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:34.142Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:37.277Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:42.878Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:45.613Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:51.156Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:46:54.025Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:46:59.675Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:02.638Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:08.272Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:11.378Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:16.946Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:19.572Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:25.274Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:28.094Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:33.775Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:36.427Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:42.061Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:44.664Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:50.262Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:47:53.023Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:47:58.660Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:01.314Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:06.953Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:09.763Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:15.455Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:18.065Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:23.757Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:26.552Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:32.129Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:34.760Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:40.444Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:43.043Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:48.735Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:51.547Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:48:57.140Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:48:59.840Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:05.530Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:08.295Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:13.855Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:16.441Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:22.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:24.828Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:30.418Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:33.316Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:38.922Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:41.819Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:47.375Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:49.942Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:49:55.566Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:49:58.348Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:04.010Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:06.698Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:12.289Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:15.007Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:20.680Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:23.315Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:28.891Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:31.472Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:37.073Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:39.746Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:45.373Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:48.009Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:50:53.673Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:50:56.465Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:02.072Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:04.787Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:10.457Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:15.221Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:20.786Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:23.651Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:29.303Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:31.787Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:37.504Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:40.193Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:45.767Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:48.352Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:51:53.990Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:51:56.689Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:02.372Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:05.047Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:10.637Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:13.588Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:19.227Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:21.872Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:27.578Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:30.200Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:35.846Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:38.676Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:44.265Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:46.839Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:52:52.398Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:52:55.267Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:00.915Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:03.545Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:09.148Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:11.813Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:17.419Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:20.544Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:26.146Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:28.937Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:34.551Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:37.141Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:42.845Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:45.476Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:51.061Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:53:53.785Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:53:59.365Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:02.294Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:07.903Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:10.608Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:16.312Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:18.986Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:24.566Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:27.634Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:33.426Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:36.326Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:41.931Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:44.584Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:50.330Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:54:53.003Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:54:58.724Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:01.595Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:07.165Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:09.919Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:15.616Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:18.304Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:24.017Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:26.818Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:32.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:35.054Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:40.710Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:43.829Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:49.504Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:55:52.218Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:55:57.916Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:00.606Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:06.168Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:09.004Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:14.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:17.221Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:22.895Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:25.799Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:31.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:34.160Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:39.798Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:42.802Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:48.394Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:51.010Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:56:56.599Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:56:59.198Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:04.784Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:07.694Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:13.303Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:15.863Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:21.400Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:24.230Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:29.876Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:32.882Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:38.580Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:41.190Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:46.874Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:49.492Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:57:55.164Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:57:57.846Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:03.428Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:06.071Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:11.671Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:14.291Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:19.912Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:22.751Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:28.349Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:31.016Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:36.633Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:39.547Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:45.141Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:47.952Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:58:53.639Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:58:56.199Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:01.933Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:04.625Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:10.331Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:12.990Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:18.628Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:21.288Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:26.918Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:29.589Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:35.318Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:37.942Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:43.624Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:46.255Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T03:59:51.910Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T03:59:54.520Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:00.303Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:03.078Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:08.805Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:11.810Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:17.357Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:20.104Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:25.697Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:28.406Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:34.095Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:36.773Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:42.350Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:45.006Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:50.678Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:00:53.662Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:00:59.492Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:02.499Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:08.198Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:10.744Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:16.367Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:18.965Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:24.863Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:27.540Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:33.176Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:35.799Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:41.434Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:44.107Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:50.071Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:01:52.688Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:01:58.365Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:01.181Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:06.718Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:09.575Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:15.269Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:17.825Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:23.467Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:26.029Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:31.623Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:34.619Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:40.235Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:42.998Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:48.619Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:51.253Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:02:56.952Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:02:59.753Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:05.446Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:08.105Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:13.703Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:16.483Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:22.073Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:24.713Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:30.332Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:32.957Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:38.582Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:41.198Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:46.792Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:49.447Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:03:55.103Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:03:57.886Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:03.503Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:06.171Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:11.767Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:14.394Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:20.098Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:22.805Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:28.495Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:31.302Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:36.880Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:39.530Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:45.141Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:47.937Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:04:53.584Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:04:56.271Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:01.973Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:04.787Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:10.584Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:13.492Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:19.083Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:21.608Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:27.458Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:30.220Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:35.878Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:38.667Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:44.373Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:47.043Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:05:52.764Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:05:55.372Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:00.967Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:03.730Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:09.459Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:12.245Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:17.818Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:20.503Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:26.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:28.831Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:34.430Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:37.064Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:42.750Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:45.349Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:51.039Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:06:53.591Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:06:59.190Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:02.036Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:07.733Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:10.390Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:16.047Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:18.999Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:24.626Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:27.283Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:32.843Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:35.463Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:41.117Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:43.801Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:49.400Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:07:52.002Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:07:57.809Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:00.357Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:06.006Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:08.804Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:14.493Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:17.148Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:22.796Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:25.481Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:31.082Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:33.882Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:39.794Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:42.456Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:48.082Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:51.093Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:08:56.647Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:08:59.303Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:04.984Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:07.600Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:13.181Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:15.673Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:21.317Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:23.953Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:29.561Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:32.447Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:38.061Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:40.719Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:46.350Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:48.951Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:09:54.545Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:09:57.175Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:02.843Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:05.456Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:11.138Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:13.932Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:19.531Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:22.624Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:28.181Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:30.740Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:36.537Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:39.336Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:44.928Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:47.569Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:10:53.226Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:10:56.260Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:01.923Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:05.198Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:10.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:13.495Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:19.239Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:21.834Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:27.439Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:30.098Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:35.714Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:38.458Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:44.118Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:46.761Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:11:52.395Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:11:54.953Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:00.603Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:03.294Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:09.007Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:11.657Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:17.256Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:20.309Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:25.884Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:28.786Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:34.384Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:37.054Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:42.696Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:45.311Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:50.904Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:12:54.146Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:12:59.743Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:02.291Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:07.988Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:10.644Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:16.222Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:18.927Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:24.593Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:27.253Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:32.809Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:35.827Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:41.514Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:44.472Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:50.072Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:13:52.747Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:13:58.369Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:00.984Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:06.639Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:09.157Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:14.768Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:17.276Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:22.847Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:25.415Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:31.035Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:33.777Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:39.386Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:42.089Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:47.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:50.217Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:14:55.796Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:14:58.522Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:04.097Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:07.211Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:12.826Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:15.471Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:21.215Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:23.861Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:29.440Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:32.245Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:37.906Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:40.525Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:46.197Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:48.849Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:15:54.482Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:15:57.044Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:02.658Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:05.685Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:11.232Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:13.881Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:19.475Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:22.076Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:27.654Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:30.582Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:36.262Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:39.149Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:44.776Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:47.540Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:16:53.166Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:16:55.863Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:01.573Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:04.452Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:10.071Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:12.649Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:18.254Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:20.889Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:26.654Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:29.565Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:35.253Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:38.342Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:43.913Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:46.502Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:17:52.119Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:17:57.031Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:02.677Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:05.450Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:11.013Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:13.603Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:19.192Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:21.793Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:27.397Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:30.056Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:35.679Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:38.482Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:44.089Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:46.747Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:18:52.363Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:18:55.014Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:00.668Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:03.242Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:08.794Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:11.508Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:17.149Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:19.829Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:25.597Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:28.487Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:34.062Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:36.661Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:42.336Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:45.042Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:50.616Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:19:53.935Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:19:59.646Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:02.247Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:07.939Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:10.639Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:16.252Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:18.874Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:24.526Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:27.219Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:33.033Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:36.205Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:41.809Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:44.538Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:50.134Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:20:53.085Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:20:58.669Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:01.280Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:06.936Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:09.630Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:15.218Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:17.824Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:23.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:26.101Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:31.817Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:34.513Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:41.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:43.915Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:50.655Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:21:53.489Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:21:59.564Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:02.169Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:07.815Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:10.508Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:16.076Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:18.958Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:24.664Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:27.438Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:33.004Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:35.852Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:41.402Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:44.118Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:49.735Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:22:52.356Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:22:57.920Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:00.476Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:06.119Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:08.682Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:14.262Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:17.019Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:22.716Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:25.326Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:30.899Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:33.517Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:39.407Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:42.085Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:47.657Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:50.255Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:23:55.820Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:23:58.446Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:04.086Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:06.904Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:12.555Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:15.114Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:20.707Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:23.986Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:29.786Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:32.452Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:38.015Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:40.672Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:46.374Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:49.176Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:24:54.872Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:24:57.508Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:03.137Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:05.853Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:11.466Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:14.473Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:20.170Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:23.487Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:29.183Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:31.777Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:37.555Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:40.384Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:45.992Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:48.681Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:25:54.265Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:25:56.855Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:02.453Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:05.116Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:10.863Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:13.529Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:19.150Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:21.744Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:27.443Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:30.256Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:35.831Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:38.412Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:44.037Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:46.791Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:26:52.428Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:26:55.127Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:00.726Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:03.242Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:09.207Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:11.764Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:17.415Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:20.232Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:25.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:28.445Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:34.116Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:36.772Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:42.392Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:47.486Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:27:53.043Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:27:55.827Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:01.455Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:04.573Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:10.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:13.033Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:18.662Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:21.249Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:26.884Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:29.512Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:35.245Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:37.932Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:43.490Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:46.550Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:28:52.094Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:28:54.734Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:00.397Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:02.986Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:08.521Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:11.153Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:16.820Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:20.251Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:25.889Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:28.505Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:34.112Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:36.736Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:42.406Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:45.168Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:50.822Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:29:53.342Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:29:59.005Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:01.561Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:07.159Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:09.771Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:15.344Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:18.296Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:23.999Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:26.801Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:32.799Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:35.376Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:41.095Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:43.860Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:49.497Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:30:52.092Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:30:57.670Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:00.281Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:05.983Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:08.950Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:14.585Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:17.266Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:23.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:29.774Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:35.455Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:38.163Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:43.718Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:46.244Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:31:51.859Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:31:54.483Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:00.149Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:02.955Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:08.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:11.999Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:17.660Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:20.636Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:26.269Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:28.890Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:34.554Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:37.138Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:42.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:45.835Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:51.607Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:32:54.406Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:32:59.995Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:03.192Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:09.066Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:11.966Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:17.763Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:20.954Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:26.684Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:29.692Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:35.483Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:38.802Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:44.505Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:47.684Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:33:53.480Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:33:56.296Z",
+      "note": "runner exited without finalizing; reset to pending"
+    },
+    {
+      "t": "2026-08-23T04:34:01.903Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T04:34:04.839Z",
+      "note": "runner exited without finalizing; reset to pending"
     }
-  ]
+  ],
+  "started": "2026-08-23T04:34:01.903Z"
 }

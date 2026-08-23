@@ -227,8 +227,8 @@
           <div class="sheet-h">
             <span class="ttl"><i class="ic sm ic-library"></i> Library</span>
             <span class="sp"></span>
-            <div class="seg" data-radio="button">
-              <button>Media</button><button class="on">Components</button><button>Styles</button><button>Assets</button>
+            <div class="seg scopeseg" data-radio="button">
+              <button>Media</button><button class="on">Components</button><button>Styles</button><button>Systems</button>
             </div>
             <span class="sp"></span>
             <button class="btn ghost sm"><i class="ic ic-import"></i> Import</button>
@@ -332,11 +332,11 @@
           </div>
           <div class="dgrp-b">
             <div style="padding:var(--gap-sm) var(--pad-sm) 0">
-              <div class="seg" id="scopeSeg">
+              <div class="seg scopeseg" id="scopeSeg">
                 <button data-scope="media">Media</button>
                 <button class="on" data-scope="components">Comp</button>
                 <button data-scope="styles">Styles</button>
-                <button data-scope="assets">Assets</button>
+                <button data-scope="systems">Systems</button>
               </div>
             </div>
             <div class="libtools">
@@ -785,10 +785,10 @@
     clearProps();
   });
 
-  // Library scope switch (Media · Components · Styles · Assets)
+  // Library scope switch (Media · Components · Styles · Systems)
   var seg = byId('scopeSeg');
   var scopeCnt = byId('scopeCnt');
-  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', assets: 'Assets' };
+  var NAMES = { media: 'Media', components: 'Components', styles: 'Styles', systems: 'Systems' };
   if (seg) {
     var sbtns = [].slice.call(seg.querySelectorAll('button'));
     sbtns.forEach(function (b) {
