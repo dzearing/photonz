@@ -125,6 +125,10 @@
      a glyph or a two-character chip and the title takes the rest. Editing
      controls live in the detail dialog, not in the row. */
   #dashboard .db-tt{--tt-cols:20px 40px 28px minmax(0,1fr) 66px}
+  /* how many rows the current filter is showing, next to the card's title */
+  #dashboard .db-count{flex:none;min-width:20px;text-align:center;font-size:9.5px;font-weight:700;
+    font-variant-numeric:tabular-nums;color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:999px;padding:1px 6px;line-height:1.5}
   #dashboard .db-ttbar{display:flex;align-items:center;gap:var(--gap-sm)}
   #dashboard .db-ttbar .input.search{width:220px}
   #dashboard .db-tthead,#dashboard .db-ttrow{display:grid;grid-template-columns:var(--tt-cols);gap:var(--gap-sm);align-items:center;min-width:0}
@@ -622,7 +626,7 @@
     h += '</div></div></div>';
 
     h += '<div class="db-card db-tt" style="margin-top:var(--gap)">';
-    h += '<div class="db-card-h"><i class="ic ic-list"></i><h3>All tasks</h3><span class="spacer" style="flex:1"></span>';
+    h += '<div class="db-card-h"><i class="ic ic-list"></i><h3>All tasks</h3><span class="db-count" id="db-tt-count">' + taskRowsData().length + '</span><span class="spacer" style="flex:1"></span>';
     h += '<div class="db-ttbar">';
     h += '<div class="seg sm">' + [['open', 'Open'], ['done', 'Finished'], ['all', 'All']].map(function (f) {
       return '<button data-tfilter="' + f[0] + '" class="' + (tFilter === f[0] ? 'on' : '') + '">' + f[1] + '</button>';
@@ -784,6 +788,9 @@
   function refreshRows() {
     var el = document.getElementById('db-tt-body');
     if (el) el.innerHTML = rows();
+    // the chip counts what is on screen, so it tracks the search box too
+    var n = document.getElementById('db-tt-count');
+    if (n) n.textContent = taskRowsData().length;
   }
 
   // ---- data ----
