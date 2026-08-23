@@ -129,6 +129,31 @@ repeated links, and `<i class="ic ic-external linkext"></i>` inside a link that
 leaves the surface. Never restyle links per page and never let default blue
 or visited purple appear.
 
+## Overlays and list motion (never hand-choreographed)
+
+Two shared components implement UX-PATTERNS **D11**; a page writes markup and
+calls them, never its own timings.
+
+- **Dialogs and overlays** (`dialog.css` + `dialog.js`). Author a
+  `.dlg-scrim` wrapping a `.dlg`, then open it with `data-dialog-open="#id"` or
+  `PZ.dialog.open(el)`. You get the standard entrance (scrim fades dur-2 while
+  the surface rises and scales dur-3/decelerate), the quicker plainer exit, and
+  **soft dismiss on all three gestures**: Escape (topmost only), a click on the
+  scrim itself, and any `[data-dialog-close]` control. Focus moves in on open
+  and returns to the opener on close. A closing dialog is still in the DOM, so
+  code that re-renders its container must wait for the `close(el, done)`
+  callback. Never write your own overlay open/close.
+- **Lists that change** (`listfx.js`). Wrap the mutation:
+  `PZ.listfx(container, function () { container.innerHTML = rows(); })`, give
+  each row a stable `data-key`, and put `data-lfx` on the container. You get the
+  three-phase sequence (exits fade in place, then survivors travel, then
+  arrivals rise, staggered), interruption that retargets from live geometry
+  instead of jumping, and suspension while a row is focused or held. Never
+  animate list rows per page.
+
+Both collapse to instant under `prefers-reduced-motion`, with an identical end
+state.
+
 ## Color / type tokens (never hardcode raw hex for chrome)
 
 `--ink --dim --faint` (text) · `--panel --panel-2 --chrome` (surfaces) ·

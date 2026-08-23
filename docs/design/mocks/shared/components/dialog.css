@@ -93,3 +93,38 @@
   .dlg-scrim,.dlg.sheet,.dlg.alert{transition:none}
   .dlg.alert{transform:none}
 }
+
+/* ============================================================
+   THE STANDARD ENTER / EXIT (UX-PATTERNS D11)
+   ============================================================
+   `.dlg.sheet` and `.dlg.alert` already had their own entrances. A PLAIN
+   `.dlg` had none, so anything that was not a sheet or an alert appeared
+   instantly — which is what "the dialog just pops" looked like. One
+   choreography now covers every overlay: the scrim fades on dur-2/standard
+   while the surface rises and scales on dur-3/decelerate, so the surface
+   lands after the backdrop has begun to darken. Leaving is quicker and
+   plainer than arriving: both halves run dur-2/standard, and the surface
+   sinks slightly instead of rising.
+
+   `dialog.js` drives the classes; a page writes markup and nothing else. */
+.dlg-scrim{transition:opacity var(--dur-2) var(--ease-standard)}
+
+/* the default surface motion, which .sheet and .alert override with their own */
+.dlg:not(.sheet):not(.alert){
+  transform:translateY(6px) scale(.97);opacity:0;
+  transition:transform var(--dur-3) var(--ease-decel), opacity var(--dur-3) var(--ease-decel);
+}
+.dlg-scrim.on .dlg:not(.sheet):not(.alert){transform:none;opacity:1}
+
+/* exit: the scrim is already fading via .on; the surface sinks rather than rises,
+   and every surface shortens to dur-2/standard so leaving never feels sluggish */
+.dlg-scrim.closing .dlg{
+  transition:transform var(--dur-2) var(--ease-standard), opacity var(--dur-2) var(--ease-standard);
+}
+.dlg-scrim.closing .dlg:not(.sheet):not(.alert){transform:translateY(4px) scale(.985);opacity:0}
+.dlg-scrim.closing .dlg.alert{transform:scale(.97);opacity:0}
+.dlg-scrim.closing .dlg.sheet{transform:translateY(-101%);opacity:0}
+
+@media (prefers-reduced-motion:reduce){
+  .dlg-scrim,.dlg,.dlg-scrim.closing .dlg{transition:none}
+}

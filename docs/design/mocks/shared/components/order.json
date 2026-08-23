@@ -60,6 +60,8 @@
     "redline",
     "toast",
     "colorpicker",
-    "tooltip"
+    "tooltip",
+    "dialog",
+    "listfx"
   ]
 }

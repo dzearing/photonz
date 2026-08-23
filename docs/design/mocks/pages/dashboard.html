@@ -322,7 +322,13 @@
       var briefOpen = !!document.querySelector('.db-brief.on');
       // a re-render would rebuild the open dialog under the pointer and reset
       // its scroll, so live updates wait until it closes
-      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen && !detailId) { lastJSON = j; render(); }
+      if (j !== lastJSON && !typing && !editingObjectives && !decAnim && !briefOpen && !detailId) {
+        lastJSON = j;
+        // on the tasks tab the page is already right; only the rows changed, so
+        // update them in place and let the choreography show what moved
+        if (tab === 'tasks' && document.getElementById('db-tt-body')) refreshTasksTable();
+        else render();
+      }
       var r = document.getElementById('db-refresh');
       if (r) r.textContent = 'live · updated ' + rel(data.generated);
     }).catch(function () {
@@ -352,6 +358,19 @@
       if (renderKeys && !renderKeys[el.dataset.key]) el.classList.add('db-enter');
     });
     renderKeys = seen;
+    // the detail overlay is rendered closed; hand it to the DS component, which
+    // animates it in and calls back when any of the dismiss gestures closes it
+    var scrim = document.getElementById('db-detail-dlg');
+    if (scrim && detailId && !scrim.classList.contains('on')) {
+      PZ.dialog.open(scrim, { onClose: function () { detailId = null; render(); } });
+    }
+  }
+  // close through the component so the exit animation runs, THEN do the work
+  function closeDetail(after) {
+    var scrim = document.getElementById('db-detail-dlg');
+    if (!scrim || !detailId) { if (after) after(); return; }
+    detailId = null;                       // stop the poll guard blocking updates
+    PZ.dialog.close(scrim, function () { if (after) after(); else render(); });
   }
 
   // ---- objectives: the commanding hub. An ordered epic tree; order is
@@ -633,26 +652,34 @@
     }).join('') + '</div>';
     h += '<label class="input sm search"><i class="ic ic-search"></i><input id="db-tquery" placeholder="Filter tasks" value="' + esc(tQuery) + '"></label>';
     h += '</div></div>';
-    h += header();
-    h += '<div id="db-tt-body">' + rows() + '</div>';
+    h += taskHeader();
+    h += '<div id="db-tt-body" data-lfx>' + rows() + '</div>';
     h += '</div>';
     h += renderDetail();
     return h;
-
-    function header() {
-      var cols = [['status', '', 'Sort by status'], ['seq', 'Seq', 'Sort by sequence'],
-        ['priority', 'Pri', 'Sort by priority'], ['title', 'Task', 'Sort by title'], ['updated', 'Updated', 'Sort by last update']];
-      var s = '<div class="db-tthead">';
-      cols.forEach(function (c) {
-        var on = tSort.key === c[0];
-        // the status column is one glyph wide, so its header is the same glyph
-        var label = c[0] === 'status' ? '<i class="ic xs ic-circle"></i>' : c[1];
-        s += '<button data-tsort="' + c[0] + '" class="' + (on ? 'on' : '') + '" title="' + c[2] + '">' + label +
-          (on && c[0] !== 'status' ? '<i class="ic xs ' + (tSort.dir === 1 ? 'ic-chevron-up' : 'ic-chevron-down') + '"></i>' : '') + '</button>';
-      });
-      s += '</div>';
-      return s;
-    }
+  }
+  function taskHeader() {
+    var cols = [['status', '', 'Sort by status'], ['seq', 'Seq', 'Sort by sequence'],
+      ['priority', 'Pri', 'Sort by priority'], ['title', 'Task', 'Sort by title'], ['updated', 'Updated', 'Sort by last update']];
+    var s = '<div class="db-tthead">';
+    cols.forEach(function (c) {
+      var on = tSort.key === c[0];
+      // the status column is one glyph wide, so its header is the same glyph
+      var label = c[0] === 'status' ? '<i class="ic xs ic-circle"></i>' : c[1];
+      s += '<button data-tsort="' + c[0] + '" class="' + (on ? 'on' : '') + '" title="' + c[2] + '">' + label +
+        (on && c[0] !== 'status' ? '<i class="ic xs ' + (tSort.dir === 1 ? 'ic-chevron-up' : 'ic-chevron-down') + '"></i>' : '') + '</button>';
+    });
+    s += '</div>';
+    return s;
+  }
+  // Sort, filter, search, and polled data all change ROWS, not the page. Doing
+  // that in place is what gives the choreography something to animate: a full
+  // re-render would replace the rows wholesale and there would be no before.
+  function refreshTasksTable() {
+    var head = document.querySelector('#dashboard .db-tthead');
+    if (!head) { render(); return; }
+    head.outerHTML = taskHeader();
+    refreshRows();
   }
   function taskRowsData() {
     var list = S.tasks.filter(function (t) {
@@ -710,7 +737,9 @@
     var t = (S.tasks || []).find(function (x) { return x.id === detailId; });
     if (!t) return '';
     var st = t.parked ? 'parked' : t.status;
-    var h = '<div class="dlg-scrim center on" data-act="detail-scrim"><div class="dlg db-detail" role="dialog" aria-modal="true" aria-label="Task detail">';
+    // rendered CLOSED; dialog.js animates it open and owns all three dismiss
+    // gestures (Escape, scrim click, close control)
+    var h = '<div class="dlg-scrim center" id="db-detail-dlg"><div class="dlg db-detail" role="dialog" aria-modal="true" aria-label="Task detail">';
 
     h += '<div class="dlg-h"><span class="db-sicon s-' + esc(st) + '"><i class="ic ' + STATUS_ICON[st] + '"></i></span><div style="min-width:0">';
     h += '<b>' + esc(t.title) + '</b>';
@@ -718,7 +747,7 @@
       '<span class="db-meta">' + esc(statusWord(t)) + '</span>' +
       '<span class="db-meta">seq ' + (t.seq != null ? t.seq : 'none') + '</span>' +
       '<span class="db-meta">' + esc(t.release || 'next') + ' release</span></div>';
-    h += '</div><button class="btn icon sm ghost db-x" data-act="detail-close" title="Close"><i class="ic ic-close"></i></button></div>';
+    h += '</div><button class="btn icon sm ghost db-x" data-dialog-close title="Close"><i class="ic ic-close"></i></button></div>';
 
     h += '<div class="dlg-b">';
 
@@ -779,15 +808,18 @@
       '<input name="dseq-' + esc(t.id) + '" data-act="seq" data-id="' + esc(t.id) + '" value="' + (t.seq != null ? t.seq : '') + '"></label>';
     h += '<select class="select sm" name="dprio-' + esc(t.id) + '" data-act="prio" data-id="' + esc(t.id) + '" title="Priority">' +
       PRIOS.map(function (pp) { return '<option value="' + pp + '"' + (pp === t.priority ? ' selected' : '') + '>' + PRIO_LABEL[pp] + '</option>'; }).join('') + '</select>';
-    h += '<button class="btn sm primary" data-act="detail-close">Done</button>';
+    h += '<button class="btn sm primary" data-dialog-close>Done</button>';
     h += '</div>';
 
     h += '</div></div>';
     return h;
   }
+  // every row change goes through the shared choreography (D11): exits fade,
+  // then survivors travel, then arrivals rise, and a change landing mid-flight
+  // retargets from where rows currently are instead of restarting
   function refreshRows() {
     var el = document.getElementById('db-tt-body');
-    if (el) el.innerHTML = rows();
+    if (el) PZ.listfx(el, function () { el.innerHTML = rows(); });
     // the chip counts what is on screen, so it tracks the search box too
     var n = document.getElementById('db-tt-count');
     if (n) n.textContent = taskRowsData().length;
@@ -1035,10 +1067,15 @@
     if (b.dataset.tsort) {
       if (tSort.key === b.dataset.tsort) tSort.dir = -tSort.dir;
       else tSort = { key: b.dataset.tsort, dir: 1 };
-      render();
+      refreshTasksTable();
       return;
     }
-    if (b.dataset.tfilter) { tFilter = b.dataset.tfilter; render(); return; }
+    if (b.dataset.tfilter) {
+      tFilter = b.dataset.tfilter;
+      document.querySelectorAll('[data-tfilter]').forEach(function (x) { x.classList.toggle('on', x.dataset.tfilter === tFilter); });
+      refreshRows();
+      return;
+    }
     if (b.dataset.act === 'ob-add-root' || b.dataset.act === 'ob-add-child') {
       var epic = { id: 'epic-' + Math.random().toString(36).slice(2, 8), title: 'New epic', note: '', children: [] };
       if (b.dataset.act === 'ob-add-root') obTree.push(epic);
@@ -1090,17 +1127,19 @@
       post('/api/task', { title: t.value.trim(), priority: p.value, notes: n.value.trim() });
       t.value = ''; n.value = '';
     }
+    // an action taken inside the dialog closes it first, so the overlay plays
+    // its exit instead of vanishing when the list re-renders underneath it
     if (b.dataset.act === 'drop') {
-      detailId = null;
-      post('/api/task/update', { id: b.dataset.id, status: 'dropped', note: 'dropped from the dashboard' });
+      var id = b.dataset.id;
+      closeDetail(function () { post('/api/task/update', { id: id, status: 'dropped', note: 'dropped from the dashboard' }); });
+      return;
     }
     if (b.dataset.act === 'unpark') {
-      post('/api/task/update', { id: b.dataset.id, status: 'pending', note: 'put back in the queue from the dashboard' });
+      var uid = b.dataset.id;
+      closeDetail(function () { post('/api/task/update', { id: uid, status: 'pending', note: 'put back in the queue from the dashboard' }); });
+      return;
     }
-    // a row opens its detail; the scrim closes it, the dialog itself does not
     if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
-    if (b.dataset.act === 'detail-close') { detailId = null; render(); return; }
-    if (b.dataset.act === 'detail-scrim' && e.target === b) { detailId = null; render(); return; }
     // real anchor: let modified clicks (new tab, download) do their normal
     // thing, and handle a plain click in place so the iframe does not reload.
     if (b.dataset.act === 'digest') {
@@ -1147,9 +1186,6 @@
   if (q && ['summary', 'objectives', 'tasks', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
   load();
   setInterval(function () { if (!document.hidden) load(); }, 4000);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && detailId) { detailId = null; render(); }
-  });
 })();
 </script>
 </body>

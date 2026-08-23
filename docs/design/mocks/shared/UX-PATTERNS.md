@@ -688,3 +688,91 @@ undo the thing that created it is a trapdoor.
 
 The catalogue is per kind: a visual clip offers Opacity/Position/Scale/Rotation/
 Blur, an audio clip offers Volume/Pan. Canonical page: `pages/video.html`.
+
+---
+
+### D11 — Overlays and lists have ONE choreography, and it is interruptible
+
+Motion had tokens (`lang-motion`: three durations, three easings, enter/exit/move)
+but no **choreography**: nothing said what happens when two things must move at
+once, or in what order. So every surface improvised, and improvised motion is
+exactly what reads as unpolished — things pop, jump, or animate on top of each
+other. The rules below are the missing half, and they are implemented once, in
+`dialog.js` and `listfx.js`, so no page choreographs anything by hand.
+
+#### Overlays: the scrim and the surface are one gesture, and dismissal is soft
+
+Every overlay (dialog, sheet, popover, the decision carousel's cards) enters and
+leaves the same way:
+
+| | scrim | surface | why |
+| --- | --- | --- | --- |
+| **enter** | fade in, `dur-2`, standard | fade + rise 6px + scale from .97, `dur-3`, **decelerate** | the surface lands softly, arriving after the scrim has begun to darken so it never appears against a bright backdrop |
+| **exit** | fade out, `dur-2`, standard | fade + sink 4px + scale to .985, `dur-2`, **standard** | leaving is quicker and plainer than arriving (lang-motion §03); a slow exit reads as the app hesitating |
+
+The surface's transition is longer than the scrim's on the way in and **the same
+length** on the way out, so the two never separate visibly.
+
+**Soft dismiss is mandatory, and it is three gestures, not one.** Every overlay
+closes on **Escape**, on a **click on the scrim itself** (not on a child, which
+is a click that merely bubbled), and via its own **close control**. An overlay
+you can only leave through one specific button is a trap; the only exceptions are
+destructive confirmations, which state their choices explicitly. Escape closes
+the **topmost** overlay only, so a popover inside a dialog does not take the
+dialog with it.
+
+**Focus is part of the animation.** On open, focus moves into the surface (its
+first control, or the surface itself); on close, focus returns to whatever opened
+it. Focus never sits on an element that is fading away.
+
+#### Lists: exits, then moves, then enters — three phases, never simultaneous
+
+When a list changes, the change is almost never one thing: an item leaves, the
+rest close the gap, and something new arrives. Doing those at once produces the
+"everything slid at once and I could not tell what happened" effect. So a list
+change is **sequenced**, and each phase has one job:
+
+1. **Exit** (`dur-2`, standard) — departing rows fade out **in place** and
+   collapse their height. Nothing else moves yet, so the eye sees *what left*.
+2. **Move** (`dur-3`, standard) — surviving rows travel from their old positions
+   to their new ones (FLIP: measure, invert, play). Nothing is fading now, so
+   the eye sees *where things went*.
+3. **Enter** (`dur-3`, decelerate, **staggered 24ms per row, capped at 6 rows**)
+   — arriving rows fade + rise into their final positions, last. The stagger is
+   what makes a batch read as "these arrived" rather than one block appearing.
+
+Phases overlap by a hair (each starts 20ms before its predecessor ends) so the
+sequence reads as one motion instead of three, and the whole thing is capped at
+roughly 600ms: past that a list feels slow rather than smooth.
+
+**A list that only moves skips phase 1 and 3.** Reordering (a sort, a
+resequence) is phase 2 alone, and it must be a real move: rows travel, they do
+not cross-fade in place.
+
+#### Interruption: retarget from where things ARE, never queue and never jump
+
+Data arrives on its own schedule (the dashboard polls every 4s), so a second
+change will land mid-sequence. Three rules, in priority order:
+
+1. **Never queue.** The new state is the truth; finishing an animation toward a
+   state that is already stale wastes the user's attention.
+2. **Measure live, not logical.** The "before" positions for the new sequence are
+   the rows' **current on-screen rectangles, mid-flight** (`getBoundingClientRect`
+   reports the transformed position). Retargeting from live geometry is the whole
+   trick: rows curve toward their new destination instead of snapping back to
+   where they logically were and starting over.
+3. **In-flight exits finish, they do not resurrect.** A row already fading out
+   keeps fading (it is nearly gone; reversing it is more confusing than letting
+   it go), and if the same key returns it enters as a new row.
+
+**Never animate what the user is touching.** A list must not re-choreograph while
+a row's own control has focus, or while a pointer is held down inside it. The
+dashboard already suspends its poll-driven re-render for open dialogs and focused
+fields for the same reason.
+
+#### Reduced motion collapses the sequence, never the outcome
+
+Under `prefers-reduced-motion: reduce`, all three phases become instant and the
+final state is identical. This is not a lesser experience with things missing; it
+is the same result without the travel. Every component here checks it once and
+takes the instant path.
