@@ -143,6 +143,21 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `.efx` effect rows, `.gramp`/`.gstop` gradient, `.dial`.
 - **Canvas content:** `.hero-card` (designed sample), `.uibtn`/`.uibtn.grad`,
   selection: `.sel-ring`+`.handle`, `.mtag`; component: `.cinst`/`.cring`+`.cbadge`.
+- **Specimen card:** `.spec` › `.spec-h` (uppercase SPECIMEN label, optional
+  `.sub` subtitle and trailing `.tag`/`.tag.acc`) + `.spec-b`, laid out in a
+  `.specs` grid (`.spec.wide` spans it). This is how §4c Kind-2 is enforced BY
+  CLASS: anything in a `.spec` wears no window chrome. `.spec.tile` is the
+  padded flex tile variant for runs of small demos (not `.spec.stage`:
+  `.stage` is the page-level walkthrough stage). Never hand-roll either.
+- **Preset picker:** `.bpick` (radiogroup grid) › `.bchip` (thumbnail chip with
+  a live `<canvas>` preview inside, `.on` marks the active one). For brushes,
+  paints, styles, transitions — any choice that IS a picture.
+- **Artstack:** `.artstack` stacks `<canvas>` + `<svg>` at `inset:0` inside one
+  positioned box so vector geometry and raster pixels land on the SAME pixels.
+  Give it a height or set `--ar` (aspect-ratio). Optional `.plabel` corner tag.
+  The background is artwork and stays page-authored.
+- **Effect row readout:** the mono value at the right of an `.efx` row is
+  `.emeta` (renamed from `.meta`, which page-local rules kept colliding with).
 - **Bounds rings are one family, all in `selection.css`:** `.sel-ring` (selected),
   `.cinst`/`.cring` (component instance), `.marq` (marquee), `.hover-ring`,
   `.lock-ring`. Every one of them hugs the bounds with a **2px** radius and never
@@ -171,7 +186,10 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   five insets. The frame is constant; the HANDLES adapt, stamped by
   `selection.js` from the measured box (`md` ≥44px · `sm` shrinks and steps
   outside · `xs` <16px drops them, since a 7px handle on a 6px object is not
-  grabbable). Lives in `shared/components/selection.{css,js}`.
+  grabbable). A full transform frame is EIGHT points: add `.handle.tc/.bc/.ml/.mr`
+  edge handles where a single-axis resize is meaningful (they drop at `sm`), and
+  `.rotstem`+`.rot` for the rotate knob above the frame (drops at `xs`).
+  Lives in `shared/components/selection.{css,js}`.
 - **Both docks collapse, and `dock.js` injects the controls** — you do not author
   them. Any `.timeline` with a `.tlbar` gets a `.tl-close` (×) at the end of the
   bar and a one-row `.tlrail` to bring it back, mirroring the panel dock's
@@ -851,7 +869,9 @@ These came from reviewing real screenshots. Each one is a rule, not a preference
    A page may retune exactly three knobs and NOTHING else:
    `--artboard-glow` (glow size), `--artboard-ink` / `--artboard-bg` (its two
    colours; set them equal for a flat artboard). Re-declaring `background` on
-   a canvas is a bug — four pages did it and each had drifted.
+   a canvas is a bug — four pages did it and each had drifted. If the retuned
+   artboard is LIGHT, add `.canvas.on-light` so the grid flips dark instead of
+   vanishing.
 
 6. **No segmented controls in narrow panels.** `.seg` does not resize down; in a
    ~268px dock it wraps to two rows and looks broken. Use a `.select`/menu, or a

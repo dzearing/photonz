@@ -107,8 +107,7 @@
   .baftr{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm)}
   .baf{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);box-shadow:inset 0 1px 0 var(--edge-hi)}
   .baf .bh{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:660;color:var(--faint);padding:var(--gap-sm) var(--pad-sm) 0}
-  .baf .bstage{display:grid;place-items:center;padding:var(--pad);min-height:104px;
-    background:radial-gradient(200px 120px at 50% 30%,#171a26,var(--artboard))}
+  .baf .bstage{--artboard-glow:200px 120px;--artboard-ink:#171a26;padding:var(--pad);min-height:104px}
   .cbtn{border:0;cursor:default}
   .cbtn.b2{font-family:var(--serif);background:#7C4DFF;color:#fff;font-size:12.5px;font-weight:640;padding:9px 16px;border-radius:14px;box-shadow:0 8px 20px -8px rgba(124,77,255,.6)}
   .cbtn.ac{font-family:var(--sans);background:#E8552D;color:#fff;font-size:12.5px;font-weight:640;padding:9px 16px;border-radius:8px;box-shadow:0 8px 20px -8px rgba(232,85,45,.6)}
@@ -394,11 +393,11 @@
           <div class="baftr">
             <div class="baf">
               <div class="bh">Brand v2.3</div>
-              <div class="bstage"><button class="cbtn b2">Get started</button></div>
+              <div class="bstage canvas mini"><button class="cbtn b2">Get started</button></div>
             </div>
             <div class="baf">
               <div class="bh">Acme Team</div>
-              <div class="bstage"><button class="cbtn ac">Get started</button></div>
+              <div class="bstage canvas mini"><button class="cbtn ac">Get started</button></div>
             </div>
           </div>
           <p class="bafcap">Same <code><i class="ic xs ic-component"></i> Button</code> instance. Accent, face, and radius all resolve from the active system, so no instance is edited by hand.</p>

@@ -128,3 +128,204 @@
 {"t":"2026-08-23T00:27:19.531Z","ev":"task_resequenced","id":"export-share-vector-filename-keeps-2x","from":110,"to":90}
 {"t":"2026-08-23T00:27:58.802Z","ev":"triage","summary":"Retriaged 30 open tasks against the updated objectives tree. Dropped 9: six video-wt selection tasks merged into one consolidated task (video-walkthroughs-clip-selection-lights-up-in-l, one shared walkthrough.js data-select root cause), free-angle measure dropped (decision: keep straight-only, nothing to build), describe-specs dropped (decision: omit the agent button; text export already covered by the panel task), measurement-naming folded into the panel task (decision: derived auto-names with rename). Added 2: the consolidated video task and arrow-tool-captions-legible-pill-labels-like-the covering objectives epic-uehjr1 which had zero queue coverage. Promoted to p1-high: shared DS primitives (interaction-foundations) and all four actionable measure-redline tasks (centers snapping, arrow captions, roles+legend, panel+export) since measure-redline is the top actionable pillar. p2 now runs pillar mock fixes in objectives order (video, ui, image, icon x2, agent) then creation-vision study work (conform pass, workspace switcher removal, blank-slate entries, composites, walk). p3 holds gated or late-stage items: zoom-semantics decision, save/dirty state, product-model re-audit, then design-system polish (icon conformance x2, class collisions, library leftovers, checklist warns, vector filename). All sequences renumbered to steps of 10; every open task notes line now names the objective it serves."}
 {"t":"2026-08-23T00:28:07.601Z","ev":"task_done","id":"retriage-queue-against-objectives","from":"in_progress","note":"Retriaged all 30 open tasks against the updated objectives tree: 9 dropped (6 video-wt tasks merged into one consolidated task, 3 closed or folded by resolved decisions), 2 added (consolidated video selection task; arrow-tool caption pill covering epic-uehjr1 which had no coverage), measure-redline and foundations work promoted to p1, all sequences renumbered to steps of 10 in objectives order, every open task note now names its objective. Verified by listing the queue: 26 pending tasks, clean steps of 10 per priority. Triage event recorded in history."}
+{"t":"2026-08-23T00:28:38.690Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:40:00.719Z","ev":"task_created","id":"audit-sweep-truncated-dock-seg-chips-on-30-pages","priority":"p2-normal","title":"Audit sweep: truncated dock-seg chips on 30 pages (Media·Comp·Styles·Assets et al)"}
+{"t":"2026-08-23T00:46:07.706Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:13.384Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:16.184Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:21.971Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:24.890Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:30.659Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:33.462Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:39.264Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:42.043Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:47.689Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:50.550Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:46:56.354Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:46:59.186Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:04.959Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:08.027Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:13.627Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:16.611Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:22.253Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:25.338Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:31.186Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:34.116Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:39.711Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:42.343Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:47.946Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:50.622Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:47:56.339Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:47:59.004Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:04.607Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:07.320Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:12.986Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:15.817Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:21.500Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:24.233Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:29.893Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:32.821Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:38.386Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:40.979Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:46.806Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:49.396Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:48:55.207Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:48:57.932Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:03.555Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:06.148Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:11.819Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:14.805Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:20.498Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:23.170Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:28.793Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:31.699Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:37.394Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:40.000Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:45.675Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:48.426Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:49:54.194Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:49:56.825Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:02.451Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:05.087Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:10.785Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:13.520Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:19.276Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:22.173Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:27.861Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:30.604Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:36.246Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:38.964Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:44.541Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:47.198Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:50:52.870Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:50:55.490Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:01.270Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:03.981Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:09.601Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:12.333Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:17.951Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:20.667Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:26.459Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:29.264Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:34.969Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:37.803Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:43.434Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:46.014Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:51:51.753Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:51:54.663Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:00.359Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:03.031Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:08.581Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:11.456Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:17.143Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:19.828Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:25.548Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:28.440Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:34.248Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:37.161Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:42.717Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:45.289Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:51.045Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:52:53.744Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:52:59.382Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:02.093Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:07.931Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:10.990Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:16.713Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:19.428Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:25.148Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:28.051Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:33.848Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:36.477Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:42.142Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:44.712Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:50.328Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:53:52.887Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:53:58.630Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:01.365Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:07.129Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:09.718Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:15.408Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:18.082Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:23.882Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:27.347Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:33.010Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:35.708Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:41.434Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:44.651Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:50.336Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:54:53.120Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:54:58.920Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:01.849Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:07.454Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:10.187Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:15.750Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:18.747Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:24.445Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:27.190Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:32.788Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:35.649Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:41.550Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:44.339Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:49.935Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:55:52.611Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:55:58.218Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:01.035Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:06.739Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:09.426Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:15.003Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:17.834Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:23.423Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:26.080Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:31.721Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:34.734Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:40.416Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:43.167Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:48.826Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:56:51.632Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:56:57.527Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:00.260Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:05.843Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:08.505Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:14.322Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:17.636Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:23.177Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:25.985Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:31.598Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:34.240Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:40.128Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:42.876Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:49.132Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:57:52.051Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:57:57.710Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:00.603Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:06.152Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:08.735Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:14.487Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:17.429Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:23.032Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:25.728Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:31.348Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:33.911Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:39.830Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:42.543Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:48.091Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:50.933Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:58:56.503Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:58:59.112Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:04.811Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:07.687Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:13.219Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:16.225Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:21.919Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:24.737Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:30.520Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:33.227Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:39.002Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:41.926Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:47.620Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:50.274Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T00:59:56.022Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T00:59:58.722Z","ev":"task_reset","id":"shared-ds-cleanup-land-the-missing-primitives-ba"}
+{"t":"2026-08-23T01:00:04.417Z","ev":"task_started","id":"shared-ds-cleanup-land-the-missing-primitives-ba","title":"Shared DS cleanup: land the missing primitives batch","priority":"p1-high"}
+{"t":"2026-08-23T01:06:52.637Z","ev":"task_done","id":"shared-ds-cleanup-land-the-missing-primitives-ba","from":"in_progress","note":"Shared primitives batch landed: spec.css (specimen card + .spec.tile), preset.css (.bpick/.bchip), 8-point+rotate selection handles, generic .chip.on, .artstack, canvas child-collapse fix, on-light grid flip, .efx .emeta rename, .ptab/.dock-tab deletion; 6 pages off hand-rolled .rng; 38 pages migrated. Verified: 88/88 pages 200, audit-sweep clean except pre-existing chip findings filed separately. Also fixed .spec.stage vs .stage collision found on resume (renamed to .spec.tile)."}

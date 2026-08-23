@@ -1,0 +1,21 @@
+{
+  "id": "audit-sweep-truncated-dock-seg-chips-on-30-pages",
+  "title": "Audit sweep: truncated dock-seg chips on 30 pages (Media·Comp·Styles·Assets et al)",
+  "priority": "p2-normal",
+  "seq": 240,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T00:40:00.718Z",
+  "updated": "2026-08-23T00:40:00.719Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Pre-existing before the shared-DS primitives batch (verified by stash + resweep on 2026-08-23: identical failures with and without the batch). audit-sweep.js reports 'truncated chip' + 'uneven chips' for .seg controls inside .pdock/.dgrp-b on ~30 pages at 1280x900, e.g. the Library scope seg. Either the seg auto-fit --segmin measurement regressed after the July rebuild or the sweep measures before photonz-ds.js sets --segmin in iframes. Reproduce with shared/audit-sweep.js, then fix whichever is broken (component or sweep timing).",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T00:40:00.719Z",
+      "note": "created (manual)"
+    }
+  ]
+}

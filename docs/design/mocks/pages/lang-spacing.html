@@ -13,7 +13,6 @@
   #lang-spacing .intro b{color:var(--ink)}
 
   #lang-spacing .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
-  #lang-spacing .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
   #lang-spacing .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
   #lang-spacing .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
   #lang-spacing .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
@@ -120,7 +119,7 @@
 
     <!-- 1 · THE 4PT SCALE (RULER) -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="ruler">
           <div class="rrow"><span class="tok">s1</span><span class="bar" style="width:4px"></span><span class="px">4</span><span class="use">hairline gaps · icon-to-label</span></div>
           <div class="rrow"><span class="tok">s2</span><span class="bar" style="width:8px"></span><span class="px">8</span><span class="use">tight gap between siblings</span></div>
@@ -141,7 +140,7 @@
 
     <!-- 2 · SEMANTIC TOKENS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="semas">
           <div class="sema"><span class="swz" style="width:16px"></span><span class="nm">--pad</span><span class="vl">16</span><span class="ds">Card and pane padding</span></div>
           <div class="sema"><span class="swz" style="width:12px"></span><span class="nm">--pad-sm</span><span class="vl">12</span><span class="ds">Compact rows and dense lists</span></div>
@@ -161,7 +160,7 @@
 
     <!-- 3 · ANATOMY -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="anat">
           <div class="anacard">
             <div class="padring"></div>
@@ -184,7 +183,7 @@
 
     <!-- 4 · RADII LADDER -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="radi">
           <div class="rr"><span class="box" style="border-radius:6px"></span><span class="lb"><b>r1</b>6 · chips, kbd</span></div>
           <div class="rr"><span class="box" style="border-radius:8px"></span><span class="lb"><b>r2</b>8 · fields, pills</span></div>
@@ -203,7 +202,7 @@
 
     <!-- 5 · DENSITY MODES -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="denrow">
           <div>
             <div class="denlbl"><span><b>Comfortable</b> · default</span><code>pad 16 · row 12</code></div>
@@ -243,7 +242,7 @@
 
     <!-- 6 · EDGE ALIGNMENT / FULL-BLEED -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="align">
           <div class="lane good-lane edge">
             <div class="cell" style="flex:2">Layers</div>

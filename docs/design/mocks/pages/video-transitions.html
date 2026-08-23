@@ -60,15 +60,7 @@
 
 /* transition tiles now live in the shared DS (.libtile.tt + .th-*) */
 
-/* ---------- Properties helpers ---------- */
-.rng{-webkit-appearance:none;appearance:none;height:4px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);outline:none;cursor:pointer;width:100%;min-width:0}
-.rng::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--panel);border:1.5px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab;transition:box-shadow .12s ease,transform .09s ease}
-.rng::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--panel);border:1.5px solid var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab}
-.rng:hover::-webkit-slider-thumb{box-shadow:0 1px 3px rgba(0,0,0,.3),0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
-.rng:active::-webkit-slider-thumb{cursor:grabbing;transform:scale(.94)}
-.rng:focus-visible{box-shadow:var(--ring)}
-.rng:disabled{opacity:.42;cursor:not-allowed}
-.rng:disabled::-webkit-slider-thumb{cursor:not-allowed}/* ---------- API line ---------- */
+/* ---------- API line ---------- */
 .apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
 .apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
 .apibar code{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap}
@@ -280,7 +272,7 @@
                   <div class="field"><span class="k">To</span><span class="v">clip-02</span></div>
                 </div>
                 <div class="irow"><span class="rl">Length</span>
-                  <input class="rng" id="dur" type="range" min="100" max="2000" step="50" value="400" aria-label="Transition duration">
+                  <div class="slider sm"><input id="dur" type="range" min="100" max="2000" step="50" value="400" aria-label="Transition duration"></div>
                 </div>
                 <div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="durVal">400 ms</span></span></div>
               </div>
@@ -291,7 +283,7 @@
               <div class="section">
                 <div class="sec-h">Progress <span class="mut">scrub by hand</span></div>
                 <div class="irow"><span class="rl">At</span>
-                  <input class="rng" id="scrub" type="range" min="0" max="100" value="0" aria-label="Transition progress">
+                  <div class="slider sm"><input id="scrub" type="range" min="0" max="100" value="0" aria-label="Transition progress"></div>
                 </div>
                 <div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="scrubVal">0%</span></span></div>
               </div>
@@ -597,7 +589,7 @@
       dipSeg.style.opacity=isDip?1:.42;
     }
     var isCut=(type==="cut");
-    if(dur) dur.disabled=isCut;
+    if(dur){ dur.disabled=isCut; var dsl=dur.closest(".slider"); if(dsl) dsl.classList.toggle("off",isCut); }
     if(region) region.classList.toggle("none",isCut);
     if(regionIco) regionIco.innerHTML=isCut?'<i class="ic ic-blade"></i>':'<i class="ic ic-transition"></i>';
     syncMeta(); syncRegionWidth(); render();

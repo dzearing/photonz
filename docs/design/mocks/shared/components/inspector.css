@@ -250,7 +250,7 @@
 
 /* ============ polish: nowrap, collapsible inspector groups, real controls ============ */
 /* icon+text pairs must never wrap onto two lines */
-.chip,.chip.style,.chip.comp,.cbadge,.mini-badge,.pill,.efx .meta,.tool,.wip,.tag{white-space:nowrap}
+.chip,.chip.style,.chip.comp,.cbadge,.mini-badge,.pill,.efx .emeta,.tool,.wip,.tag{white-space:nowrap}
 .lrow,.efx,.styrow,.tokrow,.masklist,.tspacer{flex-wrap:nowrap}
 .lrow .nm{min-width:0}
 

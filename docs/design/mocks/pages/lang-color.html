@@ -13,7 +13,6 @@
 
   /* the two-column pattern block: specimen left, name+rule right */
   #lang-color .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
-  #lang-color .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
   #lang-color .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
   #lang-color .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
   #lang-color .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
@@ -120,7 +119,7 @@
 
     <!-- 2 · ANATOMY -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="anat">
           <div class="calls">
             <div class="call"><b>Fill + role</b>the resolved color, tagged with the job it does</div>
@@ -150,7 +149,7 @@
 
     <!-- 3 · VARIANTS: full role set -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="grouplab">Text · on surfaces</div>
         <div class="textrow">
           <span style="color:var(--ink)"><b>Ink</b> primary</span>
@@ -199,7 +198,7 @@
 
     <!-- 4 · STATES -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="grouplab">Primary button · every state</div>
         <div class="stategrid">
           <div class="stcell"><span class="obtn solid">Action</span><span class="lb">Rest</span><span class="tk">--accent</span></div>
@@ -230,7 +229,7 @@
 
     <!-- 5 · LIVE EXAMPLES: light / dark side by side -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="grouplab">Same panel, both themes · roles resolve, layout does not move</div>
         <div class="compare">
           <div class="themebox" data-theme="light">
@@ -273,7 +272,7 @@
 
     <!-- 6 · RULES: DO / DON'T -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="staterow">
           <span class="obtn solid">Primary action</span>
           <span class="obtn" style="border-color:var(--comp-line);color:var(--comp);background:var(--comp-soft)"><i class="ic ic-component sm"></i> Component</span>
@@ -297,7 +296,7 @@
 
     <!-- 7 · IN THE API -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="grouplab">Token resolution · one role, two themes</div>
         <div class="codeblk"><span class="c">// a role, not a hex, resolved by the active theme</span>
 button.fill = <span class="p">"--accent"</span>
@@ -321,7 +320,7 @@ button.<span class="k">state</span>(<span class="p">"disabled"</span>) <span cla
 
     <!-- 8 · RESPONSIVE / COMPACT -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="grouplab">Compact · label drops, swatch carries the role</div>
         <div class="staterow">
           <span class="swatch" style="background:var(--accent)" title="--accent"></span>

@@ -57,6 +57,37 @@
 .handle.bl { bottom: -5px; left: -5px }
 .handle.br { bottom: -5px; right: -5px }
 
+/* EDGE HANDLES. A real transform frame has eight points, not four: the edge
+   midpoints resize one axis. Same paint as the corners, four more slots.
+   Author them only where a single-axis resize is meaningful — a corner-only
+   frame is still a complete selection. */
+.handle.tc { top: -5px;    left: 50%; transform: translateX(-50%) }
+.handle.bc { bottom: -5px; left: 50%; transform: translateX(-50%) }
+.handle.ml { left: -5px;   top: 50%;  transform: translateY(-50%) }
+.handle.mr { right: -5px;  top: 50%;  transform: translateY(-50%) }
+
+/* THE ROTATE HANDLE. A circle on a short stem above the top edge — round
+   because it turns instead of stretching, which is the one place shape may
+   differ from the square resize grabs. */
+.rotstem {
+  position: absolute;
+  left: 50%; top: -25px;
+  width: 1.5px; height: 16px;
+  background: var(--accent);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.rot {
+  position: absolute;
+  left: 50%; top: -36px;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1.5px solid var(--accent);
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
 /* ---- the frame is constant; the HANDLES adapt ----
    data-sel is stamped by selection.js from the wrapper's measured box. */
 
@@ -67,12 +98,17 @@
 [data-sel="sm"] .handle.tr { top: -8px;    right: -8px }
 [data-sel="sm"] .handle.bl { bottom: -8px; left: -8px }
 [data-sel="sm"] .handle.br { bottom: -8px; right: -8px }
+/* Edge handles drop below 44px: three grabs per edge on a small object cover
+   more frame than they free, and the corners already reach every axis. */
+[data-sel="sm"] .handle.tc, [data-sel="sm"] .handle.bc,
+[data-sel="sm"] .handle.ml, [data-sel="sm"] .handle.mr { display: none }
 
 /* xs · under 16px in either axis. Nothing legible fits, and a 7px handle on a
    6px object is not grabbable anyway — you resize it from the Properties
    fields. The frame alone says "this is selected", and the .mtag carries the
    numbers. Showing four handles here is decoration that hides the subject. */
 [data-sel="xs"] .handle { display: none }
+[data-sel="xs"] .rot, [data-sel="xs"] .rotstem { display: none }
 [data-sel="xs"] .sel-ring { inset: -2px }
 
 /* THE MEASUREMENT TAG. Above by default; selection.js flips it below when the
@@ -95,7 +131,7 @@
 
 /* A multi-selection frames the union of the bounds and drops per-object
    handles: you transform the group, not one member of it. */
-.selwrap.multi .handle { display: none }
+.selwrap.multi .handle, .selwrap.multi .rot, .selwrap.multi .rotstem { display: none }
 .selwrap.multi .sel-ring { border-style: dashed }
 
 /* ============================================================

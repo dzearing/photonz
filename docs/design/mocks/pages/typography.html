@@ -12,15 +12,8 @@
      what a text layer carries, rhythm, scripts and auto-contrast.
      Every page-local class is namespaced under #typography so nothing here
      can silently collide with a design-system class. 4pt tokens only. */
-  #typography .win.shell{height:720px;min-height:0}  /* ---- SPECIMEN card (Kind 2): a part of the app, never app chrome ---- */
-  #typography .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  #typography .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
-    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
-  #typography .spec.wide{grid-column:1/-1}
-  #typography .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
-    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
-  #typography .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
-  #typography .spec-b{padding:0 var(--pad) var(--pad)}
+  #typography .win.shell{height:720px;min-height:0}
+  /* spec cards come from the shared DS (shared/components/spec.css) */
 
   /* ---- canvas composition: a real poster, not lorem ---- */
   #typography .tpost{display:flex;flex-direction:column;align-items:flex-start;gap:var(--pad-sm);max-width:460px}
@@ -61,10 +54,8 @@
   #typography .taxis .tp{display:flex;align-items:baseline;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-bottom:5px}
   #typography .taxis .tp b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
   #typography .tot{display:flex;flex-wrap:wrap;gap:var(--gap-sm)}
-  /* OpenType feature toggles: .chip has no shared "on" state, so define the
-     selected look here rather than inventing a new control */
+  /* OpenType feature toggles: selected look comes from the shared .chip.on */
   #typography .tot .chip{padding:4px 9px}
-  #typography .tot .chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:640}
   #typography .tnums{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-sm);margin-top:var(--s3)}
   #typography .tnums .tcell{border:1px solid var(--edge-lo);border-radius:var(--r2);padding:var(--gap-sm) var(--pad-sm);background:var(--glass-thin)}
   #typography .tnums .tcl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:660;margin-bottom:3px}
@@ -310,7 +301,7 @@
               <div class="section">
                 <div class="sec-h">Fill &amp; effect <span class="mut">same primitives as any layer</span></div>
                 <div class="irow"><span class="rl">Paint</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(120deg,#8f7bff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                <div class="efx click" data-target="effects" style="margin-top:var(--s2)"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">24 · comp</span></div>
+                <div class="efx click" data-target="effects" style="margin-top:var(--s2)"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="emeta">24 · comp</span></div>
               </div>
 
               <div class="section">

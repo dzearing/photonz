@@ -18,18 +18,18 @@
   .canvas>.surf.on{display:block}
   .surf>.selwrap{width:100%}
 
-  .draw-art{position:relative;width:100%;height:300px;border-radius:var(--r4);overflow:hidden;
-    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18);touch-action:none}
+  /* shared .artstack carries the base (stacked canvas+svg, radius, clipping);
+     the page keeps its default height, the artwork drop shadow, the paper
+     background, the aspect variant and the crosshair surface. */
+  #draw .artstack{height:300px;
+    box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
   /* .ar keeps the box on the artboard's own aspect ratio so the SVG geometry and
      the raster brush canvas map to exactly the same pixels at any width. */
-  .draw-art.ar{height:auto;aspect-ratio:56 / 30}
-  .draw-art.paper{background:
+  #draw .artstack.ar{height:auto;--ar:56 / 30}
+  #draw .artstack.paper{background:
     radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.06),transparent 55%),
     linear-gradient(180deg,#20242f,#14161d)}
-  .draw-art .plabel{position:absolute;left:10px;top:8px;z-index:4;font-family:var(--mono);font-size:9px;
-    letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
-  .draw-art svg,.draw-art canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .draw-art .surface{cursor:crosshair}
+  #draw .artstack .surface{cursor:crosshair}
   /* pen editing overlay glyphs */
   .anchor{fill:var(--panel);stroke:#ff5d8f;stroke-width:1.4;cursor:grab}
   .anchor.first{fill:#ff5d8f}
@@ -47,7 +47,7 @@
   .erase-row{display:flex;gap:var(--gap);flex-wrap:wrap;justify-content:center}
   .erase-cell{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:center;
     width:258px;max-width:100%}
-  .erase-cell .draw-art{width:100%;height:200px}
+  .erase-cell .artstack{width:100%;height:200px}
   .erase-cap{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:560;color:rgba(255,255,255,.72)}
   .erase-cap .tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     padding:1px 6px;border-radius:5px}
@@ -61,28 +61,11 @@
       linear-gradient(180deg,#20242f,#14161d)}
   .libtile .th.bth canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 
-  /* the Stroke brush picker inside Properties · same engine, chip sized */
-  .bpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:var(--s2) 0 0}
-  .bchip{position:relative;border:1px solid var(--edge-lo);border-radius:var(--r2,7px);overflow:hidden;
-    background:linear-gradient(180deg,#20242f,#14161d);height:34px;padding:0;cursor:pointer;
-    transition:border-color .12s ease,transform .1s ease}
-  .bchip canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .bchip:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--edge-lo));transform:translateY(-1px)}
-  .bchip:active{transform:translateY(0) scale(.97)}
-  .bchip:focus-visible{outline:none;box-shadow:var(--ring)}
-  .bchip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  /* the Stroke brush picker is the shared preset-picker component */
   .apiline{margin:0}
   .apiline .codeblk{display:block;white-space:pre-wrap;word-break:break-word}
 
-  /* range control on the 4pt scale, accent themed */
-  .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
-    background:var(--line-strong);outline:none;margin:0}
-  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
-  .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
-    border:2px solid var(--panel);cursor:pointer}
-  .rng:focus-visible{box-shadow:var(--ring);border-radius:999px}
-  .rrow{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:var(--s2);margin:8px 0}  .rrow .val{text-align:right}  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
+  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
   .actrow .btn{flex:1 1 auto}
 
   /* color swatches */
@@ -159,7 +142,7 @@
           <!-- PEN SURFACE · one object: exact bezier geometry, brush-painted stroke -->
           <div class="surf on" id="surfPen">
             <div class="selwrap">
-              <div class="draw-art paper ar">
+              <div class="artstack paper ar">
                 <span class="plabel">path · brushed stroke · editable</span>
                 <!-- the mark: fill + brush dabs stamped along the path -->
                 <canvas id="penPaint" width="1120" height="600" aria-label="The path's fill and its brush-painted stroke"></canvas>
@@ -180,7 +163,7 @@
           <!-- BRUSH SURFACE -->
           <div class="surf" id="surfBrush">
             <div class="selwrap">
-              <div class="draw-art paper ar">
+              <div class="artstack paper ar">
                 <span class="plabel">paint · pixels</span>
                 <canvas class="surface" id="brushCanvas" width="1120" height="600"></canvas>
                 <div class="hint-badge" id="brushHint">Drag on the canvas to paint with the same brush, freehand</div>
@@ -196,14 +179,14 @@
             <div class="selwrap">
               <div class="erase-row">
                 <div class="erase-cell">
-                  <div class="draw-art">
+                  <div class="artstack">
                     <span class="plabel">pixels removed</span>
                     <canvas class="surface" id="eraseDest" width="258" height="200"></canvas>
                   </div>
                   <div class="erase-cap"><span class="tag d">Destructive</span><span>gone unless you undo</span></div>
                 </div>
                 <div class="erase-cell">
-                  <div class="draw-art">
+                  <div class="artstack">
                     <span class="plabel">mask · reversible</span>
                     <canvas class="surface" id="eraseMask" width="258" height="200"></canvas>
                   </div>
@@ -369,7 +352,7 @@
                   <button data-fill="none">None</button><button data-fill="solid">Solid</button><button class="on" data-fill="grad">Gradient</button>
                 </div>
                 <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" id="penFillSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"></span> <span id="penFillName">Brand / gradient</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="penFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="58"><span class="val" id="penFillOpV">58%</span></div>
+                <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="penFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="58"></div><span class="num" data-pz-frozen="1" id="penFillOpV">58%</span></div>
                 <p class="note" id="penFillNote">Close the path and it becomes a shape you can fill. The fill is a named <b style="color:var(--ink)">Paint</b>; the stroke is a <b style="color:var(--ink)">Brush</b>. One object carries both.</p>
               </div>
 
@@ -379,8 +362,8 @@
                 <div class="irow"><span class="rl">Brush</span>
                   <div class="bpick" id="penBrushPick" role="radiogroup" aria-label="Stroke brush"></div>
                 </div>
-                <div class="rrow"><span class="rl">Size</span><input class="rng" id="penSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"><span class="val" id="penSizeV">26</span></div>
-                <div class="rrow"><span class="rl">Flow</span><input class="rng" id="penFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"><span class="val" id="penFlowV">42%</span></div>
+                <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="penSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"></div><span class="num" data-pz-frozen="1" id="penSizeV">26</span></div>
+                <div class="slrow"><span class="rl">Flow</span><div class="slider sm"><input id="penFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"></div><span class="num" data-pz-frozen="1" id="penFlowV">42%</span></div>
                 <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" id="penStrokeSw" style="background:#ff5d8f"></span> <span id="penStrokeName">Pink 60</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <div class="actrow">
                   <button class="btn sm secondary" id="penBrowseBrush"><i class="ic ic-library"></i> Browse brushes</button>
@@ -412,9 +395,9 @@
               </div>
               <div class="section">
                 <div class="sec-h">Shape <span class="mut" id="brushRO">0 strokes</span></div>
-                <div class="rrow"><span class="rl">Size</span><input class="rng" id="bSize" name="brush-size" type="range" min="2" max="80" step="1" value="26"><span class="val" id="bSizeV">26</span></div>
-                <div class="rrow"><span class="rl">Flow</span><input class="rng" id="bFlow" name="brush-flow" type="range" min="5" max="100" step="1" value="42"><span class="val" id="bFlowV">42%</span></div>
-                <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="bOpac" name="brush-opacity" type="range" min="10" max="100" step="1" value="100"><span class="val" id="bOpacV">100%</span></div>
+                <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="bSize" name="brush-size" type="range" min="2" max="80" step="1" value="26"></div><span class="num" data-pz-frozen="1" id="bSizeV">26</span></div>
+                <div class="slrow"><span class="rl">Flow</span><div class="slider sm"><input id="bFlow" name="brush-flow" type="range" min="5" max="100" step="1" value="42"></div><span class="num" data-pz-frozen="1" id="bFlowV">42%</span></div>
+                <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="bOpac" name="brush-opacity" type="range" min="10" max="100" step="1" value="100"></div><span class="num" data-pz-frozen="1" id="bOpacV">100%</span></div>
                 <div class="actrow">
                   <button class="btn sm secondary" id="brushClear"><i class="ic ic-trash"></i> Clear layer</button>
                   <button class="btn sm secondary" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush</button>
@@ -439,7 +422,7 @@
             <div class="tprop" id="propEraser" style="display:none">
               <div class="section">
                 <div class="sec-h">Eraser</div>
-                <div class="rrow"><span class="rl">Size</span><input class="rng" id="eSize" name="eraser-size" type="range" min="10" max="70" step="1" value="34"><span class="val" id="eSizeV">34</span></div>
+                <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="eSize" name="eraser-size" type="range" min="10" max="70" step="1" value="34"></div><span class="num" data-pz-frozen="1" id="eSizeV">34</span></div>
                 <div class="setrow"><span class="rl">Mode</span><span class="val">both, side by side</span></div>
                 <p class="note">Drag on either artboard. The left one deletes pixels, the right one paints into a mask.</p>
               </div>
@@ -566,6 +549,17 @@
     var r = el.getBoundingClientRect();
     if(!r.width || !r.height) return {x:0,y:0};
     return { x:(e.clientX - r.left) * (vw / r.width), y:(e.clientY - r.top) * (vh / r.height) };
+  }
+
+  /* the shared .slider paints its fill/thumb from --p, written on input events;
+     when the page sets input.value directly (brush pick), restate --p itself. */
+  function syncSliderUi(inp){
+    if(!inp || !inp.closest) return;
+    var sl = inp.closest(".slider");
+    if(!sl) return;
+    var min = parseFloat(inp.min || "0"), max = parseFloat(inp.max || "100");
+    var p = max === min ? 0 : (parseFloat(inp.value) - min) / (max - min);
+    sl.style.setProperty("--p", Math.max(0, Math.min(1, p)).toFixed(4));
   }
 
   /* ========================================================================
@@ -1110,8 +1104,8 @@
     }
 
     App.on(function(){
-      if($("penSize")){ $("penSize").value = App.size; if($("penSizeV")) $("penSizeV").textContent = String(Math.round(App.size)); }
-      if($("penFlow")){ $("penFlow").value = Math.round(App.flow*100); if($("penFlowV")) $("penFlowV").textContent = Math.round(App.flow*100) + "%"; }
+      if($("penSize")){ $("penSize").value = App.size; syncSliderUi($("penSize")); if($("penSizeV")) $("penSizeV").textContent = String(Math.round(App.size)); }
+      if($("penFlow")){ $("penFlow").value = Math.round(App.flow*100); syncSliderUi($("penFlow")); if($("penFlowV")) $("penFlowV").textContent = Math.round(App.flow*100) + "%"; }
       render();
     });
 
@@ -1230,8 +1224,8 @@
     });
 
     App.on(function(){
-      if($("bSize")){ $("bSize").value = App.size; if($("bSizeV")) $("bSizeV").textContent = String(Math.round(App.size)); }
-      if($("bFlow")){ $("bFlow").value = Math.round(App.flow*100); if($("bFlowV")) $("bFlowV").textContent = Math.round(App.flow*100)+"%"; }
+      if($("bSize")){ $("bSize").value = App.size; syncSliderUi($("bSize")); if($("bSizeV")) $("bSizeV").textContent = String(Math.round(App.size)); }
+      if($("bFlow")){ $("bFlow").value = Math.round(App.flow*100); syncSliderUi($("bFlow")); if($("bFlowV")) $("bFlowV").textContent = Math.round(App.flow*100)+"%"; }
       if($("brBrushName")) $("brBrushName").textContent = App.brush().name;
     });
 

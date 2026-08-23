@@ -11,16 +11,10 @@
      plus honest SPECIMENS (Kind 2) for the state ladders and the matrix.
      Every page-local class is namespaced under #states and prefixed so it can
      never inherit a design-system rule by accident. 4pt tokens only. */
-  #states .win.shell{height:720px;min-height:0}  /* ---- SPECIMEN card (Kind 2): a part of the app, never app chrome ---- */
-  #states .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  #states .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
-    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
-  #states .spec.wide{grid-column:1/-1}
-  #states .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
-    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
-  #states .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+  #states .win.shell{height:720px;min-height:0}
+  /* spec cards come from the shared DS (shared/components/spec.css); only the
+     dynamic-state marker colour in the label is page-local */
   #states .spec-h .di{color:var(--comp)}
-  #states .spec-b{padding:0 var(--pad) var(--pad)}
 
   /* ---- a state ladder: one control, every state, side by side ---- */
   #states .stset{display:flex;gap:var(--gap-lg);flex-wrap:wrap;align-items:flex-start}
@@ -331,7 +325,7 @@
                 <div class="sec-h comp"><span id="ovName">Success</span> · override set <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i></span></div>
                 <div class="irow"><span class="rl">Trigger</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="trigbadge logic" id="ovTrig">app logic</span><span class="val" id="ovEvent">save.ok</span></span></div>
                 <div class="irow"><span class="rl">Fill</span><span class="select"><span class="lead"><span class="sw" id="ovSw" style="background:var(--good)"></span> <span id="ovFill">Semantic / Good</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm" id="ovEfx">Success glow</span><span class="meta">0,6,16</span></div>
+                <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm" id="ovEfx">Success glow</span><span class="emeta">0,6,16</span></div>
                 <div class="irow"><span class="rl">Label</span><span class="select"><span class="lead" id="ovLabel">Saved</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <div class="irow"><span class="rl">Motion</span><span class="select"><span class="lead">pop · 180ms</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <p class="note">Only the listed paths override the base. Everything else inherits, and clearing the state snaps the instance back to Default.</p>

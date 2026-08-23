@@ -12,17 +12,8 @@
      Page-local CSS is only: a definite window height (so the dock is bounded
      and each group scroller does the work), the specimen card, and the paint
      type chips. Everything else is shared DS. 4pt tokens only. */
-  #paint .win.shell{height:680px;min-height:0}  /* ---- SPECIMEN card (Kind 2): a part of the app, never app chrome ----
-     Same page-local pattern as pages/app-shell.html: no traffic lights,
-     no fake title bar, just a labeled bordered block. */
-  .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
-    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
-  .spec.wide{grid-column:1/-1}
-  .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
-    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
-  .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
-  .spec-b{padding:0 var(--pad) var(--pad)}
+  #paint .win.shell{height:680px;min-height:0}
+  /* spec cards come from the shared DS (shared/components/spec.css) */
 
   /* paint-type specimen tiles */
   .ptypes{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--gap)}
@@ -56,8 +47,9 @@
   /* "one Paint, every surface" specimen */
   .surf{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
   .surf .cellx{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:center;text-align:center}
-  .surf .stage2{height:74px;width:100%;border-radius:var(--r3);border:1px solid var(--edge-lo);
-    display:grid;place-items:center;background:radial-gradient(240px 120px at 50% 30%,#141826,var(--artboard))}
+  /* the tile itself is the shared .canvas.mini; only its size, border and
+     glow scale are local */
+  .surf .stage2{height:74px;width:100%;border:1px solid var(--edge-lo);--artboard-glow:240px 120px}
   .surf .cn{font-size:11px;font-weight:600;color:var(--ink)}
   .surf .cd{font-size:10.5px;color:var(--faint);line-height:1.4}
   .sfill{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f)}
@@ -69,7 +61,7 @@
   .sglow{width:52px;height:52px;border-radius:14px;background:#141826;
     box-shadow:0 0 26px 2px rgba(177,77,255,.85),0 0 8px rgba(255,93,143,.8)}
 
-  @media (max-width:820px){.specs{grid-template-columns:1fr}.ptypes{grid-template-columns:repeat(3,1fr)}.surf{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:820px){#paint .specs{grid-template-columns:1fr}.ptypes{grid-template-columns:repeat(3,1fr)}.surf{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body class="page">
@@ -300,7 +292,7 @@
             <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
           </div>
           <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="meta">Paint</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="emeta">Paint</span></div>
             <p class="note" style="padding:0 2px">A glow is an outer shadow whose color is a <b style="color:var(--ink)">Paint</b>. Same editor, different slot.</p>
           </div>
         </div>
@@ -426,10 +418,10 @@
       <div class="spec-h"><i class="ic sm ic-layers"></i> One Paint, every surface <span class="sub">(the same value in four slots)</span></div>
       <div class="spec-b">
         <div class="surf">
-          <div class="cellx"><span class="stage2"><span class="sfill"></span></span><span class="cn">Fill</span><span class="cd">shape or frame</span></div>
-          <div class="cellx"><span class="stage2"><span class="sstroke"></span></span><span class="cn">Stroke</span><span class="cd">any width</span></div>
-          <div class="cellx"><span class="stage2"><span class="stext">Aa</span></span><span class="cn">Text</span><span class="cd">type layer</span></div>
-          <div class="cellx"><span class="stage2"><span class="sglow"></span></span><span class="cn">Glow</span><span class="cd">effect color</span></div>
+          <div class="cellx"><span class="canvas mini stage2"><span class="sfill"></span></span><span class="cn">Fill</span><span class="cd">shape or frame</span></div>
+          <div class="cellx"><span class="canvas mini stage2"><span class="sstroke"></span></span><span class="cn">Stroke</span><span class="cd">any width</span></div>
+          <div class="cellx"><span class="canvas mini stage2"><span class="stext">Aa</span></span><span class="cn">Text</span><span class="cd">type layer</span></div>
+          <div class="cellx"><span class="canvas mini stage2"><span class="sglow"></span></span><span class="cn">Glow</span><span class="cd">effect color</span></div>
         </div>
         <p class="note">Four slots, one value. That is what makes Paint a primitive rather than a feature of shapes: name it once as a <b style="color:var(--ink)">Style</b> and it can be the brand gradient on a button, on a headline, and in the glow underneath both.</p>
       </div>

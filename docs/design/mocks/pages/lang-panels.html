@@ -26,15 +26,7 @@
   #lang-panels .lp-blk-h .lp-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-panels .lp-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
-  #lang-panels .lp-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-panels .lp-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-panels .lp-spec-h .lp-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-panels .lp-spec-h .lp-tag.acc{color:var(--accent)}
-  #lang-panels .lp-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. */
   #lang-panels .lp-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
   #lang-panels .lp-cap b{color:var(--ink);font-weight:600}
   #lang-panels .lp-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
@@ -123,9 +115,9 @@
       <div class="lp-blk-h"><span class="lp-n">01</span><h3>Anatomy · the panel group</h3><span class="lp-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.dgrp</code></span></div>
       <div class="lp-blk-b">
         <div class="lp-anat">
-          <div class="lp-spec">
-            <div class="lp-spec-h">One group<span class="lp-tag acc">not a window</span></div>
-            <div class="lp-spec-b">
+          <div class="spec">
+            <div class="spec-h">One group<span class="tag acc">not a window</span></div>
+            <div class="spec-b">
               <div class="lp-plinth" style="position:relative">
                 <span class="lp-pin abs" style="top:10px;left:6px">1</span>
                 <span class="lp-pin abs" style="top:10px;left:64px">2</span>
@@ -188,9 +180,9 @@
       <div class="lp-blk-h"><span class="lp-n">02</span><h3>Anatomy · the dock</h3><span class="lp-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.pdock</code> of stacked groups</span></div>
       <div class="lp-blk-b">
         <div class="lp-anat">
-          <div class="lp-spec">
-            <div class="lp-spec-h">The right dock<span class="lp-tag acc">four groups, one column</span></div>
-            <div class="lp-spec-b">
+          <div class="spec">
+            <div class="spec-h">The right dock<span class="tag acc">four groups, one column</span></div>
+            <div class="spec-b">
               <div class="lp-dockspec">
                 <div class="pdock">
                   <div class="dgrp" style="--gh:96px">
@@ -214,7 +206,7 @@
                   <div class="dgrp collapsed">
                     <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span></div>
                     <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                      <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                      <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
                     </div>
                   </div>
                   <div class="dgrp grow">
@@ -257,9 +249,9 @@
       <div class="lp-blk-h"><span class="lp-n">03</span><h3>Variants · the four groups</h3><span class="lp-sub">Specimens · the whole vocabulary</span></div>
       <div class="lp-blk-b">
         <div class="lp-grid">
-          <div class="lp-spec">
-            <div class="lp-spec-h">Layers<span class="lp-tag">one tree, flat or grouped</span></div>
-            <div class="lp-spec-b"><div class="lp-plinth">
+          <div class="spec">
+            <div class="spec-h">Layers<span class="tag">one tree, flat or grouped</span></div>
+            <div class="spec-b"><div class="lp-plinth">
               <div class="dgrp" style="--gh:130px">
                 <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span>
                   <button class="btn ghost icon sm" title="Add adjustment layer"><i class="ic ic-sliders"></i></button>
@@ -275,9 +267,9 @@
             </div><p class="lp-cap">Adjustment layers are just layers, with a clip mark showing they apply to what is below.</p></div>
           </div>
 
-          <div class="lp-spec">
-            <div class="lp-spec-h">Properties<span class="lp-tag">contextual to selection</span></div>
-            <div class="lp-spec-b"><div class="lp-plinth">
+          <div class="spec">
+            <div class="spec-h">Properties<span class="tag">contextual to selection</span></div>
+            <div class="spec-b"><div class="lp-plinth">
               <div class="dgrp" style="--gh:130px">
                 <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
                 <div class="dgrp-b">
@@ -292,25 +284,25 @@
             </div><p class="lp-cap">Nothing selected shows the document. One layer shows that layer. Multi-select shows what they share.</p></div>
           </div>
 
-          <div class="lp-spec">
-            <div class="lp-spec-h">Effects<span class="lp-tag">non-destructive stack</span></div>
-            <div class="lp-spec-b"><div class="lp-plinth">
+          <div class="spec">
+            <div class="spec-h">Effects<span class="tag">non-destructive stack</span></div>
+            <div class="spec-b"><div class="lp-plinth">
               <div class="dgrp" style="--gh:130px">
                 <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">3</span>
                   <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
                 </div>
                 <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
-                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
-                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Border</span><span class="meta">1px</span></div>
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
+                  <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Border</span><span class="emeta">1px</span></div>
                 </div>
               </div>
             </div><p class="lp-cap">Blur, shadow, border, radius, opacity. Applied at render time, never baked into pixels.</p></div>
           </div>
 
-          <div class="lp-spec">
-            <div class="lp-spec-h">Library<span class="lp-tag">one surface, four scopes</span></div>
-            <div class="lp-spec-b"><div class="lp-plinth">
+          <div class="spec">
+            <div class="spec-h">Library<span class="tag">one surface, four scopes</span></div>
+            <div class="spec-b"><div class="lp-plinth">
               <div class="dgrp" style="--gh:152px">
                 <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt">Media</span>
                   <button class="btn ghost icon sm" title="Add to library"><i class="ic ic-plus"></i></button>
@@ -552,8 +544,8 @@
                   <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
                 </div>
                 <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
-                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
                 </div>
               </div>
 

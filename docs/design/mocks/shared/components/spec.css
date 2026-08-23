@@ -1,0 +1,50 @@
+/* ============================================================
+   SPEC — the specimen card
+   ============================================================
+   PRODUCT-MODEL §4c draws a hard line between Kind-1 (a complete app screen,
+   wearing real chrome) and Kind-2 (a SPECIMEN: one component or pattern shown
+   bare, wearing none). Before this file that line was a convention: five pages
+   had hand-rolled the same glass card (app-shell, effects, paint, typography,
+   states), six more carried prefixed byte-copies (lf-spec, lx-spec, lt-spec,
+   lp-spec, lo-spec, ls-spec), and seven others shared a padded "stage" tile.
+   Now the line is a CLASS an auditor can check: anything with traffic lights
+   must be a complete shell, anything inside a .spec wears no chrome.
+
+   ---- anatomy ----
+     .specs             the two-up grid of cards
+       .spec            one specimen card (add .wide to span the grid)
+         .spec-h        the SPECIMEN LABEL: small caps, names what is shown
+           .sub         inline subtitle, sentence case
+           .tag         trailing mono annotation (.tag.acc for accent)
+         .spec-b        the body — the specimen itself, chromeless
+     .spec.tile         variant: a padded flex-column tile on a soft radial
+                        wash, for a run of small side-by-side demos
+                        (named .tile, not .stage: `.stage` is already the
+                        page-level walkthrough stage in tokens.css, and the
+                        compound would inherit its 100vh + centering)
+*/
+
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;
+  background:var(--glass-thin);
+  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
+  box-shadow:inset 0 1px 0 var(--edge-hi)}
+.spec.wide{grid-column:1/-1}
+
+.spec-h{display:flex;align-items:center;gap:var(--gap-sm);
+  padding:var(--pad-sm) var(--pad-sm) var(--gap-sm);
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);font-weight:660}
+.spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
+.spec-h .tag{margin-left:auto;font-family:var(--mono);font-size:9px;
+  letter-spacing:0;text-transform:none;font-weight:520;color:var(--faint)}
+.spec-h .tag.acc{color:var(--accent)}
+.spec-b{padding:0 var(--pad-sm) var(--pad-sm)}
+
+/* the stage variant: not a framed card but a padded tile the specimen floats
+   in, lit by a soft wash from the top-left. Used for grids of small state /
+   motion / icon demos where a border per cell would read as noise. */
+.spec.tile{border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  overflow:visible;padding:var(--pad);display:flex;flex-direction:column;
+  gap:var(--gap-sm);justify-content:center;min-width:0;
+  background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}

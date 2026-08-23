@@ -9,12 +9,8 @@
 .resizer:hover .ln{background:var(--accent)}
 .resizer .grip{position:absolute;color:var(--faint);font-size:10px;line-height:0;letter-spacing:-1px}
 
-/* dockable panel tab strip (when panels stack) */
-.dock-tabs{display:flex;gap:2px;padding:var(--s2) var(--s2) 0;background:var(--panel);border-bottom:1px solid var(--line)}
-.dock-tab{font-size:11px;font-weight:560;color:var(--faint);padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r2) var(--r2) 0 0;white-space:nowrap}
-.dock-tab.on{color:var(--ink);background:var(--panel-2)}
-.dock-tab:hover{color:var(--ink)}
-.dock-handle{color:var(--faint);cursor:grab;font-size:11px}
+/* .dock-tabs/.dock-tab/.dock-handle are GONE: .dnav/.dtab in shell.css is the
+   one tab system for a panel host (real focus states, real buttons). */
 
 /* popover / context menu */
 .popover{background:var(--chrome-solid);border:1px solid var(--line-strong);border-radius:var(--r4);box-shadow:var(--shadow);padding:var(--s1);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur)}

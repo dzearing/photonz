@@ -37,6 +37,12 @@
      doctbl docintro docnote                                 (docpage.css)
      rl-frame  rl-co                                         (redline.css)
 
+   ---- ADDED BY THE MISSING-PRIMITIVES BATCH ----
+     spec  specs  spec-h  spec-b  stage  tag                 (spec.css)
+     bpick  bchip                                            (preset.css)
+     artstack  plabel  emeta  on-light                       (canvas.css)
+     rot  rotstem  tc  bc  ml  mr                            (selection.css)
+
    Note `.dlg-scrim` rather than `.scrim`: `lang-elevation` uses `.scrim`
    as a compound modifier (`.vstage.scrim`) and a bare DS rule would have
    made that specimen `position:absolute` and invisible. When an existing

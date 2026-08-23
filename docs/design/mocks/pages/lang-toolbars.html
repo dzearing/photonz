@@ -26,15 +26,7 @@
   #lang-toolbars .lt-blk-h .lt-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-toolbars .lt-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
-  #lang-toolbars .lt-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-toolbars .lt-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-toolbars .lt-spec-h .lt-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-toolbars .lt-spec-h .lt-tag.acc{color:var(--accent)}
-  #lang-toolbars .lt-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. */
   #lang-toolbars .lt-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
   #lang-toolbars .lt-cap b{color:var(--ink);font-weight:600}
   #lang-toolbars .lt-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
@@ -130,9 +122,9 @@
     <div class="lt-blk">
       <div class="lt-blk-h"><span class="lt-n">01</span><h3>Anatomy · the floating tool bar</h3><span class="lt-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.cnv &gt; .tbar</code></span></div>
       <div class="lt-blk-b">
-        <div class="lt-spec">
-          <div class="lt-spec-h">Tool bar over a slice of canvas<span class="lt-tag acc">not a window</span></div>
-          <div class="lt-spec-b">
+        <div class="spec">
+          <div class="spec-h">Tool bar over a slice of canvas<span class="tag acc">not a window</span></div>
+          <div class="spec-b">
             <div class="cnv lt-plinth">
               <div class="canvas"><div class="artboard-label">2560 × 1440 · Screen capture</div></div>
               <div class="tbar">
@@ -192,9 +184,9 @@
     <div class="lt-blk">
       <div class="lt-blk-h"><span class="lt-n">02</span><h3>Anatomy · the command surface</h3><span class="lt-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.toolbar</code></span></div>
       <div class="lt-blk-b">
-        <div class="lt-spec">
-          <div class="lt-spec-h">Command row<span class="lt-tag acc">stands in for the native menu bar</span></div>
-          <div class="lt-spec-b">
+        <div class="spec">
+          <div class="spec-h">Command row<span class="tag acc">stands in for the native menu bar</span></div>
+          <div class="spec-b">
             <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden">
               <div class="toolbar">
                 <button class="tool" title="Commands" data-menu="#ltCmd"><i class="ic sm ic-more"></i></button>
@@ -313,9 +305,9 @@
         </div>
 
         <div class="lt-grid">
-          <div class="lt-spec">
-            <div class="lt-spec-h">UI workspace strip<span class="lt-tag">frames &amp; components</span></div>
-            <div class="lt-spec-b">
+          <div class="spec">
+            <div class="spec-h">UI workspace strip<span class="tag">frames &amp; components</span></div>
+            <div class="spec-b">
               <div class="cnv lt-plinth short">
                 <div class="canvas"><div class="artboard-label">1200 × 630 · Brand tokens</div></div>
                 <div class="tbar">
@@ -337,9 +329,9 @@
               </div>
             </div>
           </div>
-          <div class="lt-spec">
-            <div class="lt-spec-h">Video workspace strip<span class="lt-tag">the same six shared tools</span></div>
-            <div class="lt-spec-b">
+          <div class="spec">
+            <div class="spec-h">Video workspace strip<span class="tag">the same six shared tools</span></div>
+            <div class="spec-b">
               <div class="cnv lt-plinth short">
                 <div class="canvas"><div class="artboard-label">1920 × 1080 · 0:18</div></div>
                 <div class="tbar">
@@ -611,9 +603,9 @@
       <div class="lt-blk-h"><span class="lt-n">07</span><h3>Where tool options live</h3><span class="lt-sub">Specimen · the top of the Properties group</span></div>
       <div class="lt-blk-b">
         <div class="lt-grid">
-          <div class="lt-spec">
-            <div class="lt-spec-h">Crop active<span class="lt-tag">tool options lead</span></div>
-            <div class="lt-spec-b">
+          <div class="spec">
+            <div class="spec-h">Crop active<span class="tag">tool options lead</span></div>
+            <div class="spec-b">
               <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:color-mix(in srgb, var(--panel-2) 45%, transparent)">
                 <div class="dgrp" style="--gh:190px">
                   <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Crop</span></div>
@@ -633,9 +625,9 @@
               </div>
             </div>
           </div>
-          <div class="lt-spec">
-            <div class="lt-spec-h">Text active<span class="lt-tag">same slot, different options</span></div>
-            <div class="lt-spec-b">
+          <div class="spec">
+            <div class="spec-h">Text active<span class="tag">same slot, different options</span></div>
+            <div class="spec-b">
               <div style="border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:color-mix(in srgb, var(--panel-2) 45%, transparent)">
                 <div class="dgrp" style="--gh:190px">
                   <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Text</span></div>

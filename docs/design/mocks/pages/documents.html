@@ -23,9 +23,8 @@
 
 /* ---- export menu size presets ---- */
 #documents .szrow{display:flex;gap:var(--s1);padding:var(--s1) var(--s2) var(--s2);flex-wrap:wrap}
-/* .chip has no shared "on" state, so define the selected preset look here */
+/* selected preset look comes from the shared .chip.on */
 #documents .szrow .chip{padding:3px 9px}
-#documents .szrow .chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:640}
 #documents .exfmt{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:auto}
 
 /* ---- the document on the canvas: a small poster ---- */
@@ -797,8 +796,8 @@
           '<p class="note">Painted as a setting, not baked in. Swap the fill and the original is untouched.</p>'+
         '</div>'+
         '<div class="section"><div class="sec-h">Effects <span class="mut">non-destructive</span></div>'+
-          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,10,24</span></div>'+
-          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Inner glow</span><span class="meta">off</span></div>'+
+          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,10,24</span></div>'+
+          '<div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en off"></span><span class="nm">Inner glow</span><span class="emeta">off</span></div>'+
         '</div>';
     }
 

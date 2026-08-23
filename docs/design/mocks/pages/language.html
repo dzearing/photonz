@@ -22,7 +22,6 @@
   #language .intro{font-size:13px;line-height:1.55;color:var(--dim);margin:0;max-width:760px}
   #language .intro b{color:var(--ink)}
   #language .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
-  #language .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap-sm);justify-content:center;min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
   #language .lg-side{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);display:flex;flex-direction:column;gap:var(--gap-sm)}
   #language .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
   #language .bname{font-size:13.5px;font-weight:640;letter-spacing:-.01em;margin:0}
@@ -96,7 +95,7 @@
 
     <!-- 1 · THE FRAME -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · cut strip</span>
         <!-- The SUBJECT here is the title bar, so the specimen is a cut piece of
              a window with a torn bottom edge, never a whole fake window. The bar
@@ -118,7 +117,7 @@
 
     <!-- 2 · COMMAND SURFACE + TOOL BAR -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · two real surfaces</span>
         <!-- The compact command surface + ⌘K row, as it sits under a title bar. -->
         <div class="toolbar" style="border-radius:var(--r3);border:1px solid var(--line);border-bottom:1px solid var(--line)">
@@ -166,7 +165,7 @@
 
     <!-- 3 · THE ONE DOCK -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · the real dock</span>
         <!-- ONE dock on the right, stacked collapsible groups, each with its own
              bounded scroller. There is no left dock and nothing floats off. -->
@@ -189,7 +188,7 @@
             </div>
             <div class="dgrp collapsed" id="lgEffects">
               <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">2</span></div>
-              <div class="dgrp-b"><div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div></div>
+              <div class="dgrp-b"><div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div></div>
             </div>
           </div>
           <!-- what the whole dock collapses to -->
@@ -211,7 +210,7 @@
 
     <!-- 4 · SPLITTERS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · the real splitter</span>
         <div class="twopane">
           <div class="p" style="flex:1"><span>Canvas</span><span class="w">flex · always grows</span></div>
@@ -234,13 +233,13 @@
 
     <!-- 5 · COLLAPSIBLE SECTIONS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · inspector sections</span>
         <div class="demo-win" style="max-width:300px">
           <div class="pane-h tiny">Inspector</div>
           <div class="section"><div class="sec-h">Layout <span class="mut">2</span></div><div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span><span class="car"><i class="ic ic-chevron-down xs"></i></span></span></div><div class="irow"><span class="rl">H</span><span class="select"><span class="lead">630</span><span class="car"><i class="ic ic-chevron-down xs"></i></span></span></div></div>
           <div class="section"><div class="sec-h">Fill <span class="mut">Paint style</span></div><div class="irow"><span class="rl">Style</span><span class="select"><span class="lead"><span class="sw" style="width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand</span><span class="car"><i class="ic ic-chevron-down xs"></i></span></span></div></div>
-          <div class="section"><div class="sec-h">Effects <span class="mut">2</span></div><div class="efx"><span class="drag"><i class="ic ic-more xs"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div></div>
+          <div class="section"><div class="sec-h">Effects <span class="mut">2</span></div><div class="efx"><span class="drag"><i class="ic ic-more xs"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div></div>
         </div>
         <p class="note" style="margin:0">Click any header to collapse. Live via ds.js.</p>
       </div>
@@ -254,7 +253,7 @@
 
     <!-- 6 · OVERLAYS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · overlay family</span>
         <div class="cpal-mini"><div class="in"><span class="sp"></span><span style="color:var(--faint)">Add a drop shadow to the button</span><span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--faint)">⌘K</span></div></div>
         <div class="overlay-grid">
@@ -276,7 +275,7 @@
 
     <!-- 7 · SELECTION & CANVAS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · selection on canvas</span>
         <div class="canvas mini" style="min-height:180px">
           <div class="selwrap" style="width:150px">
@@ -299,7 +298,7 @@
 
     <!-- 8 · ELEVATION & GLASS -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · elevation ladder</span>
         <div class="glassbar"><i class="ic ic-circle sm"></i> Glass titlebar · blurs what scrolls behind it</div>
         <div class="ladder">
@@ -320,7 +319,7 @@
 
     <!-- 9 · DENSITY & SPACING -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · the 4pt scale</span>
         <div class="ruler4">
           <div class="u"><span class="lg-tick" style="width:4px"></span><span class="lb">4</span></div>
@@ -343,7 +342,7 @@
 
     <!-- 10 · MOTION -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · motion budget</span>
         <div class="motion">
           <span class="m"><b>120ms</b> hover · ease</span>
@@ -363,7 +362,7 @@
 
     <!-- 11 · COLOR & INTERACTION STATES -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · color &amp; states</span>
         <div class="swrow">
           <div class="s"><b style="background:var(--accent)"></b>Accent</div>
@@ -390,7 +389,7 @@
 
     <!-- 12 · KEYBOARD -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <span class="lg-kind">Specimen · keyboard map</span>
         <div class="keys">
           <span class="key"><kbd>V</kbd> Select</span>

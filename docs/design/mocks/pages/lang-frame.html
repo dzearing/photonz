@@ -28,18 +28,10 @@
   #lang-frame .lf-blk-h .lf-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-frame .lf-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · a specimen card. It never wears app chrome of its own: it is a
-     labeled, bordered slice. On THIS page the slice happens to contain a title
-     bar, because the title bar is the thing being documented. The torn bottom
-     edge says out loud "this is a cut piece of a window, not a window". */
-  #lang-frame .lf-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-frame .lf-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-frame .lf-spec-h .lf-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-frame .lf-spec-h .lf-tag.acc{color:var(--accent)}
-  #lang-frame .lf-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. On THIS
+     page a specimen may contain a title bar, because the title bar is the
+     thing being documented. The torn bottom edge says out loud "this is a cut
+     piece of a window, not a window". */
   #lang-frame .lf-cut{border:1px solid var(--edge-lo);border-radius:var(--r3) var(--r3) 0 0;overflow:hidden}
   /* the full-width bar specimens scroll inside their own card rather than clip */
   #lang-frame .lf-cut.wide{overflow-x:auto}
@@ -304,9 +296,9 @@
           continue. This is the only page in the study where a specimen contains traffic lights, because on this page the lights are the
           subject being documented. Everywhere else a specimen wears no app chrome at all, and anything with a real title bar is a real,
           complete app screen.</p>
-        <div class="lf-spec">
-          <div class="lf-spec-h">Image document<span class="lf-tag acc">42px · full</span></div>
-          <div class="lf-spec-b">
+        <div class="spec">
+          <div class="spec-h">Image document<span class="tag acc">42px · full</span></div>
+          <div class="spec-b">
               <div class="lf-cut wide">
                 <div class="titlebar">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
@@ -320,9 +312,9 @@
             </div>
           </div>
 
-          <div class="lf-spec">
-            <div class="lf-spec-h">Timed document<span class="lf-tag">context = duration</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Timed document<span class="tag">context = duration</span></div>
+            <div class="spec-b">
               <div class="lf-cut wide">
                 <div class="titlebar">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
@@ -337,9 +329,9 @@
           </div>
 
         <div class="lf-grid">
-          <div class="lf-spec">
-            <div class="lf-spec-h">Narrow window<span class="lf-tag">≤ 880px</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Narrow window<span class="tag">≤ 880px</span></div>
+            <div class="spec-b">
               <div class="lf-cut">
                 <div class="titlebar" style="height:36px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
@@ -359,9 +351,9 @@
             </div>
           </div>
 
-          <div class="lf-spec">
-            <div class="lf-spec-h">Tight window<span class="lf-tag">≤ 620px</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Tight window<span class="tag">≤ 620px</span></div>
+            <div class="spec-b">
               <div class="lf-cut">
                 <div class="titlebar" style="height:32px;gap:var(--gap-sm);padding:0 var(--pad-sm)">
                   <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
@@ -382,9 +374,9 @@
       <div class="lf-blk-h"><span class="lf-n">03</span><h3>States</h3><span class="lf-sub">Specimens · key / background · edited / saved</span></div>
       <div class="lf-blk-b">
         <div class="lf-grid">
-          <div class="lf-spec">
-            <div class="lf-spec-h">Key window<span class="lf-tag acc">focused</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Key window<span class="tag acc">focused</span></div>
+            <div class="spec-b">
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
@@ -394,9 +386,9 @@
               <p class="lf-cap">Full-colour lights, ink title, actions live.</p>
             </div>
           </div>
-          <div class="lf-spec lf-off">
-            <div class="lf-spec-h">Background window<span class="lf-tag">unfocused</span></div>
-            <div class="lf-spec-b">
+          <div class="spec lf-off">
+            <div class="spec-h">Background window<span class="tag">unfocused</span></div>
+            <div class="spec-b">
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-meta meta">· 2560 × 1440</span></div>
@@ -406,9 +398,9 @@
               <p class="lf-cap">Lights desaturate, the identity and the actions dim together. Nothing moves.</p>
             </div>
           </div>
-          <div class="lf-spec">
-            <div class="lf-spec-h">Edited<span class="lf-tag acc">unsaved changes</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Edited<span class="tag acc">unsaved changes</span></div>
+            <div class="spec-b">
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><span class="lf-dot"></span><b>settings-capture</b><span class="lf-meta meta">· edited</span></div>
@@ -418,9 +410,9 @@
               <p class="lf-cap">The accent dot leads the name the instant a change lands. Closing prompts to save.</p>
             </div>
           </div>
-          <div class="lf-spec">
-            <div class="lf-spec-h">Saved<span class="lf-tag">on disk</span></div>
-            <div class="lf-spec-b">
+          <div class="spec">
+            <div class="spec-h">Saved<span class="tag">on disk</span></div>
+            <div class="spec-b">
               <div class="lf-cut"><div class="titlebar">
                 <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
                 <div class="wtitle lf-id"><b>settings-capture</b><span class="lf-tick"><i class="ic xs ic-check"></i></span><span class="lf-meta meta">· 2560 × 1440</span></div>

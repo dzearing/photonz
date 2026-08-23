@@ -30,17 +30,6 @@
       linear-gradient(180deg,#20242f,#14161d)}
   .libtile .th.bth .b{background:currentColor}
 
-  /* range control (4pt scale, accent themed) */
-  .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
-    background:var(--line-strong);outline:none;margin:0}
-  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
-  .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
-    border:2px solid var(--panel);cursor:pointer}
-  .rng:focus-visible{box-shadow:var(--ring);border-radius:999px}
-  .rng:disabled{opacity:.42}
-  .rrow{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:var(--s2);margin:8px 0}  .rrow .val{text-align:right}
-
   /* toggle switch · built from tokens, full interaction states */
   .tgl{display:inline-flex;align-items:center;gap:var(--gap-sm);background:none;border:0;padding:4px 0;cursor:pointer}
   .tgl .sw{width:34px;height:20px;border-radius:999px;background:var(--line-strong);position:relative;flex:none;
@@ -271,16 +260,16 @@
                 <button data-shape="flat">Flat</button>
                 <button data-shape="textured">Textured</button>
               </div>
-              <div class="rrow"><span class="rl">Roundness</span><input class="rng" id="beRound" name="roundness" type="range" min="15" max="100" step="1" value="100"><span class="val" id="beRoundV">100%</span></div>
-              <div class="rrow"><span class="rl">Angle</span><input class="rng" id="beAngle" name="angle" type="range" min="0" max="180" step="1" value="0"><span class="val" id="beAngleV">0°</span></div>
+              <div class="slrow"><span class="rl">Roundness</span><div class="slider sm"><input id="beRound" name="roundness" type="range" min="15" max="100" step="1" value="100"></div><span class="num" data-pz-frozen="1" id="beRoundV">100%</span></div>
+              <div class="slrow"><span class="rl">Angle</span><div class="slider sm"><input id="beAngle" name="angle" type="range" min="0" max="180" step="1" value="0"></div><span class="num" data-pz-frozen="1" id="beAngleV">0°</span></div>
               <p class="note">Roundness and angle turn the nib into an ellipse. A flat, angled nib gives calligraphic thick and thin edges.</p>
             </div>
 
             <div class="section">
               <div class="sec-h"><i class="ic ic-sliders sm" style="color:var(--faint)"></i> Stroke</div>
-              <div class="rrow"><span class="rl">Size</span><input class="rng" id="beSize" name="size" type="range" min="4" max="90" step="1" value="24"><span class="val" id="beSizeV">24 px</span></div>
-              <div class="rrow"><span class="rl">Spacing</span><input class="rng" id="beSpacing" name="spacing" type="range" min="2" max="180" step="1" value="10"><span class="val" id="beSpacingV">10%</span></div>
-              <div class="rrow"><span class="rl">Scatter</span><input class="rng" id="beScatter" name="scatter" type="range" min="0" max="100" step="1" value="0"><span class="val" id="beScatterV">0%</span></div>
+              <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="beSize" name="size" type="range" min="4" max="90" step="1" value="24"></div><span class="num" data-pz-frozen="1" id="beSizeV">24 px</span></div>
+              <div class="slrow"><span class="rl">Spacing</span><div class="slider sm"><input id="beSpacing" name="spacing" type="range" min="2" max="180" step="1" value="10"></div><span class="num" data-pz-frozen="1" id="beSpacingV">10%</span></div>
+              <div class="slrow"><span class="rl">Scatter</span><div class="slider sm"><input id="beScatter" name="scatter" type="range" min="0" max="100" step="1" value="0"></div><span class="num" data-pz-frozen="1" id="beScatterV">0%</span></div>
               <p class="note">Spacing is the gap between dabs. Push it up and the stroke breaks into dots. Scatter jitters each dab off the path.</p>
             </div>
 
@@ -297,10 +286,10 @@
 
             <div class="section">
               <div class="sec-h"><i class="ic ic-swatch sm" style="color:var(--faint)"></i> Media</div>
-              <div class="rrow"><span class="rl">Grain</span><input class="rng" id="beGrain" name="grain" type="range" min="0" max="100" step="1" value="0"><span class="val" id="beGrainV">0%</span></div>
-              <div class="rrow"><span class="rl">Wet</span><input class="rng" id="beWet" name="wet" type="range" min="0" max="100" step="1" value="20"><span class="val" id="beWetV">20%</span></div>
-              <div class="rrow"><span class="rl">Flow</span><input class="rng" id="beFlow" name="flow" type="range" min="5" max="100" step="1" value="85"><span class="val" id="beFlowV">85%</span></div>
-              <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="beOpac" name="opacity" type="range" min="10" max="100" step="1" value="100"><span class="val" id="beOpacV">100%</span></div>
+              <div class="slrow"><span class="rl">Grain</span><div class="slider sm"><input id="beGrain" name="grain" type="range" min="0" max="100" step="1" value="0"></div><span class="num" data-pz-frozen="1" id="beGrainV">0%</span></div>
+              <div class="slrow"><span class="rl">Wet</span><div class="slider sm"><input id="beWet" name="wet" type="range" min="0" max="100" step="1" value="20"></div><span class="num" data-pz-frozen="1" id="beWetV">20%</span></div>
+              <div class="slrow"><span class="rl">Flow</span><div class="slider sm"><input id="beFlow" name="flow" type="range" min="5" max="100" step="1" value="85"></div><span class="num" data-pz-frozen="1" id="beFlowV">85%</span></div>
+              <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="beOpac" name="opacity" type="range" min="10" max="100" step="1" value="100"></div><span class="num" data-pz-frozen="1" id="beOpacV">100%</span></div>
               <p class="note">Grain breaks the dab into texture. Wet softens and bleeds the edge. Flow is per dab, opacity caps the whole stroke.</p>
             </div>
 

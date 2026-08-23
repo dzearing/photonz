@@ -27,15 +27,7 @@
   #lang-sections .ls-blk-h .ls-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-sections .ls-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
-  #lang-sections .ls-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-sections .ls-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-sections .ls-spec-h .ls-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-sections .ls-spec-h .ls-tag.acc{color:var(--accent)}
-  #lang-sections .ls-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. */
   #lang-sections .ls-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
   #lang-sections .ls-cap b{color:var(--ink);font-weight:600}
   #lang-sections .ls-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
@@ -137,9 +129,9 @@
           </div>
         </div>
 
-        <div class="ls-spec">
-          <div class="ls-spec-h">Both levels in one column<span class="ls-tag acc">not a window</span></div>
-          <div class="ls-spec-b">
+        <div class="spec">
+          <div class="spec-h">Both levels in one column<span class="tag acc">not a window</span></div>
+          <div class="spec-b">
             <div class="ls-plinth" style="max-width:300px">
               <div class="dgrp" style="--gh:250px">
                 <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
@@ -158,7 +150,7 @@
               <div class="dgrp collapsed">
                 <div class="dgrp-h"><span class="ttl">Effects</span><span class="cnt">Glow + Shadow</span></div>
                 <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                  <div class="efx"><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
+                  <div class="efx"><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
                 </div>
               </div>
             </div>
@@ -175,9 +167,9 @@
       <div class="ls-blk-h"><span class="ls-n">02</span><h3>Anatomy · the section</h3><span class="ls-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.section &gt; .sec-h</code></span></div>
       <div class="ls-blk-b">
         <div class="ls-anat">
-          <div class="ls-spec">
-            <div class="ls-spec-h">One section<span class="ls-tag acc">inside a group body</span></div>
-            <div class="ls-spec-b">
+          <div class="spec">
+            <div class="spec-h">One section<span class="tag acc">inside a group body</span></div>
+            <div class="spec-b">
               <div class="ls-plinth" style="position:relative">
                 <span class="ls-pin abs" style="top:36px;left:4px">2</span>
                 <span class="ls-pin abs" style="top:36px;left:44px">1</span>
@@ -211,9 +203,9 @@
       <div class="ls-blk-h"><span class="ls-n">03</span><h3>Variants</h3><span class="ls-sub">Specimens · open · collapsed · component · nested</span></div>
       <div class="ls-blk-b">
         <div class="ls-grid">
-          <div class="ls-spec">
-            <div class="ls-spec-h">Open<span class="ls-tag acc">the resting state</span></div>
-            <div class="ls-spec-b"><div class="ls-plinth">
+          <div class="spec">
+            <div class="spec-h">Open<span class="tag acc">the resting state</span></div>
+            <div class="spec-b"><div class="ls-plinth">
               <div class="section"><div class="sec-h">Layout <span class="mut">2</span></div>
                 <div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <div class="irow"><span class="rl">H</span><span class="select"><span class="lead">630</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
@@ -221,9 +213,9 @@
             </div><p class="ls-cap">Open by default when the active tool uses it. The summary counts what is inside.</p></div>
           </div>
 
-          <div class="ls-spec">
-            <div class="ls-spec-h">Collapsed<span class="ls-tag">summary carries the answer</span></div>
-            <div class="ls-spec-b"><div class="ls-plinth">
+          <div class="spec">
+            <div class="spec-h">Collapsed<span class="tag">summary carries the answer</span></div>
+            <div class="spec-b"><div class="ls-plinth">
               <div class="section closed"><div class="sec-h">Layout <span class="mut">400 × 630</span></div>
                 <div class="irow"><span class="rl">W</span><span class="select"><span class="lead">400</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <div class="irow"><span class="rl">H</span><span class="select"><span class="lead">630</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
@@ -231,18 +223,18 @@
             </div><p class="ls-cap">On collapse the count is swapped for the real value, so nothing is lost by closing it.</p></div>
           </div>
 
-          <div class="ls-spec">
-            <div class="ls-spec-h">Component-tinted<span class="ls-tag">purple, everywhere</span></div>
-            <div class="ls-spec-b"><div class="ls-plinth">
+          <div class="spec">
+            <div class="spec-h">Component-tinted<span class="tag">purple, everywhere</span></div>
+            <div class="spec-b"><div class="ls-plinth">
               <div class="section"><div class="sec-h comp">Component <span class="mut" style="color:var(--comp)"><i class="ic xs ic-component"></i> linked</span></div>
                 <div class="irow split"><span class="rl">Main</span><span class="select comp" data-target="dsys"><span class="lead"><span style="color:var(--comp)"><i class="ic xs ic-component"></i></span> Button</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span><button class="linkbtn">Detach</button></div>
               </div>
             </div><p class="ls-cap">Anything to do with reuse carries the component purple, in every panel and on every page.</p></div>
           </div>
 
-          <div class="ls-spec">
-            <div class="ls-spec-h">Nested<span class="ls-tag">exactly one level</span></div>
-            <div class="ls-spec-b"><div class="ls-plinth">
+          <div class="spec">
+            <div class="spec-h">Nested<span class="tag">exactly one level</span></div>
+            <div class="spec-b"><div class="ls-plinth">
               <div class="section"><div class="sec-h">Border <span class="mut">1px · solid</span></div>
                 <div class="irow"><span class="rl">Width</span><span class="select"><span class="lead">1</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
                 <div class="ls-nest">
@@ -456,8 +448,8 @@
                   <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
                 </div>
                 <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
-                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
+                  <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
                 </div>
               </div>
 
@@ -523,9 +515,9 @@
       <div class="ls-blk-h"><span class="ls-n">08</span><h3>Responsive</h3><span class="ls-sub">Narrow windows lean on the summary</span></div>
       <div class="ls-blk-b">
         <div class="ls-grid">
-          <div class="ls-spec">
-            <div class="ls-spec-h">Compact Properties<span class="ls-tag">one section open</span></div>
-            <div class="ls-spec-b">
+          <div class="spec">
+            <div class="spec-h">Compact Properties<span class="tag">one section open</span></div>
+            <div class="spec-b">
               <div class="ls-plinth ls-narrow">
                 <div class="dgrp" style="--gh:210px">
                   <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Instance</span></div>
@@ -542,9 +534,9 @@
               </div>
             </div>
           </div>
-          <div class="ls-spec">
-            <div class="ls-spec-h">What changes<span class="ls-tag">and what does not</span></div>
-            <div class="ls-spec-b">
+          <div class="spec">
+            <div class="spec-h">What changes<span class="tag">and what does not</span></div>
+            <div class="spec-b">
               <p class="ls-note" style="border:0;padding:0;background:transparent">Below <b>880px</b> the dock itself becomes a rail plus an
                 overlay, so the panel you summon has the full height to work with. Inside it, every section but the active one <b>starts
                 collapsed</b> and the value summary does the job the open body used to. Nothing is hidden: the answer is still on the header,

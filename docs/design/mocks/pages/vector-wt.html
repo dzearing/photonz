@@ -11,21 +11,20 @@
      way through: one bezier path whose stroke is stamped by the real brush
      engine, so closing the path, painting the fill, swapping the brush, and
      dragging an anchor all re-render for real. Page-local CSS is the window
-     height, the artboard, and the brush picker chips. */
+     height, the artboard's aspect ratio and artwork background, and the
+     path-editing overlay. */
 
   #vector-wt .win.shell{height:648px;min-height:0}  /* the artboard keeps the artwork's aspect ratio so the SVG geometry and the
      raster brush canvas land on exactly the same pixels at any width. The
      definite width lives on the DIRECT grid child of .canvas. */
   #vector-wt .canvas>.selwrap{width:min(560px,calc(100% - var(--s6)))}
-  #vector-wt .bart{position:relative;width:100%;aspect-ratio:64 / 28;border-radius:var(--r4);
-    overflow:hidden;touch-action:none;
+  /* the shared .artstack owns the registration; the page owns the artwork:
+     its aspect ratio, its dark artboard finish, and the pen cursor */
+  #vector-wt .artstack{--ar:64 / 28;
     background:radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,.06),transparent 55%),
       linear-gradient(180deg,#20242f,#14161d);
     box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
-  #vector-wt .bart canvas,#vector-wt .bart svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-  #vector-wt .bart svg{cursor:crosshair}
-  #vector-wt .bart .plabel{position:absolute;left:10px;top:8px;z-index:4;font-family:var(--mono);
-    font-size:9px;letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
+  #vector-wt .artstack svg{cursor:crosshair}
   #vector-wt .hint-badge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
     background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
@@ -42,25 +41,9 @@
   /* inspector rows on the 4pt scale */
   #vector-wt .setrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:var(--s2);padding:4px 0}  #vector-wt .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
   #vector-wt .actrow .btn{flex:1 1 auto}
-  #vector-wt .rng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:999px;
-    background:var(--line-strong);outline:none;margin:0}
-  #vector-wt .rng::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-    background:var(--accent);border:2px solid var(--panel);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer}
-  #vector-wt .rng::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);
-    border:2px solid var(--panel);cursor:pointer}
-  #vector-wt .rng:focus-visible{box-shadow:var(--ring);border-radius:999px}
-  #vector-wt .rrow{display:grid;grid-template-columns:52px 1fr 40px;align-items:center;gap:var(--s2);margin:8px 0}  #vector-wt .rrow .val{text-align:right}
+  /* sliders and the brush picker are the shared slider-row and preset-picker
+     primitives; nothing page-local left */
 
-  /* the brush picker · every chip is a real stroke from the same engine */
-  #vector-wt .bpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:var(--s2) 0 0}
-  #vector-wt .bchip{position:relative;border:1px solid var(--edge-lo);border-radius:7px;overflow:hidden;
-    background:linear-gradient(180deg,#20242f,#14161d);height:34px;padding:0;cursor:pointer;
-    transition:border-color .12s ease,transform .1s ease}
-  #vector-wt .bchip canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-  #vector-wt .bchip:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--edge-lo));transform:translateY(-1px)}
-  #vector-wt .bchip:active{transform:translateY(0) scale(.97)}
-  #vector-wt .bchip:focus-visible{outline:none;box-shadow:var(--ring)}
-  #vector-wt .bchip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
   /* a Library tile previews the very same engine, at tile size */
   #vector-wt .libtile .th.brushth{position:relative;background:linear-gradient(180deg,#20242f,#14161d)}
   #vector-wt .libtile .th.brushth canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -128,7 +111,7 @@
             <div class="canvas">
               <div class="artboard-label">1200 × 630 · vector</div>
               <div class="selwrap">
-                <div class="bart">
+                <div class="artstack">
                   <span class="plabel" id="vbPlabel">open path · brush stroke</span>
                   <!-- the mark: the Paint fill, then brush dabs stamped along the path -->
                   <canvas id="vbPaint" width="1280" height="560" aria-label="The shape's fill and its brush-painted stroke"></canvas>
@@ -307,7 +290,7 @@
                       <button data-fill="grad" id="vbFillGrad">Gradient</button>
                     </div>
                     <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" id="vbFillSw" style="background:repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)"></span> <span id="vbFillName">No fill</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                    <div class="rrow"><span class="rl">Opacity</span><input class="rng" id="vbFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="62"><span class="val" id="vbFillOpV">62%</span></div>
+                    <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="vbFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="62"></div><span class="num" data-pz-frozen="1" id="vbFillOpV">62%</span></div>
                   </div>
 
                   <div class="section">
@@ -315,8 +298,8 @@
                     <div class="irow"><span class="rl">Brush</span>
                       <div class="bpick" id="vbBrushPick" role="radiogroup" aria-label="Stroke brush"></div>
                     </div>
-                    <div class="rrow"><span class="rl">Size</span><input class="rng" id="vbSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"><span class="val" id="vbSizeV">26</span></div>
-                    <div class="rrow"><span class="rl">Flow</span><input class="rng" id="vbFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"><span class="val" id="vbFlowV">42%</span></div>
+                    <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="vbSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"></div><span class="num" data-pz-frozen="1" id="vbSizeV">26</span></div>
+                    <div class="slrow"><span class="rl">Flow</span><div class="slider sm"><input id="vbFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"></div><span class="num" data-pz-frozen="1" id="vbFlowV">42%</span></div>
                     <div class="actrow">
                       <button class="btn sm secondary" id="vbSwap"><i class="ic ic-brush"></i> Swap brush</button>
                       <button class="btn sm secondary" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush</button>
@@ -840,8 +823,16 @@
         n.classList.toggle("on", on);
         if (n.hasAttribute("role")) n.setAttribute("aria-checked", on ? "true" : "false");
       });
-      if ($("vbSize")) { $("vbSize").value = size; set("vbSizeV", String(Math.round(size))); }
-      if ($("vbFlow")) { $("vbFlow").value = Math.round(flow * 100); set("vbFlowV", Math.round(flow * 100) + "%"); }
+      /* the shared .slider paints its fill from input events, so a programmatic
+         value change (brush swap, walkthrough step) must announce itself; only
+         on a real change, so drag re-renders stay single-paint */
+      function setRange(id, val) {
+        var n = $(id); if (!n) return;
+        var s = String(val);
+        if (n.value !== s) { n.value = s; n.dispatchEvent(new Event("input", { bubbles: true })); }
+      }
+      setRange("vbSize", size); set("vbSizeV", String(Math.round(size)));
+      setRange("vbFlow", Math.round(flow * 100)); set("vbFlowV", Math.round(flow * 100) + "%");
     }
     function schedule() {
       if (raf) return;

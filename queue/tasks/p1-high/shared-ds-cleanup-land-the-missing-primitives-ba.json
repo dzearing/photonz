@@ -3,11 +3,11 @@
   "title": "Shared DS cleanup: land the missing primitives batch",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.028Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T01:06:52.637Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: interaction-foundations (the primitives everything sits on: selection handles, chips, specimen cards land once in shared). Re-scoped from study-tasks.json ds-consolidated-cleanup + folded items (ds-specimen-card, ds-handle-eight-point, ds-missing-primitives, vr6-tier2-primitives, fix-canvas-child-sizing, light-artboard-grid-invisible, radial-only-stages, dedupe-dock-tabs). The July component rebuild already landed toggle, slider, dock grow floors, titlebar contract. Verified still missing on 2026-08-22: .spec specimen card; 8-point+rotate selection handles (selection.css has 4 corners); generic .chip.on; preset-picker (.bpick/.bchip); ARTBOARD primitive; 6 pages still hand-roll .rng (brush-editor, draw, img-bg-remove, img-masking, vector-wt, video-transitions); .canvas > * percentage-width collapse hazard (canvas.css); light-artboard grid vanishes (tokens.css grid colors are white); 9 radial-only page canvases should adopt .canvas.mini; .ptab/dock-tab remnants in app-patterns.css + titlebar.css; .efx .meta specificity hazard. Verify each item against the current DS before landing it.",
@@ -37,6 +37,44 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T01:05:00.000Z",
+      "note": "Verified all 11 items against current DS; all still missing/broken as noted. Also found bare .spec used in 12 pages with TWO meanings (glass card x5 + prefixed copies x6; padded stage tile x7) - promoted both as .spec and .spec.stage."
+    },
+    {
+      "t": "2026-08-23T01:20:00.000Z",
+      "note": "Shared landings: spec.css (specimen card + stage variant, NEW), preset.css (.bpick/.bchip, NEW), selection.css (+.handle.tc/.bc/.ml/.mr edge handles, +.rot/.rotstem rotate, adaptive sm/xs/multi rules), button.css (generic .chip.on), canvas.css (.artstack primitive, .canvas grid-template-columns:100% child-collapse fix, .canvas.on-light grid flip, .efx .meta -> .efx .emeta), inspector.css (nowrap list follows rename), titlebar.css (.ptabs/.ptab deleted), app-patterns.css (.dock-tabs/.dock-tab/.dock-handle deleted; no page used either, .dnav/.dtab is the one tab system), order.json (+preset,+spec), tokens.css reserved-names list + AGENTS.md updated."
+    },
+    {
+      "t": "2026-08-23T01:21:00.000Z",
+      "note": "Canvas fix verified in browser: width:min(90%,560px) child measures 560px (was 0); existing children unchanged. Audit-sweep baseline: 87 pages load, 30 have PRE-EXISTING truncated-chip seg findings - confirmed pre-existing by stash+resweep (identical without the batch); filed as queue task audit-sweep-truncated-dock-seg-chips-on-30-pages."
+    },
+    {
+      "t": "2026-08-23T01:25:00.000Z",
+      "note": "Fanned out 8 page-migration agents on disjoint file sets: sliders x4 pages, draw, vector-wt, spec-card adoption x5, radial->canvas.mini + effects spec + ds-modes on-light x6, lang stage pages x7, lang card pages x6, efx-meta rename x10."
+    },
+    {
+      "t": "2026-08-23T01:00:04.416Z",
+      "note": "go-loop crash loop: 99 claim/reset cycles collapsed from log; work survived in working tree, resumed by fresh runner"
+    },
+    {
+      "t": "2026-08-23T01:35:00.000Z",
+      "note": "Resume verification: all 6 .rng pages migrated (no local .rng defs remain), no local .spec/.bpick/.bchip defs, no .ptab/.dock-tab usage (2 grep hits were the word scriptable), no .meta inside .efx rows. 88/88 pages return 200."
+    },
+    {
+      "t": "2026-08-23T01:40:00.000Z",
+      "note": "REGRESSION found by sweep and fixed: .spec.stage collided with the existing .stage walkthrough component (tokens.css flex/center + page.css 100vh), collapsing a language.html canvas to 0 width and inflating tiles to viewport height on 7 pages. Renamed variant to .spec.tile (spec.css, AGENTS.md, 49 usages across 7 pages), rebuilt dist."
+    },
+    {
+      "t": "2026-08-23T01:45:00.000Z",
+      "note": "Final audit-sweep: 88 pages, 74 segs, 77 dock managers; zero findings beyond the pre-existing truncated/uneven-chip family on the same 30 pages filed as audit-sweep-truncated-dock-seg-chips-on-30-pages. Batch complete."
+    },
+    {
+      "t": "2026-08-23T01:06:52.636Z",
+      "note": "Shared primitives batch landed: spec.css (specimen card + .spec.tile), preset.css (.bpick/.bchip), 8-point+rotate selection handles, generic .chip.on, .artstack, canvas child-collapse fix, on-light grid flip, .efx .emeta rename, .ptab/.dock-tab deletion; 6 pages off hand-rolled .rng; 38 pages migrated. Verified: 88/88 pages 200, audit-sweep clean except pre-existing chip findings filed separately. Also fixed .spec.stage vs .stage collision found on resume (renamed to .spec.tile)."
     }
-  ]
+  ],
+  "started": "2026-08-23T01:00:04.416Z",
+  "completed": "2026-08-23T01:06:52.637Z"
 }

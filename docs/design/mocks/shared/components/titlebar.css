@@ -44,9 +44,9 @@
 .pane.insp{border-left:1px solid var(--line);background:var(--panel-2)}
 .pane-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--pad-sm) var(--pad) var(--s2);display:flex;align-items:center;justify-content:space-between}
 .pane-h .add{color:var(--dim);font-size:14px;line-height:1}
-.ptabs{display:flex;gap:2px;padding:8px 10px 4px}
-.ptab{font-size:11px;font-weight:560;color:var(--faint);padding:4px 9px;border-radius:7px}
-.ptab.on{background:var(--panel-2);color:var(--ink)}
+/* .ptabs/.ptab are GONE: three overlapping tab constructs (.ptab, .dock-tab,
+   .dnav/.dtab) had accumulated; .dnav/.dtab in shell.css is the one tab system
+   (real focus states, real buttons). No page used the other two. */
 
 .lrow{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px;color:var(--dim);border-left:2px solid transparent}
 .lrow:hover{background:var(--panel-2)}

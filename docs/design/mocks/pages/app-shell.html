@@ -14,14 +14,8 @@
   .leg{display:flex;flex-wrap:wrap;gap:var(--gap-sm) var(--gap);padding:var(--pad-sm) 0 0}
   .leg .li{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim)}
   .leg .li b{color:var(--ink);font-weight:600}
-  .specs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  .spec{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);
-    backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);box-shadow:inset 0 1px 0 var(--edge-hi)}
-  .spec.wide{grid-column:1/-1}
-  .spec-h{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;
-    padding:var(--pad-sm) var(--pad) var(--gap-sm);display:flex;align-items:center;gap:7px}
-  .spec-h .sub{color:var(--dim);text-transform:none;letter-spacing:0;font-weight:520}
-  .spec-b{padding:0 var(--pad) var(--pad)}  .pglead{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0}  /* the reference shell is taller than the default .win.tall so all four
+  /* spec cards come from the shared DS (shared/components/spec.css) */
+  .pglead{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0}  /* the reference shell is taller than the default .win.tall so all four
      dock groups are visible at once */
   /* Windows get a DEFINITE height so the dock is bounded and each group's own
      scroller does the work (rather than a long list stretching the window). */
@@ -58,7 +52,7 @@
   #app-shell .shotttl{position:absolute;left:10px;top:8px;font-family:var(--serif);color:#fff;
     font-size:14px;font-weight:700;letter-spacing:-.01em;text-shadow:0 1px 7px rgba(0,0,0,.5)}
   #app-shell .shotsub{position:absolute;left:11px;top:30px;color:rgba(255,255,255,.86);font-size:9.5px}
-  @media (max-width:820px){.specs{grid-template-columns:1fr}}
+  @media (max-width:820px){#app-shell .specs{grid-template-columns:1fr}}
   /* The numbered redline callouts used to live here as ~40 lines of page-local
      CSS plus a positioning routine in this page's script. Both are now the
      shared `redline` component (shared/components/redline.{css,js}), so the doc
@@ -280,8 +274,8 @@
               <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
             </div>
             <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-              <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
-              <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+              <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
+              <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
             </div>
           </div>
 
@@ -843,8 +837,8 @@
                 <button class="btn ghost icon sm" title="Add effect"><i class="ic ic-plus"></i></button>
               </div>
               <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-                <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="meta">style</span></div>
-                <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="meta">0,8,20</span></div>
+                <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Card glow</span><span class="emeta">style</span></div>
+                <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
               </div>
             </div>
             <div class="dgrp collapsed">

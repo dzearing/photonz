@@ -86,8 +86,6 @@
   /* ---- spec blocks (same anatomy as the other design-language pages) ---- */
   #iconography .blk{display:grid;grid-template-columns:1fr 280px;gap:var(--gap);align-items:stretch;
     border:1px solid var(--line);border-radius:var(--r4);background:var(--panel);overflow:hidden}
-  #iconography .spec{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap);justify-content:center;
-    min-width:0;background:radial-gradient(600px 260px at 20% -20%,var(--panel-2),transparent 60%)}
   #iconography .meta{padding:var(--pad);border-left:1px solid var(--line);background:var(--panel-2);
     display:flex;flex-direction:column;gap:var(--gap-sm)}
   #iconography .bnum{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.04em}
@@ -492,7 +490,7 @@
 
     <!-- ============ 1 · THE GRID ============ -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="keys">
           <div class="key">
             <div class="kbox"><div class="live"></div><div class="shape sq"></div><div class="gl"><i class="ic ic-square"></i></div></div>
@@ -523,7 +521,7 @@
 
     <!-- ============ 2 · WEIGHT ============ -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="wcmp">
           <div class="wcol">
             <div class="wrow"><i class="ic ic-layers"></i><i class="ic ic-brush"></i><i class="ic ic-crop"></i><i class="ic ic-keyframe"></i><i class="ic ic-text"></i><i class="ic ic-search"></i></div>
@@ -546,7 +544,7 @@
 
     <!-- ============ 3 · SIZE RAMP ============ -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="ramp">
           <div class="rstep"><div class="rbox"><i class="ic xs ic-layers"></i></div><div class="rlab"><b>.xs · 12</b>dense list rows,<br>inline badges</div></div>
           <div class="rstep"><div class="rbox"><i class="ic sm ic-layers"></i></div><div class="rlab"><b>.sm · 14</b>panel headers,<br>menu items</div></div>
@@ -570,7 +568,7 @@
 
     <!-- ============ 4 · IN CONTEXT ============ -->
     <div class="blk">
-      <div class="spec">
+      <div class="spec tile">
         <div class="ctx">
           <div class="ctxrow">
             <span class="ctxlab">Tool bar</span>

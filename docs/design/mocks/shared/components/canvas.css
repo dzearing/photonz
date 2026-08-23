@@ -20,12 +20,35 @@
     linear-gradient(90deg,var(--artboard-grid) 1px,transparent 1px) 50% 50%/var(--grid-1) var(--grid-1),
     radial-gradient(var(--artboard-glow) at 50% 30%,var(--artboard-ink),var(--artboard-bg));
   transition:background-size .16s ease-out;
-  position:relative;overflow:hidden;display:grid;place-items:center;min-height:340px}
+  position:relative;overflow:hidden;display:grid;place-items:center;min-height:340px;
+  /* 100%, not auto: with an auto track a child's percentage width resolves
+     against a shrink-to-fit parent and COLLAPSES TO 0 (brush-library shipped an
+     invisible 0×250 sample this way). A definite full-width track gives
+     `width:min(90%,560px)` on a direct child something real to resolve
+     against; centering is unchanged because items still size to content. */
+  grid-template-columns:100%}
 /* inline specimen canvas: same treatment, doc-card scale, no editor min-height */
 .canvas.mini{--grid-cell:18px; --artboard-glow:300px 180px;
   min-height:0;border-radius:var(--r3)}
+/* on a LIGHT artboard (a page that retunes --artboard-bg toward white) the
+   default white grid lines vanish — flip them dark. */
+.canvas.on-light{--artboard-grid:rgba(0,0,0,.06);--artboard-grid-major:rgba(0,0,0,.11)}
 @media (prefers-reduced-motion:reduce){ .canvas{transition:none} }
 .artboard-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);letter-spacing:.04em}
+
+/* ---- THE ARTSTACK — registered drawing surfaces --------------------------
+   Anywhere vector geometry and raster pixels must land on the SAME pixels
+   (a brush stroke over a path, a mask over a photo), stack a <canvas> and an
+   <svg> inside one positioned box. Give the box a height, or set an
+   aspect-ratio via --ar so both surfaces keep mapping 1:1 at any width.
+   Promoted from draw.html (.draw-art) and vector-wt.html (.bart), which had
+   hand-rolled it byte-alike. The background is artwork, so pages set their
+   own (paper, artboard, photo) — the primitive owns only the registration. */
+.artstack{position:relative;width:100%;border-radius:var(--r4);overflow:hidden;
+  aspect-ratio:var(--ar, auto);touch-action:none}
+.artstack>canvas,.artstack>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.artstack .plabel{position:absolute;left:10px;top:8px;z-index:4;font-family:var(--mono);
+  font-size:9px;letter-spacing:.04em;color:rgba(255,255,255,.42);pointer-events:none}
 
 .hero-card{width:400px;border-radius:22px;padding:30px 30px 26px;position:relative;overflow:hidden;background:linear-gradient(135deg,#7c4dff 0%,#b14dff 42%,#ff5d8f 100%);box-shadow:0 0 60px -6px rgba(177,77,255,.55),0 22px 50px -14px rgba(0,0,0,.55)}
 .hero-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 85% -10%,rgba(255,255,255,.35),transparent 45%);mix-blend-mode:soft-light;pointer-events:none}
@@ -68,5 +91,8 @@
 .efx .en.off{background:var(--line-strong)}
 .efx .en.off::after{left:1.5px;right:auto}
 .efx .nm{font-weight:560;color:var(--ink)}
-.efx .meta{color:var(--faint);margin-left:auto;font-family:var(--mono);font-size:10px}
+/* .emeta, not .meta: `.efx .meta` sat at (0,1,1) specificity, so any page's own
+   `#page .meta` silently restyled every effect row (it bit language.html).
+   The row's readout now has a name no page will reuse by accident. */
+.efx .emeta{color:var(--faint);margin-left:auto;font-family:var(--mono);font-size:10px}
 .efx.click{cursor:pointer}.efx.click:hover{border-color:var(--accent-line)}

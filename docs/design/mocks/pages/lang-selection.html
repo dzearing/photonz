@@ -13,8 +13,8 @@
      prefixed `lx-` so they cannot collide with DS names (meta, rule, note,
      spec, api were all colliding before).
 
-     Two page-local EXTENSIONS of the DS are marked below: edge handles and a
-     rotate handle. Both are candidates to move into the shared DS.
+     Edge handles (.handle.tc/.bc/.ml/.mr) and the rotate handle
+     (.rotstem/.rot) are part of the shared DS now; nothing here extends them.
      ============================================================ */
   #lang-selection .lx-lead{font-size:12.5px;line-height:1.55;color:var(--dim);margin:0;max-width:840px}
   #lang-selection .lx-lead b{color:var(--ink);font-weight:600}
@@ -40,15 +40,7 @@
   #lang-selection .lx-blk-h .lx-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-selection .lx-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
-  #lang-selection .lx-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-selection .lx-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-selection .lx-spec-h .lx-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-selection .lx-spec-h .lx-tag.acc{color:var(--accent)}
-  #lang-selection .lx-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. */
   #lang-selection .lx-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
   #lang-selection .lx-cap b{color:var(--ink);font-weight:600}
   #lang-selection .lx-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
@@ -64,17 +56,8 @@
     box-shadow:0 0 44px -6px rgba(177,77,255,.5)}
   #lang-selection .lx-obj.alt{background:linear-gradient(135deg,#12c2e9,#7c4dff)}
 
-  /* DS EXTENSION 1 · edge handles. The shared DS ships four corner handles;
-     a real transform frame has eight. Same .handle paint, four more slots. */
-  #lang-selection .handle.tc{top:-13px;left:50%;transform:translateX(-50%)}
-  #lang-selection .handle.bc{bottom:-13px;left:50%;transform:translateX(-50%)}
-  #lang-selection .handle.ml{left:-13px;top:50%;transform:translateY(-50%)}
-  #lang-selection .handle.mr{right:-13px;top:50%;transform:translateY(-50%)}
-  /* DS EXTENSION 2 · rotate handle, on a short stem above the frame. */
-  #lang-selection .lx-rotstem{position:absolute;left:50%;top:-25px;width:1.5px;height:16px;background:var(--accent);
-    transform:translateX(-50%);pointer-events:none}
-  #lang-selection .lx-rot{position:absolute;left:50%;top:-36px;width:11px;height:11px;border-radius:50%;
-    background:var(--panel);border:1.5px solid var(--accent);transform:translateX(-50%)}
+  /* Edge handles and the rotate handle come from the shared DS
+     (.handle.tc/.bc/.ml/.mr, .rotstem, .rot). */
 
   /* multi-select frames */
   #lang-selection .lx-group{position:absolute;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
@@ -201,7 +184,7 @@
                   </div>
                   <!-- PLACE 1 OF 3 · the canvas -->
                   <div class="sel-ring"></div>
-                  <span class="lx-rotstem"></span><span class="lx-rot" title="Rotate"></span>
+                  <span class="rotstem"></span><span class="rot" title="Rotate"></span>
                   <span class="handle tl"></span><span class="handle tc"></span><span class="handle tr"></span>
                   <span class="handle ml"></span><span class="handle mr"></span>
                   <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
@@ -355,16 +338,16 @@
       <div class="lx-blk-h"><span class="lx-n">03</span><h3>Anatomy · the transform frame</h3><span class="lx-sub">Specimen · <code style="font-family:var(--mono);font-size:10px">.selwrap</code></span></div>
       <div class="lx-blk-b">
         <div class="lx-anat">
-          <div class="lx-spec">
-            <div class="lx-spec-h">A selected object<span class="lx-tag acc">not a window</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">A selected object<span class="tag acc">not a window</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth tall">
                 <div class="canvas">
                   <div class="artboard-label">1200 × 630 · Brand tokens</div>
                   <div class="selwrap" style="width:190px">
                     <div class="lx-obj" style="width:190px;height:118px"></div>
                     <div class="sel-ring"></div>
-                    <span class="lx-rotstem"></span><span class="lx-rot" title="Rotate"></span>
+                    <span class="rotstem"></span><span class="rot" title="Rotate"></span>
                     <span class="handle tl"></span><span class="handle tc"></span><span class="handle tr"></span>
                     <span class="handle ml"></span><span class="handle mr"></span>
                     <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
@@ -396,9 +379,9 @@
       <div class="lx-blk-h"><span class="lx-n">04</span><h3>Variants</h3><span class="lx-sub">Specimens · single · multi · marquee · instance</span></div>
       <div class="lx-blk-b">
         <div class="lx-grid">
-          <div class="lx-spec">
-            <div class="lx-spec-h">Single<span class="lx-tag">the full frame</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">Single<span class="tag">the full frame</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth short">
                 <div class="canvas">
                   <div class="selwrap" style="width:130px">
@@ -413,9 +396,9 @@
             </div>
           </div>
 
-          <div class="lx-spec">
-            <div class="lx-spec-h">Multi-select<span class="lx-tag">one group frame</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">Multi-select<span class="tag">one group frame</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth short">
                 <div class="canvas">
                   <div style="position:relative;width:160px;height:100px">
@@ -434,9 +417,9 @@
             </div>
           </div>
 
-          <div class="lx-spec">
-            <div class="lx-spec-h">Marquee<span class="lx-tag">drag on empty canvas</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">Marquee<span class="tag">drag on empty canvas</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth short">
                 <div class="canvas">
                   <div style="position:relative;width:160px;height:100px">
@@ -451,9 +434,9 @@
             </div>
           </div>
 
-          <div class="lx-spec">
-            <div class="lx-spec-h">Component instance<span class="lx-tag">purple, never blue</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">Component instance<span class="tag">purple, never blue</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth short">
                 <div class="canvas">
                   <div style="position:relative">
@@ -475,9 +458,9 @@
       <div class="lx-blk-h"><span class="lx-n">05</span><h3>States</h3><span class="lx-sub">Specimens · selected · hover (not selected) · locked</span></div>
       <div class="lx-blk-b">
         <div class="lx-grid three">
-          <div class="lx-spec">
-            <div class="lx-spec-h">Selected<span class="lx-tag acc">ring + handles</span></div>
-            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+          <div class="spec">
+            <div class="spec-h">Selected<span class="tag acc">ring + handles</span></div>
+            <div class="spec-b"><div class="cnv lx-plinth short"><div class="canvas">
               <div class="selwrap" style="width:118px">
                 <div class="lx-obj" style="width:118px;height:70px"></div>
                 <div class="sel-ring"></div>
@@ -485,9 +468,9 @@
               </div>
             </div></div><p class="lx-cap">Committed. Handles are live, arrow keys nudge, Properties follows.</p></div>
           </div>
-          <div class="lx-spec">
-            <div class="lx-spec-h">Hover<span class="lx-tag">what a click would grab next</span></div>
-            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+          <div class="spec">
+            <div class="spec-h">Hover<span class="tag">what a click would grab next</span></div>
+            <div class="spec-b"><div class="cnv lx-plinth short"><div class="canvas">
               <div style="position:relative;width:198px;height:64px">
                 <div class="selwrap" style="position:absolute;left:0;top:0;width:88px">
                   <div class="lx-obj" style="width:88px;height:64px"></div>
@@ -502,9 +485,9 @@
               </div>
             </div></div><p class="lx-cap">Not a state the selection can be in. The selected object keeps its frame; the <b>other</b> one, under the pointer, gets a 1px outline and no handles — that is what a click would grab instead. Hovering the selected object changes nothing, because its frame has already said so.</p></div>
           </div>
-          <div class="lx-spec">
-            <div class="lx-spec-h">Locked<span class="lx-tag">inspect, do not move</span></div>
-            <div class="lx-spec-b"><div class="cnv lx-plinth short"><div class="canvas">
+          <div class="spec">
+            <div class="spec-h">Locked<span class="tag">inspect, do not move</span></div>
+            <div class="spec-b"><div class="cnv lx-plinth short"><div class="canvas">
               <div style="position:relative;width:118px;height:70px">
                 <div class="lx-obj" style="width:118px;height:70px;filter:saturate(.6) brightness(.85)"></div>
                 <div class="lock-ring"></div>
@@ -521,9 +504,9 @@
       <div class="lx-blk-h"><span class="lx-n">06</span><h3>While you drag</h3><span class="lx-sub">Specimen · guides, gaps, and the measure tag</span></div>
       <div class="lx-blk-b">
         <div class="lx-anat">
-          <div class="lx-spec">
-            <div class="lx-spec-h">Snapping to a 16pt gap<span class="lx-tag acc">transient, drag only</span></div>
-            <div class="lx-spec-b">
+          <div class="spec">
+            <div class="spec-h">Snapping to a 16pt gap<span class="tag acc">transient, drag only</span></div>
+            <div class="spec-b">
               <div class="cnv lx-plinth">
                 <div class="canvas">
                   <div style="position:relative;width:230px;height:130px">

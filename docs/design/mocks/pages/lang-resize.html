@@ -31,7 +31,7 @@
   #lang-resize .pn .lrow{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s1) var(--pad-sm);font-size:11px;color:var(--dim)}
   #lang-resize .pn .lrow .ic{color:var(--faint);font-size:10px}
   #lang-resize .pn .w{font-family:var(--mono);font-size:9px;color:var(--faint)}
-  #lang-resize .canvas-fill{background:radial-gradient(220px 140px at 50% 30%,#141826,var(--artboard));color:rgba(255,255,255,.4)}
+  #lang-resize .canvas-fill{--artboard-glow:220px 140px;color:rgba(255,255,255,.4)}
 
   /* live px readout that rides the divider while dragging */
   #lang-resize .resizer{outline:none}
@@ -215,7 +215,7 @@
               <div class="resizer v" data-axis="x" data-control="prev" tabindex="0" role="separator" aria-orientation="vertical" aria-label="Resize Layers panel"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span><span class="size">176</span></div>
               <div class="pn alt" style="flex:1">
                 <div class="ph">Canvas</div>
-                <div class="pb canvas-fill">one document · one window</div>
+                <div class="pb canvas-fill canvas mini">one document · one window</div>
               </div>
             </div>
             <p class="hint" style="margin-top:var(--gap-sm)"><b>Two-pane split.</b> Layers holds 140 to 300; canvas takes the rest. Snaps at 176 and 232.</p>
@@ -224,7 +224,7 @@
             <div class="split col" id="ex-h">
               <div class="pn alt" style="flex:1">
                 <div class="ph">Preview</div>
-                <div class="pb canvas-fill">frame</div>
+                <div class="pb canvas-fill canvas mini">frame</div>
               </div>
               <div class="resizer h" data-axis="y" data-control="next" tabindex="0" role="separator" aria-orientation="horizontal" aria-label="Resize Timeline panel"><span class="ln"></span><span class="grip"><i class="ic ic-more"></i></span><span class="size">88</span></div>
               <div class="pn" data-pane style="flex:0 0 88px" data-min="56" data-max="150" data-default="88" data-snap="88,120">

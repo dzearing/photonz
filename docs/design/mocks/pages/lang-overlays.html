@@ -28,15 +28,7 @@
   #lang-overlays .lo-blk-h .lo-sub{font-size:11px;color:var(--dim);margin-left:auto;text-align:right}
   #lang-overlays .lo-blk-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--gap)}
 
-  /* KIND 2 · labeled specimen card. No traffic lights, no fake title bar. */
-  #lang-overlays .lo-spec{border:1px solid var(--edge-lo);border-radius:var(--r3);overflow:hidden;background:var(--panel-2)}
-  #lang-overlays .lo-spec-h{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--gap-sm) var(--pad-sm);
-    font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;
-    border-bottom:1px solid var(--line-soft)}
-  #lang-overlays .lo-spec-h .lo-tag{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:0;
-    text-transform:none;font-weight:520;color:var(--faint)}
-  #lang-overlays .lo-spec-h .lo-tag.acc{color:var(--accent)}
-  #lang-overlays .lo-spec-b{padding:var(--pad-sm)}
+  /* KIND 2 · specimen cards are the shared DS .spec/.spec-h/.spec-b. */
   #lang-overlays .lo-cap{font-size:10.5px;color:var(--dim);line-height:1.45;margin:var(--gap-sm) 0 0}
   #lang-overlays .lo-cap b{color:var(--ink);font-weight:600}
   #lang-overlays .lo-cap code{font-family:var(--mono);font-size:10px;color:var(--faint)}
@@ -529,9 +521,9 @@
       <div class="lo-blk-h"><span class="lo-n">06</span><h3>In context</h3><span class="lo-sub">Specimens · where each one actually shows up</span></div>
       <div class="lo-blk-b">
         <div class="lo-vgrid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
-          <div class="lo-spec">
-            <div class="lo-spec-h">Right-click on the canvas<span class="lo-tag acc">not a window</span></div>
-            <div class="lo-spec-b">
+          <div class="spec">
+            <div class="spec-h">Right-click on the canvas<span class="tag acc">not a window</span></div>
+            <div class="spec-b">
               <div class="cnv lo-plinth">
                 <div class="canvas">
                   <div class="hero-card" style="width:190px"><div class="hc-h" style="font-size:19px">Ship it faster.</div></div>
@@ -547,9 +539,9 @@
             </div>
           </div>
 
-          <div class="lo-spec">
-            <div class="lo-spec-h">⌘K over the canvas<span class="lo-tag">keyboard first</span></div>
-            <div class="lo-spec-b">
+          <div class="spec">
+            <div class="spec-h">⌘K over the canvas<span class="tag">keyboard first</span></div>
+            <div class="spec-b">
               <div class="cnv lo-plinth">
                 <div class="canvas" style="align-items:flex-start;padding-top:var(--pad)">
                   <div class="lo-pal" style="width:88%">
@@ -562,9 +554,9 @@
             </div>
           </div>
 
-          <div class="lo-spec">
-            <div class="lo-spec-h">After an action<span class="lo-tag">timed, never blocking</span></div>
-            <div class="lo-spec-b">
+          <div class="spec">
+            <div class="spec-h">After an action<span class="tag">timed, never blocking</span></div>
+            <div class="spec-b">
               <div class="cnv lo-plinth">
                 <div class="canvas">
                   <span class="toast"><i class="ic ic-check"></i> Exported settings-capture.png</span>

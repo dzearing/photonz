@@ -96,8 +96,7 @@
   .hstep .ht{font-size:12.5px;font-weight:640;color:var(--ink)}
   .hstep .hd{font-size:11.5px;color:var(--dim);line-height:1.5}
   .hstep .hd b{color:var(--ink);font-weight:600}
-  .hviz{height:60px;border-radius:var(--r2);border:1px solid var(--edge-lo);position:relative;overflow:hidden;
-    background:radial-gradient(320px 160px at 50% 30%,#141826,var(--artboard))}
+  #components .hviz{--artboard-glow:320px 160px;height:60px;border-radius:var(--r2);border:1px solid var(--edge-lo);position:relative;overflow:hidden}
   .hviz .cx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
   /* A .cx that WRAPS a chip (rather than BEING one) has to hug the chip's border
      box. Left as an inline box it takes the line-box height instead, and since
@@ -460,12 +459,12 @@
     <div class="howto">
       <div class="hstep">
         <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">1</span><span class="ht">Choose it</span></div>
-        <div class="hviz"><span class="cx mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="curs" style="left:60%;top:58%"><i class="ic sm ic-cursor"></i></span></div>
+        <div class="hviz canvas mini"><span class="cx mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="curs" style="left:60%;top:58%"><i class="ic sm ic-cursor"></i></span></div>
         <div class="hd"><b>Search or browse</b> the Library group, then click a tile to pick it up. The tile shows a live thumbnail, its name, and how many <b>instances</b> already exist.</div>
       </div>
       <div class="hstep">
         <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">2</span><span class="ht">Drag it over</span></div>
-        <div class="hviz">
+        <div class="hviz canvas mini">
           <span class="cx" style="width:60%;height:32px;border:1.5px dashed var(--comp);border-radius:10px;background:rgba(154,92,255,.14)"></span>
           <span style="position:absolute;left:44%;top:36%;background:var(--comp);color:#fff;font-size:9px;font-weight:640;padding:3px 8px;border-radius:8px;transform:rotate(-4deg)"><i class="ic xs ic-component"></i> Button</span>
           <span class="curs" style="left:58%;top:62%"><i class="ic sm ic-cursor"></i></span>
@@ -474,7 +473,7 @@
       </div>
       <div class="hstep">
         <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">3</span><span class="ht">Drop it in</span></div>
-        <div class="hviz"><span class="cx"><span class="mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="cring" style="inset:-6px;border-radius:12px"></span></span></div>
+        <div class="hviz canvas mini"><span class="cx"><span class="mini-btn">Get Photonz <i class="ic ic-chevron-right xs"></i></span><span class="cring" style="inset:-6px;border-radius:12px"></span></span></div>
         <div class="hd">Release and it lands as a <b style="color:var(--comp)">linked instance</b> · a purple ring, an <b>instance of Button</b> badge, a row in Layers, and its properties on the right.</div>
       </div>
     </div>

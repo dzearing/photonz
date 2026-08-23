@@ -243,6 +243,9 @@
 .chip:hover{border-color:color-mix(in srgb,var(--accent) 26%, var(--edge-lo));color:var(--ink)}
 .chip:active{transform:scale(.97)}
 .chip:focus-visible{outline:none;box-shadow:var(--ctl-gloss), var(--ring)}
+/* the generic ON state — an OpenType toggle, an export preset, any tag that is
+   currently applied. Same accent fill as .chip.style, without the swatch. */
+.chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent);font-weight:640}
 .chip[disabled],.chip.disabled{opacity:.42;pointer-events:none}
 
 /* .select — inspector dropdown. Add press + focus to match. */

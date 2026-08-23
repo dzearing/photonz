@@ -349,9 +349,15 @@ button.fill = token(<span class="s">"accent"</span>)   <span class="c">// follow
       if (accentHex) accentHex.textContent = a.toUpperCase();
     }
 
+    /* which modes resolve --m-bg light enough that the shared canvas grid needs
+       its dark (.on-light) lines: light bg is #EDEFF4; dark (#0A0C11) and
+       brand (#14111F) both stay dark. */
+    var LIGHT_BG = { light: true, dark: false, brand: false };
+
     function setMode(mode) {
       if (!modes[mode]) return;
       active = mode;
+      if (sample) sample.classList.toggle('on-light', !!LIGHT_BG[mode]);
       segBtns.forEach(function (b) {
         var on = b.getAttribute('data-mode') === mode;
         b.classList.toggle('on', on);

@@ -1,0 +1,29 @@
+/* ============================================================
+   PRESET PICKER — canvas-previewable thumbnail chips
+   ============================================================
+   A dock control for choosing among visual presets — brushes, paints, styles,
+   transitions — where the choice IS a picture, so each option renders its own
+   preview into a <canvas> (or shows artwork) instead of naming itself.
+
+   Promoted from draw.html and vector-wt.html, which had hand-rolled it
+   byte-alike. Wrap the chips in role="radiogroup" and mark the active one
+   with .on (aria-checked on the buttons keeps it honest).
+
+   ---- anatomy ----
+     .bpick             the grid (4-up in a dock)
+       .bchip           one preset: a <button> with a live preview inside
+         canvas         the preview surface, fills the chip
+*/
+
+.bpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:var(--s2) 0 0}
+.bchip{position:relative;border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;
+  background:linear-gradient(180deg,#20242f,#14161d);height:34px;padding:0;cursor:pointer;
+  transition:border-color .12s ease,transform .1s ease}
+.bchip canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.bchip:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--edge-lo));transform:translateY(-1px)}
+.bchip:active{transform:translateY(0) scale(.97)}
+.bchip:focus-visible{outline:none;box-shadow:var(--ring)}
+.bchip.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.bchip[disabled],.bchip.disabled{opacity:.42;pointer-events:none}
+
+@media (prefers-reduced-motion:reduce){ .bchip{transition:none} }
