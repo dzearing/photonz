@@ -459,11 +459,7 @@ struct EditorView: View {
             toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
-            toolButton(.measure, "ruler", "Measure", "i")
-            if editorState.activeTool == .measure && hasMeasureOptions {
-                measureOptions
-                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
-            }
+            measureToolButton
             toolButton(.fill, help: "Fill", key: "g") {
                 PaintBucketIcon().frame(width: 22, height: 21)
             }
@@ -543,15 +539,6 @@ struct EditorView: View {
         if editorState.activeTool == .crop {
             cropOptions
         }
-        if editorState.activeTool == .measure && hasMeasureOptions {
-            measureOptions
-        }
-    }
-
-    /// Whether the Measure tool has any options row to show (any Next flag).
-    private var hasMeasureOptions: Bool {
-        Experiments.shared.measureModesEnabled || Experiments.shared.measureCenterSnapEnabled
-            || Experiments.shared.measureRolesEnabled
     }
 
     /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
@@ -694,7 +681,7 @@ struct EditorView: View {
         case .crop: toolButton(.crop, "crop", "Crop", "c")
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
-        case .measure: toolButton(.measure, "ruler", "Measure", "i")
+        case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill", key: "g") {
                 PaintBucketIcon().frame(width: 22, height: 21)
@@ -929,101 +916,39 @@ struct EditorView: View {
         .help("Wand tolerance: how similar a color must be to join the selection")
     }
 
-    /// What the Measure tool does when you click, as always-visible chips:
-    /// Distance (the two-point caliper, the default), Size (the element under
-    /// the pointer), Gap (the space between two elements), and Alignment when
-    /// its flag is on. Mirrors the crop-aspect chip styling.
-    /// Trailing Snap control (Next `next-measure-center-snap`): what measure
-    /// points magnetize to — edges only, or edges plus element/gap centers.
-    private var measureOptions: some View {
-        HStack(spacing: 6) {
-            ForEach(Experiments.shared.measureModesEnabled
-                ? MeasureToolMode.available(alignmentEnabled: Experiments.shared.measureAlignEnabled)
-                : [], id: \.self) { mode in
-                let isActive = editorState.measureToolMode == mode
-                Button {
-                    editorState.measureToolMode = mode
-                } label: {
-                    Text(mode.title)
-                        .font(.caption.weight(.medium))
-                        .fixedSize()
-                        .foregroundStyle(isActive ? Color.white : Color.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background {
-                            if isActive {
-                                Capsule().fill(Color.accentColor)
-                            }
-                        }
+    /// The Measure tool's button, which owns its own modes (D15). Distance,
+    /// Size, Gap and (when its flag is on) Alignment used to sit beside it as
+    /// four labelled chips plus a Snap menu and a Show menu, six controls that
+    /// grew the bar the moment you picked the tool up. Now the button wears the
+    /// live mode's glyph, press-and-hold lists the modes, I cycles them, and
+    /// Snap and Show have moved to the Measure Tool section of the inspector,
+    /// where settings belong.
+    private var measureToolButton: some View {
+        @Bindable var state = editorState
+        let modes = Experiments.shared.measureModesEnabled
+            ? MeasureToolMode.available(alignmentEnabled: Experiments.shared.measureAlignEnabled)
+            : [.distance]
+        return ToolModeButton(
+            toolTitle: "Measure",
+            key: "i",
+            isActive: editorState.activeTool == .measure,
+            modes: modes.map {
+                ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help)
+            },
+            selection: $state.measureToolMode,
+            namespace: toolbarNamespace,
+            activate: { editorState.setTool(.measure) },
+            pressedKey: {
+                // Read the tool live: I picks Measure up, and once it is in hand
+                // the same key walks the modes.
+                guard editorState.activeTool == .measure,
+                      Experiments.shared.measureModesEnabled else {
+                    editorState.setTool(.measure)
+                    return
                 }
-                .buttonStyle(.plain)
-                .help(mode.help)
-            }
-            if Experiments.shared.measureCenterSnapEnabled {
-                measureSnapOption
-            }
-            if Experiments.shared.measureRolesEnabled {
-                measureShowOption
-            }
-        }
-    }
-
-    /// The mock's `Show` display filter (§5, `next-measure-roles`): which
-    /// measurement roles the canvas draws. A temporary eye-off, never saved —
-    /// exports always include every visible measurement.
-    private var measureShowOption: some View {
-        HStack(spacing: 4) {
-            Text("Show")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-            Menu {
-                Picker("Show", selection: Binding(
-                    get: { editorState.measureShowFilter },
-                    set: { editorState.setMeasureShowFilter($0) })) {
-                    ForEach(EditorState.MeasureShowFilter.allCases, id: \.self) { filter in
-                        Text(filter.title).tag(filter)
-                    }
-                }
-                .pickerStyle(.inline)
-                .labelsHidden()
-            } label: {
-                Text(editorState.measureShowFilter.title)
-                    .font(.caption.weight(.medium))
-                    .fixedSize()
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .help("Which measurements the canvas shows. A view filter only: exports "
-                  + "always include every visible measurement.")
-        }
-    }
-
-    /// The mock's `Snap: Edges and centers` control, as a compact labeled menu.
-    private var measureSnapOption: some View {
-        HStack(spacing: 4) {
-            Text("Snap")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-            Menu {
-                Picker("Snap", selection: Binding(
-                    get: { editorState.measureSnapsToCenters },
-                    set: { editorState.measureSnapsToCenters = $0 })) {
-                    Text("Edges").tag(false)
-                    Text("Edges and centers").tag(true)
-                }
-                .pickerStyle(.inline)
-                .labelsHidden()
-            } label: {
-                Text(editorState.measureSnapsToCenters ? "Edges and centers" : "Edges")
-                    .font(.caption.weight(.medium))
-                    .fixedSize()
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .help("What measure points magnetize to. Hold Command to drag free.")
-        }
+                editorState.measureToolMode = editorState.measureToolMode
+                    .cycled(alignmentEnabled: Experiments.shared.measureAlignEnabled)
+            })
     }
 
     private var cropOptions: some View {

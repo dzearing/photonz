@@ -1,0 +1,30 @@
+{
+  "feature": "Tool modes live in the tool button",
+  "epic": "measure-redline",
+  "summary": "Picking up the Measure tool no longer widens the tool bar. Its four modes moved inside the tool button, which now wears the live mode as a glyph, and Snap and Show moved to a Measure Tool section in the inspector.",
+  "setup": "Photonz Dev, Experiments window, release Next. The measure flags are on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press V for Select, then I for Measure, and watch the width of the floating bar at the bottom." },
+    { "do": "Press I again, three more times, and watch the ruler glyph on the Measure button change." },
+    { "do": "Press and hold the Measure button until the list of modes opens above the bar." },
+    { "do": "Press Escape to close it, then click the small chevron beside the ruler to open it again." },
+    { "do": "Pick Gap from the list, then look at the Measure Tool section in the inspector on the right." },
+    { "do": "Change Snap to Edges there, then measure something on the canvas." },
+    { "do": "Click the Measure button once while it is already the active tool, and check the mode did not change." }
+  ],
+  "evaluate": [
+    "With the modes hidden, can you still tell at a glance what a click is about to do?",
+    "Is press and hold discoverable, or did you only find the modes because this list told you to?",
+    "Does the chevron read as 'there is more inside me', or as clutter next to the glyph?",
+    "Do Snap and Show feel findable in the inspector, or did you look for them in the bar first?",
+    "Is I cycling forward through four modes the right speed, or do you want to jump straight to one?"
+  ],
+  "rough": [
+    "The flyout is the platform's own pull-down, not the bespoke Photoshop-style panel D15 described. The bar's selection slot (rectangle / ellipse / wand) already uses that control, so a hand-rolled one would have been a second idiom in the same strip, and press-and-hold, Escape, outside click and arrow keys come free. If it should look like a custom panel instead, that is a real call to make and it is cheap to swap.",
+    "The bar got 26pt wider in every state, because the chevron on the Measure slot is always there. It stopped growing by 422pt when you pick Measure up, so it is a good trade, but it is a trade.",
+    "Discoverability genuinely regressed against the old chips, which said Distance, Size, Gap in words. Three things carry it now: the button tooltip names the live mode, the first-run hint on the canvas names it, and the inspector shows it as a word. Whether that is enough is question one above.",
+    "Acceptance said any tool leaves the bar the same width. That is now true of Measure and of every tool except Crop (+207pt) and Wand (+152pt), which are not flag-gated and so could not be touched without changing the Current release. Queued as its own task.",
+    "The drawing tools make the bar narrower rather than wider (arrow and line by 46pt) because the colour capsule swaps the paint pair for a single swatch. That is deliberate, but it means the bar is still not a fixed width.",
+    "I could not take a screenshot of the running app on this machine, so there are no images here. The widths and the on-screen controls were read out of the running app rather than eyeballed."
+  ]
+}

@@ -94,6 +94,14 @@ struct InspectorPanel: View {
         if Experiments.shared.measurePanelEnabled, editorState.measurementCount > 0 {
             set.insert(.measurements)
         }
+        // The Measure tool's own properties (D15): Snap and Show are settings,
+        // not modes, so they left the tool bar and live here while the tool is
+        // in hand. The Mode row is a deliberate echo of the button's flyout —
+        // the flyout is the fast path, this is where the live mode is readable
+        // as a word rather than a glyph.
+        if editorState.activeTool == .measure, MeasureToolInspector.hasAnySetting {
+            set.insert(.measureTool)
+        }
         return set
     }
 
@@ -116,6 +124,8 @@ struct InspectorPanel: View {
             LayersListView()
         case .measurements:
             MeasurementsListView()
+        case .measureTool:
+            MeasureToolInspector()
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -151,9 +161,18 @@ struct InspectorPanel: View {
 
     private func loadOrder() {
         let ids = orderRaw.split(separator: ",").compactMap { InspectorSectionID(rawValue: String($0)) }
-        // Keep any sections not present in the saved string (e.g. added later).
-        let missing = InspectorSectionID.allCases.filter { !ids.contains($0) }
-        let merged = ids + missing
+        // Sections added after this panel's order was last saved get spliced in
+        // at their canonical position rather than dumped at the bottom, so a new
+        // section lands where it was designed to sit for people who have already
+        // run the app (which is everyone).
+        var merged = ids
+        for section in InspectorSectionID.allCases where !merged.contains(section) {
+            let canonical = InspectorSectionID.allCases.firstIndex(of: section) ?? 0
+            let insertAt = merged.firstIndex {
+                (InspectorSectionID.allCases.firstIndex(of: $0) ?? 0) > canonical
+            } ?? merged.endIndex
+            merged.insert(section, at: insertAt)
+        }
         if merged != order { order = merged }
     }
 
@@ -177,6 +196,7 @@ struct InspectorPanel: View {
 /// The sections of the inspector, in their default order. `rawValue` persists.
 enum InspectorSectionID: String, CaseIterable {
     case layers
+    case measureTool
     case measurements
     case annotation
     case text
@@ -189,6 +209,7 @@ enum InspectorSectionID: String, CaseIterable {
     var title: String {
         switch self {
         case .layers: "Layers"
+        case .measureTool: "Measure Tool"
         case .measurements: "Measurements"
         case .annotation: "Annotation"
         case .text: "Text"
@@ -579,6 +600,85 @@ struct LayersListView: View {
         guard renamingLayerID == layer.id else { return }
         renamingLayerID = nil
         editorState.renameLayer(id: layer.id, to: renameText)
+    }
+}
+
+// MARK: - Measure tool properties (D15)
+
+/// The Measure tool's own properties, shown while the tool is in hand.
+///
+/// These used to ride in the tool bar as a Snap menu and a Show menu next to
+/// four mode chips, six controls that grew a fixed strip the moment you picked
+/// the tool up. D15 draws the line: a mode changes what a click DOES and can
+/// live in the tool button, and everything else is a setting that belongs with
+/// the tool's properties. Snap changes where a point lands, Show changes what
+/// the canvas draws, and both read better as words in a panel than as menus in
+/// a strip.
+///
+/// Mode is here too, on purpose. The button's flyout is the fast path, but a
+/// glyph cannot tell you three minutes later that you are still in Gap, so the
+/// live mode stays readable as a word for anyone with the inspector open.
+struct MeasureToolInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    /// Whether any of the tool's settings exist in this release, so the panel
+    /// can leave the section out entirely rather than show an empty box.
+    static var hasAnySetting: Bool {
+        Experiments.shared.measureModesEnabled || Experiments.shared.measureCenterSnapEnabled
+            || Experiments.shared.measureRolesEnabled
+    }
+
+    var body: some View {
+        @Bindable var state = editorState
+        VStack(alignment: .leading, spacing: 8) {
+            if Experiments.shared.measureModesEnabled {
+                field("Mode") {
+                    Picker("Mode", selection: $state.measureToolMode) {
+                        ForEach(MeasureToolMode.available(
+                            alignmentEnabled: Experiments.shared.measureAlignEnabled), id: \.self) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .labelsHidden().controlSize(.small)
+                    .help("What a click does. The Measure button holds the same list, "
+                          + "and I cycles it.")
+                }
+            }
+            if Experiments.shared.measureCenterSnapEnabled {
+                field("Snap") {
+                    Picker("Snap", selection: $state.measureSnapsToCenters) {
+                        Text("Edges").tag(false)
+                        Text("Edges and centers").tag(true)
+                    }
+                    .labelsHidden().controlSize(.small)
+                    .help("What measure points magnetize to. Hold Command to drag free.")
+                }
+            }
+            if Experiments.shared.measureRolesEnabled {
+                field("Show") {
+                    Picker("Show", selection: Binding(
+                        get: { editorState.measureShowFilter },
+                        set: { editorState.setMeasureShowFilter($0) })) {
+                        ForEach(EditorState.MeasureShowFilter.allCases, id: \.self) { filter in
+                            Text(filter.title).tag(filter)
+                        }
+                    }
+                    .labelsHidden().controlSize(.small)
+                    .help("Which measurements the canvas shows. A view filter only: exports "
+                          + "always include every visible measurement.")
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder private func field<Content: View>(_ label: String,
+                                                   @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            content()
+        }
     }
 }
 

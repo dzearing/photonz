@@ -31,7 +31,21 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
         }
     }
 
-    /// The tool-options tooltip: what a click does in this mode.
+    /// The glyph the tool button wears while this mode is live (D15: the tool
+    /// button shows the active mode, so the bar says what a click will do
+    /// without spending a word of text on it). Distance keeps the ruler, since
+    /// it is both the default and the tool's own identity.
+    public var symbol: String {
+        switch self {
+        case .distance: "ruler"
+        case .size: "arrow.up.and.down.and.arrow.left.and.right"
+        case .gap: "arrow.left.and.right"
+        case .alignment: "align.horizontal.left"
+        }
+    }
+
+    /// The tooltip on the tool button, and the line the flyout's row carries:
+    /// what a click does in this mode.
     public var help: String {
         switch self {
         case .distance: "Distance: click two points, then click to place the readout"
@@ -64,10 +78,20 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// Whether the `[` / `]` keys grow and shrink the detected pick.
     public var picksAmongCandidates: Bool { self == .size }
 
-    /// The modes offered in the tool options. Alignment is gated on its own
-    /// flag; the other three are always there, so the current mode is always
-    /// visible and always switchable.
+    /// The modes offered in the tool button's flyout, in cycle order. Alignment
+    /// is gated on its own flag; the other three are always there, so the
+    /// current mode is always reachable in at most three presses of the key.
     public static func available(alignmentEnabled: Bool) -> [MeasureToolMode] {
         alignmentEnabled ? [.distance, .size, .gap, .alignment] : [.distance, .size, .gap]
+    }
+
+    /// The next mode the tool key lands on (D15: the keyboard is the fast path,
+    /// so pressing the tool's own key again cycles rather than re-picking a tool
+    /// that is already in hand). Wraps around, and a mode that is no longer
+    /// offered falls back to the default rather than sticking.
+    public func cycled(alignmentEnabled: Bool) -> MeasureToolMode {
+        let modes = Self.available(alignmentEnabled: alignmentEnabled)
+        guard let index = modes.firstIndex(of: self) else { return modes[0] }
+        return modes[(index + 1) % modes.count]
     }
 }

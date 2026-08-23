@@ -1,0 +1,28 @@
+{
+  "id": "the-crop-and-wand-tools-stop-widening-the-tool-b",
+  "title": "The crop and wand tools stop widening the tool bar",
+  "goal": "Picking up the Crop tool makes the floating tool bar 207 points wider and the Magic Wand makes it 152 points wider, because both spread their options along the bar. On a narrow window that is what pushes tools into the overflow menu. Both should keep their options somewhere that does not move the bar, the way the Measure tool now does.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T22:55:52.342Z",
+  "updated": "2026-08-23T22:55:52.343Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-08-23 in the running app (Next, 1171pt window): select 960, measure 960, crop 1167, wand 1112.5. EditorView.cropOptions and EditorView.wandOptions are the two remaining branches in contextualToolOptions. Neither is flag-gated, so this changes Current unless it is put behind a next-scoped flag: do that. Crop aspect is a mode by the D15 test (it changes what the drag does) so it fits ToolModeButton over CropAspect; wand tolerance is a setting and belongs in an inspector tool-properties section like MeasureToolInspector. The open question is Apply/Cancel, which are actions rather than modes or settings and may belong on the canvas crop overlay instead of the bar: that part is worth a decision card before building. Also note the drawing tools SHRINK the bar (arrow/line 914, shapes 938) because the colour capsule swaps the FG/BG pair for a single swatch, which is intentional (17.12) but means the bar still is not fixed-width.",
+  "acceptance": [
+    "Picking up the Crop tool leaves the tool bar the same width as picking up Select, measured in the running app",
+    "Picking up the Magic Wand leaves the tool bar the same width as picking up Select, measured in the running app",
+    "The crop aspect locks and the wand tolerance are still reachable in one action while the tool is in hand",
+    "Apply and Cancel for a crop stay somewhere a first-time user finds without hunting"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T22:55:52.343Z",
+      "note": "created (manual)"
+    }
+  ]
+}

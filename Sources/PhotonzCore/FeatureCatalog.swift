@@ -90,7 +90,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureModesFlag,
                     title: "Measure modes",
-                    description: "The Measure tool gets modes you pick in the tool options: Distance is the two-point caliper and draws nothing until you click, Size measures the element under the pointer in one click (with [ and ] to grow or shrink the pick), and Gap turns a click in the space between two elements into one spacing measurement. Off means the Measure tool is the plain two-point caliper.",
+                    description: "The Measure tool gets modes you pick in its own tool button: Distance is the two-point caliper and draws nothing until you click, Size measures the element under the pointer in one click (with [ and ] to grow or shrink the pick), and Gap turns a click in the space between two elements into one spacing measurement. Off means the Measure tool is the plain two-point caliper.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -121,7 +121,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureRolesFlag,
                     title: "Measurement roles",
-                    description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the measure inspector, a legend on the canvas while the tool is active, and a Show filter in the tool options.",
+                    description: "Each measurement is a Size or a Spacing callout with its own remembered colors. Adds a Role control to the measure inspector, a legend on the canvas while the tool is active, and a Show filter in the Measure Tool section of the inspector.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
@@ -139,7 +139,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureCenterSnapFlag,
                     title: "Snap to centers",
-                    description: "Adds a Snap option to the Measure tool. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    description: "Adds a Snap option to the Measure Tool section of the inspector. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

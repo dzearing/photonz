@@ -975,10 +975,18 @@ text, and every future tool with modes would have done the same.
 
 - The tool button shows the **active mode's glyph**, so the bar says what you
   are about to do without a word of text.
-- Pressing and holding it, or clicking its corner marker, opens a **flyout that
+- Pressing and holding it, or clicking its chevron, opens a **flyout that
   expands upward** out of the bar (the bar sits at the bottom, so up is the only
-  direction with room). The flyout lists the modes with names, glyphs and
-  shortcuts, and it closes on pick, on Escape, and on an outside click.
+  direction with room). The flyout lists the modes with names and glyphs, plus
+  one line naming the cycle key, and it closes on pick, on Escape, and on an
+  outside click.
+- **The flyout is the platform's own pull-down**, the same control the bar's
+  selection slot (rectangle / ellipse / wand) already uses: a click runs the
+  primary action, a press-and-hold or a click on the chevron opens the list. A
+  hand-rolled popover would put a second "there is more inside me" idiom in one
+  300pt strip, and would have to re-earn press-and-hold, Escape, outside click
+  and arrow-key navigation that the system gives away. Per-mode shortcut hints
+  are noise: every mode shares the tool's key, so the list says it once.
 - **The keyboard is the fast path.** Pressing the tool's key again cycles its
   modes, so a mode is never more than a keystroke away and the flyout is for
   discovery rather than for daily use.
@@ -995,3 +1003,12 @@ mode; if it changes how the result looks or what is displayed, it is a setting.
 The result the bar must hold to: **selecting any tool leaves the tool bar the
 same width it was**. If a tool needs more room to explain itself, it needs a
 flyout, not a wider bar.
+
+**Keep the mode readable somewhere in words.** A glyph is enough to say what the
+next click does while your hand is on the tool, and not enough to remind you
+three minutes later. The tool's properties carry the live mode as a word next to
+its settings, so the flyout stays the fast path rather than the only path.
+
+Built for Measure on 2026-08-23: picking it up moved the bar from 1356pt to
+960pt, the same width as every other tool. Wand tolerance and the crop chips
+still grow the bar and are next.

@@ -4149,3 +4149,42 @@ number ends beside the bracket's corner rather than centred on the row.
 Audit: `queue/audits/2026-08-23-measure-edge-readout.json`.
 Next: a caliper only protects its own measuring line from its readout, not the
 element it measured — queued as its own task.
+
+## 2026-08-23 — A tool's modes live in the tool button (D15, Next)
+
+Picking up Measure used to add six controls to the floating tool bar: four
+labelled mode chips, a Snap menu and a Show menu. Measured in the running app,
+the bar went from 934pt to **1356pt** the moment you pressed I, on a strip that
+also has to survive a narrow window.
+
+`ToolModeButton` is the shared control (not a measure-only one, since shape,
+marquee and brush all need it next). The button wears the live mode's glyph,
+press-and-hold or the chevron opens the modes above the bar, and the tool's own
+key cycles them. Measured after: **960pt for Measure, and 960pt for Select,
+Fill, Zoom Callout and both marquees** — picking the tool up no longer moves the
+bar at all. The always-present chevron costs 26pt in every state, which is the
+trade for not spending 422pt on one tool.
+
+Built on `Menu(primaryAction:)` rather than a bespoke popover, deliberately: the
+bar's selection slot already uses that control, so a hand-rolled flyout would
+have been a second "there is more inside me" idiom in one 300pt strip, and
+press-and-hold, Escape, outside click and arrow keys come from the system.
+
+Snap and Show are settings, not modes, so they left the bar for a new **Measure
+Tool** inspector section, which also carries the live mode as a word — a glyph
+says what the next click does, it does not remind you three minutes later.
+`loadOrder` now splices newly-added sections in at their canonical position
+instead of dumping them at the bottom of everyone's saved panel order.
+
+Two things this cost real time and are worth remembering. Screenshots are
+blocked on this machine, so the tool bar widths and the on-screen controls were
+read out of the **running** app: a temporary env-gated task that walked every
+tool logging the measured bar width, then one that synthesized key events
+through `performKeyEquivalent` and dumped the window's accessibility tree. That
+probe caught a bug reasoning would not have: the tool key's action is registered
+once, so a `let isActive` captured in it goes stale and I re-picked Measure
+forever instead of cycling. The key action now reads live state.
+
+Next-only throughout (every measure flag is Next-scoped), 1049 tests green.
+Audit: `queue/audits/2026-08-23-tool-mode-flyout.json`.
+Next: Crop still widens the bar by 207pt and Wand by 152pt — queued.

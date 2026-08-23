@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:05:04.152Z",
-  "updated": "2026-08-23T22:05:04.152Z",
+  "updated": "2026-08-23T22:57:25.307935Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23: horizontal space in the toolbar is scarce and the measure options row is eating it. Reference behaviour is the Photoshop tool flyout. Current code: EditorView.measureOptions builds the chip row plus measureSnapOption and measureShowOption, gated by hasMeasureOptions; contextualToolOptions is where per-tool rows are added, so wand and crop options are the same pattern and should follow once measure proves it. The rule is written up as UX-PATTERNS D15, including the mode-versus-setting test: if it changes what the pointer does it can be a mode, if it changes how the result looks it is a setting. Build the flyout as a shared control, not a measure-only one, since shape, marquee and brush all need it next.",
@@ -25,6 +25,19 @@
     {
       "t": "2026-08-23T22:05:04.152Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T22:31:06.097Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T22:36:19.993751Z",
+      "note": "Adversarial review before building. (1) Discoverability regresses: chips said Distance/Size/Gap in words, a glyph plus a 6pt marker says nothing. Mitigation: the button tooltip names the live mode, and the Measure Tool inspector section carries the mode in text, so the flyout is the fast path and not the only path. (2) Clicking the already-active tool button must NOT cycle the mode, only the key does. A user clicking Measure to be sure it is picked would otherwise silently change what the next click does. Split the paths: the visible button activates, a zero-size shortcut button owns the key and cycles when the tool is already in hand. (3) Shortest version: the bar ALREADY has this control, the selection slot (rect/ellipse/wand) is a Menu with a primaryAction, so click activates and press-and-hold or the chevron opens it. Building a bespoke popover would put two different 'this has more inside' idioms in one 300pt strip. Building the shared control on Menu gets press-and-hold, Escape, outside click, and arrow-key navigation from the system for free. Deviates from D15's wording (custom flyout) and I am taking the consistency instead. (4) Per-mode shortcut hints are noise: every mode shares the tool key, so the flyout gets one footer line naming the cycle key rather than the same letter four times. (5) Acceptance 1 says ANY tool, but wand tolerance and the crop chips also widen the bar and are NOT flag-gated, so touching them would change Current. Measure only this run, follow-up queued."
+    },
+    {
+      "t": "2026-08-23T22:57:25.307935Z",
+      "note": "Built and verified in the RUNNING app, since screenshots are blocked on this machine. Bar width, measured by a temporary env-gated task that walked every tool and logged the real measured width: before, select 934 and measure 1356; after, select 960 and measure 960, matching Fill, Zoom Callout and both marquees exactly. The always-present chevron costs 26pt in every state, which is the trade for not spending 422pt on one tool. Crop (1167) and Wand (1112.5) still grow it and are not flag-gated, so they are queued separately rather than changing Current. A second probe synthesized key events through performKeyEquivalent and dumped the window accessibility tree: I picks Measure up then walks distance to size to gap to alignment; with next-measure-modes off the slot is a plain ruler button with no chevron and I only picks the tool up. The inspector reads Measure Tool with Mode, Snap and Show, and the tool bar carries no measure chips. That probe caught a real bug reasoning would have missed: a keyboard shortcut's action is registered once, so the isActive captured in it went stale and I re-picked Measure forever instead of cycling. The key action now reads live state from EditorState. Also gave the button an accessibility label (it reached VoiceOver as an unnamed pop-up) and made the inspector splice newly-added sections in at their canonical position instead of the bottom of everyone's saved order."
     }
-  ]
+  ],
+  "started": "2026-08-23T22:31:06.097Z"
 }

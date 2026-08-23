@@ -28,6 +28,35 @@ struct MeasureToolModeTests {
         #expect(!MeasureToolMode.distance.picksAmongCandidates)
     }
 
+    // MARK: The tool button owns its modes (D15)
+
+    @Test func everyModeHasItsOwnGlyphSoTheToolButtonCanSayWhatItWillDo() {
+        // The bar shows the live mode as a glyph and nothing else, so two modes
+        // sharing a symbol would make the button lie about what a click does.
+        let symbols = MeasureToolMode.allCases.map(\.symbol)
+        #expect(Set(symbols).count == MeasureToolMode.allCases.count)
+        #expect(symbols.allSatisfy { !$0.isEmpty })
+        // Distance keeps the ruler: it is the tool's own identity and the default.
+        #expect(MeasureToolMode.distance.symbol == "ruler")
+    }
+
+    @Test func theToolKeyCyclesForwardThroughTheOfferedModes() {
+        #expect(MeasureToolMode.distance.cycled(alignmentEnabled: false) == .size)
+        #expect(MeasureToolMode.size.cycled(alignmentEnabled: false) == .gap)
+        #expect(MeasureToolMode.gap.cycled(alignmentEnabled: false) == .distance)
+    }
+
+    @Test func cyclingReachesAlignmentOnlyWhenItIsOffered() {
+        #expect(MeasureToolMode.gap.cycled(alignmentEnabled: true) == .alignment)
+        #expect(MeasureToolMode.alignment.cycled(alignmentEnabled: true) == .distance)
+    }
+
+    @Test func cyclingOutOfAModeThatIsNoLongerOfferedLandsOnTheDefault() {
+        // Alignment can be switched off underneath a session that is sitting in
+        // it. The key must still do something sane rather than stick.
+        #expect(MeasureToolMode.alignment.cycled(alignmentEnabled: false) == .distance)
+    }
+
     @Test func thePickerAlwaysOffersTheThreeMeasuringModes() {
         // The current mode has to be visible at all times, so the three real
         // measuring modes are never behind a flag. Alignment checks rather than
