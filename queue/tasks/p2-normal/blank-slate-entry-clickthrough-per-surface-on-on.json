@@ -3,11 +3,11 @@
   "title": "Blank-slate entry clickthrough per surface on one template",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:46.976Z",
-  "updated": "2026-08-23T06:49:53.224Z",
+  "updated": "2026-08-23T07:14:32.954Z",
   "deps": [
     "finish-the-mock-conform-pass-across-all-pages"
   ],
@@ -58,7 +58,12 @@
     {
       "t": "2026-08-23T07:44:00.000Z",
       "note": "verified in Chrome against the live dev server: all three entry pages stepped through (cue alignment measured, filter, trim, export, instance drop all correct), walk.html and non-entry pages unaffected, zero console errors, elevation check green, no orphaned rail links; AGENTS.md documents the entry template and the stale legacy note is corrected"
+    },
+    {
+      "t": "2026-08-23T07:14:32.954Z",
+      "note": "Shipped one shared blank-slate entry template (shared/components/entry.js: injected canonical menu bar, histbar, standard history past for .desk[data-entry] pages) and the three per-surface entry clickthroughs on it: capture-wt (image, converted), ui-entry-wt (UI, new: New Window -> front door -> template -> component drop), video-entry-wt (video, new: history Videos scope -> Open -> trim -> export). All old walkthrough pages already used .wt (folded); rail links added, none orphaned. Verified stepping all three pages in Chrome against the live dashboard: cue geometry, filters, trim, export, zero console errors; plus a shared fix for the unstyled floating timeline collapse button."
     }
   ],
-  "started": "2026-08-23T06:49:53.224Z"
+  "started": "2026-08-23T06:49:53.224Z",
+  "completed": "2026-08-23T07:14:32.954Z"
 }
