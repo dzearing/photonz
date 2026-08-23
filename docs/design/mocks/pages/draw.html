@@ -39,10 +39,6 @@
   /* the exact bezier geometry, ghosted under the brushed mark */
   #penPath.geo{stroke:rgba(255,255,255,.32);stroke-width:1;stroke-dasharray:4 5}
   #penPath.geo.off{stroke:none}
-  .hint-badge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
-    background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
-    border:1px solid rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
   /* eraser: two side-by-side artboards */
   .erase-row{display:flex;gap:var(--gap);flex-wrap:wrap;justify-content:center}
   .erase-cell{display:flex;flex-direction:column;gap:var(--gap-sm);align-items:center;
@@ -65,16 +61,9 @@
   .apiline{margin:0}
   .apiline .codeblk{display:block;white-space:pre-wrap;word-break:break-word}
 
-  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
-  .actrow .btn{flex:1 1 auto}
-
-  /* color swatches */
-  .swatches{display:flex;gap:6px;flex-wrap:wrap}
-  .sw-btn{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.2);cursor:pointer;
-    padding:0;transition:transform .1s ease}
-  .sw-btn:hover{transform:scale(1.08)}
-  .sw-btn:focus-visible{outline:none;box-shadow:var(--ring)}
-  .sw-btn.on{outline:2px solid var(--accent);outline-offset:1px}</style>
+  /* .actrow is a design-system class; this page only asks its buttons to share
+     the width evenly. */
+  #draw .actrow .btn{flex:1 1 auto}</style>
 </head>
 <body class="page">
 <main class="stage">
@@ -86,49 +75,30 @@
     Drag an anchor and the brushed mark re-renders; close the path and you get a shape you can <b>fill</b>; swap the
     brush in the <b>Library</b> and the same geometry wears a completely different mark. The canvas is live, try it.</p>
 
-  <div class="win tall cq shell" data-shell="sketch-sheet · 1200 × 630" data-ws="image">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>sketch-sheet</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-        <button class="btn primary sm" data-target="image">Done</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#dwCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#dwHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="val" id="dwReadout">Pen · vector path</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="dwCmd" style="position:absolute;right:0;top:26px;width:226px;z-index:12">
-          <div class="mlabel">Tools</div>
-          <div class="menuitem" data-tool="pen"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
-          <div class="menuitem" data-tool="brush"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
-          <div class="menuitem" data-tool="eraser"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menuitem" data-target="draw-boolean"><i class="ic ic-boolean-union"></i> Combine shapes <span class="sc">⌘⌥U</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="sketch-sheet · 1200 × 630" data-ws="image"
+       data-status='<span id="dwReadout">Pen · vector path</span>'>
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="dwShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+           title bar and Ask are built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="dwCmd">
+        <div class="mlabel">Tools</div>
+        <div class="menuitem" data-tool="pen"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
+        <div class="menuitem" data-tool="brush"><i class="ic ic-brush"></i> Brush <span class="sc">B</span></div>
+        <div class="menuitem" data-tool="eraser"><i class="ic ic-eraser"></i> Eraser <span class="sc">E</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+        <div class="menuitem" data-target="draw-boolean"><i class="ic ic-boolean-union"></i> Combine shapes <span class="sc">⌘⌥U</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem" data-sheet="#dwHist"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -146,7 +116,7 @@
                   <path id="penPath" class="geo" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
                   <g id="penOverlay"></g>
                 </svg>
-                <div class="hint-badge" id="penHint">Drag an anchor or a handle · the brushed stroke re-renders live</div>
+                <div class="cnv-hint" id="penHint">Drag an anchor or a handle · the brushed stroke re-renders live</div>
               </div>
               <!-- SELECTION, place 1 of 3: on the canvas -->
               <div class="sel-ring"></div>
@@ -161,7 +131,7 @@
               <div class="artstack paper ar">
                 <span class="plabel">paint · pixels</span>
                 <canvas class="surface" id="brushCanvas" width="1120" height="600"></canvas>
-                <div class="hint-badge" id="brushHint">Drag on the canvas to paint with the same brush, freehand</div>
+                <div class="cnv-hint" id="brushHint">Drag on the canvas to paint with the same brush, freehand</div>
               </div>
               <div class="sel-ring"></div>
               <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
@@ -333,7 +303,7 @@
                   </div>
                 </div>
                 <div class="actrow">
-                  <button class="btn sm secondary" id="penClose"><i class="ic ic-boolean-union"></i> Close</button>
+                  <button class="btn sm secondary" id="penClose"><i class="ic ic-path-close"></i> Close</button>
                   <button class="btn sm secondary" id="penUndo"><i class="ic ic-undo"></i> Undo</button>
                   <button class="btn sm secondary" id="penClear"><i class="ic ic-trash"></i> Clear</button>
                 </div>
@@ -346,7 +316,12 @@
                 <div class="seg" id="penFillMode" style="margin-bottom:var(--s2)">
                   <button data-fill="none">None</button><button data-fill="solid">Solid</button><button class="on" data-fill="grad">Gradient</button>
                 </div>
-                <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" id="penFillSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"></span> <span id="penFillName">Brand / gradient</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Paint</span>
+                  <button class="cpick-btn wide" data-menu="#dwPick" data-cp-slot="Fill" data-cp-color="#7C4DFF"
+                          data-cp-paint='{"type":"linear","angle":135,"stops":[{"hex":"#7C4DFF","pos":0},{"hex":"#FF5D8F","pos":54},{"hex":"#FFB057","pos":100}]}'>
+                    <span class="sw" id="penFillSw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"></span><span class="cph" id="penFillName">Brand / gradient</span>
+                  </button>
+                </div>
                 <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="penFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="58"></div><span class="num" data-pz-frozen="1" id="penFillOpV">58%</span></div>
                 <p class="note" id="penFillNote">Close the path and it becomes a shape you can fill. The fill is a named <b style="color:var(--ink)">Paint</b>; the stroke is a <b style="color:var(--ink)">Brush</b>. One object carries both.</p>
               </div>
@@ -359,7 +334,11 @@
                 </div>
                 <div class="slrow"><span class="rl">Size</span><div class="slider sm"><input id="penSize" name="stroke-size" type="range" min="2" max="60" step="1" value="26"></div><span class="num" data-pz-frozen="1" id="penSizeV">26</span></div>
                 <div class="slrow"><span class="rl">Flow</span><div class="slider sm"><input id="penFlow" name="stroke-flow" type="range" min="5" max="100" step="1" value="42"></div><span class="num" data-pz-frozen="1" id="penFlowV">42%</span></div>
-                <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" id="penStrokeSw" style="background:#ff5d8f"></span> <span id="penStrokeName">Pink 60</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                <div class="irow"><span class="rl">Color</span>
+                  <button class="cpick-btn wide" data-menu="#dwPick" data-cp-slot="Stroke" data-cp-color="#FF5D8F" data-cp-flat>
+                    <span class="sw" id="penStrokeSw" style="background:#ff5d8f"></span><span class="cph" id="penStrokeName">Pink 60</span>
+                  </button>
+                </div>
                 <div class="actrow">
                   <button class="btn sm secondary" id="penBrowseBrush"><i class="ic ic-library"></i> Browse brushes</button>
                   <button class="btn sm secondary" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush</button>
@@ -400,16 +379,12 @@
               </div>
               <div class="section" style="border-bottom:0">
                 <div class="sec-h">Color <span class="mut">Paint</span></div>
-                <div class="swatches" id="brushSwatches">
-                  <button class="sw-btn on" style="background:#ff5d8f" data-color="#ff5d8f" title="Pink"></button>
-                  <button class="sw-btn" style="background:#7c4dff" data-color="#7c4dff" title="Purple"></button>
-                  <button class="sw-btn" style="background:#4c6fff" data-color="#4c6fff" title="Blue"></button>
-                  <button class="sw-btn" style="background:#12c2e9" data-color="#12c2e9" title="Cyan"></button>
-                  <button class="sw-btn" style="background:#f6c453" data-color="#f6c453" title="Amber"></button>
-                  <button class="sw-btn" style="background:#3ecf8e" data-color="#3ecf8e" title="Green"></button>
-                  <button class="sw-btn" style="background:#f4f6fb" data-color="#f4f6fb" title="White"></button>
+                <div class="irow"><span class="rl">Paint</span>
+                  <button class="cpick-btn wide" id="brushSlot" data-menu="#dwPick" data-cp-slot="Brush" data-cp-color="#FF5D8F" data-cp-flat>
+                    <span class="sw" id="dwBrushSw" style="background:#ff5d8f"></span><span class="cph" id="dwBrushName">Pink 60</span>
+                  </button>
                 </div>
-                <p class="note">Brush paints pixels into <b style="color:var(--ink)">Paint 1</b>, a raster Layer. Color comes from a <b style="color:var(--ink)">Paint</b>, the same swatch pair the tool bar shows.</p>
+                <p class="note">Brush paints pixels into <b style="color:var(--ink)">Paint 1</b>, a raster Layer. Color comes from a <b style="color:var(--ink)">Paint</b>, and it opens the same picker every other color slot in the app opens.</p>
               </div>
             </div>
 
@@ -492,6 +467,9 @@
       </div>
 
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <!-- THE one paint popover (D7). It builds its own body; the Fill, Stroke
+           and Brush swatches above re-point it. -->
+      <div class="popover cpick pop" id="dwPick" data-cp-color="#FF5D8F" data-cp-name="Brush" aria-label="Paint"></div>
       <div class="popover menu pop" id="dwAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
         <div class="mlabel">Add adjustment</div>
         <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
@@ -1197,25 +1175,26 @@
     bind("bFlow","bFlowV", function(x){ return Math.round(x)+"%"; }, function(x){ App.flow = x/100; });
     bind("bOpac","bOpacV", function(x){ return Math.round(x)+"%"; }, function(x){ App.opacity = x/100; });
 
-    // color swatches, mirrored into the tool bar's foreground swatch
-    var NAMES = { "#ff5d8f":"Pink 60", "#7c4dff":"Purple 50", "#4c6fff":"Blue 55",
-                  "#12c2e9":"Cyan 55", "#f6c453":"Amber 60", "#3ecf8e":"Green 55", "#f4f6fb":"White 98" };
-    var sws = $("brushSwatches");
+    /* The paint. Brush and Pen stroke are the SAME color on this page, so they
+       are two slots on one picker and both follow it. Everything else that
+       shows the color (the tool bar's foreground swatch, the raster layer's
+       chip) is painted from here, from one value. */
+    var NAMES = { "#FF5D8F":"Pink 60", "#7C4DFF":"Purple 50", "#4C6FFF":"Blue 55",
+                  "#12C2E9":"Cyan 55", "#F6C453":"Amber 60", "#3ECF8E":"Green 55", "#F4F6FB":"White 98" };
     function setColor(hex){
-      App.color = hex;
-      App.colorName = NAMES[hex] || hex;
-      if(sws) all(".sw-btn", sws).forEach(function(b){
-        b.classList.toggle("on", b.getAttribute("data-color") === hex);
-      });
-      if($("dwFg")) $("dwFg").style.background = hex;
-      if($("dwLayerSw")) $("dwLayerSw").style.background = hex;
-      if($("penStrokeSw")) $("penStrokeSw").style.background = hex;
-      if($("penStrokeName")) $("penStrokeName").textContent = App.colorName;
+      var key = String(hex).toUpperCase();
+      App.color = key;
+      App.colorName = NAMES[key] || key;
+      if($("dwFg")) $("dwFg").style.background = key;
+      if($("dwLayerSw")) $("dwLayerSw").style.background = key;
+      ["penStrokeSw","dwBrushSw"].forEach(function(id){ if($(id)) $(id).style.background = key; });
+      ["penStrokeName","dwBrushName"].forEach(function(id){ if($(id)) $(id).textContent = App.colorName; });
       App.emit();
     }
-    if(sws) sws.addEventListener("click", function(e){
-      var b = e.target.closest(".sw-btn"); if(!b) return;
-      setColor(b.getAttribute("data-color"));
+    var dwPick = $("dwPick");
+    if(dwPick) dwPick.addEventListener("cp:change", function(e){
+      var name = dwPick.getAttribute("data-cp-name");
+      if(name === "Brush" || name === "Stroke") setColor(e.detail.hex);
     });
 
     App.on(function(){

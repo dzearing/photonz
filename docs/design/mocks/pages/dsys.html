@@ -31,8 +31,10 @@
   .tokline .sw{width:18px;height:18px;border-radius:5px;flex:none;border:1px solid rgba(0,0,0,.14)}
   .tokline .nm{color:var(--ink);font-weight:520;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tokline .hex{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint)}
-  .tokline:hover{background:var(--panel-2)}  .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
-  .actrow .btn{flex:1 1 auto}
+  .tokline:hover{background:var(--panel-2)}
+  /* `.actrow` is a design-system class; this page only asks its buttons to
+     share the width evenly. */
+  #dsys .actrow .btn{flex:1 1 auto}
   /* ---- reference cards below the shell (documentation, not app chrome) ---- */
   .dsref-list{display:flex;flex-direction:column;gap:var(--gap)}
   .dsref{border:1px solid var(--edge-lo);border-radius:var(--r-md);overflow:hidden;background:var(--glass-thin);

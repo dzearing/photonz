@@ -30,21 +30,13 @@
       linear-gradient(180deg,#20242f,#14161d)}
   .libtile .th.bth .b{background:currentColor}
 
-  /* toggle switch · built from tokens, full interaction states */
-  .tgl{display:inline-flex;align-items:center;gap:var(--gap-sm);background:none;border:0;padding:4px 0;cursor:pointer}
-  .tgl .sw{width:34px;height:20px;border-radius:999px;background:var(--line-strong);position:relative;flex:none;
-    border:1px solid var(--edge-lo);box-shadow:inset 0 1px 2px rgba(0,0,0,.14);transition:var(--ctl-tr)}
-  .tgl .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.32);transition:transform .15s ease,width .1s ease}
-  .tgl[aria-checked="true"] .sw{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,white 16%),var(--accent));border-color:transparent}
-  .tgl[aria-checked="true"] .sw::after{transform:translateX(14px)}
-  .tgl:hover .sw{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo))}
-  .tgl:active .sw::after{width:16px}
-  .tgl:focus-visible{outline:none}
-  .tgl:focus-visible .sw{box-shadow:inset 0 1px 2px rgba(0,0,0,.14),var(--ring)}
-  .tgl[disabled],.tgl.disabled{opacity:.42;pointer-events:none}
-  .tgl .lb{font-size:11.5px;color:var(--ink);font-weight:520;text-align:left}
-  .tgl .lb small{display:block;color:var(--faint);font-size:9.5px;font-weight:500;margin-top:1px}
+  /* Each dynamic is a setting row: what it does on the left, the design
+     system's own `.switch` on the right. The knob used to be a `span.sw`
+     inside a hand-rolled `.tgl`, which collided with `.sw`, the swatch every
+     color slot in the app uses. */
+  #brush-editor .tgrow{cursor:pointer;padding:5px 0}
+  #brush-editor .tgrow .lb{font-size:11.5px;color:var(--ink);font-weight:520;text-align:left}
+  #brush-editor .tgrow .lb small{display:block;color:var(--faint);font-size:9.5px;font-weight:500;margin-top:1px}
   .tgrid{display:flex;flex-direction:column;gap:2px}
 
   /* dynamics curve */
@@ -52,12 +44,6 @@
     background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
     box-shadow:inset 0 1px 0 var(--edge-hi);display:block;margin:8px 0 4px}
 
-  /* color swatches */
-  .swatches{display:flex;gap:6px;flex-wrap:wrap}
-  .sw-btn{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.2);cursor:pointer;padding:0;transition:transform .1s ease}
-  .sw-btn:hover{transform:scale(1.08)}
-  .sw-btn:focus-visible{outline:none;box-shadow:var(--ring)}
-  .sw-btn.on{outline:2px solid var(--accent);outline-offset:1px}
 
   .apiline{margin:0}
   .apiline .codeblk{white-space:pre-wrap;word-break:break-word}</style>
@@ -67,45 +53,25 @@
 <section class="screen on" id="brush-editor">
   <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Brush editor</h2><span class="k">· the Brush tool's full parameters, live on the canvas</span></div>
 
-  <div class="win tall cq shell" data-shell="brush-proof · 1200 × 600" data-ws="image">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>brush-proof</b> · 1200 × 600</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-        <button class="btn primary sm" data-target="draw">Done</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#beCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#beHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <button class="btn ghost sm" data-sheet="#beBrowse" title="Browse the whole brush library"><i class="ic ic-library"></i> Browse library <span class="kbd">⌃⌘L</span></button>
-      <span class="tspacer"></span>
-      <span class="val" id="beSum">24 px · 10% spacing</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="beCmd" style="position:absolute;right:0;top:26px;width:222px;z-index:12">
-          <div class="mlabel">Brush</div>
-          <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
-          <div class="menuitem"><i class="ic ic-save"></i> Save as preset <span class="sc">⌘S</span></div>
-          <div class="menuitem" id="beResetMenu"><i class="ic ic-undo"></i> Reset parameters</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="brush-proof · 1200 × 600" data-ws="image"
+       data-status='<span id="beSum">24 px · 10% spacing</span>'>
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="beShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+           title bar and Ask are built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="beCmd">
+        <div class="mlabel">Brush</div>
+        <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
+        <div class="menuitem"><i class="ic ic-save"></i> Save as preset <span class="sc">⌘S</span></div>
+        <div class="menuitem" id="beResetMenu"><i class="ic ic-undo"></i> Reset parameters</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem" data-target="brush-library"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+        <div class="menuitem" data-sheet="#beHist"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -126,6 +92,7 @@
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#beShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
           <button class="tool" data-sheet="#beHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" data-sheet="#beBrowse" title="Browse the whole brush library (⌃⌘L)"><i class="ic sm ic-library"></i></button>
         </div>
 
         <!-- FLOATING TOOL BAR · the D4 Draw inventory, Brush active -->
@@ -269,11 +236,11 @@
             </div>
 
             <div class="section">
-              <div class="sec-h"><i class="ic ic-keyframe sm" style="color:var(--faint)"></i> Dynamics <span class="mut">pressure and tilt</span></div>
+              <div class="sec-h"><i class="ic ic-curves sm" style="color:var(--faint)"></i> Dynamics <span class="mut">pressure and tilt</span></div>
               <div class="tgrid">
-                <button class="tgl" id="beDynSize" role="switch" aria-checked="true"><span class="sw"></span><span class="lb">Size follows pressure<small>light touch tapers the ends</small></span></button>
-                <button class="tgl" id="beDynOpac" role="switch" aria-checked="true"><span class="sw"></span><span class="lb">Opacity follows pressure<small>soft in, soft out</small></span></button>
-                <button class="tgl" id="beDynTilt" role="switch" aria-checked="false"><span class="sw"></span><span class="lb">Tilt shapes the nib<small>tilt flattens toward the ends</small></span></button>
+                <label class="setrow tgrow"><span class="lb">Size follows pressure<small>light touch tapers the ends</small></span><span class="switch sm"><input type="checkbox" id="beDynSize" checked><i></i></span></label>
+                <label class="setrow tgrow"><span class="lb">Opacity follows pressure<small>soft in, soft out</small></span><span class="switch sm"><input type="checkbox" id="beDynOpac" checked><i></i></span></label>
+                <label class="setrow tgrow"><span class="lb">Tilt shapes the nib<small>tilt flattens toward the ends</small></span><span class="switch sm"><input type="checkbox" id="beDynTilt"><i></i></span></label>
               </div>
               <canvas class="dyncurve" id="beCurve" width="248" height="74"></canvas>
               <p class="note">The curve maps pen pressure across the stroke. With dynamics off, every dab is full size and fully opaque.</p>
@@ -290,16 +257,12 @@
 
             <div class="section">
               <div class="sec-h"><i class="ic ic-swatch sm" style="color:var(--faint)"></i> Color <span class="mut">Paint</span></div>
-              <div class="swatches" id="beSwatches">
-                <button class="sw-btn on" style="background:#ff9d7e" data-color="#ff9d7e" title="Coral"></button>
-                <button class="sw-btn" style="background:#ff5d8f" data-color="#ff5d8f" title="Pink"></button>
-                <button class="sw-btn" style="background:#7c4dff" data-color="#7c4dff" title="Purple"></button>
-                <button class="sw-btn" style="background:#4c6fff" data-color="#4c6fff" title="Blue"></button>
-                <button class="sw-btn" style="background:#12c2e9" data-color="#12c2e9" title="Cyan"></button>
-                <button class="sw-btn" style="background:#3ecf8e" data-color="#3ecf8e" title="Green"></button>
-                <button class="sw-btn" style="background:#f4f6fb" data-color="#f4f6fb" title="White"></button>
+              <div class="irow"><span class="rl">Paint</span>
+                <button class="cpick-btn wide" id="beColorSlot" data-menu="#bePick" data-cp-slot="Brush" data-cp-color="#FF9D7E" data-cp-flat data-cp-open>
+                  <span class="sw" id="beColorSw"></span><span class="cph" id="beColorHex"></span>
+                </button>
               </div>
-              <p class="note">The brush color is a <b style="color:var(--ink)">Paint</b>, the same swatch pair the tool bar shows.</p>
+              <p class="note">The brush color is a <b style="color:var(--ink)">Paint</b>, and its swatch opens the same picker every other color slot in the app opens.</p>
             </div>
 
             <div class="section">
@@ -348,6 +311,9 @@
         <button class="drailtab" data-group="#beLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
+      <!-- THE one paint popover (D7). It builds its own body; the Paint swatch
+           in Color points it at the brush's own color from load. -->
+      <div class="popover cpick pop" id="bePick" data-cp-color="#FF9D7E" data-cp-name="Brush" aria-label="Brush paint"></div>
       <div class="popover menu pop" id="beLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
         <div class="menuitem"><i class="ic ic-plus"></i> New raster layer <span class="sc">⌘⇧N</span></div>
         <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment</div>
@@ -609,21 +575,16 @@
 
   function toggle(id, key){
     var b = $(id); if(!b) return;
-    b.addEventListener("click", function(){
-      S[key] = !S[key];
-      b.setAttribute("aria-checked", S[key] ? "true" : "false");
-      render();
-    });
+    b.addEventListener("change", function(){ S[key] = b.checked; render(); });
   }
   toggle("beDynSize", "dynSize");
   toggle("beDynOpac", "dynOpac");
   toggle("beDynTilt", "dynTilt");
 
-  var sws = $("beSwatches");
-  if(sws) sws.addEventListener("click", function(e){
-    var b = e.target.closest(".sw-btn"); if(!b) return;
-    sws.querySelectorAll(".sw-btn").forEach(function(x){ x.classList.toggle("on", x===b); });
-    S.color = b.getAttribute("data-color"); render();
+  /* the ONE picker drives the brush color (D7) */
+  var bePick = $("bePick");
+  if(bePick) bePick.addEventListener("cp:change", function(e){
+    S.color = e.detail.hex; render();
   });
 
   /* ---------- presets: the Brushes scope of the Library group ---------- */
@@ -665,10 +626,13 @@
     setR("beScatter", Math.round(S.scatter*100)); setR("beGrain", Math.round(S.grain*100));
     setR("beWet", Math.round(S.wet*100)); setR("beFlow", Math.round(S.flow*100));
     setR("beOpac", Math.round(S.opac*100));
-    var setT = function(id,on){ var e=$(id); if(e) e.setAttribute("aria-checked", on?"true":"false"); };
+    var setT = function(id,on){ var e=$(id); if(e) e.checked = !!on; };
     setT("beDynSize", S.dynSize); setT("beDynOpac", S.dynOpac); setT("beDynTilt", S.dynTilt);
     if(shape) shape.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-shape")===S.shape); });
-    if(sws) sws.querySelectorAll(".sw-btn").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-color")===S.color); });
+    /* Loading a preset brings its color with it, so the slot moves too. The
+       picker owns the swatch and the hex, so re-pointing it is the whole
+       update: no second copy of the value on the page. */
+    if(bePick) bePick.dispatchEvent(new CustomEvent("cp:set", { detail:{ color:S.color } }));
     paintGrids();
     render();
   }

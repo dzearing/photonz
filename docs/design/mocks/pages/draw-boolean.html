@@ -21,10 +21,8 @@
   .blab{font-family:var(--mono);font-size:12px;fill:rgba(255,255,255,.68);pointer-events:none}
   .blab.dim{fill:rgba(255,255,255,.42);font-size:11px}
   #bDrag:active{cursor:grabbing}
-  .bhint{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
-    background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
-    border:1px solid rgba(255,255,255,.14);pointer-events:none;white-space:nowrap;display:flex;gap:6px;align-items:center}
+  /* the shared canvas hint pill, parked just under the artwork */
+  #draw-boolean .cnv-hint{bottom:-6px}
 
   /* the four-op gallery, shown in the slide-down overlay */
   .bgal{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap-sm);
@@ -44,49 +42,29 @@
 <section class="screen on" id="draw-boolean">
   <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Boolean operations</h2><span class="k">· union, subtract, intersect, exclude</span></div>
 
-  <div class="win tall cq shell" data-shell="combine-mark · 1200 × 630" data-ws="image">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>combine-mark</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-        <button class="btn primary sm" data-target="vector-wt">Done</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#bCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#bHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <button class="btn ghost sm" data-sheet="#bOpsSheet" title="Browse the four boolean operations"><i class="ic ic-boolean-union"></i> All operations</button>
-      <span class="tspacer"></span>
-      <span class="val" id="bReadout">union · 1 path</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="bCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-          <div class="mlabel">Path</div>
-          <div class="menuitem"><i class="ic ic-boolean-union"></i> Union <span class="sc">⌘⌥U</span></div>
-          <div class="menuitem"><i class="ic ic-boolean-union"></i> Subtract <span class="sc">⌘⌥S</span></div>
-          <div class="menuitem"><i class="ic ic-boolean-union"></i> Intersect <span class="sc">⌘⌥I</span></div>
-          <div class="menuitem"><i class="ic ic-boolean-union"></i> Exclude <span class="sc">⌘⌥X</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Release combine</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="combine-mark · 1200 × 630" data-ws="image"
+       data-status='<span id="bReadout">union · 1 path</span>'>
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="dbShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` button that opens it,
+           the title bar and Ask are all built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="bCmd">
+        <div class="mlabel">Path</div>
+        <div class="menuitem"><i class="ic ic-boolean-union"></i> Union <span class="sc">⌘⌥U</span></div>
+        <div class="menuitem"><i class="ic ic-boolean-subtract"></i> Subtract <span class="sc">⌘⌥S</span></div>
+        <div class="menuitem"><i class="ic ic-boolean-intersect"></i> Intersect <span class="sc">⌘⌥I</span></div>
+        <div class="menuitem"><i class="ic ic-boolean-exclude"></i> Exclude <span class="sc">⌘⌥X</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Release combine</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem" data-sheet="#bHist"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -127,7 +105,7 @@
                 <!-- transparent drag handle over the circle -->
                 <circle id="bDrag" cx="286" cy="168" r="96" fill="#fff" fill-opacity="0" style="cursor:grab"/>
               </svg>
-              <div class="bhint" id="bHint"><i class="ic ic-move" style="width:13px;height:13px"></i> Drag circle A to change the overlap</div>
+              <div class="cnv-hint" id="bHint"><i class="ic ic-move" style="width:13px;height:13px"></i> Drag circle A to change the overlap</div>
             </div>
             <!-- SELECTION, place 1 of 3: on the canvas -->
             <div class="sel-ring"></div>
@@ -139,6 +117,7 @@
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#dbShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
           <button class="tool" data-sheet="#bHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" data-sheet="#bOpsSheet" title="Browse the four boolean operations"><i class="ic sm ic-boolean-union"></i></button>
         </div>
 
         <!-- FLOATING TOOL BAR · the D4 Draw inventory, Select active -->
@@ -217,7 +196,7 @@
                   <use href="#sA" class="bsrc"/><use href="#sB" class="bsrc"/>
                   <g fill="url(#sG)" fill-opacity="0.72"><use href="#sA" mask="url(#sAmB)"/></g>
                 </svg>
-                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Subtract</div>
+                <div class="nm"><i class="ic ic-boolean-subtract sm" style="color:#ff7e5f"></i> Subtract</div>
                 <div class="op">boolean · A minus B</div>
                 <div class="ds">Punches B out of A. Order matters, so a swap gives B minus A instead.</div>
               </div>
@@ -234,7 +213,7 @@
                   <use href="#iA" class="bsrc"/><use href="#iB" class="bsrc"/>
                   <g fill="url(#iG)" fill-opacity="0.72"><use href="#iA" clip-path="url(#iClipB)"/></g>
                 </svg>
-                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Intersect</div>
+                <div class="nm"><i class="ic ic-boolean-intersect sm" style="color:#ff7e5f"></i> Intersect</div>
                 <div class="op">boolean · and</div>
                 <div class="ds">Keeps only the region covered by A <b style="color:var(--ink)">and</b> B. Just the overlap survives.</div>
               </div>
@@ -252,7 +231,7 @@
                   <use href="#xA" class="bsrc"/><use href="#xB" class="bsrc"/>
                   <g fill="url(#xG)" fill-opacity="0.72"><use href="#xA" mask="url(#xAmB)"/><use href="#xB" mask="url(#xBmA)"/></g>
                 </svg>
-                <div class="nm"><i class="ic ic-boolean-union sm" style="color:#ff7e5f"></i> Exclude</div>
+                <div class="nm"><i class="ic ic-boolean-exclude sm" style="color:#ff7e5f"></i> Exclude</div>
                 <div class="op">boolean · xor</div>
                 <div class="ds">Keeps A and B but drops the overlap, leaving a clean hole where they met.</div>
               </div>
@@ -318,7 +297,7 @@
           </div>
           <div class="dgrp-b">
             <!-- SELECTION, place 2 of 3: the matching row in Layers -->
-            <div class="lrow sel"><i class="ic ic-boolean-union"></i><span class="nm" id="bLayerNm">Combine · union</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow sel"><i class="ic ic-boolean-union" id="bLayerIc"></i><span class="nm" id="bLayerNm">Combine · union</span><i class="ic sm ic-eye eye"></i></div>
             <div id="bSrcRows">
               <div class="lrow child" data-src="a"><i class="ic ic-circle"></i><span class="nm">Circle A</span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow child" data-src="b"><i class="ic ic-square"></i><span class="nm">Square B</span><i class="ic sm ic-eye eye"></i></div>
@@ -351,8 +330,21 @@
             </div>
             <div class="section">
               <div class="sec-h">Fill <span class="mut">Paint style</span></div>
-              <div class="irow"><span class="rl">Style</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-              <div class="irow"><span class="rl">Stroke</span><span class="select"><span class="lead"><span class="sw" style="background:#ff5d8f"></span> Pink 60</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <!-- Two slots, ONE picker (D7): clicking either swatch moves the
+                   same popover there. The named Style stays a `.select`,
+                   because that opens the design system, not a color. -->
+              <div class="irow"><span class="rl">Fill</span>
+                <button class="cpick-btn wide" data-menu="#bPick" data-cp-slot="Fill" data-cp-color="#7C4DFF"
+                        data-cp-paint='{"type":"linear","angle":135,"stops":[{"hex":"#7C4DFF","pos":0},{"hex":"#FF5D8F","pos":100}]}'>
+                  <span class="sw"></span><span class="cph"></span>
+                </button>
+              </div>
+              <div class="irow"><span class="rl">Stroke</span>
+                <button class="cpick-btn wide" data-menu="#bPick" data-cp-slot="Stroke" data-cp-color="#FF5D8F" data-cp-flat>
+                  <span class="sw"></span><span class="cph"></span>
+                </button>
+              </div>
+              <div class="irow"><span class="rl">Style</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-right"></i></span></span></div>
               <p class="note">One result path, painted with one named Style. Swap the Style once and every shape wearing it follows.</p>
             </div>
             <div class="section" style="border-bottom:0">
@@ -412,6 +404,9 @@
       </div>
 
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
+      <!-- THE one paint popover. It builds its own body; the two swatches above
+           re-point it. -->
+      <div class="popover cpick pop" id="bPick" data-cp-color="#7C4DFF" data-cp-name="Fill" aria-label="Paint"></div>
       <div class="popover menu pop" id="bAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
         <div class="mlabel">Add adjustment</div>
         <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
@@ -463,6 +458,7 @@
   var swap = $("bSwap"), reset = $("bReset"), release = $("bRelease"), ops = $("bOps");
   var readout = $("bReadout"), apiOp = $("bApiOp"), apiArgs = $("bApiArgs"), hint = $("bHint");
   var tag = $("bTag"), layerNm = $("bLayerNm"), orderVal = $("bOrder"), srcRows = $("bSrcRows");
+  var layerIc = $("bLayerIc");
   var VW = 640, VH = 330;
   var DEF = { cx:286, cy:168 };
   var op = "union", order = "ab";
@@ -509,6 +505,8 @@
     if(readout) readout.textContent = label;
     if(tag) tag.textContent = "Combine · " + label;
     if(layerNm) layerNm.textContent = "Combine · " + op;
+    // the layer row wears the op it IS, not the family mark
+    if(layerIc) layerIc.className = "ic ic-boolean-" + op;
     if(orderVal) orderVal.textContent = (op !== "subtract") ? "not used" : (order === "ab" ? "A minus B" : "B minus A");
     if(apiOp) apiOp.textContent = '"' + op + '"';
     if(apiArgs) apiArgs.textContent = (op === "subtract" && order === "ba") ? "square, circle" : "circle, square";

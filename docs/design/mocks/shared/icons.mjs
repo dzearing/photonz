@@ -226,6 +226,11 @@ export const CATEGORIES = [
       ['bezier', P('M4.2 18.2C4.2 9.4 19.8 14.6 19.8 5.8') + R(2.2, 16.2, 4, 4, 1.2) + R(17.8, 3.8, 4, 4, 1.2), 'A curve between two points', 'curve spline handle path'],
       ['node', C(12, 12, 2.4) + P('M5 19l4.4-4.4M19 5l-4.4 4.4') + R(2.6, 16.6, 3.6, 3.6, 1) + R(17.8, 3.8, 3.6, 3.6, 1), 'Edit a point and its handles', 'anchor point vertex handle'],
       ['corner-radius', P('M4.4 19.6V10.4A6 6 0 0 1 10.4 4.4h9.2') + P('M4.4 10.4V4.4h6', "stroke-dasharray='2.6 2.6'") + DOT(4.4, 4.4, 1.15), 'Round the corners', 'radius rounding fillet'],
+      // An OPEN path with its two ends still apart, and the segment that would
+      // join them drawn dashed: the glyph shows the move, not the result. The
+      // two ends wear the same square anchors as `node` and `bezier`, because
+      // they are the same anchors.
+      ['path-close', P('M17.1 17.7A7.6 7.6 0 1 1 17.1 6.3') + P('M17.1 8.3v7.4', "stroke-dasharray='2.2 2.3'") + R(15.3, 15.9, 3.6, 3.6, 1) + R(15.3, 4.5, 3.6, 3.6, 1), 'Join the two ends of an open path', 'close join shape loop seal end'],
       ['boolean-union', `<path d='${B_SQ}${B_CI}' fill='black' stroke='none' opacity='.42'/><path d='${B_SQ}'/><path d='${B_CI}'/>`, 'Keep both shapes as one', 'combine merge weld add'],
       ['boolean-subtract', `<defs><mask id='bs'><path d='${B_SQ}' fill='white'/><path d='${B_CI}' fill='black'/></mask></defs><path d='${B_SQ}' mask='url(#bs)' fill='black' stroke='none' opacity='.42'/><path d='${B_SQ}'/><path d='${B_CI}'/>`, 'Remove the top shape', 'minus front knockout'],
       ['boolean-intersect', `<defs><clipPath id='bi'><path d='${B_SQ}'/></clipPath></defs><path d='${B_CI}' clip-path='url(#bi)' fill='black' stroke='none' opacity='.55'/><path d='${B_SQ}'/><path d='${B_CI}'/>`, 'Keep only the overlap', 'intersection common'],

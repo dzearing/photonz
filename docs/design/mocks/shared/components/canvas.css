@@ -36,6 +36,20 @@
 @media (prefers-reduced-motion:reduce){ .canvas{transition:none} }
 .artboard-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);letter-spacing:.04em}
 
+/* ---- THE CANVAS HINT — "drag this" said on the artboard ------------------
+   The dark glass pill under a live demo that names the gesture ("Drag an
+   anchor and the stroke re-renders"). It is NOT a tooltip: it is on screen
+   from the start, it is never hovered, and it disappears once you have done
+   the thing. Eleven pages had each hand-rolled it under a different name
+   (.hint-badge, .bhint, .mhint), which is why some of them blurred at 6px
+   and some at 8px. Position is the page's (`bottom` / `top` on the pill);
+   everything else is here. `.on-art` for a pill sitting on light artwork. */
+.cnv-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;pointer-events:none;
+  background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.14)}
+
 /* ---- THE ARTSTACK — registered drawing surfaces --------------------------
    Anywhere vector geometry and raster pixels must land on the SAME pixels
    (a brush stroke over a path, a mask over a photo), stack a <canvas> and an

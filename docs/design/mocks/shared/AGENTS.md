@@ -66,7 +66,13 @@ and `.dsub` each broke a different page.
   full-width actions) · `.seg.stack` (a segmented control allowed to wrap) ·
   `.win.shell .canvas{min-height:0}` (the canvas has no height floor inside a
   shell). All seven are now reserved bare names. `vr6-strip.py` re-runs as a
-  guard: it should always report 0 rules to remove.
+  guard: it should always report 0 rules to remove. Two more have joined them
+  since: `.actrow` (`.actstack`'s sibling — two or three SHORT buttons on one
+  line, wrapping only when the dock is narrow) and `.cnv-hint`, the dark glass
+  pill on the artboard that names the gesture ("Drag an anchor and the stroke
+  re-renders"). `.cnv-hint` is NOT a tooltip: it is on screen from the start,
+  it is never hovered, and it goes away once you have done the thing. The page
+  sets only its `top`/`bottom`.
 - Same rule for `data-*`: `data-target` is a reserved global cross-page nav hook
   that `preventDefault`s and `stopPropagation`s. Using it as page data means your
   control silently never fires. Pick your own `data-` name.
@@ -851,7 +857,7 @@ The full searchable library, with the grid and the drawing rules, is
 
 **Tools** — cursor move marquee-rect marquee-ellipse lasso wand subject crop straighten ruler eyedropper pen pencil brush eraser fill gradient clone heal patch dodge-burn blur-tool text
 
-**Shapes & vector** — square circle line triangle polygon frame bezier node corner-radius boolean-union boolean-subtract boolean-intersect boolean-exclude flatten
+**Shapes & vector** — square circle line triangle polygon frame bezier node corner-radius path-close boolean-union boolean-subtract boolean-intersect boolean-exclude flatten
 
 **Layers & structure** — layers layer-add group ungroup component instance mask clip eye eye-off lock unlock opacity blend merge
 

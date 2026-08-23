@@ -41,12 +41,9 @@
   /* category filter chips inside the Library group / overlay header */
   .catseg{flex-wrap:wrap}  .apiline{margin:0}
   .apiline .codeblk{white-space:pre-wrap;word-break:break-word}
-  .note{font-size:10.5px;color:var(--faint);line-height:1.45;margin-top:var(--s2)}
   .btag{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     padding:1px 6px;border-radius:5px;white-space:nowrap}
   .libstat{font-family:var(--mono);font-size:10px;color:var(--faint);white-space:nowrap}
-  /* grouped-menu section label (same as the app-shell reference page) */
-  .mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;padding:6px 10px 3px}
 </style>
 </head>
 <body class="page">
@@ -54,45 +51,25 @@
 <section class="screen on" id="brush-library">
   <div class="scen-head"><span class="pip" style="background:#ff7e5f"></span><h2>Brush library</h2><span class="k">· the Library group, scope Brushes</span></div>
 
-  <div class="win tall cq shell" data-shell="brush-sheet · 1200 × 630" data-ws="image">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>brush-sheet</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn sm"><i class="ic ic-export"></i> Export</button>
-        <button class="btn primary sm" data-target="draw">Done</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#blCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#blHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <button class="btn ghost sm" data-sheet="#blBrowse" title="Browse the whole library"><i class="ic ic-library"></i> Browse library <span class="kbd">⌃⌘L</span></button>
-      <span class="tspacer"></span>
-      <span class="libstat" id="libStat" aria-live="polite"></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="blCmd" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
-          <div class="mlabel">Brush</div>
-          <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
-          <div class="menuitem" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush <span class="sc">⌘⌥B</span></div>
-          <div class="menuitem"><i class="ic ic-import"></i> Import brush file <span class="sc">⌘⇧I</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell" data-shell="brush-sheet · 1200 × 630" data-ws="image"
+       data-status='<span class="libstat" id="libStat" aria-live="polite"></span>'>
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="blShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
+           title bar and Ask are built by the shell component. -->
+      <div class="popover menu pop cmdpop" id="blCmd">
+        <div class="mlabel">Brush</div>
+        <div class="menuitem"><i class="ic ic-brush"></i> Pick brush <span class="sc">B</span></div>
+        <div class="menuitem" data-target="brush-editor"><i class="ic ic-sliders"></i> Edit brush <span class="sc">⌘⌥B</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import brush file <span class="sc">⌘⇧I</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem" data-sheet="#blBrowse"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+        <div class="menuitem" data-sheet="#blHist"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -112,6 +89,7 @@
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#blShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
           <button class="tool" data-sheet="#blHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" data-sheet="#blBrowse" title="Browse the whole library (⌃⌘L)"><i class="ic sm ic-library"></i></button>
         </div>
 
         <!-- FLOATING TOOL BAR · the D4 Draw inventory, Brush active -->

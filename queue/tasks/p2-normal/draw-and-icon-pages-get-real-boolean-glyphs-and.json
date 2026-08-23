@@ -3,11 +3,11 @@
   "title": "Draw and icon pages get real boolean glyphs and shared color slots",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:39.833Z",
-  "updated": "2026-08-23T06:33:39.833Z",
+  "updated": "2026-08-23T15:44:31.991877Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Draw / brush / icon family'). Pages: draw, draw-boolean, brush-editor, brush-library, icon-draw-wt, icon-gradient-wt, vector-wt. Key items: draw-boolean uses ic-boolean-union for all four ops though subtract/intersect/exclude glyphs exist (high); Close path stops wearing ic-boolean-union (draw + vector-wt; pick/add a path-close glyph); color slots to .cpick-btn + shared .cpick (draw .sw-btn, brush-editor, draw-boolean, vector-wt Paint slot); brush-editor .tgl to DS .switch (drop the span.sw collision); icon-draw-wt one-glyph-per-command across its two menus + ic-snap; icon-gradient-wt colour to color x6; promote .actrow or drop copies; delete legacy titlebar/toolbar/.cmdk; vector-wt tool strip adds Eraser. Verify 200 + audit-sweep.",
@@ -16,6 +16,15 @@
     {
       "t": "2026-08-23T06:33:39.833Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T15:24:07.166Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T15:44:31.991877Z",
+      "note": "Added ic-path-close to the icon set (three pages were closing a path with the boolean-union mark). Promoted .actrow and .cnv-hint to the design system and dropped the page copies. draw-boolean: the four ops wear their four glyphs everywhere including the live Layers row; Fill/Stroke are two slots on one .cpick. draw: Close wears ic-path-close, Fill/Stroke/Brush are three slots on one picker (the sw-btn grid is gone). brush-editor: .tgl -> DS .switch (the span.sw collision is gone), swatch grid -> one slot, Dynamics = ic-curves. brush-library: page-local .note/.mlabel deleted. icon-draw-wt: one glyph per command across both menus, ic-snap for Snap, shortcut and label aligned. icon-gradient-wt: colour x19 -> color, Convert to radial = ic-gradient. vector-wt: Close path = ic-path-close, Paint slot is a real .cpick-btn that paints the canvas, Eraser added to the tool strip. Legacy titlebar/toolbar/.cmdk deleted from all four pages that still had it. Verified: 90/90 pages HTTP 200, audit-sweep clean on 90/90, vr6-strip reports 0, Scripts/test.sh 932 tests pass, no console errors on the changed pages."
     }
-  ]
+  ],
+  "started": "2026-08-23T15:24:07.165Z"
 }

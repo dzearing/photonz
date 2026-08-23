@@ -9,10 +9,10 @@
   /* icon-gradient-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
      screen, rendered once, driven by the steps below. ONE scenario, and it
      picks up exactly where `icon-draw-wt` stopped: the monochrome glyph exists
-     and now the colour version has to be made from it.
+     and now the color version has to be made from it.
 
      The argument here is that a GRADIENT IS A VALUE, not a vibe. Every part of
-     one is a number you can name: the type, the angle, each stop's colour, each
+     one is a number you can name: the type, the angle, each stop's color, each
      stop's position. So the same precision that put the glyph on whole units
      applies to the paint: the angle snaps to 15 degrees, a stop snaps to the
      midpoint and to its neighbours' spacing, and a position is typed as 58
@@ -24,7 +24,7 @@
          three gradient types are the same popover, and it MOVES between slots
          rather than being duplicated per slot.
        · nothing here is a preset. Every gradient on this page was made out of
-         the colour that was already in the slot.
+         the color that was already in the slot.
        · a paint that is used twice is a Style. Copying a gradient by hand is
          the bug the Library exists to prevent.
 
@@ -101,9 +101,9 @@
 <section class="screen on" id="icon-gradient-wt">
   <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Paint an icon with a gradient</h2><span class="k">· usage clickthrough · one scenario</span></div>
 
-  <p class="pglead">One job: take the <b>cloud upload</b> glyph off the grid and make the colour version of it, the one that ships as an
+  <p class="pglead">One job: take the <b>cloud upload</b> glyph off the grid and make the color version of it, the one that ships as an
     app icon. The interesting part is that <b>a gradient here is a set of numbers, not a mood</b>. Its type, its angle, each stop's
-    colour and each stop's position are all values you can name, so the angle snaps to 15 degrees the way the drawing snapped to
+    color and each stop's position are all values you can name, so the angle snaps to 15 degrees the way the drawing snapped to
     whole units, a stop snaps to the midpoint and to its neighbours' spacing, and a position is typed as <code>58</code> rather
     than dragged to about there. Then the whole paint gets a name and the rest of the family follows it. There is one paint
     control on this page and it <b>moves</b> between slots. Eleven real clicks on ONE screen, which never re-renders below.</p>
@@ -129,7 +129,7 @@
         <div class="popover menu pop cmdpop" id="cmdMenu">
           <div class="mlabel">Paint</div>
           <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as a style</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Convert to radial</div>
+          <div class="menuitem"><i class="ic ic-gradient"></i> Convert to radial</div>
           <div class="menuitem"><i class="ic ic-copy"></i> Copy paint <span class="sc">⌘⌥C</span></div>
           <div class="menu-sep"></div>
           <div class="mlabel">Export</div>
@@ -231,7 +231,7 @@
                 <button class="tool" id="tEllipse" title="Ellipse (O)"><i class="ic sm ic-circle"></i></button>
                 <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
                 <button class="tool" id="tGrad" title="Gradient (G)"><i class="ic sm ic-gradient"></i></button>
-                <button class="tool ovf" id="tEyedrop" title="Sample a colour (I)"><i class="ic sm ic-eyedropper"></i></button>
+                <button class="tool ovf" id="tEyedrop" title="Sample a color (I)"><i class="ic sm ic-eyedropper"></i></button>
                 <span class="tsep ovf"></span>
                 <button class="tool ovf" id="tMeasure" title="Measure (M)" data-target="redline"><i class="ic sm ic-ruler"></i></button>
                 <span class="tsep"></span>
@@ -252,7 +252,7 @@
                 <span class="val zval">100%</span>
               </span>
               <div class="popover menu pop" id="toolOvf" style="position:absolute;right:0;bottom:44px;width:206px;z-index:12">
-                <div class="menuitem"><i class="ic ic-eyedropper"></i> Sample a colour <span class="sc">I</span></div>
+                <div class="menuitem"><i class="ic ic-eyedropper"></i> Sample a color <span class="sc">I</span></div>
                 <div class="menuitem" data-target="redline"><i class="ic ic-ruler"></i> Measure <span class="sc">M</span></div>
               </div>
             </div>
@@ -306,13 +306,13 @@
                 <span class="cp-prev"><i class="was"></i><i class="now"></i></span>
                 <span class="cp-name" id="gxPickName">Plate fill</span>
                 <span class="sp"></span>
-                <button class="btn ghost icon sm" title="Sample a colour from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>
+                <button class="btn ghost icon sm" title="Sample a color from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>
                 <button class="btn ghost icon sm" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>
               </div>
               <div class="cp-types" data-cp-types role="group" aria-label="Paint type"></div>
               <div class="cp-geo wt-off" data-cp-geo></div>
               <div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>
-              <div class="seg cp-mode" data-cp-mode role="group" aria-label="Colour format">
+              <div class="seg cp-mode" data-cp-mode role="group" aria-label="Color format">
                 <button class="on" data-cp-m="hsl">HSL</button>
                 <button data-cp-m="rgb">RGB</button>
                 <button data-cp-m="hex">HEX</button>
@@ -493,7 +493,7 @@
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Fill</b> swatch on the plate</p>
           <p class="wt-where">Properties, in the <b>Paint</b> section</p>
-          <p class="wt-res">the paint editor opens on <code>#5B3AD9</code>, the flat colour the plate starts on. This is the <b>only</b> colour control in Photonz: the same popover handles a solid and all three gradient types, and it moves to whichever swatch you click rather than each slot growing a dialog of its own. The quiet 24 unit grid is still on the artboard, carried over from the glyph document.</p>
+          <p class="wt-res">the paint editor opens on <code>#5B3AD9</code>, the flat color the plate starts on. This is the <b>only</b> color control in Photonz: the same popover handles a solid and all three gradient types, and it moves to whichever swatch you click rather than each slot growing a dialog of its own. The quiet 24 unit grid is still on the artboard, carried over from the glyph document.</p>
         </div>
       </li>
 
@@ -509,7 +509,7 @@
           <span class="wt-n">2</span>
           <p class="wt-do"><b>Radial</b>, in the four-way type switch</p>
           <p class="wt-where">the paint editor, along its top</p>
-          <p class="wt-res">the ramp and the direction pad appear, and the plate becomes a gradient <b>seeded from the colour it already had</b> rather than from a stock preset. That matters: you never lose the colour you were working from. The four thumbnails are outcomes, not words, so each one shows what your paint would look like as that type.</p>
+          <p class="wt-res">the ramp and the direction pad appear, and the plate becomes a gradient <b>seeded from the color it already had</b> rather than from a stock preset. That matters: you never lose the color you were working from. The four thumbnails are outcomes, not words, so each one shows what your paint would look like as that type.</p>
         </div>
       </li>
 
@@ -536,12 +536,12 @@
           data-open="#gProps" data-collapse="#gLibrary"
           data-select="#lrPlate" data-pop="#gxPicker" data-show="#gxGrid,#secGeo,#gxHandle,#selPlate"
           data-css="#gxPlate=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#1B1140 100%)|#pFillSw=background:radial-gradient(circle at 32% 22%,#6E8BFF 0%,#1B1140 100%)|#gxHandlePv=left:32%;top:22%|#gxHandleKn=left:65%;top:55%;background:#1B1140|#gxHandleLn=left:32%;top:22%;width:150px;transform:rotate(45deg)|#gxHandleRd=left:65%;top:49%"
-          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 2 stops|#chipPaint=radial|#pOrigin=32, 22|#pStops=2 · 0, 100|#gxHandleRd=#1B1140 · 100%|#pGradNote=A stop is a colour and a position, and both are typed as often as they are dragged. The HEX field takes #1B1140, rgb(27, 17, 64) or hsl(255 58% 16%), because a brand colour usually arrives as text from somewhere else.">
+          data-set="#propKind=Plate|#pPaintKind=Radial|#pGradKind=Radial|#pFillLbl=Radial · 2 stops|#chipPaint=radial|#pOrigin=32, 22|#pStops=2 · 0, 100|#gxHandleRd=#1B1140 · 100%|#pGradNote=A stop is a color and a position, and both are typed as often as they are dragged. The HEX field takes #1B1140, rgb(27, 17, 64) or hsl(255 58% 16%), because a brand color usually arrives as text from somewhere else.">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
           <p class="wt-do">the outer stop, then <b>HEX</b>, and paste <code>#1B1140</code></p>
           <p class="wt-where">the paint editor, on the format switch under the field</p>
-          <p class="wt-res">the far end of the ramp becomes the exact brand ink rather than something dragged close to it. That field also takes <code>rgb(27, 17, 64)</code> and <code>hsl(255 58% 16%)</code>, because a brand colour usually arrives as text pasted from a spec, and retyping it by eye is how a family drifts apart.</p>
+          <p class="wt-res">the far end of the ramp becomes the exact brand ink rather than something dragged close to it. That field also takes <code>rgb(27, 17, 64)</code> and <code>hsl(255 58% 16%)</code>, because a brand color usually arrives as text pasted from a spec, and retyping it by eye is how a family drifts apart.</p>
         </div>
       </li>
 
@@ -592,7 +592,7 @@
           <span class="wt-n">7</span>
           <p class="wt-do">the <b>Glyph</b> swatch</p>
           <p class="wt-where">Properties, one row below Fill</p>
-          <p class="wt-res">the picker <b>slides to the glyph slot</b> and comes back to Solid, because that is what the glyph is painted with. It brought its recents and its shades with it, so the plate colours you were just working from are one click away. This is the same popover, not a second one: there is exactly one colour surface in the app.</p>
+          <p class="wt-res">the picker <b>slides to the glyph slot</b> and comes back to Solid, because that is what the glyph is painted with. It brought its recents and its shades with it, so the plate colors you were just working from are one click away. This is the same popover, not a second one: there is exactly one color surface in the app.</p>
         </div>
       </li>
 
@@ -679,7 +679,7 @@
   </div>
 
   <div class="caption">
-    <div class="c"><div class="lab">The idea</div><p>A gradient is <b>a set of values, not a mood</b>: a type, an origin, an angle, and a list of stops that each have a colour and a position. Once it is values, the same precision the drawing grid gave the glyph applies to the paint. The angle snaps to 15 degrees, a stop snaps to the midpoint and to its neighbours, and a position is typed. And because it is values, it can have a name, which is the only reason a family of icons stays a family.</p></div>
+    <div class="c"><div class="lab">The idea</div><p>A gradient is <b>a set of values, not a mood</b>: a type, an origin, an angle, and a list of stops that each have a color and a position. Once it is values, the same precision the drawing grid gave the glyph applies to the paint. The angle snaps to 15 degrees, a stop snaps to the midpoint and to its neighbours, and a position is typed. And because it is values, it can have a name, which is the only reason a family of icons stays a family.</p></div>
     <div class="c"><div class="lab g2">A direction</div><p>The gradient could be <b>edited entirely on the canvas</b>, with the ramp drawn along the axis handle and the stops draggable in place, so the panel becomes the numeric view rather than the only view. Photoshop and Figma both make you look away from the artwork to move a stop. The risk is a handle that covers the thing it is painting, which is why here the handle shows geometry and the ramp stays in the panel.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Should a style be able to hold <b>a paint per appearance</b>, so <code>Brand / plate</code> carries a light-mode and a dark-mode ramp under one name? It would make one style do what two nearly-identical ones do today, and it is how tokens already work. The catch is that an app icon does not switch with the system, so the same style would mean different things in different places.</p></div>
   </div>

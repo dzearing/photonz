@@ -25,10 +25,6 @@
       linear-gradient(180deg,#20242f,#14161d);
     box-shadow:0 20px 44px -14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.18)}
   #vector-wt .artstack svg{cursor:crosshair}
-  #vector-wt .hint-badge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
-    background:rgba(10,12,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    color:rgba(255,255,255,.9);font-size:10.5px;font-weight:560;padding:5px 11px;border-radius:999px;
-    border:1px solid rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
 
   /* the exact bezier, ghosted under the brushed mark */
   #vector-wt #vbGeo.geo{stroke:rgba(255,255,255,.32);stroke-width:1;stroke-dasharray:4 5}
@@ -38,8 +34,8 @@
   #vector-wt .hline{stroke:#7fb0ff;stroke-width:1;opacity:.85}
   #vector-wt .hdot{fill:#7fb0ff;stroke:var(--panel);stroke-width:1;cursor:grab}
 
-  /* inspector rows on the 4pt scale */
-  #vector-wt .setrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:var(--s2);padding:4px 0}  #vector-wt .actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
+  /* `.setrow` and `.actrow` are design-system classes; this page only asks the
+     buttons in an action row to share the width evenly. */
   #vector-wt .actrow .btn{flex:1 1 auto}
   /* sliders and the brush picker are the shared slider-row and preset-picker
      primitives; nothing page-local left */
@@ -78,7 +74,7 @@
         <div class="popover menu pop cmdpop" id="vCmd">
           <div class="mlabel">Path</div>
           <div class="menuitem"><i class="ic ic-pen"></i> Pen <span class="sc">P</span></div>
-          <div class="menuitem"><i class="ic ic-boolean-union"></i> Close path <span class="sc">⌘⇧J</span></div>
+          <div class="menuitem"><i class="ic ic-path-close"></i> Close path <span class="sc">⌘⇧J</span></div>
           <div class="menu-sep"></div>
           <div class="mlabel">Stroke</div>
           <div class="menuitem" data-target="brush-library"><i class="ic ic-brush"></i> Pick a brush <span class="sc">B</span></div>
@@ -98,7 +94,7 @@
                     <path id="vbGeo" class="geo" fill="none" stroke-linejoin="round" stroke-linecap="round"></path>
                     <g id="vbOverlay"></g>
                   </svg>
-                  <div class="hint-badge" id="vbHint">Drag an anchor or a handle and the brushed stroke re-renders live</div>
+                  <div class="cnv-hint" id="vbHint">Drag an anchor or a handle and the brushed stroke re-renders live</div>
                 </div>
                 <!-- SELECTION, place 1 of 3: on the canvas -->
                 <span class="wt-off" id="vbSel">
@@ -122,6 +118,7 @@
                 <span class="tsep"></span>
                 <button class="tool" id="tPen" title="Pen (P)"><i class="ic sm ic-pen"></i></button>
                 <button class="tool" id="tBrush" title="Brush (B)"><i class="ic sm ic-brush"></i></button>
+                <button class="tool" id="tEraser" title="Eraser (E)" data-target="draw"><i class="ic sm ic-eraser"></i></button>
                 <button class="tool ovf" id="tShape" title="Shape (U)"><i class="ic sm ic-square"></i></button>
                 <button class="tool ovf" id="tText" title="Text (T)"><i class="ic sm ic-text"></i></button>
                 <span class="tsep ovf"></span>
@@ -255,7 +252,7 @@
                       <button class="on">Smooth</button><button>Corner</button>
                     </div>
                     <div class="actrow">
-                      <button class="btn sm secondary" id="vbClose"><i class="ic ic-boolean-union"></i> Close path</button>
+                      <button class="btn sm secondary" id="vbClose"><i class="ic ic-path-close"></i> Close path</button>
                       <button class="btn sm secondary"><i class="ic ic-undo"></i> Undo</button>
                     </div>
                   </div>
@@ -267,7 +264,12 @@
                       <button data-fill="solid" id="vbFillSolid">Solid</button>
                       <button data-fill="grad" id="vbFillGrad">Gradient</button>
                     </div>
-                    <div class="irow"><span class="rl">Paint</span><span class="select" data-target="dsys"><span class="lead"><span class="sw" id="vbFillSw" style="background:repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)"></span> <span id="vbFillName">No fill</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+                    <div class="irow"><span class="rl">Paint</span>
+                      <button class="cpick-btn wide" data-menu="#vbPick" data-cp-slot="Fill" data-cp-color="#7C4DFF"
+                              data-cp-paint='{"type":"linear","angle":135,"stops":[{"hex":"#7C4DFF","pos":0},{"hex":"#FF5D8F","pos":54},{"hex":"#FFB057","pos":100}]}'>
+                        <span class="sw" id="vbFillSw" style="background:repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)"></span><span class="cph" id="vbFillName">No fill</span>
+                      </button>
+                    </div>
                     <div class="slrow"><span class="rl">Opacity</span><div class="slider sm"><input id="vbFillOp" name="fill-opacity" type="range" min="0" max="100" step="1" value="62"></div><span class="num" data-pz-frozen="1" id="vbFillOpV">62%</span></div>
                   </div>
 
@@ -347,6 +349,9 @@
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
 
+          <!-- THE one paint popover (D7). It builds its own body; the Paint
+               swatch in Fill re-points it. -->
+          <div class="popover cpick pop" id="vbPick" data-cp-color="#7C4DFF" data-cp-name="Fill" aria-label="Fill paint"></div>
           <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
             <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
             <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
@@ -691,6 +696,32 @@
 
     var state = { shape: "closed", fill: "grad", brush: "ink.marker", moved: false };
     var anchors = [], size = 26, flow = 0.42, fillOpacity = 0.62;
+
+    /* THE FILL PAINT (D7). The slot in Properties opens the one picker, and
+       what comes back paints the canvas: the solid hex when the fill is solid,
+       the stop list when it is a gradient. Nothing here re-implements color;
+       it only reads the paint the picker handed over. */
+    var fillSolid = "#7C4DFF";
+    var fillPaint = { type:"linear", angle:135,
+      stops:[{hex:"#7C4DFF",pos:0},{hex:"#FF5D8F",pos:54},{hex:"#FFB057",pos:100}] };
+    var NOFILL = "repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)";
+    function fillStops(){
+      return fillPaint.stops.slice().sort(function(a,b){ return a.pos - b.pos; });
+    }
+    function fillCss(){
+      if (state.fill === "none") return NOFILL;
+      if (state.fill === "solid") return fillSolid;
+      var st = fillStops().map(function(s){ return s.hex + " " + s.pos + "%"; }).join(",");
+      if (fillPaint.type === "radial") return "radial-gradient(circle at 50% 50%," + st + ")";
+      if (fillPaint.type === "angular") return "conic-gradient(from " + (fillPaint.angle||0) + "deg," + st + ")";
+      return "linear-gradient(" + (fillPaint.angle||135) + "deg," + st + ")";
+    }
+    function fillLabel(){
+      if (state.fill === "none") return "No fill";
+      if (state.fill === "solid") return fillSolid;
+      return fillPaint.type.charAt(0).toUpperCase() + fillPaint.type.slice(1) +
+        " · " + fillPaint.stops.length + " stops";
+    }
     var selIdx = 0, drag = null, raf = null;
 
     function clone(list, moved) {
@@ -738,10 +769,12 @@
         var p2 = new Path2D(d);
         if (state.fill === "grad") {
           var g = ctx.createLinearGradient(bb.x, bb.y, bb.x + bb.width, bb.y + bb.height);
-          g.addColorStop(0, "#7c4dff"); g.addColorStop(0.55, "#ff5d8f"); g.addColorStop(1, "#ffb057");
+          fillStops().forEach(function (st) {
+            g.addColorStop(Math.max(0, Math.min(1, st.pos / 100)), st.hex);
+          });
           ctx.fillStyle = g;
         } else {
-          ctx.fillStyle = "#7c4dff";
+          ctx.fillStyle = fillSolid;
         }
         ctx.globalAlpha = fillOpacity;
         ctx.fill(p2);
@@ -773,9 +806,7 @@
 
       var br = brushById(state.brush), a = anchors[selIdx];
       var closed = state.shape === "closed", empty = !anchors.length;
-      var fillName = state.fill === "grad" ? "Brand / grad" : (state.fill === "solid" ? "Purple 50" : "No fill");
-      var fillSw = state.fill === "grad" ? "linear-gradient(135deg,#7c4dff,#ff5d8f,#ffb057)"
-        : (state.fill === "solid" ? "#7c4dff" : "repeating-linear-gradient(45deg,#333,#333 3px,#555 3px,#555 6px)");
+      var fillName = fillLabel(), fillSw = fillCss();
       function set(id, text) { var n = $(id); if (n) n.textContent = text; }
       set("vbBrushName", br.name);
       set("vbReadout", empty ? "Pen · no path yet"
@@ -927,6 +958,24 @@
     });
 
     /* ---- fill controls ---- */
+    /* Picking a paint IS choosing the fill: hand back a gradient and the fill
+       becomes a gradient, hand back a flat color and it becomes solid. The
+       None / Solid / Gradient row stays because "no fill at all" is not a
+       color and so cannot live inside a color picker. */
+    var vbPick = $("vbPick");
+    if (vbPick) vbPick.addEventListener("cp:change", function (e) {
+      if (vbPick.getAttribute("data-cp-name") !== "Fill") return;
+      var pt = e.detail.paint;
+      if (pt && pt.type && pt.type !== "solid" && pt.stops && pt.stops.length) {
+        fillPaint = { type: pt.type, angle: pt.angle, stops: pt.stops.slice() };
+        if (state.fill !== "grad") state.fill = "grad";
+      } else {
+        fillSolid = e.detail.hex;
+        if (state.fill === "grad") state.fill = "solid";
+      }
+      render();
+    });
+
     var fseg = $("vbFillMode");
     if (fseg) fseg.addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return;

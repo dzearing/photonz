@@ -81,6 +81,14 @@
 /* --- stacked full-width actions (4 pages) ------------------------------ */
 .actstack{display:flex;flex-direction:column;gap:var(--gap-sm);margin-top:var(--s1)}
 
+/* --- side-by-side actions at the end of a section (3 pages) ------------
+   `.actstack`'s sibling: two or three SHORT buttons that fit on one line
+   (Close · Undo · Clear), wrapping only when the dock is narrow. It was
+   already a bare unprefixed name in three pages, which is the collision
+   class this file exists to close, and the rule was byte-identical in all
+   three. Reach for `.actstack` when a button's label is a sentence. */
+.actrow{display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-top:var(--s1)}
+
 /* --- .seg.stack ---------------------------------------------------------
    Used to mean "a segmented control allowed to wrap to a second row when the
    labels do not fit". That is SUPERSEDED: a wrapped segmented control reads
