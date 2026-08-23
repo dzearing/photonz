@@ -177,6 +177,15 @@
                   <span class="ctag a wt-off" id="cmpTagA">After</span>
                 </div>
                 <span class="fqtag wt-off" id="fqTag"><i class="ic xs ic-layers"></i> skin split · color + detail</span>
+                <!-- SELECTION, place 1 of 3: the ring on canvas. Hidden until
+                     step 1 selects a layer; every step keeps it in data-show
+                     and names the selected layer in the tag, so canvas, Layers,
+                     and Properties always agree. -->
+                <div class="wt-off" id="selFrame">
+                  <div class="sel-ring"></div>
+                  <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+                  <span class="mtag" id="selMtag">Heal · spots</span>
+                </div>
               </div>
             </div>
 
@@ -449,9 +458,9 @@
       <li class="wt-step"
           data-title="Pick up the Heal brush"
           data-cue="#tHeal" data-cue-label="Click the Heal tool" data-cue-place="top"
-          data-tool="#tHeal" data-show="#lrHeal,#propsBrush" data-hide="#propsEmpty"
+          data-tool="#tHeal" data-show="#lrHeal,#propsBrush,#selFrame" data-hide="#propsEmpty"
           data-select="#lrHeal"
-          data-set="#layerCount=2|#propKind=Heal brush">
+          data-set="#layerCount=2|#propKind=Heal brush|#selMtag=Heal · spots">
         <div class="wt-cap img">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Heal</b> tool</p>
@@ -464,8 +473,8 @@
           data-title="Paint out the blemishes"
           data-cue="#healRing" data-cue-label="Drag over each blemish" data-cue-place="right"
           data-tool="#tHeal" data-select="#lrHeal"
-          data-show="#lrHeal,#propsBrush,#healRing" data-hide="#propsEmpty,#spotA,#spotB,#spotC"
-          data-set="#layerCount=2|#propKind=Heal brush">
+          data-show="#lrHeal,#propsBrush,#healRing,#selFrame" data-hide="#propsEmpty,#spotA,#spotB,#spotC"
+          data-set="#layerCount=2|#propKind=Heal brush|#selMtag=Heal · spots">
         <div class="wt-cap img">
           <span class="wt-n">2</span>
           <p class="wt-do" data-verb="Drag"><b>over each blemish</b> on the cheek and forehead</p>
@@ -477,9 +486,9 @@
       <li class="wt-step"
           data-title="Pick up the Clone stamp"
           data-cue="#tClone" data-cue-label="Click the Clone stamp" data-cue-place="top"
-          data-tool="#tClone" data-show="#lrClone" data-hide="#healRing"
+          data-tool="#tClone" data-show="#lrClone,#selFrame" data-hide="#healRing"
           data-select="#lrClone"
-          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.">
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.|#selMtag=Clone · texture">
         <div class="wt-cap img">
           <span class="wt-n">3</span>
           <p class="wt-do">the <b>Clone stamp</b></p>
@@ -492,8 +501,8 @@
           data-title="Clone out the stray hair"
           data-cue="#cloneDst" data-cue-label="Drag from the source onto the stray hair" data-cue-place="right"
           data-tool="#tClone" data-select="#lrClone"
-          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink" data-hide="#strayHair,#healRing"
-          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.">
+          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink,#selFrame" data-hide="#strayHair,#healRing"
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#pBrushNote=Clone copies real pixels from the source you set, so it keeps an edge crisp where Heal would smear it.|#selMtag=Clone · texture">
         <div class="wt-cap img">
           <span class="wt-n">4</span>
           <p class="wt-do" data-verb="Drag"><b>from the source crosshair onto the stray hair</b></p>
@@ -506,9 +515,9 @@
           data-title="Open the Layers panel menu"
           data-cue="#btnLayerMenu" data-cue-label="Click the Layers panel menu" data-cue-place="left"
           data-tool="#tClone" data-select="#lrClone"
-          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink" data-hide="#strayHair,#healRing"
+          data-show="#lrClone,#cloneSrc,#cloneDst,#cloneLink,#selFrame" data-hide="#strayHair,#healRing"
           data-pop="#layerMenu"
-          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set">
+          data-set="#layerCount=3|#propKind=Clone stamp|#pBrushTitle=Clone stamp|#pSize=28 px|#pModeLabel=Source|#pMode=Aligned · ⌥-click to set|#selMtag=Clone · texture">
         <div class="wt-cap img">
           <span class="wt-n">5</span>
           <p class="wt-do">the <b>panel menu</b></p>
@@ -521,10 +530,10 @@
           data-title="Split the skin into two layers"
           data-cue="#miFreq" data-cue-label="Click Frequency separation" data-cue-place="left"
           data-tool="#tClone" data-pop="#layerMenu"
-          data-show="#lrFreqC,#lrFreqD,#propsFreq,#fqTag" data-hide="#propsBrush,#strayHair,#cloneSrc,#cloneDst,#cloneLink"
+          data-show="#lrFreqC,#lrFreqD,#propsFreq,#fqTag,#selFrame" data-hide="#propsBrush,#strayHair,#cloneSrc,#cloneDst,#cloneLink"
           data-select="#lrFreqC"
           data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
-          data-set="#layerCount=5|#propKind=Adjustment">
+          data-set="#layerCount=5|#propKind=Adjustment|#selMtag=Freq · color">
         <div class="wt-cap img">
           <span class="wt-n">6</span>
           <p class="wt-do"><b>Frequency separation…</b></p>
@@ -537,10 +546,10 @@
           data-title="Pick up Dodge and burn"
           data-cue="#tDodge" data-cue-label="Click Dodge and burn" data-cue-place="top"
           data-tool="#tDodge"
-          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush" data-hide="#propsFreq,#strayHair"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush,#selFrame" data-hide="#propsFreq,#strayHair"
           data-select="#lrDb"
           data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
-          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.">
+          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.|#selMtag=Dodge &amp; burn">
         <div class="wt-cap img">
           <span class="wt-n">7</span>
           <p class="wt-do"><b>Dodge and burn</b></p>
@@ -553,10 +562,10 @@
           data-title="Shape the light"
           data-cue="#dbMark" data-cue-label="Drag along the cheekbones and jaw" data-cue-place="right"
           data-tool="#tDodge"
-          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush,#dbShapes" data-hide="#propsFreq,#strayHair"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#propsBrush,#dbShapes,#selFrame" data-hide="#propsFreq,#strayHair"
           data-select="#lrDb"
           data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
-          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.">
+          data-set="#layerCount=6|#propKind=Dodge and burn|#pBrushTitle=Dodge and burn|#pSize=90 px|#pModeLabel=Range|#pMode=Midtones · exposure 8%|#pBrushNote=Dodge and burn paint onto a 50% gray layer set to soft light, so shaping brightness never bruises the pixels underneath.|#selMtag=Dodge &amp; burn">
         <div class="wt-cap img">
           <span class="wt-n">8</span>
           <p class="wt-do" data-verb="Drag"><b>along the cheekbones, nose bridge, and jaw</b></p>
@@ -569,11 +578,11 @@
           data-title="Compare with the original"
           data-cue="#btnCompare" data-cue-label="Click Before / after" data-cue-place="left"
           data-tool="#tSelect"
-          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#dbShapes,#cmpBefore,#cmpDiv,#cmpTagB,#cmpTagA,#propsLayer"
+          data-show="#lrFreqC,#lrFreqD,#fqTag,#lrDb,#dbShapes,#cmpBefore,#cmpDiv,#cmpTagB,#cmpTagA,#propsLayer,#selFrame"
           data-hide="#propsFreq,#propsBrush,#strayHair"
           data-activate="#btnCompare" data-select="#lrDb"
           data-css="#cvFace=filter:saturate(1.04) contrast(.99)"
-          data-set="#layerCount=6|#propKind=Layer|#pLayerName=Dodge &amp; burn|#pBlend=Soft light">
+          data-set="#layerCount=6|#propKind=Layer|#pLayerName=Dodge &amp; burn|#pBlend=Soft light|#selMtag=Dodge &amp; burn">
         <div class="wt-cap img">
           <span class="wt-n">9</span>
           <p class="wt-do"><b>Before / after</b></p>
