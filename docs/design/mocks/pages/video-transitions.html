@@ -9,8 +9,9 @@
 /* video-transitions · a transition is a relationship between two clips at a cut,
    so it lives on the timeline dock and its parameters live in Properties. The
    transition library is the shared .libgrid / .libtile grammar inside a panel
-   group, not a bespoke widget. Only the A to B animator and the transition
-   region on the cut are page local. 4pt scale and shared tokens throughout. */
+   group, not a bespoke widget. The transition on the cut is the shared .xband
+   family and the cut itself the shared .editpt (shared/components/video.css).
+   Only the A to B animator is page local. 4pt scale and shared tokens. */
 
 #video-transitions .win.shell{height:900px;min-height:0}
 #video-transitions .cnv>.canvas{min-height:0;background:radial-gradient(680px 340px at 50% 36%,#171a26,#05060a)}/* ---------- the A to B animator, on the canvas ---------- */
@@ -27,36 +28,24 @@
 .tbadge{position:absolute;top:var(--s3);right:var(--s3);z-index:5;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:640;color:#fff;background:rgba(0,0,0,.42);border:1px solid var(--accent);padding:4px 9px;border-radius:999px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .tbadge b{font-weight:700}
 
-/* ---------- the timeline dock: two clips and the transition on the cut ---------- */
-#tlDock{--gutter:58px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
-.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
-.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
-.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tlbar .now b{color:var(--warn)}
-.tlz{padding:var(--s3) var(--s3) var(--s3);position:relative}
-.tlgrid .track{margin:var(--s1) 0}
-.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
-.tlgrid .track .lane.rlane{height:20px;display:block}
-.tlgrid .rlane>.ruler{margin-bottom:0;height:19px}
-.tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);flex:none}
-.tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
-.tlgrid .track .lane.clane{height:40px}
-.tlgrid .lane>.clip{position:absolute;top:0;height:40px}
-.tlgrid .lane>.clip .tc{font-family:var(--mono);font-size:9px;opacity:.85;margin-left:auto}
-/* the transition region straddling the cut */
-.tregion{position:absolute;top:0;bottom:0;z-index:3;transform:translateX(-50%);display:grid;place-items:center;border-radius:var(--r1);cursor:grab;background:repeating-linear-gradient(45deg,var(--warn),var(--warn) 3px,color-mix(in srgb,var(--warn) 62%,#000) 3px,color-mix(in srgb,var(--warn) 62%,#000) 6px);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--warn) 70%,transparent),0 2px 10px -4px rgba(0,0,0,.5)}
-.tregion:active{cursor:grabbing}
-/* SELECTION, place 2 of 3 is the Layers row; the region also shows the selection */
-.tregion.sel{outline:2px solid var(--accent);outline-offset:2px}
-.tregion .ico{color:#1a1c22;display:grid;place-items:center}
-.tregion .ico .ic{width:15px;height:15px}
-.tregion.none{background:repeating-linear-gradient(45deg,var(--line-strong),var(--line-strong) 3px,transparent 3px,transparent 6px);box-shadow:0 0 0 1.5px var(--line-strong)}
-.tregion.none .ico{color:var(--faint)}
-.thandle{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:4;display:grid;place-items:center}
-.thandle.l{left:-4px}.thandle.r{right:-4px}
-.thandle::after{content:"";width:2px;height:20px;border-radius:2px;background:#1a1c22;opacity:.55}
-.tregion.none .thandle::after{background:var(--faint)}
-.tdurtag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--warn);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* ---------- the timeline dock: two clips and the shared .xband on the cut ---------- */
+#video-transitions #tlDock{--gutter:58px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#video-transitions .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+#video-transitions .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+#video-transitions .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#video-transitions .tlbar .now b{color:var(--warn)}
+#video-transitions .tlz{padding:var(--s3) var(--s3) var(--s3);position:relative}
+#video-transitions .tlgrid .track{margin:var(--s1) 0}
+#video-transitions .tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
+#video-transitions .tlgrid .track .lane.rlane{height:20px;display:block}
+#video-transitions .tlgrid .rlane>.ruler{margin-bottom:0;height:19px}
+#video-transitions .tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);flex:none}
+#video-transitions .tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+#video-transitions .tlgrid .clip .tc{font-family:var(--mono);font-size:9px;opacity:.85;margin-left:auto}
+/* the transition on the cut is the shared .xband (grips, .sel, .blk dip) inside
+   a .lane.abs, and the hard cut is the shared .editpt. No page-local region.
+   Scoped refinement only: the grips resize the band, so they say so. */
+#video-transitions .xband .gr{cursor:ew-resize}
 
 /* transition tiles now live in the shared DS (.libtile.tt + .th-*) */
 
@@ -71,17 +60,17 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px}
+  #video-transitions #tlDock{--gutter:52px}
   .tstage{width:400px;height:225px}
   .tlayer h3{font-size:24px}
   .tlayer{padding:var(--s4)}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
+  #video-transitions #tlDock{--gutter:52px}
   .tstage{width:272px;height:153px}
   .tlayer h3{font-size:17px}
   .tlayer p{display:none}
-  .tlbar .now{display:none}
+  #video-transitions .tlbar .now{display:none}
 }
 </style>
 </head>
@@ -94,41 +83,26 @@
       lives on the timeline where the cut is, its parameters open in <b>Properties</b> like any other selection, and the
       six behaviors are browsed as tiles in a panel group, the same grammar as every other library in the app.</p>
 
-    <div class="win tall cq shell" data-shell="launch-teaser · 1920 × 1080 · 0:12" data-ws="video">
+    <div class="win tall cq shell" data-shell="launch-teaser · 1920 × 1080 · 0:12" data-ws="video"
+         data-status='<span id="cutChip"><i class="ic xs ic-transition"></i> Cross dissolve · 400 ms</span>'>
 
-      <!-- TITLE BAR -->
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>launch-teaser</b> · 1920 × 1080 · 0:12</div>
-        <div class="tbtns">
-          <button class="btn ghost sm" data-target="video"><i class="ic ic-chevron-left"></i> Timeline</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip" id="cutChip"><i class="ic xs ic-transition"></i> Cross dissolve · 400 ms</span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:230px;z-index:12">
-            <div class="mlabel">Cut</div>
-            <div class="menuitem" id="mApply"><i class="ic ic-transition"></i> Apply default transition</div>
-            <div class="menuitem" id="mRemove"><i class="ic ic-blade"></i> Remove transition, hard cut</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-      </div>
+      <!-- TITLE BAR · built by the shell component from data-shell -->
 
       <!-- EDITOR ROW -->
       <div class="edit lean" id="shell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` button that
+             opens it is built by the shell component in .cnv-act. -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">Cut</div>
+          <div class="menuitem" id="mApply"><i class="ic ic-transition"></i> Apply default transition</div>
+          <div class="menuitem" id="mRemove"><i class="ic ic-blade"></i> Remove transition, hard cut</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem" data-target="video"><i class="ic ic-timeline"></i> Full timeline</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
 
         <div class="cnv">
           <div class="canvas">
@@ -186,20 +160,16 @@
             </div>
           </div>
 
-          <!-- HISTORY OVERLAY -->
-          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
-            <div class="sheet-h">
-              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
-              <span class="sp"></span>
-              <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
-              <span class="sp"></span>
-              <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
-              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
-            </div>
+          <!-- THE GLOBAL CAPTURE HISTORY (⌘⇧H) · chromeless: histbar + filmstrip -->
+          <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
             <div class="sheet-b">
+              <div class="histbar">
+                <div class="seg" data-radio="button"><button>All</button><button>Screenshots</button><button class="on">Videos</button></div>
+                <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+              </div>
               <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
                 <div class="filmcard sel" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
+                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:12</span></span>
                   <span class="cap"><span class="nm">Launch teaser</span><span class="ago">open now</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
@@ -208,7 +178,7 @@
                   </span>
                 </div>
                 <div class="filmcard" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
+                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:06</span></span>
                   <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
                   <span class="acts">
                     <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
@@ -226,7 +196,6 @@
                   </span>
                 </div>
               </div>
-              <p class="note" style="margin:0">Open a recording and the transport bar and timeline dock appear, with every cut ready to take a transition.</p>
             </div>
           </div>
         </div>
@@ -236,24 +205,8 @@
         <!-- THE RIGHT DOCK -->
         <div class="pdock" id="dock">
 
-          <!-- SELECTION, place 2 of 3 -->
-          <div class="dgrp" id="gLayers" style="--gh:72px">
-            <div class="dgrp-h">
-              <span class="ttl">Layers</span><span class="cnt">4</span>
-              <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-            </div>
-            <div class="dgrp-b">
-              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>
-              <div class="lrow child"><i class="ic ic-image"></i><span class="nm">clip-01</span><i class="ic sm ic-eye eye"></i></div>
-              <div class="lrow child sel" id="rowTrans"><i class="ic ic-transition"></i><span class="nm" id="rowTransNm">Cross dissolve</span><i class="ic sm ic-eye eye"></i></div>
-              <div class="lrow child"><i class="ic ic-image"></i><span class="nm">clip-02</span><i class="ic sm ic-eye eye"></i></div>
-              <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>
-              <div class="lrow child"><i class="ic ic-audio"></i><span class="nm">music.wav</span><i class="ic sm ic-eye eye"></i></div>
-            </div>
-          </div>
-
-          <div class="splitter h" data-min="80" data-max="260"></div>
-
+          <!-- No Layers group in a workspace that has a timeline: the timeline
+               dock below IS the layer list. -->
           <!-- SELECTION, place 3 of 3: the transition's own parameters -->
           <div class="dgrp" id="gProps" style="--gh:184px">
             <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Transition</span>
@@ -334,19 +287,12 @@
 
         <!-- THE RAIL -->
         <div class="drail">
-          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
           <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
           <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
           <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
         </div>
 
-        <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-          <div class="menuitem"><i class="ic ic-transition"></i> Add transition at playhead</div>
-          <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
-          <div class="menu-sep"></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-        </div>
-        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:160px;width:200px;z-index:11">
+        <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
           <div class="menuitem"><i class="ic ic-copy"></i> Copy transition</div>
           <div class="menuitem"><i class="ic ic-undo"></i> Reset to default length</div>
         </div>
@@ -378,8 +324,8 @@
         <span class="tc" id="tcEnd">400 ms</span>
       </div>
 
-      <!-- TIMELINE DOCK -->
-      <div class="timeline" id="tlDock">
+      <!-- TIMELINE DOCK · the layer list of this workspace -->
+      <div class="timeline" id="tlDock" data-tl-summary="Cross dissolve · 400 ms · at 0:06">
         <div class="tlbar">
           <span class="lbl">Timeline</span>
           <span class="tsep"></span>
@@ -394,15 +340,17 @@
               <div class="lane rlane"><div class="ruler" id="ruler"></div></div>
             </div>
             <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
-              <div class="lane clane" id="track">
+              <div class="lane abs" id="track">
                 <div class="clip v1" style="left:0;width:52%"><span class="lbl">clip-01</span><span class="tc">0:00</span></div>
                 <div class="clip v2" style="left:52%;width:48%"><span class="lbl">clip-02</span><span class="tc">0:06</span></div>
-                <div class="tregion sel" id="region" style="left:52%">
-                  <span class="tdurtag" id="durTag">400 ms</span>
-                  <span class="thandle l" data-h="l"></span>
-                  <span class="ico" id="regionIco"><i class="ic ic-transition"></i></span>
-                  <span class="thandle r" data-h="r"></span>
-                </div>
+                <!-- SELECTION, place 2 of 3: the shared .xband spans the seam,
+                     drawn ON the two clips, never between them -->
+                <span class="xband sel" id="region" style="left:48.4%;width:7.2%" tabindex="0" role="button" aria-label="Transition at the cut">
+                  <span id="durTag">400 ms</span>
+                  <span class="gr l"></span><span class="gr r"></span>
+                </span>
+                <!-- the hard cut: the shared .editpt, zero width on the seam -->
+                <button class="editpt" id="cutPt" style="left:52%" title="The cut at 0:06" aria-label="Cut at 0:06" hidden></button>
               </div>
             </div>
           </div>
@@ -417,7 +365,7 @@
 
     <div class="caption">
       <div class="c"><div class="lab">The idea</div><p>A transition is not a filter on a clip, it is a <b>relationship between two clips at a cut</b>. Pick it from the panel group, watch it run on the real frames, and drag its length right on the timeline. Show the behavior, do not just name it.</p></div>
-      <div class="c"><div class="lab g2">One grammar everywhere</div><p>The six behaviors are <b>library tiles</b>, exactly like media, components and styles. The selected transition reads the same in three places: named on the canvas, highlighted in <b>Layers</b>, and open in <b>Properties</b>.</p></div>
+      <div class="c"><div class="lab g2">One grammar everywhere</div><p>The six behaviors are <b>library tiles</b>, exactly like media, components and styles. The selected transition reads the same in three places: named on the canvas, highlighted on the <b>timeline</b>, and open in <b>Properties</b>.</p></div>
       <div class="c"><div class="lab g2">A direction</div><p>Every transition rides the <b>same keyframe and easing engine</b> as the rest of the timeline, so its length and curve are animatable and an <b>agent</b> can set them with one call. Duration and type are just parameters, no special-case UI.</p></div>
       <div class="c"><div class="lab g2">Open question</div><p>How many transitions earn a place in v1? Cross dissolve, dip, and cut cover most real edits. Slide, push, and morph are flashy but easy to overuse. Ship the honest few, or the full shelf?</p></div>
     </div>
@@ -563,7 +511,7 @@
 
   /* ---------- the transition library (shared tile grammar) ---------- */
   var lib=document.getElementById("lib");
-  var region=document.getElementById("region"), regionIco=document.getElementById("regionIco");
+  var region=document.getElementById("region"), cutPt=document.getElementById("cutPt");
   if(lib) lib.addEventListener("click", function(e){
     var tile=e.target.closest(".libtile"); if(!tile) return;
     [].forEach.call(lib.querySelectorAll(".libtile"),function(x){ x.classList.toggle("sel",x===tile); });
@@ -585,12 +533,14 @@
     }
     var isCut=(type==="cut");
     if(dur){ dur.disabled=isCut; var dsl=dur.closest(".slider"); if(dsl) dsl.classList.toggle("off",isCut); }
-    if(region) region.classList.toggle("none",isCut);
-    if(regionIco) regionIco.innerHTML=isCut?'<i class="ic ic-blade"></i>':'<i class="ic ic-transition"></i>';
+    /* a hard cut is not a band: the .xband leaves and the .editpt seam takes
+       the selection; a dip draws as the shared outline (.blk) variant */
+    if(region){ region.hidden=isCut; region.classList.toggle("blk", type==="dip"); }
+    if(cutPt){ cutPt.hidden=!isCut; cutPt.classList.toggle("sel",isCut); }
     syncMeta(); syncRegionWidth(); render();
   }
 
-  /* ---------- selection readouts: canvas badge, Layers row, Properties ---------- */
+  /* ---------- selection readouts: canvas badge, timeline band, Properties ---------- */
   var badgeName=document.getElementById("badgeName"), badgeMs=document.getElementById("badgeMs");
   var apiType=document.getElementById("apiType"), apiMs=document.getElementById("apiMs");
   function syncMeta(){
@@ -601,26 +551,30 @@
     if(badgeMs) badgeMs.textContent=lenTxt;
     if(apiMs) apiMs.textContent=(type==="cut")?"0":ms;
     if(durVal) durVal.textContent=(type==="cut")?"no ramp":(ms+" ms");
-    var rn=document.getElementById("rowTransNm"); if(rn) rn.textContent=meta.name;
     var pt=document.getElementById("propType"); if(pt) pt.textContent=meta.name;
     var ln=document.getElementById("lenNow"); if(ln) ln.textContent=lenTxt;
     var ce=document.getElementById("tcEnd"); if(ce) ce.textContent=lenTxt;
     var chip=document.getElementById("cutChip");
     if(chip) chip.innerHTML='<i class="ic xs ic-transition"></i> '+meta.name+' · '+lenTxt;
+    /* the collapsed timeline rail reports the SELECTION, not the panel name */
+    var tl=document.getElementById("tlDock");
+    if(tl) tl.setAttribute("data-tl-summary", meta.name+" · "+lenTxt+" · at 0:06");
   }
 
-  /* ---------- the transition region on the cut ---------- */
+  /* ---------- the .xband on the cut: centered on the seam at 52% ---------- */
   function msToPct(m){ return clamp(m/2000*36,4,36); }
   function pctToMs(w){ return Math.round(clamp(w/36*2000,100,2000)/50)*50; }
   function syncRegionWidth(){
     if(!region) return;
-    region.style.width=((type==="cut")?4:msToPct(ms))+"%";
+    var w=msToPct(ms);
+    region.style.width=w+"%";
+    region.style.left=(52-w/2)+"%";
     var tag=document.getElementById("durTag");
-    if(tag) tag.textContent=(type==="cut")?"cut":(ms+" ms");
+    if(tag) tag.textContent=ms+" ms";
   }
   var track=document.getElementById("track");
   if(region) region.addEventListener("pointerdown", function(e){
-    var h=e.target.closest(".thandle"); if(!h) return;
+    var h=e.target.closest(".gr"); if(!h) return;
     if(type==="cut") return;
     e.preventDefault(); e.stopPropagation();
     var rect=track.getBoundingClientRect();

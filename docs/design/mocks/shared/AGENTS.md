@@ -834,7 +834,7 @@ The full searchable library, with the grid and the drawing rules, is
 
 **Type** — bold italic underline strikethrough text-align-left text-align-center text-align-right text-align-justify line-height letter-spacing font-size list-bullet list-number
 
-**Media & timeline** — play pause stop skip-back skip-forward step-back step-forward loop keyframe transition blade trim speed timeline audio waveform volume volume-off mic captions video film camera aperture
+**Media & timeline** — play pause stop skip-back skip-forward step-back step-forward loop keyframe transition blade trim speed timeline audio waveform volume volume-off solo mic captions video film camera aperture
 
 **Agent, capture & system** — sparkle chat capture record window display cloud download upload branch compare restore keyboard command warning
 

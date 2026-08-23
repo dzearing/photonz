@@ -16,7 +16,7 @@
    Every page-local class is prefixed .mg- so it can never inherit a shared-DS
    rule of the same name. 4pt scale and shared tokens only. */
 
-#video-motion{--mg-accent:#12c2e9;--gutter:132px}
+#video-motion{--mg-accent:#12c2e9}
 #video-motion .win.shell{height:780px;min-height:0}
 #video-motion .win.shell .canvas{min-height:0;--artboard-glow:720px 420px;--artboard-ink:#161b2c}/* ---------- the title sequence on the canvas (16:9) ---------- */
 .mg-stage{position:relative;width:560px;aspect-ratio:16/9;border-radius:var(--r4);overflow:hidden;background:
@@ -67,52 +67,51 @@
 .mg-grade{position:absolute;top:8px;right:10px;font-family:var(--mono);font-size:9px;
   color:rgba(255,255,255,.5);letter-spacing:.04em;z-index:2}
 
-/* ---------- the timeline dock: one lane per animated layer ---------- */
-#mgTlDock{flex:0 0 auto;max-height:222px;overflow:auto;padding:0;display:flex;flex-direction:column;min-height:0}
-.mg-tlbar{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3);
+/* ---------- the timeline dock: SHARED grammar (.timeline/.tlbar/.track/.tl/
+   .lane/.clip/.kfm/.ruler/.playhead), scoped refinements only. Mirrors the
+   canonical dock authoring on pages/video.html: --gutter is the track-label
+   column, the ruler lives in a .lane.rlane so ticks and clips share one axis,
+   and the playhead rides a strip inset by the gutter. The .tlbar layout, the
+   .kfread readout, the .tk tick, the .gl gridline and the .playstrip are
+   page-scoped here because the shared DS does not own them yet; the values
+   match video.html so a future promotion is a copy, not a merge. */
+#mgTlDock{flex:0 0 auto;max-height:222px;overflow:auto;padding:0;display:flex;flex-direction:column;min-height:0;--gutter:132px}
+#video-motion .tlbar{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3);
   border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
-.mg-tlbar .mg-lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+#video-motion .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
   font-weight:660;white-space:nowrap}
-.mg-read{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);
+#video-motion .tlbar .kfread{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);
   background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;
   font-variant-numeric:tabular-nums;white-space:nowrap}
-.mg-read b{color:var(--mg-accent)}
-.mg-tlz{padding:var(--s3);position:relative}
-.mg-grid{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:var(--s2);row-gap:var(--s1);position:relative}
-.mg-rl{font-size:10.5px;color:var(--dim);font-weight:560;display:flex;align-items:center;gap:5px;
-  overflow:hidden;white-space:nowrap;min-width:0}
-.mg-rl .ic{color:var(--faint);flex:none}
-.mg-rl.comp{color:var(--comp)}.mg-rl.comp .ic{color:var(--comp)}
-.mg-ruler{position:relative;height:16px;border-bottom:1px solid var(--edge-lo)}
-.mg-ruler .mg-tk{position:absolute;top:0;bottom:0;border-left:1px solid var(--edge-lo);font-size:9px;
-  color:var(--faint);font-family:var(--mono);padding-left:3px;pointer-events:none}
-.mg-ruler .mg-tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
-.mg-lane{position:relative;height:22px}
-.mg-lane .mg-gl{position:absolute;top:0;bottom:0;width:1px;background:var(--edge-lo);pointer-events:none}
-.mg-bar{position:absolute;top:3px;height:16px;border-radius:var(--r1);display:flex;align-items:center;
-  padding:0 7px;font-size:9px;font-family:var(--mono);color:#fff;font-weight:600;overflow:hidden;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);white-space:nowrap}
-.mg-bar.k{background:linear-gradient(135deg,#12c2e9,#6aa8ff)}
-.mg-bar.h{background:linear-gradient(135deg,#7c4dff,#c56cff)}
-.mg-bar.w{background:linear-gradient(135deg,#1b7a8c,#12c2e9)}
-.mg-bar.c{background:linear-gradient(135deg,#9a5cff,#c56cff)}
-.mg-bar .mg-kd{position:absolute;top:50%;width:6px;height:6px;background:#fff;
-  transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(0,0,0,.25)}
-.mg-bar .mg-kd.s{left:0}.mg-bar .mg-kd.e{left:100%}
-/* playhead spanning the lane column */
-.mg-strip{position:absolute;left:calc(var(--gutter) + var(--s2));right:0;top:0;bottom:0;pointer-events:none;z-index:5}
-.mg-ph{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px)}
-.mg-ph .mg-phh{position:absolute;top:-1px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit)}
-
-/* ---------- Properties helpers ---------- */
-.mg-block{margin:var(--gap-sm) 0}
-.mg-block .mg-pl{font-size:10.5px;color:var(--faint);margin-bottom:var(--s2);display:flex;align-items:center;gap:var(--s2)}
-  /* .mg-block .seg override deleted: the shared DS lays every panel scope control
-     out as an equal-column grid sized to its own labels (VISUAL RULE 6). */
-.mg-stepper{display:flex;align-items:center;gap:6px;background:var(--glass-thin);
-  backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);
-  border-radius:999px;padding:3px 4px}
-.mg-stepper .val{flex:1;min-width:0;text-align:center;color:var(--ink)}
+#video-motion .tlbar .kfread b{color:var(--mg-accent)}
+#video-motion .tlz{padding:var(--s3);position:relative}
+#video-motion .tlgrid{position:relative}
+#video-motion .tlgrid .track{margin:var(--s1) 0}
+#video-motion .tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;
+  font-size:10.5px;font-weight:560;color:var(--dim);overflow:hidden;white-space:nowrap}
+#video-motion .tlgrid .track .tl .ic{color:var(--faint);flex:none}
+#video-motion .tlgrid .track .tl.comp,
+#video-motion .tlgrid .track .tl.comp .ic{color:var(--comp)}
+#video-motion .tlgrid .track .lane{height:22px}
+#video-motion .tlgrid .track .lane.rlane{height:19px}
+#video-motion .tlgrid .rlane>.ruler{margin:0;height:19px}
+#video-motion .tlgrid .rlane>.ruler .tk{position:absolute;top:0;bottom:0;flex:none;border-left:1px solid var(--edge-lo);pointer-events:none}
+#video-motion .tlgrid .rlane>.ruler .tk.end{border-left:0;right:0;left:auto;padding-left:0;padding-right:3px}
+#video-motion .tlgrid .lane .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--edge-lo);pointer-events:none}
+#video-motion .tlgrid .lane>.clip{height:22px;border-radius:5px;font-size:9px;font-family:var(--mono);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+/* the component clip colour, as on video.html's Title track */
+#video-motion .clip.comp{background:linear-gradient(135deg,#9a5cff,#c56cff)}
+/* playhead overlay: gutter + track gap puts it at the lane column's left edge */
+#video-motion .playstrip{position:absolute;left:calc(var(--gutter) + 8px);right:0;top:0;bottom:0;pointer-events:none;z-index:5}
+#video-motion .tlgrid .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px);z-index:5;left:0}
+#video-motion .tlgrid .playhead::before{content:none}
+#video-motion .tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit)}
+/* the dock collapse (D9): the shared closed-state rules are class-level, so the
+   id-scoped refinements above would out-rank them; restate the release here so
+   collapsing really reclaims the dock down to the one .tlrail row */
+#mgTlDock[data-tl="closed"] > :not(.tlrail){display:none}
+#mgTlDock[data-tl="closed"]{max-height:none}
 
 /* ---------- KIND 2 · specimen cards (no traffic lights, no title bar) ---------- */
 #video-motion .mg-spec{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--glass-thin);
@@ -165,15 +164,17 @@
 .mg-code .k{color:#7f9bff}.mg-code .p{color:#e0a5ff}.mg-code .s{color:#7fd7a6}.mg-code .n{color:#f0a76b}
 .mg-spacer{flex:1}
 
-/* narrow: the WINDOW container query, not the viewport */
+/* narrow: the WINDOW container query, not the viewport. The rule subjects are
+   all INSIDE .win.cq (a rule on #video-motion itself would silently never
+   match, per the container-query gotcha in shared/AGENTS.md). */
 @container shell (max-width:880px){
-  #video-motion{--gutter:96px}
+  #video-motion #mgTlDock{--gutter:96px}
   #video-motion .mg-stage{width:400px}
 }
 @container shell (max-width:620px){
-  #video-motion{--gutter:72px}
+  #video-motion #mgTlDock{--gutter:72px}
   #video-motion .mg-stage{width:276px}
-  #video-motion .mg-tlbar .mg-read{display:none}
+  #video-motion .tlbar .kfread{display:none}
 }
 @media (max-width:720px){
   .mg-cards{grid-template-columns:1fr}
@@ -192,42 +193,27 @@
     agent sets them with the same call you do.</p>
 
   <!-- ================= KIND 1 · the complete app screen ================= -->
-  <div class="win tall cq shell" data-shell="title-sequence · 1920 × 1080 · 0:01" data-ws="video">
+  <div class="win tall cq shell" data-shell="title-sequence · 1920 × 1080 · 0:01" data-ws="video"
+       data-status="<span id='mgChip'>Stagger up · 60 ms</span>">
 
-    <!-- TITLE BAR · document identity only -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>title-sequence</b> · 1920 × 1080 · 0:01</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMPACT COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#mgCmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#mgHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip comp"><i class="ic xs ic-component"></i> <span id="mgChip">Stagger up · 60 ms</span></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="mgCmdMenu" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
-          <div class="mlabel">Animate</div>
-          <div class="menuitem"><i class="ic ic-keyframe"></i> Animate in <span class="sc">⇧A</span></div>
-          <div class="menuitem"><i class="ic ic-pen"></i> Put text on a path</div>
-          <div class="menuitem"><i class="ic ic-sparkle"></i> Stagger children</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">View</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+    <!-- Title bar and the … command-surface button are BUILT by the shell
+         component (data-shell above); this page authors only its content. -->
 
     <!-- EDITOR ROW · canvas dominant, ONE dock on the right -->
     <div class="edit lean" id="mgShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` button that opens
+           it is injected into .cnv-act by the shell component. -->
+      <div class="popover menu pop cmdpop" id="mgCmdMenu">
+        <div class="mlabel">Animate</div>
+        <div class="menuitem"><i class="ic ic-keyframe"></i> Animate in <span class="sc">⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-pen"></i> Put text on a path</div>
+        <div class="menuitem"><i class="ic ic-sparkle"></i> Stagger children</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">View</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -348,53 +334,36 @@
 
       <div class="splitter v" data-min="220" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
+      <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups.
+           NO Layers group here: this workspace has a timeline, and the timeline
+           IS the layer list (same objects, same order, plus when each starts). -->
       <div class="pdock" id="mgDock">
 
-        <!-- SELECTION, place 2 of 3: one row per animated layer -->
-        <div class="dgrp" id="mgLayers" style="--gh:142px">
-          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">6</span>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#mgLayerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b">
-            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-frame"></i> Title · 00:00 to 00:01</div>
-            <div class="lrow child sel"><i class="ic ic-pen"></i><span class="nm">Kicker · on path</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Capture.</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Design.</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-text"></i><span class="nm">Automate.</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child selc"><i class="ic ic-component"></i><span class="nm">Lower-third</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow"><i class="ic ic-image"></i><span class="nm">Backdrop</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
-          </div>
-        </div>
-
-        <div class="splitter h" data-min="90" data-max="320"></div>
-
         <!-- SELECTION, place 3 of 3: the reveal is a normal set of properties -->
-        <div class="dgrp" id="mgProps" style="--gh:250px">
+        <div class="dgrp" id="mgProps" data-grp="props">
           <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Animate in</span></div>
           <div class="dgrp-b">
             <div class="section">
               <div class="sec-h">Reveal <span class="mut" id="mgPresetMut">Stagger up</span></div>
-              <div class="mg-block">
-                <div class="mg-pl">Preset</div>
-                <div class="seg" id="mgPreset" role="group" aria-label="Reveal preset">
-                  <button class="on" data-preset="stagger">Stagger up</button>
-                  <button data-preset="fade">Fade up</button>
-                  <button data-preset="pop">Pop in</button>
-                </div>
+              <div class="mlabel">Preset</div>
+              <div class="seg" id="mgPreset" role="group" aria-label="Reveal preset">
+                <button class="on" data-preset="stagger">Stagger up</button>
+                <button data-preset="fade">Fade up</button>
+                <button data-preset="pop">Pop in</button>
               </div>
-              <div class="mg-block">
-                <div class="mg-pl">Stagger offset</div>
-                <div class="mg-stepper">
-                  <button class="btn ghost icon sm" id="mgDown" title="Less offset"><i class="ic ic-minus sm"></i></button>
-                  <span class="val" id="mgStagVal">60 ms</span>
-                  <button class="btn ghost icon sm" id="mgUp" title="More offset"><i class="ic ic-plus sm"></i></button>
-                </div>
+              <div class="mlabel">Stagger offset</div>
+              <div class="stepper block" style="margin-bottom:var(--s2)">
+                <span class="k">Offset</span>
+                <input id="mgStag" value="60" inputmode="numeric" aria-label="Stagger offset in milliseconds">
+                <span class="u">ms</span>
+                <b class="sp">
+                  <button id="mgUp" aria-label="More offset"><i class="ic ic-chevron-up"></i></button>
+                  <button id="mgDown" aria-label="Less offset"><i class="ic ic-chevron-down"></i></button>
+                </b>
               </div>
               <div class="grid2">
                 <div class="field"><span class="k">Each</span><span class="v">520 ms</span></div>
-                <div class="field"><span class="k">Total</span><span class="v" id="mgDur">1.12s</span></div>
+                <div class="field"><span class="k">Total</span><span class="v" id="mgDur">0.82s</span></div>
               </div>
               <p class="note">One number drives the whole cascade. Each layer inherits the same reveal, offset by a fixed step.</p>
             </div>
@@ -435,18 +404,11 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#mgLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#mgProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#mgLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
-      <div class="popover menu pop" id="mgLayerMenu" style="position:absolute;right:var(--s4);top:34px;width:212px;z-index:11">
-        <div class="menuitem"><i class="ic ic-keyframe"></i> Animate in <span class="sc">⇧A</span></div>
-        <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
       <div class="popover menu pop" id="mgLibMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:214px;z-index:11">
         <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
         <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
@@ -461,7 +423,7 @@
         <button class="btn ghost icon sm" id="mgReset" title="Back to the pre-roll" disabled><i class="ic ic-skip-back"></i></button>
         <button class="btn primary icon" id="mgPlay" title="Play the reveal" aria-pressed="false"><i class="ic ic-play"></i></button>
         <button class="btn ghost icon sm" id="mgEnd" title="Jump to the settled frame"><i class="ic ic-skip-forward"></i></button>
-        <button class="btn ghost icon sm" id="mgLoop" title="Loop the reveal" aria-pressed="false"><i class="ic ic-undo"></i></button>
+        <button class="btn ghost icon sm" id="mgLoop" title="Loop the reveal" aria-pressed="false"><i class="ic ic-loop"></i></button>
       </span>
       <span class="tc cur" id="mgClock">0.00s</span>
       <span class="scrub" id="mgScrub" role="slider" aria-label="Playhead" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
@@ -470,19 +432,21 @@
         <span class="mark" style="left:100%"></span>
         <span class="knob" style="left:0%"></span>
       </span>
-      <span class="tc" id="mgClockTotal">1.12s</span>
+      <span class="tc" id="mgClockTotal">0.82s</span>
     </div>
 
-    <!-- TIMELINE DOCK · one lane per animated layer, on the same time axis -->
-    <div class="timeline" id="mgTlDock">
-      <div class="mg-tlbar">
-        <span class="mg-lbl">Timeline</span>
-        <span class="mg-lbl" style="color:var(--comp);letter-spacing:.02em;text-transform:none;font-weight:560"><i class="ic ic-keyframe xs"></i> one offset per layer</span>
+    <!-- TIMELINE DOCK · one lane per animated layer, on the same time axis.
+         It is the layer list for this workspace. dock.js injects the collapse
+         control into .tlbar and mirrors data-tl-summary on the collapsed row. -->
+    <div class="timeline" id="mgTlDock" data-tl-summary="Title group · Stagger up · 60 ms · 0.82s">
+      <div class="tlbar">
+        <span class="lbl">Timeline</span>
+        <span class="lbl" style="color:var(--comp);letter-spacing:.02em;text-transform:none;font-weight:560"><i class="ic ic-keyframe xs"></i> one offset per layer</span>
         <span class="tspacer"></span>
-        <span class="mg-read"><i class="ic ic-play xs"></i> <b id="mgClock2">0.00s</b> / <span id="mgClockTotal2">1.12s</span></span>
+        <span class="kfread"><i class="ic ic-play xs"></i> <b id="mgClock2">0.00s</b> / <span id="mgClockTotal2">0.82s</span></span>
       </div>
-      <div class="mg-tlz">
-        <div class="mg-grid" id="mgTlGrid"><!-- rows + playhead injected by JS --></div>
+      <div class="tlz">
+        <div class="tlgrid" id="mgTlGrid"><!-- ruler + lanes + playstrip injected by JS --></div>
       </div>
     </div>
   </div>
@@ -563,14 +527,17 @@
   var PRESET_NAME = { stagger:"Stagger up", fade:"Fade up", pop:"Pop in" };
   var PRESET_API  = { stagger:"stagger-up", fade:"fade-up", pop:"pop-in" };
 
-  // ordered reveal targets · order index drives the stagger offset
+  // ordered reveal targets · order index drives the stagger offset.
+  // cls is a SHARED clip variant (video.css): v1/v2/txt, plus the component
+  // clip colour video.html's Title track uses. sel marks the selected layer,
+  // because in a timeline workspace the timeline is the layer list.
   var targets = [
-    {id:"path",  el:document.getElementById("mgKick"), label:'Kicker · on path', cls:"k", icon:"ic-pen"},
-    {id:"head",  el:document.getElementById("mgHead"), label:'Headline', cls:"h", icon:"ic-text"},
-    {id:"w0",    el:stage.querySelectorAll(".mg-word")[0], label:'"Capture."', cls:"w", icon:"ic-text"},
-    {id:"w1",    el:stage.querySelectorAll(".mg-word")[1], label:'"Design."', cls:"w", icon:"ic-text"},
-    {id:"w2",    el:stage.querySelectorAll(".mg-word")[2], label:'"Automate."', cls:"w", icon:"ic-text"},
-    {id:"badge", el:document.querySelector(".mg-badge"), label:'Lower-third', cls:"c", icon:"ic-component", comp:true}
+    {id:"path",  el:document.getElementById("mgKick"), label:'Kicker · on path', cls:"v1", icon:"ic-pen", sel:true},
+    {id:"head",  el:document.getElementById("mgHead"), label:'Headline', cls:"v2", icon:"ic-text"},
+    {id:"w0",    el:stage.querySelectorAll(".mg-word")[0], label:'"Capture."', cls:"txt", icon:"ic-text"},
+    {id:"w1",    el:stage.querySelectorAll(".mg-word")[1], label:'"Design."', cls:"txt", icon:"ic-text"},
+    {id:"w2",    el:stage.querySelectorAll(".mg-word")[2], label:'"Automate."', cls:"txt", icon:"ic-text"},
+    {id:"badge", el:document.querySelector(".mg-badge"), label:'Lower-third', cls:"comp", icon:"ic-component", comp:true}
   ].filter(function(t){ return t.el; });
 
   var playBtn  = document.getElementById("mgPlay");
@@ -579,7 +546,8 @@
   var loopBtn  = document.getElementById("mgLoop");
   var upBtn    = document.getElementById("mgUp");
   var downBtn  = document.getElementById("mgDown");
-  var stagVal  = document.getElementById("mgStagVal");
+  var stagIn   = document.getElementById("mgStag");
+  var tlDock   = document.getElementById("mgTlDock");
   var durVal   = document.getElementById("mgDur");
   var apiCode  = document.getElementById("mgApi");
   var kickText = document.getElementById("mgKickText");
@@ -608,33 +576,42 @@
   function renderTimeline(){
     grid.innerHTML="";
     var tks = ticks(), tot = total()/1000;
-    var rlab=document.createElement("div"); rlab.className="mg-rl";
-    rlab.innerHTML='<i class="ic ic-history sm"></i> Time';
-    var rl=document.createElement("div"); rl.className="mg-ruler";
+    // ruler row: shares the lane column, so ticks line up with clips and keys
+    var rrow=document.createElement("div"); rrow.className="track";
+    var rlab=document.createElement("span"); rlab.className="tl";
+    rlab.innerHTML='<i class="ic ic-ruler sm"></i> Time';
+    var rlane=document.createElement("div"); rlane.className="lane rlane";
+    var ruler=document.createElement("div"); ruler.className="ruler";
     tks.forEach(function(t,i){
       var tk=document.createElement("span");
       var end = i===tks.length-1;
-      tk.className="mg-tk"+(end?" end":"");
+      tk.className="tk"+(end?" end":"");
       tk.style.left=(t/tot*100)+"%";
       tk.textContent=t.toFixed(t<1?2:1)+"s";
       if(end) tk.style.left="auto";
-      rl.appendChild(tk);
+      ruler.appendChild(tk);
     });
-    grid.appendChild(rlab); grid.appendChild(rl);
+    rlane.appendChild(ruler); rrow.appendChild(rlab); rrow.appendChild(rlane); grid.appendChild(rrow);
+    // one track per animated layer: a shared .clip on a .lane.abs, with .kfm
+    // key marks on the reveal's first and last frame
     targets.forEach(function(t,i){
-      var lab=document.createElement("div"); lab.className="mg-rl"+(t.comp?" comp":"");
+      var row=document.createElement("div"); row.className="track";
+      var lab=document.createElement("span"); lab.className="tl"+(t.comp?" comp":"");
       lab.innerHTML='<i class="ic '+t.icon+' sm"></i> '+t.label;
-      var lane=document.createElement("div"); lane.className="mg-lane";
-      tks.forEach(function(tk){ var g=document.createElement("i"); g.className="mg-gl"; g.style.left=(tk/tot*100)+"%"; lane.appendChild(g); });
-      var bar=document.createElement("div"); bar.className="mg-bar "+t.cls;
-      bar.style.left=pct(delayOf(i))+"%"; bar.style.width=pct(ANIM)+"%";
-      bar.innerHTML='<span class="mg-kd s"></span><span class="mg-kd e"></span>'+(delayOf(i)===0?"0":"+"+delayOf(i))+" ms";
-      lane.appendChild(bar);
-      grid.appendChild(lab); grid.appendChild(lane);
+      var lane=document.createElement("div"); lane.className="lane abs";
+      tks.forEach(function(tk){ var g=document.createElement("i"); g.className="gl"; g.style.left=(tk/tot*100)+"%"; lane.appendChild(g); });
+      var clip=document.createElement("div"); clip.className="clip "+t.cls+(t.sel?" sel":"");
+      clip.style.left=pct(delayOf(i))+"%"; clip.style.width=pct(ANIM)+"%";
+      clip.innerHTML='<span class="lbl">'+(delayOf(i)===0?"0":"+"+delayOf(i))+' ms</span>'+
+        '<span class="kfm" style="left:0%"></span><span class="kfm" style="left:100%"></span>'+
+        '<span class="edge l"></span><span class="edge r"></span>';
+      lane.appendChild(clip);
+      row.appendChild(lab); row.appendChild(lane); grid.appendChild(row);
     });
-    var strip=document.createElement("div"); strip.className="mg-strip";
-    playhead=document.createElement("div"); playhead.className="mg-ph";
-    playhead.innerHTML='<span class="mg-phh"></span>';
+    // playhead overlay spanning every row (the video.html playstrip idiom)
+    var strip=document.createElement("div"); strip.className="playstrip";
+    playhead=document.createElement("div"); playhead.className="playhead";
+    playhead.innerHTML='<span class="head"></span>';
     strip.appendChild(playhead); grid.appendChild(strip);
     setPlayhead(clockMs);
   }
@@ -653,7 +630,7 @@
   function fmt(ms){ return (ms/1000).toFixed(2)+"s"; }
   function setClock(ms){ clocks.forEach(function(c){ if(c) c.textContent=fmt(ms); }); }
   function syncReadouts(){
-    if(stagVal) stagVal.textContent = stagger+" ms";
+    if(stagIn) stagIn.value = stagger;
     var totS = fmt(total());
     if(durVal) durVal.textContent=totS;
     totals.forEach(function(t){ if(t) t.textContent=totS; });
@@ -661,6 +638,7 @@
     if(upBtn) upBtn.disabled = stagger>=STAG_MAX;
     if(presetMut) presetMut.textContent=PRESET_NAME[preset];
     if(chip) chip.textContent=PRESET_NAME[preset]+" · "+stagger+" ms";
+    if(tlDock) tlDock.setAttribute("data-tl-summary","Title group · "+PRESET_NAME[preset]+" · "+stagger+" ms · "+totS);
     if(apiCode) apiCode.innerHTML='<span class="k">type</span>.<span class="p">animateIn</span>({preset:<span class="s">"'+PRESET_API[preset]+'"</span>, stagger:<span class="n">'+stagger+'</span>})';
   }
 
@@ -770,7 +748,8 @@
     });
   }
 
-  /* stagger stepper */
+  /* stagger stepper: the DS .stepper — spinner buttons, typed values,
+     and arrow keys (shift steps by the same coarse step) */
   function setStagger(v){
     stagger=clamp(v,STAG_MIN,STAG_MAX);
     syncReadouts(); renderTimeline();
@@ -778,6 +757,18 @@
   }
   if(upBtn) upBtn.addEventListener("click", function(){ setStagger(stagger+STAG_STEP); });
   if(downBtn) downBtn.addEventListener("click", function(){ setStagger(stagger-STAG_STEP); });
+  if(stagIn){
+    stagIn.addEventListener("change", function(){
+      var v=parseInt(stagIn.value,10);
+      if(isNaN(v)) v=stagger;
+      setStagger(v);
+    });
+    stagIn.addEventListener("keydown", function(e){
+      if(e.key==="ArrowUp"){ e.preventDefault(); setStagger(stagger+STAG_STEP); }
+      else if(e.key==="ArrowDown"){ e.preventDefault(); setStagger(stagger-STAG_STEP); }
+      else if(e.key==="Enter"){ stagIn.blur(); }
+    });
+  }
 
   /* preset seg, in Properties */
   var presetSeg=document.getElementById("mgPreset");

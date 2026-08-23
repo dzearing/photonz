@@ -19,13 +19,13 @@
 .cap-stage{position:absolute;inset:0}
 .cap-scene{position:absolute;inset:0;background:radial-gradient(120% 80% at 30% 20%,rgba(255,255,255,.18),transparent 55%),linear-gradient(160deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.35))}
 .cap-scene .sun{position:absolute;top:18%;left:24%;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,#fff6d6,rgba(255,210,122,.35) 60%,transparent);opacity:.8}
-.safe{position:absolute;border:1px dashed;border-radius:3px;pointer-events:none;opacity:0;transition:opacity .18s ease}
-.cap-stage.safe-on .safe{opacity:1}
-.safe.action{inset:4%;border-color:rgba(255,255,255,.55)}
-.safe.title{inset:9%;border-color:rgba(255,224,106,.85)}
-.safe .slab{position:absolute;font-size:8px;font-family:var(--mono);letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:rgba(0,0,0,.42);white-space:nowrap}
-.safe.action .slab{top:3px;left:4px;color:rgba(255,255,255,.9)}
-.safe.title .slab{bottom:3px;right:4px;color:#ffe06a}
+.vc-safe{position:absolute;border:1px dashed;border-radius:3px;pointer-events:none;opacity:0;transition:opacity .18s ease}
+.cap-stage.vc-safe-on .vc-safe{opacity:1}
+.vc-safe.vc-action{inset:4%;border-color:rgba(255,255,255,.55)}
+.vc-safe.vc-title{inset:9%;border-color:rgba(255,224,106,.85)}
+.vc-safe .vc-slab{position:absolute;font-size:8px;font-family:var(--mono);letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:rgba(0,0,0,.42);white-space:nowrap}
+.vc-safe.vc-action .vc-slab{top:3px;left:4px;color:rgba(255,255,255,.9)}
+.vc-safe.vc-title .vc-slab{bottom:3px;right:4px;color:#ffe06a}
 .capline{position:absolute;display:flex;flex-wrap:wrap;gap:5px;line-height:1.24;z-index:2}
 .capline.cc{left:50%;bottom:12%;transform:translateX(-50%);max-width:78%;justify-content:center;text-align:center}
 .capline.ll{left:9%;bottom:13%;max-width:64%;justify-content:flex-start;border-radius:var(--r2)}
@@ -34,8 +34,8 @@
 .capline.bg-none{text-shadow:0 2px 12px rgba(0,0,0,.6)}
 .cw{transition:color .12s ease,transform .12s ease}
 .cw.active{transform:translateY(-1px)}
-/* SELECTION, place 1 of 3: the selected cue's line is ringed on the canvas */
-.capline .capring{position:absolute;inset:-6px;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
+/* SELECTION, place 1 of 3: the selected cue's line wears the shared frame
+   (.sel-ring + corner .handle, from selection.css) - no page CSS needed */
 .l3badge{position:absolute;top:-11px;left:0;background:var(--comp);color:#fff;font-size:8.5px;font-weight:640;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;z-index:3}
 .capline:not(.ll) .l3badge{display:none}
 .autoflag{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;z-index:3;box-shadow:0 6px 16px -6px rgba(157,108,255,.6)}
@@ -116,28 +116,15 @@
     document has time: the tool is picked in the floating tool bar, its options sit at the top of <b>Properties</b>, and the
     generated cues land on the <b>timeline</b> as a normal track. Each word owns its own time span.</p>
 
-  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:06 · saved" data-ws="video">
+  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:06 <span id='capDirty' style='color:var(--faint)'>· saved</span>" data-ws="video">
 
-    <!-- TITLE BAR · document · workspace lens · document actions -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>launch-teaser</b> · 1920 x 1080 · 0:06 <span id="capDirty" style="color:var(--faint)">· saved</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
+    <!-- EDITOR ROW: canvas dominant, one dock on the right. Title bar and the
+         command surface button are built by the shell component (data-shell). -->
+    <div class="edit lean" id="shell" data-dock="open">
 
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style xlink" data-target="typography"><span class="sw"></span>Caption / Regular <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+      <div class="cnv">
+        <!-- THIS PAGE'S COMMAND MENU · opened by the built `…` in .cnv-act (D3) -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
           <div class="mlabel">Captions</div>
           <div class="menuitem" id="mGen"><i class="ic ic-sparkle"></i> Auto-generate captions</div>
           <div class="menuitem" id="mClear"><i class="ic ic-x"></i> Clear caption track</div>
@@ -149,28 +136,22 @@
           <div class="menu-sep"></div>
           <div class="mlabel">Window</div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
         </div>
-      </div>
-    </div>
-
-    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
-    <div class="edit lean" id="shell" data-dock="open">
-
-      <div class="cnv">
         <div class="canvas">
           <div class="vframe">
-            <div class="cap-stage safe-on" id="capStage">
+            <div class="cap-stage vc-safe-on" id="capStage">
               <div class="cap-scene"><span class="sun"></span></div>
               <span class="autoflag" id="autoFlag"><i class="ic ic-sparkle xs"></i> Auto · en</span>
-              <div class="safe action"><span class="slab">Action safe · 93%</span></div>
-              <div class="safe title"><span class="slab">Title safe · 90%</span></div>
+              <div class="vc-safe vc-action"><span class="vc-slab">Action safe · 93%</span></div>
+              <div class="vc-safe vc-title"><span class="vc-slab">Title safe · 90%</span></div>
               <div class="capline cc bg-pill" id="capLine"><!-- word spans injected --></div>
             </div>
           </div>
         </div>
 
         <div class="cnv-act">
+          <span class="chip style xlink" id="styleChip" data-target="typography"><span class="sw"></span>Caption / Regular <i class="ic xs ic-chevron-down"></i></span>
           <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
         </div>
 
@@ -253,19 +234,9 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK -->
+      <!-- THE RIGHT DOCK · no Layers group here: this workspace has a timeline,
+           and the timeline IS the layer list -->
       <div class="pdock" id="dock">
-
-        <!-- SELECTION, place 2 of 3 -->
-        <div class="dgrp" id="gLayers" style="--gh:76px">
-          <div class="dgrp-h">
-            <span class="ttl">Layers</span><span class="cnt">4</span>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b" id="layerList"><!-- injected --></div>
-        </div>
-
-        <div class="splitter h" data-min="80" data-max="260"></div>
 
         <!-- SELECTION, place 3 of 3, plus the ACTIVE TOOL's options at the top -->
         <div class="dgrp grow" id="gProps">
@@ -345,20 +316,13 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
       <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
-      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
-        <div class="menuitem"><i class="ic ic-text"></i> New caption cue</div>
-        <div class="menuitem"><i class="ic ic-sparkle"></i> Re-transcribe this clip</div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
-      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:200px;z-index:11">
+      <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
         <div class="menuitem"><i class="ic ic-undo"></i> Reset to style</div>
       </div>
@@ -390,8 +354,10 @@
       <span class="tc">0:06</span>
     </div>
 
-    <!-- TIMELINE DOCK · the caption track, on shared timeline primitives -->
-    <div class="timeline" id="tlDock">
+    <!-- TIMELINE DOCK · the caption track, on shared timeline primitives.
+         SELECTION, place 2 of 3: this workspace has no Layers group because the
+         timeline is the layer list, so the selected cue reads here. -->
+    <div class="timeline" id="tlDock" data-tl-summary="Cue 1 of 2 · 0.20s to 2.63s">
       <div class="tlbar">
         <span class="lbl">Caption track</span>
         <span class="trk-auto"><i class="ic xs ic-sparkle"></i> auto · word level</span>
@@ -416,7 +382,7 @@
 
   <div class="caption">
     <div class="c"><div class="lab">The idea</div><p>Auto-captions land as a <b>real track with word-level timing</b>. Each word sits on its own time span, the current word lights up in the track and in the preview as the playhead moves, and the whole line is a <b>Type Style</b> you can restyle without touching a single pixel.</p></div>
-    <div class="c"><div class="lab g2">Captions are a tool, not a mode</div><p>Nothing about the shell changes to caption a video. You pick <b>Title / Text</b> in the tool bar, its options appear at the top of <b>Properties</b>, and the cues appear on the timeline. One selected cue reads the same in three places: ringed on the canvas, highlighted in <b>Layers</b>, and open in <b>Properties</b>.</p></div>
+    <div class="c"><div class="lab g2">Captions are a tool, not a mode</div><p>Nothing about the shell changes to caption a video. You pick <b>Title / Text</b> in the tool bar, its options appear at the top of <b>Properties</b>, and the cues appear on the timeline. One selected cue reads the same in three places: ringed on the canvas, selected on the <b>timeline</b>, and open in <b>Properties</b>.</p></div>
     <div class="c"><div class="lab g2">Safe by default</div><p>Title-safe and action-safe guides keep words off the crop no matter the aspect. Broadcast wants 90% and 93%; social reels want a taller inset. The guide set is a preset an <span class="chip xlink" data-target="agent">agent</span> can pick per platform.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Word timing is easy to generate but tedious to hand-fix. Do we ship an inline nudge on each word chip, or trust re-transcription plus a global offset? The first is precise, the second is faster for most cuts.</p></div>
   </div>
@@ -517,11 +483,24 @@
       else if(playT >= x.t+x.d){ col=st.spoken; cls+=" spoken"; }
       html += '<span class="'+cls+'" style="color:'+col+'">'+x.w+'</span>';
     });
-    if(ci===selCue) html += '<span class="capring"></span>';
+    // shared selection grammar: the line is the positioned box, the ring hugs
+    // its bounds, corner handles resize it; selection.js stamps the size bucket
+    if(ci===selCue) html += '<span class="sel-ring"></span>'+
+      '<span class="handle tl"></span><span class="handle tr"></span>'+
+      '<span class="handle bl"></span><span class="handle br"></span>';
     line.innerHTML = html;
   }
 
-  /* ---------------- TIMELINE: the caption track ---------------- */
+  /* ---------------- TIMELINE: the caption track (selection, place 2 of 3:
+     the timeline is the layer list in this workspace) ---------------- */
+  var tlDock=document.getElementById("tlDock");
+  function updateTlSummary(){
+    if(!tlDock) return;
+    if(!gen){ tlDock.setAttribute("data-tl-summary","No captions yet"); return; }
+    var c=CUES[selCue];
+    tlDock.setAttribute("data-tl-summary",
+      "Cue "+(selCue+1)+" of "+CUES.length+" · "+c.t0.toFixed(2)+"s to "+c.t1.toFixed(2)+"s");
+  }
   var playhead=null;
   function renderTrack(){
     if(!body) return;
@@ -530,7 +509,7 @@
       '<div class="tlz"><div class="tlgrid" id="tlGrid">'+
         '<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
         '<div class="track"><span class="tl">Cues</span><div class="lane cuelane" id="cueLane"></div></div>'+
-        '<div class="track"><span class="tl"><span class="trk-auto"><i class="ic xs ic-text"></i>Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'+
+        '<div class="track"><span class="tl"><span class="trk-auto"><i class="ic xs ic-captions"></i>Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'+
         '<div class="playstrip"><div class="playhead" id="capHead"><span class="head"></span></div></div>'+
       '</div></div>';
     var ruler=document.getElementById("capRuler");
@@ -572,7 +551,7 @@
   function renderEmpty(){
     body.innerHTML =
       '<div class="capempty">'+
-        '<span class="g"><i class="ic ic-text lg"></i></span>'+
+        '<span class="g"><i class="ic ic-captions lg"></i></span>'+
         '<p>No captions on this clip yet. Auto-generate a word-level track from the clip audio, then scrub to see each word light up.</p>'+
         '<button class="btn primary" id="genBtn"><i class="ic ic-sparkle"></i> Auto-generate captions</button>'+
       '</div>';
@@ -592,39 +571,14 @@
     var iv=setInterval(function(){
       p+=Math.random()*22+10;
       if(bar) bar.style.width=Math.min(p,100)+"%";
-      if(p>=100){ clearInterval(iv); gen=true; markDirty(); renderTrack(); renderPreview(); renderLayers(); renderProps(); syncControls(); }
+      if(p>=100){ clearInterval(iv); gen=true; markDirty(); renderTrack(); renderPreview(); renderProps(); updateTlSummary(); syncControls(); }
     },90);
   }
-
-  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
-  var layerList=document.getElementById("layerList");
-  function renderLayers(){
-    if(!layerList) return;
-    var h='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-text"></i> Captions</div>';
-    if(gen){
-      CUES.forEach(function(c,i){
-        var ws=WORDS.filter(function(x){ return x.cue===i; }).map(function(x){ return x.w; }).join(" ");
-        h+='<div class="lrow child'+(i===selCue?" sel":"")+'" data-cue="'+i+'" role="button" tabindex="0">'+
-             '<i class="ic ic-text"></i><span class="nm">'+ws+'</span><i class="ic sm ic-eye eye"></i></div>';
-      });
-    } else {
-      h+='<div class="lrow child" style="color:var(--faint)"><i class="ic ic-text"></i><span class="nm">no cues yet</span></div>';
-    }
-    h+='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>'+
-       '<div class="lrow child"><i class="ic ic-image"></i><span class="nm">teaser.mov</span><i class="ic sm ic-eye eye"></i></div>'+
-       '<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>'+
-       '<div class="lrow child"><i class="ic ic-audio"></i><span class="nm">voice.wav</span><i class="ic sm ic-eye eye"></i></div>';
-    layerList.innerHTML=h;
-  }
-  layerList && layerList.addEventListener("click", function(e){
-    var row=e.target.closest("[data-cue]"); if(!row) return;
-    selectCue(+row.getAttribute("data-cue"), true);
-  });
 
   function selectCue(i, seek){
     selCue=i;
     if(seek) playT=+(CUES[i].t0+0.05).toFixed(2);
-    renderTrack(); renderLayers(); renderProps(); renderPreview(); updateReadouts(); syncControls();
+    renderTrack(); renderProps(); renderPreview(); updateTlSummary(); updateReadouts(); syncControls();
   }
 
   /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
@@ -774,7 +728,7 @@
     var b=e.target.closest("button"); if(!b) return;
     [].forEach.call(styleSeg.children,function(x){ x.classList.toggle("on",x===b); });
     styleK=b.getAttribute("data-style");
-    var chip=document.querySelector('.toolbar .chip.style');
+    var chip=document.getElementById('styleChip');
     if(chip) chip.innerHTML='<span class="sw"></span>'+STYLES[styleK].name+' <i class="ic xs ic-chevron-down"></i>';
     markDirty(); renderPreview(); renderSpec();
   });
@@ -788,7 +742,7 @@
       safeBtn.classList.toggle("secondary", safeOn);
       safeBtn.classList.toggle("ghost", !safeOn);
     }
-    if(stage) stage.classList.toggle("safe-on", safeOn);
+    if(stage) stage.classList.toggle("vc-safe-on", safeOn);
   }
   if(safeBtn) safeBtn.addEventListener("click", function(){ setSafe(!safeOn); });
   var mSafe=document.getElementById("mSafe");
@@ -802,7 +756,7 @@
   function clearTrack(){
     playing=false; setPlayIcon(); if(raf) cancelAnimationFrame(raf);
     gen=false; markDirty();
-    renderTrack(); renderPreview(); renderLayers(); renderProps(); updateReadouts(); syncControls();
+    renderTrack(); renderPreview(); renderProps(); updateTlSummary(); updateReadouts(); syncControls();
   }
   var clearBtn=document.getElementById("clearBtn");
   if(clearBtn) clearBtn.addEventListener("click", clearTrack);
@@ -815,7 +769,7 @@
     setSafe(true);
     var d=document.getElementById("capDirty"); if(d){ d.textContent="· saved"; d.style.color="var(--faint)"; }
     dirty=false;
-    setPlayIcon(); renderTrack(); renderLayers(); renderProps(); renderPreview(); renderSpec(); updateReadouts(); syncControls();
+    setPlayIcon(); renderTrack(); renderProps(); renderPreview(); renderSpec(); updateTlSummary(); updateReadouts(); syncControls();
   }
   var resetBtn=document.getElementById("resetBtn");
   if(resetBtn) resetBtn.addEventListener("click", resetAll);
@@ -877,10 +831,10 @@
   /* ---------------- BOOT ---------------- */
   setSafe(safeOn);
   renderTrack();
-  renderLayers();
   renderProps();
   renderPreview();
   renderSpec();
+  updateTlSummary();
   updateReadouts();
   syncControls();
 })();

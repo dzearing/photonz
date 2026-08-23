@@ -1,0 +1,21 @@
+{
+  "id": "video-page-blank-slate-on-ramp-uses-the-shared-e",
+  "title": "Video page blank-slate on-ramp uses the shared entry template",
+  "priority": "p2-normal",
+  "seq": 330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T14:29:06.098Z",
+  "updated": "2026-08-23T14:29:06.098Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From ux-audit 2026-08-23 ('Video app pages', med, A), left out of the conformance pass that closed the rest of that section. docs/design/mocks/pages/video.html still opens with a second chrome-less .win containing a bespoke .onramp/.onstep/.onstage stepper (page-local, used nowhere else). Since then blank-slate-entry-clickthrough-per-surface-on-on shipped shared/components/entry.js plus a dedicated video-entry-wt clickthrough, so the on-ramp is now a second, divergent answer to the same question. Either convert it onto the shared entry template or drop it in favour of video-entry-wt. Worth a decision card if dropping changes what the video page teaches.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T14:29:06.098Z",
+      "note": "created (manual)"
+    }
+  ]
+}

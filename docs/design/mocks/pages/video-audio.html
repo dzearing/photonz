@@ -8,7 +8,7 @@
 <style>
 /* video-audio · a real mixer inside the shared shell. Audio tracks ride the same
    time axis as everything else, so they are lanes on the timeline dock; the
-   selected track's channel strip (mute, solo, fader, fades, ducking) opens in
+   selected track's channel strip (mute, solo, volume, fades, ducking) opens in
    the Properties group like any other selection, and the source files live in
    Library, scope Media. Only the waveform lane art is page local. 4pt scale. */
 
@@ -56,14 +56,9 @@
 .tlgrid .playhead::before{content:none}
 .tlgrid .playhead .head{position:absolute;top:-2px;left:-5px;width:0;height:0;border:6px solid transparent;border-top-color:var(--crit);pointer-events:auto;cursor:ew-resize}
 
-/* ---------- Properties: the channel strip for the selected track ---------- */
-.fader{position:relative;flex:1;height:20px;border-radius:999px;background:var(--panel-2);border:1px solid var(--edge-lo);box-shadow:inset 0 1px 2px rgba(0,0,0,.12);cursor:ew-resize;min-width:0;transition:var(--ctl-tr)}
-.fader:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo))}
-.fader:focus-visible{outline:none;box-shadow:inset 0 1px 2px rgba(0,0,0,.12), var(--ring)}
-.fader.active{border-color:var(--accent-line)}
-.fader .ffill{position:absolute;left:2px;top:2px;bottom:2px;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 55%,transparent),var(--accent));pointer-events:none}
-.fader .fthumb{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.2);box-shadow:0 1px 4px rgba(0,0,0,.35);transform:translate(-50%,-50%);pointer-events:none}
-.fader.dim0{opacity:.45}
+/* ---------- Properties: the channel strip for the selected track.
+   Volume is the shared DS .slider; only the muted dim is page local. ---------- */
+#video-audio .slrow.va-dim{opacity:.45;pointer-events:none}
 .btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}/* ---------- api strip ---------- */
 .apiwrap{padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
 .apiwrap h4{margin:0 0 var(--gap-sm);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
@@ -94,28 +89,14 @@
     lanes on the <b>timeline dock</b>, the selected track's channel strip opens in <b>Properties</b>, and the source files
     live in <b>Library, scope Media</b> next to every other asset.</p>
 
-  <div class="win tall cq shell" data-shell="launch-teaser · stereo 48 kHz · 0:14 · saved" data-ws="video">
+  <div class="win tall cq shell" data-shell="launch-teaser · stereo 48 kHz · 0:14 · <span id='aDirty'>saved</span>" data-ws="video" data-status="<span id='trackChip'>Music selected</span>">
 
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>launch-teaser</b> · stereo 48 kHz · 0:14 <span id="aDirty" style="color:var(--faint)">· saved</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
+    <!-- EDITOR ROW · chrome (title bar, command button, Ask) is built by the shell -->
+    <div class="edit lean" id="shell" data-dock="open">
 
-    <!-- COMMAND SURFACE + ⌘K + History -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip" id="trackChip"><i class="ic xs ic-audio"></i> Music selected</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:236px;z-index:12">
+      <div class="cnv">
+        <!-- this page's commands; the shell anchors the menu and builds its trigger -->
+        <div class="popover menu pop cmdpop" id="cmdMenu">
           <div class="mlabel">Audio</div>
           <div class="menuitem" id="mDuck"><i class="ic ic-audio"></i> Duck music under voiceover</div>
           <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset the mix</div>
@@ -123,15 +104,8 @@
           <div class="menu-sep"></div>
           <div class="mlabel">Window</div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
         </div>
-      </div>
-    </div>
-
-    <!-- EDITOR ROW -->
-    <div class="edit lean" id="shell" data-dock="open">
-
-      <div class="cnv">
         <div class="canvas">
           <div class="vframe">
             <div class="title">Ship it faster.</div>
@@ -143,6 +117,7 @@
         </div>
 
         <div class="cnv-act">
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
         </div>
 
@@ -226,26 +201,38 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK -->
+      <!-- THE RIGHT DOCK · no Layers group here: this workspace has a timeline,
+           and the timeline IS the layer list -->
       <div class="pdock" id="dock">
-
-        <!-- SELECTION, place 2 of 3 -->
-        <div class="dgrp" id="gLayers" style="--gh:84px">
-          <div class="dgrp-h">
-            <span class="ttl">Layers</span><span class="cnt">3</span>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b" id="layerList"><!-- injected --></div>
-        </div>
-
-        <div class="splitter h" data-min="80" data-max="260"></div>
 
         <!-- SELECTION, place 3 of 3: the channel strip for the selected track -->
         <div class="dgrp grow" id="gProps">
-          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Audio track</span>
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Music</span>
             <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
           </div>
-          <div class="dgrp-b" id="propBody"><!-- injected per selection --></div>
+          <div class="dgrp-b" id="propBody">
+            <div class="section">
+              <div class="sec-h">Channel <span class="mut" id="chFile">music.wav</span></div>
+              <div class="btnrow">
+                <button class="btn sm ghost" id="chMute" aria-pressed="false"><i class="ic ic-volume"></i> Mute</button>
+                <button class="btn sm ghost" id="chSolo" aria-pressed="false"><i class="ic ic-solo"></i> Solo</button>
+              </div>
+              <div class="slrow" id="chVolRow" style="margin-top:var(--s3)"><span class="rl">Volume</span><span class="slider" data-unit=" dB" data-dp="1"><input type="range" id="chVol" min="-24" max="6" step="0.5" value="0" aria-label="Music volume"><span class="sl-bub"></span></span><span class="num">0.0 dB</span></div>
+            </div>
+            <div class="section">
+              <div class="sec-h">Fades <span class="mut">drag the diamonds on the lane</span></div>
+              <div class="grid2">
+                <div class="field"><span class="k">In</span><span class="v" id="fInVal">1.5s</span></div>
+                <div class="field"><span class="k">Out</span><span class="v" id="fOutVal">1.5s</span></div>
+              </div>
+              <div class="seg stack" id="aCurve" style="margin-top:var(--s2)">
+                <button data-c="linear">Linear</button>
+                <button data-c="ease" class="on">Ease</button>
+                <button data-c="scurve">S-curve</button>
+              </div>
+            </div>
+            <div id="chExtra"><!-- ducking or clip facts, per selection --></div>
+          </div>
         </div>
 
         <div class="dgrp collapsed" id="gEffects" style="--gh:150px">
@@ -287,18 +274,11 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
-      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-        <div class="menuitem"><i class="ic ic-audio"></i> New audio track</div>
-        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
       <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:180px;width:206px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy channel settings</div>
         <div class="menuitem"><i class="ic ic-undo"></i> Reset this track</div>
@@ -332,8 +312,10 @@
       <span class="tc">0:14</span>
     </div>
 
-    <!-- TIMELINE DOCK · audio lanes on the shared time axis -->
-    <div class="timeline" id="tlDock">
+    <!-- TIMELINE DOCK · audio lanes on the shared time axis.
+         SELECTION, place 2 of 3: the selected track's lane. The timeline is the
+         layer list here, so there is no Layers group in the dock. -->
+    <div class="timeline" id="tlDock" data-tl-summary="Music · 0.00s / 14.00s">
       <div class="tlbar">
         <span class="lbl">Audio</span>
         <span class="tsep"></span>
@@ -358,7 +340,7 @@
 
   <div class="caption">
     <div class="c"><div class="lab">The idea</div><p>Audio rides the <b>same time axis</b> as the video timeline, so a mixer is not a separate app. Levels, fades and ducking are just automation over time, drawn where you can see and grab them. The music envelope you watch dip is the exact curve the render reads.</p></div>
-    <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a lane and the meter on the canvas, the row in <b>Layers</b>, and the channel strip in <b>Properties</b> all follow. The source files sit in <b>Library, scope Media</b>, so audio is not a special case with its own bin.</p></div>
+    <div class="c"><div class="lab g2">One selection, three places</div><p>Pick a track and the meter on the canvas, its lane on the <b>timeline</b>, and the channel strip in <b>Properties</b> all follow. There is no separate Layers panel: the timeline is the layer list. The source files sit in <b>Library, scope Media</b>, so audio is not a special case with its own bin.</p></div>
     <div class="c"><div class="lab g2">A direction</div><p>Ducking is a <b>relationship</b>, not a baked edit. Point the music at the voiceover and it follows, so re-timing the voiceover re-computes the dip. The same idea drives sidechains, auto-fades on cuts, and loudness targets for export.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Should ducking default on the moment a voiceover lands on a track, or stay an explicit choice? Smart defaults feel magic until they surprise, and audio surprises are the worst kind.</p></div>
   </div>
@@ -577,31 +559,21 @@
     });
   }
 
-  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
-  var layerList=document.getElementById("layerList");
-  function renderLayers(){
-    if(!layerList) return;
-    var h='<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>'+
-          '<div class="lrow child"><i class="ic ic-image"></i><span class="nm">teaser.mov</span><i class="ic sm ic-eye eye"></i></div>'+
-          '<div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>';
-    S.tracks.forEach(function(tr){
-      h+='<div class="lrow child'+(S.sel===tr.id?" sel":"")+'" data-track="'+tr.id+'" role="button" tabindex="0">'+
-           '<i class="ic ic-audio"></i><span class="nm">'+tr.name+'</span>'+
-           '<i class="ic sm '+(audible(tr)?"ic-eye":"ic-eye-off")+' eye"></i></div>';
-    });
-    layerList.innerHTML=h;
+  /* ---------------- selection. No Layers panel: the timeline lane (place 2
+     of 3) is the layer row, so selecting only touches canvas, timeline and
+     Properties, plus the shell status chip and the collapsed-dock summary. */
+  var tlDockEl=document.getElementById("tlDock");
+  function updateTlSummary(){
+    if(!tlDockEl) return;
+    var tr=trackOf(S.sel);
+    tlDockEl.setAttribute("data-tl-summary",(tr?tr.name:"Audio")+" · "+S.playT.toFixed(2)+"s / "+DURATION.toFixed(2)+"s");
   }
-  layerList && layerList.addEventListener("click", function(e){
-    var row=e.target.closest("[data-track]"); if(!row) return;
-    select(row.getAttribute("data-track"));
-  });
-
   function select(id){
     S.sel=id;
-    renderAllLanes(); renderLayers(); renderProps(); syncCanvasSel();
+    renderAllLanes(); renderProps(); syncCanvasSel(); updateTlSummary();
     var chip=document.getElementById("trackChip");
     var tr=trackOf(id);
-    if(chip && tr) chip.innerHTML='<i class="ic xs ic-audio"></i> '+tr.name+' selected';
+    if(chip && tr) chip.textContent=tr.name+" selected";
   }
   function syncCanvasSel(){
     [].forEach.call(document.querySelectorAll(".vurow"), function(r){
@@ -609,62 +581,62 @@
     });
   }
 
-  /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
+  /* ---------------- PROPERTIES (selection, place 3 of 3) ----------------
+     The channel strip is static DS markup so slider.js wires the volume
+     .slider once at load; this pass just points it at the selected track.
+     Only #chExtra, which differs per track, is re-rendered. */
   var propBody=document.getElementById("propBody");
+  var chVol=document.getElementById("chVol");
   function renderProps(){
-    if(!propBody) return;
-    var tr=trackOf(S.sel); if(!tr) return;
+    var tr=trackOf(S.sel); if(!tr||!propBody) return;
     var kind=document.getElementById("propKind");
     if(kind) kind.textContent=tr.name;
-    var h="";
-    h+='<div class="section"><div class="sec-h">Channel <span class="mut">'+tr.file+'</span></div>'+
-       '<div class="btnrow">'+
-         '<button class="btn sm '+(tr.mute?"danger":"ghost")+'" data-mute="'+tr.id+'" aria-pressed="'+tr.mute+'"><i class="ic ic-volume"></i> Mute</button>'+
-         '<button class="btn sm '+(tr.solo?"primary":"ghost")+'" data-solo="'+tr.id+'" aria-pressed="'+tr.solo+'"><i class="ic ic-star"></i> Solo</button>'+
-       '</div>'+
-       '<div class="irow" style="margin-top:var(--s3)"><span class="rl">Volume</span>'+
-         '<div class="fader'+(tr.mute?" dim0":"")+'" data-fader="'+tr.id+'" tabindex="0" role="slider" '+
-              'aria-label="'+tr.name+' volume" aria-valuemin="-24" aria-valuemax="6" aria-valuenow="'+tr.gainDb.toFixed(1)+'">'+
-           '<i class="ffill"></i><i class="fthumb"></i></div></div>'+
-       '<div class="irow"><span class="rl">Gain</span><span class="field" style="justify-content:flex-end"><span class="v" data-gain="'+tr.id+'">'+(tr.gainDb>0?"+":"")+tr.gainDb.toFixed(1)+' dB</span></span></div>'+
-       '</div>';
-    h+='<div class="section"><div class="sec-h">Fades <span class="mut">drag the diamonds on the lane</span></div>'+
-       '<div class="grid2">'+
-         '<div class="field"><span class="k">In</span><span class="v" id="fInVal">'+tr.fadeIn.toFixed(1)+'s</span></div>'+
-         '<div class="field"><span class="k">Out</span><span class="v" id="fOutVal">'+tr.fadeOut.toFixed(1)+'s</span></div>'+
-       '</div>'+
-       '<div class="seg stack" id="aCurve" style="margin-top:var(--s2)">'+
-         '<button data-c="linear"'+(S.curve==="linear"?' class="on"':'')+'>Linear</button>'+
-         '<button data-c="ease"'+(S.curve==="ease"?' class="on"':'')+'>Ease</button>'+
-         '<button data-c="scurve"'+(S.curve==="scurve"?' class="on"':'')+'>S-curve</button>'+
-       '</div></div>';
-    if(tr.id==="music"){
-      h+='<div class="section"><div class="sec-h">Ducking <span class="mut">under the voiceover</span></div>'+
-         '<div class="btnrow"><button class="btn sm '+(S.duck?"primary":"ghost")+'" id="duckToggle" aria-pressed="'+S.duck+'"><i class="ic ic-audio"></i> '+(S.duck?"On":"Off")+'</button></div>'+
-         '<div class="grid2" style="margin-top:var(--s2)">'+
-           '<div class="field"><span class="k">Amount</span><span class="v">'+DUCK_DB+' dB</span></div>'+
-           '<div class="field"><span class="k">Ramp</span><span class="v">'+(DUCK_RAMP*1000)+' ms</span></div>'+
-         '</div>'+
-         '<p class="note">Ducking is a relationship, not a baked edit. Move the voiceover and the dip follows it.</p></div>';
-    } else {
-      h+='<div class="section"><div class="sec-h">Clip</div>'+
-         '<div class="grid2">'+
-           '<div class="field"><span class="k">In</span><span class="v">'+tr.clip[0].toFixed(1)+'s</span></div>'+
-           '<div class="field"><span class="k">Out</span><span class="v">'+tr.clip[1].toFixed(1)+'s</span></div>'+
-         '</div>'+
-         '<p class="note">The music track ducks under this one, so its timing drives the dip.</p></div>';
+    var file=document.getElementById("chFile");
+    if(file) file.textContent=tr.file;
+    var mb=document.getElementById("chMute");
+    if(mb){
+      mb.classList.toggle("danger",tr.mute); mb.classList.toggle("ghost",!tr.mute);
+      mb.setAttribute("aria-pressed",String(tr.mute));
+      var mi=mb.querySelector(".ic");
+      if(mi){ mi.classList.toggle("ic-volume-off",tr.mute); mi.classList.toggle("ic-volume",!tr.mute); }
     }
-    propBody.innerHTML=h;
-    positionFader(tr);
-  }
-  function positionFader(tr){
-    var f=document.querySelector('[data-fader="'+tr.id+'"]'); if(!f) return;
-    var u=(tr.gainDb+24)/30;
-    f.querySelector(".ffill").style.width="calc("+(u*100)+"% - 2px)";
-    f.querySelector(".fthumb").style.left="calc(2px + "+(u*100)+"% * 0.92)";
-    f.setAttribute("aria-valuenow",tr.gainDb.toFixed(1));
-    var g=document.querySelector('[data-gain="'+tr.id+'"]');
-    if(g) g.textContent=(tr.gainDb>0?"+":"")+tr.gainDb.toFixed(1)+" dB";
+    var so=document.getElementById("chSolo");
+    if(so){
+      so.classList.toggle("primary",tr.solo); so.classList.toggle("ghost",!tr.solo);
+      so.setAttribute("aria-pressed",String(tr.solo));
+    }
+    var row=document.getElementById("chVolRow");
+    if(row) row.classList.toggle("va-dim",tr.mute);
+    if(chVol){
+      chVol.disabled=tr.mute;
+      chVol.value=tr.gainDb;
+      chVol.setAttribute("aria-label",tr.name+" volume");
+      chVol.dispatchEvent(new Event("input",{bubbles:true}));
+    }
+    var fi=document.getElementById("fInVal"), fo=document.getElementById("fOutVal");
+    if(fi) fi.textContent=tr.fadeIn.toFixed(1)+"s";
+    if(fo) fo.textContent=tr.fadeOut.toFixed(1)+"s";
+    [].forEach.call(document.querySelectorAll("#aCurve button"),function(b){
+      b.classList.toggle("on",b.getAttribute("data-c")===S.curve);
+    });
+    var extra=document.getElementById("chExtra");
+    if(!extra) return;
+    if(tr.id==="music"){
+      extra.innerHTML='<div class="section"><div class="sec-h">Ducking <span class="mut">under the voiceover</span></div>'+
+        '<div class="btnrow"><button class="btn sm '+(S.duck?"primary":"ghost")+'" id="duckToggle" aria-pressed="'+S.duck+'"><i class="ic ic-audio"></i> '+(S.duck?"On":"Off")+'</button></div>'+
+        '<div class="grid2" style="margin-top:var(--s2)">'+
+          '<div class="field"><span class="k">Amount</span><span class="v">'+DUCK_DB+' dB</span></div>'+
+          '<div class="field"><span class="k">Ramp</span><span class="v">'+(DUCK_RAMP*1000)+' ms</span></div>'+
+        '</div>'+
+        '<p class="note">Ducking is a relationship, not a baked edit. Move the voiceover and the dip follows it.</p></div>';
+    } else {
+      extra.innerHTML='<div class="section"><div class="sec-h">Clip</div>'+
+        '<div class="grid2">'+
+          '<div class="field"><span class="k">In</span><span class="v">'+tr.clip[0].toFixed(1)+'s</span></div>'+
+          '<div class="field"><span class="k">Out</span><span class="v">'+tr.clip[1].toFixed(1)+'s</span></div>'+
+        '</div>'+
+        '<p class="note">The music track ducks under this one, so its timing drives the dip.</p></div>';
+    }
   }
 
   /* ---------------- METERS on the canvas ---------------- */
@@ -700,6 +672,7 @@
   function updateTime(){
     var el=document.getElementById("aTime");
     if(el) el.textContent=S.playT.toFixed(2)+"s / "+DURATION.toFixed(2)+"s";
+    updateTlSummary();
     var tc=document.getElementById("tcCur");
     if(tc) tc.textContent=tcode(S.playT);
     if(tScrub){
@@ -783,36 +756,23 @@
     if(laneHit) select(laneHit.getAttribute("data-lane"));
   });
 
-  /* ---------------- Properties interactions ---------------- */
-  propBody && propBody.addEventListener("pointerdown",function(e){
-    var f=e.target.closest(".fader"); if(!f) return;
-    var tr=trackOf(f.getAttribute("data-fader")); if(!tr||tr.mute) return;
-    var rect=f.getBoundingClientRect();
-    f.classList.add("active"); markDirty();
-    var set=function(cx){ tr.gainDb=+(clamp((cx-rect.left)/rect.width,0,1)*30-24).toFixed(1); positionFader(tr); drawMeters(true); };
-    set(e.clientX);
-    var mv=function(ev){ set(ev.clientX); };
-    var up=function(){ f.classList.remove("active"); document.removeEventListener("pointermove",mv); document.removeEventListener("pointerup",up); };
-    document.addEventListener("pointermove",mv); document.addEventListener("pointerup",up);
-    e.preventDefault();
-  });
-  propBody && propBody.addEventListener("keydown",function(e){
-    var f=e.target.closest && e.target.closest(".fader"); if(!f) return;
-    var tr=trackOf(f.getAttribute("data-fader")); if(!tr) return;
-    var step=e.shiftKey?3:1, moved=false;
-    if(e.key==="ArrowRight"||e.key==="ArrowUp"){ tr.gainDb=clamp(+(tr.gainDb+step).toFixed(1),-24,6); moved=true; }
-    else if(e.key==="ArrowLeft"||e.key==="ArrowDown"){ tr.gainDb=clamp(+(tr.gainDb-step).toFixed(1),-24,6); moved=true; }
-    if(moved){ positionFader(tr); drawMeters(true); markDirty(); e.preventDefault(); }
+  /* ---------------- Properties interactions ----------------
+     The DS slider owns pointer + keyboard; the page only reads its input
+     events. renderProps re-syncs it with a programmatic dispatch, so only
+     trusted events count as an edit. */
+  chVol && chVol.addEventListener("input",function(e){
+    var tr=trackOf(S.sel); if(!tr) return;
+    tr.gainDb=+parseFloat(chVol.value).toFixed(1);
+    drawMeters(true);
+    if(e.isTrusted) markDirty();
   });
   propBody && propBody.addEventListener("click",function(e){
-    var mb=e.target.closest("[data-mute]");
-    var sb=e.target.closest("[data-solo]");
+    var tr=trackOf(S.sel);
     var cb=e.target.closest("#aCurve button");
-    var dk=e.target.closest("#duckToggle");
-    if(mb){ var t1=trackOf(mb.getAttribute("data-mute")); if(t1){ t1.mute=!t1.mute; refresh(); markDirty(); } }
-    else if(sb){ var t2=trackOf(sb.getAttribute("data-solo")); if(t2){ t2.solo=!t2.solo; refresh(); markDirty(); } }
+    if(e.target.closest("#chMute")){ if(tr){ tr.mute=!tr.mute; refresh(); markDirty(); } }
+    else if(e.target.closest("#chSolo")){ if(tr){ tr.solo=!tr.solo; refresh(); markDirty(); } }
     else if(cb){ S.curve=cb.getAttribute("data-c"); refresh(); markDirty(); }
-    else if(dk){ setDuck(!S.duck); markDirty(); }
+    else if(e.target.closest("#duckToggle")){ setDuck(!S.duck); markDirty(); }
   });
 
   function setDuck(on){
@@ -854,7 +814,6 @@
 
   document.addEventListener("keydown",function(e){
     if(e.target && /input|textarea/i.test(e.target.tagName)) return;
-    if(e.target && e.target.classList && e.target.classList.contains("fader")) return;
     if(e.key===" "){ if(playBtn){ e.preventDefault(); playBtn.click(); } }
   });
 
@@ -887,9 +846,9 @@
     if(dirty) return;
     dirty=true;
     var d=document.getElementById("aDirty");
-    if(d){ d.textContent="· edited"; d.style.color="var(--warn)"; }
+    if(d){ d.textContent="edited"; d.style.color="var(--warn)"; }
   }
-  function refresh(){ renderAllLanes(); renderLayers(); renderProps(); syncCanvasSel(); drawMeters(true); }
+  function refresh(){ renderAllLanes(); renderProps(); syncCanvasSel(); drawMeters(true); }
   function resetAll(){
     if(S.playing && raf) cancelAnimationFrame(raf);
     S=defaults();
@@ -897,7 +856,7 @@
     buildTimeline(); refresh(); onSeek();
     dirty=false;
     var d=document.getElementById("aDirty");
-    if(d){ d.textContent="· saved"; d.style.color="var(--faint)"; }
+    if(d){ d.textContent="saved"; d.style.color=""; }
   }
   ["aReset","mReset"].forEach(function(id){
     var el=document.getElementById(id);
@@ -907,7 +866,6 @@
   /* ---------------- boot ---------------- */
   reflectPlay();
   buildTimeline();
-  renderLayers();
   renderProps();
   syncCanvasSel();
   onSeek();

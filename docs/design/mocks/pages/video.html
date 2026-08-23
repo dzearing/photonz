@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
 /* video page · the SAME document with a time dimension, so the transport bar and
-   the timeline dock appear ("timeline when time"). Chrome is the shared shell:
-   .win.tall.cq > .titlebar > .toolbar > .edit.lean > .transport > .timeline.
+   the timeline dock appear ("timeline when time"). Chrome is the shared shell
+   component: the page declares data-shell/data-ws and shell.js builds the rest.
    Only the things the shared DS does not cover live here: the aligned timeline
    grid and the keyframe plot, both scoped to #video, all on the 4pt scale. */
 
@@ -17,7 +17,7 @@
    of the app did not fit on the machine the app is for, so the one thing the
    page exists to show could never be seen at once. 820px is the budget:
 
-     titlebar 42 · toolbar 34 · canvas ~370 · transport 49 · dock ~320
+     shell chrome ~42 · canvas ~400 · transport 49 · dock ~320
 
    The dock got there by no longer stacking two editors: the timeline is
    clips only, and a clip's values live in the detail pane on the right. */
@@ -97,7 +97,9 @@
 .clip.ov{background:linear-gradient(135deg,#1b7a8c,#12c2e9)}
 .duck{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ducktag{position:absolute;top:2px;right:6px;font-size:8px;font-family:var(--mono);color:#bff3e4;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:var(--r1)}
-.xition{position:absolute;top:50%;transform:translate(-50%,-50%);height:28px;background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px);border-radius:3px;z-index:2;display:grid;place-items:center;color:#1a1c22}
+/* the transition is the shared .xband, drawn ON the clips in a .lane.abs; the
+   only page fact is this timeline's 28px lane height (a scoped refinement) */
+#video .tlgrid .xband{height:28px}
 /* playhead overlay: gutter + gap puts it exactly at the lane column's left edge */
 .playstrip{position:absolute;left:calc(var(--gutter) + 8px);right:0;top:0;bottom:0;pointer-events:none;z-index:5}
 .tlgrid .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px);z-index:5;left:0}
@@ -273,11 +275,6 @@
 .words{display:flex;flex-wrap:wrap;gap:var(--s1);margin-top:var(--s2)}
 .wtok{font-size:9px;font-family:var(--mono);background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r1);padding:2px 5px;color:var(--dim)}
 .wtok.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
-.tpi{display:block;height:30px}
-.tpi.diss{background:linear-gradient(90deg,#12c2e9,#ff5d8f)}
-.tpi.dip{background:linear-gradient(90deg,#7c4dff,#0a0c11 50%,#ff5d8f)}
-.tpi.slide{background:linear-gradient(90deg,#26463a 50%,#12c2e9 50%)}
-.tpi.push{background:repeating-linear-gradient(90deg,#7c4dff,#7c4dff 4px,#b14dff 4px,#b14dff 8px)}
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
@@ -332,47 +329,31 @@
   </div>
 
   <!-- ========== THE EDITOR: one shell, one dock, time at the bottom ========== -->
-  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:15 · saved" data-ws="video">
+  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:15 <span id='dirty' style='color:var(--faint)'>· saved</span>" data-ws="video">
 
-    <!-- TITLE BAR · document · workspace lens · document actions -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>launch-teaser</b> · 1920 x 1080 · 0:15 <span id="dirty" style="color:var(--faint)">· saved</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar is the
-         real command surface; the mock never draws a fake one. -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="typography"><span class="sw"></span>Caption / Bold <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-          <div class="mlabel">File</div>
-          <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
-          <div class="menuitem"><i class="ic ic-export"></i> Export MP4 <span class="sc">⌘E</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Clip</div>
-          <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
-          <div class="menuitem"><i class="ic ic-keyframe"></i> Add keyframe <span class="sc">K</span></div>
-          <div class="menuitem"><i class="ic ic-transition"></i> Apply transition</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <!-- EDITOR ROW: canvas dominant, one dock on the right. All chrome (title
+         bar, Ask launcher, the command-surface button) is built by the shared
+         shell from data-shell; this page authors only its own command menu. -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <!-- THIS PAGE'S COMMAND MENU (D3). Share and Export live here and in the
+           native menu bar, never as title-bar buttons. History is the global
+           surface, reached from here or with its shortcut. -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">File</div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import media <span class="sc">⌘⇧I</span></div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export MP4 <span class="sc">⌘E</span></div>
+        <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Clip</div>
+        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead <span class="sc">B</span></div>
+        <div class="menuitem"><i class="ic ic-keyframe"></i> Add keyframe <span class="sc">K</span></div>
+        <div class="menuitem"><i class="ic ic-transition"></i> Apply transition</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -532,10 +513,10 @@
             <div class="efx click"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0,8,20</span></div>
             <div class="sec-h" style="padding-top:var(--s2)">Transitions <span class="mut">drag onto a cut</span></div>
             <div class="libgrid" id="tpal" style="grid-template-columns:1fr 1fr;padding:0 0 var(--s2)">
-              <div class="libtile sel" tabindex="0" data-x="Cross dissolve"><span class="th tpi diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">0.6s</span></span></div>
-              <div class="libtile" tabindex="0" data-x="Dip to color"><span class="th tpi dip"></span><span class="cap"><span class="nm">Dip to color</span><span class="mt">0.5s</span></span></div>
-              <div class="libtile" tabindex="0" data-x="Slide"><span class="th tpi slide"></span><span class="cap"><span class="nm">Slide</span><span class="mt">0.4s</span></span></div>
-              <div class="libtile" tabindex="0" data-x="Push"><span class="th tpi push"></span><span class="cap"><span class="nm">Push</span><span class="mt">0.4s</span></span></div>
+              <div class="libtile tt sel" tabindex="0" role="button" data-x="Cross dissolve"><span class="th th-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt">0.6s</span></span></div>
+              <div class="libtile tt" tabindex="0" role="button" data-x="Dip to color"><span class="th th-dip"></span><span class="cap"><span class="nm">Dip to color</span><span class="mt">0.5s</span></span></div>
+              <div class="libtile tt" tabindex="0" role="button" data-x="Slide"><span class="th th-slide"></span><span class="cap"><span class="nm">Slide</span><span class="mt">0.4s</span></span></div>
+              <div class="libtile tt" tabindex="0" role="button" data-x="Push"><span class="th th-push"></span><span class="cap"><span class="nm">Push</span><span class="mt">0.4s</span></span></div>
             </div>
           </div>
         </div>
@@ -597,7 +578,7 @@
          TIME CONTROLS ONLY. The scrubber is the only thing here whose value is
          measured in pixels, so it gets the whole row and every sibling is
          flex:none. What used to sit on the right went where it belongs:
-           Export     -> the title bar, which already has it as the primary action
+           Export     -> the command menu, and the native menu bar in the real app
            Cut        -> the Blade tool, already in the canvas AND timeline strips
            Add key    -> a diamond on the property's own lane in the keyframe
            Delete key    editor, because a key belongs to a property at a time -->
@@ -778,12 +759,16 @@
       var row=document.createElement("div"); row.className="track";
       var lab=document.createElement("span"); lab.className="tl";
       lab.innerHTML = (tr.auto ? '<span class="trk-auto"><i class="ic xs ic-sparkle"></i>Caption</span>' : tr.name);
-      var lane=document.createElement("div"); lane.className="lane"; lane.setAttribute("data-track",tr.kind);
+      var lane=document.createElement("div"); lane.className="lane abs"; lane.setAttribute("data-track",tr.kind);
       TICKS.forEach(function(t){ var g=document.createElement("i"); g.className="gl"; g.style.left=pct(t)+"%"; lane.appendChild(g); });
+      /* the shared .xband: a transition overlaps two clips, so it draws ON
+         them, centered on the cut. x.t is the band's center. A dip is the
+         outline .blk variant, so what is under it stays readable. */
       (tr.trans||[]).forEach(function(x){
-        var el=document.createElement("div"); el.className="xition";
-        el.style.left=pct(x.t)+"%"; el.style.width=pct(x.dur)+"%";
-        el.innerHTML='<i class="ic xs ic-transition"></i>';
+        var el=document.createElement("div");
+        el.className="xband"+(/dip/i.test(x.name||"")?" blk":"");
+        el.style.left=pct(x.t-x.dur/2)+"%"; el.style.width=pct(x.dur)+"%";
+        el.innerHTML='<i class="ic xs ic-transition"></i><span class="gr l"></span><span class="gr r"></span>';
         el.title=x.name;
         lane.appendChild(el);
       });
@@ -1342,7 +1327,7 @@
         '<span class="stepper sm"><span class="k">v</span><input type="number" id="kcV" value="'+Math.round(k.v)+'"><span class="u">'+(p.unit||"")+'</span></span>'+
       '</div>'+
       (isLast
-        ? '<div class="kf-hint">Last key \u2014 nothing after it to ease into.</div>'
+        ? '<div class="kf-hint">Last key. Nothing after it to ease into.</div>'
         : '<div class="kf-l">Curve to next key</div>'+
           '<div class="kf-e">'+['linear','in','out','ease','spring','hold'].map(function(m){
             return '<button class="kc-e'+(m===mode?" on":"")+'" data-ease="'+m+'" title="'+
@@ -1657,7 +1642,8 @@
             var r=lane.getBoundingClientRect();
             var t=timeFromX(ev.clientX,r);
             tr.trans=(tr.trans||[]).filter(function(x){ return Math.abs(x.t-t)>0.7; });
-            tr.trans.push({t:clamp(t-0.3,0,DURATION-0.6),dur:0.6,name:tp.getAttribute("data-x")});
+            /* t is the band's CENTER (it straddles the cut it lands on) */
+            tr.trans.push({t:clamp(t,0.3,DURATION-0.3),dur:0.6,name:tp.getAttribute("data-x")});
             markDirty(); renderTimeline();
           }
         }

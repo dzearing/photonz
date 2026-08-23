@@ -9,92 +9,100 @@
 /* video-speed · retiming a clip inside the shared shell. Speed is a property of
    the selected clip, so the stop controls live in the Properties group, the clip
    lives on the timeline dock, and the speed curve is plotted there on the clip's
-   own time axis. Only the curve plot and the retimed clip strip are page local.
+   own time axis. The clip itself is the shared .clip with its .speed badge; only
+   the curve plot and the speed-band underlay are page local (vs- prefix).
    4pt scale and shared tokens throughout. */
 
 #video-speed .win.shell{height:920px;min-height:0}
-#video-speed .cnv>.canvas{min-height:0;background:radial-gradient(620px 300px at 50% 38%,#171a26,#0a0c11)}/* ---------- canvas preview ---------- */
-.sframe{width:440px;height:220px;border-radius:var(--r2);position:relative;overflow:hidden;box-shadow:0 18px 40px -14px rgba(0,0,0,.6);background:linear-gradient(135deg,#0e2740,#123a52 45%,#1c2f5c)}
-.sframe .fgrid{position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px;opacity:.7}
-.subject{position:absolute;top:50%;left:0;width:26px;height:26px;transform:translate(-50%,-50%)}
-.subject .core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff,#8fd8ff 40%,#12c2e9 72%,#0a6ea0);box-shadow:0 0 18px 3px rgba(18,194,233,.7)}
-.subject .trail{position:absolute;top:50%;right:50%;height:6px;transform:translateY(-50%);border-radius:3px;background:linear-gradient(90deg,transparent,rgba(18,194,233,.75));transform-origin:right center}
-.sframe .path{position:absolute;left:8%;right:8%;top:50%;height:2px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,.18) 6px,transparent 6px,transparent 12px)}
-.sbadge{position:absolute;left:16px;bottom:14px;padding:var(--s2) var(--pad-sm);border-radius:var(--r2);background:linear-gradient(120deg,rgba(18,194,233,.9),rgba(28,47,92,.82));box-shadow:0 8px 22px -8px rgba(0,0,0,.5);color:#fff;font-variant-numeric:tabular-nums}
-.sbadge .big{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
-.sbadge .lab{font-size:10px;opacity:.9;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
-.sframe-tag{position:absolute;right:14px;top:12px;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.72);background:rgba(0,0,0,.4);padding:3px 8px;border-radius:var(--r1)}
-.freezechip{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:660;color:#1a1c22;background:linear-gradient(180deg,#ffd98a,#febc2e);padding:5px 10px;border-radius:var(--r2);box-shadow:0 6px 16px -6px rgba(0,0,0,.5);opacity:0;transition:opacity .12s ease}
-.freezechip.on{opacity:1}
-.state-note{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:10px;letter-spacing:.05em;color:rgba(255,255,255,.7);font-weight:560}
+#video-speed .cnv>.canvas{min-height:0;background:radial-gradient(620px 300px at 50% 38%,#171a26,#0a0c11)}
+#video-speed #scDirty{color:var(--faint)}
+
+/* ---------- canvas preview ---------- */
+#video-speed .sframe{width:440px;height:220px;border-radius:var(--r2);position:relative;overflow:hidden;box-shadow:0 18px 40px -14px rgba(0,0,0,.6);background:linear-gradient(135deg,#0e2740,#123a52 45%,#1c2f5c)}
+#video-speed .sframe .fgrid{position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/28px 28px;opacity:.7}
+#video-speed .subject{position:absolute;top:50%;left:0;width:26px;height:26px;transform:translate(-50%,-50%)}
+#video-speed .subject .core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff,#8fd8ff 40%,#12c2e9 72%,#0a6ea0);box-shadow:0 0 18px 3px rgba(18,194,233,.7)}
+#video-speed .subject .trail{position:absolute;top:50%;right:50%;height:6px;transform:translateY(-50%);border-radius:3px;background:linear-gradient(90deg,transparent,rgba(18,194,233,.75));transform-origin:right center}
+#video-speed .sframe .path{position:absolute;left:8%;right:8%;top:50%;height:2px;transform:translateY(-50%);background:repeating-linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,.18) 6px,transparent 6px,transparent 12px)}
+#video-speed .sbadge{position:absolute;left:16px;bottom:14px;padding:var(--s2) var(--pad-sm);border-radius:var(--r2);background:linear-gradient(120deg,rgba(18,194,233,.9),rgba(28,47,92,.82));box-shadow:0 8px 22px -8px rgba(0,0,0,.5);color:#fff;font-variant-numeric:tabular-nums}
+#video-speed .sbadge .big{font-family:var(--serif);font-size:26px;font-weight:700;line-height:1}
+#video-speed .sbadge .lab{font-size:10px;opacity:.9;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+#video-speed .sframe-tag{position:absolute;right:14px;top:12px;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.72);background:rgba(0,0,0,.4);padding:3px 8px;border-radius:var(--r1)}
+#video-speed .freezechip{position:absolute;right:14px;bottom:14px;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:660;color:#1a1c22;background:linear-gradient(180deg,#ffd98a,#febc2e);padding:5px 10px;border-radius:var(--r2);box-shadow:0 6px 16px -6px rgba(0,0,0,.5);opacity:0;transition:opacity .12s ease}
+#video-speed .freezechip.on{opacity:1}
+#video-speed .state-note{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:10px;letter-spacing:.05em;color:rgba(255,255,255,.7);font-weight:560}
 
 /* ---------- the timeline dock: source vs retimed, plus the speed curve ---------- */
-#tlDock{--gutter:58px;flex:0 0 auto;max-height:400px;overflow:auto;padding:0;display:flex;flex-direction:column}
-.tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
-.tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
-.tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tlbar .now b{color:#12c2e9}
-.tlz{padding:var(--s2) var(--s3) var(--s2);position:relative}
-.tlgrid .track{margin:var(--s1) 0}
-.tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
-.tlgrid .track .lane{display:block}
-.tlgrid .track .lane.srclane{height:18px}
+#video-speed #tlDock{--gutter:58px;flex:0 0 auto;max-height:400px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#video-speed .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
+#video-speed .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
+#video-speed .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+#video-speed .tlbar .now b{color:#12c2e9}
+#video-speed .tlz{padding:var(--s2) var(--s3) var(--s2);position:relative}
+#video-speed .tlgrid .track{margin:var(--s1) 0}
+#video-speed .tlgrid .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap}
+#video-speed .tlgrid .track .lane{display:block}
+#video-speed .tlgrid .track .lane.srclane{height:18px}
 /* ghost source bar: the original clip length, fixed */
-.srcbar{height:16px;border-radius:var(--r1);background:repeating-linear-gradient(45deg,transparent,transparent 6px,color-mix(in srgb,var(--line) 60%,transparent) 6px,color-mix(in srgb,var(--line) 60%,transparent) 12px);border:1px dashed var(--line-strong)}
-/* retimed output clip: sampled cells colored by speed band, width tracks output length */
-.outclip{position:relative;height:34px;display:flex;border-radius:var(--r2);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px -8px rgba(0,0,0,.5);transition:width .12s ease;cursor:pointer}
-.outclip .cell{height:100%;flex:1 0 0}
-.cell.slow{background:linear-gradient(135deg,#12c2e9,#1f7fd6)}
-.cell.norm{background:linear-gradient(135deg,#7c4dff,#9a5cff)}
-.cell.fast{background:linear-gradient(135deg,#c56cff,#ff5d8f)}
-.cell.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 4px,#c98f18 4px,#c98f18 8px)}
-.outclip.sel{outline:2px solid var(--accent);outline-offset:1px}
-.clip-play{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--crit);z-index:4;pointer-events:none}
-.clip-play::before{content:"";position:absolute;top:-2px;left:-4px;border:5px solid transparent;border-top-color:var(--crit)}
-.seglegend{display:flex;flex-wrap:wrap;gap:var(--gap-sm);margin-top:var(--gap-sm);font-size:10px;color:var(--faint)}
-.seglegend .lg{display:inline-flex;align-items:center;gap:5px}
-.seglegend .sw{width:12px;height:10px;border-radius:3px;display:inline-block}
-.sw.slow{background:#12c2e9}.sw.norm{background:#9a5cff}.sw.fast{background:#ff5d8f}
-.sw.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px)}
+#video-speed .srcbar{height:16px;border-radius:var(--r1);background:repeating-linear-gradient(45deg,transparent,transparent 6px,color-mix(in srgb,var(--line) 60%,transparent) 6px,color-mix(in srgb,var(--line) 60%,transparent) 12px);border:1px dashed var(--line-strong)}
+/* the retimed clip is the SHARED .clip (label, .speed badge, .sel ring). Its
+   width tracks output length; the sampled speed-band underlay is page local. */
+#video-speed .tlgrid .clip{width:100%;transition:width .12s ease;cursor:pointer}
+#video-speed .tlgrid .clip .lbl{position:relative;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+#video-speed .vs-cells{position:absolute;inset:0;display:flex}
+#video-speed .vs-cell{height:100%;flex:1 0 0}
+#video-speed .vs-cell.slow{background:linear-gradient(135deg,#12c2e9,#1f7fd6)}
+#video-speed .vs-cell.norm{background:linear-gradient(135deg,#7c4dff,#9a5cff)}
+#video-speed .vs-cell.fast{background:linear-gradient(135deg,#c56cff,#ff5d8f)}
+#video-speed .vs-cell.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 4px,#c98f18 4px,#c98f18 8px)}
+#video-speed .vs-play{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--crit);z-index:4;pointer-events:none}
+#video-speed .vs-play::before{content:"";position:absolute;top:-2px;left:-4px;border:5px solid transparent;border-top-color:var(--crit)}
+#video-speed .seglegend{display:flex;flex-wrap:wrap;gap:var(--gap-sm);margin-top:var(--gap-sm);font-size:10px;color:var(--faint)}
+#video-speed .seglegend .lg{display:inline-flex;align-items:center;gap:5px}
+#video-speed .seglegend .sw{width:12px;height:10px;border-radius:3px;display:inline-block}
+#video-speed .sw.slow{background:#12c2e9}
+#video-speed .sw.norm{background:#9a5cff}
+#video-speed .sw.fast{background:#ff5d8f}
+#video-speed .sw.frz{background:repeating-linear-gradient(45deg,#febc2e,#febc2e 3px,#c98f18 3px,#c98f18 6px)}
 
 /* ---------- speed curve editor (inside the timeline dock) ---------- */
-.schdr{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3) 0;flex-wrap:wrap;border-top:1px solid var(--edge-lo)}
-.schdr h4{margin:var(--s2) 0 0;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
-.scbody{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:8px;padding:var(--s2) var(--s3) var(--s3);align-items:stretch}
-.scaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 14px}
-.scplot{grid-column:2;position:relative;height:124px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none;cursor:crosshair}
-.scplot svg{position:absolute;inset:0;width:100%;height:100%}
-.scpt{position:absolute;width:12px;height:12px;background:#12c2e9;transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid var(--panel);border-radius:2px;cursor:grab;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-.scpt:hover{background:color-mix(in srgb,#12c2e9 80%,white)}
-.scpt.sel{background:var(--warn);width:14px;height:14px;box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 26%,transparent)}
-.scpt.frz{background:#febc2e}
-.scpt:active{cursor:grabbing}
-.scplot .schead{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--crit);border:1.5px solid var(--panel);transform:translate(-50%,-50%);z-index:4;pointer-events:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--crit) 22%,transparent)}
+#video-speed .schdr{display:flex;align-items:center;gap:var(--gap-sm);padding:var(--s2) var(--s3) 0;flex-wrap:wrap;border-top:1px solid var(--edge-lo)}
+#video-speed .schdr h4{margin:var(--s2) 0 0;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660}
+#video-speed .scbody{display:grid;grid-template-columns:var(--gutter) 1fr;column-gap:8px;padding:var(--s2) var(--s3) var(--s3);align-items:stretch}
+#video-speed .scaxis{grid-column:1;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:9px;color:var(--faint);padding:2px 0 14px}
+#video-speed .scplot{grid-column:2;position:relative;height:124px;background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);overflow:hidden;touch-action:none;cursor:crosshair}
+#video-speed .scplot svg{position:absolute;inset:0;width:100%;height:100%}
+#video-speed .scpt{position:absolute;width:12px;height:12px;background:#12c2e9;transform:translate(-50%,-50%) rotate(45deg);border:1.5px solid var(--panel);border-radius:2px;cursor:grab;z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+#video-speed .scpt:hover{background:color-mix(in srgb,#12c2e9 80%,white)}
+#video-speed .scpt.sel{background:var(--warn);width:14px;height:14px;box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 26%,transparent)}
+#video-speed .scpt.frz{background:#febc2e}
+#video-speed .scpt:active{cursor:grabbing}
+#video-speed .scplot .schead{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--crit);border:1.5px solid var(--panel);transform:translate(-50%,-50%);z-index:4;pointer-events:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--crit) 22%,transparent)}
 
 /* ---------- Properties helpers ---------- */
-.seg.stack{flex-wrap:wrap;width:100%}.btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
+#video-speed .btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
 
 /* ---------- API line ---------- */
-.apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
-.apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
-.apibar code{font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r1);padding:3px 8px}
-.apibar code b{color:#12c2e9;font-weight:600}
-.xlink{cursor:pointer}
-.xlink:hover{border-color:var(--accent-line);color:var(--ink)}
+#video-speed .apibar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);border:1px solid var(--edge-lo);border-radius:var(--r-md);box-shadow:inset 0 1px 0 var(--edge-hi)}
+#video-speed .apibar .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660}
+#video-speed .apibar code{font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--glass-thin);border:1px solid var(--edge-lo);border-radius:var(--r1);padding:3px 8px}
+#video-speed .apibar code b{color:#12c2e9;font-weight:600}
+#video-speed .xlink{cursor:pointer}
+#video-speed .xlink:hover{border-color:var(--accent-line);color:var(--ink)}
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:52px;max-height:360px}
-  .sframe{width:320px;height:160px}
-  .sbadge .big{font-size:20px}
-  .scplot{height:104px}
+  #video-speed #tlDock{--gutter:52px;max-height:360px}
+  #video-speed .sframe{width:320px;height:160px}
+  #video-speed .sbadge .big{font-size:20px}
+  #video-speed .scplot{height:104px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:52px}
-  .sframe{width:232px;height:116px}
-  .sbadge{left:8px;bottom:8px;padding:var(--s1) var(--s2)}
-  .sbadge .big{font-size:15px}
-  .tlbar .now{display:none}
+  #video-speed #tlDock{--gutter:52px}
+  #video-speed .sframe{width:232px;height:116px}
+  #video-speed .sbadge{left:8px;bottom:8px;padding:var(--s1) var(--s2)}
+  #video-speed .sbadge .big{font-size:15px}
+  #video-speed .tlbar .now{display:none}
 }
 </style>
 </head>
@@ -107,42 +115,25 @@
     the timeline dock, its speed curve is plotted on the clip's own time axis right below it, and the controls for the
     selected stop live where every other selection's controls live: the <b>Properties</b> group.</p>
 
-  <div class="win tall cq shell" data-shell="hero-shot · 1920 x 1080 · source 0:03 · live" data-ws="video">
-
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>hero-shot</b> · 1920 x 1080 · source 0:03 <span id="scDirty" style="color:var(--faint)">· live</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Render</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip" id="speedChip">1.00x at playhead</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:228px;z-index:12">
-          <div class="mlabel">Clip</div>
-          <div class="menuitem" id="mAdd"><i class="ic ic-keyframe"></i> Add speed stop <span class="sc">A</span></div>
-          <div class="menuitem" id="mDel"><i class="ic ic-minus"></i> Delete speed stop</div>
-          <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset ramp</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="win tall cq shell"
+       data-shell="hero-shot · 1920 x 1080 · source 0:03 <span id='scDirty'>· live</span>"
+       data-ws="video"
+       data-status="<span id='speedChip'>1.00x at playhead</span>">
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <!-- THIS PAGE'S COMMAND MENU · the shell builds the … button that opens it -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">Clip</div>
+        <div class="menuitem" id="mAdd"><i class="ic ic-keyframe"></i> Add speed stop <span class="sc">A</span></div>
+        <div class="menuitem" id="mDel"><i class="ic ic-minus"></i> Delete speed stop</div>
+        <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset ramp</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem" data-dock-toggle="#shell"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -247,26 +238,10 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK -->
+      <!-- THE RIGHT DOCK · no Layers group here: the timeline IS the layer list -->
       <div class="pdock" id="dock">
 
-        <!-- SELECTION, place 2 of 3 -->
-        <div class="dgrp" id="gLayers" style="--gh:72px">
-          <div class="dgrp-h">
-            <span class="ttl">Layers</span><span class="cnt">2</span>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b">
-            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-image"></i> V1</div>
-            <div class="lrow child sel"><i class="ic ic-image"></i><span class="nm">hero-shot</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lgroup"><i class="ic sm ic-chevron-down"></i> <i class="ic sm ic-audio"></i> Audio</div>
-            <div class="lrow child"><i class="ic ic-audio"></i><span class="nm">ambience.wav</span><i class="ic sm ic-eye eye"></i></div>
-          </div>
-        </div>
-
-        <div class="splitter h" data-min="80" data-max="260"></div>
-
-        <!-- SELECTION, place 3 of 3: everything the selected stop can do -->
+        <!-- SELECTION, place 2 of 3 is the timeline clip; place 3 of 3: everything the selected stop can do -->
         <div class="dgrp grow" id="gProps">
           <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Clip</span>
             <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
@@ -350,18 +325,11 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
-      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:198px;z-index:11">
-        <div class="menuitem"><i class="ic ic-keyframe"></i> Retime this clip</div>
-        <div class="menuitem"><i class="ic ic-blade"></i> Split at playhead</div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
       <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:160px;width:198px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy retime curve</div>
         <div class="menuitem"><i class="ic ic-undo"></i> Reset to 1x</div>
@@ -395,7 +363,7 @@
     </div>
 
     <!-- TIMELINE DOCK -->
-    <div class="timeline" id="tlDock">
+    <div class="timeline" id="tlDock" data-tl-summary="hero-shot · 0.27x · 0:03 / 0:10.93">
       <div class="tlbar">
         <span class="lbl">Retime</span>
         <span class="tspacer"></span>
@@ -407,8 +375,15 @@
           <div class="track"><span class="tl"><i class="ic xs ic-image"></i> Source</span>
             <div class="lane srclane"><div class="srcbar" title="Original clip length, fixed"></div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-history"></i> Retimed</span>
-            <div class="lane"><div class="outclip sel" id="outClip"></div><div class="clip-play" id="clipPlay"></div></div>
+          <div class="track"><span class="tl"><i class="ic xs ic-speed"></i> Retimed</span>
+            <div class="lane">
+              <div class="clip sel" id="vsClip">
+                <span class="vs-cells" id="vsCells"></span>
+                <span class="lbl">hero-shot</span>
+                <span class="speed" id="vsSpeed">1.00x</span>
+              </div>
+              <div class="vs-play" id="vsPlay"></div>
+            </div>
           </div>
         </div>
         <div class="seglegend">
@@ -545,19 +520,25 @@
     plot.appendChild(head);
   }
 
-  var outClip=document.getElementById("outClip");
-  var clipPlay=document.getElementById("clipPlay");
+  var vsClip=document.getElementById("vsClip");
+  var vsCells=document.getElementById("vsCells");
+  var vsSpeed=document.getElementById("vsSpeed");
+  var clipPlay=document.getElementById("vsPlay");
+  var tlDock=document.getElementById("tlDock");
   var MAX_OUT = SRC_SEC*3.4;
   function renderClip(){
-    if(!outClip) return;
+    if(!vsClip) return;
     var N=48, cells="";
     for(var i=0;i<N;i++){
-      cells+='<span class="cell '+bandOf(speedAt((i+0.5)/N))+'"></span>';
+      cells+='<span class="vs-cell '+bandOf(speedAt((i+0.5)/N))+'"></span>';
     }
-    outClip.innerHTML=cells;
+    if(vsCells) vsCells.innerHTML=cells;
     var L=outputLen();
-    outClip.style.width=clamp(L/MAX_OUT,0.16,1)*100+"%";
-    if(clipPlay){ clipPlay.style.left=(playT*outClip.getBoundingClientRect().width)+"px"; }
+    vsClip.style.width=clamp(L/MAX_OUT,0.16,1)*100+"%";
+    var avg=SRC_SEC/Math.max(L,0.01);
+    if(vsSpeed) vsSpeed.textContent=avg.toFixed(2)+"x";
+    if(tlDock) tlDock.setAttribute("data-tl-summary","hero-shot · "+avg.toFixed(2)+"x · "+tcode(SRC_SEC)+" / "+fmt(L));
+    if(clipPlay){ clipPlay.style.left=(playT*vsClip.getBoundingClientRect().width)+"px"; }
     var ov=document.getElementById("outLenVal"); if(ov) ov.textContent=fmt(L);
     var sc=document.getElementById("stopCount"); if(sc) sc.textContent=stops.length;
   }
@@ -598,7 +579,7 @@
     if(trail){ var len=clamp(spd*16,0,60); trail.style.width=len+"px"; trail.style.opacity=clamp(spd*0.55,0,0.9); }
     var sf=document.getElementById("srcFrame");
     if(sf) sf.textContent="src "+String(Math.round(sp*SRC_FRAMES)).padStart(3,"0")+" / "+SRC_FRAMES;
-    if(clipPlay && outClip) clipPlay.style.left=(playT*outClip.getBoundingClientRect().width)+"px";
+    if(clipPlay && vsClip) clipPlay.style.left=(playT*vsClip.getBoundingClientRect().width)+"px";
   }
   function syncAll(){ renderCurve(); renderClip(); updateReadouts(); }
 
@@ -658,8 +639,8 @@
     document.addEventListener("pointermove",move); document.addEventListener("pointerup",up);
     e.preventDefault();
   }
-  outClip && outClip.addEventListener("pointerdown", function(e){
-    var w=outClip.getBoundingClientRect();
+  vsClip && vsClip.addEventListener("pointerdown", function(e){
+    var w=vsClip.getBoundingClientRect();
     startScrub(e,{left:w.left,width:w.width});
   });
   if(tScrub){

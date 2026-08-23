@@ -351,6 +351,7 @@ export const CATEGORIES = [
       ['waveform', P('M3.4 12v0M6.2 8.4v7.2M9 5.4v13.2M11.8 9.6v4.8M14.6 6.4v11.2M17.4 9v6M20.6 10.8v2.4'), 'Audio waveform', 'levels amplitude sound'],
       ['volume', P('M4.4 9.4h3.2L12.6 5.2v13.6L7.6 14.6H4.4z') + P('M15.8 9.4a3.6 3.6 0 0 1 0 5.2M18.4 6.6a7.4 7.4 0 0 1 0 10.8'), 'Volume', 'sound level loud'],
       ['volume-off', P('M4.4 9.4h3.2L12.6 5.2v13.6L7.6 14.6H4.4z') + P('M16.2 9.8l4.4 4.4M20.6 9.8l-4.4 4.4'), 'Muted', 'mute silent off'],
+      ['solo', P('M5.6 14.2v-2.4a6.4 6.4 0 0 1 12.8 0v2.4') + R(3.4, 13.8, 4.4, 6, 2) + R(16.2, 13.8, 4.4, 6, 2), 'Solo this track', 'headphones isolate alone monitor'],
       ['mic', R(9, 3.4, 6, 11.2, 3) + P('M5.6 11.6v1.4a6.4 6.4 0 0 0 12.8 0v-1.4M12 19.4v1.2'), 'Record from the microphone', 'record voice-over narrate'],
       ['captions', R(3.4, 5.2, 17.2, 13.6, 2.8) + P('M9.4 10.4a2.4 2.4 0 1 0 0 3.2M16.6 10.4a2.4 2.4 0 1 0 0 3.2'), 'Captions and subtitles', 'subtitles cc text-track'],
       ['video', P('M3.4 7.6a2.4 2.4 0 0 1 2.4-2.4h6.8a2.4 2.4 0 0 1 2.4 2.4v8.8a2.4 2.4 0 0 1-2.4 2.4H5.8a2.4 2.4 0 0 1-2.4-2.4z') + P('M15 10.4l5.6-3.2v9.6L15 13.6z'), 'A video clip', 'movie clip footage'],

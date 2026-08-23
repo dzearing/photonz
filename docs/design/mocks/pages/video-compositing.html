@@ -8,8 +8,8 @@
 <style>
 /* video-compositing · chroma key, track mattes and blend modes inside the shared
    shell. Compositing is just layers with a rule for how they combine, so the
-   stack is the Layers group, every rule is a property of the selected layer in
-   the Properties group, and the clips sit on the timeline dock. Only the scene
+   stack IS the timeline (top track composites over the ones below), every rule
+   is a property of the selected layer in the Properties group. Only the scene
    art and the matte preview are page local. 4pt scale and shared tokens. */
 
 #video-compositing .win.shell{height:900px;min-height:0}
@@ -42,9 +42,10 @@
 .cbadge2{position:absolute;top:var(--s2);left:var(--s2);z-index:6;display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:660;letter-spacing:.03em;color:#fff;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);padding:3px 8px;border-radius:999px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .cbadge2 .dt{width:7px;height:7px;border-radius:50%}
 .cbadge2 .dt.off{background:#ff8f8f}.cbadge2 .dt.on{background:#3ecf8e}
-/* SELECTION, place 1 of 3: the selected layer is outlined on the canvas */
-.selring{position:absolute;inset:0;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none;z-index:7}
-.seltag{position:absolute;right:var(--s2);top:var(--s2);z-index:7;font-size:9.5px;font-weight:640;color:var(--accent-ink);background:var(--accent);padding:3px 8px;border-radius:999px;white-space:nowrap}
+/* SELECTION, place 1 of 3: the shared .selwrap frames the selected layer's
+   bounds (a full-frame clip, so the frame is the stage). The ring, handles and
+   .mtag are all shared selection.css; only the shrink-wrap is page local. */
+#video-compositing .canvas>.selwrap{width:fit-content}
 
 /* ---------- the timeline dock ---------- */
 #tlDock{--gutter:58px;flex:0 0 auto;max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column}
@@ -62,19 +63,12 @@
 .clip.grade{background:linear-gradient(135deg,#ff5d8f,#7c4dff);opacity:1}
 .clip.fg{background:linear-gradient(160deg,#4f79c4,#31538c)}
 .clip.bg{background:linear-gradient(120deg,#ffd68a,#6a3f78)}
+#video-compositing .clip.vcp-matte{background:repeating-linear-gradient(45deg,rgba(124,77,255,.8) 0 6px,rgba(124,77,255,.4) 6px 12px)}
 .playstrip{position:absolute;left:calc(var(--gutter) + 8px);right:0;top:0;bottom:0;pointer-events:none;z-index:5}
 .tlgrid .playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);transform:translateX(-1px);left:0}
 .tlgrid .playhead::before{content:none}
 
-/* ---------- Properties helpers ---------- */
-.vc-slider{-webkit-appearance:none;appearance:none;width:100%;min-width:0;height:5px;border-radius:999px;background:var(--line-strong);outline:none;cursor:pointer;transition:opacity .12s ease}
-.vc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:linear-gradient(180deg,#fff,#e7ebff);border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab;transition:transform .09s ease,box-shadow .12s ease}
-.vc-slider::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:1px solid var(--accent-line);box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:grab}
-.vc-slider:hover::-webkit-slider-thumb{box-shadow:0 2px 6px rgba(0,0,0,.35),0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
-.vc-slider:active::-webkit-slider-thumb{transform:scale(.9);cursor:grabbing}
-.vc-slider:focus-visible::-webkit-slider-thumb{box-shadow:var(--ring)}
-.vc-slider:disabled{opacity:.38;cursor:not-allowed}
-.vc-slider:disabled::-webkit-slider-thumb{cursor:not-allowed}
+/* ---------- Properties helpers (sliders are the shared .slider/.slrow) ---------- */
 .keyswatch{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
 .keyswatch .sw{width:16px;height:16px;border-radius:5px;border:1px solid var(--edge-lo);background:#00d84a;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}.btnrow{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s2)}
 
@@ -115,71 +109,56 @@
 <section class="screen on" id="video-compositing">
   <div class="scen-head"><span class="pip" style="background:#12c2e9"></span><h2>Compositing and keying</h2><span class="k">· chroma key, mattes, blend</span></div>
 
-  <p class="pglead">Compositing is just <b>layers with a rule for how they combine</b>. The stack is the <b>Layers</b> group,
-    every rule (key, matte, blend) is a property of the selected layer in <b>Properties</b>, and the clips sit on the
-    timeline dock. Pick a layer and the controls that apply to it are the ones you see.</p>
+  <p class="pglead">Compositing is just <b>layers with a rule for how they combine</b>. The stack is the <b>timeline</b>:
+    a track composites over the tracks below it, and every rule (key, matte, blend) is a property of the selected layer
+    in <b>Properties</b>. Pick a layer on the timeline and the controls that apply to it are the ones you see.</p>
 
-  <div class="win tall cq shell" data-shell="keying-demo · 1920 x 1080 · key off" data-ws="video">
+  <div class="win tall cq shell" data-shell="keying-demo · 1920 x 1080 · <span id='ckState'>key off</span>" data-ws="video">
 
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>keying-demo</b> · 1920 x 1080 · <span id="ckState" style="color:var(--faint)">key off</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip" id="selChip"><i class="ic xs ic-image"></i> FG subject.mov</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:240px;z-index:12">
-          <div class="mlabel">Layer</div>
-          <div class="menuitem" id="mAutoKey"><i class="ic ic-sparkle"></i> Auto key the background colour</div>
-          <div class="menuitem" id="mMatte"><i class="ic ic-component"></i> Use layer below as matte</div>
-          <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset this demo</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- EDITOR ROW -->
+    <!-- EDITOR ROW · the shell component builds the title bar and the … button -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <!-- THIS PAGE'S COMMAND MENU -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">Layer</div>
+        <div class="menuitem" id="mAutoKey"><i class="ic ic-sparkle"></i> Auto key the background colour</div>
+        <div class="menuitem" id="mMatte"><i class="ic ic-mask"></i> Use layer below as matte</div>
+        <div class="menuitem" id="mReset"><i class="ic ic-undo"></i> Reset this demo</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
-          <div class="cstage" id="ckStage">
-            <div class="layer chkbd"></div>
-            <div class="layer scene-bg"><div class="sun"></div><div class="sea"></div><div class="glint"></div><div class="head1"></div><div class="head2"></div></div>
-            <div class="layer scene-fg" id="ckFg">
-              <div class="green" id="ckGreen"></div>
-              <div class="spillcast" id="ckSpillCast"></div>
-              <div class="subject" id="ckSubject">
-                <div class="hair"></div>
-                <div class="head"></div>
-                <div class="neck"></div>
-                <div class="body"></div>
-                <div class="tint" id="ckTint"></div>
+          <!-- SELECTION, place 1 of 3: the shared frame on the selected layer's bounds -->
+          <div class="selwrap">
+            <div class="cstage" id="ckStage">
+              <div class="layer chkbd"></div>
+              <div class="layer scene-bg"><div class="sun"></div><div class="sea"></div><div class="glint"></div><div class="head1"></div><div class="head2"></div></div>
+              <div class="layer scene-fg" id="ckFg">
+                <div class="green" id="ckGreen"></div>
+                <div class="spillcast" id="ckSpillCast"></div>
+                <div class="subject" id="ckSubject">
+                  <div class="hair"></div>
+                  <div class="head"></div>
+                  <div class="neck"></div>
+                  <div class="body"></div>
+                  <div class="tint" id="ckTint"></div>
+                </div>
               </div>
+              <div class="layer grade" id="ckGrade"></div>
+              <div class="cbadge2"><span class="dt off" id="ckDot"></span><span id="ckDotLbl">Key off</span></div>
             </div>
-            <div class="layer grade" id="ckGrade"></div>
-            <div class="cbadge2"><span class="dt off" id="ckDot"></span><span id="ckDotLbl">Key off</span></div>
-            <div class="selring"></div>
-            <span class="seltag" id="selTag">FG · subject.mov</span>
+            <div class="sel-ring"></div>
+            <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
+            <span class="mtag" id="selTag">FG subject.mov · 1920 × 1080</span>
           </div>
         </div>
 
         <div class="cnv-act">
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
           <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
         </div>
 
@@ -263,20 +242,8 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK -->
+      <!-- THE RIGHT DOCK · no Layers group: the timeline IS the layer list -->
       <div class="pdock" id="dock">
-
-        <!-- SELECTION, place 2 of 3 -->
-        <div class="dgrp" id="gLayers" style="--gh:88px">
-          <div class="dgrp-h">
-            <span class="ttl">Layers</span><span class="cnt">4</span>
-            <button class="btn ghost icon sm" title="Add adjustment layer" data-menu="#addAdjMenu"><i class="ic ic-sliders"></i></button>
-            <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
-          </div>
-          <div class="dgrp-b" id="layerList"><!-- injected --></div>
-        </div>
-
-        <div class="splitter h" data-min="80" data-max="280"></div>
 
         <!-- SELECTION, place 3 of 3: the rule that applies to the selected layer -->
         <div class="dgrp grow" id="gProps">
@@ -325,24 +292,11 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
-      <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
-        <div class="mlabel">Add adjustment</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Colour grade</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
-        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
-      </div>
-      <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:212px;z-index:11">
-        <div class="menuitem"><i class="ic ic-wand"></i> Add chroma key</div>
-        <div class="menuitem"><i class="ic ic-component"></i> Use layer below as matte</div>
-        <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
-      </div>
       <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:200px;width:200px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy properties</div>
         <div class="menuitem"><i class="ic ic-undo"></i> Reset this layer</div>
@@ -376,8 +330,8 @@
       <span class="tc">0:08</span>
     </div>
 
-    <!-- TIMELINE DOCK -->
-    <div class="timeline" id="tlDock">
+    <!-- TIMELINE DOCK · SELECTION, place 2 of 3: the timeline IS the layer list -->
+    <div class="timeline" id="tlDock" data-tl-summary="V2 · FG subject.mov">
       <div class="tlbar">
         <span class="lbl">Composite</span>
         <span class="tsep"></span>
@@ -388,8 +342,11 @@
       <div class="tlz">
         <div class="tlgrid">
           <div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="ruler"></div></div></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> V3</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> V4</span>
             <div class="lane"><div class="clip grade" data-layer="grade" style="left:0;width:100%">colour grade</div></div>
+          </div>
+          <div class="track"><span class="tl"><i class="ic xs ic-component"></i> V3</span>
+            <div class="lane"><div class="clip vcp-matte" data-layer="matte" style="left:0;width:100%">Matte shape</div></div>
           </div>
           <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V2</span>
             <div class="lane"><div class="clip fg sel" data-layer="fg" style="left:0;width:100%">subject.mov</div></div>
@@ -406,7 +363,7 @@
   <!-- REFERENCE: what a matte and each blend mode actually do -->
   <div class="refwrap">
     <div class="refcard">
-      <h4><i class="ic ic-component sm"></i> Track matte reference</h4>
+      <h4><i class="ic ic-mask sm"></i> Track matte reference</h4>
       <div class="matte-stage">
         <div class="layer chkbd" style="position:absolute;inset:0"></div>
         <div class="matte-fill" id="matteFill"></div>
@@ -425,7 +382,7 @@
 
   <div class="caption">
     <div class="c"><div class="lab">The idea</div><p>Compositing is just layers with a rule for how they combine. <b>Keying</b> makes a colour transparent, a <b>matte</b> borrows another layer's shape or brightness, and a <b>blend mode</b> sets the math. One live preview shows all three reacting as you touch the controls, so the operation is felt, not read.</p></div>
-    <div class="c"><div class="lab g2">Every rule is a property</div><p>There is no keying mode and no matte tool. Select the layer and the rule that applies to it opens in <b>Properties</b>, the same place a caption style or a clip speed opens. One selection, three places: outlined on the canvas, highlighted in <b>Layers</b>, open in <b>Properties</b>.</p></div>
+    <div class="c"><div class="lab g2">Every rule is a property</div><p>There is no keying mode and no matte tool. Select the layer and the rule that applies to it opens in <b>Properties</b>, the same place a caption style or a clip speed opens. One selection, three places: outlined on the canvas, highlighted on the <b>timeline</b>, open in <b>Properties</b>.</p></div>
     <div class="c"><div class="lab g2">A direction</div><p>Because a matte is just another layer, any <b><i class="ic ic-component xs"></i> component</b> can be the matte source. Drop a keyframed shape on the matte track and the reveal animates for free on the same timeline the rest of the project uses.</p></div>
     <div class="c"><div class="lab g2">Open question</div><p>Auto key can sample the dominant background colour and set a sane threshold in one call. Do we surface spill kill and light-wrap as defaults, or keep the first pass to a single <b>Key it</b> button and let power users open the rest?</p></div>
   </div>
@@ -451,10 +408,10 @@
   var grade=document.getElementById("ckGrade");
 
   var LAYERS=[
-    {id:"grade",name:"Colour grade",kind:"adj",icon:"ic-sliders"},
-    {id:"matte",name:"Matte shape",kind:"matte",icon:"ic-component"},
-    {id:"fg",name:"FG subject.mov",kind:"clip",icon:"ic-image"},
-    {id:"bg",name:"BG beach.mov",kind:"clip",icon:"ic-image"}
+    {id:"grade",name:"Colour grade",kind:"adj"},
+    {id:"matte",name:"Matte shape",kind:"matte"},
+    {id:"fg",name:"FG subject.mov",kind:"clip"},
+    {id:"bg",name:"BG beach.mov",kind:"clip"}
   ];
   var DEF={keyed:false,thresh:40,spill:40,blend:"screen",matte:"off",sel:"fg"};
   var st={keyed:DEF.keyed,thresh:DEF.thresh,spill:DEF.spill,blend:DEF.blend,matte:DEF.matte,sel:DEF.sel};
@@ -494,14 +451,6 @@
     if(efx) efx.classList.toggle("off", !st.keyed);
     set("efxKeyMeta", st.keyed?(st.thresh+"%"):"off");
     set("efxBlendMeta", st.blend==="plus-lighter"?"add":st.blend);
-    // the key button in the transport bar
-    var kb=document.getElementById("ckKey");
-    if(kb){
-      kb.setAttribute("aria-pressed", st.keyed?"true":"false");
-      kb.classList.toggle("primary", st.keyed);
-      kb.classList.toggle("ghost", !st.keyed);
-      kb.innerHTML=(st.keyed?'<i class="ic ic-check"></i><span class="lb">Keyed</span>':'<i class="ic ic-wand"></i><span class="lb">Key it</span>');
-    }
     renderMatteRef();
   }
 
@@ -518,38 +467,26 @@
     set("blendApi", '"'+(st.blend==="plus-lighter"?"add":st.blend)+'"');
   }
 
-  /* ---------------- LAYERS (selection, place 2 of 3) ---------------- */
-  var layerList=document.getElementById("layerList");
-  function renderLayers(){
-    if(!layerList) return;
-    var h="";
-    LAYERS.forEach(function(l){
-      var cls="lrow"+(l.kind==="adj"?" adj":"")+(st.sel===l.id?(l.kind==="matte"?" selc":" sel"):"");
-      h+='<div class="'+cls+'" data-layer="'+l.id+'" role="button" tabindex="0">'+
-           '<i class="ic '+l.icon+'"></i>'+(l.kind==="adj"?'<span class="clipmark"></span>':'')+
-           '<span class="nm">'+l.name+'</span><i class="ic sm ic-eye eye"></i></div>';
-    });
-    layerList.innerHTML=h;
-  }
-  layerList && layerList.addEventListener("click", function(e){
-    var row=e.target.closest("[data-layer]"); if(!row) return;
-    select(row.getAttribute("data-layer"));
-  });
-
+  /* ---------------- TIMELINE (selection, place 2 of 3) ----------------
+     The timeline is the layer list: same objects, same order, plus time.
+     Clicking a clip selects the layer; the collapsed dock reads the
+     selection back through data-tl-summary. */
+  var TRACKS={grade:"V4",matte:"V3",fg:"V2",bg:"V1"};
   function select(id){
     st.sel=id;
-    renderLayers(); renderProps(); syncCanvasSel(); syncTimelineSel();
+    renderProps(); syncCanvasSel(); syncTimelineSel();
   }
   function syncCanvasSel(){
     var l=layerOf(st.sel); if(!l) return;
-    set("selTag", l.name);
-    var chip=document.getElementById("selChip");
-    if(chip) chip.innerHTML='<i class="ic xs '+l.icon+'"></i> '+l.name;
+    set("selTag", l.name+" · 1920 × 1080");
   }
   function syncTimelineSel(){
     [].forEach.call(document.querySelectorAll(".tlgrid .clip"), function(c){
       c.classList.toggle("sel", c.getAttribute("data-layer")===st.sel);
     });
+    var tl=document.getElementById("tlDock");
+    var l=layerOf(st.sel);
+    if(tl && l) tl.setAttribute("data-tl-summary",(TRACKS[l.id]?TRACKS[l.id]+" · ":"")+l.name);
   }
   document.addEventListener("click", function(e){
     var c=e.target.closest(".tlgrid .clip");
@@ -558,6 +495,17 @@
 
   /* ---------------- PROPERTIES (selection, place 3 of 3) ---------------- */
   var propBody=document.getElementById("propBody");
+  /* DS .slrow with the shared .slider. The skeleton (.sl-track/.sl-fill/
+     .sl-thumb/.sl-bub) is authored here because this body re-renders per
+     selection, after the shared slider pass has already run; the look and
+     the states are entirely shared slider.css. */
+  function slrowHTML(label,aria,id,val,numId){
+    return '<div class="slrow"><span class="rl">'+label+'</span>'+
+      '<span class="slider'+(st.keyed?'':' off')+'" data-unit="%" style="--p:'+(val/100).toFixed(4)+'">'+
+        '<input id="'+id+'" type="range" min="0" max="100" value="'+val+'"'+(st.keyed?'':' disabled')+' aria-label="'+aria+'">'+
+        '<span class="sl-track"><i class="sl-fill"></i></span><span class="sl-thumb"></span><span class="sl-bub">'+val+'%</span>'+
+      '</span><span class="num" id="'+numId+'">'+val+'%</span></div>';
+  }
   function renderProps(){
     if(!propBody) return;
     var l=layerOf(st.sel); if(!l) return;
@@ -570,10 +518,10 @@
            '<button class="btn sm '+(st.keyed?"primary":"secondary")+'" id="ckKeyProp" aria-pressed="'+st.keyed+'"><i class="ic '+(st.keyed?"ic-check":"ic-wand")+'"></i> '+(st.keyed?"Keyed":"Key it")+'</button>'+
            '<button class="btn sm ghost" id="ckSample" title="Sample the background colour"><i class="ic ic-eyedropper"></i> Sample</button>'+
          '</div>'+
-         '<div class="irow" style="margin-top:var(--s3)"><span class="rl">Threshold</span><input class="vc-slider" id="ckThresh" type="range" min="0" max="100" value="'+st.thresh+'"'+(st.keyed?"":" disabled")+' aria-label="Key threshold"></div>'+
-         '<div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="ckThreshV">'+st.thresh+'%</span></span></div>'+
-         '<div class="irow"><span class="rl">Spill kill</span><input class="vc-slider" id="ckSpill" type="range" min="0" max="100" value="'+st.spill+'"'+(st.keyed?"":" disabled")+' aria-label="Spill suppression"></div>'+
-         '<div class="irow"><span class="rl">Value</span><span class="field" style="justify-content:flex-end"><span class="v" id="ckSpillV">'+st.spill+'%</span></span></div>'+
+         '<div style="margin-top:var(--s3)">'+
+         slrowHTML("Threshold","Key threshold","ckThresh",st.thresh,"ckThreshV")+
+         slrowHTML("Spill kill","Spill suppression","ckSpill",st.spill,"ckSpillV")+
+         '</div>'+
          '<p class="note" id="ckHint"></p>'+
          '</div>'+
          '<div class="section"><div class="sec-h">Clip <span class="mut">subject.mov</span></div>'+
@@ -614,13 +562,18 @@
          '<p class="note">The background plate sits at the bottom of the stack, so everything above composites over it.</p></div>';
     }
     propBody.innerHTML=h;
+    /* .drag while the pointer is down, so the shared bubble shows */
+    [].forEach.call(propBody.querySelectorAll(".slider input[type=range]"), function(inp){
+      var sl=inp.closest(".slider");
+      inp.addEventListener("pointerdown", function(){ sl.classList.add("drag"); });
+      ["pointerup","pointercancel","blur","keyup"].forEach(function(t){
+        inp.addEventListener(t, function(){ sl.classList.remove("drag"); });
+      });
+    });
     syncKeyControls();
   }
 
   function syncKeyControls(){
-    var tv=document.getElementById("ckThreshV"), sv=document.getElementById("ckSpillV");
-    if(tv) tv.textContent=st.thresh+"%";
-    if(sv) sv.textContent=st.spill+"%";
     var kv=document.getElementById("ckKeyVal");
     if(kv) kv.textContent=st.keyed?"on":"off";
     var hint=document.getElementById("ckHint");
@@ -629,12 +582,19 @@
         ? 'Green removed. Raise <b>threshold</b> to cut more green. Lower <b>spill kill</b> to see the green fringe return on the shoulders and hair.'
         : 'Press <b>Key it</b> to remove the green and drop the subject over the beach. Threshold controls how much green is cut; spill kill removes the fringe the light casts on the subject.';
     }
-    var th=document.getElementById("ckThresh"), sp=document.getElementById("ckSpill");
-    [th,sp].forEach(function(el){
+    [["ckThresh",st.thresh,"ckThreshV"],["ckSpill",st.spill,"ckSpillV"]].forEach(function(r){
+      var el=document.getElementById(r[0]);
+      var num=document.getElementById(r[2]);
+      if(num) num.textContent=r[1]+"%";
       if(!el) return;
       el.disabled=!st.keyed;
-      var v=+el.value;
-      el.style.background="linear-gradient(90deg,var(--accent) 0 "+v+"%,var(--line-strong) "+v+"% 100%)";
+      var sl=el.closest(".slider");
+      if(sl){
+        sl.classList.toggle("off", !st.keyed);
+        sl.style.setProperty("--p", (r[1]/100).toFixed(4));
+        var bub=sl.querySelector(".sl-bub");
+        if(bub) bub.textContent=r[1]+"%";
+      }
     });
   }
 
@@ -676,7 +636,7 @@
   function resetAll(){
     st={keyed:DEF.keyed,thresh:DEF.thresh,spill:DEF.spill,blend:DEF.blend,matte:DEF.matte,sel:DEF.sel};
     playT=0;
-    renderLayers(); renderProps(); syncCanvasSel(); syncTimelineSel(); renderStage(); updateTime();
+    renderProps(); syncCanvasSel(); syncTimelineSel(); renderStage(); updateTime();
   }
   ["ckReset","mReset"].forEach(function(id){
     var el=document.getElementById(id);
@@ -789,7 +749,6 @@
   })();
 
   /* ---------------- boot ---------------- */
-  renderLayers();
   renderProps();
   syncCanvasSel();
   syncTimelineSel();

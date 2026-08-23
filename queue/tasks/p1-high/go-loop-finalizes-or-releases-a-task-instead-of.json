@@ -1,0 +1,21 @@
+{
+  "id": "go-loop-finalizes-or-releases-a-task-instead-of",
+  "title": "Go loop finalizes or releases a task instead of reclaiming it in a tight cycle",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T14:29:06.070Z",
+  "updated": "2026-08-23T14:29:06.071Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Between 2026-08-23T07:44Z and 14:22Z the loop claimed 'video-app-pages-conform-to-shared-timeline-selec' and exited without finalizing 2757 times, writing 5515 log entries into the task file (556KB) and 5516 events into queue/history.jsonl, while the finished work sat uncommitted in the working tree. Two things to fix: (1) a runner that exits without setting a terminal status should back off and stop re-claiming the same task rather than retrying every ~6s; (2) repeated claim/reset churn should be rate-limited or coalesced so it cannot balloon a task file the dashboard has to render. Consider capping the log array length in queue-lib.mjs. Epic: unmanned-loop / loop-robustness.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T14:29:06.071Z",
+      "note": "created (manual)"
+    }
+  ]
+}
