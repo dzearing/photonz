@@ -1,6 +1,7 @@
 {
   "id": "sweep-mock-pages-for-ds-class-name-collisions",
   "title": "Sweep mock pages for DS class-name collisions",
+  "goal": "Some pages give their own styles the same names as shared ones, so those elements silently pick up styling meant for something else and will drift further as the shared styles change. This finds every overlap and renames the page-local ones.",
   "priority": "p3-low",
   "seq": 60,
   "status": "pending",
@@ -12,9 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: design-system (zero drift: page-local names must not shadow DS classes). From study-tasks.json fix-class-collisions. Page-local class names that shadow DS classes (bar, btn, card, dsub, sw) silently inherit DS rules. ui-grid and ui-prototype were fixed; sweep the rest of the 88 pages and namespace offenders. The audit agent has a grep rule for this; run it and fix hits.",
   "acceptance": [
-    "The collision grep from ux-audit-agent.md is run over all pages; hits are listed in the task log",
-    "Every colliding page-local class is namespaced; re-running the grep returns zero hits",
-    "Touched pages return 200 with no visual regressions in audit-sweep.js"
+    "The collision check is run over every page and the hits are listed in the task log",
+    "Every colliding page-local name is renamed, and re-running the check returns no hits",
+    "Every touched page loads without error with no visual change in the automated sweep"
   ],
   "log": [
     {

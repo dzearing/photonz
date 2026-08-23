@@ -1,7 +1,9 @@
 {
   "id": "icon-conformance-audit-across-mock-pages",
   "title": "Icon conformance audit across mock pages",
+  "goal": "Some places in the study still stand in a typed character or an emoji where an icon belongs, so those spots look wrong next to the real icons. This finds every one and replaces it with a proper icon from the shared set.",
   "priority": "p3-low",
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
@@ -11,8 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: design-system > icon-conformance. Scan docs/design/mocks/pages for ascii/unicode/emoji glyphs used as icons and for non ic-* icon styles. Fix by adding missing glyphs to shared/icons.mjs and regenerating. Acceptance: zero ascii icon hits in a grep sweep.",
   "acceptance": [
-    "A grep sweep of docs/design/mocks/pages finds zero ascii, unicode, or emoji glyphs used as icons",
-    "Any missing glyphs are added to shared/icons.mjs and regenerated, not inlined per page"
+    "A sweep over every page finds no typed characters, symbols or emoji being used as icons",
+    "Any icon that was missing is added to the shared icon set and regenerated rather than pasted into one page",
+    "Every touched page loads without error"
   ],
   "log": [
     {
@@ -31,6 +34,5 @@
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
     }
-  ],
-  "seq": 40
+  ]
 }

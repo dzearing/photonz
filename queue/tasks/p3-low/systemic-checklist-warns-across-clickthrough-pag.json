@@ -1,6 +1,7 @@
 {
   "id": "systemic-checklist-warns-across-clickthrough-pag",
   "title": "Systemic checklist warns across clickthrough pages",
+  "goal": "A quality pass over the clickable prototypes found several small problems that repeat across many pages rather than failing any one of them: dropdown rows that cannot be reached by keyboard, play buttons that never say whether they are playing, and layer rows whose controls differ from row to row. This settles each of them across the whole set.",
   "priority": "p3-low",
   "seq": 80,
   "status": "pending",
@@ -11,7 +12,12 @@
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: design-system > clickthrough-sweep. Rollup of warns from the checklist sweep that are not page failures but repeat everywhere: (1) .select rows usually lack role/tabindex (present on some pages, absent on video-title-wt, ds-build-wt, others). (2) Play buttons on all video transports lack aria-pressed, and the D8 loop control is absent set-wide including canonical video.html. (3) Layer-row asymmetry pattern: the locked Background row carries ic-lock while sibling rows carry only the eye, and some rows (img-grade-wt #lrRaw) have no eye at all; section 5 says affordances are identical on every row, but canonical image.html has the same variance, so rule or pages need a ruling. (4) walk.html smuggles a span through the data-status shell attribute. From sweep-every-clickthrough-page-for-checklist-conf.",
-  "acceptance": [],
+  "acceptance": [
+    "Dropdown-style rows can be focused and operated by keyboard everywhere they appear",
+    "Every video play control reports whether it is playing, and a ruling is recorded on whether a loop control belongs in the transport",
+    "Layer rows either carry the same controls on every row or the rule is amended to describe the real pattern, with the ruling written down",
+    "Every touched page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-22T23:43:53.742Z",

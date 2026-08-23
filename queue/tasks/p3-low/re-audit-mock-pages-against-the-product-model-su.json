@@ -1,6 +1,7 @@
 {
   "id": "re-audit-mock-pages-against-the-product-model-su",
   "title": "Re-audit mock pages against the product model success criteria",
+  "goal": "Once the cleanup passes are finished, every page in the study needs checking again against the six things the product vision says a person must be able to do. Anything still falling short becomes its own piece of work rather than being noted and forgotten.",
   "priority": "p3-low",
   "seq": 30,
   "status": "pending",
@@ -15,8 +16,9 @@
   "blockedBy": [],
   "notes": "Objective: creation-vision (gated: run after the conform pass and entries pass). From study-tasks.json reaudit. Run shared/ux-audit-agent.md across all pages against the 6 PRODUCT-MODEL.md success criteria; feed misses back into the queue until clean. Do after the conform pass and entries pass.",
   "acceptance": [
-    "A findings file records pass/fail per page against each of the 6 PRODUCT-MODEL success criteria",
-    "Every miss is filed as its own queue task; zero unfiled misses"
+    "A findings file records a pass or fail for every page against each of the six success criteria",
+    "Every failure is filed as its own queue task, with none left unfiled",
+    "The audit is run after the conformance and entry passes have landed, not before"
   ],
   "log": [
     {

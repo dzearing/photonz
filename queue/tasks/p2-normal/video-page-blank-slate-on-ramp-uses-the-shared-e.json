@@ -1,6 +1,7 @@
 {
   "id": "video-page-blank-slate-on-ramp-uses-the-shared-e",
   "title": "Video page blank-slate on-ramp uses the shared entry template",
+  "goal": "The main video page opens with its own one-off getting-started stepper, while every other surface now teaches the same shared empty-state opening. This replaces the one-off so someone arriving with nothing open sees one consistent way in.",
   "priority": "p2-normal",
   "seq": 330,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit 2026-08-23 ('Video app pages', med, A), left out of the conformance pass that closed the rest of that section. docs/design/mocks/pages/video.html still opens with a second chrome-less .win containing a bespoke .onramp/.onstep/.onstage stepper (page-local, used nowhere else). Since then blank-slate-entry-clickthrough-per-surface-on-on shipped shared/components/entry.js plus a dedicated video-entry-wt clickthrough, so the on-ramp is now a second, divergent answer to the same question. Either convert it onto the shared entry template or drop it in favour of video-entry-wt. Worth a decision card if dropping changes what the video page teaches.",
-  "acceptance": [],
+  "acceptance": [
+    "The video page's getting-started section is either rebuilt on the shared empty-state opening or removed in favour of the dedicated video getting-started clickthrough",
+    "No page-local stepper markup used nowhere else remains on the page",
+    "The page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T14:29:06.098Z",

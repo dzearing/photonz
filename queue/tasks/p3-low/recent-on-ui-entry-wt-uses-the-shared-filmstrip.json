@@ -1,7 +1,7 @@
 {
   "id": "recent-on-ui-entry-wt-uses-the-shared-filmstrip",
   "title": "Recent on ui-entry-wt uses the shared filmstrip",
-  "goal": "",
+  "goal": "One page still lists recent captures in an older one-off layout, so the same thing looks and behaves differently depending on where you meet it. This moves it to the shared layout and removes the leftover styling nothing else uses.",
   "priority": "p3-low",
   "seq": 220,
   "status": "pending",
@@ -12,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "home.html's Recent grid is now the shared .filmstrip / .filmcard, so the landing window and the history overlay agree on what a capture looks like and what you can do to one. ui-entry-wt.html is the last page still drawing the old bespoke .recents / .rec grid. Port it, then delete .recents / .rec / .rec .pv / .rec .cap from shared/components/inspector.css (lines ~48-51) since nothing will use them.",
-  "acceptance": [],
+  "acceptance": [
+    "Recent captures on that page look and behave the same as they do on the landing screen",
+    "The retired one-off styling is deleted from the shared stylesheet and nothing else refers to it",
+    "The page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T17:23:03.502Z",

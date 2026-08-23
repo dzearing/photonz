@@ -1,7 +1,7 @@
 {
   "id": "the-history-overlay-specimen-wears-the-shape-his",
   "title": "The history overlay specimen wears the shape history.css specifies",
-  "goal": "",
+  "goal": "The capture history panel is specified as a chromeless panel floating over the whole screen, but the reference page other pages copy still shows an older shape with a title bar and close button inside a window. This settles which shape is right and makes the reference say so.",
   "priority": "p3-low",
   "seq": 210,
   "status": "pending",
@@ -12,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "history.css says the capture history is a GLOBAL, chromeless pane: .sheet.down.hist with NO .sheet-h, whose only chrome is the centered .histbar (All / Screenshots / Videos + Clear All) over a .filmstrip, floating near the top of the SCREEN rather than inside a window. app-shell's 'History overlay' specimen and redline's #histSheet still draw the older shape: a .sheet.down with a .sheet-h title row and a close button, inside a window. Since app-shell is the spec other pages conform to, its version of a shared surface must match the component that owns it. Decide whether the in-window overlay is still a legitimate second form (an in-window convenience, per AGENTS 'an in-window History button is a convenience, never the taught path') or whether both should become .hist over a .desk like capture-wt does, then make the exemplar say so.",
-  "acceptance": [],
+  "acceptance": [
+    "A ruling is recorded on whether a history panel inside a window is still a legitimate second form",
+    "The reference page and the redline page both show the history panel in the agreed shape",
+    "Every touched page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T17:23:03.472Z",

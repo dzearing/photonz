@@ -1,6 +1,7 @@
 {
   "id": "export-share-vector-filename-keeps-2x",
   "title": "Export-share: vector filename keeps @2x",
+  "goal": "On the export screen, choosing a format that has no pixel size still leaves a 2x size suffix in the suggested filename, which promises something the file will not have. This drops the suffix when it does not apply.",
   "priority": "p3-low",
   "seq": 90,
   "status": "pending",
@@ -12,9 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: design-system > clickthrough-sweep. From study-tasks.json fix-export-share-scale. Verified still live 2026-08-22: picking SVG or PDF disables the scale seg but the scale variable stays 2, so filename() renders launch-poster@2x.svg. Reset scale to 1 (or exclude suffix for vector formats) when a vector format is picked.",
   "acceptance": [
-    "Picking SVG or PDF on export-share.html shows a filename without a scale suffix",
-    "Switching back to PNG restores the previously selected scale and suffix",
-    "Page returns 200"
+    "Choosing a resolution-independent format shows a suggested filename with no size suffix",
+    "Switching back to a pixel format restores the previously chosen size and its suffix",
+    "The page loads without error"
   ],
   "log": [
     {

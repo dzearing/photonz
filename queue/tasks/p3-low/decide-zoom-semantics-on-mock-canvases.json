@@ -1,6 +1,7 @@
 {
   "id": "decide-zoom-semantics-on-mock-canvases",
   "title": "Decide zoom semantics on mock canvases",
+  "goal": "Zooming on the mock canvases changes the background grid but leaves the artwork exactly the same size, so the readout can say 260 percent while nothing looks any bigger. Someone needs to decide what zoom should mean here, and then every editing surface should behave that way.",
   "priority": "p3-low",
   "seq": 10,
   "status": "pending",
@@ -12,8 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: creation-vision > editor-surfaces (needs a UX decision before any implementation). From study-tasks.json zoom-scales-grid-not-artwork. Zoom changes grid density but artwork stays the same size, so the readout can say 260 percent while the hero card renders at 1x. Honest fix: scale artwork by --zoom and counter-scale selection chrome by 1/--zoom. This changes what zoom means on every editor page: open a UX decision before implementing.",
   "acceptance": [
-    "A UX decision is opened (and resolved) on whether zoom scales artwork or only grid density",
-    "The chosen behavior is implemented in the shared canvas component and verified on at least 3 editor pages at zoom 0.5/1/2 with constant-size selection chrome if artwork scaling is chosen"
+    "A decision is opened and answered on whether zoom scales the artwork or only the grid",
+    "The chosen behaviour is implemented once in the shared canvas and holds on at least three editing pages at half, normal and double zoom",
+    "If artwork scales, selection outlines and handles stay the same thickness at every zoom level"
   ],
   "log": [
     {

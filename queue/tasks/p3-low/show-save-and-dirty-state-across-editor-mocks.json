@@ -1,6 +1,7 @@
 {
   "id": "show-save-and-dirty-state-across-editor-mocks",
   "title": "Show save and dirty state across editor mocks",
+  "goal": "The editing screens never show whether your work has unsaved changes or when it was last saved, so it is unclear where the work goes. This adds one consistent unsaved marker and saving indicator across every editing screen.",
   "priority": "p3-low",
   "seq": 20,
   "status": "pending",
@@ -12,9 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: creation-vision > editor-surfaces. From study-tasks.json save-dirty-state (audit finding f-020). documents.html already shows the save/versions/autosave flow; this task carries the dirty-dot + autosave affordance into the editor shells so every editor mock answers where does my work go.",
   "acceptance": [
-    "Editor shell mocks show a dirty indicator that clears on save, plus an autosave affordance, consistent with documents.html",
-    "The pattern is defined once in shared/components/, not per page",
-    "Touched pages return 200 and pass shared/audit-sweep.js"
+    "Every editing screen shows an unsaved marker that clears once saved, plus an indication that saving happens automatically",
+    "The pattern is defined once in the shared set rather than per page",
+    "Every touched page loads without error and passes the automated page sweep"
   ],
   "log": [
     {

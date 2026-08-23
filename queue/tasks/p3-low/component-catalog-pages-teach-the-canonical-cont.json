@@ -1,6 +1,7 @@
 {
   "id": "component-catalog-pages-teach-the-canonical-cont",
   "title": "Component catalog pages teach the canonical controls they spec",
+  "goal": "The pages that document each control demonstrate it with a hand-drawn imitation rather than the real thing, so the catalog teaches a version of the product that does not exist. This rebuilds every example from the real shared parts.",
   "priority": "p3-low",
   "seq": 130,
   "status": "pending",
@@ -11,7 +12,12 @@
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('comp-* catalog'). Pages: comp-agent, comp-buttons, comp-feedback, comp-fields, comp-index, comp-overlays, comp-panels, comp-segmented, comp-toolbars, comp-tooltips, layers-pane, panes-panels. Key items: comp-overlays sheet figure becomes a real data-shell window (high); comp-agent drops fake traffic-dot mini-windows and restates the conversation as the right-dock Agent group per the one-dock model; comp-index inventory on .libgrid/.libtile; comp-toolbars/comp-buttons/comp-index retire .pill.ai in favor of .askbtn; comp-tooltips .ct-strip to .tbar/.tstrip; comp-feedback toast from the shared toast component; comp-segmented real .btn + .slider in demos; comp-fields ic-arrow-right + real .dgrp inspector column; comp-panels real .pdock in the demo; layers-pane/panes-panels replace inert .bar meters with .setrow/.slrow + add the missing .tbar in panes-panels' full shells; rename .hero collisions. Verify 200 + audit-sweep.",
-  "acceptance": [],
+  "acceptance": [
+    "Each catalog page demonstrates the actual shared control it documents, with no hand-drawn stand-ins",
+    "Example app windows on those pages are produced by the shared window frame instead of being drawn per page",
+    "Page-local style names that clash with shared ones are renamed",
+    "Every touched page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T06:34:07.590Z",

@@ -1,6 +1,7 @@
 {
   "id": "ds-stepper-gets-the-scrub-arithmetic-and-arrow-k",
   "title": "DS stepper gets the scrub, arithmetic and arrow-key behaviour its spec promises",
+  "goal": "The number fields in the study are documented as ones you can drag sideways to change, type simple math into, and nudge with the arrow keys, but none of that actually works and each page wires up its own partial version. This builds the behaviour once so every number field does what it promises.",
   "priority": "p3-low",
   "seq": 170,
   "status": "pending",
@@ -11,7 +12,12 @@
   "deps": [],
   "blockedBy": [],
   "notes": "input.css documents the .stepper as a numeric field whose label scrubs sideways, which accepts arithmetic (320/2, +16), steps with arrows and 10x with shift, and has spinner buttons. None of that is implemented: there is no stepper.js, so every page that adopts .stepper hand-wires its own input listener and spinner clicks (ui-autolayout, ui-grid do this now). Add a shared component so the behaviour is one file, then drop the per-page wiring.",
-  "acceptance": [],
+  "acceptance": [
+    "Dragging sideways on a number field's label changes its value",
+    "Typing a simple expression such as 320/2 or +16 resolves to the computed number",
+    "Arrow keys step the value, Shift steps ten times as far, and the small up and down buttons work",
+    "Pages that previously wired this up themselves use the shared behaviour and still work"
+  ],
   "log": [
     {
       "t": "2026-08-23T16:15:25.906Z",

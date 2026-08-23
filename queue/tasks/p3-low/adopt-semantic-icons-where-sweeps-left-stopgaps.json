@@ -1,6 +1,7 @@
 {
   "id": "adopt-semantic-icons-where-sweeps-left-stopgaps",
   "title": "Adopt semantic icons where sweeps left stopgaps",
+  "goal": "A handful of controls in the study borrow an icon that means something else, so the picture does not match what the control does. This gives them icons that actually depict the action, such as left, center and right alignment and horizontal and vertical flip.",
   "priority": "p3-low",
   "seq": 50,
   "status": "pending",
@@ -12,9 +13,9 @@
   "blockedBy": [],
   "notes": "Objective: design-system > icon-conformance. From study-tasks.json icon-semantic-refine. Pages are ascii/emoji clean; this is semantic polish: lang-toolbars text-align seg should use ic-align-left/center/right, flip H/V should use ic-flip-horizontal/vertical instead of ic-transition, walkthrough back/next could adopt chevrons. Complements (does not duplicate) the queued icon-conformance-audit task, which hunts ascii glyphs.",
   "acceptance": [
-    "lang-toolbars uses ic-align-left/center/right and ic-flip-horizontal/vertical",
-    "Remaining intentional stopgaps are listed in the task log with a reason each",
-    "Touched pages return 200"
+    "The text-alignment and flip controls on the toolbar spec page use alignment and flip icons rather than a stand-in",
+    "Any icon deliberately left as a stand-in is listed in the task log with the reason",
+    "Every touched page loads without error"
   ],
   "log": [
     {

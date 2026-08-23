@@ -1,6 +1,7 @@
 {
   "id": "remaining-canvas-hint-pills-adopt-the-shared-cnv",
   "title": "Remaining canvas hint pills adopt the shared .cnv-hint",
+  "goal": "The small floating hint that names the current gesture on the canvas is redrawn on eight pages, each with its own near-identical copy of the same styling. This points them all at the shared one so the hint stays consistent as it changes.",
   "priority": "p3-low",
   "seq": 160,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "The 2026-08-23 draw/icon pass promoted .cnv-hint to shared/components/canvas.css (the dark glass pill on the artboard that names the gesture) and adopted it on draw, draw-boolean and vector-wt. Eight pages still hand-roll the same pill under their own name: image, img-bg-remove, img-grade-wt, img-masking (x2), img-retouch-wt, video-audio, video-compositing, video-transitions. Swap each local rule for the shared class, keeping only the page's own top/bottom as a scoped refinement. Verify 200 + audit-sweep.",
-  "acceptance": [],
+  "acceptance": [
+    "All eight pages use the shared hint styling, keeping only their own placement on the canvas",
+    "The hints render the same as before on each page",
+    "Every touched page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T15:45:10.430Z",

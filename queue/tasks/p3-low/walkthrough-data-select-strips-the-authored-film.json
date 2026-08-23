@@ -1,6 +1,7 @@
 {
   "id": "walkthrough-data-select-strips-the-authored-film",
   "title": "walkthrough data-select strips the authored filmcard.sel from history sheets",
+  "goal": "Stepping through a walkthrough silently clears the selected item in the capture history panel, so its row of actions vanishes and the step no longer illustrates what the words describe. This keeps a panel's own selection unless the step is actually selecting something there.",
   "priority": "p3-low",
   "seq": 150,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "Any wt step with data-select clears sel/selc from every .filmcard in the stage (walkthrough.js data-select handler), so the history pane loses its authored one-selected-card state (history.css says ship with ONE .filmcard.sel so the action row is visible) once a user steps a walkthrough. Affects every wt page with a hist sheet, e.g. composites, component-configure-wt. Fix idea: scope the deselect sweep to the panels the step actually selects in, or exclude .filmcard strips that carry data-radio.",
-  "acceptance": [],
+  "acceptance": [
+    "Stepping through a walkthrough that shows a history panel leaves that panel's selected item selected, with its row of actions still visible",
+    "Steps that do select something still clear the previous selection in the panel they act on",
+    "Verified in a browser on at least two walkthroughs that include a history panel"
+  ],
   "log": [
     {
       "t": "2026-08-23T07:28:13.971Z",

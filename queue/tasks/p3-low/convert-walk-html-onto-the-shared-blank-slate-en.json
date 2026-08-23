@@ -1,6 +1,7 @@
 {
   "id": "convert-walk-html-onto-the-shared-blank-slate-en",
   "title": "Convert walk.html onto the shared blank-slate entry template",
+  "goal": "The main product walkthrough still hand-draws the empty screen a new user starts from, duplicating what the shared version now provides everywhere else. This switches it over so there is only one description of that screen.",
   "priority": "p3-low",
   "seq": 140,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "walk.html still hand-authors the menu-bar agent, histbar, and filler history cards that shared/components/entry.js now injects for .desk[data-entry] pages (capture-wt, ui-entry-wt, video-entry-wt). Convert it the way capture-wt was converted: add data-entry, add data-entry-fill to the filmstrip, delete the copied chrome, keep its own first card and artwork. Verify all 15 steps still replay and the cues land.",
-  "acceptance": [],
+  "acceptance": [
+    "The walkthrough's opening screen comes from the shared empty-state template instead of a copy inside the page",
+    "All fifteen walkthrough steps still replay in order with their callouts pointing at the right things",
+    "The page loads without error and passes the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T07:14:13.191Z",

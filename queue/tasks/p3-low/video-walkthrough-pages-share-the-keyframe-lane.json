@@ -1,6 +1,7 @@
 {
   "id": "video-walkthrough-pages-share-the-keyframe-lane",
   "title": "Video walkthrough pages share the keyframe lane and finish selection cues",
+  "goal": "Six video walkthroughs each carry their own identical copy of the animation timeline row, and a couple of steps claim something is selected without ever showing it. This moves the timeline row into the shared set and finishes the missing selection cues.",
   "priority": "p3-low",
   "seq": 110,
   "status": "pending",
@@ -11,7 +12,12 @@
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Video walkthroughs'). Pages: video-cut-wt, video-freeze-wt, video-move-wt, video-title-wt, video-transition-wt, video-zoom-wt. Promote the byte-identical .track.kft/.kfl/.kfd/.kfseg keyframe-lane CSS from move/zoom/cut into shared/components/video.css and delete page copies; video-title-wt add canvas sel-ring for the selected text layer in steps 5-6; add selwrap where .sel-ring is hosted bare; icon fixes (ic-speed for Speed, ic-trim for Shorten, chevron in .select caret, stop rotating ic-chevron-down in shared video.css .xbtn). Verify 200 + audit-sweep.",
-  "acceptance": [],
+  "acceptance": [
+    "The animation timeline row is defined once and shared, with no page keeping a copy",
+    "Every walkthrough step that says something is selected shows a selection on the canvas",
+    "Icons on those pages depict the action they trigger, and no icon spins where it should sit still",
+    "All six pages load without error and pass the automated page sweep"
+  ],
   "log": [
     {
       "t": "2026-08-23T06:33:20.632Z",

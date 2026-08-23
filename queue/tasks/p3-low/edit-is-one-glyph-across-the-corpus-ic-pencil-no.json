@@ -1,7 +1,7 @@
 {
   "id": "edit-is-one-glyph-across-the-corpus-ic-pencil-no",
   "title": "Edit is one glyph across the corpus: ic-pencil, not ic-pen",
-  "goal": "",
+  "goal": "The Edit action shows a pencil on some pages and a pen nib on fifty others, and the pen nib already means the vector drawing tool. This makes Edit a pencil everywhere so one picture keeps one meaning.",
   "priority": "p3-low",
   "seq": 200,
   "status": "pending",
@@ -12,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "app-shell and redline now use ic-pencil for the Edit action on filmcards and layer rows, which is what icons.mjs maps 'edit' to; ic-pen is the bezier TOOL and must not double as the edit verb. 50 other pages plus shared/components/entry.js (its injected history cards) still emit <i class=\"ic ic-pen\"> inside title=\"Edit\" controls, so the corpus disagrees with its own exemplar. Mechanical sweep: replace 'title=\"Edit\"><i class=\"ic ic-pen\"' with ic-pencil across pages/ and entry.js, then re-run the browser audit-sweep and spot-check the icon in a filmcard action row.",
-  "acceptance": [],
+  "acceptance": [
+    "Every Edit control across the study shows the pencil icon, including ones added automatically to generated cards",
+    "The pen nib icon appears only for the vector pen tool",
+    "A browser spot check of an item's action row shows the pencil, and the automated page sweep is clean"
+  ],
   "log": [
     {
       "t": "2026-08-23T17:22:52.671Z",

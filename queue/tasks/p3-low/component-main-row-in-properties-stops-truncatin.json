@@ -1,6 +1,7 @@
 {
   "id": "component-main-row-in-properties-stops-truncatin",
   "title": "Component Main row in Properties stops truncating its component name",
+  "goal": "In the properties panel, the row that tells you which shared component an item came from cuts the name off after a few letters, so you cannot tell what it is linked to. This makes that name readable at the panel's normal width.",
   "priority": "p3-low",
   "seq": 180,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "On states.html (and any page using the same .irow.split Main row) the .select showing the linked main renders as 'Butt...' at the default 267px dock width: 76px label + Detach leaves the .select .lead only 45px for a 56px word. Pre-existing, verified against the unmodified page. Either give the row more of the dock, shorten the Detach affordance to an icon, or let the select wrap under its label.",
-  "acceptance": [],
+  "acceptance": [
+    "At the default panel width the linked component name reads in full, with no trailing ellipsis",
+    "The action that breaks the link stays reachable in the same row",
+    "The row is measured in a browser at the default panel width before and after, and the numbers are recorded in the task log"
+  ],
   "log": [
     {
       "t": "2026-08-23T16:15:25.936Z",

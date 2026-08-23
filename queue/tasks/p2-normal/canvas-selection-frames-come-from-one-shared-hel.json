@@ -1,6 +1,7 @@
 {
   "id": "canvas-selection-frames-come-from-one-shared-hel",
   "title": "Canvas selection frames come from one shared helper, not per-page markup",
+  "goal": "When a mock page shows something selected on the canvas, the selection outline, its corner handles and its size tag are hand-drawn again on every page, and five pages this cycle described a selection in their caption while drawing nothing at all. This makes a page declare that something is selected and get the standard selection drawn for it, and adds a check that catches a page whose words and picture disagree.",
   "priority": "p2-normal",
   "seq": 320,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "Recurring finding: five separate tasks this cycle each fixed the same defect by hand (walk, composites, img-retouch-wt, icon-gradient-wt, and the six video walkthroughs all promised a selection in copy but drew no ring on canvas). The markup is identical every time: .selwrap > .sel-ring + 4 .handle + .mtag. Extract it into a shared helper (a data-attribute the shell honors, like data-sel-frame on the target, mirroring how data-shell builds chrome) so a page declares selection instead of retyping it, and add an audit gate that fails any page whose copy claims a selection while the canvas has no ring. Acceptance: helper shipped in shared/components, at least three pages converted to it with identical rendering, and the audit gate catches a deliberately broken page.",
-  "acceptance": [],
+  "acceptance": [
+    "A page can mark something as selected and get the outline, corner handles and size tag drawn for it without hand-writing any of them",
+    "At least three pages that used to hand-draw a selection use the shared version and render identically before and after",
+    "The automated page check fails a deliberately broken page whose caption claims a selection but whose canvas shows none"
+  ],
   "log": [
     {
       "t": "2026-08-23T14:24:52.005Z",

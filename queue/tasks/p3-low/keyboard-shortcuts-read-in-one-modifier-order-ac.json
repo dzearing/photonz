@@ -1,6 +1,7 @@
 {
   "id": "keyboard-shortcuts-read-in-one-modifier-order-ac",
   "title": "Keyboard shortcuts read in one modifier order across the study",
+  "goal": "The same keyboard shortcut is printed two different ways in different parts of the study, so it reads as though there were two shortcuts. This settles one order for modifier keys and applies it to every shortcut hint.",
   "priority": "p3-low",
   "seq": 190,
   "status": "pending",
@@ -11,7 +12,11 @@
   "deps": [],
   "blockedBy": [],
   "notes": "Audit rescan 2026-08-23 found the same shortcut printed two ways: 59 pages write Cmd-Shift-H, 10 write Shift-Cmd-H, and the macOS screenshot shortcuts appear as Shift-Cmd-4/3/5 on app-shell, capture-wt and walk but Cmd-Shift-4 on home and ui-entry-wt. Option-Cmd-L and Cmd-Option-K split the same way. Pick ONE order for every shortcut hint (macOS renders Control, Option, Shift, Command in that order, which argues for Shift-Cmd) and sweep every .sc, .kbd and <code> hint in docs/design/mocks/pages plus AGENTS.md so the study never teaches two spellings of one key. Design-system family task took the majority spelling for its two pages as a stopgap.",
-  "acceptance": [],
+  "acceptance": [
+    "One modifier order is chosen and written into the study's authoring guide",
+    "Every shortcut hint in the study is printed in that order, and a sweep finds no page still using the other spelling",
+    "Every touched page loads without error"
+  ],
   "log": [
     {
       "t": "2026-08-23T17:00:45.837Z",
