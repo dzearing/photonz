@@ -101,6 +101,55 @@ struct MeasureToolModeTests {
                 >= MeasureContent.defaultHeadOffset)
     }
 
+    /// The margin outside an element is where a redliner expects the number,
+    /// so a head that cannot reach its full standoff shortens to fit rather
+    /// than doubling back over the thing it is measuring.
+    @Test func aHeadShortReachesIntoTheMarginBeforeItGivesUpAndFlips() {
+        var content = MeasureContent(mode: .vertical, decimals: 0)
+        // The settings capture: a card edge at x 1376 on a 1440 wide image, so
+        // there are 64 px of margin — not the full standoff, but enough.
+        let feet = (CGPoint(x: 1376, y: 148), CGPoint(x: 1376, y: 236))
+        content.start = feet.0
+        content.end = feet.1
+        let canvas = CGSize(width: 1440, height: 960)
+        let offset = MeasureBuilder.clearingHeadOffset(content: content, from: feet.0, to: feet.1,
+                                                       canvas: canvas)
+        #expect(offset > 0, "the head stayed outward instead of flipping over the element")
+        var placed = content
+        placed.headOffset = offset
+        let chip = placed.labelRect(chipSize: placed.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: canvas).contains(chip),
+                "the readout hangs off the canvas: \(chip)")
+    }
+
+    /// The same on the bottom edge, where a width caliper reaches down.
+    @Test func aBottomEdgeHeadShortensToKeepTheReadoutOnTheImage() {
+        var content = MeasureContent(mode: .horizontal, decimals: 0)
+        let feet = (CGPoint(x: 600, y: 900), CGPoint(x: 800, y: 900))
+        content.start = feet.0
+        content.end = feet.1
+        let canvas = CGSize(width: 1440, height: 960)
+        let offset = MeasureBuilder.clearingHeadOffset(content: content, from: feet.0, to: feet.1,
+                                                       canvas: canvas)
+        #expect(offset > 0)
+        var placed = content
+        placed.headOffset = offset
+        #expect(CGRect(origin: .zero, size: canvas)
+            .contains(placed.labelRect(chipSize: placed.estimatedLabelSize)))
+    }
+
+    /// A shortened head is still a head: it never collapses onto the feet, or
+    /// the caliper stops reading as a caliper.
+    @Test func aShortenedHeadStaysFarEnoughOutToReadAsACaliper() {
+        var content = MeasureContent(mode: .vertical, decimals: 0)
+        let feet = (CGPoint(x: 1376, y: 148), CGPoint(x: 1376, y: 236))
+        content.start = feet.0
+        content.end = feet.1
+        let offset = MeasureBuilder.clearingHeadOffset(content: content, from: feet.0, to: feet.1,
+                                                       canvas: CGSize(width: 1440, height: 960))
+        #expect(abs(offset) >= MeasureBuilder.minimumClearingReach)
+    }
+
     @Test func theHeadFlipsRatherThanHangTheReadoutOffTheCanvas() {
         // An element hard against the right edge: reaching right would put the
         // readout half outside the image, so it goes left instead.

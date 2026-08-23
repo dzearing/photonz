@@ -4075,3 +4075,35 @@ old behaviour and fails without the fix.
 Audit: `queue/audits/2026-08-23-callout-clearance.json`.
 Next: no way to drag a readout to a spot you prefer — the obvious follow-up if
 the automatic picks feel wrong.
+
+## 2026-08-23 — A measurement near the edge keeps its number on the picture
+
+Reproducing the reported bug first was the whole job. The task said a caliper
+against the right edge of a capture gets its readout cut in half by the canvas
+edge, and the screenshot it pointed at showed exactly that. Rendering the same
+measurement through the real pipeline today showed something else: the
+callout-clearance work had already added a canvas-aware flip, so the number is
+whole now, but the head doubles back over the element and the pill lands on the
+green switch it just measured. Same complaint, moved one step along: you still
+have to drag it away by hand.
+
+`MeasureBuilder.clearingHeadOffset` now fits the head to the picture in order —
+full standoff outward, then as far outward as the margin allows (floor at
+`minimumClearingReach`, below which the pill swallows the head line), and only
+then turn round and reach inward. A card 64 px from the edge of a capture has
+room for the number in its margin; the straight-to-flip rule never looked.
+`canvasEdgeGap` keeps the pill off the edge itself.
+
+Shared code, so Current and Next both get it. 1033 tests green, including a
+sweep of every element position and size on a 1440x960 canvas asserting no
+readout ever leaves the picture, plus the three named edge cases on the real
+audit capture.
+
+Still rough, and in the audit for the user to react to: on a margin narrower
+than the pill it straddles the card's edge, and the shortened head leaves the
+pill over its own measuring line, so the planner slides it a step along and the
+number ends beside the bracket's corner rather than centred on the row.
+
+Audit: `queue/audits/2026-08-23-measure-edge-readout.json`.
+Next: a caliper only protects its own measuring line from its readout, not the
+element it measured — queued as its own task.

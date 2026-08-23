@@ -97,8 +97,17 @@ why Size commits two standard calipers instead of a combined "124 × 30" badge.
 
 **Placement.** Modes that place their own calipers use
 `MeasureBuilder.clearingHeadOffset`, which stands the readout off far enough to
-clear what it measures and flips to the other side rather than hang off the
-canvas. A 12 px gap with a 90 px pill parked on it tells you nothing.
+clear what it measures. A 12 px gap with a 90 px pill parked on it tells you
+nothing.
+
+Near the edge of a capture that standoff will not fit, and the head fits itself
+to the picture in a fixed order: full standoff outward, then **as far outward as
+the margin allows** (down to `minimumClearingReach`, below which the pill
+swallows the head line), and only then turn round and reach inward over the
+thing being measured. The middle step is the one that matters — a card 64 px
+from the image edge has room for the number in its margin, and the older
+straight-to-flip rule parked that number on the switch it had just measured.
+`canvasEdgeGap` keeps the pill from kissing the edge.
 
 **Overlay chrome only.** The Size/Gap preview is canvas overlay layers in
 `CanvasNSView` (like the snap dot and guides), rasterized through the real

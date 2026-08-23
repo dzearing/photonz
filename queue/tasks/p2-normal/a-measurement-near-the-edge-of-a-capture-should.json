@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 350,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:03:57.258Z",
-  "updated": "2026-08-23T18:03:57.258Z",
+  "updated": "2026-08-23T22:20:00.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Visible in queue/audits/2026-08-23-measure-03-roles.png: the 44 px height caliper on the right edge is clipped. MeasureBuilder.layer pads the frame for the chip but nothing clamps the head offset to the canvas, and the layer frame is allowed to extend past canvasSize. Likely fix: flip the head to the inward side when the outward one would leave the canvas, the way a popover flips.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-08-23T18:03:57.258Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T21:52:13.084Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T22:20:00.000Z",
+      "note": "Adversarial review before building. Walked the flow as a first-time redliner: you point at a row against the right edge of a capture and press one key; you should never then have to drag the number. Reproduced the reported clipping through the real render pipeline on the audit capture and found the report is now half stale: the callout-clearance work (a726ec4) added a canvas-aware head flip, so the number is no longer cut by the edge. What it does instead is worse in one way and better in another: it doubles the head back over the element and parks the pill on the very switch it just measured. So the task is real, the described symptom has moved. Rejected the mock-ish answer of only widening the layer frame: the frame was never what clipped it."
+    },
+    {
+      "t": "2026-08-23T22:20:00.000Z",
+      "note": "Shortest version that delivers the value: fit the head to the picture in order instead of flipping straight away. Full standoff outward, then as far outward as the margin allows (floor at minimumClearingReach = 14, below which the pill swallows the head line), then inward. canvasEdgeGap = 6 keeps the pill off the edge. MeasureBuilder.clearingHeadOffset in Sources/PhotonzCore/Measure.swift. Shared code, so Current and Next both get it; no release fork exists."
+    },
+    {
+      "t": "2026-08-23T22:20:00.000Z",
+      "note": "Tests first: 3 in MeasureToolModeTests (shortens rather than flips on the right edge, same on the bottom, never below the minimum reach) and 4 in MeasureCalloutClearanceTests on the real fixture (right-most element, bottom-edge element, flush-with-edge element, and a sweep of every element position and size on a 1440x960 canvas asserting no readout leaves the picture). Full suite green: 1033 tests."
+    },
+    {
+      "t": "2026-08-23T22:20:00.000Z",
+      "note": "Review of the built thing. Rendered the before and after through DocumentRenderer onto the audit capture (queue/audits/2026-08-23-edge-readout-{before,after}.png). Before: the 44 px pill sits on the green toggle. After: it sits in the grey margin, whole. Honest roughness: with an 83 px pill and a 64 px margin the pill overlaps the card edge by ~16 px, and because the shortened head leaves the pill straddling its own measuring line the planner slides it one step along the axis, so the number ends beside the bracket's bottom corner rather than centred on the row. Both recorded in the audit for the user to react to. Verified offscreen, not by driving the live app: no screen recording in this session."
     }
-  ]
+  ],
+  "started": "2026-08-23T21:52:13.083Z"
 }

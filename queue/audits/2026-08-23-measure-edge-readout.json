@@ -1,0 +1,27 @@
+{
+  "feature": "Measurements near the edge of a capture",
+  "epic": "measure-redline",
+  "summary": "Measuring something that sits close to the right or bottom of a screenshot now tucks the number into the margin instead of pushing it off the picture or parking it on top of the thing you just measured.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Open queue/audits/2026-08-23-measure-00-capture.png and press i for the Measure tool." },
+    { "do": "Click the Size chip in the tool options." },
+    { "do": "Point at the top settings row, the one with Launch at login, and press ] until the pick covers the whole white card." },
+    { "do": "Look at the height number in the preview before you click: it should sit in the grey margin to the right of the card, whole.", "shot": "2026-08-23-edge-readout-after.png" },
+    { "do": "Click to commit. Nothing should jump, and you should not have to drag the number anywhere." },
+    { "do": "Undo, then do the same on the Save Changes button in the middle of the picture: its numbers should sit exactly where they always did." },
+    { "do": "Switch to Distance, click two points near the right edge, then drag the head handle out past the edge of the image and let go." }
+  ],
+  "evaluate": [
+    "In the margin beside the card, is that where your eye looks for the height of a row?",
+    "The number ends up beside the bottom corner of the bracket rather than centred on it. Does that read as attached, or as floating?",
+    "The pill overlaps the card's right edge by a few pixels because the margin is narrower than the pill. Is that acceptable, or should the number go above the card instead?",
+    "For something truly flush with the image edge the caliper still turns inward and the number lands on the element. Is that the right last resort?"
+  ],
+  "rough": [
+    "The number is no longer clipped and no longer sits on the switch it measured, but on a narrow margin it does straddle the edge of the card by a few pixels. There is no way to avoid that with an 83 px pill and a 64 px margin except to move the number off the row entirely, which is a bigger change than this task.",
+    "A caliper only protects its own thin measuring line from the readout, not the element it is measuring. That is why the number can land on a neighbouring row. Filed as its own task.",
+    "Verified offscreen through the real render pipeline against the audit capture, plus a sweep of every element position on a 1440x960 canvas, rather than by driving the live app: screen recording is not available to this session.",
+    "The before shot is 2026-08-23-edge-readout-before.png, the same measurement with the old rule."
+  ]
+}

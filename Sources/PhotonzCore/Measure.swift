@@ -435,10 +435,14 @@ public enum MeasureBuilder {
     /// space between two of them) place their own calipers, so they use this
     /// instead of the bare default reach — a 12 px gap with a 90 px readout
     /// parked on it tells you nothing about which gap you measured.
-    /// Pass `canvas` and the head also picks its SIDE: outward (down for a width
-    /// caliper, right for a height one) unless the readout would fall off the
-    /// image there, in which case it flips to the other side. A measurement
-    /// half off the canvas is not a measurement.
+    /// Pass `canvas` and the head also fits itself to the picture, in this
+    /// order: reach outward the full standoff; if the margin out there is too
+    /// thin for the whole readout, reach outward as far as the margin allows;
+    /// only when even that is too thin to read as a caliper does the head turn
+    /// round and reach inward, over the very thing it is measuring. That order
+    /// matters — a number tucked into the margin beside a card is what a
+    /// redliner expects, and a number parked on the switch it just measured is
+    /// the thing they would have to drag away by hand.
     public static func clearingHeadOffset(content: MeasureContent,
                                           from start: CGPoint, to end: CGPoint,
                                           canvas: CGSize? = nil) -> CGFloat {
@@ -452,9 +456,27 @@ public enum MeasureBuilder {
         guard let canvas else { return reach }
         let feet = content.mode == .horizontal ? start.y : start.x
         let limit = content.mode == .horizontal ? canvas.height : canvas.width
-        if feet + reach + half <= limit { return reach }
-        return feet - reach - half >= 0 ? -reach : reach
+        // What the readout eats on each side of the feet: the standoff, half a
+        // chip, and a hair of breathing room so the pill never kisses the edge.
+        let needed = reach + half + canvasEdgeGap
+        if feet + needed <= limit { return reach }
+        let outward = limit - feet - half - canvasEdgeGap
+        if outward >= minimumClearingReach { return outward }
+        if feet - needed >= 0 { return -reach }
+        let inward = feet - half - canvasEdgeGap
+        if inward >= minimumClearingReach { return -inward }
+        return reach
     }
+
+    /// How close a readout may come to the edge of the picture. Six pixels is
+    /// enough that the pill reads as sitting IN the margin rather than falling
+    /// out of it.
+    public static let canvasEdgeGap: CGFloat = 6
+
+    /// The shortest standoff a shortened head may settle for. Any tighter and
+    /// the chip swallows the head line, so the caliper stops looking like a
+    /// caliper and the flip inward is the better trade.
+    public static let minimumClearingReach: CGFloat = 14
 
     /// The layer a placement whose feet run from `start` to `end` (document
     /// coordinates) creates. Frame = padded bbox (+ chip reservation); feet

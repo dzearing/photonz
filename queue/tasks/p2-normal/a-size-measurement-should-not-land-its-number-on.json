@@ -1,0 +1,27 @@
+{
+  "id": "a-size-measurement-should-not-land-its-number-on",
+  "title": "A size measurement should not land its number on the element it measured",
+  "goal": "When you measure something with one click, the number can end up sitting on top of a neighbouring row or on the element itself, because a caliper only knows to stay off its own thin measuring line, not off the thing it was measuring. The number should steer around the element too.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 360,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T22:02:56.531Z",
+  "updated": "2026-08-23T22:02:56.532Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MeasureContent.subjectRects only covers the measuring line for a plain caliper. EditorState.addElementSize and the Size hover preview in CanvasView both already know the element rect and could feed it to MeasureLabelPlanner.plan as an avoid rect (or a real subject). Watch the interaction with the shortened head from clearingHeadOffset: near an edge there may be nowhere clear, so the planner needs a sane last resort rather than a jump.",
+  "acceptance": [
+    "Measuring the size of a settings row on the audit capture leaves the readout clear of that row",
+    "Measuring an element with a neighbour directly below it leaves the readout clear of the neighbour",
+    "A measurement with open space around it keeps the placement it has today"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T22:02:56.531Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -90,6 +90,111 @@ struct MeasureCalloutClearanceTests {
         #expect(CGRect(origin: .zero, size: Self.canvas).contains(readout))
     }
 
+    /// Size mode's two calipers for an element, placed exactly the way
+    /// `EditorState.addElementSize` places them.
+    private func elementSize(_ rect: CGRect) -> (width: MeasureContent, height: MeasureContent) {
+        let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
+        let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
+        func caliper(_ mode: MeasureMode, _ feet: (CGPoint, CGPoint),
+                     avoiding others: [CGRect]) -> MeasureContent {
+            var c = MeasureContent(mode: mode, unit: .points)
+            c.headOffset = MeasureBuilder.clearingHeadOffset(content: c, from: feet.0, to: feet.1,
+                                                             canvas: Self.canvas)
+            c.start = feet.0
+            c.end = feet.1
+            let plan = MeasureLabelPlanner.plan(for: c, canvas: Self.canvas, avoiding: others)
+            c.labelPlacement = plan.placement
+            c.labelNudge = plan.nudge
+            return c
+        }
+        let w = caliper(.horizontal, widthFeet, avoiding: [])
+        let h = caliper(.vertical, heightFeet,
+                        avoiding: [w.labelRect(chipSize: w.estimatedLabelSize)])
+        return (w, h)
+    }
+
+    /// The right-most element on the capture: the settings card, whose edge is
+    /// 64 px from the image edge. Its height caliper has to fit its number into
+    /// that margin instead of hanging half of it off the picture.
+    @Test func theHeightOfTheRightMostElementKeepsItsWholeNumberOnTheCapture() {
+        let card = CGRect(x: 64, y: 148, width: 1312, height: 88)
+        let height = elementSize(card).height
+        let chip = height.labelRect(chipSize: height.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip),
+                "the height readout hangs off the right edge: \(chip)")
+        #expect(height.headOffset > 0,
+                "the caliper doubled back over the element instead of using the margin")
+    }
+
+    /// The same against the bottom edge, with a width caliper reaching down
+    /// into a margin too thin for its full standoff.
+    @Test func theWidthOfABottomEdgeElementKeepsItsWholeNumberOnTheCapture() {
+        let strip = CGRect(x: 400, y: 820, width: 300, height: 90)
+        let width = elementSize(strip).width
+        let chip = width.labelRect(chipSize: width.estimatedLabelSize)
+        #expect(CGRect(origin: .zero, size: Self.canvas).contains(chip),
+                "the width readout hangs off the bottom edge: \(chip)")
+        #expect(width.headOffset > 0,
+                "the caliper doubled back over the element instead of using the margin")
+    }
+
+    /// An element flush with the very bottom has no margin to tuck into, so the
+    /// caliper does turn round — and the number is still whole and on the
+    /// picture, which is the promise that matters.
+    @Test func anElementFlushWithTheEdgeStillKeepsItsWholeNumberOnTheCapture() {
+        let flush = CGRect(x: 400, y: 860, width: 300, height: 100)
+        let pair = elementSize(flush)
+        for c in [pair.width, pair.height] {
+            #expect(CGRect(origin: .zero, size: Self.canvas)
+                .contains(c.labelRect(chipSize: c.estimatedLabelSize)))
+        }
+    }
+
+    /// A caliper with room on both sides is left exactly as it was.
+    @Test func aCaliperWithRoomOnBothSidesIsUnchanged() {
+        let button = CGRect(x: 400, y: 400, width: 248, height: 60)
+        let pair = elementSize(button)
+        var plainWidth = MeasureContent(mode: .horizontal, unit: .points)
+        plainWidth.start = CGPoint(x: button.minX, y: button.maxY)
+        plainWidth.end = CGPoint(x: button.maxX, y: button.maxY)
+        var plainHeight = MeasureContent(mode: .vertical, unit: .points)
+        plainHeight.start = CGPoint(x: button.maxX, y: button.minY)
+        plainHeight.end = CGPoint(x: button.maxX, y: button.maxY)
+        #expect(pair.width.headOffset
+                == MeasureBuilder.clearingHeadOffset(content: plainWidth, from: plainWidth.start,
+                                                     to: plainWidth.end))
+        #expect(pair.height.headOffset
+                == MeasureBuilder.clearingHeadOffset(content: plainHeight, from: plainHeight.start,
+                                                     to: plainHeight.end))
+    }
+
+    /// Every element Size mode can be pointed at, anywhere on the capture,
+    /// keeps its whole number on the picture. The edge cases are not a handful
+    /// of positions, they are a whole border, so this sweeps it.
+    @Test func noElementAnywhereOnTheCaptureHangsItsNumberOffTheEdge() {
+        let bounds = CGRect(origin: .zero, size: Self.canvas)
+        var offenders: [String] = []
+        for x in stride(from: CGFloat(0), through: 1420, by: 20) {
+            for y in stride(from: CGFloat(0), through: 940, by: 20) {
+                for size in [CGSize(width: 24, height: 24), CGSize(width: 120, height: 44),
+                             CGSize(width: 600, height: 200)] {
+                    let rect = CGRect(x: x, y: y,
+                                      width: min(size.width, Self.canvas.width - x),
+                                      height: min(size.height, Self.canvas.height - y))
+                    if rect.width < 4 || rect.height < 4 { continue }
+                    let pair = elementSize(rect)
+                    for c in [pair.width, pair.height] {
+                        let chip = c.labelRect(chipSize: c.estimatedLabelSize)
+                        if !bounds.contains(chip) && offenders.count < 8 {
+                            offenders.append("\(rect) \(c.mode) head=\(c.headOffset) chip=\(chip)")
+                        }
+                    }
+                }
+            }
+        }
+        #expect(offenders.isEmpty, "readouts off the canvas: \(offenders)")
+    }
+
     /// Size mode drops a width and a height caliper on the same element; their
     /// readouts meet at a corner, so this is the likeliest stack in the app.
     @Test func theWidthAndHeightReadoutsOfOneElementDoNotStack() {
