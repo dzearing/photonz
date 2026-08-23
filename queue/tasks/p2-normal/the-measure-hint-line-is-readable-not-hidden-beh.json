@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 370,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T23:25:34.433Z",
-  "updated": "2026-08-23T23:25:34.434Z",
+  "updated": "2026-08-23T23:27:50.088Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Spotted while placing the crop action pill, not verified. EditorView.measureHintChip is an .overlay(alignment: .bottom) on the canvas with .padding(.bottom, 14); the tool bar is an .overlay(alignment: .bottom) on that same canvas with .padding(.bottom, 16) and roughly 48pt of height. The crop action pill solved the same problem with .padding(.bottom, 76); if the chip is indeed behind the bar, the same clearance (better: one shared constant both read) is the fix. Screenshots are blocked on this machine — use the in-app cacheDisplay probe described in the 2026-08-23 crop/wand log entry, and remember it does not draw accent fills.",
@@ -22,6 +22,11 @@
     {
       "t": "2026-08-23T23:25:34.434Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T23:27:50.088Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-08-23T23:27:50.088Z"
 }

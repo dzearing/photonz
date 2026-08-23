@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:55:52.342Z",
-  "updated": "2026-08-23T23:26:19.000892Z",
+  "updated": "2026-08-23T23:27:00.881Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-08-23 in the running app (Next, 1171pt window): select 960, measure 960, crop 1167, wand 1112.5. EditorView.cropOptions and EditorView.wandOptions are the two remaining branches in contextualToolOptions. Neither is flag-gated, so this changes Current unless it is put behind a next-scoped flag: do that. Crop aspect is a mode by the D15 test (it changes what the drag does) so it fits ToolModeButton over CropAspect; wand tolerance is a setting and belongs in an inspector tool-properties section like MeasureToolInspector. The open question is Apply/Cancel, which are actions rather than modes or settings and may belong on the canvas crop overlay instead of the bar: that part is worth a decision card before building. Also note the drawing tools SHRINK the bar (arrow/line 914, shapes 938) because the colour capsule swaps the FG/BG pair for a single swatch, which is intentional (17.12) but means the bar still is not fixed-width.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-08-23T23:26:19.000892Z",
       "note": "Post-build review on the running app. Screenshots are blocked here, so verification went through two cameras and NEITHER draws everything: the in-app cacheDisplay capture drops accent fills and renders the inspector blank (the panel IS laid out, the canvas shrinks for it), and ImageRenderer draws SwiftUI but paints Slider and Picker as a yellow unsupported block. Read together they confirm the pill, the bar and both inspector sections. Written into the progress log so the next session does not chase a bug that is only the camera. Left rough and recorded in the audit: the pill does not track the crop rect, carries no size readout, and wand tolerance is behind the sidebar toggle when the inspector is closed."
+    },
+    {
+      "t": "2026-08-23T23:27:00.880Z",
+      "note": "Crop aspect moved into the crop tool button's flyout, crop Apply/Cancel onto the canvas as a Cancel/Crop pill above the tool bar, wand tolerance into a Magic Wand inspector section (plus a Crop Tool section carrying the live aspect as a word). Behind next-tool-options, Next only, on by default, so Current is untouched. Measured in the running app: select 975, wand 975, crop 975, measure 975, where crop used to be 1167 and wand 1112.5. 1052 tests green, pushed as a299de6. Audit: queue/audits/2026-08-23-tool-options.json"
     }
   ],
-  "started": "2026-08-23T22:58:20.138Z"
+  "started": "2026-08-23T22:58:20.138Z",
+  "completed": "2026-08-23T23:27:00.881Z"
 }

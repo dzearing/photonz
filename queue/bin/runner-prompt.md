@@ -14,6 +14,8 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 ## Hard rules
 
+- **NEVER rebuild, re-sign, kill or relaunch `dist/Photonz Dev.app` while `queue/playtest.lock` exists.** The user plays with that exact app. Replacing the binary ends their session, and because a screen-capture client that changes on disk must be re-authorized, it also makes macOS demand the Screen Recording permission again. That has already happened to them once. Check for the lock before any build that produces an app bundle; `swift build` and `Scripts/test.sh` are always safe because they touch nothing the user is running.
+
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).
 - Design-study work follows `docs/design/mocks/shared/AGENTS.md` and `docs/design/mocks/shared/UX-PATTERNS.md`. No em dashes in user-facing copy; say "agent", never a vendor name.

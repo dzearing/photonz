@@ -1,0 +1,28 @@
+{
+  "id": "the-loop-stops-rebuilding-the-app-the-user-is-pl",
+  "title": "The loop stops rebuilding the app the user is playtesting",
+  "goal": "While the user was trying the Measure tool, a runner rebuilt and killed the dev app underneath them, which ended their session and made macOS demand the Screen Recording permission again, because a screen-capture app that changes on disk has to be re-authorized. Verification by the loop must never disturb the app a person is using.",
+  "epic": "unmanned-loop",
+  "priority": "p0-critical",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-08-23T23:42:58.666Z",
+  "updated": "2026-08-23T23:42:58.666Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Playtest 2026-08-23. Evidence: queue/loop.log shows runners calling Scripts/build-app.sh followed by pkill -f \"Photonz Dev\" three times in one task, and the dist binary timestamp moved to 16:37 while the user had the app open. Signing itself is healthy: one Photonz Dev cert, and the designated requirement pins identifier plus that cert leaf, so the grant would survive a rebuild if macOS did not separately re-verify screen-capture clients whose binary changed. The stopgap is the lock file plus a hard rule in the runner contract. The real fix is a separate probe bundle id (for example com.dzearing.photonz.probe) built to its own path, granted once, so loop verification and user playtesting never share an app. Scripts/build-app.sh already takes a dev variant path, so add a probe variant rather than a new script.",
+  "acceptance": [
+    "A runner that needs a running app builds to its own bundle, with its own bundle id and its own output path, never dist/Photonz Dev.app",
+    "The users dev app keeps a stable code identity so its Screen Recording grant survives, and is only rebuilt when the user asks",
+    "queue/playtest.lock is honoured: while it exists no runner touches the users app at all",
+    "Running the loop through a task that needs the app, while the lock exists, leaves the users app untouched, verified by comparing its binary timestamp before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T23:42:58.666Z",
+      "note": "created (manual)"
+    }
+  ]
+}

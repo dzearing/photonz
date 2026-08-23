@@ -1,0 +1,12 @@
+Playtesting in progress. Created 2026-08-23 by the user's session.
+
+While this file exists, no runner may rebuild, re-sign, kill or relaunch
+"dist/Photonz Dev.app". The user is using that app right now, and replacing the
+binary under them kills their session AND makes macOS re-prompt for Screen
+Recording, because a screen-capture client that changes on disk has to be
+re-authorized.
+
+Verify your work with `swift build` and `Scripts/test.sh`, which touch nothing
+the user is running. If a change genuinely cannot be verified without a running
+app, say so in the task log and leave the task for a moment when this file is
+gone. Delete this file only if the user asks you to.
