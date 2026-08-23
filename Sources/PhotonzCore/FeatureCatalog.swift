@@ -90,8 +90,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: measureHoverFlag,
-                    title: "Hover to measure",
-                    description: "While the Measure tool is idle, hovering outlines the element under the pointer with its width and height. Hold Command to suppress it.",
+                    title: "Hover to measure (experimental)",
+                    description: "While the Measure tool is idle, hovering outlines the element under the pointer with its width and height. Hold Command to suppress it. Off by default: detection on a flat screenshot is a guess, so the outline flickers between candidates and it is not clear what is being measured. Being redesigned as an explicit mode.",
                     isEnabled: false,
                     parameters: [
                         FeatureParameter(name: measureHoverRadius, label: "Search radius (px)",
@@ -99,7 +99,12 @@ public enum FeatureCatalog {
                                          bounds: NumberBounds(minimum: 100, maximum: 2000, step: 50)),
                     ]),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                // OFF by default. Shipped on, and playtesting found it made the
+                // Measure tool worse: constant hover chrome over a screenshot
+                // reads as noise, and the two-point caliper it sits beside is
+                // the interaction people actually want. Still available in the
+                // Experiments window for anyone who wants to try it.
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: measureAlignFlag,

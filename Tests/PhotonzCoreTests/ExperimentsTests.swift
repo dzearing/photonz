@@ -316,10 +316,15 @@ struct FeatureCatalogTests {
             .string(FeatureCatalog.releaseTagFlag, FeatureCatalog.releaseTagLabel) == Release.next.title)
     }
 
-    @Test func theHoverMeasureFlagIsNextOnlyAndOnByDefault() {
-        // Section 3 of docs/design/next-measure.md: the readout exists only in
-        // Next (default on there), and Current never even lists the flag.
-        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureHoverFlag))
+    @Test func theHoverMeasureFlagIsNextOnlyAndOffByDefault() {
+        // Section 3 of docs/design/next-measure.md put the readout in Next,
+        // default on. Playtesting reversed the default: hover detection on a
+        // flat screenshot is a guess, so the outline flickers between
+        // candidates and the constant chrome buries the two-point caliper that
+        // people actually reach for. The flag stays, so it can still be turned
+        // on in the Experiments window, but Next no longer ships with it.
+        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.measureHoverFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.measureHoverFlag })
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measureHoverFlag })
         #expect(FeatureCatalog.defaultSettings(for: .next)
             .number(FeatureCatalog.measureHoverFlag, FeatureCatalog.measureHoverRadius)

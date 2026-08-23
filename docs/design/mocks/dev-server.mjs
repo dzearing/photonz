@@ -92,6 +92,16 @@ async function handleApi(req, res, url) {
       const body = lib.readDecisionBrief(id);
       return body === null ? send(404, { error: 'no brief' }) : send(200, { id, body });
     }
+    // screenshots live beside their audit
+    if (req.method === 'GET' && url.startsWith('/api/audit-shot/')) {
+      const name = decodeURIComponent(url.slice('/api/audit-shot/'.length));
+      if (!/^[a-z0-9._-]+\.(png|jpg|jpeg)$/i.test(name)) return send(400, { error: 'bad name' });
+      try {
+        const buf = await readFile(join(ROOT, '..', '..', '..', 'queue', 'audits', name));
+        res.writeHead(200, { 'content-type': name.endsWith('.png') ? 'image/png' : 'image/jpeg', 'cache-control': 'no-store' });
+        return res.end(buf);
+      } catch { return send(404, { error: 'no shot' }); }
+    }
     if (req.method === 'GET' && url.startsWith('/api/audit/')) {
       const name = decodeURIComponent(url.slice('/api/audit/'.length));
       const body = lib.readAudit(name);
@@ -102,6 +112,11 @@ async function handleApi(req, res, url) {
       if (!/^[\d-]+\.md$/.test(name)) return send(400, { error: 'bad digest name' });
       const body = lib.readDigest(name);
       return body === null ? send(404, { error: 'not found' }) : send(200, { name, body });
+    }
+    if (req.method === 'POST' && url === '/api/feedback') {
+      const { audit, anchor, quote, text, epic } = await readBody(req);
+      const t = lib.addFeedback({ audit, anchor, quote, text, epic });
+      return send(200, { id: t.id, title: t.title });
     }
     if (req.method === 'POST' && url === '/api/objectives') {
       const { epics } = await readBody(req);

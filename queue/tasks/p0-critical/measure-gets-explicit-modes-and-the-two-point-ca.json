@@ -1,0 +1,30 @@
+{
+  "id": "measure-gets-explicit-modes-and-the-two-point-ca",
+  "title": "Measure gets explicit modes, and the two-point caliper stays the default",
+  "goal": "Measuring by hovering was tried and it is worse than what came before: the outline flickers between guesses, it is unclear what is being measured, and the constant chrome buries the two-point caliper that people actually reach for. Measuring should start from the interaction that already worked, hover to get a point then measure between two points, and anything cleverer should be a mode you choose rather than something that happens to you.",
+  "epic": "measure-redline",
+  "priority": "p0-critical",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T18:27:02.626Z",
+  "updated": "2026-08-23T18:27:02.626Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Direct playtest feedback, 2026-08-23: hover-to-measure is janky and unclear, the old hover-a-point-then-measure-two-points flow was better, and the suggestion is modes: (1) two-point caliper as today, (2) auto-measure a component under the pointer, (3) a whitespace measurer where clicking between two elements measures the gap. next-measure-hover has already been defaulted OFF in FeatureCatalog.swift as a stopgap; do not simply turn it back on. Detection code is ElementBounds (PhotonzCore) and it works, the problem is that it fires continuously and speculatively rather than on an explicit act. Run the adversarial review from the runner contract on each proposed mode before building, and open a decision if the mode switcher UI is a real UX choice rather than an obvious one.",
+  "acceptance": [
+    "The two-point caliper is the default way to measure and nothing overlays the canvas until the user asks for it",
+    "Measure has explicit modes the user picks, and the current mode is visible in the tool options at all times",
+    "A measure-an-element mode returns one clean size measurement for the thing under the pointer, committed by a click, not by hovering",
+    "A whitespace mode lets the user click in the gap between two elements and get a single gap measurement between the two facing edges",
+    "Every mode produces the same well-designed measurement callout, no mode has its own look",
+    "The user has tried all three modes on a real screenshot and confirmed each is clearer than hover was"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T18:27:02.626Z",
+      "note": "created (manual)"
+    }
+  ]
+}

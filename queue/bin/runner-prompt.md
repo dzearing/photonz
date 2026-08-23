@@ -88,34 +88,38 @@ Write the findings into the task log. If the mock is wrong, say so and build the
 
 ## When a feature is ready: write its audit
 
-A feature is not done when it compiles. It is done when the user can try it and judge it. When your task completes a feature (or a meaningful, usable slice of one), write `queue/audits/<YYYY-MM-DD>-<feature-id>.md`:
+A feature is not done when it compiles. It is done when the user can try it and judge it. When your task completes a feature (or a usable slice of one), write `queue/audits/<YYYY-MM-DD>-<feature-id>.json`.
 
-```
-# <Feature name>
+**It is structured and SHORT.** A long report does not get read, and the dashboard needs something it can hang a comment on, line by line:
 
-## What it is
-Two or three plain sentences: what it does for the user, and why it matters.
-
-## How to try it
-Numbered steps against the real dev build, starting from launching the app.
-Name the exact menu items, keys and gestures. Say which release and flags it
-needs (Photonz Dev, Experiments window, release Next, flag <name>).
-
-## What to evaluate
-The questions you want answered: what should feel good, what you are unsure
-about, what you deliberately left out. Be specific enough that a yes or no is
-possible.
-
-## What the adversarial review found
-What you changed away from the mock and why, and anything that still feels
-clumsy but you could not fix.
-
-## Screenshots
-Real screenshots from the running app, saved beside this file and referenced
-relatively. A feature audit with no picture is a promise, not a report.
+```json
+{
+  "feature": "Measure and redline",
+  "epic": "measure-redline",
+  "summary": "One or two plain sentences: what you can now do that you could not before.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default.",
+  "try": [
+    { "do": "One short imperative step. Name the exact key, menu item or gesture.", "shot": "2026-08-23-measure-1.png" },
+    { "do": "The next step. Aim for five to eight steps total, not twenty." }
+  ],
+  "evaluate": [
+    "A question you want answered, specific enough to answer yes or no."
+  ],
+  "rough": [
+    "Anything that still feels clumsy, and anything you changed away from the mock and why."
+  ]
+}
 ```
 
-Then note the audit path in the task log so the digest can point at it.
+Rules that keep it usable:
+
+- **`try` is five to eight steps.** If it needs more, the feature is too big to playtest in one sitting: audit the slice that is ready.
+- **Every step is one action.** No paragraphs, no background, no justification.
+- **Screenshots are optional per step but expected overall.** Save them beside the audit and reference the file name only.
+- **`evaluate` asks real questions**, three to five. "Does the readout land where your eye already is?" not "evaluate the readout".
+- **`rough` is honest.** This is where you admit what you could not fix, and where the mock was wrong.
+
+The user reacts to any line of this on the dashboard, and their reaction becomes a task automatically, so write each line as something a person can agree or disagree with.
 
 ## Definition of done
 

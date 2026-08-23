@@ -526,12 +526,36 @@ export function requestRetriage() {
 // try it, and what to judge. Written by the runner that finishes a feature,
 // read on the dashboard's Audit tab.
 const AUDITS = join(QUEUE, 'audits');
+// Audits are STRUCTURED, not prose. A free-form markdown report becomes a wall
+// nobody reads, and worse, it cannot be reacted to line by line. This shape is
+// short by construction and gives the dashboard something to hang a comment on:
+//   { feature, epic, summary, try:[{do,shot}], evaluate:[..], rough:[..] }
 export function listAudits() {
-  try { return readdirSync(AUDITS).filter((f) => f.endsWith('.md')).sort().reverse(); } catch { return []; }
+  try { return readdirSync(AUDITS).filter((f) => f.endsWith('.json')).sort().reverse(); } catch { return []; }
 }
 export function readAudit(name) {
-  if (!/^[a-z0-9._-]+\.md$/i.test(name)) return null;
-  try { return readFileSync(join(AUDITS, name), 'utf8'); } catch { return null; }
+  if (!/^[a-z0-9._-]+\.json$/i.test(name)) return null;
+  return readJSON(join(AUDITS, name));
+}
+
+// Feedback is the point of the Audit tab: a reaction becomes a task, with the
+// thing being reacted to quoted so a runner does not have to guess.
+export function addFeedback({ audit, anchor = '', quote = '', text, epic = '' }) {
+  if (!text || !text.trim()) throw new Error('feedback needs text');
+  const t = addTask({
+    title: 'Feedback: ' + text.trim().split(/[.!?\n]/)[0].slice(0, 70),
+    goal: text.trim(),
+    epic,
+    priority: 'p1-high',
+    area: 'app',
+    source: 'audit feedback',
+    acceptance: ['The thing the user described is changed, or a decision is opened explaining why not'],
+    notes: `Filed from the audit ${audit}${anchor ? ` (${anchor})` : ''}.` +
+      (quote ? `\n\nWhat they were reacting to:\n"${quote}"` : '') +
+      `\n\nTheir words:\n"${text.trim()}"`,
+  });
+  appendEvent('feedback_filed', { id: t.id, audit, anchor });
+  return t;
 }
 
 // ---- digests ----------------------------------------------------------------

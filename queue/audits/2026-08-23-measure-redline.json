@@ -1,0 +1,29 @@
+{
+  "feature": "Measure and redline",
+  "epic": "measure-redline",
+  "summary": "Turn a screenshot into a spec: click two points for a caliper, tag each measurement as a size or a spacing, drag a guide to check alignment, then copy the whole set out as a text spec list. Every number below was checked against a capture whose true sizes are known.",
+  "setup": "Photonz Dev, Experiments window, release Next. Hover-to-measure is now OFF by default after this review; the other five measure flags are on.",
+  "try": [
+    { "do": "Open the test capture in Photonz and press i for the Measure tool.", "shot": "2026-08-23-measure-00-capture.png" },
+    { "do": "Click the left edge of the Save Changes button, then its right edge, then click again to place the caliper. It should read 124 px, which is the true width." },
+    { "do": "Measure the gap between Reset and Save Changes the same way. True answer is 12 px. Select it and switch Role to Spacing: it turns blue and stays blue for the next one.", "shot": "2026-08-23-measure-03-roles.png" },
+    { "do": "Set Snap to Edges and centers in the tool options, then start a measurement in the middle of a settings row. The foot should jump to the row's vertical centre." },
+    { "do": "Switch the mode chip from Distance to Alignment and drag a guide down the left edge of the three labels in the second card. The middle one is deliberately 4 px out.", "shot": "2026-08-23-measure-04-alignment.png" },
+    { "do": "Open the inspector, read the Measurements list, then use its group menu and Copy as Spec List. Paste it somewhere." },
+    { "do": "Draw an arrow at the misaligned label, double-click it, and type a caption.", "shot": "2026-08-23-measure-05-arrow-caption.png" },
+    { "do": "In the measure inspector Export section, hit Copy Image and paste into another app. Every caliper and caption should be baked into the pixels." }
+  ],
+  "evaluate": [
+    "Is the two-point caliper the interaction you actually want measuring to start from?",
+    "Is red for size and blue for spacing the right split, and should a gap between two elements auto-detect as spacing instead of you setting it?",
+    "Is the alignment guide worth costing a mode you can forget you are in, or would you rather eyeball two calipers?",
+    "Is the spec list the right shape to paste into a ticket, or does it need coordinates too?"
+  ],
+  "rough": [
+    "Hover-to-measure mostly does not work, and it has been turned off by default because of this review. It reads an empty field well (218x24 against a true 220x26) and gets almost everything else wrong: a 42x24 toggle reads as a 12x12 sliver of its knob, the Save Changes and Reset buttons read nothing at all, and a 624x44 settings row reads 490x42 because the walk stops at the label text.",
+    "That is not a tuning nudge. Preferring the strongest edge fixes buttons exactly but then a settings row grabs the whole card around it. Getting both right needs a different signal than the edge map alone, so it is filed as its own feature-sized task.",
+    "Alignment reports off by 5 px where the truth is 4, an off-by-one worth deciding about.",
+    "Deliberately left out: free-angle calipers, semantic names from text recognition, and the agent Describe specs button, all previously decided against.",
+    "The long-form version of this review, with every measured number and the reasoning, is in queue/audits/2026-08-23-measure-redline.md."
+  ]
+}

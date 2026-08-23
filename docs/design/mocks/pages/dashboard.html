@@ -280,6 +280,38 @@
     #dashboard .db-brief{transition:none}
   }
 
+  /* ---- audits: short, scannable, and every line answers back ---- */
+  #dashboard .db-afeature{font-size:15px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+  #dashboard .db-asum{margin:0;font-size:12.5px;line-height:1.6;color:var(--dim);max-width:70em}
+  #dashboard .db-asetup{margin:var(--s3) 0 0;font-size:11px;color:var(--faint);line-height:1.5}
+  #dashboard .db-asetup b{color:var(--dim);font-weight:600}
+  /* a commentable line: content, and a control that stays quiet until you want it */
+  #dashboard .db-aline{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 24px;
+    gap:var(--s2);align-items:start;padding:var(--s2) 0;border-bottom:1px solid var(--line-soft)}
+  #dashboard .db-aline:last-child,#dashboard .db-aline.lead{border-bottom:0}
+  #dashboard .db-aline.lead{padding-top:var(--s2)}
+  #dashboard .db-acomment{opacity:0;transition:opacity var(--dur-1) var(--ease-standard)}
+  #dashboard .db-aline:hover .db-acomment,#dashboard .db-aline.commenting .db-acomment{opacity:1}
+  /* a line stacks: the sentence, then anything illustrating it. This was a
+     wrapping flex row with baseline alignment, and a tall screenshot in a
+     baseline-aligned row hangs ABOVE its own text, which is how the shot ended
+     up beside step one instead of under it. */
+  #dashboard .db-abody{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+  #dashboard .db-arow{display:flex;gap:var(--gap-sm);align-items:baseline;min-width:0}
+  #dashboard .db-anum{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
+    font-size:9.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);font-variant-numeric:tabular-nums}
+  #dashboard .db-ado{font-size:12.5px;line-height:1.55;color:var(--ink);flex:1;min-width:0}
+  #dashboard .db-aq{font-size:12.5px;line-height:1.55;color:var(--dim)}
+  #dashboard .db-aother{color:var(--faint);font-style:italic}
+  /* a screenshot belongs UNDER its step, not beside it: as a flex item it took
+     its own width and sat next to the sentence it illustrates */
+  #dashboard .db-abody img{flex:0 0 100%;width:100%;max-width:460px;margin-top:var(--s2);
+    border:1px solid var(--line);border-radius:var(--r3)}
+  #dashboard .db-acomposer{grid-column:1/-1;margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s2)}
+  #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
+  #dashboard .db-afiled{grid-column:1/-1;display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--good);margin-top:2px}
+  #dashboard .db-afiled .ic{width:12px;height:12px}
+
   /* ---- digest tab ---- */
   /* The day list used to be a rail down the left. Picking a date is a one-shot
      choice, not something you scan, so it moved into a select beside the page
@@ -1121,14 +1153,14 @@
     return { clientX: r.left + ux * k, clientY: r.top + uy * k };
   }
 
-  // ---- audits: the feature reports a person can act on ----
-  // An audit answers three questions the queue cannot: what is this, how do I
-  // try it, and what should I judge. It is the handoff from the loop to a human.
-  var auditSel = null, auditCache = {};
+  // ---- audits: try a feature, react to any line of it ----
+  // The report is structured rather than prose, so it stays short AND every
+  // line is a thing the user can disagree with. A reaction files a task with
+  // the line quoted, which is the whole handoff back to the loop.
+  var auditSel = null, auditCache = {}, commentOn = null, filed = {};
   function auditTitle(name) {
-    // 2026-08-23-measure-redline.md -> "measure redline · Aug 23"
-    var m = name.replace('.md', '').match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
-    if (!m) return name.replace('.md', '');
+    var m = name.replace('.json', '').match(/^(\d{4}-\d{2}-\d{2})-(.*)$/);
+    if (!m) return name.replace('.json', '');
     return m[2].replace(/-/g, ' ') + ' · ' + dayLabel(m[1]);
   }
   function auditPicker() {
@@ -1139,31 +1171,75 @@
       return '<option value="' + esc(n) + '"' + (n === auditSel ? ' selected' : '') + '>' + esc(auditTitle(n)) + '</option>';
     }).join('') + '</select>';
   }
+  // one commentable line: the content, plus a quiet control that opens a composer
+  function auditLine(cls, anchor, quote, inner) {
+    var open = commentOn === anchor;
+    var key = auditSel + '|' + anchor;
+    var h = '<div class="db-aline ' + cls + (open ? ' commenting' : '') + '" data-anchor="' + esc(anchor) + '">';
+    h += '<div class="db-abody">' + inner + '</div>';
+    h += '<button class="btn icon sm ghost db-acomment" data-act="audit-comment" data-anchor="' + esc(anchor) +
+      '" data-quote="' + esc(quote) + '" title="Comment on this"><i class="ic ic-chat"></i></button>';
+    if (filed[key]) h += '<span class="db-afiled"><i class="ic ic-check"></i>filed</span>';
+    if (open) {
+      h += '<div class="db-acomposer">' +
+        '<textarea class="input area block" id="db-ctext" rows="2" placeholder="What is wrong with this, or what would you rather?"></textarea>' +
+        '<div class="db-acta"><button class="btn sm ghost" data-act="audit-cancel">Cancel</button>' +
+        '<button class="btn sm primary" data-act="audit-send" data-anchor="' + esc(anchor) + '" data-quote="' + esc(quote) + '">File as task</button></div>' +
+        '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
   function renderAudits() {
     var list = (S.audits) || [];
     if (!list.length) {
       return '<div class="db-card"><div class="db-card-b"><div class="db-empty">' +
-        'Nothing to try yet. When the loop finishes a feature it writes a report here: what the feature is, ' +
-        'how to try it in the dev build, what to evaluate, and what its adversarial review found.' +
+        'Nothing to try yet. When the loop finishes a feature it leaves a short report here: what it is, ' +
+        'a handful of steps to try it, and what to judge. You can comment on any line and it becomes a task.' +
         '</div></div></div>';
     }
     if (!auditSel || list.indexOf(auditSel) < 0) auditSel = list[0];
-    var cached = auditCache[auditSel];
-    var h = '<div class="db-card"><div class="db-card-b"><div class="db-md" id="db-audit">' +
-      (cached ? md(cached) : '<p class="db-empty">Loading…</p>') + '</div></div></div>';
-    if (!cached) setTimeout(function () { loadAudit(auditSel); }, 0);
+    var a = auditCache[auditSel];
+    if (!a) { setTimeout(function () { loadAudit(auditSel); }, 0); return '<div class="db-card"><div class="db-card-b"><div class="db-empty">Loading…</div></div></div>'; }
+
+    var h = '<div class="db-card db-audit"><div class="db-card-b">';
+    h += '<div class="db-afeature">' + esc(a.feature || auditTitle(auditSel)) + '</div>';
+    if (a.summary) h += auditLine('lead', 'summary', a.summary, '<p class="db-asum">' + esc(a.summary) + '</p>');
+    if (a.setup) h += '<p class="db-asetup"><b>Setup</b> ' + esc(a.setup) + '</p>';
+    h += '</div></div>';
+
+    if ((a.try || []).length) {
+      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-play"></i><h3>Try it</h3><span class="k">' + a.try.length + ' steps</span></div><div class="db-card-b">';
+      a.try.forEach(function (st, i) {
+        var inner = '<div class="db-arow"><span class="db-anum">' + (i + 1) + '</span><span class="db-ado">' + esc(st.do || '') + '</span></div>';
+        if (st.shot) inner += '<img src="/api/audit-shot/' + encodeURIComponent(st.shot) + '" alt="" loading="lazy">';
+        h += auditLine('step', 'try-' + i, st.do || '', inner);
+      });
+      h += '</div></div>';
+    }
+    if ((a.evaluate || []).length) {
+      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-help"></i><h3>What to judge</h3></div><div class="db-card-b">';
+      a.evaluate.forEach(function (q, i) { h += auditLine('q', 'eval-' + i, q, '<span class="db-aq">' + esc(q) + '</span>'); });
+      h += '</div></div>';
+    }
+    if ((a.rough || []).length) {
+      h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Known rough edges</h3></div><div class="db-card-b">';
+      a.rough.forEach(function (r, i) { h += auditLine('rough', 'rough-' + i, r, '<span class="db-aq">' + esc(r) + '</span>'); });
+      h += '</div></div>';
+    }
+    // a catch-all, because not every reaction is about a specific line
+    h += '<div class="db-card" style="margin-top:var(--gap)"><div class="db-card-b">' +
+      auditLine('other', 'general', a.feature || '', '<span class="db-aq db-aother">Something else about this feature</span>') +
+      '</div></div>';
     return h;
   }
   function loadAudit(name) {
     fetch('/api/audit/' + encodeURIComponent(name)).then(function (r) { return r.json(); }).then(function (d) {
-      auditCache[name] = d.body || '';
-      if (auditSel === name) {
-        var el = document.getElementById('db-audit');
-        if (el) { el.innerHTML = md(auditCache[name]); PZ.view.enter(el); }
-      }
+      auditCache[name] = d.body || d;
+      if (auditSel === name) render();
     }).catch(function () {
-      var el = document.getElementById('db-audit');
-      if (el) el.innerHTML = '<p class="db-empty">That report could not be loaded.</p>';
+      var el = document.getElementById('db-body');
+      if (el) el.innerHTML = '<div class="db-card"><div class="db-card-b"><div class="db-empty">That report could not be loaded.</div></div></div>';
     });
   }
 
@@ -1333,10 +1409,29 @@
       return;
     }
     if (b.dataset.act === 'detail') { detailId = b.dataset.id; render(); return; }
+    if (b.dataset.act === 'audit-comment') {
+      commentOn = commentOn === b.dataset.anchor ? null : b.dataset.anchor;
+      render();
+      var ta = document.getElementById('db-ctext');
+      if (ta) ta.focus();
+      return;
+    }
+    if (b.dataset.act === 'audit-cancel') { commentOn = null; render(); return; }
+    if (b.dataset.act === 'audit-send') {
+      var ta2 = document.getElementById('db-ctext');
+      var text = ta2 ? ta2.value.trim() : '';
+      if (!text) { if (ta2) ta2.focus(); return; }
+      var a = auditCache[auditSel] || {};
+      var key = auditSel + '|' + b.dataset.anchor;
+      b.textContent = 'Filing…'; b.disabled = true;
+      post('/api/feedback', { audit: auditSel, anchor: b.dataset.anchor, quote: b.dataset.quote, text: text, epic: a.epic || '' })
+        .then(function () { filed[key] = true; commentOn = null; render(); });
+      return;
+    }
   });
   document.getElementById('dashboard').addEventListener('change', function (e) {
     if (e.target.id === 'db-dsel') { selectDigest(e.target.value); return; }
-    if (e.target.id === 'db-asel') { auditSel = e.target.value; render(); return; }
+    if (e.target.id === 'db-asel') { auditSel = e.target.value; commentOn = null; render(); return; }
     var s = e.target.closest('select[data-act="prio"]');
     if (s) { post('/api/task/update', { id: s.dataset.id, priority: s.value }); return; }
     var q2 = e.target.closest('input[data-act="seq"]');
