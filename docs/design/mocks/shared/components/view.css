@@ -1,0 +1,36 @@
+/* ============================================================
+   VIEW — the entrance a whole screen makes (UX-PATTERNS D11)
+   ============================================================
+   Overlays had a choreography and lists had one; the largest change of all,
+   swapping what the whole page is showing, had none. So the dashboard grew a
+   page-local `.db-viewin`, which is the same mistake as a page-local tooltip:
+   the next page would have invented its own, slightly different, and the site
+   would drift one animation at a time.
+
+   ONE definition, used three ways, all of them the same motion:
+
+     · a page loads                   view.js plays it on the page's stage
+     · a section swaps in place       PZ.view.enter(el) on the region that changed
+     · a region is replaced wholesale PZ.view.enter(el)
+
+   IT IS AN ENTRANCE, NOT A CROSS-FADE, and that is a deliberate cost decision.
+   Fading the old view out before bringing the new one in holds the new content
+   back by the exit's whole duration, and navigation is the one place where
+   added latency is felt immediately. The new view paints at once and rises the
+   last few pixels into place: it reads as arriving, and it costs nothing.
+
+   The distance is 8px rather than the 5px a row uses. A screen is a bigger
+   object, and the same travel that reads as "settling" on a 32px row is
+   invisible on a 900px page. */
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(8px) }
+  to   { opacity: 1; transform: none }
+}
+/* `both` matters: the final keyframe (transform:none) is retained, so an
+   animated ancestor does not go on acting as the containing block for the
+   fixed-position tooltips and dialogs that live inside it. */
+.view-enter { animation: view-in var(--dur-3) var(--ease-decel) both }
+
+@media (prefers-reduced-motion: reduce) {
+  .view-enter { animation: none }
+}

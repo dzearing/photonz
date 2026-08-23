@@ -39,11 +39,23 @@
     scrim.setAttribute('aria-hidden', 'false');
     var entry = { scrim: scrim, restore: document.activeElement, onClose: opts.onClose };
     stack.push(entry);
-    // focus moves in, so the keyboard is inside the overlay and Escape is ours
+    // Focus moves in, so the keyboard is inside the overlay and Escape is ours.
+    //
+    // It lands on the SURFACE, not on the first control, and that is both the
+    // correct dialog pattern and the fix for a real bug. Scripted .focus() on a
+    // button counts as non-pointer focus, so :focus-visible matches and the
+    // keyboard ring appeared around the close button on a plain mouse click —
+    // a ring that says "you are here" to someone who never used the keyboard.
+    // Focusing the container announces the dialog to a screen reader, draws
+    // nothing (see .dlg[tabindex] in dialog.css), and still puts Tab at the top
+    // of the dialog's own controls.
+    //
+    // A dialog whose job is typing can opt in with data-dialog-autofocus, where
+    // landing in the field IS the expected behaviour.
     var surface = scrim.querySelector('.dlg');
     if (surface && opts.focus !== false) {
-      var first = focusables(surface)[0];
-      if (first) first.focus();
+      var auto = surface.querySelector('[data-dialog-autofocus]');
+      if (auto) auto.focus();
       else { surface.setAttribute('tabindex', '-1'); surface.focus(); }
     }
   }

@@ -721,9 +721,19 @@ destructive confirmations, which state their choices explicitly. Escape closes
 the **topmost** overlay only, so a popover inside a dialog does not take the
 dialog with it.
 
-**Focus is part of the animation.** On open, focus moves into the surface (its
-first control, or the surface itself); on close, focus returns to whatever opened
-it. Focus never sits on an element that is fading away.
+**Focus is part of the animation.** On open, focus moves to the **surface
+itself**, not to its first control; on close it returns to whatever opened the
+overlay. Focus never sits on an element that is fading away.
+
+Focusing the surface rather than the first button is deliberate twice over. It
+is what announces the dialog to a screen reader, and it keeps the keyboard ring
+honest: a scripted `.focus()` on a button counts as non-pointer focus, so
+`:focus-visible` matches and a plain mouse click drew a keyboard ring around the
+close button. Rings mean "the keyboard is here" and must never appear for a
+pointer user. The container takes focus and draws nothing; every control inside
+keeps its own `:focus-visible`, so keyboard users lose nothing. A dialog whose
+job is typing opts in with `data-dialog-autofocus`, where landing in the field
+is the point.
 
 #### Lists: exits, then moves, then enters — three phases, never simultaneous
 
@@ -770,6 +780,31 @@ a row's own control has focus, or while a pointer is held down inside it. The
 dashboard already suspends its poll-driven re-render for open dialogs and focused
 fields for the same reason.
 
+#### Views: a screen arrives, it does not cross-fade
+
+The third motion component, beside overlays and lists, and the one that was
+missing longest: changing what the whole page shows. It is **one entrance, no
+exit** (`view.css` / `view.js`, `PZ.view.enter(el)`), and the absence of an exit
+is the decision, not an omission. Fading the outgoing view out first would delay
+the incoming one by the exit's entire duration, and navigation is where added
+latency is felt most. The new view paints immediately and rises the last 8px
+into place: it reads as arriving, and costs nothing.
+
+It applies at every scale, and it is always the same motion:
+
+- **A page loads** — `view.js` plays it once on the page's stage, so every page
+  in the site enters identically without doing anything.
+- **A section swaps in place** — the region that changed calls
+  `PZ.view.enter(el)`; navigating between pages and switching sections within
+  one then look like the same act, because they are.
+- **Re-render is not arrival.** Only play it when the view actually CHANGED. A
+  polled refresh of the section you are already reading must not re-animate it,
+  or the page twitches on every poll.
+
+A page-local page-transition is a bug, the same way a page-local tooltip is:
+the next page invents a slightly different one and the site drifts a single
+animation at a time.
+
 #### Reduced motion collapses the sequence, never the outcome
 
 Under `prefers-reduced-motion: reduce`, all three phases become instant and the
@@ -797,6 +832,18 @@ behave differently, and only one of them was covered:
 
 Neither is a second tooltip system. They are one component with one plate, one
 elevation, and one placement law.
+
+**A paragraph is not a tooltip.** A hint is one short line, and a readout is a
+few values. When the content is longer than that, it belongs in the surface the
+thing already opens: the dashboard put a task's whole notes field into a row's
+`title`, which the component dutifully turned into a tooltip that covered the
+list it was describing and could not be read. The row opened a detail dialog the
+whole time. If you are reaching for a tooltip to carry a paragraph, the answer
+is the detail view, not a bigger tooltip.
+
+**Watch `title`.** Any element with a `title` and no `data-tip` is upgraded
+automatically, which is a feature for real labels and a trap for text that was
+never meant to be one.
 
 #### The placement law (in this order, and the order is the point)
 

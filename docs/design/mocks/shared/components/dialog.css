@@ -128,3 +128,11 @@
 @media (prefers-reduced-motion:reduce){
   .dlg-scrim,.dlg,.dlg-scrim.closing .dlg{transition:none}
 }
+
+/* The surface takes focus on open (dialog.js), which is what announces the
+   dialog and puts Tab at the top of its controls. It is a container, not a
+   control, so it never draws a ring: the ring is reserved for the thing you
+   are about to operate. Every control inside keeps its own :focus-visible,
+   so keyboard users lose nothing. */
+.dlg[tabindex]:focus,
+.dlg[tabindex]:focus-visible { outline: none }

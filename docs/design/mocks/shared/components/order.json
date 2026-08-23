@@ -41,7 +41,8 @@
     "visual-rules",
     "video",
     "colorpicker",
-    "tooltip"
+    "tooltip",
+    "view"
   ],
   "js": [
     "core",
@@ -62,6 +63,7 @@
     "colorpicker",
     "tooltip",
     "dialog",
-    "listfx"
+    "listfx",
+    "view"
   ]
 }

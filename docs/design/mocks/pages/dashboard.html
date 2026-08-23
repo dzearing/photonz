@@ -17,6 +17,7 @@
   /* things that arrive get a soft entrance; reduced-motion turns it off below */
   @keyframes db-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
   #dashboard .db-enter{animation:db-in var(--dur-3) var(--ease-decel) both}
+  /* a section change uses the shared view entrance (view.css), not a local one */
 
   /* ---- cards ---- */
   #dashboard .db-card{border:1px solid var(--edge-lo);border-radius:var(--r4);
@@ -221,11 +222,18 @@
     border:1px solid var(--line-strong)}
   #dashboard .db-acc li.met::before{background:var(--good);border-color:var(--good)}
   #dashboard .db-deps{display:flex;flex-wrap:wrap;gap:var(--s2)}
-  #dashboard .db-log{display:flex;flex-direction:column;gap:var(--s2);max-height:260px;overflow:auto;
+  /* Activity is a LIST, so it gets rows: one column template, a separator per
+     row, and a time column wide enough for the timestamp it actually renders.
+     At 92px the time overflowed its cell and collided with the note ("11:34
+     PMcreated"), which is what happens when a column is sized by guess. */
+  #dashboard .db-log{display:flex;flex-direction:column;max-height:280px;overflow:auto;
     padding-right:var(--s2)}
-  #dashboard .db-logrow{display:grid;grid-template-columns:92px 1fr;gap:var(--s3);align-items:baseline}
-  #dashboard .db-logrow .t{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap}
-  #dashboard .db-logrow .n{font-size:11.5px;line-height:1.5;color:var(--dim);white-space:pre-wrap}
+  #dashboard .db-logrow{display:grid;grid-template-columns:124px minmax(0,1fr);gap:var(--s3);
+    align-items:baseline;padding:var(--s2) 0;border-bottom:1px solid var(--line-soft)}
+  #dashboard .db-logrow:last-child{border-bottom:0}
+  #dashboard .db-logrow .t{font-family:var(--mono);font-size:9.5px;color:var(--faint);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  #dashboard .db-logrow .n{font-size:11.5px;line-height:1.5;color:var(--dim);white-space:pre-wrap;min-width:0}
   #dashboard .db-ttrow{cursor:pointer}
   #dashboard .db-ttrow .input,#dashboard .db-ttrow .select,#dashboard .db-ttrow .btn{cursor:auto}
 
@@ -342,8 +350,16 @@
   // ---- render root ----
   // Rows carry data-key; anything whose key was not present in the previous
   // render animates in, so arriving content lands gracefully instead of popping.
-  var renderKeys = null;
+  var renderKeys = null, shownTab = null;
   var TAB_TITLE = { summary: 'Summary', objectives: 'Objectives', tasks: 'Tasks', data: 'Data', digest: 'Digest' };
+  // Play the entrance only when the SECTION changed. A poll-driven re-render of
+  // the section you are already looking at must not re-animate it, or the page
+  // would twitch every 4 seconds.
+  function playViewEnter() {
+    if (shownTab === tab) return;
+    shownTab = tab;
+    PZ.view.enter(body);
+  }
   function render() {
     // The page names itself after the section you are in, and it knows that
     // from the URL, not from the data. This ran BELOW the `!S` guard, so the
@@ -360,6 +376,7 @@
     if (tab === 'tasks') body.innerHTML = renderTasks();
     if (tab === 'data') { body.innerHTML = renderData(); wireCharts(); }
     if (tab === 'digest') { body.innerHTML = renderDigest(); }
+    playViewEnter();
     var seen = {};
     body.querySelectorAll('[data-key]').forEach(function (el) {
       seen[el.dataset.key] = 1;
@@ -717,7 +734,11 @@
     if (!list.length) return '<div class="db-ttempty">No tasks match. Change the filter above or queue one.</div>';
     return list.map(function (t) {
       var st = t.parked ? 'parked' : t.status;
-      var h = '<div class="db-ttrow" data-act="detail" data-id="' + esc(t.id) + '" data-key="tt-' + esc(t.id) + '" title="' + esc(statusWord(t) + ' · ' + (t.notes || 'no notes')) + '">';
+      // NO title/data-tip here. The notes are a paragraph, and a paragraph in a
+      // tooltip is not a hint (D12): it covered the list it was meant to
+      // describe and was unreadable. The row opens the detail dialog, which is
+      // where a paragraph belongs.
+      var h = '<div class="db-ttrow" data-act="detail" data-id="' + esc(t.id) + '" data-key="tt-' + esc(t.id) + '">';
       h += '<span class="db-sicon s-' + esc(st) + '"><i class="ic ' + STATUS_ICON[st] + '"></i></span>';
       h += '<span class="db-seq">' + (t.seq != null ? t.seq : '') + '</span>';
       h += '<span class="db-pri ' + t.priority.slice(0, 2) + '">' + t.priority.slice(0, 2).toUpperCase() + '</span>';
@@ -732,10 +753,14 @@
   // ---- task detail overlay ----------------------------------------------
   // Everything the queue knows about one task, plus the controls that used to
   // crowd every row. Composes the DS dialog (dialog.css), not a bespoke panel.
+  // Built from two parts rather than one toLocaleString call: that produces
+  // "Aug 22 at 11:34 PM" in current ICU, whose width varies by locale and blew
+  // past the column it sits in. This is compact and predictable.
   function absTime(iso) {
     if (!iso) return null;
     var d = new Date(iso);
-    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' +
+      d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   }
   function linkify(text) {
     return esc(text).replace(/(https?:\/\/[^\s<)"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');

@@ -151,8 +151,13 @@ calls them, never its own timings.
   instead of jumping, and suspension while a row is focused or held. Never
   animate list rows per page.
 
-Both collapse to instant under `prefers-reduced-motion`, with an identical end
-state.
+- **Whole views** (`view.css` + `view.js`). Every page gets the standard
+  entrance automatically on load. When a page swaps a region wholesale, call
+  `PZ.view.enter(el)` on it, and only when the view actually changed. Never
+  write a page-local page transition.
+
+All three collapse to instant under `prefers-reduced-motion`, with an identical
+end state.
 
 ## Color / type tokens (never hardcode raw hex for chrome)
 
@@ -907,8 +912,11 @@ keyframe; agent/AI (✦) -> sparkle; add (+/✚) -> plus; reset -> undo; play/pa
 play/pause; brush -> brush; eraser -> eraser; drag handle (⋮⋮) -> more; search ->
 search; back -> chevron-right (or a left variant); export/import/save -> export/
 import/save; layers -> layers; blade/split -> blade; zoom -> zoom; hand/pan -> hand;
-magic/select-subject -> wand; adjustments -> sliders. If no icon fits, use a clean
-text label, never an ascii symbol. If you truly need a new icon, add it to the
+magic/select-subject -> wand; adjustments -> sliders; redact -> blur (the effect
+IS a blur; eye-off means "this layer is hidden" and nothing else); open a
+capture/document in the editor -> external (pen/pencil is Edit, so Open must not
+share it); save something as a style -> swatch (a style is always swatch, never
+library). If no icon fits, use a clean text label, never an ascii symbol. If you truly need a new icon, add it to the
 generator (Scripts) not inline.
 
 ## VISUAL RULES (non-negotiable, from design review)
