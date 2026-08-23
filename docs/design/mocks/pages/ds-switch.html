@@ -32,28 +32,17 @@
     font-weight:700;border:1px solid var(--line-soft);border-radius:999px;padding:2px 8px;flex:none}
   #ds-switch .dss-blk-h .dss-sub{margin-left:auto}
 
-  /* ---- the system picker, as a dock group body ---- */
-  .dss-pick{padding:var(--gap-sm) var(--pad-sm) var(--pad-sm);display:flex;flex-direction:column;gap:var(--gap-sm)}
-  .dss-pick .lead{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:660;margin:0 0 var(--s1)}
-
-  .dss-sys{display:flex;align-items:center;gap:var(--pad-sm);text-align:left;width:100%;
-    padding:var(--gap-sm) var(--pad-sm);border-radius:var(--r-md);border:1px solid var(--edge-lo);
-    background:var(--glass-thin);backdrop-filter:var(--lg-blur-sm);-webkit-backdrop-filter:var(--lg-blur-sm);
-    box-shadow:inset 0 1px 0 var(--edge-hi);cursor:pointer;color:var(--ink);transition:var(--ctl-tr)}
-  .dss-sys:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo));background:var(--glass)}
-  .dss-sys:active{transform:translateY(.5px) scale(.99)}
-  .dss-sys:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
-  .dss-sys.on{border-color:var(--accent-line);box-shadow:inset 0 1px 0 var(--edge-hi),0 0 0 1px var(--accent-line)}
-  .dss-sw{width:30px;height:30px;border-radius:9px;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 0 0 1px var(--edge-lo);display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff}
-  .dss-meta{flex:1;min-width:0}
-  .dss-meta .nm{font-size:12.5px;font-weight:640;color:var(--ink);line-height:1.2}
-  .dss-meta .tok{display:block;font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .dss-act{flex:none;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:2px 6px;border-radius:999px;visibility:hidden}
-  .dss-sys.on .dss-act{visibility:visible}
-  .dss-hint{font-size:10.5px;color:var(--faint);line-height:1.45;margin-top:var(--s1);padding-top:var(--pad-sm);border-top:1px solid var(--edge-lo)}
-
-  #ds-switch .dss-mlabel{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
-    font-weight:700;padding:6px 10px 3px}
+  /* ---- the systems catalog: Library tiles, scope = Systems (D2) ----
+     The catalog is NOT a bespoke picker. It is the shared Library grid, so a
+     system browses, selects and drives Properties exactly like a component or
+     a style does. Only the tile's thumbnail is page-specific: it paints the
+     system's own surface, accent, and corner radius, so the tile is a preview
+     of what applying it does. */
+  #ds-switch .libtile .th{position:relative;background:var(--artboard)}
+  #ds-switch .dss-tsw{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:22px;height:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 0 0 1px rgba(0,0,0,.28)}
+  #ds-switch .dss-hint{font-size:10.5px;color:var(--faint);line-height:1.45;
+    margin:0;padding:var(--pad-sm);border-top:1px solid var(--edge-lo)}
 
   /* ---- the "now showing" readout, in the Properties group ---- */
   .dss-now{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;font-weight:600;color:var(--ink)}
@@ -140,40 +129,27 @@
          only) › command surface › canvas + floating tool bar › splitter › one
          right dock of panel groups › the rail it collapses to.
          ===================================================================== -->
-    <div class="win tall cq shell" data-shell="northern-light· 1200 × 630" data-ws="ui">
+    <div class="win tall cq shell" data-shell="northern-light · 1200 × 630" data-ws="ui"
+         data-status='<span class="chip style"><span class="sw" id="dss-chipsw"></span><span id="dss-chip">Brand v2.3</span></span>'>
 
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>northern-light</b><span class="meta">· 1200 × 630</span></div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#dssCmd"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#dssHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <span class="chip style" data-target="dsys"><span class="sw"></span>Brand v2.3 <i class="ic xs ic-chevron-down"></i></span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="dssCmd" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-            <div class="dss-mlabel">System</div>
-            <div class="menuitem"><i class="ic ic-swatch"></i> Apply a system <span class="sc">⌘⌥Y</span></div>
-            <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
-            <div class="menuitem" data-target="dsys"><i class="ic ic-library"></i> Manage systems</div>
-            <div class="menu-sep"></div>
-            <div class="dss-mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-          </div>
-        </div>
-      </div>
+      <!-- TITLE BAR and the compact command surface are CHROME: the shell
+           component builds both from data-shell / data-status. The page only
+           authors the menu ITEMS below (D3). -->
 
       <div class="edit lean" id="dssShell" data-dock="open">
+
+        <!-- D3 command surface: THIS PAGE'S commands. The `…` button that opens
+             them is built by the shell component, into the canvas actions. -->
+        <div class="popover menu pop cmdpop" id="dssCmd">
+          <div class="mlabel">System</div>
+          <div class="menuitem"><i class="ic ic-swatch"></i> Apply a system <span class="sc">⌘⌥Y</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
+          <div class="menuitem" data-target="dsys"><i class="ic ic-library"></i> Manage systems</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
 
         <div class="cnv">
           <div class="canvas">
@@ -270,38 +246,59 @@
         <!-- THE RIGHT DOCK · the picker is a panel group, not invented chrome -->
         <div class="pdock">
 
-          <div class="dgrp" id="dssSystems" style="--gh:230px">
-            <div class="dgrp-h"><span class="ttl">Design systems</span><span class="cnt">5</span>
+          <!-- LIBRARY (D1/D2): ONE surface, four scopes. The systems catalog is
+               this group at scope Systems, never a picker of its own. -->
+          <div class="dgrp" id="dssLibrary" data-grp="library">
+            <div class="dgrp-h"><span class="ttl">Library</span><span class="cnt" id="dssScopeCnt">Systems</span>
               <button class="btn ghost icon sm" title="Import a system file"><i class="ic ic-import"></i></button>
               <button class="btn ghost icon sm" title="Manage systems" data-target="dsys"><i class="ic ic-more"></i></button>
             </div>
             <div class="dgrp-b">
-              <div class="dss-pick">
-                <button class="dss-sys on" data-sys="brand2" aria-pressed="true">
-            <span class="dss-sw" style="background:#7C4DFF">A</span>
-            <span class="dss-meta"><span class="nm">Brand v2.3</span><span class="tok">New York · r16 · #7C4DFF</span></span>
-            <span class="dss-act">Active</span>
-          </button>
-          <button class="dss-sys" data-sys="brand1" aria-pressed="false">
-            <span class="dss-sw" style="background:#2F6FED">A</span>
-            <span class="dss-meta"><span class="nm">Brand v1 (legacy)</span><span class="tok">SF Pro · r6 · #2F6FED</span></span>
-            <span class="dss-act">Active</span>
-          </button>
-          <button class="dss-sys" data-sys="acme" aria-pressed="false">
-            <span class="dss-sw" style="background:#E8552D">A</span>
-            <span class="dss-meta"><span class="nm">Acme Team</span><span class="tok">SF Pro · r8 · #E8552D</span></span>
-            <span class="dss-act">Active</span>
-          </button>
-          <button class="dss-sys" data-sys="gray" aria-pressed="false">
-            <span class="dss-sw" style="background:#5A6270">A</span>
-            <span class="dss-meta"><span class="nm">Grayscale</span><span class="tok">SF Pro · r8 · #5A6270</span></span>
-            <span class="dss-act">Active</span>
-          </button>
-          <button class="dss-sys" data-sys="hc" aria-pressed="false">
-            <span class="dss-sw" style="background:#0A0C12">A</span>
-            <span class="dss-meta"><span class="nm">High-contrast</span><span class="tok">SF Pro · r2 · #0A0C12</span></span>
-            <span class="dss-act">Active</span>
-          </button>
+              <div style="padding:var(--gap-sm) var(--pad-sm) 0">
+                <div class="seg scopeseg" id="dssScopeSeg">
+                  <button data-scope="media" data-scope-name="Media">Media</button>
+                  <button data-scope="components" data-scope-name="Components">Comp</button>
+                  <button data-scope="styles" data-scope-name="Styles">Styles</button>
+                  <button class="on" data-scope="systems" data-scope-name="Systems">Systems</button>
+                </div>
+              </div>
+              <div class="libtools">
+                <span class="srch"><i class="ic sm ic-search"></i><input id="dssSearch" name="library-search" type="text" placeholder="Search systems" autocomplete="off" spellcheck="false" aria-label="Search library"></span>
+              </div>
+
+              <div data-scope-body="media" hidden>
+                <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-image"></i></span>No media imported</div>
+              </div>
+              <div data-scope-body="components" hidden>
+                <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-component"></i></span>No components in this document</div>
+              </div>
+              <div data-scope-body="styles" hidden>
+                <div class="empty" style="padding:var(--s5)"><span class="g"><i class="ic lg ic-swatch"></i></span>Styles come from the active system</div>
+              </div>
+
+              <div data-scope-body="systems">
+                <div class="libgrid" id="dssSysGrid">
+                  <div class="libtile sel" tabindex="0" role="button" data-sys="brand2" aria-pressed="true">
+                    <span class="th" style="background:linear-gradient(150deg,#241a38,#141018)"><i class="dss-tsw" style="background:#7C4DFF;border-radius:8px"></i></span>
+                    <span class="cap"><span class="nm">Brand v2.3</span><span class="mt">New York · r16</span></span>
+                  </div>
+                  <div class="libtile" tabindex="0" role="button" data-sys="brand1" aria-pressed="false">
+                    <span class="th" style="background:linear-gradient(150deg,#fbfcfe,#eef1f6)"><i class="dss-tsw" style="background:#2F6FED;border-radius:3px"></i></span>
+                    <span class="cap"><span class="nm">Brand v1 (legacy)</span><span class="mt">SF Pro · r6</span></span>
+                  </div>
+                  <div class="libtile" tabindex="0" role="button" data-sys="acme" aria-pressed="false">
+                    <span class="th" style="background:linear-gradient(150deg,#2a1712,#1c0f0b)"><i class="dss-tsw" style="background:#E8552D;border-radius:4px"></i></span>
+                    <span class="cap"><span class="nm">Acme Team</span><span class="mt">SF Pro · r8</span></span>
+                  </div>
+                  <div class="libtile" tabindex="0" role="button" data-sys="gray" aria-pressed="false">
+                    <span class="th" style="background:linear-gradient(150deg,#20242c,#14171d)"><i class="dss-tsw" style="background:#5A6270;border-radius:4px"></i></span>
+                    <span class="cap"><span class="nm">Grayscale</span><span class="mt">SF Pro · r8</span></span>
+                  </div>
+                  <div class="libtile" tabindex="0" role="button" data-sys="hc" aria-pressed="false">
+                    <span class="th" style="background:#ffffff"><i class="dss-tsw" style="background:#0A0C12;border-radius:1px"></i></span>
+                    <span class="cap"><span class="nm">High-contrast</span><span class="mt">SF Pro · r2</span></span>
+                  </div>
+                </div>
                 <p class="dss-hint">Same document, same layers. Only the system changes: accent, typeface, and corner radius all resolve from whichever one is active.</p>
               </div>
             </div>
@@ -340,7 +337,7 @@
 
         <!-- THE RAIL · what the dock collapses to -->
         <div class="drail">
-          <button class="drailtab" data-group="#dssSystems" title="Design systems"><i class="ic sm ic-swatch"></i><span class="lb">Systems</span></button>
+          <button class="drailtab" data-group="#dssLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           <button class="drailtab" data-group="#dssProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
           <button class="drailtab" data-group="#dssLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         </div>
@@ -475,7 +472,7 @@ system.<span class="p">apply</span>(ds.name)</div>
     };
 
     var sample = root.querySelector('#dss-sample');
-    var cards = [].slice.call(root.querySelectorAll('.dss-sys'));
+    var cards = [].slice.call(root.querySelectorAll('.libtile[data-sys]'));
     var nowEl = root.querySelector('#dss-now');
     var dotEl = root.querySelector('#dss-dot');
     var pillEl = root.querySelector('#dss-pill');
@@ -491,16 +488,47 @@ system.<span class="p">apply</span>(ds.name)</div>
       if (nowEl) nowEl.textContent = s.label;
       if (dotEl) dotEl.style.background = s.dot;
       if (pillEl) pillEl.textContent = s.pill;
+      /* the title-bar status chip is built by the shell component from
+         data-status, so it only exists after that has run. Look it up each
+         time rather than caching a node that may not be there yet. */
+      var chip = document.getElementById('dss-chip');
+      var chipSw = document.getElementById('dss-chipsw');
+      if (chip) chip.textContent = s.label;
+      if (chipSw) chipSw.style.background = s.dot;
       cards.forEach(function (c) {
         var on = c.getAttribute('data-sys') === id;
-        c.classList.toggle('on', on);
+        c.classList.toggle('sel', on);
         c.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
     }
 
     cards.forEach(function (c) {
       c.addEventListener('click', function () { apply(c.getAttribute('data-sys')); });
+      c.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(c.getAttribute('data-sys')); }
+      });
     });
+
+    /* Library scope switch (D2): one surface, four scopes. Switching swaps the
+       body, the header count, and what the search field says it searches. */
+    var seg = root.querySelector('#dssScopeSeg');
+    var scopeCnt = root.querySelector('#dssScopeCnt');
+    var srch = root.querySelector('#dssSearch');
+    if (seg) {
+      var sbtns = [].slice.call(seg.querySelectorAll('button'));
+      sbtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var scope = b.getAttribute('data-scope');
+          var name = b.getAttribute('data-scope-name') || b.textContent.trim();
+          sbtns.forEach(function (x) { x.classList.toggle('on', x === b); });
+          [].forEach.call(root.querySelectorAll('[data-scope-body]'), function (body) {
+            body.hidden = body.getAttribute('data-scope-body') !== scope;
+          });
+          if (scopeCnt) scopeCnt.textContent = name;
+          if (srch) srch.placeholder = 'Search ' + name.toLowerCase();
+        });
+      });
+    }
 
     var teamBtn = root.querySelector('#dss-apply-team');
     if (teamBtn) teamBtn.addEventListener('click', function () { apply('acme'); });

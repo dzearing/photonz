@@ -97,47 +97,32 @@
 <section class="screen on" id="dsys">
   <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Design system</h2><span class="k">· tokens, styles &amp; components, in the Library</span></div>
 
-  <div class="win tall cq shell" data-shell="brand-kit· 1440 × 900" data-ws="ui">
+  <div class="win tall cq shell" data-shell="brand-kit · 1440 × 900" data-ws="ui"
+       data-status='<span class="chip style"><span class="sw"></span>Brand v2.3.0</span>'>
 
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <!-- Document identity ONLY. The active system is a toolbar chip, not part
-           of the document's name (PRODUCT-MODEL §4c). -->
-      <div class="wtitle"><b>brand-kit</b><span class="meta">· 1440 × 900</span></div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#dsCmd"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#dsHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <button class="btn ghost sm" data-sheet="#dsSystems" title="Browse design systems"><i class="ic ic-library"></i> Systems</button>
-      <span class="tspacer"></span>
-      <span class="chip style"><span class="sw"></span>Brand v2.3.0 <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="dsCmd" style="position:absolute;right:0;top:26px;width:232px;z-index:12">
-          <div class="mlabel">System</div>
-          <div class="menuitem"><i class="ic ic-save"></i> Save as version <span class="sc">⌘S</span></div>
-          <div class="menuitem"><i class="ic ic-export"></i> Export system <span class="sc">⌘⇧E</span></div>
-          <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
-          <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Extract a system from a URL</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+    <!-- TITLE BAR and the compact command surface are CHROME: the shell
+         component builds both from data-shell / data-status. Document identity
+         ONLY up there; the active system is a status chip, not part of the
+         document's name (PRODUCT-MODEL §4c). The page authors the menu ITEMS
+         below (D3), and nothing else. -->
 
     <!-- EDITOR ROW -->
     <div class="edit lean" id="dsShell" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` button that opens
+           them is built by the shell component, into the canvas actions. -->
+      <div class="popover menu pop cmdpop" id="dsCmd">
+        <div class="mlabel">System</div>
+        <div class="menuitem"><i class="ic ic-save"></i> Save as version <span class="sc">⌘S</span></div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export system <span class="sc">⌘⇧E</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import a system file</div>
+        <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Extract a system from a URL</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -157,6 +142,7 @@
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#dsShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
           <button class="tool" data-sheet="#dsHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" data-sheet="#dsSystems" title="Browse design systems"><i class="ic sm ic-library"></i></button>
         </div>
 
         <!-- FLOATING TOOL BAR · the D4 UI inventory -->

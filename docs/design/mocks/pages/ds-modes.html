@@ -112,6 +112,8 @@
   .dm-step .n{width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none;margin-top:1px}
   .dm-step b{color:var(--ink);font-weight:620}
   .dm-step code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--edge-lo);padding:1px 5px;border-radius:5px}
+  /* the mode dot: same colour as that mode's column header in the map */
+  .dm-md{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
   .dm-apmeta{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
   .dm-apmeta b{color:var(--dim);font-weight:600}
 </style>
@@ -128,10 +130,16 @@
 
       <div class="dm-bar">
         <span class="lead">Mode</span>
+        <!-- Names only. A mode is identified by its name and by the coloured
+             dot it shares with its column in the map below; every glyph that
+             would fit already means something else in the one icon library
+             (eye = layer visibility, exposure = a brightness adjustment,
+             swatch = a saved style), and UX-PATTERNS §8 is one concept, one
+             icon, app-wide. -->
         <div class="seg" id="dm-seg" role="tablist" aria-label="Token mode">
-          <button data-mode="light" class="on" aria-selected="true"><i class="ic xs ic-eye"></i> Light</button>
-          <button data-mode="dark" aria-selected="false"><i class="ic xs ic-eye-off"></i> Dark</button>
-          <button data-mode="brand" aria-selected="false"><i class="ic xs ic-swatch"></i> Brand</button>
+          <button data-mode="light" class="on" aria-selected="true"><span class="dm-md" style="background:#4C6FFF"></span> Light</button>
+          <button data-mode="dark" aria-selected="false"><span class="dm-md" style="background:#7F9BFF"></span> Dark</button>
+          <button data-mode="brand" aria-selected="false"><span class="dm-md" style="background:#6E8BFF"></span> Brand</button>
         </div>
         <span class="now"><span class="d" id="dm-dot"></span>Now resolving <b id="dm-now" style="margin-left:2px">Light</b></span>
       </div>

@@ -127,41 +127,26 @@
   <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Component library &amp; drag-to-canvas</h2><span class="k">· how you choose a component and place it</span></div>
 
   <!-- ============ THE ONE SHELL · Library is a right-dock panel group ============ -->
-  <div class="win tall cq shell" data-shell="aurora-marketing · 1440 × 1024" data-ws="ui">
+  <div class="win tall cq shell" data-shell="aurora-marketing · 1440 × 1024" data-ws="ui"
+       data-status='<span class="chip comp">Aurora components</span><span class="chip" id="chipCount">0 placed</span>'>
 
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>aurora-marketing</b> · 1440 × 1024</div>
-      <div class="tbtns">
-        <button class="btn ghost sm" id="reset" title="Clear placed instances"><i class="ic ic-undo"></i> Reset</button>
-        <button class="btn sm" data-target="dsys">Design system <i class="ic xs ic-chevron-right"></i></button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + the history entry (D3 / D6) -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip comp"><i class="ic xs ic-component"></i> Aurora components</span>
-      <span class="chip" id="chipCount">0 placed</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-          <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">⌘I</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Show Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-import"></i> Add to Library <span class="sc">⌘⇧A</span></div>
-          <div class="menu-sep"></div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
-        </div>
-      </div>
-    </div>
+    <!-- TITLE BAR and the compact command surface are CHROME: the shell
+         component builds both from data-shell / data-status. The page only
+         authors the menu ITEMS below (D3). -->
 
     <!-- EDITOR ROW: canvas dominant, one dock on the right -->
     <div class="edit lean" id="shellComp" data-dock="open">
+
+      <!-- D3 command surface: THIS PAGE'S commands. The `…` button that opens
+           them is built by the shell component, into the canvas actions. -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">⌘I</span></div>
+        <div class="menuitem"><i class="ic ic-library"></i> Show Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Add to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menu-sep"></div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <!-- CANVAS / DROP TARGET -->
@@ -179,6 +164,9 @@
         <!-- canvas action cluster: the panel toggle lives with the canvas -->
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#shellComp" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" id="reset" title="Clear placed instances"><i class="ic sm ic-undo"></i></button>
+          <button class="tool" data-target="dsys" title="Open the design system"><i class="ic sm ic-swatch"></i></button>
         </div>
 
         <!-- FLOATING BOTTOM TOOL BAR (D4 · UI workspace inventory) -->
@@ -449,8 +437,8 @@
   </div>
 
   <!-- ===== the gesture, step by step (always readable, even without interacting) ===== -->
-  <div class="win">
-    <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>The gesture</b> · choose → drag → drop</div><div class="tbtns"></div></div>
+  <div class="spec">
+    <div class="spec-h"><i class="ic sm ic-cursor"></i> The gesture <span class="sub">(choose, drag, drop)</span></div>
     <div class="howto">
       <div class="hstep">
         <div style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="hn">1</span><span class="ht">Choose it</span></div>
@@ -475,8 +463,8 @@
   </div>
 
   <!-- ===== four ways to place a component ===== -->
-  <div class="win">
-    <div class="titlebar"><div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="wtitle"><b>Ways to place a component</b> · drag is just one</div><div class="tbtns"></div></div>
+  <div class="spec">
+    <div class="spec-h"><i class="ic sm ic-component"></i> Ways to place a component <span class="sub">(drag is just one)</span></div>
     <div class="ways">
       <div class="way">
         <span class="wi"><i class="ic ic-component"></i></span>
