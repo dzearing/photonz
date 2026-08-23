@@ -3,11 +3,11 @@
   "title": "UI workspace pages drop legacy chrome and inert hand-rolled controls",
   "priority": "p2-normal",
   "seq": 280,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:39.861Z",
-  "updated": "2026-08-23T06:33:39.861Z",
+  "updated": "2026-08-23T16:16:07.964Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('UI family'). Pages: ui-autolayout, ui-build-screen, ui-grid, ui-nested, ui-prototype, ui-variants, states, typography. Key items: delete hand-authored titlebar/toolbar/.cmdk on all 8 (shell builds chrome from data-shell); DS .stepper/.slider replace .ua-stepper/.ug-stepper and typography's inert .bar meters; ui-variants .pswitch/.ptext/.prop to .switch/.input/.irow; move lesson prose off canvas HUDs (ui-autolayout .al-status, ui-grid .gc-status + in-dock teaching prose, ui-nested .linknote); drop in-dock 'In the API' codeblk duplicates; ui-prototype run panel to a dgrp or sheet; icons (ic-trash for remove, ic-arrow-right for transitions, drop unicode pilcrow). Verify 200 + audit-sweep.",
@@ -16,6 +16,20 @@
     {
       "t": "2026-08-23T06:33:39.861Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T15:45:49.208Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T16:15:13.727308Z",
+      "note": "All 8 pages converted. Hand-authored .titlebar/.toolbar/.cmdk deleted; each page now declares data-shell/data-status and authors only its .cmdpop items, with History/Reset/Play/Export moved to .cnv-act or the command menu. DS controls replace the hand-rolled ones: .stepper for ui-autolayout gap/pad and ui-grid cols/gutter/margin, .slider for typography's 8 inert .bar meters, .switch/.input/.irow/.seg.stack for ui-variants, .lrow+.rtag for states' .strow, .codeblk for states' .apiline. Lesson prose left the canvas (ui-autolayout .al-status, ui-grid .gc-status + two in-dock .modehint blocks, ui-nested .linknote) and now sits in captions under the window. In-dock 'In the API' duplicates dropped on ui-autolayout/ui-grid/ui-nested, with the live echo moved into each page's specimen. ui-prototype's canvas run panel is now a Run panel group in the dock with a rail tab. Icons: ic-trash for Remove, ic-arrow-right for the 7 transition arrows, unicode pilcrow gone."
+    },
+    {
+      "t": "2026-08-23T16:16:07.963Z",
+      "note": "Shipped in 28a0871. All 8 UI-family pages (ui-autolayout, ui-build-screen, ui-grid, ui-nested, ui-prototype, ui-variants, states, typography) drop their hand-authored .titlebar/.toolbar/.cmdk and let the shell component build chrome from data-shell/data-status; History, Reset, Play, Open library moved to .cnv-act, Share/Export to the command menu, live chip readouts into data-status with their ids intact. DS .stepper replaces the .btn+inert-.bar steppers on ui-autolayout and ui-grid; DS .slider replaces typography's 8 inert .bar meters; ui-variants' .pswitch/.ptext/.prop become .switch/.input/.irow + .mlabel/.seg.stack; states' .strow becomes .lrow+.rtag and its .apiline a .codeblk. Lesson prose left the canvas (al-status, gc-status, linknote) and the dock (2 modehint blocks) for captions under the window; the in-dock 'In the API' duplicates are gone with the live echo moved into each specimen; ui-prototype's run panel is a Run dock group with a rail tab. Icons: ic-trash for Remove, ic-arrow-right for the 7 transition arrows, unicode pilcrow replaced by the word Paragraph. Verified: 8/8 HTTP 200, audit-sweep 0 findings at 1280x900 plus gates for surviving cmdk/toolbar/missing title bar, no overflow and a live canvas at the 880 and 620 breakpoints, every rewired control exercised in the browser, all 7 ui-build-screen walkthrough cues still anchor, check-elevation and check-states pass. Left untouched: pre-existing uncommitted work in shared/ (tooltip readout + UX-PATTERNS D12) belonging to another change. Follow-ups filed: ds-stepper-gets-the-scrub-arithmetic-and-arrow-k, component-main-row-in-properties-stops-truncatin."
     }
-  ]
+  ],
+  "started": "2026-08-23T15:45:49.208Z",
+  "completed": "2026-08-23T16:16:07.964Z"
 }

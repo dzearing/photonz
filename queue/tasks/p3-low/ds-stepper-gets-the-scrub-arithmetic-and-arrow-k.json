@@ -1,0 +1,21 @@
+{
+  "id": "ds-stepper-gets-the-scrub-arithmetic-and-arrow-k",
+  "title": "DS stepper gets the scrub, arithmetic and arrow-key behaviour its spec promises",
+  "priority": "p3-low",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T16:15:25.906Z",
+  "updated": "2026-08-23T16:15:25.906Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "input.css documents the .stepper as a numeric field whose label scrubs sideways, which accepts arithmetic (320/2, +16), steps with arrows and 10x with shift, and has spinner buttons. None of that is implemented: there is no stepper.js, so every page that adopts .stepper hand-wires its own input listener and spinner clicks (ui-autolayout, ui-grid do this now). Add a shared component so the behaviour is one file, then drop the per-page wiring.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T16:15:25.906Z",
+      "note": "created (manual)"
+    }
+  ]
+}
