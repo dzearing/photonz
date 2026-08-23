@@ -56,6 +56,13 @@
      above, so an inset surface shades at its top lip and catches light at its
      bottom lip — the exact inverse of a raised control's top gloss. Wells are
      slightly darker than the panel around them; raised controls are lighter. */
+  /* TOOLTIP PLATE — one identity in both themes: a dark slate label.
+     In light it is the classic inverted tooltip (12:1 against a white card).
+     In dark it LIFTS instead of inverting: the old plate used --ink, which is
+     near-white in dark mode (luminance .814) and made a transient label the
+     brightest thing on screen. This sits at .035, a 1.47:1 lift off the panel,
+     so it is clearly a raised object without ever glaring. */
+  --tip-bg:#262b35; --tip-ink:#f2f4f8;
   --well:#eef0f5;
   --well-sh:inset 0 1px 2px rgba(22,28,45,.10), inset 0 2px 5px rgba(22,28,45,.05), inset 0 -1px 0 rgba(255,255,255,.75);
   --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
@@ -136,6 +143,7 @@
     --stage:#08090d; --stage-2:#0d0f15;
     --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
     --panel:#14161d; --panel-2:#181b22;
+    --tip-bg:#2f3542; --tip-ink:#eef0f5;
     --well:#0e1015;
     --well-sh:inset 0 1px 2px rgba(0,0,0,.55), inset 0 2px 5px rgba(0,0,0,.30), inset 0 -1px 0 rgba(255,255,255,.05);
     --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
@@ -150,6 +158,7 @@
 :root[data-theme="light"]{
   --stage:#e9ebf0; --stage-2:#dfe2e9; --chrome:rgba(246,247,250,.82); --chrome-solid:#f6f7fa;
   --panel:#fbfcfe; --panel-2:#f1f3f7; --ink:#1a1c22; --dim:#5c6371; --faint:#8b92a1;
+  --tip-bg:#262b35; --tip-ink:#f2f4f8;
   --well:#eef0f5;
   --well-sh:inset 0 1px 2px rgba(22,28,45,.10), inset 0 2px 5px rgba(22,28,45,.05), inset 0 -1px 0 rgba(255,255,255,.75);
   --line:#e2e4ea; --line-soft:#eceef3; --line-strong:#d4d7df;
@@ -169,6 +178,7 @@
 
   --stage:#08090d; --stage-2:#0d0f15; --chrome:rgba(30,33,41,.72); --chrome-solid:#1b1e26;
   --panel:#14161d; --panel-2:#181b22; --ink:#e7e9ee; --dim:#b0b6c2; --faint:#8b93a2;
+  --tip-bg:#2f3542; --tip-ink:#eef0f5;
   --well:#0e1015;
   --well-sh:inset 0 1px 2px rgba(0,0,0,.55), inset 0 2px 5px rgba(0,0,0,.30), inset 0 -1px 0 rgba(255,255,255,.05);
   --line:#262a33; --line-soft:#1e212a; --line-strong:#333846;

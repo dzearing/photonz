@@ -21,10 +21,22 @@
    stroke, so there is no junction to leak. One fill, drawn twice, no seam.
 
    Elevation: it floats over live content, so it is level 2 on the ladder in
-   pages/lang-elevation.html — but it is a LABEL, not a surface you read at
-   length, so it takes the inverted plate rather than glass. Glass would make a
-   12px label sit on whatever is behind it and lose contrast exactly when it is
-   over a busy canvas, which is when you needed it. */
+   pages/lang-elevation.html. It is OPAQUE rather than glass, because glass
+   would make a 12px label sit on whatever is behind it and lose contrast
+   exactly when it is over a busy canvas, which is when you needed it.
+
+   IT IS NOT INVERTED, and it used to be. `background:var(--ink)` is near-white
+   in dark mode (luminance .814), which made a transient label the brightest
+   object on screen — a web convention that reads as a foreign body in an app
+   of dark surfaces. The plate is now its own token, --tip-bg: one dark-slate
+   identity in both themes. In light that is the classic inverted tooltip
+   (11.9:1 against a white card); in dark it LIFTS rather than inverts, sitting
+   at luminance .035 with a 1.47:1 step off the panel — enough to read as a
+   raised object, nowhere near enough to glare. (Matching the app's own
+   --chrome-solid was tried first and measured 1.13:1, which is the "not
+   distinct enough" end of the same mistake.) Label text keeps 10.8:1.
+
+   One opaque fill, no border, so the beak is drawn twice with no seam. */
 
 .tip {
   position: fixed;
@@ -32,8 +44,8 @@
   max-width: 260px;
   padding: var(--s1) var(--gap-sm);
   border-radius: var(--r1);
-  background: var(--ink);
-  color: var(--panel);
+  background: var(--tip-bg);
+  color: var(--tip-ink);
   font-family: var(--sans);
   font-size: 10.5px;
   font-weight: 560;
@@ -96,7 +108,7 @@
   position: absolute;
   width: 24px;
   height: 9px;
-  background: var(--ink);
+  background: var(--tip-bg);
   clip-path: path("M0 0 C4.5 0 5.96 3 7 4.2 L9.6 7.2 Q12 10 14.4 7.2 L17 4.2 C18.04 3 19.5 0 24 0 Z");
 }
 .tip[data-side="top"]::after    { top: calc(100% - .5px);    left: var(--tip-x, 50%); transform: translateX(-50%) }
@@ -138,13 +150,17 @@
 /* The specimen form, for the pages that DOCUMENT the tooltip (lang-overlays,
    lang-keyboard, language). Same plate, same beak, but it sits in the flow so a
    spec sheet can show it without hovering anything. */
+/* the documentation specimen must BE the component, not a lookalike, so it
+   takes the same plate; a doc page that drifts from the thing it documents is
+   worse than no doc page */
 .tip-demo {
   position: relative;
   display: inline-block;
   padding: var(--s1) var(--gap-sm);
   border-radius: var(--r1);
-  background: var(--ink);
-  color: var(--panel);
+  background: var(--tip-bg);
+  color: var(--tip-ink);
+  box-shadow: var(--lg-shadow);
   font-size: 10.5px;
   font-weight: 560;
   white-space: nowrap;
@@ -158,3 +174,36 @@
   .tip[data-side="top"],.tip[data-side="bottom"],
   .tip[data-side="left"],.tip[data-side="right"] { transform: none }
 }
+
+/* ============================================================
+   READOUT — the pointer-following variant (UX-PATTERNS D12)
+   ============================================================
+   A hint tooltip labels a CONTROL and anchors to it. A readout labels a
+   POSITION — a point on a chart, a spot on a canvas — so it follows the
+   pointer and carries values that change as you move. Same plate, same
+   elevation, three differences:
+
+   1. NO BEAK. There is no element to point at; the pointer is the anchor, and
+      a beak aimed at a moving cursor reads as jitter.
+   2. IT NEVER SQUISHES. `max-width` on a data label is how you get the bug
+      this variant was written for: near the right edge the label wrapped and
+      then clipped, so the numbers you were reading were the ones cut off.
+      `width:max-content` with no cap means it keeps its size and MOVES
+      instead, which is what the placement law in D12 requires.
+   3. NO TRAVEL EASING. It tracks a pointer, so animating its position would
+      make it lag behind the thing it is reporting on. Opacity fades; position
+      is immediate.
+
+   Numbers are tabular so a value does not jiggle as its digits change. */
+.tip.readout {
+  max-width: none;
+  width: max-content;
+  padding: var(--s1) var(--gap-sm);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  transition: opacity .1s ease;
+  transform: none;
+}
+.tip.readout.on { transform: none }
+.tip.readout::after { display: none }
+.tip.readout b { color: var(--tip-ink); font-weight: 700 }

@@ -251,6 +251,67 @@
     upgrade();
   }
   // Pages add controls after load (walkthrough steps swap panels, the shell
+
+  /* ---- READOUT: the pointer-following variant (UX-PATTERNS D12) ----
+     PZ.tip.readout(html, event)  shows/moves it;  PZ.tip.readout(null)  hides.
+
+     The placement law, in order, and the order is the whole point:
+
+       1. Sit CLEAR of the pointer, always, by a gap. A label under the cursor
+          hides the very pixel you are inspecting.
+       2. Prefer the side with room, biased to bottom-right, which is where a
+          right-handed cursor leaves the most content visible.
+       3. If the preferred side does not fit, FLIP to the opposite side of the
+          pointer. Flip before anything else.
+       4. Only if neither side fits, clamp to the viewport.
+       5. NEVER resize to fit. Squeezing a readout to fit the last 40px of the
+          window is how a value gets wrapped and then clipped, which is worse
+          than useless: it is a number you can misread. It moves; it never
+          shrinks. (This is the bug the variant was written for.)
+
+     Placement is measured against the VIEWPORT because .tip is position:fixed,
+     and inside an iframe the viewport is the frame, which is exactly the box
+     the label must stay inside. */
+  var readoutEl = null;
+  function readout(html, e) {
+    if (html == null) {
+      if (readoutEl) readoutEl.classList.remove('on');
+      return;
+    }
+    if (!readoutEl) {
+      readoutEl = document.createElement('div');
+      readoutEl.className = 'tip readout';
+      readoutEl.setAttribute('role', 'status');
+      document.body.appendChild(readoutEl);
+    }
+    readoutEl.innerHTML = html;
+    readoutEl.classList.add('on');
+
+    var GAP_X = 14, GAP_Y = 14;
+    var b = readoutEl.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+    var px = e.clientX, py = e.clientY;
+
+    // 2 + 3: prefer right/below, flip when the preferred side would not fit
+    var x = px + GAP_X;
+    if (x + b.width > vw - EDGE) x = px - GAP_X - b.width;
+    var y = py + GAP_Y;
+    if (y + b.height > vh - EDGE) y = py - GAP_Y - b.height;
+
+    // 4: both sides failed (a viewport narrower than the label). Clamp, but keep
+    // it off the pointer by pushing it to whichever side has more room.
+    if (x < EDGE) x = (px > vw / 2) ? Math.max(EDGE, px - GAP_X - b.width) : Math.min(px + GAP_X, vw - b.width - EDGE);
+    if (y < EDGE) y = (py > vh / 2) ? Math.max(EDGE, py - GAP_Y - b.height) : Math.min(py + GAP_Y, vh - b.height - EDGE);
+    x = Math.max(EDGE, Math.min(x, vw - b.width - EDGE));
+    y = Math.max(EDGE, Math.min(y, vh - b.height - EDGE));
+
+    readoutEl.style.left = Math.round(x) + 'px';
+    readoutEl.style.top = Math.round(y) + 'px';
+  }
+
+  window.PZ = window.PZ || {};
+  window.PZ.tip = { readout: readout, hide: function () { hide(true); readout(null); } };
+
   // component builds chrome). Watch rather than guess at timing: a control that
   // appears in step 6 gets the same tooltip as one that was there at load.
   if (window.MutationObserver) {

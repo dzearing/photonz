@@ -776,3 +776,94 @@ Under `prefers-reduced-motion: reduce`, all three phases become instant and the
 final state is identical. This is not a lesser experience with things missing; it
 is the same result without the travel. Every component here checks it once and
 takes the instant path.
+
+---
+
+### D12 — Two kinds of tooltip, and one placement law
+
+A tooltip existed in the system (`tooltip.css` / `tooltip.js`, `data-tip`), and
+it was still hand-rolled again on the dashboard's charts, because the component
+answered only half the problem. There are **two** kinds, they look the same and
+behave differently, and only one of them was covered:
+
+| | **Hint** | **Readout** |
+| --- | --- | --- |
+| labels | a **control** | a **position** (a point on a chart, a spot on a canvas) |
+| anchored to | the element | the **pointer** |
+| markup | `data-tip="Split at playhead"` | `PZ.tip.readout(html, event)` |
+| beak | yes, aimed at the control | none: a beak aimed at a moving cursor reads as jitter |
+| delay | ~400ms in, so it never flickers past | none: it is already the answer to a deliberate hover |
+| content | one short label, optional shortcut | values, tabular figures, several lines |
+
+Neither is a second tooltip system. They are one component with one plate, one
+elevation, and one placement law.
+
+#### The placement law (in this order, and the order is the point)
+
+1. **Never cover the subject.** A hint sits off its control; a readout sits
+   clear of the pointer by a gap. A label that covers the pixel you are
+   inspecting has defeated itself.
+2. **Prefer the side with room**, biased away from the content: above for a
+   hint, below-right of the pointer for a readout, which is where a
+   right-handed cursor leaves the most visible.
+3. **Flip before anything else.** If the preferred side does not fit, move to
+   the opposite side of the anchor. Flipping is the primary response to an
+   edge, not a fallback.
+4. **Clamp only when both sides fail**, and keep the beak pointing at the real
+   anchor rather than at the tooltip's own middle.
+5. **NEVER resize to fit.** This is the rule that was missing, and it is not a
+   nicety: a readout squeezed into the last 40px of the window wraps and then
+   clips, so the number you are reading is the one that got cut off. A label
+   MOVES; it never shrinks. Any `max-width` on a data readout is a bug.
+
+#### It must never be in the way
+
+A tooltip is `pointer-events: none`, always, so the mouse passes straight
+through it: hovering "onto" a tooltip is impossible, so it can never steal a
+hover, block a click, or trap the pointer between itself and its subject. It
+hides the moment the pointer leaves its subject, and it dies immediately if the
+element it labels is removed from the document, so a label never outlives the
+thing it labels.
+
+---
+
+### D13 — Chart hover: snap to the data, and anchor the readout to the crosshair
+
+Charts are read by pointing at them, so the hover behaviour IS the chart's
+interface. One model, and it applies to every time-series chart in the app.
+
+**The crosshair snaps to a data point, never to the pointer.** A line chart has
+values at discrete positions; the space between them is interpolation, not data.
+So the vertical crosshair jumps to the nearest data point's x and the readout
+reports THAT point. A crosshair that tracks the cursor continuously implies a
+precision the data does not have, and it makes the reported value change while
+the line under it does not.
+
+**Every series is reported at once.** With two lines, one crosshair, one readout
+carrying both values plus anything derived from them (the dashboard's chart adds
+the gap between them, which is the number the chart exists to show). Do not make
+the user hover each line in turn.
+
+**The marker sits on each line.** At the snapped x, each series gets a dot at its
+own value, so the crosshair, the dots, and the numbers in the readout are
+visibly the same moment.
+
+**The readout is anchored to the crosshair, not to the cursor.** This is the
+rule that was violated first: the readout floated wherever the mouse happened
+to be, so the numbers and the line they described were in different places and
+the eye had to pair them up. It sits beside the crosshair line, flipping to its
+other side near an edge (D12's placement law), so the value and its position
+are always adjacent.
+
+**The whole plot is the target.** A hover band spans the full plot height, so
+you can point anywhere in the column rather than tracing a 2px line, and the
+readout appears from the first pixel of the plot area rather than only near a
+mark.
+
+**Bars anchor to the bar.** A bar chart has no crosshair; each bar is its own
+target and its readout anchors to the bar's top edge, which is where its value
+is.
+
+**Leaving is immediate.** The crosshair, the dots, and the readout all disappear
+the moment the pointer leaves the plot: a stale crosshair pointing at a value
+you are no longer asking about is worse than none.

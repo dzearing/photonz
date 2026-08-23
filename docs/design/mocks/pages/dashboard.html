@@ -193,9 +193,8 @@
   #dashboard .db-stack i{border-radius:3px;min-width:3px}
   #dashboard .db-stackleg{display:flex;flex-wrap:wrap;gap:var(--s2) var(--gap);font-size:11px;color:var(--dim)}
   #dashboard .db-stackleg b{color:var(--ink);font-weight:640;font-variant-numeric:tabular-nums}
-  #dashboard .db-tip{position:fixed;z-index:50;pointer-events:none;background:var(--chrome-solid);border:1px solid var(--line);
-    border-radius:var(--r2);padding:var(--s1) var(--gap-sm);font-size:10.5px;color:var(--ink);box-shadow:var(--lg-shadow);display:none}
-  #dashboard .db-tip b{font-variant-numeric:tabular-nums}
+  /* chart readouts use the DS tooltip's readout variant (D12); this page owns
+     no tooltip of its own */
 
   /* ---- task detail overlay: the DS dialog, scoped to a full page ----
      .dlg-scrim is absolute because it normally lives inside a .win mock; this
@@ -279,7 +278,6 @@
     <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2 id="db-title">Summary</h2><span class="k" id="db-refresh"></span><span id="db-headslot"></span></div>
 
     <div id="db-body"><div class="db-empty">Connecting to the queue…</div></div>
-    <div class="db-tip" id="db-tip"></div>
   </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
@@ -288,7 +286,6 @@
   'use strict';
   var S = null, lastJSON = '', tab = 'summary', digestSel = null, digestCache = {}, detailId = null;
   var body = document.getElementById('db-body');
-  var tip = document.getElementById('db-tip');
   var PRIOS = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
   var PRIO_LABEL = { 'p0-critical': 'P0 critical', 'p1-high': 'P1 high', 'p2-normal': 'P2 normal', 'p3-low': 'P3 low' };
   var PRIO_BADGE = { 'p0-critical': 'badge crit', 'p1-high': 'badge warn', 'p2-normal': 'badge accent', 'p3-low': 'badge' };
@@ -940,7 +937,11 @@
       var dot = svg.querySelector('#db-crossdot'), dot2 = svg.querySelector('#db-crossdot2');
       dot.setAttribute('cx', cx); dot.setAttribute('cy', y(d.openedTotal)); dot.setAttribute('visibility', 'visible');
       dot2.setAttribute('cx', cx); dot2.setAttribute('cy', y(d.doneTotal)); dot2.setAttribute('visibility', 'visible');
-      showTip(e, dayLabel(d.day) + ' · opened <b>' + d.openedTotal + '</b> · completed <b>' + d.doneTotal +
+      // anchored to the crosshair, midway between the two series markers, so
+      // the values and the point they describe read as one thing
+      var mid = (y(d.openedTotal) + y(d.doneTotal)) / 2;
+      showTip(svgPoint(svg, W, cx, mid),
+        dayLabel(d.day) + ' · opened <b>' + d.openedTotal + '</b> · completed <b>' + d.doneTotal +
         '</b> · open <b>' + (d.openedTotal - d.doneTotal) + '</b>');
     });
     svg.addEventListener('mouseleave', function () {
@@ -980,7 +981,12 @@
     s += '</svg>';
     el.innerHTML = h + s;
     el.querySelectorAll('rect').forEach(function (r2) {
-      r2.addEventListener('mousemove', function (e) { showTip(e, dayLabel(r2.dataset.day) + ' · ' + r2.dataset.kind + ' <b>' + r2.dataset.v + '</b>'); });
+      // a bar's value lives at its top edge, so that is what the readout hugs
+      r2.addEventListener('mousemove', function () {
+        var br = r2.getBoundingClientRect();
+        showTip({ clientX: br.left + br.width / 2, clientY: br.top },
+          dayLabel(r2.dataset.day) + ' · ' + r2.dataset.kind + ' <b>' + r2.dataset.v + '</b>');
+      });
       r2.addEventListener('mouseleave', hideTip);
     });
   }
@@ -1016,8 +1022,16 @@
     }).join('') + '</div>';
   }
 
-  function showTip(e, html) { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY - 10) + 'px'; }
-  function hideTip() { tip.style.display = 'none'; }
+  // Chart readouts anchor to the MARK, not the cursor (D13): callers pass the
+  // crosshair's screen x (or a bar's top edge), so the numbers sit beside the
+  // thing they describe. The DS handles flipping and clamping from there.
+  function showTip(anchor, html) { PZ.tip.readout(html, anchor); }
+  function hideTip() { PZ.tip.readout(null); }
+  // an SVG user-space point in screen coordinates, for a chart drawn to a viewBox
+  function svgPoint(svg, vbWidth, ux, uy) {
+    var r = svg.getBoundingClientRect(), k = r.width / vbWidth;
+    return { clientX: r.left + ux * k, clientY: r.top + uy * k };
+  }
 
   // ---- digest ----
   // Every digest is addressable: ?tab=digest&d=2026-08-23.md is a real URL that
