@@ -1,0 +1,29 @@
+{
+  "feature": "Callouts move out of the way",
+  "epic": "measure-redline",
+  "summary": "Every readout the measure tools draw now picks a spot in nearby whitespace instead of parking on the thing it is talking about, so an alignment verdict reading off 5 px no longer hides the row that is off. Two readouts that would land on each other slide apart.",
+  "setup": "Photonz Dev, Experiments window, release Next. Measure flags on as usual, including Alignment mode.",
+  "try": [
+    { "do": "Open the test capture (Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png) and press i for the Measure tool.", "shot": "2026-08-23-callout-clearance-before.png" },
+    { "do": "Switch the mode chip to Alignment and drag a guide down the left edge of the three settings rows in the top card." },
+    { "do": "Read the verdict. It should sit just past the end of the guide, with all three rows fully visible.", "shot": "2026-08-23-callout-clearance-after.png" },
+    { "do": "Undo, then drag the same guide from the very top of the picture to the very bottom, so there is no room past either end. The verdict should drop into the empty band between the two cards instead.", "shot": "2026-08-23-callout-clearance-crowded.png" },
+    { "do": "Switch to Size mode and click the Save Changes button. Its width and height readouts should sit clear of the button and clear of each other." },
+    { "do": "Place two Distance calipers a few pixels apart across the same area. Their readouts should end up side by side, not stacked." },
+    { "do": "Select one measurement and drag a foot. The readout re-picks its spot; the guide, ticks and connector must not move with it." },
+    { "do": "Select a measurement and push the Label size slider up. The bigger readout should still land somewhere clear." }
+  ],
+  "evaluate": [
+    "Past the end of the guide: is that where your eye goes looking for an alignment verdict, or would you rather it stayed beside the row that is off?",
+    "When a readout moves, does it still read as belonging to its measurement without a leader line?",
+    "Two readouts sliding apart along the line: is that better than one of them jumping somewhere else entirely?",
+    "The head handle now sits on the bare head line rather than under the pill. Does the caliper still feel grabbable?"
+  ],
+  "rough": [
+    "The spot is picked when a measurement lands and when its endpoints or label size change, not continuously. Drag one measurement on top of another afterwards and their readouts can re-stack. A readout that jumps whenever an unrelated layer moves felt worse than one that stays put, so this was chosen on purpose.",
+    "A sideways push is the last resort for an alignment verdict, because which side a checked row extends into cannot be read from its edge alone, so pushing sideways is a coin flip on covering a row. Past the end of the guide, then a gap on the guide, then sideways.",
+    "There is no way to drag a readout to a spot you prefer. The tool picks, you cannot overrule it. That is the obvious next task if the picks feel wrong.",
+    "The measure legend now walks to a free corner of the canvas instead of always sitting top left, using a generous size estimate for its glass panel. It can step aside a little sooner than strictly necessary.",
+    "The fix lives in shared code, so the current release gets the same correctness, not just Next."
+  ]
+}

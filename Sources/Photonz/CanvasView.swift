@@ -1208,10 +1208,20 @@ final class CanvasNSView: NSView {
         content.mode = mode
         content.headOffset = headOffset
         content.showLabel = true
+        // The preview picks the readout's spot exactly the way the commit will,
+        // so nothing jumps when you click (UX-PATTERNS D14).
+        var probe = content
+        probe.start = start
+        probe.end = end
+        let plan = MeasureLabelPlanner.plan(for: probe, canvas: viewport.documentSize,
+                                            avoiding: placedReadoutRects())
+        content.labelPlacement = plan.placement
+        content.labelNudge = plan.nudge
         let built = MeasureBuilder.layer(content: content, from: start, to: end)
         let key = "\(mode.rawValue)|\(start)|\(end)|\(style.unit.rawValue)|\(style.decimals)|"
             + "\(style.strokeColorHex)|\(style.chipColorHex)|\(style.textColorHex)|"
-            + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)"
+            + "\(style.labelScale)|\(style.strokeWidth)|\(pixelScale)|"
+            + "\(plan.placement.rawValue)|\(plan.nudge)"
         if sprite?.key != key {
             guard let measure = built.measure,
                   let image = MeasureRasterizer.rasterize(measure, size: built.frame.size,
@@ -1229,6 +1239,12 @@ final class CanvasNSView: NSView {
                                     width: sprite.frame.width * viewport.zoom,
                                     height: sprite.frame.height * viewport.zoom)
         caliperLayer.isHidden = false
+    }
+
+    /// Every readout already on the canvas, in document space — what a hovered
+    /// preview steers around, same as a committed measurement does.
+    private func placedReadoutRects() -> [CGRect] {
+        (document?.layers ?? []).compactMap { MeasureBuilder.readoutRect(of: $0) }
     }
 
     /// Draws the measure tool's creation chrome — the snapping dot(s) and the

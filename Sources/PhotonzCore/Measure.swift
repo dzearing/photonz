@@ -108,6 +108,14 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// reads the check's verdict instead of a distance. Nil for plain calipers
     /// and for every document saved before this field existed.
     public var alignment: AlignmentCheck?
+    /// Where the readout sits relative to the measurement (UX-PATTERNS D14).
+    /// Chosen once, when the measurement lands, by `MeasureLabelPlanner`; only
+    /// the readout ever moves, never the geometry. Every document saved before
+    /// this field existed decodes `.onLine`, exactly how it used to draw.
+    public var labelPlacement: MeasureLabelPlacement
+    /// A small extra shift along the measuring line, used to keep two nearby
+    /// readouts from stacking. Zero for almost every measurement.
+    public var labelNudge: CGFloat
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -119,7 +127,9 @@ public struct MeasureContent: Hashable, Codable, Sendable {
                 showLabel: Bool = true,
                 unit: MeasureUnit = .pixels, decimals: Int = 0, labelScale: CGFloat = 1,
                 role: MeasureRole = .size,
-                alignment: AlignmentCheck? = nil) {
+                alignment: AlignmentCheck? = nil,
+                labelPlacement: MeasureLabelPlacement = .onLine,
+                labelNudge: CGFloat = 0) {
         self.start = start
         self.end = end
         self.headOffset = headOffset
@@ -135,6 +145,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.labelScale = labelScale
         self.role = role
         self.alignment = alignment
+        self.labelPlacement = labelPlacement
+        self.labelNudge = labelNudge
     }
 
     /// Default caliper ink — the original single measure color.
@@ -151,6 +163,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case start, end, headOffset, mode, strokeWidth, showLabel, unit, decimals, labelScale
         case role
         case alignment
+        case labelPlacement, labelNudge
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
@@ -181,6 +194,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(labelScale, forKey: .labelScale)
         try c.encode(role, forKey: .role)
         try c.encodeIfPresent(alignment, forKey: .alignment)
+        try c.encode(labelPlacement, forKey: .labelPlacement)
+        try c.encode(labelNudge, forKey: .labelNudge)
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -208,6 +223,9 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelScale = try c.decodeIfPresent(CGFloat.self, forKey: .labelScale) ?? 1
         role = try c.decodeIfPresent(MeasureRole.self, forKey: .role) ?? .size
         alignment = try c.decodeIfPresent(AlignmentCheck.self, forKey: .alignment)
+        labelPlacement = try c.decodeIfPresent(MeasureLabelPlacement.self,
+                                               forKey: .labelPlacement) ?? .onLine
+        labelNudge = try c.decodeIfPresent(CGFloat.self, forKey: .labelNudge) ?? 0
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
@@ -446,13 +464,11 @@ public enum MeasureBuilder {
         let g = content.caliperGeometry()
         let pad = content.renderPadding
         var box = boundingBox(of: [g.footA, g.footB, g.headA, g.headB]).insetBy(dx: -pad, dy: -pad)
-        // Reserve room for the chip centered on the head so the number isn't
-        // clipped at the frame edge.
+        // Reserve room for the chip WHERE IT ACTUALLY LANDS — which, when the
+        // readout has moved out of the way of its subject (D14), is not on the
+        // head line at all.
         if content.showLabel {
-            let size = content.estimatedLabelSize
-            box = box.union(CGRect(x: g.labelAnchor.x - size.width / 2,
-                                   y: g.labelAnchor.y - size.height / 2,
-                                   width: size.width, height: size.height))
+            box = box.union(content.labelRect(chipSize: content.estimatedLabelSize))
         }
         // An alignment check also draws each item's tick (and an outlier's
         // actual edge, which can sit well off the guide) — reserve that too.
@@ -589,6 +605,56 @@ public enum MeasureBuilder {
         // remap() maps a layer-local point into the new frame's document space.
         let startDoc = remap(m.start), endDoc = remap(m.end)
         return rebuilding(layer, content: m, start: startDoc, end: endDoc)
+    }
+
+    /// Where an existing measurement's readout actually sits, in DOCUMENT
+    /// space — what the next measurement's readout has to stay off (D14 rule 4).
+    public static func readoutRect(of layer: Layer) -> CGRect? {
+        guard let m = layer.measure, m.showLabel else { return nil }
+        return m.labelRect(chipSize: m.estimatedLabelSize)
+            .offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
+    }
+
+    /// The layer's measure with its feet and alignment items re-expressed in
+    /// DOCUMENT space (they are stored layer-local once placed).
+    public static func documentSpaceContent(of layer: Layer) -> MeasureContent? {
+        guard var m = layer.measure else { return nil }
+        let origin = layer.frame.origin
+        m.start = CGPoint(x: m.start.x + origin.x, y: m.start.y + origin.y)
+        m.end = CGPoint(x: m.end.x + origin.x, y: m.end.y + origin.y)
+        if var check = m.alignment {
+            check.items = check.items.map { item in
+                var item = item
+                switch m.mode {
+                case .vertical:
+                    item.edge += origin.x
+                    item.spanStart += origin.y
+                    item.spanEnd += origin.y
+                case .horizontal:
+                    item.edge += origin.y
+                    item.spanStart += origin.x
+                    item.spanEnd += origin.x
+                }
+                return item
+            }
+            m.alignment = check
+        }
+        return m
+    }
+
+    /// Re-picks where the readout sits after something moved, and rebuilds the
+    /// frame around it. The measurement itself never moves: the feet, the head,
+    /// the ticks and the connector stay exactly where they were (D14 rule 5).
+    public static func replanningLabel(_ layer: Layer, canvas: CGSize?,
+                                       avoiding others: [CGRect] = []) -> Layer {
+        guard var m = layer.measure, let probe = documentSpaceContent(of: layer) else { return layer }
+        let plan = MeasureLabelPlanner.plan(for: probe, canvas: canvas, avoiding: others)
+        guard plan.placement != m.labelPlacement || plan.nudge != m.labelNudge else { return layer }
+        m.labelPlacement = plan.placement
+        m.labelNudge = plan.nudge
+        var updated = layer
+        updated.content = .measure(m)
+        return updating(updated, start: probe.start, end: probe.end)
     }
 
     /// Style/readout edit on an existing measure: feet stay anchored in document

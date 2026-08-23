@@ -246,12 +246,13 @@ struct EditorView: View {
                 .overlay(alignment: .bottom) {
                     if editorState.showsMeasureHint { measureHintChip }
                 }
-                .overlay(alignment: .topLeading) {
+                .overlay(alignment: Self.alignment(for: editorState.measureLegendCorner)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
+                .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendCorner)
         } else {
             emptyState
         }
@@ -278,6 +279,16 @@ struct EditorView: View {
         .padding(10)
         .allowsHitTesting(false)
         .transition(.opacity)
+    }
+
+    /// The corner the legend picked, as a SwiftUI overlay alignment.
+    private static func alignment(for corner: CanvasCorner) -> Alignment {
+        switch corner {
+        case .topLeading: .topLeading
+        case .topTrailing: .topTrailing
+        case .bottomLeading: .bottomLeading
+        case .bottomTrailing: .bottomTrailing
+        }
     }
 
     /// A short line of the entry's ink: solid for a role, dashed for Alignment.

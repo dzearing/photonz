@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T20:48:06.539Z",
-  "updated": "2026-08-23T20:48:06.540Z",
+  "updated": "2026-08-23T21:28:03.510Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23, screenshot attached to the feedback. Root cause: MeasureRasterizer.drawAlignmentCheck places the chip at g.labelAnchor, the feet-line midpoint, which for an edge-alignment guide is by construction on top of the elements being checked. The guide is drawn split around the chip, so the geometry already assumes the chip sits ON the line. Options worth weighing in the adversarial review: place the chip just beyond the guide end that has canvas room; or offset it perpendicular to the guide, away from the side the checked elements occupy. The principle now lives in shared/UX-PATTERNS.md D14 and covers all annotations, not just this chip, so fix the family rather than the instance. Do not regress the split-guide look if the chip moves off the line: it may no longer need splitting.",
@@ -25,6 +25,39 @@
     {
       "t": "2026-08-23T20:48:06.540Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T21:01:02.956Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T21:06:59.835Z",
+      "note": "Adversarial review (before building). 1) Walked it as a first-timer: draw an alignment guide down three labels, the verdict lands at the guide midpoint, which by construction is ON the rows it is judging. Confirmed in code: drawAlignmentCheck pills at g.labelAnchor and splits the guide around it, so the geometry ASSUMES the chip sits on the line. 2) The same trap is one step away for calipers: the chip rides the head line, so any measurement placed with a short head (manual 3-click) parks the readout on the measured span. Auto modes dodge it only because clearingHeadOffset pushes the whole head out, which moves the geometry to save the label - exactly what D14 rule 5 forbids. 3) What the mock assumes we cannot deliver: nothing here comes from a mock, it is a rendering bug, so there is no mock to disagree with. 4) Decorative and cut: the split-guide gap. It exists only to stop a translucent pill revealing a stroke behind it, so once the chip is off the line the split is pure decoration and the guide should draw whole. 5) Shortest version that delivers the value: do NOT store a pixel offset. Store WHICH SIDE the readout took (on the line, past either end, clear to either side) plus a small along-axis nudge, and derive the pixels from the current chip size. That way a bigger label, a unit change or a longer number can never leave a stale offset behind, and the JSON stays readable."
+    },
+    {
+      "t": "2026-08-23T21:06:59.836Z",
+      "note": "Design settled. New MeasureLabelPlacement in PhotonzCore, planned once at placement time by MeasureLabelPlanner, scored against three things: the rects the measurement is describing (alignment item spans including the outlier edge, or the feet line for a caliper), the canvas bounds, and the chip rects of measurements already in the document. Preference order keeps the classic on-the-line look when it is genuinely clear, so nothing moves that did not need to. The rasterizer splits the line only when the chip is still on it, and draws a solid leader from the nearest point of the measurement to the chip when the chip has moved further than adjacency can carry."
+    },
+    {
+      "t": "2026-08-23T21:06:59.836Z",
+      "note": "Known limit going in: the plan is computed when the measurement lands and when its endpoints are dragged, not continuously. Dragging one measurement on top of another later can re-stack labels. Chose that deliberately - a label that re-jumps whenever an unrelated layer moves is worse than one that stays put - and will record it in the audit."
+    },
+    {
+      "t": "2026-08-23T21:28:03.509Z",
+      "note": "Built. PhotonzCore gains MeasureLabelPlacement (on the line, past either end, clear to either side) plus labelNudge, both stored on MeasureContent and both derived into pixels from the CURRENT chip size, so a bigger label or a longer number can never leave a stale offset. MeasureLabelPlanner scores candidates against the rects the measurement is describing, the canvas edges and the readouts already on the canvas. MeasureRasterizer splits the line only while the pill still rides it and draws a solid leader from the nearest point of the measurement when the pill has moved past adjacency. MeasureBuilder reserves the frame where the pill ACTUALLY lands and gains replanningLabel/readoutRect. EditorState plans at every placement path (distance, size, gap, alignment), on endpoint commit and on label-size commit; the hover preview plans too, so nothing jumps when you click."
+    },
+    {
+      "t": "2026-08-23T21:28:03.510Z",
+      "note": "Adversarial review of the BUILT thing, on real renders of the audit capture (Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png). Two real problems, both found by looking rather than by tests. 1) First ranking put on-the-line first for alignment, and the verdict squeezed into the hairline gap between two rows: legal by the rule, cramped in the picture, and unpredictable (you cannot guess where the verdict will be). Changed to past-the-end first. 2) With past-the-end ruled out (a guide running the full height of the picture) the sideways fallback pushed the verdict RIGHT, straight over the row labels, because an item only records where an edge is, not which side its element extends into. Sideways is now the LAST resort, after a gap on the line, since a gap between two checked runs is known-empty and sideways is a coin flip. Both re-verified on renders."
+    },
+    {
+      "t": "2026-08-23T21:28:03.510Z",
+      "note": "Verified. 1012 tests green. New coverage: placement model and planner (MeasureLabelPlacementTests), rasterizer split/leader behaviour (MeasureRenderingTests), and the thumb test run end to end on the real capture (MeasureCalloutClearanceTests) - scan real edges, plan, then assert the readout misses every subject and stays on the picture. Each new render test was checked against the OLD behaviour by temporarily forcing the chip back to the anchor: all three fail, so they are real regression tests. Before/after/crowded PNGs saved to queue/audits/."
+    },
+    {
+      "t": "2026-08-23T21:28:03.510Z",
+      "note": "Release note: the fix lives in shared code (Measure.swift, MeasureRasterizer.swift, EditorState), not in Releases/Next, because the measure rasterizer is one shared object. Current gets the same correctness fix automatically, which is the shared-file mechanism working as designed; nothing Next-only leaked into Current."
     }
-  ]
+  ],
+  "started": "2026-08-23T21:01:02.956Z"
 }

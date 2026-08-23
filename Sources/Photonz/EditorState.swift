@@ -901,6 +901,30 @@ final class EditorState {
         finishCreating(layer.id)
     }
 
+    /// Every readout already on the canvas, in document space. A new
+    /// measurement's readout steers around these so two numbers never stack
+    /// (UX-PATTERNS D14 rule 4).
+    private func placedReadoutRects(excluding id: UUID? = nil) -> [CGRect] {
+        guard let document else { return [] }
+        return document.layers.compactMap { layer in
+            layer.id == id ? nil : MeasureBuilder.readoutRect(of: layer)
+        }
+    }
+
+    /// Picks where a about-to-land measurement's readout sits, so it never
+    /// covers the thing it is measuring (UX-PATTERNS D14). `start`/`end` and any
+    /// alignment items on `content` must be in document space.
+    private func planReadout(_ content: inout MeasureContent, from start: CGPoint, to end: CGPoint,
+                             avoiding extra: [CGRect] = []) {
+        var probe = content
+        probe.start = start
+        probe.end = end
+        let plan = MeasureLabelPlanner.plan(for: probe, canvas: document?.canvasSize,
+                                            avoiding: placedReadoutRects() + extra)
+        content.labelPlacement = plan.placement
+        content.labelNudge = plan.nudge
+    }
+
     /// Completed 3-click caliper placement: add the dimension layer with the
     /// active style, then auto-revert to Select and select the new caliper so its
     /// handles are immediately grabbable — matches other apps (the old sticky
@@ -909,6 +933,7 @@ final class EditorState {
         var content = measureStyle
         content.mode = mode
         content.headOffset = headOffset
+        planReadout(&content, from: start, to: end)
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         // Inherit the last caliper's non-destructive effects (a drop shadow added
         // in Effects carries to the next measure), like annotations do per shape.
@@ -937,7 +962,13 @@ final class EditorState {
         height.mode = .vertical
         height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: heightFeet.0,
                                                               to: heightFeet.1, canvas: canvas)
+        planReadout(&width, from: widthFeet.0, to: widthFeet.1)
         var widthLayer = MeasureBuilder.layer(content: width, from: widthFeet.0, to: widthFeet.1)
+        // The height readout also dodges the width readout that just landed —
+        // they meet at the element's corner, so they are the likeliest pair in
+        // the whole app to stack.
+        planReadout(&height, from: heightFeet.0, to: heightFeet.1,
+                    avoiding: [MeasureBuilder.readoutRect(of: widthLayer)].compactMap { $0 })
         var heightLayer = MeasureBuilder.layer(content: height, from: heightFeet.0, to: heightFeet.1)
         widthLayer.style = measureStyles.layerStyle
         heightLayer.style = measureStyles.layerStyle
@@ -971,6 +1002,7 @@ final class EditorState {
         // itself — a pill parked on a 12 px space hides the very thing measured.
         content.headOffset = MeasureBuilder.clearingHeadOffset(content: content, from: gap.start,
                                                                to: gap.end, canvas: canvas)
+        planReadout(&content, from: gap.start, to: gap.end)
         var layer = MeasureBuilder.layer(content: content, from: gap.start, to: gap.end)
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
@@ -1035,6 +1067,7 @@ final class EditorState {
             start = CGPoint(x: span.lowerBound, y: reference)
             end = CGPoint(x: span.upperBound, y: reference)
         }
+        planReadout(&content, from: start, to: end)
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
@@ -1122,6 +1155,35 @@ final class EditorState {
         }
         return document
     }
+
+    /// Which corner the legend takes. It is a key TO the measurements, so
+    /// parking it on top of one makes the same mistake a callout covering its
+    /// subject makes (UX-PATTERNS D14): it walks to the first free corner.
+    var measureLegendCorner: CanvasCorner {
+        guard let viewport, let document else { return .topLeading }
+        let rows = measureLegendEntries.count
+        guard rows > 0 else { return .topLeading }
+        let occupied = document.layers.compactMap { layer -> CGRect? in
+            guard layer.measure != nil, layer.isVisible else { return nil }
+            let origin = viewport.viewPoint(fromDocument: layer.frame.origin)
+            return CGRect(x: origin.x, y: origin.y,
+                          width: layer.frame.width * viewport.zoom,
+                          height: layer.frame.height * viewport.zoom)
+        }
+        return CornerPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
+                                          in: viewport.viewSize,
+                                          inset: Self.measureLegendInset,
+                                          avoiding: occupied)
+    }
+
+    /// A generous reservation for the legend's glass panel. It is chrome laid
+    /// out by SwiftUI, so its exact size is not knowable here; over-reserving
+    /// only makes it step aside a little sooner than strictly needed.
+    static func measureLegendSize(rows: Int) -> CGSize {
+        CGSize(width: 140, height: CGFloat(max(rows, 1)) * 21 + 16)
+    }
+    /// Matches the legend's own `.padding(10)`.
+    static let measureLegendInset: CGFloat = 10
 
     /// One row of the canvas legend (§5): a measurement kind present in the
     /// document, with the ink to swatch it in.
@@ -1272,7 +1334,14 @@ final class EditorState {
         measureLabelPreview = nil
         previewMove = nil
         updateMeasureStyles { $0.labelSizePx = scale * MeasureContent.labelFontSize }
-        applyMeasureRestyle { MeasureBuilder.restyled($0, labelScale: scale) }
+        // A much bigger readout can no longer fit where the small one did, so
+        // it gets to pick again (UX-PATTERNS D14).
+        let canvas = document?.canvasSize
+        let others = placedReadoutRects(excluding: selectedMeasureLayer?.id)
+        applyMeasureRestyle {
+            MeasureBuilder.replanningLabel(MeasureBuilder.restyled($0, labelScale: scale),
+                                           canvas: canvas, avoiding: others)
+        }
     }
 
     /// The caliper's ink: legs, head line, and the chip's border. Absorbs into
@@ -1348,9 +1417,13 @@ final class EditorState {
     /// values is a History no-op (the Esc-cancel path).
     func commitMeasureEndpoints(id: UUID, start: CGPoint, end: CGPoint, headOffset: CGFloat) {
         previewMove = nil
+        let others = placedReadoutRects(excluding: id)
+        let canvas = document?.canvasSize
         perform {
             $0.updateLayer(id: id) {
                 $0 = MeasureBuilder.updating($0, start: start, end: end, headOffset: headOffset)
+                // The measurement moved, so where its readout can sit changed.
+                $0 = MeasureBuilder.replanningLabel($0, canvas: canvas, avoiding: others)
             }
         }
     }

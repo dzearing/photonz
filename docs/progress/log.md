@@ -4031,3 +4031,47 @@ Audit: `queue/audits/2026-08-23-hover-measure.json`.
 Nothing visual was verified — screen recording is blocked for the agent.
 Next: whether Size should commit one caliper or two, and the alignment-scan
 short-run fix.
+
+## 2026-08-23 — Callouts move out of the way (measure-redline)
+
+A measurement's readout no longer covers the thing it is measuring
+(UX-PATTERNS D14). The reported case: an alignment verdict reading "off 5 px"
+was drawn at the midpoint of its own guide, which is by construction on top of
+the misaligned row, so the one element you had to look at was the one hidden.
+
+The fix is a family fix, not an instance fix. `MeasureContent` gains a stored
+`labelPlacement` (on the line, past either end, clear to either side) and a
+small `labelNudge` along the line. Both are *cases*, not pixels: the actual
+displacement is derived from the readout's CURRENT size, so a bigger label, a
+longer number or a unit switch can never leave a stale offset behind. Documents
+saved before this decode `.onLine` and draw exactly as they did.
+
+`MeasureLabelPlanner` picks the case once, when the measurement lands (and again
+when its endpoints or label size change), scoring candidates against three
+things: the rects the measurement is describing, the canvas edges, and the
+readouts already on the canvas. `MeasureRasterizer` splits the line around the
+pill only while the pill still rides it, and draws a solid leader from the
+nearest point of the measurement when the pill has moved past adjacency. The
+geometry never moves: feet, head, ticks and connector stay exactly where the
+measurement is.
+
+Two things changed after looking at real renders rather than at tests. An
+alignment verdict first preferred the line and squeezed into the hairline gap
+between two rows — legal, cramped, and impossible to predict; it now goes past
+the end of the guide. And the sideways fallback pushed the verdict straight over
+the row labels, because an alignment item records where an edge is, not which
+side its element extends into; sideways is now the last resort, after a gap on
+the line.
+
+The measure legend walks to a free corner instead of always sitting top-left
+(`CornerPlacement`, PhotonzCore), for the same reason: a key that covers the
+measurements it explains makes the same mistake.
+
+Shared code, so Current gets the same correctness as Next. 1012 tests green,
+including the thumb test run end to end on the real audit capture
+(`MeasureCalloutClearanceTests`); each new render test was checked against the
+old behaviour and fails without the fix.
+
+Audit: `queue/audits/2026-08-23-callout-clearance.json`.
+Next: no way to drag a readout to a spot you prefer — the obvious follow-up if
+the automatic picks feel wrong.

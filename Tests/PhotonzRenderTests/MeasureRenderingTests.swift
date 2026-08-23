@@ -102,6 +102,90 @@ struct MeasureRenderingTests {
                 "the verdict pill draws guide-colored ink at the midpoint")
     }
 
+    // MARK: A callout never covers what it is talking about (UX-PATTERNS D14)
+
+    /// The bug this family of tests exists for: the verdict used to be drawn at
+    /// the guide midpoint, which is exactly where the outlier row is.
+    @Test func aRelocatedVerdictLeavesTheCheckedRowsUncovered() {
+        var c = alignmentContent(showLabel: true)
+        c.labelPlacement = .afterEnd
+        let out = render(c, from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        // The outlier's real edge (x=112, y 112…152) and its connector are
+        // fully drawn, with no pill fill sitting over them.
+        #expect(anyPixel(out, xs: 110...114, ys: 115...150, where: isRedInk),
+                "the outlier's edge is still there")
+        #expect(anyPixel(out, xs: 103...109, ys: 129...135, where: isRedInk),
+                "the connector the verdict used to sit on top of is visible again")
+        #expect(anyPixel(out, xs: 60...140, ys: 216...260, where: isRedInk),
+                "the verdict now reads past the end of the guide")
+    }
+
+    /// A pill that has moved off the line must not leave the line broken where
+    /// it used to be. The readout is inked BLUE here, so the only red that can
+    /// land mid-guide is the guide itself.
+    @Test func aRelocatedVerdictLeavesTheGuideWhole() {
+        var c = alignmentContent(showLabel: true)
+        c.textColorHex = "#0000FF"
+        c.labelPlacement = .afterEnd
+        let out = render(c, from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        #expect(anyPixel(out, xs: 97...103, ys: 116...128, where: isRedInk),
+                "the dashed guide runs through where the chip gap used to be")
+    }
+
+    /// Attachment (D14 rule 3): a pill pushed well off to the side gets a
+    /// leader line back to the measurement. The outlier here is a long way out
+    /// (x=160), so the pill lands clear of it and the strip between the two can
+    /// only hold the leader.
+    @Test func aSidewaysVerdictGetsALeaderBackToTheGuide() {
+        var c = MeasureContent(headOffset: 0, mode: .vertical, strokeWidth: 6,
+                               strokeColorHex: "#FF0000", textColorHex: "#0000FF")
+        c.alignment = AlignmentCheck(
+            items: [AlignmentItem(edge: 100, spanStart: 40, spanEnd: 80),
+                    AlignmentItem(edge: 160, spanStart: 112, spanEnd: 152),
+                    AlignmentItem(edge: 100, spanStart: 184, spanEnd: 224)],
+            tolerance: 1)
+        c.labelPlacement = .clearPositive
+        let out = render(c, from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
+        // The bare strip runs from the outlier's own stroke (x=160 ± 3) to the
+        // pill's left edge. Only a leader can put ink there.
+        var placed = c
+        placed.start = CGPoint(x: 100, y: 30)
+        placed.end = CGPoint(x: 100, y: 210)
+        let chip = PillRasterizer.footprint(for: placed.label(pixelScale: 1),
+                                            fontSize: placed.labelPointSize,
+                                            padding: placed.labelPadding)
+        let pillLeft = Int(placed.labelRect(chipSize: chip).minX)
+        #expect(pillLeft > 166, "the pill clears the outlier's edge")
+        #expect(anyPixel(out, xs: 165...(pillLeft - 2), ys: 116...124, where: isRedInk),
+                "a solid leader bridges the guide and the relocated verdict")
+    }
+
+    /// Nothing moves that was never in the way: the classic on-the-line pill
+    /// still splits the head line.
+    @Test func anOnLineChipStillSplitsTheLine() {
+        let transparentChip = MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                                             headOffset: 28, mode: .horizontal, strokeWidth: 6,
+                                             strokeColorHex: "#FF0000", chipOpacity: 0)
+        let img = MeasureRasterizer.rasterize(transparentChip, size: CGSize(width: 240, height: 120),
+                                              pixelScale: 1)!
+        let gap = chipFillProbe(chipWidth: chipWidth(for: transparentChip))
+        #expect(pixel(img, x: gap.x, y: gap.y).a == 0, "the gap is still cut for the chip")
+    }
+
+    /// A readout pushed off the head line leaves the head line unbroken.
+    @Test func aClearedCaliperReadoutLeavesTheHeadLineWhole() {
+        var c = MeasureContent(start: CGPoint(x: 20, y: 60), end: CGPoint(x: 220, y: 60),
+                               headOffset: 6, mode: .horizontal, strokeWidth: 6,
+                               strokeColorHex: "#FF0000", chipOpacity: 0)
+        c.labelPlacement = .clearPositive
+        let img = MeasureRasterizer.rasterize(c, size: CGSize(width: 260, height: 160),
+                                              pixelScale: 1)!
+        // The head line runs at the caliper's head; sample its middle.
+        let g = c.caliperGeometry()
+        #expect(isRed(pixel(img, x: Int(g.labelAnchor.x), y: Int(g.labelAnchor.y))),
+                "the head line is continuous under where the chip used to sit")
+    }
+
     // Feet run at y=130 from x=20..240; head sits +28 below at y=158.
 
     @Test func caliperStrokesTheLegsAndHeadLine() {
