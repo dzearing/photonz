@@ -3,11 +3,11 @@
   "title": "Go loop finalizes or releases a task instead of reclaiming it in a tight cycle",
   "priority": "p1-high",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T14:29:06.070Z",
-  "updated": "2026-08-23T14:51:04.942Z",
+  "updated": "2026-08-23T14:51:26.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Between 2026-08-23T07:44Z and 14:22Z the loop claimed 'video-app-pages-conform-to-shared-timeline-selec' and exited without finalizing 2757 times, writing 5515 log entries into the task file (556KB) and 5516 events into queue/history.jsonl, while the finished work sat uncommitted in the working tree. Two things to fix: (1) a runner that exits without setting a terminal status should back off and stop re-claiming the same task rather than retrying every ~6s; (2) repeated claim/reset churn should be rate-limited or coalesced so it cannot balloon a task file the dashboard has to render. Consider capping the log array length in queue-lib.mjs. Epic: unmanned-loop / loop-robustness.",
@@ -48,7 +48,12 @@
     {
       "t": "2026-08-23T14:51:04.942Z",
       "note": "Verified: churn-drill 27/27, failure-drill 13/13 still green, Scripts/test.sh 932 tests pass."
+    },
+    {
+      "t": "2026-08-23T14:51:26.023Z",
+      "note": "Task logs coalesce + cap at 120 entries; history.jsonl self-compacts past 512KB (churn rolls up, real events kept forever, charts unchanged); guardStuck's blind reset now parks instead of retrying forever; loop.log rotates at 32MB. New queue/bin/churn-drill.mjs replays the incident: 27/27 checks pass, failure-drill.sh 13/13, Scripts/test.sh 932 tests. Real history repaired 8,114 -> 397 events. Shipped in bb2e3c3."
     }
   ],
-  "started": "2026-08-23T14:42:05.302Z"
+  "started": "2026-08-23T14:42:05.302Z",
+  "completed": "2026-08-23T14:51:26.023Z"
 }
