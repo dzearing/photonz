@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p1-high",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T18:03:57.229Z",
-  "updated": "2026-08-23T21:30:02.508Z",
+  "updated": "2026-08-23T21:47:08.255Z",
   "deps": [],
   "blockedBy": [],
   "notes": "See queue/audits/2026-08-23-measure-redline.md. AlignmentCheck.verdict was fixed 2026-08-23 to use the span-weighted heaviest cluster as the reference (was a plain median that invented a line between two clusters). What remains: (1) AlignmentScan.items produces a spurious 2-sample run at x=108 spanning y 602-610 just under the File name prefix label, which beats the real edge at x=106 for worst-offender, so the chip reads 5 instead of 4. Fix in the scan: a run that no element accounts for should not become an item. (2) MeasureRasterizer puts the verdict chip at the guide midpoint; move it perpendicular, away from the outlier. (3) The aligned ticks are MeasureBuilder.alignmentTickHalf = 5 px and read as nothing; the mock also showed an item count (Left edge alignment, 4 items) that the panel row does not carry.",
@@ -51,7 +51,12 @@
     {
       "t": "2026-08-23T22:20:00.000Z",
       "note": "Adversarial review, on the built thing. Renders through the shipping path at 1:1 read well: the bracket is the first thing you see, the number agrees with it. Still clumsy and recorded in the audit rather than fixed: the pill can overhang a card's left edge, there is no count of what was checked, and the verdict still sits at the end of the guide rather than beside the offender (that placement is the D14 rule set yesterday, so overriding it a day later is the user's call, not mine). 1025 tests green."
+    },
+    {
+      "t": "2026-08-23T21:47:08.254Z",
+      "note": "The guide down the three labels now reads off 4 px (was off 5) and brackets the row it means. Number: AlignmentScan requires a boundary to be at least 0.2 as bold as the boldest one its sample window offers before it counts as an element edge, the same floor ElementBounds uses, which drops the block-summing echo under the middle label that used to win the outlier vote. Picture: the offender gets a bracket at twice the stroke enclosing the gap instead of a 1px line, the guide runs solid across every element it confirms and dashed where it is only travelling, ticks 5px to 8px. Pill placement already cleared every judged row (callout-clearance work) and is now pinned. Verified end to end through the shipping path on Fixtures/settings-pane-2x.png at 1:1 and 3x, plus a horizontal guide over the footer buttons; the drag was swept through EdgeSnapping (every press from device x 88 to 102 agrees). New AlignmentFixtureTests measures the guide against the real capture; synthetic ghost tests checked to fail with the floor at 0. 1025 tests green. Audit: queue/audits/2026-08-23-alignment-guide.json. Commit 009d9ae, pushed."
     }
   ],
-  "started": "2026-08-23T21:30:02.507Z"
+  "started": "2026-08-23T21:30:02.507Z",
+  "completed": "2026-08-23T21:47:08.255Z"
 }
