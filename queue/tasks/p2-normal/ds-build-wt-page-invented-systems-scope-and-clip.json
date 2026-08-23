@@ -3,11 +3,11 @@
   "title": "ds-build-wt: page-invented Systems scope and clipped scope tab",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:40.825Z",
-  "updated": "2026-08-23T05:59:57.016Z",
+  "updated": "2026-08-23T06:15:26.776Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: ui-building > ui-design-systems (plus design-system conformance). Checklist sweep: (1) gate 3 warn: Library scope row is Media/Comp/Styles/Systems, replacing the fixed D2 fourth scope 'Assets' with a page-invented 'Systems' (grep: only this file uses data-scope=systems); decide whether design systems live under Assets or the scope set changes everywhere. (2) measured in browser: the 'Systems' chip clips 10px (scrollWidth 63 vs clientWidth 53) in the 232px seg; 'Styles' also clips slightly. (3) minor: fill value uses a unicode arrow (#pFillVal '#7C4DFF -> #FF5D8F' rendered with an arrow glyph); .select rows lack role/tabindex. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -56,7 +56,12 @@
     {
       "t": "2026-08-23T06:15:04.793Z",
       "note": "log compressed: crash-loop claim/reset spam collapsed into summary lines"
+    },
+    {
+      "t": "2026-08-23T06:15:26.776Z",
+      "note": "Systems replaces Assets applied on all 49 Library pages per the resolved decision; file-like Assets content moved to Media; UX-PATTERNS D2 + AGENTS + audit docs + PRODUCT-MODEL updated; every scope seg on scopeseg geometry with the 1px border clip fixed. Verified per page in Chrome (labels whole, scope switching works, no console errors); test.sh green; pushed 31d5548."
     }
   ],
-  "started": "2026-08-23T05:59:57.015Z"
+  "started": "2026-08-23T05:59:57.015Z",
+  "completed": "2026-08-23T06:15:26.776Z"
 }
