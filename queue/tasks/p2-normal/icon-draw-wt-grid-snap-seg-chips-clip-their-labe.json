@@ -3,11 +3,11 @@
   "title": "icon-draw-wt: Grid & snap seg chips clip their labels",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:08.036Z",
-  "updated": "2026-08-23T00:27:39.522Z",
+  "updated": "2026-08-23T03:05:18.359Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: icon-svg > icon-grid. Checklist sweep, measured in browser at 1280x900: both 'Grid & snap' .seg.ig-multi groups (224px wide) clip chip labels ('Live area' scrollWidth 72 vs clientWidth 69, 'Geometry' 74 vs 69), and the second seg's sliding plate span is collapsed to 2px wide instead of sitting under the active chip. Widen the seg or shorten labels, and fix the plate positioning. All structural gates pass on this page. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -28,6 +28,24 @@
     {
       "t": "2026-08-23T00:27:39.522Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-23T02:56:36.812Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T02:59:00.000Z",
+      "note": "Reproduced in browser at 1280x900: labels clipped 1-5px (under the one-ellipsis collapse threshold, so they ellipsized forever), segSnap plate was a 2px border-only box (no selection), and worse: segmented.js radio machinery made one click wipe the other on chips in these multi-toggle rows."
+    },
+    {
+      "t": "2026-08-23T03:04:00.000Z",
+      "note": "Fixed at the component level: new .seg.multi variant in segmented.css/js (no plate, no radio semantics, aria-pressed toggles, accent-on tint, scopeseg-style natural-width columns + dense padding so unequal labels fit). Page now uses seg multi and drops its private override CSS and click handler. Verified in browser: zero clipped labels in both rows, independent toggling works, walkthrough data-class driving syncs aria-pressed via the MutationObserver, collapse-to-menu still works at narrow widths (trigger lists the on chips), radio segs on this page and components.html unaffected, audit panel-seg grid gate passes."
+    },
+    {
+      "t": "2026-08-23T03:05:18.358Z",
+      "note": "Shipped a .seg.multi variant in the shared design system (segmented.css/js): toggle rows get no travelling plate, no radio semantics, aria-pressed per chip, accent-on tint, and natural-width columns so unequal labels never clip. icon-draw-wt's Show and Snap to rows now use it. Verified in Chrome at 1280x900: zero clipped labels, chips toggle independently (the old radio behavior wiped sibling chips on click), the 2px plate box is gone, collapse-to-menu still works, and radio segs elsewhere are untouched."
     }
-  ]
+  ],
+  "started": "2026-08-23T02:56:36.812Z",
+  "completed": "2026-08-23T03:05:18.359Z"
 }

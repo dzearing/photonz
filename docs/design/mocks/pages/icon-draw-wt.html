@@ -94,9 +94,9 @@
   #icon-draw-wt .ig-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
   #icon-draw-wt .ig-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
 
-  /* ---------- Grid & snap panel group · every number is a control ---------- */
-  #icon-draw-wt .seg.ig-multi button.on{background:var(--accent-soft);color:var(--accent);
-    box-shadow:inset 0 0 0 1px var(--accent-line)}
+  /* ---------- Grid & snap panel group · every number is a control ----------
+     The Show and Snap to rows are `.seg.multi` — the design system's toggle
+     variant owns their accent-on styling and their behaviour. */
   #icon-draw-wt .ig-ok{color:var(--good);font-weight:640}
   #icon-draw-wt .ig-boolrow{display:flex;gap:var(--s1)}
   #icon-draw-wt .ig-boolrow .btn{flex:1}
@@ -335,7 +335,7 @@
                     <span class="select" id="selGrid" tabindex="0" role="button"><span class="lead" id="gridKind">None</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
                   </div>
                   <div class="irow" style="grid-template-columns:1fr"><span class="rl">Show</span>
-                    <span class="seg ig-multi" id="segShow" role="group" aria-label="Overlays to show">
+                    <span class="seg multi" id="segShow" role="group" aria-label="Overlays to show">
                       <button id="shGrid">Grid</button>
                       <button id="shLive">Live area</button>
                       <button id="shKeys">Keylines</button>
@@ -344,7 +344,7 @@
                 </div>
                 <div class="section">
                   <div class="irow" style="grid-template-columns:1fr"><span class="rl">Snap to</span>
-                    <span class="seg ig-multi" id="segSnap" role="group" aria-label="Snap targets">
+                    <span class="seg multi" id="segSnap" role="group" aria-label="Snap targets">
                       <button id="snGrid">Grid</button>
                       <button id="snKeys">Keylines</button>
                       <button id="snGeo">Geometry</button>
@@ -728,9 +728,9 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-  /* Page-local: the Library scope switch, the segmented controls, and the
-     multi-toggle overlay/snap rows stay live when a person clicks them
-     directly. The walkthrough drives the same state declaratively. */
+  /* Page-local: the Library scope switch and the line-cap seg stay live when
+     a person clicks them directly. The walkthrough drives the same state
+     declaratively. */
   (function () {
     var root = document.getElementById('icon-draw-wt');
     var seg = root.querySelector('.scopeseg');
@@ -754,14 +754,8 @@
         b.addEventListener('click', function () { bs.forEach(function (x) { x.classList.toggle('on', x === b); }); });
       });
     });
-    // multi-choice rows: Show, and Snap to. Each button is its own toggle.
-    [].slice.call(root.querySelectorAll('.ig-multi button')).forEach(function (b) {
-      b.setAttribute('aria-pressed', b.classList.contains('on') ? 'true' : 'false');
-      b.addEventListener('click', function () {
-        b.classList.toggle('on');
-        b.setAttribute('aria-pressed', b.classList.contains('on') ? 'true' : 'false');
-      });
-    });
+    // The Show and Snap to rows are `.seg.multi`: the design system's own
+    // toggle behaviour (segmented.js) runs them, so no page handler here.
   })();
 </script>
 </body>

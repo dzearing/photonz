@@ -44,6 +44,7 @@
      <span class="seg"><button class="on">Fill</button><button>Fit</button></span>
      <span class="seg fill">…</span>     equal columns, fills its container
      <span class="seg sm">…</span>       24px, for dense panel rows
+     <span class="seg multi">…</span>    independent toggles, not a radio group
    ============================================================ */
 
 .seg{
@@ -208,6 +209,35 @@
    margin the longest label set needs at the dock's default width. */
 .seg.scopeseg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,max-content);justify-content:space-between;gap:0;width:100%}
 .seg.scopeseg>button{padding:0 var(--s2)}
+
+/* ---- MULTI: INDEPENDENT TOGGLES ON ONE TRACK ---------------------------
+   `.seg.multi` is not a radio group. Each segment is its own on/off switch
+   (overlays to show, snap targets), so a raised plate travelling between
+   slots has no meaning here: two chips can be on at once and zero is legal.
+   The on state is the accent tint instead of the plate. A plate says "this
+   is the one value"; the tint says "this one is engaged", and side by side
+   with a radio seg that difference is the point. segmented.js reads the
+   class too: no plate, no radio semantics, `aria-pressed` per button, and a
+   click toggles only the segment under it.
+
+   The geometry is the scopeseg's, for the scopeseg's reason. Toggle labels
+   are short and UNEQUAL ("Grid" next to "Live area" and "Geometry"), and
+   these rows live in ~220px dock columns — equal `1fr` columns gave every
+   chip the same box, so the longest label sat a few px past its slot, under
+   the one-ellipsis collapse threshold, and just showed `Geomet…` forever.
+   Natural-width columns give each label exactly what it needs and
+   space-between spreads the slack; `minmax(0,…)` keeps the columns
+   shrinkable so the collapse-to-menu still takes over at the dock's true
+   minimum. Dense padding for the same reason as the scopeseg. */
+.seg.multi{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,max-content);justify-content:space-between;gap:0;width:100%}
+.seg.multi>button{padding:0 var(--s2)}
+.seg.multi>button.on{
+  background:var(--accent-soft);
+  border-color:transparent;
+  color:var(--accent);
+  font-weight:620;
+  box-shadow:inset 0 0 0 1px var(--accent-line);
+}
 
 /* `.seg.stack` used to mean "allowed to wrap". Nothing is allowed to wrap, so
    it is now just the full-width form, kept because five pages ask for it. */

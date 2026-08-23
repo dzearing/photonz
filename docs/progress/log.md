@@ -3873,3 +3873,10 @@ behind `next-measure-panel` (Next-only, default ON; Current byte-identical).
 - `Scripts/test.sh` green: 932 tests. Dev app bundle builds, launches clean.
 - Not verified by hand: panel look/feel on a live canvas (TCC blocks unmanned
   capture) — worth the same manned pass §5 is queued for.
+
+## 2026-08-23 · go loop: icon-draw-wt Grid & snap chips
+
+- The Show and Snap to rows on icon-draw-wt were multi-toggle chips wearing the radio `.seg`: labels clipped a few px forever (under the collapse threshold), the second row's plate was a 2px border-only box, and one click wiped the sibling on chips.
+- Shipped `.seg.multi` in the shared design system (segmented.css/js): independent toggles with aria-pressed, no travelling plate, accent-on tint, scopeseg-style natural-width columns + dense padding. Collapse-to-menu still works; the trigger lists the on chips. Page dropped its private override CSS and click handler.
+- Verified in Chrome at 1280x900: zero clipped labels, independent toggling, walkthrough data-class driving keeps aria in sync, radio segs on this page and components.html unaffected.
+- Only icon-draw-wt uses the variant so far; other chip-like rows can adopt `seg multi` when touched.

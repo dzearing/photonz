@@ -24,6 +24,16 @@
      'change' event on .seg  { detail:{ index, value, button } }, bubbles
 
    `data-value` on a segment names it for the event; the label is the fallback.
+
+   `.seg.multi` IS NOT A RADIO GROUP. Each segment is an independent on/off
+   toggle (overlays to show, snap targets), so the radio machinery would be
+   wrong three ways at once: the exclusive `select` would wipe the other on
+   chips on every click, the travelling plate would sit under only the first
+   of them, and `role=radio` would announce a set of checkboxes as a single
+   choice. A multi seg gets none of it — a click toggles only its own button,
+   the buttons carry `aria-pressed`, and the on styling is per-button in CSS
+   (the accent tint) instead of the plate. The `change` event gains an `on`
+   field. Collapse still applies; the menu trigger's label lists what is on.
    ============================================================ */
 (function () {
   var PZ = window.PZ || {};
@@ -94,6 +104,26 @@
       detail: {
         index: b.indexOf(btn),
         value: btn.getAttribute('data-value') || btn.textContent.trim(),
+        button: btn
+      }
+    }));
+  }
+
+  /* The `.multi` click path. Only the button under the pointer changes; the
+     rest of the row is none of this click's business. aria-pressed is synced
+     here for direct clicks and in the MutationObserver for everyone else
+     (the walkthrough sets `.on` declaratively and never clicks). */
+  function toggle(seg, btn) {
+    if (!btn || btn.disabled || btn.classList.contains('disabled')) return;
+    btn.classList.toggle('on');
+    var on = btn.classList.contains('on');
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    seg.dispatchEvent(new CustomEvent('change', {
+      bubbles: true,
+      detail: {
+        index: buttons(seg).indexOf(btn),
+        value: btn.getAttribute('data-value') || btn.textContent.trim(),
+        on: on,
         button: btn
       }
     }));
@@ -261,8 +291,17 @@
   }
 
   function syncAltLabel(seg) {
+    if (!seg.__alt) return;
+    // A collapsed multi seg has no single value to show, so the trigger lists
+    // what is on. "None" is a state, not a placeholder — zero on is legal.
+    if (seg.classList.contains('multi')) {
+      var on = buttons(seg).filter(function (b) { return b.classList.contains('on'); })
+        .map(function (b) { return b.textContent.trim(); });
+      seg.__alt.querySelector('.lead').textContent = on.length ? on.join(' · ') : 'None';
+      return;
+    }
     var btn = selected(seg);
-    if (seg.__alt && btn) seg.__alt.querySelector('.lead').textContent = btn.textContent.trim();
+    if (btn) seg.__alt.querySelector('.lead').textContent = btn.textContent.trim();
   }
 
   function fit(seg) {
@@ -284,19 +323,31 @@
     var b = buttons(seg);
     if (!b.length) return;
 
-    var plate = document.createElement('span');
-    // starts hidden: until it has been placed against a real box there is
-    // nothing meaningful to draw, and a 0x0 plate at the origin flashes.
-    plate.className = 'seg-plate off';
-    // decorative: the selected state is announced by aria-checked on the button
-    plate.setAttribute('aria-hidden', 'true');
-    seg.insertBefore(plate, seg.firstChild);
-    seg.__plate = plate;
-    seg.classList.add('has-plate');
+    var multi = seg.classList.contains('multi');
 
-    if (!seg.hasAttribute('role')) seg.setAttribute('role', 'radiogroup');
+    var plate = null;
+    if (!multi) {
+      plate = document.createElement('span');
+      // starts hidden: until it has been placed against a real box there is
+      // nothing meaningful to draw, and a 0x0 plate at the origin flashes.
+      plate.className = 'seg-plate off';
+      // decorative: the selected state is announced by aria-checked on the button
+      plate.setAttribute('aria-hidden', 'true');
+      seg.insertBefore(plate, seg.firstChild);
+      seg.__plate = plate;
+      seg.classList.add('has-plate');
+    }
+
+    if (!seg.hasAttribute('role')) seg.setAttribute('role', multi ? 'group' : 'radiogroup');
     var cur = selected(seg);
     b.forEach(function (x) {
+      if (multi) {
+        // toggles, not radios: every button is a tab stop and announces its
+        // own pressed state. No roving tabindex — there is no "the" value
+        // for the group to hand focus to.
+        x.setAttribute('aria-pressed', x.classList.contains('on') ? 'true' : 'false');
+        return;
+      }
       if (!x.hasAttribute('role')) x.setAttribute('role', 'radio');
       x.setAttribute('aria-checked', x === cur ? 'true' : 'false');
       x.tabIndex = (cur ? x === cur : x === b[0]) ? 0 : -1;
@@ -304,10 +355,10 @@
 
     seg.addEventListener('click', function (e) {
       var btn = e.target.closest('button');
-      if (btn && btn.parentNode === seg) select(seg, btn);
+      if (btn && btn.parentNode === seg) (multi ? toggle : select)(seg, btn);
     });
 
-    seg.addEventListener('keydown', function (e) {
+    if (!multi) seg.addEventListener('keydown', function (e) {
       var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
             : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
       var next = null;
@@ -330,6 +381,15 @@
       for (var i = 0; i < recs.length; i++) {
         var t = recs[i].target;
         if (t !== plate && t !== seg && t !== seg.__alt) {
+          if (multi) {
+            // no plate to move — but a page script or walkthrough step that
+            // sets `.on` directly must not leave aria-pressed stale.
+            b.forEach(function (x) {
+              x.setAttribute('aria-pressed', x.classList.contains('on') ? 'true' : 'false');
+            });
+            syncAltLabel(seg);
+            return;
+          }
           seg.__moveAt = Date.now();   // see the ResizeObserver below
           place(seg, true);
           syncAltLabel(seg);
