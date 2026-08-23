@@ -24,6 +24,26 @@ struct CropTests {
         #expect(CropAspect.sixteenNine.label == "16:9")
     }
 
+    /// D15: the crop tool button wears the live aspect's glyph, so every aspect
+    /// needs one and Free keeps the tool's own crop glyph.
+    @Test func aspectSymbols() {
+        #expect(CropAspect.free.symbol == "crop")
+        #expect(CropAspect.square.symbol == "square")
+        #expect(CropAspect.fourThree.symbol == "rectangle.ratio.4.to.3")
+        #expect(CropAspect.sixteenNine.symbol == "rectangle.ratio.16.to.9")
+    }
+
+    @Test func everyAspectCarriesAHelpLineNamingItself() {
+        for aspect in CropAspect.allCases {
+            #expect(!aspect.help.isEmpty)
+            #expect(aspect.help.contains(aspect.label))
+        }
+    }
+
+    @Test func freeIsTheDefaultAndComesFirst() {
+        #expect(CropAspect.allCases.first == .free)
+    }
+
     // MARK: Fitting a rect to an aspect
 
     @Test func fittedFreeReturnsTheRectUnchanged() {

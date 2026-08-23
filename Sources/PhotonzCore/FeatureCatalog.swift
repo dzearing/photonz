@@ -41,6 +41,8 @@ public enum FeatureCatalog {
 
     public static let arrowCaptionsFlag = "next-arrow-captions"
 
+    public static let toolOptionsFlag = "next-tool-options"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -140,6 +142,15 @@ public enum FeatureCatalog {
                     name: measureCenterSnapFlag,
                     title: "Snap to centers",
                     description: "Adds a Snap option to the Measure Tool section of the inspector. With Edges and centers, measure points also magnetize to element and gap centers, the midpoint between neighboring edges. Hold Command to drag free.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: toolOptionsFlag,
+                    title: "Tool options off the tool bar",
+                    description: "Picking up the Crop tool or the Magic Wand stops widening the floating tool bar. Crop keeps its aspect locks inside its own tool button and shows Cancel and Crop on the canvas while a crop is live; the wand's tolerance moves to a Magic Wand section in the inspector. Off means both tools lay their options out along the bar, which grows it and pushes tools into the overflow menu on a narrow window.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

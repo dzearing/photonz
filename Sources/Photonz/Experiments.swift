@@ -165,6 +165,13 @@ extension Experiments {
     /// release's catalog, so Current always reads false.
     var arrowCaptionsEnabled: Bool { isEnabled(FeatureCatalog.arrowCaptionsFlag) }
 
+    /// `next-tool-options`: whether the Crop tool and the Magic Wand keep their
+    /// options off the floating tool bar (D15) — crop aspect in the crop
+    /// button's flyout, crop actions on the canvas, wand tolerance in the
+    /// inspector. Exists only in the Next release's catalog, so Current always
+    /// reads false and keeps both option rows in the bar.
+    var toolOptionsEnabled: Bool { isEnabled(FeatureCatalog.toolOptionsFlag) }
+
     /// `capture-toast-timing`: how long that fade takes.
     var captureToastFadeSeconds: Double {
         guard isEnabled(FeatureCatalog.captureToastTimingFlag) else {

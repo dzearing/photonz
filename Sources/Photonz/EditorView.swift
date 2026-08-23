@@ -246,11 +246,18 @@ struct EditorView: View {
                 .overlay(alignment: .bottom) {
                     if editorState.showsMeasureHint { measureHintChip }
                 }
+                .overlay(alignment: .bottom) {
+                    if Experiments.shared.toolOptionsEnabled,
+                       editorState.activeTool == .crop, editorState.cropRect != nil {
+                        cropActionBar
+                    }
+                }
                 .overlay(alignment: Self.alignment(for: editorState.measureLegendCorner)) {
                     let entries = editorState.measureLegendEntries
                     if !entries.isEmpty { measureLegend(entries) }
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
                 .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendCorner)
         } else {
@@ -439,7 +446,7 @@ struct EditorView: View {
         HStack(spacing: 14) {
             toolButton(.select, "cursorarrow", "Select", "v")
             regionSelectButtons
-            if editorState.activeTool == .wand {
+            if editorState.activeTool == .wand, !Experiments.shared.toolOptionsEnabled {
                 wandOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
@@ -450,8 +457,8 @@ struct EditorView: View {
             toolButton(.highlight, "highlighter", "Highlight", "h")
             toolButton(.text, "character.cursor.ibeam", "Text", "t")
             Divider().frame(height: 20)
-            toolButton(.crop, "crop", "Crop", "c")
-            if editorState.activeTool == .crop {
+            cropToolButton
+            if editorState.activeTool == .crop, !Experiments.shared.toolOptionsEnabled {
                 cropOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
@@ -533,11 +540,13 @@ struct EditorView: View {
     /// the compact bar they sit at the trailing edge; the full bar keeps them
     /// inline. (The color/style swatch lives in the adaptive color capsule now.)
     @ViewBuilder private var contextualToolOptions: some View {
-        if editorState.activeTool == .wand {
-            wandOptions
-        }
-        if editorState.activeTool == .crop {
-            cropOptions
+        if !Experiments.shared.toolOptionsEnabled {
+            if editorState.activeTool == .wand {
+                wandOptions
+            }
+            if editorState.activeTool == .crop {
+                cropOptions
+            }
         }
     }
 
@@ -678,7 +687,7 @@ struct EditorView: View {
         case .ellipse: toolButton(.ellipse, "circle", "Ellipse", "o")
         case .highlight: toolButton(.highlight, "highlighter", "Highlight", "h")
         case .text: toolButton(.text, "character.cursor.ibeam", "Text", "t")
-        case .crop: toolButton(.crop, "crop", "Crop", "c")
+        case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
         case .measure: measureToolButton
@@ -949,6 +958,63 @@ struct EditorView: View {
                 editorState.measureToolMode = editorState.measureToolMode
                     .cycled(alignmentEnabled: Experiments.shared.measureAlignEnabled)
             })
+    }
+
+    /// The Crop tool's button, which owns its aspect locks (D15). Free, 1:1,
+    /// 4:3 and 16:9 used to sit beside it as four chips (plus a checkmark and a
+    /// cross), 207pt of bar that appeared the moment you picked the tool up.
+    /// The lock is a mode by D15's test — it changes what a drag does — so the
+    /// button wears its glyph and press-and-hold lists the four.
+    ///
+    /// Unlike Measure, C does NOT cycle: switching lock refits the rect, so a
+    /// second press of the tool's key would silently reshape a crop you just
+    /// dragged. Picking a lock stays a deliberate choice.
+    ///
+    /// With the flag off this is the plain crop button and the chips are back
+    /// in the bar, which is what Current ships.
+    @ViewBuilder private var cropToolButton: some View {
+        if Experiments.shared.toolOptionsEnabled {
+            ToolModeButton(
+                toolTitle: "Crop",
+                key: "c",
+                isActive: editorState.activeTool == .crop,
+                modes: CropAspect.allCases.map {
+                    ToolMode(mode: $0, title: $0.label, symbol: $0.symbol, help: $0.help)
+                },
+                selection: Binding(get: { editorState.cropAspect },
+                                   set: { editorState.setCropAspect($0) }),
+                namespace: toolbarNamespace,
+                activate: { editorState.setTool(.crop) },
+                keyCycles: false,
+                pressedKey: { editorState.setTool(.crop) })
+        } else {
+            toolButton(.crop, "crop", "Crop", "c")
+        }
+    }
+
+    /// Crop's two actions while a crop is live. A mode belongs in the tool
+    /// button and a setting in the inspector (D15), but Apply and Cancel are
+    /// neither: they are the actions that END a modal state, so they sit on the
+    /// canvas the state has taken over, floating just clear of the tool bar,
+    /// and they leave with the crop. Words, not glyphs — a checkmark at the far
+    /// end of an 1100pt bar was never the thing a first-timer reached for.
+    private var cropActionBar: some View {
+        HStack(spacing: 10) {
+            Button("Cancel") { editorState.cancelCrop() }
+                .help("Cancel the crop (⎋)")
+            Button("Crop") { editorState.commitCrop() }
+                .keyboardShortcut(.return, modifiers: [])
+                .buttonStyle(.borderedProminent)
+                .help("Apply the crop (⏎)")
+        }
+        .controlSize(.large)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .glassEffect(.regular, in: .capsule)
+        // Clear of the floating tool bar (48pt tall, 16pt off the bottom), so
+        // the two read as a stack rather than one covering the other.
+        .padding(.bottom, 76)
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
     private var cropOptions: some View {

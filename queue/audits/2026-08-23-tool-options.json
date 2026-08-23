@@ -1,0 +1,32 @@
+{
+  "feature": "Crop and the wand keep their options off the tool bar",
+  "epic": "measure-redline",
+  "summary": "Picking up the Crop tool or the Magic Wand no longer widens the floating tool bar. Crop's four aspect locks moved inside its own tool button, its Apply and Cancel moved onto the canvas as a pill reading Cancel and Crop, and the wand's tolerance moved to a Magic Wand section in the inspector.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag is next-tool-options, on by default. Open any screenshot and show the inspector (⌥⌘L).",
+  "try": [
+    { "do": "Press V for Select, then C for Crop, and watch the width of the floating bar at the bottom.", "shot": "2026-08-23-tool-options-1-crop.png" },
+    { "do": "Look just above the tool bar for the Cancel and Crop buttons, then drag a crop rect and press Crop.", "shot": "2026-08-23-tool-options-2-bar.png" },
+    { "do": "Press ⌘Z, press C again, and this time press Escape to leave the crop." },
+    { "do": "Press and hold the Crop button until its list of aspect locks opens, and pick 16:9." },
+    { "do": "Press C again and check that it did NOT move to the next aspect lock.", "shot": "2026-08-23-tool-options-4-crop-inspector.png" },
+    { "do": "Press W for the Magic Wand and watch the bar width again." },
+    { "do": "Find Tolerance in the Magic Wand section of the inspector, drag it, then click a flat area of the image.", "shot": "2026-08-23-tool-options-3-wand-inspector.png" }
+  ],
+  "evaluate": [
+    "Are Cancel and Crop where your eye already is, or did you look for them in the bar first?",
+    "Does the pill floating above the tool bar read as part of the crop, or as a second toolbar?",
+    "Should the pill follow the crop rectangle around instead of sitting in one place at the bottom?",
+    "With the chips gone, is the aspect lock still findable, or does the crop button look like it has nothing inside it?",
+    "Tolerance now lives in the inspector: does that feel like the right home, or do you want it back within reach of the canvas?",
+    "C picking the tool up but never cycling the aspect: right call, or should the key walk the locks the way I walks Measure's modes?"
+  ],
+  "rough": [
+    "The screenshots are captured by the app itself, because screen capture is blocked on this machine, and that camera does not draw accent fills. The Crop button in the pill photographs as an empty white capsule (it is blue with white text on screen) and no tool wears its accent circle. The inspector photographs blank entirely, so its two sections are shown rendered on their own instead, where sliders and pickers come out as yellow blocks.",
+    "Apply and Cancel had no home in the pattern and the task suggested asking you first. I decided it rather than blocking a p1 on a click: the app already puts Cancel and Done together for a video crop, and ⏎ and ⎋ already did the job. If the pill is wrong, question one and two above are where to say so, and moving it is cheap.",
+    "The pill sits in one fixed place, bottom center, rather than tracking the crop rectangle. Simpler, never jitters during a drag, but it can be a long way from a crop in the top corner.",
+    "It shows no size readout. A live 1920 x 1080 would be useful and was cut to keep two actions from growing into a strip. Easy to add if you want it.",
+    "The bar gained 15pt in EVERY state, because the chevron on the crop slot is always there. That is the same trade Measure made: it stopped growing by 207pt when you pick Crop up.",
+    "The bar is still not a fixed width: the drawing tools make it 23pt NARROWER, because the colour capsule swaps the paint pair for a single swatch. Deliberate, but it means picking a tool still moves the bar a little.",
+    "Wand tolerance is one click further away when the inspector is closed, and on a window under 680pt wide the inspector hides itself, so the setting is behind the sidebar toggle. Measure's Snap and Show already have exactly this gap."
+  ]
+}

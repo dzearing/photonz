@@ -102,6 +102,19 @@ struct InspectorPanel: View {
         if editorState.activeTool == .measure, MeasureToolInspector.hasAnySetting {
             set.insert(.measureTool)
         }
+        // The Magic Wand's own properties (D15): tolerance is a setting, not a
+        // mode, so it left the tool bar and lives here while the wand is in
+        // hand.
+        if editorState.activeTool == .wand, Experiments.shared.toolOptionsEnabled {
+            set.insert(.wandTool)
+        }
+        // Crop's aspect lock, in words. The tool button's flyout is the fast
+        // path; D15 asks that the live mode stay readable somewhere as a word,
+        // because a glyph says what the next drag does and does not remind you
+        // three minutes later.
+        if editorState.activeTool == .crop, Experiments.shared.toolOptionsEnabled {
+            set.insert(.cropTool)
+        }
         return set
     }
 
@@ -126,6 +139,10 @@ struct InspectorPanel: View {
             MeasurementsListView()
         case .measureTool:
             MeasureToolInspector()
+        case .wandTool:
+            WandToolInspector()
+        case .cropTool:
+            CropToolInspector()
         case .annotation:
             if let layer = selectedLayer, layer.annotation != nil {
                 AnnotationInspector(layer: layer)
@@ -197,6 +214,8 @@ struct InspectorPanel: View {
 enum InspectorSectionID: String, CaseIterable {
     case layers
     case measureTool
+    case wandTool
+    case cropTool
     case measurements
     case annotation
     case text
@@ -210,6 +229,8 @@ enum InspectorSectionID: String, CaseIterable {
         switch self {
         case .layers: "Layers"
         case .measureTool: "Measure Tool"
+        case .wandTool: "Magic Wand"
+        case .cropTool: "Crop Tool"
         case .measurements: "Measurements"
         case .annotation: "Annotation"
         case .text: "Text"
@@ -679,6 +700,71 @@ struct MeasureToolInspector: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             content()
         }
+    }
+}
+
+// MARK: - Magic Wand tool properties (D15)
+
+/// The Magic Wand's own properties, shown while the tool is in hand.
+///
+/// Tolerance used to ride in the tool bar as a labelled slider, 152pt that
+/// appeared the moment you picked the wand up. It is a setting by D15's test —
+/// it changes what the result looks like, not what the pointer does — so it
+/// belongs with the tool's properties, and it reads better here with room for
+/// the number and a line saying what it means.
+struct WandToolInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        @Bindable var state = editorState
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Tolerance").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text("\(Int(editorState.wandTolerance))")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: Binding(get: { editorState.wandTolerance },
+                                  set: { editorState.wandTolerance = $0.rounded() }),
+                   in: 0...128)
+                .controlSize(.small)
+            Text("How far a color may drift and still join the selection.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Crop tool properties (D15)
+
+/// The Crop tool's own properties, shown while the tool is in hand: the aspect
+/// lock as a word.
+///
+/// The four locks used to be four chips in the tool bar. They are modes, so
+/// they moved into the crop button's flyout; this is the same choice spelled
+/// out, for anyone with the inspector open. Picking here reshapes the pending
+/// crop rect exactly as the flyout does.
+struct CropToolInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("Aspect").font(.caption).foregroundStyle(.secondary)
+            Picker("Aspect", selection: Binding(get: { editorState.cropAspect },
+                                                set: { editorState.setCropAspect($0) })) {
+                ForEach(CropAspect.allCases, id: \.self) { aspect in
+                    Text(aspect.label).tag(aspect)
+                }
+            }
+            .labelsHidden().controlSize(.small)
+            .help("What shape the crop keeps. The Crop button holds the same list.")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
     }
 }
 

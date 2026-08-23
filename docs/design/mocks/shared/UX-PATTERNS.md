@@ -1009,6 +1009,22 @@ next click does while your hand is on the tool, and not enough to remind you
 three minutes later. The tool's properties carry the live mode as a word next to
 its settings, so the flyout stays the fast path rather than the only path.
 
+**Actions are the third kind, and they belong on the thing they end.** A mode
+changes what a click does and lives in the tool button; a setting changes how
+the result looks and lives in the tool's properties; an ACTION ends a state
+(Apply a crop, Cancel it) and belongs on the canvas that state has taken over,
+not in the bar. Crop shows Cancel and Crop as words in a glass pill floating
+just clear of the tool bar, and the pill leaves with the crop. Two glyphs at the
+far end of an 1100pt strip were never what a first-timer reached for.
+
+**A mode that reshapes existing work is picked, never cycled.** Measure's key
+walks its modes because a mode only changes what the NEXT click does. Crop's
+does not: switching aspect refits the rect you already dragged, so a stray
+second press of C would silently reshape your crop. C picks the tool up and
+nothing more; the lock is chosen in the flyout or the inspector.
+
 Built for Measure on 2026-08-23: picking it up moved the bar from 1356pt to
-960pt, the same width as every other tool. Wand tolerance and the crop chips
-still grow the bar and are next.
+960pt, the same width as every other tool. Crop and the Magic Wand followed the
+same day: crop's four aspect chips plus its checkmark and cross (207pt) and the
+wand's tolerance slider (152pt) left the bar, and picking up either tool now
+leaves it at exactly the width Select leaves it.

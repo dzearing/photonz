@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T22:55:52.342Z",
-  "updated": "2026-08-23T22:55:52.343Z",
+  "updated": "2026-08-23T23:26:19.000892Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-08-23 in the running app (Next, 1171pt window): select 960, measure 960, crop 1167, wand 1112.5. EditorView.cropOptions and EditorView.wandOptions are the two remaining branches in contextualToolOptions. Neither is flag-gated, so this changes Current unless it is put behind a next-scoped flag: do that. Crop aspect is a mode by the D15 test (it changes what the drag does) so it fits ToolModeButton over CropAspect; wand tolerance is a setting and belongs in an inspector tool-properties section like MeasureToolInspector. The open question is Apply/Cancel, which are actions rather than modes or settings and may belong on the canvas crop overlay instead of the bar: that part is worth a decision card before building. Also note the drawing tools SHRINK the bar (arrow/line 914, shapes 938) because the colour capsule swaps the FG/BG pair for a single swatch, which is intentional (17.12) but means the bar still is not fixed-width.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-08-23T22:55:52.343Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T22:58:20.139Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T23:02:47.673600Z",
+      "note": "Pre-build adversarial review. (1) Removing crop's checkmark/cross from the bar with nothing in their place would be a regression for a first-time user, so the actions get a home BEFORE the chips leave: a small glass pill on the canvas, above the tool bar, reading Cancel and Crop in words. That is more findable than two 24pt glyphs at the far end of an 1100pt bar, and it only exists while a crop is live. (2) Crop aspect passes the D15 mode test (it changes what the drag does) so it goes in the crop tool button's flyout. (3) But C must NOT cycle aspects the way I cycles measure modes: switching aspect refits the rect, so a stray second press would silently reshape a crop the user just dragged. C stays idempotent for crop and aspect is a deliberate pick. This needs a keyCycles option on ToolModeButton so the tooltip does not promise cycling. (4) Wand tolerance is a setting, so it goes to a Magic Wand section in the inspector. Known gap, same one Measure already ships with: on a narrow window where the inspector auto-hides, the setting is one inspector-toggle click away rather than zero. Recorded for the audit. (5) Cut from the pill: aspect chips, a Reset, a live size readout. Two actions only, or the strip grows back somewhere else."
+    },
+    {
+      "t": "2026-08-23T23:02:47.673600Z",
+      "note": "On the Apply/Cancel decision card the task notes suggested: judged safely decidable rather than worth blocking a p1 on. The app already has the precedent (video crop puts Cancel/Done together in the row that replaces the timeline), the keyboard already commits with Return and cancels with Escape, and the change is small and reversible. Shipping the whole feature and putting the placement question at the top of the audit gets the user a real thing to react to instead of a blocked task waiting on a click."
+    },
+    {
+      "t": "2026-08-23T23:26:19.000892Z",
+      "note": "Built behind next-tool-options (Next only, on by default, so Current keeps both option rows in the bar). Crop aspect -> the crop button's flyout via ToolModeButton, with keyCycles false so C picks the tool up and never reshapes a rect you already dragged. Crop Apply/Cancel -> a glass pill on the canvas above the tool bar reading Cancel and Crop, carrying the Return shortcut. Wand tolerance -> a new Magic Wand inspector section; crop also gained a Crop Tool section so the live aspect stays readable as a word, which is what D15 asks for."
+    },
+    {
+      "t": "2026-08-23T23:26:19.000892Z",
+      "note": "Measured in the running app after: select 975, wand 975, crop 975, measure 975 (arrow 952, the known colour-capsule shrink). Before was select 960, crop 1167, wand 1112.5. Acceptance 1 and 2 verified by measurement, not by reasoning. The whole bar is 15pt wider in every state now, which is crop's always-present chevron."
+    },
+    {
+      "t": "2026-08-23T23:26:19.000892Z",
+      "note": "Post-build review on the running app. Screenshots are blocked here, so verification went through two cameras and NEITHER draws everything: the in-app cacheDisplay capture drops accent fills and renders the inspector blank (the panel IS laid out, the canvas shrinks for it), and ImageRenderer draws SwiftUI but paints Slider and Picker as a yellow unsupported block. Read together they confirm the pill, the bar and both inspector sections. Written into the progress log so the next session does not chase a bug that is only the camera. Left rough and recorded in the audit: the pill does not track the crop rect, carries no size readout, and wand tolerance is behind the sidebar toggle when the inspector is closed."
     }
-  ]
+  ],
+  "started": "2026-08-23T22:58:20.138Z"
 }

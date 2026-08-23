@@ -50,6 +50,13 @@ struct ToolModeButton<Mode: Hashable>: View {
     let namespace: Namespace.ID
     /// Picks this tool up (without touching the mode).
     let activate: () -> Void
+    /// Whether pressing the tool's key again walks the modes. True for a tool
+    /// whose modes only change what the NEXT click does, so a stray press costs
+    /// nothing. False for one where switching mode reshapes work already on the
+    /// canvas (Crop refits the rect you just dragged): there the mode has to be
+    /// a deliberate pick, and the key stays a plain "pick this tool up". Only
+    /// the wording changes here; `pressedKey` is what actually decides.
+    var keyCycles: Bool = true
     /// What the tool's key does: pick the tool up, or, when it is already in
     /// hand, move to the next mode. The caller decides from LIVE state rather
     /// than from `isActive`, because a keyboard shortcut's action is registered
@@ -69,6 +76,7 @@ struct ToolModeButton<Mode: Hashable>: View {
     private var tooltip: String {
         guard let current else { return "\(toolTitle) (\(keyLabel))" }
         guard modes.count > 1 else { return "\(current.help) (\(keyLabel))" }
+        guard keyCycles else { return "\(current.help) (\(keyLabel))\nPress and hold for the list." }
         return "\(current.help)\n\(keyLabel) cycles modes. Press and hold for the list."
     }
 
@@ -115,10 +123,13 @@ struct ToolModeButton<Mode: Hashable>: View {
                 }
             }
             .pickerStyle(.inline)
-            Divider()
-            // One line for the whole list, because every mode shares the tool's
-            // key: printing the same letter on four rows would say nothing.
-            Text("Press \(keyLabel) to cycle")
+            if keyCycles {
+                Divider()
+                // One line for the whole list, because every mode shares the
+                // tool's key: printing the same letter on four rows would say
+                // nothing.
+                Text("Press \(keyLabel) to cycle")
+            }
         } label: {
             glyph
         } primaryAction: {

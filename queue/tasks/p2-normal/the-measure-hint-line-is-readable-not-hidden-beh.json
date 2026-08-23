@@ -1,0 +1,27 @@
+{
+  "id": "the-measure-hint-line-is-readable-not-hidden-beh",
+  "title": "The measure hint line is readable, not hidden behind the tool bar",
+  "goal": "When you pick up the Measure tool, a short line tells you what to do next (\"Click two points for a live distance\"). It is placed at the bottom of the canvas, in the same spot the floating tool bar sits, so it may be hidden behind the bar and nobody would ever read it. Check whether it is visible, and if it is not, move it so it is.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T23:25:34.433Z",
+  "updated": "2026-08-23T23:25:34.434Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Spotted while placing the crop action pill, not verified. EditorView.measureHintChip is an .overlay(alignment: .bottom) on the canvas with .padding(.bottom, 14); the tool bar is an .overlay(alignment: .bottom) on that same canvas with .padding(.bottom, 16) and roughly 48pt of height. The crop action pill solved the same problem with .padding(.bottom, 76); if the chip is indeed behind the bar, the same clearance (better: one shared constant both read) is the fix. Screenshots are blocked on this machine — use the in-app cacheDisplay probe described in the 2026-08-23 crop/wand log entry, and remember it does not draw accent fills.",
+  "acceptance": [
+    "With the Measure tool in hand, the hint line is fully visible on screen and not covered by the tool bar",
+    "The hint still leaves on its own once the first measurement lands",
+    "Checked with the tool bar in both its full and its narrow overflow form"
+  ],
+  "log": [
+    {
+      "t": "2026-08-23T23:25:34.434Z",
+      "note": "created (manual)"
+    }
+  ]
+}

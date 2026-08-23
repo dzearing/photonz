@@ -26,6 +26,30 @@ public enum CropAspect: String, CaseIterable, Hashable, Codable, Sendable {
         case .sixteenNine: "16:9"
         }
     }
+
+    /// The glyph the Crop tool button wears while this lock is live (D15: the
+    /// tool button shows the active mode, so the bar never has to spend a row
+    /// of chips saying it). Free keeps the crop glyph, since it is both the
+    /// default and the tool's own identity.
+    public var symbol: String {
+        switch self {
+        case .free: "crop"
+        case .square: "square"
+        case .fourThree: "rectangle.ratio.4.to.3"
+        case .sixteenNine: "rectangle.ratio.16.to.9"
+        }
+    }
+
+    /// The tooltip on the tool button and the line its flyout row carries:
+    /// what dragging the crop rect will do under this lock.
+    public var help: String {
+        switch self {
+        case .free: "Crop, Free: drag any shape"
+        case .square: "Crop, 1:1: the crop stays square"
+        case .fourThree: "Crop, 4:3: the crop keeps a 4:3 shape"
+        case .sixteenNine: "Crop, 16:9: the crop keeps a 16:9 shape"
+        }
+    }
 }
 
 /// Crop-mode geometry: the crop rect always honors the aspect lock and never

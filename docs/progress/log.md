@@ -4188,3 +4188,59 @@ forever instead of cycling. The key action now reads live state.
 Next-only throughout (every measure flag is Next-scoped), 1049 tests green.
 Audit: `queue/audits/2026-08-23-tool-mode-flyout.json`.
 Next: Crop still widens the bar by 207pt and Wand by 152pt — queued.
+
+## 2026-08-23 — Crop and the wand stop widening the tool bar (D15, Next)
+
+Measured in the running app before: Select left the bar at 960pt, Crop grew it
+to 1167 and the Magic Wand to 1112.5. Both spread their options along a strip
+that also has to survive a narrow window, which is what pushed tools into the
+overflow menu.
+
+All three kinds of option now have a home, and D15 grew a section saying so:
+
+- **Aspect is a mode** (it changes what the drag does), so Free / 1:1 / 4:3 /
+  16:9 moved into the crop button's flyout. The button wears the live lock's
+  glyph; Free keeps the crop glyph, since it is the default and the tool's
+  identity.
+- **Tolerance is a setting**, so it moved to a new **Magic Wand** inspector
+  section, with room for the number and a line saying what it means. Crop got a
+  **Crop Tool** section too, carrying the live aspect as a word — D15 asks that
+  a mode stay readable somewhere, because a glyph does not remind you three
+  minutes later.
+- **Apply and Cancel are actions**, which D15 had no answer for. They end a
+  modal state, so they now sit on the canvas that state took over: a glass pill
+  reading Cancel and Crop, floating clear of the tool bar, gone with the crop.
+  ⏎ and ⎋ still do the same thing.
+
+**C does not cycle aspects.** Measure's key walks its modes because a mode only
+changes what the next click does; switching crop aspect refits the rect you just
+dragged, so a stray second press would silently reshape your work. `ToolModeButton`
+gained a `keyCycles` flag so its tooltip and flyout stop promising a cycle that
+this tool deliberately does not do.
+
+Measured after: **975pt for Select, Wand, Crop and Measure alike** — picking any
+of them up leaves the bar exactly where it was. The 15pt the bar gained overall
+is crop's always-present chevron, the same trade Measure made. (Arrow and the
+other drawing tools still read 952 because the colour capsule swaps the FG/BG
+pair for one swatch — intentional, 17.12.)
+
+All of it behind `next-tool-options`, Next-only and on by default, so Current
+keeps both option rows in the bar. 1052 tests green.
+
+Verification, since screenshots are still blocked on this machine: an env-gated
+probe walked the tools logging the measured bar width, captured the window with
+`cacheDisplay`, and rendered the two new inspector sections offscreen with
+`ImageRenderer`. Worth remembering — **neither capture path draws everything**.
+`cacheDisplay` drops accent fills and the whole inspector's content (the panel is
+laid out, the canvas shrinks for it, but it comes out blank), so the prominent
+Crop button photographs as an empty white capsule and no tool wears its accent
+circle. `ImageRenderer` draws SwiftUI but paints AppKit-backed controls (Slider,
+Picker) as a yellow "unsupported" block. Read the two together, or you will chase
+a bug that is only the camera.
+
+Audit: `queue/audits/2026-08-23-tool-options.json`.
+Next: the bar is still not fixed-width (drawing tools shrink it by 23pt via the
+colour capsule, intentional). One thing spotted while placing the crop pill and
+NOT verified: the measure hint chip is a bottom overlay with 14pt of padding on
+the same view the tool bar overlays, so it may be sitting behind the bar.
+Queued.
