@@ -4,11 +4,11 @@
   "goal": "Right now most tasks in the queue are unreadable unless you already know the codebase: the detail field is full of file names and shorthand, and there is no one-line statement of what the task actually achieves. This rewrites all of them so opening a task tells you what changes and for whom, and shows a checklist of what has to be true before it counts as done.",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-08-23T17:03:13.388Z",
-  "updated": "2026-08-23T17:26:05.438Z",
+  "updated": "2026-08-23T17:31:10.718Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Schema: tasks now carry goal (plain language), acceptance (checklist), notes (runner detail). See the contract in queue/bin/runner-prompt.md. Work through queue/tasks/*/*.json for every task whose status is not done or dropped. Read each task title, notes and log to infer the real intent; when the intent is genuinely unclear, say so in the goal rather than inventing one. Do not change titles, ids, priority or seq. Commit as one change.",
@@ -34,7 +34,12 @@
     {
       "t": "2026-08-23T17:31:07.653Z",
       "note": "verified in a browser: the task dialog renders goal, then Done when, then a collapsed Working detail disclosure"
+    },
+    {
+      "t": "2026-08-23T17:31:10.717Z",
+      "note": "All 25 open tasks rewritten with a plain-language goal and a 2-4 item acceptance checklist; original technical text preserved in notes. Verified in a browser that the dashboard task dialog renders goal, then Done when, then a collapsed Working detail."
     }
   ],
-  "started": "2026-08-23T17:26:05.437Z"
+  "started": "2026-08-23T17:26:05.437Z",
+  "completed": "2026-08-23T17:31:10.718Z"
 }
