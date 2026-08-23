@@ -58,16 +58,18 @@
   #img-retouch-wt .dbmk.b{background:#5b3a22;color:#fff}
   #img-retouch-wt .dbmk .ic{width:10px;height:10px}
 
-  /* before / after compare · the left half is the untouched Base · RAW */
-  #img-retouch-wt .cmpbefore{position:absolute;inset:0;z-index:5;clip-path:inset(0 50% 0 0);filter:saturate(.86) brightness(.96) contrast(.98)}
-  #img-retouch-wt .cmpdiv{position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.9);z-index:7;box-shadow:0 0 10px rgba(0,0,0,.45)}
-  #img-retouch-wt .cmpdiv .grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
+  /* Before / after compare · the left half is the untouched Base · RAW. Page
+     artwork, so every class carries the page prefix (AGENTS.md). Promote this to
+     the DS the moment a second page needs a wipe. */
+  #img-retouch-wt .rt-cmp-before{position:absolute;inset:0;z-index:5;clip-path:inset(0 50% 0 0);filter:saturate(.86) brightness(.96) contrast(.98)}
+  #img-retouch-wt .rt-cmp-div{position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(255,255,255,.9);z-index:7;box-shadow:0 0 10px rgba(0,0,0,.45)}
+  #img-retouch-wt .rt-cmp-div .grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
     background:rgba(12,16,24,.72);border:1.5px solid rgba(255,255,255,.85);display:grid;place-items:center;color:#fff}
-  #img-retouch-wt .cmpdiv .grip .ic{width:13px;height:13px}
-  #img-retouch-wt .ctag{position:absolute;top:10px;z-index:7;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  #img-retouch-wt .rt-cmp-div .grip .ic{width:13px;height:13px}
+  #img-retouch-wt .rt-ctag{position:absolute;top:10px;z-index:7;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
     color:#fff;background:rgba(10,12,20,.6);padding:3px 8px;border-radius:6px}
-  #img-retouch-wt .ctag.b{left:10px}
-  #img-retouch-wt .ctag.a{right:10px}
+  #img-retouch-wt .rt-ctag.b{left:10px}
+  #img-retouch-wt .rt-ctag.a{right:10px}
 
   /* the skin-split readout that frequency separation puts on the canvas */
   #img-retouch-wt .fqtag{position:absolute;left:50%;bottom:-26px;transform:translateX(-50%);z-index:6;white-space:nowrap;
@@ -110,11 +112,11 @@
              button that opens it is built by the shell component. -->
         <div class="popover menu pop cmdpop" id="cmdMenu">
               <div class="mlabel">Layer</div>
-              <div class="menuitem"><i class="ic ic-layers"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
-              <div class="menuitem"><i class="ic ic-sliders"></i> Frequency separation…</div>
+              <div class="menuitem"><i class="ic ic-layer-add"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
+              <div class="menuitem"><i class="ic ic-sharpen"></i> Frequency separation…</div>
               <div class="menu-sep"></div>
               <div class="mlabel">View</div>
-              <div class="menuitem"><i class="ic ic-flip-horizontal"></i> Before / after <span class="sc">\</span></div>
+              <div class="menuitem"><i class="ic ic-compare"></i> Before / after <span class="sc">\</span></div>
               <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
             </div>
 
@@ -159,7 +161,7 @@
                   <span class="clonedst wt-off" id="cloneDst" style="left:62%;top:31%"></span>
 
                   <!-- before / after: the left half is the untouched original -->
-                  <span class="cmpbefore wt-off" id="cmpBefore">
+                  <span class="rt-cmp-before wt-off" id="cmpBefore">
                     <span class="pt-bg"></span><span class="pt-shoulder"></span><span class="pt-hair"></span><span class="pt-neck"></span>
                     <span class="pt-face">
                       <span class="pt-fhl"></span><span class="pt-cheek l"></span><span class="pt-cheek r"></span>
@@ -172,11 +174,11 @@
                     <span class="pt-spot" style="left:47%;top:31%;width:8px;height:8px"></span>
                     <span class="pt-hairline"></span>
                   </span>
-                  <span class="cmpdiv wt-off" id="cmpDiv"><span class="grip"><i class="ic ic-move"></i></span></span>
-                  <span class="ctag b wt-off" id="cmpTagB">Before</span>
-                  <span class="ctag a wt-off" id="cmpTagA">After</span>
+                  <span class="rt-cmp-div wt-off" id="cmpDiv"><span class="grip"><i class="ic ic-move"></i></span></span>
+                  <span class="rt-ctag b wt-off" id="cmpTagB">Before</span>
+                  <span class="rt-ctag a wt-off" id="cmpTagA">After</span>
                 </div>
-                <span class="fqtag wt-off" id="fqTag"><i class="ic xs ic-layers"></i> skin split · color + detail</span>
+                <span class="fqtag wt-off" id="fqTag"><i class="ic xs ic-sharpen"></i> skin split · color + detail</span>
                 <!-- SELECTION, place 1 of 3: the ring on canvas. Hidden until
                      step 1 selects a layer; every step keeps it in data-show
                      and names the selected layer in the tag, so canvas, Layers,
@@ -191,7 +193,7 @@
 
             <div class="cnv-act">
               <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-              <button class="cmp tool" id="btnCompare" title="Before / after (\)"><i class="ic sm ic-flip-horizontal"></i></button>
+              <button class="cmp tool" id="btnCompare" aria-pressed="false" title="Before / after (\)"><i class="ic sm ic-compare"></i></button>
             </div>
 
             <!-- FLOATING TOOL BAR · D4 image inventory -->
@@ -346,8 +348,8 @@
               <div class="dgrp-b">
                 <!-- SELECTION, place 2 of 3: the matching row in Layers -->
                 <div class="lrow wt-off" id="lrDb"><i class="ic ic-dodge-burn"></i><span class="nm">Dodge &amp; burn</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow adj wt-off" id="lrFreqD"><i class="ic ic-sliders"></i><span class="nm">Freq · detail</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow adj wt-off" id="lrFreqC"><i class="ic ic-sliders"></i><span class="nm">Freq · color</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow adj wt-off" id="lrFreqD"><i class="ic ic-sharpen"></i><span class="nm">Freq · detail</span><i class="ic sm ic-eye eye"></i></div>
+                <div class="lrow adj wt-off" id="lrFreqC"><i class="ic ic-blur"></i><span class="nm">Freq · color</span><i class="ic sm ic-eye eye"></i></div>
                 <div class="lrow wt-off" id="lrClone"><i class="ic ic-clone"></i><span class="nm">Clone · texture</span><i class="ic sm ic-eye eye"></i></div>
                 <div class="lrow wt-off" id="lrHeal"><i class="ic ic-heal"></i><span class="nm">Heal · spots</span><i class="ic sm ic-eye eye"></i></div>
                 <div class="lrow" id="lrBase"><i class="ic ic-image"></i><span class="nm">Base · RAW</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
@@ -437,8 +439,8 @@
 
           <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
           <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:216px;z-index:11">
-            <div class="menuitem"><i class="ic ic-layers"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
-            <div class="menuitem" id="miFreq"><i class="ic ic-sliders"></i> Frequency separation…</div>
+            <div class="menuitem"><i class="ic ic-layer-add"></i> New retouch layer <span class="sc">⌘⇧N</span></div>
+            <div class="menuitem" id="miFreq"><i class="ic ic-sharpen"></i> Frequency separation…</div>
             <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
             <div class="menu-sep"></div>
             <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>

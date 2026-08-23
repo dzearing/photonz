@@ -573,8 +573,11 @@ a grid. Nothing else. (`.popover.pop.on{display:block}` out-specifies a bare
 
 Authoring: `data-cp-color` seeds it, `data-cp-fill` / `data-cp-text` bind live
 outputs, a `cp:change` event carries `{hex, rgba, r,g,b,a, h,s,l}`, and a
-`cp:set` event re-points the same popover at another slot. Canonical page:
-`pages/color.html`.
+`cp:set` event re-points the same popover at another slot. The eight regions are
+built by the component, so an empty `<div class="popover cpick pop">` is a whole
+picker, and a slot is a `.cpick-btn` carrying `data-cp-slot` (its name) plus
+`data-cp-color` / `data-cp-paint` (what it currently holds). See AGENTS.md
+"Color" for the two-line adoption. Canonical page: `pages/color.html`.
 
 ---
 

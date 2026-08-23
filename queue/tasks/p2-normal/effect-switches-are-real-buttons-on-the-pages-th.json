@@ -1,0 +1,21 @@
+{
+  "id": "effect-switches-are-real-buttons-on-the-pages-th",
+  "title": "Effect switches are real buttons on the pages the family sweeps missed",
+  "priority": "p2-normal",
+  "seq": 340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-23T15:22:41.024Z",
+  "updated": "2026-08-23T15:22:41.024Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from image-family-pages-use-the-real-adjustment-glyph. The DS now says .efx .en is a <button> with aria-pressed (core.js owns the press; canvas.css owns the reset; AGENTS.md 'Effect row enable'). A post-fix browser sweep over all 89 pages found inert span.en left on: editor, language, lang-panels, lang-sections, video, video-audio, video-captions, video-compositing, video-speed. Same sweep also found the deprecated .cmdk still authored on lang-toolbars and language. app-shell, states, typography and draw-boolean are already covered by their own family tasks, so leave those alone. Verify with the browser sweep, not a grep: 200 on every page, audit-sweep.js clean, and zero '.efx span.en' / '.cmdk' on the pages listed here.",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-08-23T15:22:41.024Z",
+      "note": "created (manual)"
+    }
+  ]
+}

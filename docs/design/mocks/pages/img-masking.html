@@ -64,14 +64,8 @@
   /* mask-type segmented control: let each option carry an icon + label */
   /* .seg.wrap deleted: the shared DS now lays every panel scope control out as
      an equal-column grid sized to its own labels (VISUAL RULE 6). */
-  /* a small designed gradient chip for the Gradient option (not a glyph) */
-  .gswatch{width:12px;height:12px;border-radius:3px;flex:none;
-    background:linear-gradient(180deg,#111,#fff);border:1px solid rgba(0,0,0,.2)}
-
   /* live mask thumbnail in the Layers group */
   .lthumb{width:16px;height:16px;border-radius:4px;flex:none;border:1px solid var(--edge-lo)}
-  .lrow .rmtag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-    color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:1px 6px;border-radius:5px}
 
   .optrow{display:flex;flex-wrap:wrap;gap:var(--s2)}
 </style>
@@ -85,45 +79,32 @@
       lives in <b>Properties</b>, not in a mask-only mode with its own chrome. The tool strip stays the normal Image
       inventory: the brush paints the mask, the wand selects a subject, the eraser takes it back.</p>
 
-    <div class="win tall cq shell" data-shell="golden-ridge · 6000 × 3750" data-ws="image">
+    <div class="win tall cq shell" data-shell="golden-ridge · 6000 × 3750"
+         data-status="Mask · 8-bit alpha" data-ws="image">
 
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>golden-ridge</b> · 6000 × 3750</div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <button class="btn ghost sm" data-target="agent" title="Ask the agent"><i class="ic ic-sparkle"></i> Ask agent</button>
-        <span class="val" title="Mask precision">Mask · 8-bit alpha</span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:226px;z-index:12">
-            <div class="mlabel">Layer</div>
-            <div class="menuitem"><i class="ic ic-layers"></i> Add layer mask</div>
-            <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-            <div class="menuitem"><i class="ic ic-undo"></i> Invert mask <span class="sc">⌘I</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Select</div>
-            <div class="menuitem"><i class="ic ic-wand"></i> Select sky <span class="sc">⌘⇧A</span></div>
-            <div class="menuitem" data-target="img-bg-remove"><i class="ic ic-eraser"></i> Remove background</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
-          </div>
-        </div>
-      </div>
-
+      <!-- The title bar and the Ask launcher are built by the shared shell from
+           data-shell / data-status; this page authors only its command menu. -->
       <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">File</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘E</span></div>
+          <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-mask"></i> Add layer mask</div>
+          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Invert mask <span class="sc">⌘I</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Select</div>
+          <div class="menuitem"><i class="ic ic-wand"></i> Select sky <span class="sc">⌘⇧A</span></div>
+          <div class="menuitem" data-target="img-bg-remove"><i class="ic ic-eraser"></i> Remove background</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+          <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
 
         <div class="cnv">
           <!-- CANVAS: the landscape + the masked adjustment, live -->
@@ -174,8 +155,8 @@
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
             <span class="tsep"></span>
-            <button class="tool" id="beforeBtn" title="Show the original frame"><i class="ic sm ic-eye-off"></i></button>
-            <button class="tool" id="showMaskBtn" title="Show the mask as a red overlay"><i class="ic sm ic-layers"></i></button>
+            <button class="tool" id="beforeBtn" aria-pressed="false" title="Show the original frame"><i class="ic sm ic-compare"></i></button>
+            <button class="tool" id="showMaskBtn" aria-pressed="false" title="Show the mask as a red overlay"><i class="ic sm ic-mask"></i></button>
           </div>
 
           <!-- FLOATING TOOL BAR · the canonical D4 Image inventory.
@@ -278,12 +259,12 @@
             <div class="dgrp-b">
               <!-- SELECTION, place 2 of 3: the matching row in Layers -->
               <div class="lrow sel adj" id="lrAdj">
-                <i class="ic ic-sliders" style="color:#ff9a44"></i><span class="clipmark"></span><span class="nm">Warm · darken</span>
+                <i class="ic ic-temperature" style="color:#ff9a44"></i><span class="clipmark"></span><span class="nm">Warm · darken</span>
                 <span class="lthumb" id="maskThumb" title="Layer mask"></span>
                 <i class="ic sm ic-eye eye"></i>
               </div>
-              <div class="lrow adj"><i class="ic ic-sliders" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">Clarity</span><i class="ic sm ic-eye eye"></i></div>
-              <div class="lrow adj"><i class="ic ic-sliders" style="color:#7f9bff"></i><span class="clipmark"></span><span class="nm">Vignette</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow adj"><i class="ic ic-sharpen" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">Clarity</span><i class="ic sm ic-eye eye"></i></div>
+              <div class="lrow adj"><i class="ic ic-vignette" style="color:#7f9bff"></i><span class="clipmark"></span><span class="nm">Vignette</span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow"><i class="ic ic-brush"></i><span class="nm">Dodge · ridge line</span><i class="ic sm ic-eye eye"></i></div>
               <div class="lrow" id="lrPhoto">
                 <i class="ic ic-image"></i><span class="nm">golden-ridge · RAW</span><span class="val">6K</span>
@@ -303,16 +284,16 @@
 
               <div class="section">
                 <div class="sec-h">Mask <span class="mut" id="maskKind">Agent · sky</span></div>
-                <div class="masklist" id="maskRow"><span class="mm" id="maskRowSw"></span><span id="maskRowName">Sky select</span><span class="rmtag" id="maskRowTag">live</span></div>
+                <div class="masklist" id="maskRow"><span class="mm" id="maskRowSw"></span><span id="maskRowName">Sky select</span><span class="rtag accent" id="maskRowTag">live</span></div>
                 <p class="note">The mask is a real alpha <b style="color:var(--ink)">Paint</b> channel on this layer. Paint it with the brush, take it back with the eraser, or hand it to the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span>. The pixels never change.</p>
               </div>
 
               <div class="section">
                 <div class="sec-h">Mask type <span class="mut">where it applies</span></div>
                 <div class="seg" id="typeSeg">
-                  <button data-type="layer" title="Layer mask"><i class="ic sm ic-layers"></i>Layer</button>
-                  <button data-type="luminosity" title="Luminosity mask"><i class="ic sm ic-sliders"></i>Luma</button>
-                  <button data-type="gradient" title="Gradient mask"><span class="gswatch"></span>Gradient</button>
+                  <button data-type="layer" title="Layer mask"><i class="ic sm ic-mask"></i>Layer</button>
+                  <button data-type="luminosity" title="Luminosity mask"><i class="ic sm ic-levels"></i>Luma</button>
+                  <button data-type="gradient" title="Gradient mask"><i class="ic sm ic-gradient"></i>Gradient</button>
                   <button data-type="ai" class="on" title="Agent select mask"><i class="ic sm ic-wand"></i>Agent</button>
                 </div>
                 <p class="note" id="typeNote">The agent selects the <b style="color:var(--ink)">sky</b> or subject and masks to it · one call, local model by default.</p>
@@ -389,13 +370,13 @@
 
         <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
           <div class="mlabel">Add adjustment</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Warm / darken</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Clarity</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Vignette</div>
+          <div class="menuitem"><i class="ic ic-temperature"></i> Warm / darken</div>
+          <div class="menuitem"><i class="ic ic-sharpen"></i> Clarity</div>
+          <div class="menuitem"><i class="ic ic-vignette"></i> Vignette</div>
           <div class="menuitem" data-target="img-grade-wt"><i class="ic ic-swatch"></i> Split tone</div>
         </div>
         <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
-          <div class="menuitem"><i class="ic ic-layers"></i> Add layer mask</div>
+          <div class="menuitem"><i class="ic ic-mask"></i> Add layer mask</div>
           <div class="menuitem"><i class="ic ic-undo"></i> Invert mask <span class="sc">⌘I</span></div>
           <div class="menu-sep"></div>
           <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
@@ -407,7 +388,7 @@
         </div>
         <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
           <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
-          <div class="menuitem"><i class="ic ic-swatch"></i> Save this mask as a preset</div>
+          <div class="menuitem"><i class="ic ic-save"></i> Save this mask as a preset</div>
           <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
         </div>
       </div>
@@ -556,13 +537,17 @@
     // canvas action toggles (before / quick mask) live in the canvas cluster
     var bb = $("beforeBtn");
     if (bb) {
+      // ic-compare IS the command, so it does not change with the state; the
+      // pressed look and the tooltip carry which side you are looking at.
       bb.classList.toggle("on", state.before);
-      var bi = bb.querySelector(".ic");
-      if (bi) { bi.classList.toggle("ic-eye", state.before); bi.classList.toggle("ic-eye-off", !state.before); }
+      bb.setAttribute("aria-pressed", state.before ? "true" : "false");
       bb.setAttribute("title", state.before ? "Show the graded frame" : "Show the original frame");
     }
     var smb = $("showMaskBtn");
-    if (smb) smb.classList.toggle("on", state.showMask);
+    if (smb) {
+      smb.classList.toggle("on", state.showMask);
+      smb.setAttribute("aria-pressed", state.showMask ? "true" : "false");
+    }
     var smb2 = $("showMaskBtn2");
     if (smb2) smb2.classList.toggle("primary", state.showMask);
 

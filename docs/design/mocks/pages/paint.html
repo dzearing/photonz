@@ -79,44 +79,31 @@
        identity only, command surface + ⌘K + History, canvas with a real
        selection, floating tool bar, one right dock, rail.
        ============================================================ -->
-  <div class="win tall cq shell" data-shell="untitled-1 · 1200 × 630" data-ws="ui">
+  <div class="win tall cq shell" data-shell="untitled-1 · 1200 × 630"
+       data-status="Brand tokens" data-ws="ui">
 
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>untitled-1</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar
-         is the real command surface; the mock never draws a fake one. -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:214px;z-index:12">
-          <div class="mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-eyedropper"></i> Pick color <span class="sc">I</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
-        </div>
-      </div>
-    </div>
-
+    <!-- The title bar and the Ask launcher are built by the shared shell from
+         data-shell / data-status; this page authors only its command menu. -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">File</div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘E</span></div>
+        <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Edit</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+        <div class="menuitem"><i class="ic ic-eyedropper"></i> Pick color <span class="sc">I</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -213,7 +200,7 @@
             <div class="lrow sel"><i class="ic ic-square"></i><span class="nm">Panel</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-pen"></i><span class="nm">Wordmark</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-temperature"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
           </div>
         </div>
@@ -228,45 +215,20 @@
           </div>
           <div class="dgrp-b">
 
+            <!-- The paint TYPE switch, the ramp, the selected stop and the aim
+                 pad all live in the one picker (D7). Properties carries the
+                 slot, which is the same swatch every other color row in the app
+                 uses; opening it here opens the identical control. -->
             <div class="section">
               <div class="sec-h">Fill <span class="mut" id="pKind">Linear paint</span></div>
-              <div class="seg" id="ptSeg" style="margin-bottom:var(--s2)">
-                <button data-paint="solid">Solid</button>
-                <button class="on" data-paint="linear">Linear</button>
-                <button data-paint="radial">Radial</button>
-                <button data-paint="angular">Angular</button>
-                <button data-paint="image">Image</button>
-                <button data-paint="noise">Noise</button>
+              <div class="irow"><span class="rl">Paint</span>
+                <button class="cpick-btn wide" id="pFillSlot" data-menu="#pPick" data-cp-open
+                        data-cp-slot="Fill" data-cp-color="#7C4DFF"
+                        data-cp-paint='{"type":"linear","angle":135,"stops":[{"hex":"#7C4DFF","pos":0},{"hex":"#B14DFF","pos":45},{"hex":"#FF5D8F","pos":100}]}'>
+                  <span class="sw"></span><span class="cph"></span>
+                </button>
               </div>
-
-              <div id="pGrad">
-                <div class="gramp" id="pRamp">
-                  <div class="gstop" style="left:4%;--stop-c:#7c4dff"><b></b><div class="line"></div></div>
-                  <div class="gstop" style="left:45%;--stop-c:#b14dff"><b></b><div class="line"></div></div>
-                  <div class="gstop" style="left:96%;--stop-c:#ff5d8f"><b></b><div class="line"></div></div>
-                </div>
-                <div class="irow"><span class="rl">Angle</span>
-                  <span style="display:flex;align-items:center;gap:var(--gap)"><span class="dial"></span><span class="val" id="pAngle">135°</span></span>
-                </div>
-              </div>
-
-              <div id="pFlat" class="wt-off">
-                <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" id="pFlatSw" style="background:#7c4dff"></span> <span id="pFlatHex">7C4DFF</span></span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-                <div class="irow"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
-              </div>
-            </div>
-
-            <div class="section" id="pStopSec">
-              <div class="sec-h">Selected stop <span class="mut">2 of 3</span></div>
-              <div class="irow"><span class="rl">Color</span><span class="select"><span class="lead"><span class="sw" style="background:#b14dff"></span> B14DFF</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
-              <div class="irow"><span class="rl">Position</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:45%"></i></span><span class="val">45%</span></span></div>
-              <div class="irow"><span class="rl">Stops</span>
-                <span style="display:flex;gap:var(--s2)">
-                  <button class="btn secondary icon sm" title="Add stop"><i class="ic ic-plus"></i></button>
-                  <button class="btn secondary icon sm" title="Remove stop"><i class="ic ic-minus"></i></button>
-                  <button class="btn secondary icon sm" title="Pick a color from the canvas"><i class="ic ic-eyedropper"></i></button>
-                </span>
-              </div>
+              <div class="irow"><span class="rl">Opacity</span><span class="bar"><i style="width:100%"></i></span></div>
             </div>
 
             <div class="section">
@@ -287,7 +249,7 @@
             <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
           </div>
           <div class="dgrp-b" style="padding:0 var(--s3) var(--s2)">
-            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="emeta">Paint</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle outer glow"></button><span class="nm">Outer glow</span><span class="emeta">Paint</span></div>
             <p class="note" style="padding:0 2px">A glow is an outer shadow whose color is a <b style="color:var(--ink)">Paint</b>. Same editor, different slot.</p>
           </div>
         </div>
@@ -332,9 +294,9 @@
       <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
       <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
         <div class="mlabel">Add adjustment</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Curves</div>
+        <div class="menuitem"><i class="ic ic-saturation"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-curves"></i> Curves</div>
       </div>
       <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
         <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
@@ -348,21 +310,26 @@
         <div class="menuitem"><i class="ic ic-undo"></i> Reset fill</div>
       </div>
       <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);bottom:236px;width:188px;z-index:11">
-        <div class="menuitem"><i class="ic ic-sparkle"></i> Outer glow</div>
-        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Border</div>
+        <div class="menuitem"><i class="ic ic-glow"></i> Outer glow</div>
+        <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-border"></i> Border</div>
       </div>
       <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
         <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
         <div class="menuitem"><i class="ic ic-swatch"></i> Save fill as style</div>
         <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
       </div>
+
+      <!-- THE Paint editor. Not a page-local stack of a type switch, a ramp and
+           a stop row: the one picker, opened from the Fill slot (D7). -->
+      <div class="popover cpick pop" id="pPick" data-cp-color="#7C4DFF" data-cp-name="Fill"
+           data-cp-recent="#7C4DFF,#B14DFF,#FF5D8F,#12C2E9,#3ECF8E,#FFB36B,#F4F6FF,#0C0E14" aria-label="Fill"></div>
     </div>
   </div>
 
   <div class="caption">
     <div class="c"><div class="lab">One selection, three places</div><p>The ring on the canvas, the highlighted <b>Panel</b> row in Layers, and the <b>Properties</b> group are the same selection. Paint is not a mode you enter, it is the Fill section of whatever you already selected.</p></div>
-    <div class="c"><div class="lab g2">Try it</div><p>Click a paint type in the <b>Fill</b> segmented control and the canvas repaints live. Linear, radial and angular keep the gradient ramp; solid and noise swap it for a single color row.</p></div>
+    <div class="c"><div class="lab g2">Try it</div><p>Click the <b>Fill</b> swatch in Properties and the one picker opens on this shape's paint. Switch it to solid, radial or angular, drag a stop, aim the gradient, and the canvas repaints live.</p></div>
     <div class="c"><div class="lab g2">API mirror</div><p><code>fill: linear("#7C4DFF","#B14DFF","#FF5D8F", angle:135)</code> · or once it is named, <code>fill: style("Brand/gradient")</code>.</p></div>
   </div>
 
@@ -388,7 +355,7 @@
     </div>
 
     <div class="spec">
-      <div class="spec-h"><i class="ic sm ic-sliders"></i> Gradient stop editor <span class="sub">(anatomy)</span></div>
+      <div class="spec-h"><i class="ic sm ic-gradient"></i> Gradient stop editor <span class="sub">(anatomy)</span></div>
       <div class="spec-b">
         <div class="anat">
           <span class="anum" style="left:2px;top:2px">1</span>
@@ -432,65 +399,38 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-  /* Page-local: the Fill type switch repaints the canvas layer live, swaps the
-     gradient ramp for a flat color row, and keeps the tool bar's foreground
-     swatch in sync. Library scope + tile selection match the editor page.
-     Collapse, resize, rail, overlay, overflow and tool selection are all
-     shared DS behavior. */
+  /* Page-local: the shape on the canvas, the tool bar's foreground swatch and
+     the Fill slot all follow the ONE picker. The paint types, the ramp, the aim
+     pad and the selected stop are the picker's job, not this page's, so there
+     is nothing here that re-implements a color control. Collapse, resize, rail,
+     overlay, overflow and tool selection are all shared DS behavior. */
   (function () {
     'use strict';
 
     var shape = document.getElementById('pvShape');
     var swatch = document.getElementById('pvSwatch');
-    var grad = document.getElementById('pGrad');
-    var flat = document.getElementById('pFlat');
     var kind = document.getElementById('pKind');
-    var stopSec = document.getElementById('pStopSec');
-    var ramp = document.getElementById('pRamp');
-    var angle = document.getElementById('pAngle');
-    var seg = document.getElementById('ptSeg');
+    var slot = document.getElementById('pFillSlot');
+    var picker = document.getElementById('pPick');
 
-    var paints = {
-      solid:   { css: '#7c4dff', label: 'Solid paint', glow: 'rgba(124,77,255,.5)', stops: false },
-      linear:  { css: 'linear-gradient(135deg,#7c4dff,#b14dff 45%,#ff5d8f)', label: 'Linear paint', glow: 'rgba(177,77,255,.5)', stops: true, ramp: 'linear-gradient(90deg,#7c4dff,#b14dff 45%,#ff5d8f)', angle: '135°' },
-      radial:  { css: 'radial-gradient(circle at 34% 30%,#ffd08a,#ff5d8f 55%,#7c4dff)', label: 'Radial paint', glow: 'rgba(255,93,143,.5)', stops: true, ramp: 'linear-gradient(90deg,#ffd08a,#ff5d8f 55%,#7c4dff)', angle: '34% 30%' },
-      angular: { css: 'conic-gradient(from 200deg,#7c4dff,#12c2e9,#3ecf8e,#ffb36b,#ff5d8f,#7c4dff)', label: 'Angular paint', glow: 'rgba(62,207,142,.45)', stops: true, ramp: 'linear-gradient(90deg,#7c4dff,#12c2e9,#3ecf8e,#ffb36b,#ff5d8f)', angle: '200°' },
-      image:   { css: 'linear-gradient(160deg,#12c2e9,#7c4dff 60%,#ff5d8f)', label: 'Image paint', glow: 'rgba(18,194,233,.45)', stops: false },
-      noise:   { css: '#3a2a5e', label: 'Noise paint', glow: 'rgba(58,42,94,.6)', stops: false }
-    };
+    var LABEL = { solid: 'Solid paint', linear: 'Linear paint', radial: 'Radial paint', angular: 'Angular paint' };
+    var TYPE = { solid: 'Solid', linear: 'Linear', radial: 'Radial', angular: 'Angular' };
 
-    function apply(name) {
-      var p = paints[name];
-      if (!p || !shape) return;
-      shape.style.background = p.css;
-      shape.style.boxShadow = '0 0 50px -6px ' + p.glow;
-      if (name === 'noise') {
-        shape.style.backgroundImage =
-          'radial-gradient(rgba(255,255,255,.5) .6px,transparent .7px),radial-gradient(rgba(255,255,255,.28) .6px,transparent .7px)';
-        shape.style.backgroundSize = '5px 5px,7px 7px';
-        shape.style.backgroundPosition = '0 0,3px 4px';
-      } else {
-        shape.style.backgroundSize = '';
-        shape.style.backgroundPosition = '';
+    if (picker) picker.addEventListener('cp:change', function (e) {
+      var d = e.detail;
+      var css = d.paint.type === 'solid' ? d.rgba : d.css;
+      if (shape) {
+        shape.style.background = css;
+        shape.style.boxShadow = '0 0 50px -6px rgba(' + d.r + ',' + d.g + ',' + d.b + ',.5)';
       }
-      if (swatch) swatch.style.background = p.css;
-      if (kind) kind.textContent = p.label;
-      if (grad) grad.classList.toggle('wt-off', !p.stops);
-      if (flat) flat.classList.toggle('wt-off', !!p.stops);
-      if (stopSec) stopSec.classList.toggle('wt-off', !p.stops);
-      if (p.stops && ramp) ramp.style.background = p.ramp;
-      if (p.stops && angle) angle.textContent = p.angle;
-    }
-
-    if (seg) {
-      var btns = [].slice.call(seg.querySelectorAll('[data-paint]'));
-      btns.forEach(function (b) {
-        b.addEventListener('click', function () {
-          btns.forEach(function (x) { x.classList.toggle('on', x === b); });
-          apply(b.getAttribute('data-paint'));
-        });
-      });
-    }
+      if (swatch) swatch.style.background = css;
+      if (kind) kind.textContent = LABEL[d.paint.type] || 'Paint';
+      if (slot) {
+        var sw = slot.querySelector('.sw'), tx = slot.querySelector('.cph');
+        if (sw) sw.style.background = css;
+        if (tx) tx.textContent = d.paint.type === 'solid' ? d.hex : TYPE[d.paint.type];
+      }
+    });
 
     var scope = document.getElementById('scopeSeg');
     if (scope) {

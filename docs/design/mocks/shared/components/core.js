@@ -40,6 +40,21 @@
     });
   });
 
+  /* Effect / adjustment enable switches. `.efx .en` is a real BUTTON on every
+     page — a span cannot be pressed, focused or announced, and half the effect
+     stacks in the study had shipped as inert spans. The press itself is the
+     same everywhere, so it lives here: flip `.off`, keep aria-pressed honest,
+     and stop the click before the row's own [data-target] treats it as "open
+     that page". A page that paints the result adds its own listener on the
+     same button and reads the class afterwards. */
+  document.querySelectorAll('.efx button.en').forEach(function (sw) {
+    sw.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var on = !sw.classList.toggle('off');
+      sw.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
+
   // Subtabs (e.g. agent A/B/C): .subtab[data-alt] toggles matching .altpane.
   var subtabs = [].slice.call(document.querySelectorAll('.subtab'));
   subtabs.forEach(function (t) {

@@ -188,7 +188,13 @@
         })[0];
         [].slice.call(t.parentNode.children).forEach(function (x) {
           var like = cls ? x.classList.contains(cls) : x.tagName === t.tagName;
-          if (like) x.classList.toggle('on', x === t);
+          if (!like) return;
+          x.classList.toggle('on', x === t);
+          // A step that presses a toggle must not leave aria-pressed saying
+          // otherwise; same rule segmented.js follows when it sets .on directly.
+          if (x.hasAttribute('aria-pressed')) {
+            x.setAttribute('aria-pressed', x === t ? 'true' : 'false');
+          }
         });
       });
 

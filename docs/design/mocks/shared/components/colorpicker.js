@@ -159,6 +159,57 @@
     svg.querySelector('path').setAttribute('d', d);
   }
 
+  /* THE BODY BELONGS TO THE COMPONENT, NOT TO THE PAGE.
+     D7 fixes the eight regions and their order, so retyping them per page only
+     buys drift: the four pages that had adopted the picker already disagreed
+     about the eyedropper's tooltip and about whether the contrast readout was
+     there at all. An adopting page now writes ONE line —
+
+       <div class="popover cpick pop" id="bgPick" data-cp-color="#3A4150"
+            data-cp-name="Backdrop" aria-label="Backdrop"></div>
+
+     — and gets the whole control. A page that authors its own body (color.html
+     and comp-color.html hang redline callouts off the individual regions) is
+     left exactly as written, because the check is "is there a head already". */
+  var CP_BODY =
+    '<div class="cp-head">' +
+      '<span class="cp-prev"><i class="was"></i><i class="now"></i></span>' +
+      '<span class="cp-name"></span>' +
+      '<span class="sp"></span>' +
+      '<button class="btn ghost icon" title="Sample a color from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>' +
+      '<button class="btn ghost icon" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>' +
+    '</div>' +
+    '<div class="cp-types" data-cp-types role="group" aria-label="Paint type"></div>' +
+    '<div class="cp-geo wt-off" data-cp-geo></div>' +
+    '<div class="cp-sv" data-cp-sv role="slider" aria-label="Saturation and brightness"><span class="cp-dot"></span></div>' +
+    '<div class="seg cp-mode" data-cp-mode role="group" aria-label="Color format">' +
+      '<button class="on" data-cp-m="hsl">HSL</button>' +
+      '<button data-cp-m="rgb">RGB</button>' +
+      '<button data-cp-m="hex">HEX</button>' +
+    '</div>' +
+    '<div class="cp-sliders" data-cp-sliders></div>' +
+    '<div class="cp-sw">' +
+      '<span class="seg cp-scope" data-cp-scope role="group" aria-label="Swatch scope">' +
+        '<button class="on" data-cp-sc="shades">Shades</button>' +
+        '<button data-cp-sc="related">Related</button>' +
+        '<button data-cp-sc="document">Document</button>' +
+      '</span>' +
+      '<div class="cp-chips" data-cp-chips></div>' +
+    '</div>' +
+    '<div class="cp-foot">' +
+      '<span class="cp-ctr" data-cp-ctr></span>' +
+      '<span class="sp"></span>' +
+      '<button class="btn secondary sm"><i class="ic ic-swatch"></i> Save style</button>' +
+    '</div>';
+
+  all('.cpick').forEach(function (cp) {
+    if (cp.querySelector('.cp-head')) return;
+    cp.innerHTML = CP_BODY;
+    // segmented.js has already swept the page, so the two segs this just
+    // created would otherwise never get their sliding plate.
+    if (PZ.segmented) all('.seg', cp).forEach(PZ.segmented.attach);
+  });
+
   all('.cpick').forEach(function (cp) {
     var sv = cp.querySelector('[data-cp-sv]');
     var dot = cp.querySelector('.cp-dot');
@@ -894,5 +945,100 @@
     buildGeo();
     renderStack();
     sync(true);
+  });
+
+  /* ---- SLOT TRIGGERS: one popover, re-pointed, never a second picker ----
+     D7's rule is that every color slot opens the SAME control. Making that
+     true used to cost a page sixty lines of script (re-seed, rename, re-bind
+     the swatch, place the popover), which is why slots kept falling through to
+     a bespoke grid instead. A slot is now markup:
+
+       <button class="cpick-btn wide" data-menu="#bgPick" data-cp-slot="Backdrop"
+               data-cp-color="#3A4150"><span class="sw"></span><span class="cph"></span></button>
+
+     `.sw` shows the paint and `.cph` shows its hex; both follow the picker
+     live. `data-cp-flat` marks a slot that takes a flat color (a drop shadow),
+     so the paint-type row is hidden rather than shown doing nothing.
+
+     Clicking a DIFFERENT swatch moves the picker there rather than dismissing
+     it, because that is what the click meant. Clicking the swatch you are
+     already on toggles it, which the shared [data-menu] handler already does. */
+
+  /* Level with the swatch that opened it and clear of the panel it sits in, so
+     the row you are editing stays visible. Whole pixels only: a popover parked
+     on a half pixel puts every child edge on one too, and the lighter popover
+     background then shows through as a hairline down the saturation field. */
+  function cpAnchor(cp, trigger) {
+    var host = cp.offsetParent;
+    if (!host) return;
+    var h = host.getBoundingClientRect(), t = trigger.getBoundingClientRect();
+    var top = Math.max(12, Math.min(t.top - h.top - 8, h.height - cp.offsetHeight - 12));
+    cp.style.top = Math.round(top) + 'px';
+    cp.style.right = Math.round(h.right - t.left + 12) + 'px';
+    var got = cp.getBoundingClientRect();
+    if (got.top % 1) cp.style.top = (Math.round(top) - (got.top % 1)) + 'px';
+  }
+
+  var cpSlotN = 0;
+  all('[data-cp-slot]').forEach(function (trigger) {
+    var cp = document.querySelector(trigger.getAttribute('data-menu') || '#_');
+    if (!cp || !cp.classList.contains('cpick')) return;
+    var n = String(++cpSlotN);
+    var sw = trigger.querySelector('.sw');
+    var tx = trigger.querySelector('.cph');
+    if (sw && !sw.id) sw.id = 'cpslot' + n + 'sw';
+    if (tx && !tx.id) tx.id = 'cpslot' + n + 'hex';
+    if (!cp.style.position) { cp.style.position = 'absolute'; cp.style.zIndex = '14'; }
+    // The slot shows its own color from the start, so `data-cp-color` is the one
+    // place it is written rather than being repeated in a style and a label.
+    var seed = trigger.getAttribute('data-cp-color');
+    if (seed && sw && !sw.style.background) sw.style.background = seed;
+    if (seed && tx && !tx.textContent.trim()) tx.textContent = seed;
+
+    /* The slot holds a PAINT, not a color, so what it hands back has to be the
+       whole paint. Passing only the hex made every gradient slot snap to solid
+       the second time it was opened. `data-cp-paint` seeds one in markup; after
+       that the slot keeps whatever the picker last left on it. */
+    var paint = null;
+    try { paint = JSON.parse(trigger.getAttribute('data-cp-paint') || 'null'); } catch (err) { paint = null; }
+
+    function point() {
+      var moved = cp.getAttribute('data-cp-on') !== n;
+      cp.setAttribute('data-cp-on', n);
+      cp.setAttribute('data-cp-name', trigger.getAttribute('data-cp-slot'));
+      cp.setAttribute('data-cp-fill', sw ? '#' + sw.id : '');
+      cp.setAttribute('data-cp-text', tx ? '#' + tx.id : '');
+      var flat = trigger.hasAttribute('data-cp-flat');
+      var types = cp.querySelector('[data-cp-types]');
+      if (types) types.classList.toggle('wt-off', flat);
+      cp.dispatchEvent(new CustomEvent('cp:set', {
+        detail: {
+          color: trigger.getAttribute('data-cp-color'),
+          paint: (!flat && paint && paint.type !== 'solid') ? paint : null
+        }
+      }));
+      return moved;
+    }
+
+    trigger.addEventListener('click', function () {
+      if (point()) cp.classList.add('on');
+      // The shared [data-menu] handler lays the popover out on this same
+      // click, so measure after it has been shown.
+      requestAnimationFrame(function () { cpAnchor(cp, trigger); });
+    });
+
+    /* `data-cp-open` names the slot the picker starts on, closed. The page then
+       gets one `cp:change` before anyone touches anything, which is how a
+       document opens already painted without the page re-deriving its own fill
+       from a second copy of the same value. */
+    if (trigger.hasAttribute('data-cp-open')) point();
+
+    // The slot remembers what the picker left on it, so re-opening it starts
+    // where you stopped rather than back at the authored paint.
+    cp.addEventListener('cp:change', function (e) {
+      if (cp.getAttribute('data-cp-on') !== n) return;
+      trigger.setAttribute('data-cp-color', e.detail.hex);
+      paint = e.detail.paint;
+    });
   });
 })();

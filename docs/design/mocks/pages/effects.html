@@ -11,12 +11,9 @@
      SPECIMENS (Kind 2) for the stack ladder, the row anatomy and ordering.
      Page-local CSS is only: a definite window height, the specimen card, and
      the sample artwork. Everything else is shared DS. 4pt tokens only. */
-  #effects .win.shell{height:760px;min-height:0}  /* the enable switch in a live stack is a real <button>, so reset the UA
-     chrome and give it the same focus ring every other control has */
-  #effects .efx .en{border:0;padding:0;appearance:none;-webkit-appearance:none;cursor:pointer}
-  #effects .efx .en:hover{filter:brightness(1.1)}
-  #effects .efx .en:active{transform:scale(.94)}
-  #effects .efx .en:focus-visible{outline:none;box-shadow:var(--ring)}
+  #effects .win.shell{height:760px;min-height:0}
+  /* the enable switch is a real <button> everywhere now; its UA reset moved to
+     canvas.css so the next stack does not have to re-declare it */
 
   /* specimen cards (.specs/.spec/.spec-h/.spec-b) come from the shared DS */
 
@@ -73,42 +70,31 @@
        KIND 1 · AN APP SCREEN. Complete shell, document identity only in
        the title bar, a real selection driving Properties and Effects.
        ============================================================ -->
-  <div class="win tall cq shell" data-shell="card-hero · 1200 × 630" data-ws="ui">
+  <div class="win tall cq shell" data-shell="card-hero · 1200 × 630"
+       data-status="Brand tokens" data-ws="ui">
 
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>card-hero</b> · 1200 × 630</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:216px;z-index:12">
-          <div class="mlabel">Effect</div>
-          <div class="menuitem"><i class="ic ic-sparkle"></i> Add outer glow</div>
-          <div class="menuitem"><i class="ic ic-square"></i> Add drop shadow</div>
-          <div class="menuitem"><i class="ic ic-swatch"></i> Save stack as style</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menuitem"><i class="ic ic-copy"></i> Paste effects</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-        </div>
-      </div>
-    </div>
-
+    <!-- The title bar and the Ask launcher are built by the shared shell from
+         data-shell / data-status; this page authors only its command menu. -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">File</div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘E</span></div>
+        <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Effect</div>
+        <div class="menuitem"><i class="ic ic-glow"></i> Add outer glow</div>
+        <div class="menuitem"><i class="ic ic-shadow"></i> Add drop shadow</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Save stack as style</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Paste effects</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas">
@@ -198,10 +184,10 @@
           </div>
           <div class="dgrp-b">
             <!-- SELECTION, place 2 of 3: the matching row in Layers -->
-            <div class="lrow sel"><i class="ic ic-square"></i><span class="nm">Card</span><i class="ic sm ic-sparkle"></i><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow sel"><i class="ic ic-square"></i><span class="nm">Card</span><i class="ic sm ic-effects" title="Has an effect stack"></i><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-text"></i><span class="nm">Headline</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-component"></i><span class="nm">Button</span><i class="ic sm ic-component cmark"></i></div>
-            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-sliders"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow adj" title="Adjustment layer · clips to the layers below"><i class="ic ic-temperature"></i><span class="clipmark"></span><span class="nm">Warm grade</span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow"><i class="ic ic-image"></i><span class="nm">Background</span><i class="ic sm ic-lock"></i><i class="ic sm ic-eye eye"></i></div>
           </div>
         </div>
@@ -233,14 +219,24 @@
           <div class="dgrp-b">
             <div class="section">
               <div class="sec-h">Outer glow <span class="mut">selected effect</span></div>
-              <div class="irow"><span class="rl">Color</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:#b14dff"></span> Paint</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Color</span>
+                <button class="cpick-btn wide" id="fxGlowColor" data-menu="#fxPick"
+                        data-cp-slot="Outer glow" data-cp-color="#B14DFF" data-cp-flat>
+                  <span class="sw"></span><span class="cph"></span>
+                </button>
+              </div>
               <div class="irow"><span class="rl">Blur</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:62%"></i></span><span class="val">40</span></span></div>
               <div class="irow"><span class="rl">Spread</span><span style="display:flex;align-items:center;gap:var(--gap-sm)"><span class="bar"><i style="width:18%"></i></span><span class="val">6</span></span></div>
               <div class="irow"><span class="rl">Blend</span><span class="select"><span class="lead">Screen</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
             </div>
             <div class="section">
               <div class="sec-h">Fill <span class="mut">Paint style</span></div>
-              <div class="irow"><span class="rl">Style</span><span class="select" data-target="paint"><span class="lead"><span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span> Brand / gradient</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></div>
+              <div class="irow"><span class="rl">Paint</span>
+                <button class="cpick-btn wide" id="fxFillPaint" data-menu="#fxPick"
+                        data-cp-slot="Card fill" data-cp-color="#7C4DFF">
+                  <span class="sw" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span><span class="cph">Brand / gradient</span>
+                </button>
+              </div>
             </div>
             <div class="section">
               <div class="sec-h">Style <span class="mut">the whole stack, named</span></div>
@@ -277,16 +273,16 @@
 
       <div class="drail">
         <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
-        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-effects"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
       <div class="popover menu pop" id="addAdjMenu" style="position:absolute;right:var(--s4);top:34px;width:188px;z-index:11">
         <div class="mlabel">Add adjustment</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Hue / Saturation</div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Color grade</div>
-        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
+        <div class="menuitem"><i class="ic ic-saturation"></i> Hue / Saturation</div>
+        <div class="menuitem"><i class="ic ic-swatch"></i> Color grade</div>
+        <div class="menuitem"><i class="ic ic-blur"></i> Blur</div>
       </div>
       <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:192px;z-index:11">
         <div class="menuitem"><i class="ic ic-copy"></i> Copy effects</div>
@@ -296,10 +292,10 @@
       </div>
       <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:196px;width:196px;z-index:11">
         <div class="mlabel">Add effect</div>
-        <div class="menuitem"><i class="ic ic-sparkle"></i> Outer glow</div>
-        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Stroke</div>
-        <div class="menuitem"><i class="ic ic-image"></i> Background blur</div>
+        <div class="menuitem"><i class="ic ic-glow"></i> Outer glow</div>
+        <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-border"></i> Stroke</div>
+        <div class="menuitem"><i class="ic ic-blur"></i> Background blur</div>
       </div>
       <div class="popover menu pop" id="fxMenu" style="position:absolute;right:var(--s4);top:196px;width:200px;z-index:11">
         <div class="menuitem"><i class="ic ic-swatch"></i> Save stack as style</div>
@@ -313,6 +309,11 @@
         <div class="menuitem"><i class="ic ic-swatch"></i> Save stack as style</div>
         <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
       </div>
+
+      <!-- THE one color picker (D7). The glow's color and the card's fill paint
+           are two slots on it, not two trips to another page. -->
+      <div class="popover cpick pop" id="fxPick" data-cp-color="#B14DFF" data-cp-name="Outer glow"
+           data-cp-recent="#B14DFF,#7C4DFF,#FF5D8F,#12C2E9,#F4F6FF,#0C0E14" aria-label="Color"></div>
     </div>
   </div>
 
@@ -351,7 +352,7 @@
           <span class="anum" style="left:34px">2</span>
           <span class="anum" style="left:86px">3</span>
           <span class="anum" style="right:2px">4</span>
-          <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Outer glow</span><span class="emeta">40 · spread 6</span></div>
+          <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle outer glow"></button><span class="nm">Outer glow</span><span class="emeta">40 · spread 6</span></div>
         </div>
         <div class="aleg">
           <span class="li"><span class="n">1</span><b>Drag grip</b> · order is meaningful</span>
@@ -401,6 +402,21 @@
       stroke: 'inset 0 0 0 2px rgba(255,255,255,.6)',
       inner:  'inset 0 10px 20px -8px rgba(0,0,0,.75)'
     };
+
+    /* The glow's color slot is a real slot: picking a color in the shared
+       picker repaints the card, so the row is the control and not a picture
+       of one. The fill slot paints the card's own background the same way. */
+    var picker = document.getElementById('fxPick');
+    if (picker) picker.addEventListener('cp:change', function (e) {
+      var slot = picker.getAttribute('data-cp-name');
+      if (slot === 'Outer glow') {
+        var c = e.detail;
+        shadows.glow = '0 0 55px -2px rgba(' + c.r + ',' + c.g + ',' + c.b + ',.75)';
+      } else if (slot === 'Card fill') {
+        layer.style.background = e.detail.paint.type === 'solid' ? e.detail.rgba : e.detail.css;
+      }
+      render();
+    });
     var meta = {
       glow:   ['40 · spread 6', 'off'],
       shadow: ['0,26,44', 'off'],
@@ -429,14 +445,11 @@
       if (count) count.textContent = on + (on === 1 ? ' on' : ' on');
     }
 
+    // The press itself is shared (core.js flips `.off` and aria-pressed on any
+    // `.efx button.en`); this page only paints what the new state means.
     rows.forEach(function (row) {
       var sw = row.querySelector('.en');
-      if (!sw) return;
-      sw.addEventListener('click', function (e) {
-        e.stopPropagation();
-        sw.classList.toggle('off');
-        render();
-      });
+      if (sw) sw.addEventListener('click', render);
     });
 
     var scope = document.getElementById('scopeSeg');

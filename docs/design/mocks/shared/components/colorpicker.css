@@ -242,4 +242,7 @@
 .cpick-btn:focus-visible{outline:none;border-color:transparent;box-shadow:var(--ring)}
 .cpick-btn .sw{width:14px;height:14px;border-radius:4px;flex:none;border:1px solid var(--edge-lo);
   box-shadow:inset 0 1px 0 var(--edge-hi)}
+/* The slot's label is one line. A named paint ("Brand / gradient") is longer
+   than a hex, and letting it wrap turns a row control into a two-line block. */
+.cpick-btn .cph{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpick-btn.wide{width:100%;justify-content:flex-start}

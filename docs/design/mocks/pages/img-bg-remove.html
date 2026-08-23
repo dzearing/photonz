@@ -66,22 +66,15 @@
 
   .artboard-label{z-index:4}
 
-  /* ---- background swatch picker ---- */
-  .bgsw-row{display:flex;gap:var(--s2);flex-wrap:wrap}
-  .bgsw{width:34px;height:34px;border-radius:var(--r2);border:1px solid var(--edge-lo);cursor:pointer;padding:0;
-    box-shadow:inset 0 1px 0 var(--edge-hi);transition:var(--ctl-tr);position:relative;overflow:hidden}
-  .bgsw:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--edge-lo));transform:translateY(-1px)}
-  .bgsw:active{transform:scale(.94)}
-  .bgsw:focus-visible{outline:none;box-shadow:var(--ctl-gloss),var(--ring)}
-  .bgsw[disabled]{opacity:.42;pointer-events:none}
-  .bgsw.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-line)}
-  .bgsw .tick{position:absolute;inset:0;display:grid;place-items:center;color:#fff;opacity:0}
-  .bgsw.on .tick{opacity:1}
-  .bgsw.trans{background-color:#eceef2;
+  /* The backdrop presets are the shared preset picker (.bpick / .bchip); only
+     the checkerboard that says "no backdrop at all" is page art. */
+  .bgr-chk{background-color:#eceef2;
     background-image:linear-gradient(45deg,#c3c7d0 25%,transparent 0),linear-gradient(-45deg,#c3c7d0 25%,transparent 0),
       linear-gradient(45deg,transparent 75%,#c3c7d0 0),linear-gradient(-45deg,transparent 75%,#c3c7d0 0);
     background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
-  .bgsw.trans .tick{color:var(--accent)}
+  .bchip .tick{position:absolute;inset:0;display:grid;place-items:center;color:#fff;opacity:0}
+  .bchip.on .tick{opacity:1}
+  .bgr-chk .tick{color:var(--accent)}
 
   /* layers group thumbnails */
   .lthumb{width:16px;height:16px;border-radius:4px;flex:none;border:1px solid var(--edge-lo)}
@@ -89,8 +82,6 @@
     background-image:linear-gradient(45deg,#c3c7d0 25%,transparent 0),linear-gradient(-45deg,#c3c7d0 25%,transparent 0),
       linear-gradient(45deg,transparent 75%,#c3c7d0 0),linear-gradient(-45deg,transparent 75%,#c3c7d0 0);
     background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0}
-  .lrow .rmtag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-    color:var(--faint);background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 6px;border-radius:5px}
   .lrow.gone .nm{text-decoration:line-through;opacity:.6}
 
   /* tool-option buttons wrap inside the Properties group */
@@ -105,44 +96,31 @@
     <p class="pglead">Cutting out a subject is not a wizard. It is the <b>subject select</b> tool plus its options in
       <b>Properties</b>: outline, cut, refine the edge, then drop a new backdrop layer underneath. Nothing is baked in.</p>
 
-    <div class="win tall cq shell" data-shell="portrait-cutout · 4000 × 3000" data-ws="image">
+    <div class="win tall cq shell" data-shell="portrait-cutout · 4000 × 3000"
+         data-status="RGBA · 16-bit · alpha" data-ws="image">
 
-      <div class="titlebar">
-        <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-        <div class="wtitle"><b>portrait-cutout</b> · 4000 × 3000</div>
-        <div class="tbtns">
-          <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-          <button class="btn primary sm"><i class="ic ic-export"></i> Export PNG</button>
-        </div>
-      </div>
-
-      <!-- COMMAND SURFACE + ⌘K + History (D3 / D6) -->
-      <div class="toolbar">
-        <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-        <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-        <span class="tsep"></span>
-        <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-        <span class="tspacer"></span>
-        <button class="btn ghost sm" data-target="agent" title="Ask the agent"><i class="ic ic-sparkle"></i> Ask agent</button>
-        <span class="val" title="Document precision">RGBA · 16-bit · alpha</span>
-        <div style="position:relative">
-          <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:224px;z-index:12">
-            <div class="mlabel">Select</div>
-            <div class="menuitem"><i class="ic ic-wand"></i> Select subject <span class="sc">⌘⇧A</span></div>
-            <div class="menuitem"><i class="ic ic-lasso"></i> Lasso <span class="sc">L</span></div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Layer</div>
-            <div class="menuitem"><i class="ic ic-eraser"></i> Remove background</div>
-            <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Mask from selection</div>
-            <div class="menu-sep"></div>
-            <div class="mlabel">Window</div>
-            <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-            <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
-          </div>
-        </div>
-      </div>
-
+      <!-- The title bar and the Ask launcher are built by the shared shell from
+           data-shell / data-status; this page authors only its command menu. -->
       <div class="edit lean" id="shell" data-dock="open">
+
+        <div class="popover menu pop cmdpop" id="cmdMenu">
+          <div class="mlabel">File</div>
+          <div class="menuitem"><i class="ic ic-export"></i> Export PNG <span class="sc">⌘E</span></div>
+          <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Select</div>
+          <div class="menuitem"><i class="ic ic-subject"></i> Select subject <span class="sc">⌘⇧A</span></div>
+          <div class="menuitem"><i class="ic ic-lasso"></i> Lasso <span class="sc">L</span></div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Layer</div>
+          <div class="menuitem"><i class="ic ic-eraser"></i> Remove background</div>
+          <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Mask from selection</div>
+          <div class="menu-sep"></div>
+          <div class="mlabel">Window</div>
+          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+          <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        </div>
 
         <div class="cnv">
           <!-- CANVAS: the live cut-out scene -->
@@ -348,7 +326,7 @@
 
               <div class="section">
                 <div class="sec-h">Selection <span class="mut" id="selStat">none</span></div>
-                <div class="masklist" id="maskRow"><span class="mm" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>Subject · agent mask<span class="rmtag" id="maskTag" style="color:var(--accent);background:var(--accent-soft)">ready</span></div>
+                <div class="masklist" id="maskRow"><span class="mm" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"></span>Subject · agent mask<span class="rtag accent" id="maskTag">ready</span></div>
                 <p class="note">The cut-out is a real alpha <b style="color:var(--ink)">Paint</b> mask on the Subject layer. Brush it, feather it, or hand it to the <span data-target="agent" style="color:var(--accent);cursor:pointer">agent</span>.</p>
               </div>
 
@@ -364,15 +342,21 @@
 
               <div class="section">
                 <div class="sec-h">Replace background <span class="mut" id="bgStat">transparent</span></div>
-                <div class="bgsw-row" id="bgSwatches">
-                  <button class="bgsw trans on" data-bg="transparent" data-name="transparent" title="Transparent"><span class="tick"><i class="ic sm ic-check"></i></span></button>
-                  <button class="bgsw" data-bg="linear-gradient(160deg,#3a4150,#20242c)" data-name="studio · slate" title="Studio slate" style="background:linear-gradient(160deg,#3a4150,#20242c)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
-                  <button class="bgsw" data-bg="linear-gradient(160deg,#12c2e9,#0e7490)" data-name="teal" title="Teal" style="background:linear-gradient(160deg,#12c2e9,#0e7490)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
-                  <button class="bgsw" data-bg="linear-gradient(160deg,#ffb057,#ff5d8f)" data-name="sunset" title="Sunset" style="background:linear-gradient(160deg,#ffb057,#ff5d8f)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
-                  <button class="bgsw" data-bg="linear-gradient(160deg,#7c4dff,#b14dff)" data-name="violet" title="Violet" style="background:linear-gradient(160deg,#7c4dff,#b14dff)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
-                  <button class="bgsw" data-bg="#f4f6fb" data-name="paper white" title="Paper white" style="background:#f4f6fb"><span class="tick" style="color:var(--accent)"><i class="ic sm ic-check"></i></span></button>
+                <div class="irow"><span class="rl">Color</span>
+                  <button class="cpick-btn wide" id="bgSlot" data-menu="#bgPick" data-cp-slot="Backdrop"
+                          data-cp-color="#3A4150" disabled>
+                    <span class="sw bgr-chk"></span><span class="cph">transparent</span>
+                  </button>
                 </div>
-                <p class="note" id="bgNote">The subject is cut to <b style="color:var(--ink)">transparency</b> · drop any color or gradient behind it. This is just a new <b style="color:var(--ink)">Layer</b> under the Subject.</p>
+                <div class="bpick" id="bgSwatches" role="radiogroup" aria-label="Backdrop presets">
+                  <button class="bchip bgr-chk on" role="radio" aria-checked="true" data-bg="transparent" data-name="transparent" title="Transparent"><span class="tick"><i class="ic sm ic-check"></i></span></button>
+                  <button class="bchip" role="radio" aria-checked="false" data-bg="linear-gradient(160deg,#3a4150,#20242c)" data-name="studio · slate" title="Studio slate" style="background:linear-gradient(160deg,#3a4150,#20242c)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
+                  <button class="bchip" role="radio" aria-checked="false" data-bg="linear-gradient(160deg,#12c2e9,#0e7490)" data-name="teal" title="Teal" style="background:linear-gradient(160deg,#12c2e9,#0e7490)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
+                  <button class="bchip" role="radio" aria-checked="false" data-bg="linear-gradient(160deg,#ffb057,#ff5d8f)" data-name="sunset" title="Sunset" style="background:linear-gradient(160deg,#ffb057,#ff5d8f)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
+                  <button class="bchip" role="radio" aria-checked="false" data-bg="linear-gradient(160deg,#7c4dff,#b14dff)" data-name="violet" title="Violet" style="background:linear-gradient(160deg,#7c4dff,#b14dff)"><span class="tick"><i class="ic sm ic-check"></i></span></button>
+                  <button class="bchip" role="radio" aria-checked="false" data-bg="#f4f6fb" data-name="paper white" title="Paper white" style="background:#f4f6fb"><span class="tick" style="color:var(--accent)"><i class="ic sm ic-check"></i></span></button>
+                </div>
+                <p class="note" id="bgNote">The subject is cut to <b style="color:var(--ink)">transparency</b> · drop any color or gradient behind it. This is just a new <b style="color:var(--ink)">Layer</b> under the Subject, and its color slot opens the same picker every other color in the app does.</p>
               </div>
 
               <div class="section">
@@ -426,7 +410,7 @@
 
         <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
           <div class="menuitem"><i class="ic ic-plus"></i> New empty layer <span class="sc">⌘⇧N</span></div>
-          <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+          <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Add layer mask</div>
           <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
         </div>
         <div class="popover menu pop" id="propMenu" style="position:absolute;right:var(--s4);top:190px;width:198px;z-index:11">
@@ -438,6 +422,11 @@
           <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
           <div class="menuitem"><i class="ic ic-swatch"></i> Save backdrop as style</div>
         </div>
+
+        <!-- THE one color picker (D7). The body is the component's; the page
+             only says which slot opens it. -->
+        <div class="popover cpick pop" id="bgPick" data-cp-color="#3A4150" data-cp-name="Backdrop"
+             data-cp-recent="#3A4150,#12C2E9,#FFB057,#7C4DFF,#F4F6FB,#0C0E14" aria-label="Backdrop"></div>
       </div>
     </div>
 
@@ -487,12 +476,15 @@
       featherBlur.setAttribute("stdDeviation", sd.toFixed(2));
     }
 
-    // buttons: cut gated on selection; swatches gated on cut
+    // buttons: cut gated on selection; the backdrop slot and its presets
+    // gated on cut, because there is no behind until there is a cut-out
     var cutBtn = $("cutBtn");
     if (cutBtn) cutBtn.disabled = !state.selected;
     var selBtn = $("selectBtn");
     if (selBtn) selBtn.classList.toggle("disabled", state.selected);
-    document.querySelectorAll(".bgsw").forEach(function (b) { b.disabled = !state.cut; });
+    document.querySelectorAll(".bchip").forEach(function (b) { b.disabled = !state.cut; });
+    var bgSlot = $("bgSlot");
+    if (bgSlot) bgSlot.disabled = !state.cut;
 
     // layers group reflects the result
     var lrOrig = $("lrOrigBg");
@@ -541,15 +533,46 @@
   var sR = $("smoothR");
   if (sR) sR.addEventListener("input", function () { state.smooth = +sR.value; render(); });
 
-  // Background swatches
+  /* Backdrop: a preset chip is a shortcut, the swatch slot is the full answer.
+     Both write the same one paint, so the chips clear when the picker moves the
+     color somewhere none of them name. */
+  function setBg(css, name) {
+    state.bg = css;
+    state.bgName = name;
+    if (newbg) newbg.style.background = css === "transparent" ? "" : css;
+    var slot = $("bgSlot");
+    if (slot) {
+      var chip = slot.querySelector(".sw");
+      var hex = slot.querySelector(".cph");
+      if (chip) {
+        chip.classList.toggle("bgr-chk", css === "transparent");
+        chip.style.background = css === "transparent" ? "" : css;
+      }
+      if (hex) hex.textContent = name;
+    }
+    render();
+  }
+
   var sw = $("bgSwatches");
   if (sw) sw.addEventListener("click", function (e) {
-    var b = e.target.closest(".bgsw"); if (!b || b.disabled) return;
-    sw.querySelectorAll(".bgsw").forEach(function (x) { x.classList.toggle("on", x === b); });
-    state.bg = b.getAttribute("data-bg");
-    state.bgName = b.getAttribute("data-name") || "custom";
-    if (newbg) newbg.style.background = state.bg === "transparent" ? "" : state.bg;
-    render();
+    var b = e.target.closest(".bchip"); if (!b || b.disabled) return;
+    sw.querySelectorAll(".bchip").forEach(function (x) {
+      var on = x === b;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    setBg(b.getAttribute("data-bg"), b.getAttribute("data-name") || "custom");
+  });
+
+  // The one picker paints the same backdrop layer the chips do.
+  var bgPick = $("bgPick");
+  if (bgPick) bgPick.addEventListener("cp:change", function (e) {
+    var css = e.detail.paint.type === "solid" ? e.detail.rgba : e.detail.css;
+    sw && sw.querySelectorAll(".bchip").forEach(function (x) {
+      x.classList.remove("on");
+      x.setAttribute("aria-checked", "false");
+    });
+    setBg(css, e.detail.hex.toLowerCase());
   });
 
   // Picking the refine brush from Properties activates it in the tool bar too
@@ -567,7 +590,17 @@
     if (fR) fR.value = 22;
     if (sR) sR.value = 30;
     if (newbg) newbg.style.background = "";
-    document.querySelectorAll(".bgsw").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-bg") === "transparent"); });
+    document.querySelectorAll(".bchip").forEach(function (x) {
+      var on = x.getAttribute("data-bg") === "transparent";
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-checked", on ? "true" : "false");
+    });
+    var slot0 = $("bgSlot");
+    if (slot0) {
+      var c0 = slot0.querySelector(".sw"), h0 = slot0.querySelector(".cph");
+      if (c0) { c0.classList.add("bgr-chk"); c0.style.background = ""; }
+      if (h0) h0.textContent = "transparent";
+    }
     var selB = $("selectBtn"); if (selB) selB.classList.remove("disabled");
     activate($("subjectTool"));
     render();

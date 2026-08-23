@@ -158,6 +158,11 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   The background is artwork and stays page-authored.
 - **Effect row readout:** the mono value at the right of an `.efx` row is
   `.emeta` (renamed from `.meta`, which page-local rules kept colliding with).
+- **Effect row enable:** `.efx .en` is a **`<button>`**, never a span — a span
+  cannot be pressed, focused or announced. Author it with `aria-pressed` and a
+  `title`; the press itself (flip `.off`, sync `aria-pressed`, and keep the
+  click off the row's own `data-target`) is shared in `core.js`, so a page adds
+  a listener only when it also paints the result.
 - **Bounds rings are one family, all in `selection.css`:** `.sel-ring` (selected),
   `.cinst`/`.cring` (component instance), `.marq` (marquee), `.hover-ring`,
   `.lock-ring`. Every one of them hugs the bounds with a **2px** radius and never
@@ -170,6 +175,28 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   derived shades and related-hue rows, recents, contrast readout) opened by a
   `.cpick-btn` swatch trigger. Never author a second color UI, and never a
   separate gradient editor; see UX-PATTERNS.md D7 and `pages/color.html`.
+  **Adopting it is two lines.** The popover's body is built by the component, so
+  a page writes only the empty shell and one swatch per slot:
+
+  ```html
+  <button class="cpick-btn wide" data-menu="#bgPick" data-cp-slot="Backdrop"
+          data-cp-color="#3A4150"><span class="sw"></span><span class="cph"></span></button>
+  …
+  <div class="popover cpick pop" id="bgPick" data-cp-color="#3A4150" aria-label="Backdrop"></div>
+  ```
+
+  `.sw` shows the paint and `.cph` its hex; both follow the picker live and are
+  seeded from `data-cp-color`. Add `data-cp-paint='{"type":"linear",…}'` when the
+  slot opens on a gradient, `data-cp-flat` for a slot that takes a flat color
+  (a drop shadow) so the paint-type row is hidden rather than shown doing
+  nothing, and `data-cp-open` on the slot the picker should start pointed at, so
+  the page gets one `cp:change` and paints its canvas without a second copy of
+  the value. Many slots, one popover: clicking a different swatch moves it.
+  Only annotate the regions by hand when the page IS the spec (`comp-color`).
+- **Row tag:** `.rtag` — the state word at the end of a `.lrow` or a `.masklist`
+  ("live", "ready", "editing"); `.rtag.accent` for the one you are working on.
+  Three pages had each declared this under `.lrow` only and then used it in a
+  `.masklist`, where it rendered as bare text.
 - **Captions:** `.caption`>`.c`>`.lab`(/`.lab.g2`)+`p`. Use these to explain
   "the idea / direction / open question" under each window.
 - **Code snippets:** `.codeblk` (with `.k`/`.s`/`.c`/`.p` spans for syntax).

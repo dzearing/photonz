@@ -80,48 +80,35 @@
     inventory, the dock foregrounds Layers and Properties, and the layer stack never changes. Color editing here is a
     stack of <b>adjustment layers</b> that sit above the pixels and never rewrite them.</p>
 
-  <div class="win tall cq shell" data-shell="sunset-edit · 4032 × 3024" data-ws="image">
+  <div class="win tall cq shell" data-shell="sunset-edit · 4032 × 3024"
+       data-status="32-bit float · Display P3" data-ws="image">
 
-    <!-- TITLE BAR · document · workspace lens · document actions -->
-    <div class="titlebar">
-      <div class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></div>
-      <div class="wtitle"><b>sunset-edit</b> · 4032 × 3024</div>
-      <div class="tbtns">
-        <button class="btn ghost sm"><i class="ic ic-import"></i> Share</button>
-        <button class="btn primary sm"><i class="ic ic-export"></i> Export</button>
-      </div>
-    </div>
-
-    <!-- COMMAND SURFACE + ⌘K + History (D3 / D6). The native macOS menu bar is
-         the real command surface; the mock never draws a fake one. -->
-    <div class="toolbar">
-      <button class="tool" title="Commands" data-menu="#cmdMenu"><i class="ic sm ic-more"></i></button>
-      <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
-      <span class="tsep"></span>
-      <button class="btn ghost sm" data-sheet="#histSheet" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
-      <span class="tspacer"></span>
-      <button class="btn ghost sm" data-target="agent" title="Ask the agent"><i class="ic ic-sparkle"></i> Ask agent</button>
-      <span class="imgval lg" title="Document precision">32-bit float · Display P3</span>
-      <div style="position:relative">
-        <div class="popover menu pop" id="cmdMenu" style="position:absolute;right:0;top:26px;width:218px;z-index:12">
-          <div class="mlabel">Edit</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
-          <div class="menuitem"><i class="ic ic-copy"></i> Duplicate layer <span class="sc">⌘J</span></div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Layer</div>
-          <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-          <div class="menuitem"><i class="ic ic-wand"></i> Select subject</div>
-          <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
-          <div class="menu-sep"></div>
-          <div class="mlabel">Window</div>
-          <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌥⌘L</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- EDITOR ROW: canvas dominant, one dock on the right -->
+    <!-- EDITOR ROW: canvas dominant, one dock on the right. The title bar and
+         the Ask launcher are built by the shared shell from data-shell /
+         data-status; this page authors only its own command menu. -->
     <div class="edit lean" id="shell" data-dock="open">
+
+      <!-- THIS PAGE'S COMMAND MENU (D3). Share and Export live here and in the
+           native menu bar, never as title-bar buttons. -->
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">File</div>
+        <div class="menuitem"><i class="ic ic-export"></i> Export… <span class="sc">⌘E</span></div>
+        <div class="menuitem"><i class="ic ic-share"></i> Share</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Edit</div>
+        <div class="menuitem"><i class="ic ic-undo"></i> Undo <span class="sc">⌘Z</span></div>
+        <div class="menuitem"><i class="ic ic-copy"></i> Duplicate layer <span class="sc">⌘J</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
+        <div class="menuitem"><i class="ic ic-subject"></i> Select subject</div>
+        <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Add layer mask</div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">Window</div>
+        <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
+        <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
+        <div class="menuitem" data-sheet="#histSheet"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+      </div>
 
       <div class="cnv">
         <div class="canvas" style="background:radial-gradient(700px 420px at 50% 30%,#141826,#0a0c11)">
@@ -132,7 +119,7 @@
               <!-- the non-destructive Hue / Saturation layer, above the pixels -->
               <div class="adjlayer" id="adjlayer"></div>
               <div class="adjbadge" id="adjBadge">Hue/Sat +31°</div>
-              <div class="submask"></div><span class="subtag"><i class="ic xs ic-sparkle"></i> subject mask</span>
+              <div class="submask"></div><span class="subtag"><i class="ic xs ic-subject"></i> subject mask</span>
               <div class="stamp">
                 <span class="stamp-badge"><i class="ic sm ic-component"></i> SUNSET '26</span>
                 <span class="cinst"></span>
@@ -261,15 +248,15 @@
 
             <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Adjustments <span class="cnt">above the pixels</span></div>
             <!-- SELECTION, place 2 of 3: the matching row in Layers -->
-            <div class="lrow child sel adj"><i class="ic ic-sliders" style="color:#ff7e5f"></i><span class="clipmark"></span><span class="nm">Hue / Saturation</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye adjtoggle" id="adjEye" title="Toggle layer"></i></div>
-            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#4c9fff"></i><span class="nm">Color balance</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="nm">Curves</span><span class="mth" style="background:linear-gradient(135deg,#fff 40%,#111)"></span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#7f9bff"></i><span class="nm">White balance</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child adj"><i class="ic ic-sliders" style="color:#3ecf8e"></i><span class="nm">Clarity + Texture</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child sel adj"><i class="ic ic-saturation" style="color:#ff7e5f"></i><span class="clipmark"></span><span class="nm">Hue / Saturation</span><span class="mth" style="background:linear-gradient(135deg,#111 45%,#eee)"></span><i class="ic sm ic-eye eye adjtoggle" id="adjEye" title="Toggle layer"></i></div>
+            <div class="lrow child adj"><i class="ic ic-swatch" style="color:#4c9fff"></i><span class="nm">Color balance</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-curves" style="color:#e0a53a"></i><span class="nm">Curves</span><span class="mth" style="background:linear-gradient(135deg,#fff 40%,#111)"></span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-temperature" style="color:#7f9bff"></i><span class="nm">White balance</span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child adj"><i class="ic ic-sharpen" style="color:#3ecf8e"></i><span class="nm">Clarity + Texture</span><i class="ic sm ic-eye eye"></i></div>
 
             <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Pixels</div>
             <div class="lrow child"><i class="ic ic-heal"></i><span class="nm">Retouch · heal / clone</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow child"><i class="ic ic-square" style="color:#4c6fff"></i><span class="nm">Foreground · mask</span><span class="mth" style="background:linear-gradient(135deg,#000 45%,#fff)"></span><i class="ic sm ic-eye eye"></i></div>
+            <div class="lrow child"><i class="ic ic-mask" style="color:#4c6fff"></i><span class="nm">Foreground · mask</span><span class="mth" style="background:linear-gradient(135deg,#000 45%,#fff)"></span><i class="ic sm ic-eye eye"></i></div>
             <div class="lrow child"><i class="ic ic-image"></i><span class="nm">IMG_4021 · linked</span><span class="imgval">RAW</span></div>
           </div>
         </div>
@@ -287,9 +274,9 @@
             <div class="section">
               <div class="sec-h">Tool options <span class="mut">Select</span></div>
               <div class="optrow">
-                <button class="btn secondary sm" data-target="img-bg-remove"><i class="ic ic-sparkle"></i> Subject</button>
+                <button class="btn secondary sm" data-target="img-bg-remove"><i class="ic ic-subject"></i> Subject</button>
                 <button class="btn secondary sm" data-target="img-masking"><i class="ic ic-image"></i> Sky</button>
-                <button class="btn secondary sm" data-target="img-masking"><i class="ic ic-sliders"></i> Luminosity</button>
+                <button class="btn secondary sm" data-target="img-masking"><i class="ic ic-levels"></i> Luminosity</button>
                 <button class="btn ghost sm" data-target="agent"><i class="ic ic-sparkle"></i> Gen fill</button>
                 <button class="btn ghost sm" data-target="img-bg-remove"><i class="ic ic-eraser"></i> Remove bg</button>
               </div>
@@ -336,11 +323,11 @@
             <button class="btn ghost icon sm" title="Add effect" data-menu="#efxMenu"><i class="ic ic-plus"></i></button>
           </div>
           <div class="dgrp-b" style="padding:var(--s2) var(--s3)">
-            <div class="efx" style="border-color:var(--accent-line)"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en adjtoggle" id="stackAdjEye" title="Toggle layer"></span><span class="nm">Hue / Saturation</span><span class="emeta">+31 / +18</span></div>
-            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Color balance</span><span class="emeta">warm</span></div>
-            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Curves</span><span class="emeta">RGB</span></div>
-            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">White balance</span><span class="emeta">5200K</span></div>
-            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><span class="en"></span><span class="nm">Clarity + Texture</span><span class="emeta">+18 / +22</span></div>
+            <div class="efx" style="border-color:var(--accent-line)"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en adjtoggle" id="stackAdjEye" type="button" aria-pressed="true" title="Toggle the Hue / Saturation layer"></button><span class="nm">Hue / Saturation</span><span class="emeta">+31 / +18</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle Color balance"></button><span class="nm">Color balance</span><span class="emeta">warm</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle Curves"></button><span class="nm">Curves</span><span class="emeta">RGB</span></div>
+            <div class="efx"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle White balance"></button><span class="nm">White balance</span><span class="emeta">5200K</span></div>
+            <div class="efx click" data-target="effects"><span class="drag"><i class="ic sm ic-more"></i></span><button class="en" type="button" aria-pressed="true" title="Toggle Clarity + Texture"></button><span class="nm">Clarity + Texture</span><span class="emeta">+18 / +22</span></div>
           </div>
         </div>
 
@@ -378,7 +365,7 @@
       <div class="drail">
         <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
-        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
+        <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-effects"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
       </div>
 
@@ -390,11 +377,11 @@
         <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(135deg,#4c9fff,#f0685c)"></span>Color balance <span class="sc">⌘B</span></div>
         <div class="menuitem"><span class="sw" style="width:13px;height:13px;border-radius:4px;flex:none;background:linear-gradient(90deg,#4c9fff,#ff9a44)"></span>White balance</div>
         <div class="menu-sep"></div>
-        <div class="menuitem"><i class="ic ic-sliders"></i> Clarity + Texture</div>
+        <div class="menuitem"><i class="ic ic-sharpen"></i> Clarity + Texture</div>
       </div>
       <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
         <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-        <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+        <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Add layer mask</div>
         <div class="menu-sep"></div>
         <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
         <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
@@ -404,9 +391,9 @@
         <div class="menuitem"><i class="ic ic-undo"></i> Reset to default</div>
       </div>
       <div class="popover menu pop" id="efxMenu" style="position:absolute;right:var(--s4);top:432px;width:192px;z-index:11">
-        <div class="menuitem"><i class="ic ic-image"></i> Blur</div>
-        <div class="menuitem"><i class="ic ic-square"></i> Drop shadow</div>
-        <div class="menuitem"><i class="ic ic-swatch"></i> Grain</div>
+        <div class="menuitem"><i class="ic ic-blur"></i> Blur</div>
+        <div class="menuitem"><i class="ic ic-shadow"></i> Drop shadow</div>
+        <div class="menuitem"><i class="ic ic-noise"></i> Grain</div>
       </div>
       <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:208px;z-index:11">
         <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
@@ -446,8 +433,10 @@
       badge.style.opacity = state.on ? '1' : '0';
     }
     toggles.forEach(function (t) {
-      if (t.classList.contains('en')) t.classList.toggle('off', !state.on);
-      else { t.classList.toggle('ic-eye', state.on); t.classList.toggle('ic-eye-off', !state.on); }
+      if (t.classList.contains('en')) {
+        t.classList.toggle('off', !state.on);
+        t.setAttribute('aria-pressed', state.on ? 'true' : 'false');
+      } else { t.classList.toggle('ic-eye', state.on); t.classList.toggle('ic-eye-off', !state.on); }
     });
   }
 

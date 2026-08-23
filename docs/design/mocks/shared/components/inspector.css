@@ -121,6 +121,15 @@
 .curve svg{position:absolute;inset:0}
 .masklist{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);padding:6px 0}
 .masklist .mm{width:24px;height:18px;border-radius:4px;background:linear-gradient(135deg,#4c6fff,#7c4dff)}
+/* ROW TAG — the state word at the end of a row: "live", "ready", "editing".
+   Three pages had declared this themselves under `.lrow` and then used it in a
+   `.masklist`, where the rule did not reach and it rendered as bare text. It is
+   the same tag in both rows, so it is one rule here. `.accent` is the "this is
+   the one you are working on" variant. */
+.lrow .rtag,.masklist .rtag{margin-left:auto;font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--faint);background:color-mix(in srgb,var(--ink) 7%,transparent);
+  padding:1px 6px;border-radius:5px;white-space:nowrap}
+.lrow .rtag.accent,.masklist .rtag.accent{color:var(--accent);background:var(--accent-soft)}
 
 /* video editor */
 .vpreview{background:radial-gradient(600px 300px at 50% 40%,#171a26,#0a0c11);display:grid;place-items:center;min-height:250px;position:relative}

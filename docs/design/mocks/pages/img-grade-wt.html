@@ -66,17 +66,9 @@
   .curve .s{stroke:var(--accent);stroke-width:1.7;fill:none}
   .curve .ref{stroke:var(--line);stroke-width:.5}
 
-  /* split-tone wheels (highlight/shadow color pickers) */
-  .stwheel{width:44px;height:44px;border-radius:50%;flex:none;border:1.5px solid rgba(255,255,255,.5);
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.2), 0 2px 8px -3px rgba(0,0,0,.4);position:relative}
-  .stwheel::after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;
-    border:1px solid rgba(0,0,0,.35);top:22%;left:70%}
-  .stwheel.hi{background:conic-gradient(from 90deg,#ff9a5c,#ffd27a,#fff2c4,#ffd27a,#ff9a5c)}
-  .stwheel.sh{background:conic-gradient(from 270deg,#4c7cd6,#7fa8e8,#c8dcff,#7fa8e8,#4c7cd6)}
-  .stwheel.sh::after{top:70%;left:30%}
-  .stpair{display:flex;gap:var(--gap);align-items:center;justify-content:space-around;margin:var(--s2) 0}
-  .stcol{display:flex;flex-direction:column;align-items:center;gap:6px}
-  .stcol .cl{font-size:10px;color:var(--faint)}
+  /* Split tone used to draw two 44px colour wheels that nothing could pick up.
+     A split tone is two color slots, so they are two `.cpick-btn` swatches on
+     the one picker (D7) and this page declares no color UI of its own. */
 
   .huebar{flex:1;height:8px;border-radius:4px;
     background:linear-gradient(90deg,#f0685c,#ffb057,#f6c453,#3ecf8e,#4c9fff,#b98cff,#f0685c)}
@@ -122,7 +114,7 @@
         <div class="popover menu pop cmdpop" id="cmdMenu">
               <div class="mlabel">Layer</div>
               <div class="menuitem"><i class="ic ic-sliders"></i> Add adjustment layer</div>
-              <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+              <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Add layer mask</div>
               <div class="menuitem"><i class="ic ic-library"></i> Save grade as a style</div>
               <div class="menu-sep"></div>
               <div class="mlabel">View</div>
@@ -271,9 +263,9 @@
               <div class="dgrp-b">
                 <div class="lgroup" id="lgAdj"><i class="ic sm ic-chevron-down"></i> Adjustments <span class="cnt">above the pixels</span></div>
                 <div class="lrow child adj wt-off" id="lrSplit" data-adj="split"><i class="ic ic-swatch" style="color:#ffb057"></i><span class="clipmark"></span><span class="nm">Split tone</span><i class="ic sm ic-eye eye adjeye" id="eyeSplit"></i></div>
-                <div class="lrow child adj wt-off" id="lrHsl" data-adj="hsl"><i class="ic ic-swatch" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">HSL</span><i class="ic sm ic-eye eye adjeye"></i></div>
-                <div class="lrow child adj wt-off" id="lrCurves" data-adj="curves"><i class="ic ic-sliders" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Curves</span><i class="ic sm ic-eye eye adjeye"></i></div>
-                <div class="lrow child adj wt-off" id="lrExposure" data-adj="exposure"><i class="ic ic-sliders" style="color:#ff9a5c"></i><span class="clipmark"></span><span class="nm">Exposure</span><i class="ic sm ic-eye eye adjeye" id="eyeExposure"></i></div>
+                <div class="lrow child adj wt-off" id="lrHsl" data-adj="hsl"><i class="ic ic-saturation" style="color:#3ecf8e"></i><span class="clipmark"></span><span class="nm">HSL</span><i class="ic sm ic-eye eye adjeye"></i></div>
+                <div class="lrow child adj wt-off" id="lrCurves" data-adj="curves"><i class="ic ic-curves" style="color:#e0a53a"></i><span class="clipmark"></span><span class="nm">Curves</span><i class="ic sm ic-eye eye adjeye"></i></div>
+                <div class="lrow child adj wt-off" id="lrExposure" data-adj="exposure"><i class="ic ic-exposure" style="color:#ff9a5c"></i><span class="clipmark"></span><span class="nm">Exposure</span><i class="ic sm ic-eye eye adjeye" id="eyeExposure"></i></div>
                 <div class="lgroup"><i class="ic sm ic-chevron-down"></i> Pixels</div>
                 <div class="lrow child sel" id="lrRaw"><i class="ic ic-image"></i><span class="nm">golden-hour</span><span class="val">RAW</span></div>
               </div>
@@ -333,9 +325,17 @@
 
                 <div class="section wt-off" id="pSplit">
                   <div class="sec-h">Split tone <span class="mut">highlights · shadows</span></div>
-                  <div class="stpair">
-                    <div class="stcol"><span class="stwheel hi"></span><span class="cl">Highlights</span><span class="val">amber</span></div>
-                    <div class="stcol"><span class="stwheel sh"></span><span class="cl">Shadows</span><span class="val">teal</span></div>
+                  <div class="irow"><span class="rl">Highlights</span>
+                    <button class="cpick-btn wide" id="stHi" data-menu="#stPick"
+                            data-cp-slot="Split tone · highlights" data-cp-color="#FFB057">
+                      <span class="sw"></span><span class="cph"></span>
+                    </button>
+                  </div>
+                  <div class="irow"><span class="rl">Shadows</span>
+                    <button class="cpick-btn wide" id="stSh" data-menu="#stPick"
+                            data-cp-slot="Split tone · shadows" data-cp-color="#4C7CD6">
+                      <span class="sw"></span><span class="cph"></span>
+                    </button>
                   </div>
                   <div class="row"><span class="rl">Balance</span><span class="bar"><i style="width:58%"></i></span><span class="val">+8</span></div>
                   <div class="row"><span class="rl">Strength</span><span class="bar"><i style="width:44%"></i></span><span class="val">44%</span></div>
@@ -403,17 +403,21 @@
           <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
           <div class="popover menu pop" id="adjMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
             <div class="mlabel">Add adjustment layer</div>
-            <div class="menuitem" id="miExposure"><i class="ic ic-sliders"></i> Exposure</div>
-            <div class="menuitem" id="miCurves"><i class="ic ic-sliders"></i> Curves</div>
-            <div class="menuitem" id="miHsl"><i class="ic ic-swatch"></i> HSL</div>
+            <div class="menuitem" id="miExposure"><i class="ic ic-exposure"></i> Exposure</div>
+            <div class="menuitem" id="miCurves"><i class="ic ic-curves"></i> Curves</div>
+            <div class="menuitem" id="miHsl"><i class="ic ic-saturation"></i> HSL</div>
             <div class="menuitem" id="miSplit"><i class="ic ic-swatch"></i> Split tone</div>
           </div>
           <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-            <div class="menuitem" data-target="img-masking"><i class="ic ic-layers"></i> Add layer mask</div>
+            <div class="menuitem" data-target="img-masking"><i class="ic ic-mask"></i> Add layer mask</div>
             <div class="menuitem"><i class="ic ic-library"></i> Save grade as a style</div>
             <div class="menu-sep"></div>
             <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
           </div>
+
+          <!-- THE one color picker (D7): both split-tone slots open this. -->
+          <div class="popover cpick pop" id="stPick" data-cp-color="#FFB057" data-cp-name="Split tone · highlights"
+               data-cp-recent="#FFB057,#FFD27A,#4C7CD6,#7FA8E8,#3ECF8E,#F4F6FB" aria-label="Split tone"></div>
         </div>
       </div>
     </div>
