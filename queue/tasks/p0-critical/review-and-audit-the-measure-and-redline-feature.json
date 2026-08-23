@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p0-critical",
   "seq": 2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:40:08.412Z",
-  "updated": "2026-08-23T18:04:24.711836Z",
+  "updated": "2026-08-23T18:05:13.489Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Flags (all Next, default on): next-measure-hover, next-measure-align, next-measure-center-snap, next-measure-roles, next-measure-panel, next-arrow-captions. Catalog: Sources/PhotonzCore/FeatureCatalog.swift. Spec: docs/design/next-measure.md. Build: Scripts/build-app.sh then open dist/Photonz Dev.app, choose release Next in the Experiments window. Take screenshots with the app itself where possible. Audit format is specified in queue/bin/runner-prompt.md.",
@@ -60,7 +60,12 @@
     {
       "t": "2026-08-23T18:04:24.711836Z",
       "note": "Audit written: queue/audits/2026-08-23-measure-redline.md, with the test capture and five real renders beside it. Verified rendering on the dashboard Ready to try tab."
+    },
+    {
+      "t": "2026-08-23T18:05:13.489Z",
+      "note": "All six Next measure flags exercised against a real 2x settings capture with known geometry. Calipers, roles, centre snapping, spec list and arrow captions are exact; next-measure-hover fails its own done-when (button reads nothing, toggle reads a 12x12 sliver) and next-measure-align settled the guide on empty space. Fixed the alignment verdict (span-weighted heaviest cluster instead of a plain median, 2 tests, 934 green); filed the hover detection as p0 with measured counterexamples plus two smaller follow-ups. Audit at queue/audits/2026-08-23-measure-redline.md with 6 real screenshots, verified rendering on the dashboard Ready to try tab (which needed image and ordered-list support added). Pushed as a5489e2."
     }
   ],
-  "started": "2026-08-23T17:47:23.486Z"
+  "started": "2026-08-23T17:47:23.486Z",
+  "completed": "2026-08-23T18:05:13.489Z"
 }
