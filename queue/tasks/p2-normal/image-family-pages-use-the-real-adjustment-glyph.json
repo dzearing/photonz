@@ -3,11 +3,11 @@
   "title": "Image family pages use the real adjustment glyphs and the one color picker",
   "priority": "p2-normal",
   "seq": 260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:39.807Z",
-  "updated": "2026-08-23T14:51:49.030Z",
+  "updated": "2026-08-23T15:23:30.553Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From ux-audit rescan 2026-08-23 ('Image family'). Pages: image, img-bg-remove, img-masking, img-grade-wt, img-retouch-wt, effects, paint. Key items: adjustment/effect glyphs to ic-curves/ic-levels/ic-blur/ic-shadow/ic-noise/ic-glow/ic-border/ic-saturation/ic-exposure; ic-mask for mask concepts; ic-compare for before/after on both retouch and masking; .rmtag scoping bug renders unstyled on img-bg-remove + img-masking (fix scope); inert span.en toggles to buttons with aria-pressed; color slots to .cpick-btn + shared .cpick (img-grade-wt stwheel, effects/paint rows, bg-remove .bgsw); paint editor stack belongs in .cpick per D7; delete legacy titlebar/toolbar/.cmdk; dedupe repeated Option-Command-L shortcut. Verify 200 + audit-sweep.",
@@ -33,7 +33,12 @@
     {
       "t": "2026-08-23T15:22:59.574814Z",
       "note": "Shipped. Central: .cpick builds its own body and any .cpick-btn[data-cp-slot] re-points it (data-cp-color/-paint/-flat/-open); .efx .en is a <button> with the press in core.js and the reset in canvas.css; .rtag row tag in inspector.css; walkthrough data-activate syncs aria-pressed; .cpick-btn label stays one line. Pages: image, img-bg-remove, img-masking, img-grade-wt, img-retouch-wt, effects, paint. Library shortcut moved to Control-Command-L on all 15 pages that collided with the dock's Option-Command-L. Verified in Chrome, not by grep: 90/90 pages HTTP 200; audit-sweep.js over 89 pages reports zero findings (73 segs, 79 dock managers); no JS errors on 26 spot-checked pages; real interaction confirmed the backdrop picker repaints the cut-out layer, the split-tone slots share one popover, the glow slot hides the paint-type row while the fill slot shows it and a linear paint reaches the card, and paint.html opens on the brand gradient with a 3-stop ramp. Left out on purpose: the before/after wipe on img-retouch-wt stayed page artwork (prefixed rt-*) because no second page needs it yet. Filed effect-switches-are-real-buttons-on-the-pages-th for the inert span.en found outside this family."
+    },
+    {
+      "t": "2026-08-23T15:23:30.552Z",
+      "note": "All seven image-family pages conform: real adjustment/effect glyphs (curves, levels, exposure, saturation, temperature, sharpen, vignette, blur, shadow, noise, glow, border), ic-mask for mask concepts, ic-compare for before/after, effect switches are real buttons with aria-pressed, every color slot is a .cpick-btn on the ONE shared picker (bg-remove backdrop, grade split tone, effects glow + fill, paint fill), paint.html's inline paint-editor stack moved into that picker per D7, legacy titlebar/toolbar/.cmdk gone, Library shortcut moved off the dock's Option-Command-L. Central DS work: .cpick builds its own body, [data-cp-slot] triggers re-point it, .rtag row tag, .efx button reset + shared press. Verified in Chrome: 90/90 pages 200, audit-sweep clean over 89, no JS errors, live interaction on each new picker. Commit 7d8d966."
     }
   ],
-  "started": "2026-08-23T14:51:49.029Z"
+  "started": "2026-08-23T14:51:49.029Z",
+  "completed": "2026-08-23T15:23:30.553Z"
 }
