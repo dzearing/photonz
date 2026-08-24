@@ -45,13 +45,29 @@ new component, base its spacing/radii/colors on the tokens below so it matches.
 
 ### PREFIX every page-local class (this bug has bitten ten times)
 
-`shared/photonz-ds.css` opens with a **RESERVED CLASS NAMES** list. A page that
-reuses one of those bare names for its own purpose silently inherits the DS rule,
-and it presents as a mystery layout bug, not as a collision. Real cases: `.bar`
-and `.btn` swallowed a selection ring; `.ghost` turned a control into a 300px
-absolutely-positioned dashed box; `.shot` blew up a toast; `.meta` overrode an
-effect row; `.sheet`, `.rail`, `.timeline`, `.panel`, `.ramp`, `.val`, `.body`
-and `.dsub` each broke a different page.
+`shared/components/tokens.css` opens with a **RESERVED CLASS NAMES** list. A page
+that reuses one of those bare names for its own purpose silently inherits the DS
+rule, and it presents as a mystery layout bug, not as a collision. Real cases:
+`.bar` and `.btn` swallowed a selection ring; `.ghost` turned a control into a
+300px absolutely-positioned dashed box; `.shot` blew up a toast; `.meta` overrode
+an effect row; `.sheet`, `.rail`, `.timeline`, `.panel`, `.ramp`, `.val`, `.body`
+and `.dsub` each broke a different page. Most recently `.body` again: tokens.css
+owns `.body{display:grid;grid-template-columns:220px 1fr}` (the shell's rail plus
+content), so a 230px swatch card on `lang-color` that called its lower half
+`.body` got a 220px first column, and the swatch description was laid out
+starting 3px PAST the card's right edge, where the card's `overflow:hidden` ate
+it. Nothing in the page's own CSS looked wrong.
+
+- **`node shared/check-reserved.mjs` is the gate.** It does not ban the words —
+  pages refine real DS components all day (`#dashboard .db-ttrow .btn{…}`) and
+  no grep can tell that apart from a page inventing its own meaning. What it
+  catches is the damage: a DS stylesheet imposing a STRUCTURAL property
+  (`grid-template-columns/rows`, `grid-area`, `float`, `position:absolute|fixed`)
+  on a bare class, and a page styling that same bare class as its key selector
+  **without redeclaring that property**. Then the page's box is being positioned
+  by a rule its author never wrote. `--list` prints the guarded set. If an
+  element really IS that DS component, add it to `USED_AS_ITSELF` in the script
+  with one line saying what the class is; keep that list short.
 
 - **Prefix every local class with a page tag** — `#video-motion .mg-tag`,
   `#export-share .ex-body`, `#lang-frame .lf-spec`.

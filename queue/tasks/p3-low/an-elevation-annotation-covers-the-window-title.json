@@ -1,0 +1,27 @@
+{
+  "id": "an-elevation-annotation-covers-the-window-title",
+  "title": "An elevation annotation covers the window title it points at",
+  "goal": "On the elevation reference page, the label that names the glass titlebar sits directly on top of the window title underneath it, so both are unreadable. Move the label off the text it is describing.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T05:05:21.962Z",
+  "updated": "2026-08-24T05:05:21.962Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "docs/design/mocks/pages/lang-elevation.html, the Live examples specimen. The .tag annotations are absolutely positioned over their targets; the titlebar one lands on the .ttl text (hero-card 1200 x 630). See queue/audits/2026-08-24-reserved-body-elevation-light.png. Note .tag is itself a reserved DS name that this page shadows (#lang-elevation .scene .tag), so fix the name at the same time.",
+  "acceptance": [
+    "On the elevation reference page, the glass titlebar label and the window title are both fully readable",
+    "The label still visibly points at the titlebar it names",
+    "Checked in light and dark"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T05:05:21.962Z",
+      "note": "created (manual)"
+    }
+  ]
+}

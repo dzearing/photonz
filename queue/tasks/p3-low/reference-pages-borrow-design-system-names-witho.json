@@ -1,0 +1,28 @@
+{
+  "id": "reference-pages-borrow-design-system-names-witho",
+  "title": "Reference pages borrow design system names without breaking, yet",
+  "goal": "Across the design study, 81 pages style a class the design system already owns. Most are fine, but some mean something completely different by the name and quietly pick up a padding, a border or a glass blur they never asked for. Go through the list and rename the ones that are borrowing rather than refining, so the pages stop drifting.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 420,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T05:05:10.462Z",
+  "updated": "2026-08-24T05:05:10.462Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured during color-and-elevation-reference-pages-reuse-a-rese. 84 distinct DS bare class names appear as the key selector of a page rule, across 81 pages in docs/design/mocks/pages. check-reserved.mjs deliberately gates only the STRUCTURAL form (grid-template-columns/rows, grid-area, float, position:absolute|fixed) because that is the decidable damage. Widening STRUCTURAL to include padding, overflow-y and backdrop-filter was tried and produces 74 hits, nearly all legitimate refinements (.btn{flex}, .win{height}, .selwrap{width}), so it is not gateable. This task is the human triage pass the gate cannot do. Known real case fixed already: lang-motion .rail/.track/.dot -> .mo-rail/.mo-track/.mo-puck. Start by re-running the zero-overlap heuristic (page rule shares no property with the DS rule of the same name) as a shortlist, then judge each by hand.",
+  "acceptance": [
+    "Every page rule whose class name belongs to the design system is triaged as either a refinement of that component or a page-local box that needs its own name",
+    "Each borrowing case is renamed with a page prefix and the page is checked in light and dark",
+    "node shared/check-reserved.mjs still passes, and any newly guarded name is added to it with a one-line reason",
+    "The triage result is written down so the next person does not redo it"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T05:05:10.462Z",
+      "note": "created (manual)"
+    }
+  ]
+}

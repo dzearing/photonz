@@ -1,0 +1,28 @@
+{
+  "feature": "Reserved class names in the design study",
+  "epic": "design-system",
+  "summary": "Four reference pages had borrowed a class name the design system already owns, so their own boxes were being laid out by rules nobody wrote for them. The worst case hid a swatch description off the edge of its card. A new check script now fails the moment a page does this again.",
+  "setup": "Design dashboard at http://127.0.0.1:8791. Nothing to build. From docs/design/mocks, node shared/check-reserved.mjs is the guard.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/lang-color.html and read the Anatomy swatch card. The token, the sentence and both hexes should all sit inside it.", "shot": "2026-08-24-reserved-body-color-light.png" },
+    { "do": "Compare that card to how it looked before the fix: the sentence was simply gone.", "shot": "2026-08-24-reserved-body-color-before.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/lang-motion.html and look at the three easing cards. Each rail should be a thin hairline with a dot on it.", "shot": "2026-08-24-reserved-body-motion-light.png" },
+    { "do": "Compare to before: each rail sat in a taller padded box with a stray vertical tick at its right end.", "shot": "2026-08-24-reserved-body-motion-before.png" },
+    { "do": "Click an easing card. The dot should glide across and stop." },
+    { "do": "Open http://127.0.0.1:8791/pages/lang-elevation.html and check the Live examples window: Layers rail on the left, dark canvas on the right." },
+    { "do": "Open http://127.0.0.1:8791/pages/video-compositing.html and press Key it. The subject should keep head, hair and shoulders while the green drops out.", "shot": "2026-08-24-reserved-body-compositing-dark.png" },
+    { "do": "Run node shared/check-reserved.mjs from docs/design/mocks and watch it pass; run it with --list to see the 62 names it guards." }
+  ],
+  "evaluate": [
+    "Does the swatch card now read as one tidy block, or does the description crowd the hexes below it?",
+    "Do the easing rails look deliberate at their new height, or too thin to see the dot travel?",
+    "Is the guard's rule the right one to gate on, or would you rather it flagged every borrowed name and made someone justify each?",
+    "Any of these four pages look worse to you than before, in either theme?"
+  ],
+  "rough": [
+    "The guard only catches the damaging form: the design system imposing a layout property (grid columns, float, absolute position) on a bare class that a page then styles without redeclaring it. It does not catch a borrowed name that only imposes padding, a border or a glass blur, which is how the motion page's rail broke. I found that one by eye, not by the gate.",
+    "Widening the gate to padding and backdrop blur was tried and rejected: it fires on 74 page rules, nearly all of them legitimate refinements of the real component, which would leave a gate nobody can keep green. A follow-up task is filed to triage the rest by hand.",
+    "81 pages contain a rule whose key class is a design-system name. That is mostly fine and encouraged (a page tuning a real button is not a collision), so 'no page uses a reserved name' is not the bar; 'no page means something different by one' is.",
+    "On lang-elevation the annotation tag 'glass titlebar · elev 2' overlaps the window's own title text. That is pre-existing and unrelated to this fix, but it is worth its own task."
+  ]
+}

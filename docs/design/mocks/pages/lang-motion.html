@@ -47,11 +47,11 @@
   #lang-motion .dur{flex:1 1 120px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:var(--pad-sm)}
   #lang-motion .dur .n{font-size:13px;font-weight:640;color:var(--ink);font-variant-numeric:tabular-nums}
   #lang-motion .dur .u{font-size:10px;color:var(--faint);margin-bottom:var(--gap-sm)}
-  #lang-motion .dur .track{height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
-  #lang-motion .dur .track i{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--accent);border-radius:4px;transform:translateX(-100%)}
-  #lang-motion .dur.d1 .track i{animation:sweep var(--dur-1) var(--ease-standard) infinite alternate}
-  #lang-motion .dur.d2 .track i{animation:sweep var(--dur-2) var(--ease-standard) infinite alternate}
-  #lang-motion .dur.d3 .track i{animation:sweep var(--dur-3) var(--ease-standard) infinite alternate}
+  #lang-motion .dur .mo-track{height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+  #lang-motion .dur .mo-track i{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--accent);border-radius:4px;transform:translateX(-100%)}
+  #lang-motion .dur.d1 .mo-track i{animation:sweep var(--dur-1) var(--ease-standard) infinite alternate}
+  #lang-motion .dur.d2 .mo-track i{animation:sweep var(--dur-2) var(--ease-standard) infinite alternate}
+  #lang-motion .dur.d3 .mo-track i{animation:sweep var(--dur-3) var(--ease-standard) infinite alternate}
   @keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 
   #lang-motion .eases{display:flex;gap:var(--gap-sm);flex-wrap:wrap}
@@ -59,13 +59,13 @@
   #lang-motion .ease:hover{border-color:var(--accent-line)}
   #lang-motion .ease .t{font-size:11px;font-weight:620;color:var(--ink);margin-bottom:2px}
   #lang-motion .ease .c{font-family:var(--mono);font-size:8.5px;color:var(--faint);margin-bottom:var(--gap-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #lang-motion .ease .rail{height:14px;position:relative}
-  #lang-motion .ease .rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
-  #lang-motion .ease .dot{position:absolute;top:50%;left:0;width:10px;height:10px;border-radius:50%;background:var(--accent);transform:translate(0,-50%)}
-  #lang-motion .ease.go .dot{animation:glide 900ms both}
-  #lang-motion .ease.es .dot{animation-timing-function:var(--ease-standard)}
-  #lang-motion .ease.ed .dot{animation-timing-function:var(--ease-decel)}
-  #lang-motion .ease.esp .dot{animation-timing-function:var(--ease-spring)}
+  #lang-motion .ease .mo-rail{height:14px;position:relative}
+  #lang-motion .ease .mo-rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+  #lang-motion .ease .mo-puck{position:absolute;top:50%;left:0;width:10px;height:10px;border-radius:50%;background:var(--accent);transform:translate(0,-50%)}
+  #lang-motion .ease.go .mo-puck{animation:glide 900ms both}
+  #lang-motion .ease.es .mo-puck{animation-timing-function:var(--ease-standard)}
+  #lang-motion .ease.ed .mo-puck{animation-timing-function:var(--ease-decel)}
+  #lang-motion .ease.esp .mo-puck{animation-timing-function:var(--ease-spring)}
   @keyframes glide{from{left:0}to{left:calc(100% - 10px)}}
 
   /* ---- What animates: legend map ---- */
@@ -183,15 +183,15 @@
       <div class="spec tile">
         <div class="toklab">Duration tokens</div>
         <div class="durs">
-          <div class="dur d1"><div class="n">120</div><div class="u">ms · dur-1</div><div class="track"><i></i></div></div>
-          <div class="dur d2"><div class="n">180</div><div class="u">ms · dur-2</div><div class="track"><i></i></div></div>
-          <div class="dur d3"><div class="n">240</div><div class="u">ms · dur-3</div><div class="track"><i></i></div></div>
+          <div class="dur d1"><div class="n">120</div><div class="u">ms · dur-1</div><div class="mo-track"><i></i></div></div>
+          <div class="dur d2"><div class="n">180</div><div class="u">ms · dur-2</div><div class="mo-track"><i></i></div></div>
+          <div class="dur d3"><div class="n">240</div><div class="u">ms · dur-3</div><div class="mo-track"><i></i></div></div>
         </div>
         <div class="toklab">Easing tokens <span style="text-transform:none;letter-spacing:0;font-weight:520;color:var(--faint)">· click a card to replay</span></div>
         <div class="eases">
-          <div class="ease es" data-ease><div class="t">Standard</div><div class="c">cubic-bezier(.4,0,.2,1)</div><div class="rail"><span class="dot"></span></div></div>
-          <div class="ease ed" data-ease><div class="t">Decelerate</div><div class="c">cubic-bezier(0,0,.2,1)</div><div class="rail"><span class="dot"></span></div></div>
-          <div class="ease esp" data-ease><div class="t">Spring</div><div class="c">cubic-bezier(.34,1.4,.5,1)</div><div class="rail"><span class="dot"></span></div></div>
+          <div class="ease es" data-ease><div class="t">Standard</div><div class="c">cubic-bezier(.4,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
+          <div class="ease ed" data-ease><div class="t">Decelerate</div><div class="c">cubic-bezier(0,0,.2,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
+          <div class="ease esp" data-ease><div class="t">Spring</div><div class="c">cubic-bezier(.34,1.4,.5,1)</div><div class="mo-rail"><span class="mo-puck"></span></div></div>
         </div>
       </div>
       <div class="meta">

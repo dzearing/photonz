@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 410,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T04:36:01.002Z",
-  "updated": "2026-08-24T04:36:01.002Z",
+  "updated": "2026-08-24T05:05:45.491770Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same root cause as component-shortcuts-run-off-the-edge-of-their-ca: tokens.css owns .body{display:grid;grid-template-columns:220px 1fr;min-height:0} (the app shell rail + content). Shadowing pages: pages/lang-color.html (#lang-color .swcard .body overrides padding only, so the 230px card inherits a 220px+1fr grid and .desc starts 3px past the card right edge, measured live, genuinely broken); pages/lang-elevation.html (#lang-elevation .scene .body fully overrides display+columns so it is currently harmless but still a violation); pages/video-compositing.html (.subject .body is NOT scoped to a page id at all, and inherits display:grid). Fix is the documented one: prefix the local class per page (see RESERVED CLASS NAMES in shared/components/tokens.css and the PREFIX rule in shared/AGENTS.md), then re-check layout. Worth adding a guard that greps pages for bare reserved names.",
@@ -22,6 +22,48 @@
     {
       "t": "2026-08-24T04:36:01.002Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T04:37:46.133Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T04:55:43.343Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-08-24T04:55:48.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Adversarial pass on the idea, before touching anything. The task framed this as three pages to rename, but the rename is not the deliverable: the deliverable is that the next page cannot do it again. A rename with no gate is a bug that comes back, and this list already records ten previous returns. So the shortest version that actually delivers the value is rename + gate, and the gate has to be one people can keep green. Also pushed back on the acceptance wording: 'no page uses a bare reserved name' reads absolute but is not the bar. 81 of 90 pages style a class the design system owns, and almost all of it is legitimate refinement, which the naming rule explicitly encourages. The bug is meaning something DIFFERENT by the name, not typing it."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Verified the three named pages live in the browser, both themes. lang-color: the swatch description now runs 13px to 217px inside a 230px card, nothing past the edge (it used to start 3px past it and get eaten by overflow:hidden). lang-elevation: the scene grid resolves to 150px + 558px as written. video-compositing: the subject's torso sits at full width, bottom-aligned, and Key it still drops the green while keeping head, hair and shoulders."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Found a fourth page by eye. lang-motion borrowed .rail for the 14px easing track, .track for the 6px duration bar and .dot for the puck that glides along the rail. Measured live: the rail was rendering at 24px with 12px/10px padding, a 1px right border and a 22px backdrop blur, all inherited; that stray vertical tick at the right end of each easing card was the design system's border-right. Renamed to .mo-rail / .mo-track / .mo-puck. Rail is back to 14px with no padding, border, blur or inherited margin, and clicking a card still replays the glide."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Tried to widen the gate to catch the lang-motion form and rejected it with numbers. Adding padding, overflow-y and backdrop-filter to the structural set produces 74 hits, nearly all legitimate refinements (.btn{flex}, .win{height}, .selwrap{width}), which is a gate nobody could keep green. A zero-overlap heuristic (page rule shares no property with the design system rule of the same name) produces 81, same problem. So the gate stays scoped to the decidable damage and the remainder is filed as a human triage task: reference-pages-borrow-design-system-names-witho."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "AGENTS.md's PREFIX section pointed at shared/photonz-ds.css, which has been intentionally empty since the component split. Repointed it at shared/components/tokens.css, added the lang-color case as the worked example, and documented what check-reserved.mjs does and does not catch."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Mutation-tested the guard: reverting the lang-color rename makes it exit 1 with the right page, class, inherited property and source file; restoring makes it pass. All six study guards green (reserved, shortcuts, a11y-names, selection, states, elevation). All 90 pages return 200. No console errors on the four changed pages."
+    },
+    {
+      "t": "2026-08-24T05:05:45.491770Z",
+      "note": "Also filed an-elevation-annotation-covers-the-window-title: on lang-elevation the 'glass titlebar - elev 2' annotation sits on top of the window title it names. Pre-existing, unrelated to this fix, visible in the audit screenshots."
     }
-  ]
+  ],
+  "started": "2026-08-24T04:55:48.950Z",
+  "failures": 1
 }
