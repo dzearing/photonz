@@ -4,11 +4,11 @@
   "goal": "The Edit action shows a pencil on some pages and a pen nib on fifty others, and the pen nib already means the vector drawing tool. This makes Edit a pencil everywhere so one picture keeps one meaning.",
   "priority": "p3-low",
   "seq": 200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:22:52.670Z",
-  "updated": "2026-08-24T01:19:32.833Z",
+  "updated": "2026-08-24T01:20:43.762Z",
   "deps": [],
   "blockedBy": [],
   "notes": "DONE. ic-pencil is the edit verb everywhere; ic-pen is vector only. 206 replacements in 58 pages + shared/components/entry.js; shared/dist rebuilt via node shared/build-ds.mjs. Rule recorded in shared/AGENTS.md under Iconography (\"One picture, one meaning\"). Verification was browser-side: match BOTH [title=\"Edit\"] and [data-tip=\"Edit\"] because the tooltip component rewrites title at runtime. Known borrowed glyph: pages/export-share.html spec panel uses ic-document for its CSS section header because shared/icons.mjs has no code glyph - add one if a code block ever needs a real icon. Left as vector on purpose: layers-pane/icon-draw-wt arrow layer rows and redline.html \"Arrow / annotate (P)\", filed separately.",
@@ -45,7 +45,12 @@
     {
       "t": "2026-08-24T01:19:32.833Z",
       "note": "Left alone on purpose, with the reason: the redline arrow annotation layers (8 rows) and the \"Arrow / annotate (P)\" tool wear the pen nib. They are vector paths, so they do not collide with the edit verb, but a redline arrow reading as a nib is a separate legibility question on the focus surface - filed rather than folded in. Also wrote the rule into shared/AGENTS.md so the corpus stops re-deriving it: pencil is the edit verb, the nib is vector, and a glyph that looks nearly right for a second job means the second job needs its own icon."
+    },
+    {
+      "t": "2026-08-24T01:20:43.762Z",
+      "note": "ic-pencil is now the edit verb everywhere and the pen nib means vector only. 206 of the study's 304 nibs were standing in for an edit action, not the 179 the notes predicted: also 5 Rename buttons, 13 filmcard rows that spelled the same action 'Open' (retitled to Edit, since they are the identical component the app-shell exemplar labels Edit), 2 labelled Open buttons on capture cards, 'Edit main', the share-sheet edit access level, 2 editable-value carets, and a section header where the nib meant neither edit nor vector. Comment access took ic-chat. Swept 58 pages plus shared/components/entry.js so auto-injected history cards are covered, and rebuilt shared/dist. Verified in a browser, not by grep: 89 pages in 1280x900 iframes, 231 live edit-verb controls all ic-pencil with the mask actually in effect, 91 surviving nibs all on vector meanings, standing audit-sweep clean, every touched page 200. Rule recorded in shared/AGENTS.md. Audit at queue/audits/2026-08-23-edit-glyph.json with a screenshot. Redline arrow annotations still wear the nib on purpose, filed as redline-arrow-annotations-get-an-arrow-glyph-not."
     }
   ],
-  "started": "2026-08-24T01:09:47.734Z"
+  "started": "2026-08-24T01:09:47.734Z",
+  "completed": "2026-08-24T01:20:43.762Z"
 }
