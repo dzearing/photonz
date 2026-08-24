@@ -1,17 +1,17 @@
 {
   "id": "library-group-leftovers-on-four-mock-pages",
   "title": "Library group leftovers on four mock pages",
-  "goal": "A few pages still show an older version of the library panel: an Import button parked in the panel body because its header is missing the add menu, and a category strip that crops the row of items. This brings them back in line with the standard panel.",
+  "goal": "Two mock pages show a redundant Import button sitting in the body of the library panel, duplicating the add button already in its header, and a third crops its row of library items behind a two-line category strip. This brings all three back in line with the standard panel.",
   "priority": "p3-low",
   "seq": 70,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.179Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:20:52.847Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: design-system > clickthrough-sweep (July findings: verify each is still present first). From study-tasks.json import-header-menu-missing-3-pages + components-page-chrome. (1) img-grade-wt and lang-panels Library groups kept a body Import button because their headers lack the + import menu; give them the standard header menu and delete the body button. (2) components.html adds a bespoke 52px .catrow on top of standard Library chrome so its tile row is cut; fold categories into the scope control. Findings are from July: verify each is still present before fixing.",
+  "notes": "Objective: design-system > clickthrough-sweep. From study-tasks.json import-header-menu-missing-3-pages + components-page-chrome. VERIFIED 2026-08-24, see log for evidence and measurements. (1) The July diagnosis is wrong: img-grade-wt.html:357 and lang-panels.html:308/:549 ALREADY have the standard header add button. What is left is the redundant body Import button inside .libtools at img-grade-wt.html:369, lang-panels.html:318 and lang-panels.html:562, the only 3 of 62 Library groups that still have one. Fix is to delete those three buttons and reword the UX-PATTERNS D1 sentence that still calls for a body + Import button. (2) components.html .catrow is real: at 1200x841 it costs 52px of a 200px panel body and leaves zero fully visible tiles. Do NOT fold categories into the scope switch, that violates D2. Prefer deleting .catrow, since #libBody already groups tiles under .libsec-h category headings.",
   "acceptance": [
     "The two pages whose library panel keeps a body Import button get the standard add menu in the header and lose the body button, or the log records that this was already fixed",
     "The components page shows a full, uncropped row of library items with no bespoke category strip, or the log records that this was already fixed",
@@ -33,6 +33,43 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:17:08.911Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "stage gate: serves design-system > clickthrough-sweep. design-system is staged next and every child is later; focus is measure-redline. Per objectives principle 5 only a now-staged epic may hold open tasks, so this is dropped rather than built. Verified both findings first so the next run does not re-discover them."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Finding 1 VERDICT: half stale, half real, and the diagnosis in the notes is wrong. The notes say img-grade-wt and lang-panels keep a body Import button BECAUSE their headers lack the + import menu. Both headers already have the standard add button (img-grade-wt.html:357 ghost icon + titled \"Save this grade as a style\"; lang-panels.html:308 and :549 ghost icon + titled \"Add to library\"). So nothing needs adding. What is genuinely left is the REDUNDANT body button."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Finding 1 corpus evidence: parsed every .dgrp-h whose title is Library across all 90 pages. 62 Library groups; 53 carry a header button; 58 carry a .libtools row; only 3 .libtools rows still hold an ic-import button, and they are exactly the three instances named above (img-grade-wt.html:369, lang-panels.html:318, lang-panels.html:562). The canonical header affordance, 48 of 62, is <button class=\"btn ghost icon sm\" title=\"Add to library\"><i class=\"ic ic-plus\"></i></button>. Remaining fix is a 3-line deletion of the body buttons; the .srch stays and .libtools flex-wraps fine with a single child."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Finding 1 caveat for whoever does it: UX-PATTERNS D1 still literally reads \"the panel's + Import button (file picker)\" as one of the three add paths, which is the sentence these two pages were written against. The header + IS that affordance now (59 of 62 panels read that way), so the doc sentence should be reworded in the same change or the next sweep will re-add the button."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Finding 2 VERDICT: real, measured, and worse than the note suggests. Loaded http://127.0.0.1:8791/pages/components.html at 1200x841. #gLibrary .dgrp-b is 200px tall and scrolls (scrollHeight 754). The bespoke .catrow is 52px of that, because 6 chips wrap to two lines in a 276px dock. Result: ZERO tiles are fully visible and 2 are cut mid-card. Hiding .catrow in the live DOM and re-measuring gives 2 fully visible tiles and 0 cut, so the strip is exactly the cause, not a coincidence."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Finding 2 pushback: DO NOT do what the notes propose. \"Fold categories into the scope control\" would put Buttons/Cards/Avatars into the scope switch, and D2 says the four scopes are Media/Components/Styles/Systems and \"a page must not invent any other scope name\". Two better options for the future run: (a) delete .catrow outright, since #libBody ALREADY groups tiles under .libsec-h category headings so the chip strip duplicates navigation the body provides, or (b) keep it as a filter but make it one line (flex-wrap:nowrap + overflow-x:auto), which takes it from 52px to about 26px. (a) is the shorter, more honest fix."
+    },
+    {
+      "t": "2026-08-24T00:34:00.000Z",
+      "note": "Page health: components.html loads clean, the only failing request is /favicon.ico 404 which every page shares. No mock files were touched in this run."
+    },
+    {
+      "t": "2026-08-24T00:20:52.847Z",
+      "note": "Stage gate: serves design-system > clickthrough-sweep, staged next/later while focus is measure-redline. Verified both findings first and left the evidence in the log: finding 1 is misdiagnosed (both headers already have the add button; only 3 of 62 Library groups still carry a redundant body Import button), finding 2 is real and measured (the 52px .catrow leaves zero fully visible tiles in a 200px panel body) but the proposed fix would violate D2."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:17:08.911Z"
 }
