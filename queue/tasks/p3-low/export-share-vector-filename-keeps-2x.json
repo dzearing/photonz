@@ -4,14 +4,14 @@
   "goal": "On the export screen, choosing a format that has no pixel size still leaves a 2x size suffix in the suggested filename, which promises something the file will not have. This drops the suffix when it does not apply.",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.204Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:23:59.306Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: design-system > clickthrough-sweep. From study-tasks.json fix-export-share-scale. Verified still live 2026-08-22: picking SVG or PDF disables the scale seg but the scale variable stays 2, so filename() renders launch-poster@2x.svg. Reset scale to 1 (or exclude suffix for vector formats) when a vector format is picked.",
+  "notes": "Objective: design-system > clickthrough-sweep. From study-tasks.json fix-export-share-scale. Verified still live 2026-08-22: picking SVG or PDF disables the scale seg but the scale variable stays 2, so filename() renders launch-poster@2x.svg. Reset scale to 1 (or exclude suffix for vector formats) when a vector format is picked.\n\nRe-verified 2026-08-24 by reading docs/design/mocks/pages/export-share.html: the bug is real. `var fmt=\"png\", scale=2` (line ~445); `suffix()` returns \"@\"+scale+\"x\" whenever scale>1 and `filename()` concatenates it unconditionally, so picking PDF or SVG renders launch-poster@2x.svg in both #fnPreview and #sFile. render() disables #scaleSeg for vector formats and the comment even says \"disable + pin at 1x\", but nothing pins it: the `scale` variable and the seg .on highlight both stay at 2. The API line also emits scale: 2 for a vector export.\n\nRecoverable fix (do not mutate `scale`, acceptance item 2 needs the raster choice remembered): keep `scale` as the user's raster pick and add `function effectiveScale(){ return FMT[fmt].raster ? scale : 1; }`. Route suffix(), the w/h math, the est math and the apiExport string through effectiveScale(), and in render() set the seg .on highlight to data-scale=\"1\" while locked, restoring it to `scale` when a raster format is picked again. Three acceptance items then check out by loading the page and clicking SVG then PNG.",
   "acceptance": [
     "Choosing a resolution-independent format shows a suggested filename with no size suffix",
     "Switching back to a pixel format restores the previously chosen size and its suffix",
@@ -33,6 +33,19 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:22:59.942Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:23:52.670Z",
+      "note": "Adversarial read before building: the fix is real and small, but it lands entirely in the design-study mock docs/design/mocks/pages/export-share.html. No shipping app code, and a filename suffix on a prototype export sheet does nothing for measure-redline."
+    },
+    {
+      "t": "2026-08-24T00:23:59.305Z",
+      "note": "Stage gate: serves design-system > clickthrough-sweep, staged later (parent design-system is next); focus is measure-redline, and only epics staged now may hold open tasks. The defect is real and re-verified today, but it lives entirely in the design-study mock docs/design/mocks/pages/export-share.html and unblocks nothing in the focus epic. The verified diagnosis and a ready-to-apply fix (an effectiveScale() helper so the raster choice is remembered) are written into the task notes, so this is a few minutes of work whenever clickthrough-sweep is staged now."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:22:59.942Z"
 }
