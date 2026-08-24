@@ -4,17 +4,17 @@
   "goal": "Once the cleanup passes are finished, every page in the study needs checking again against the six things the product vision says a person must be able to do. Anything still falling short becomes its own piece of work rather than being noted and forgotten.",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.052Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:05:21.445Z",
   "deps": [
     "finish-the-mock-conform-pass-across-all-pages",
     "blank-slate-entry-clickthrough-per-surface-on-on"
   ],
   "blockedBy": [],
-  "notes": "Objective: creation-vision (gated: run after the conform pass and entries pass). From study-tasks.json reaudit. Run shared/ux-audit-agent.md across all pages against the 6 PRODUCT-MODEL.md success criteria; feed misses back into the queue until clean. Do after the conform pass and entries pass.",
+  "notes": "Objective: creation-vision (gated: run after the conform pass and entries pass). From study-tasks.json reaudit. Run shared/ux-audit-agent.md across all pages against the 6 PRODUCT-MODEL.md success criteria; feed misses back into the queue until clean. Do after the conform pass and entries pass.\n\nStage-gate drop 2026-08-24. Re-verified before dropping so it can be re-filed\nwhen creation-vision is staged now.\n\nGating deps are satisfied: finish-the-mock-conform-pass-across-all-pages is\ndone (2026-08-23T06:35Z) and blank-slate-entry-clickthrough-per-surface-on-on\nis done (2026-08-23T07:14Z), so acceptance item 3 (\"run after the conformance\nand entry passes\") would be met if the epic were in focus.\n\nCORRECTION for re-filing: the rubric is TEN criteria, not six. This task and\nits acceptance were imported when PRODUCT-MODEL.md §5 held six; it now reads\n\"A refine pass is good when all ten hold\" (docs/design/mocks/shared/\nPRODUCT-MODEL.md:378-411): 1 one model written down, 2 shell coherence,\n3 legible entries, 4 one walkthrough template, 5 foundation-gated features,\n6 the build test, 7 responsive & collapsible, 8 history-first preserved,\n9 every screen declares its kind, 10 walkthroughs are one app operated.\nThe goal and acceptance both say \"six\" and must be rewritten to \"ten\" on\nre-file, or the audit will silently skip criteria 7-10 (which is where the\nlong tail of real misses lives).\n\nThe work is genuinely not already done. docs/design/mocks/ux-audit-2026-08-23.md\n(259 lines) is the most recent audit, but it is organized by the seven\nconformance clusters A-G from shared/ux-audit-agent.md, not by the rubric:\ngrep for \"success criteri\", \"criterion\" and \"rubric\" across\nux-audit-2026-08-23.md and ux-audit-clusters.md returns zero hits. It also\npredates the entries pass. So there is still no per-page pass/fail matrix\nagainst the rubric, which is acceptance item 1.\n\nScope on re-file: 90 pages under docs/design/mocks/pages/ (up from the 88 the\nlast audit covered) x 10 criteria. Tools already in place: shared/ux-audit-\nagent.md (the audit prompt), shared/audit-sweep.js (the browser measurement\nsweep that covers criterion 7, reported 88/88 clean on 2026-08-23),\nshared/check-selection.mjs, shared/check-states.mjs, shared/check-elevation.mjs.\nExisting open findings live in audit-findings.json (330 lines) and\nux-audit-clusters.md; the re-audit should dedupe against those before filing\nnew tasks so the same F/G long-tail items are not filed twice.",
   "acceptance": [
     "A findings file records a pass or fail for every page against each of the six success criteria",
     "Every failure is filed as its own queue task, with none left unfiled",
@@ -36,6 +36,19 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:04:03.161Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:12:00.000Z",
+      "note": "Serves creation-vision, an epic staged 'later'; the focus epic is measure-redline, and only epics staged 'now' may hold open tasks. Same gate that dropped show-save-and-dirty-state-across-editor-mocks and decide-zoom-semantics-on-mock-canvases. Re-verified first and the work is still real and unstarted: both gating deps landed 2026-08-23, but the newest audit (ux-audit-2026-08-23.md) is organized by conformance clusters A-G, not the rubric (zero hits for 'success criteri'/'criterion'/'rubric'), and it predates the entries pass, so the per-page pass/fail matrix in acceptance item 1 does not exist. Also found a real defect in the task itself: PRODUCT-MODEL.md section 5 now defines TEN criteria, not six, so the goal and acceptance must be rewritten before re-filing or criteria 7-10 get skipped. Full evidence preserved in notes."
+    },
+    {
+      "t": "2026-08-24T00:05:21.444Z",
+      "note": "Serves creation-vision, an epic staged 'later'; the focus epic is measure-redline and only epics staged 'now' may hold open tasks. Re-verified first: the work is real and unstarted, and the task's own acceptance is wrong (the rubric is ten criteria now, not six). Evidence preserved in notes for re-filing."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:04:03.161Z"
 }
