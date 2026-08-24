@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 320,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:32:18.732Z",
-  "updated": "2026-08-24T03:54:42.307720Z",
+  "updated": "2026-08-24T03:55:09.682Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the redline Arrow key. Same-bar collisions: docs/design/mocks/pages/image.html Patch (P) sits next to Pen (P) - Photoshop files Patch under J with the healing group, and Heal (J) already exists in the corpus, so the fix is probably Patch -> J as a grouped slot. iconography.html Marquee (M) next to Measure (M) - the app already resolved this one, Tool.shortcutKey has measure on I because M is the Photoshop marquee. ui-prototype.html Connect (X) next to Swap foreground and background (X). Detection script: grep title=\"...(K)\" per page and group by K. Note app-shell.html and lang-toolbars.html also flag but are false positives - they render several DIFFERENT tool bars on one page as a gallery, so C=Crop in an image bar vs C=Component insert in a UI bar is mode-dependent, not a collision. Canonical letters now live in Sources/PhotonzCore/Tools.swift Tool.shortcutKey and the rule is written up in docs/design/mocks/shared/AGENTS.md.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-08-24T03:54:42.307720Z",
       "note": "Filed follow-ups: the-ruler-tool-answers-to-a-different-key-on-alm (p2), component-shortcuts-run-off-the-edge-of-their-ca (p3). Audit: queue/audits/2026-08-23-tool-key-collisions.json"
+    },
+    {
+      "t": "2026-08-24T03:55:09.682Z",
+      "note": "Every tool bar in the design study now gives each key to exactly one tool. iconography.html Measure M->I, image.html Patch P->shift-J with Pen's P restored in the overflow menu, ui-prototype.html Connect X->N, plus two overflow rows renamed to match the button they stand for. New guard shared/check-shortcuts.mjs walks every .tbar and fails on a same-bar duplicate: was 5 red, now green. Keyboard legend and shared/AGENTS.md updated. Verified in the browser on all five pages; Scripts/test.sh 1094 tests pass. Pushed as 4ad74e7."
     }
   ],
-  "started": "2026-08-24T03:45:34.323Z"
+  "started": "2026-08-24T03:45:34.323Z",
+  "completed": "2026-08-24T03:55:09.682Z"
 }
