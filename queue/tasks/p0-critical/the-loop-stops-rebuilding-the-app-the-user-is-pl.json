@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-08-23T23:42:58.666Z",
-  "updated": "2026-08-23T23:42:58.666Z",
+  "updated": "2026-08-24T00:00:26.357Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23. Evidence: queue/loop.log shows runners calling Scripts/build-app.sh followed by pkill -f \"Photonz Dev\" three times in one task, and the dist binary timestamp moved to 16:37 while the user had the app open. Signing itself is healthy: one Photonz Dev cert, and the designated requirement pins identifier plus that cert leaf, so the grant would survive a rebuild if macOS did not separately re-verify screen-capture clients whose binary changed. The stopgap is the lock file plus a hard rule in the runner contract. The real fix is a separate probe bundle id (for example com.dzearing.photonz.probe) built to its own path, granted once, so loop verification and user playtesting never share an app. Scripts/build-app.sh already takes a dev variant path, so add a probe variant rather than a new script.",
@@ -23,6 +23,43 @@
     {
       "t": "2026-08-23T23:42:58.666Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-23T23:53:09.156Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T23:55:11.248Z",
+      "note": "Adversarial review of the fix, before building. (1) A probe bundle alone does not fix this: the rule against touching the users app was already written into the runner contract and the loop broke it anyway, because runners reach for Scripts/build-app.sh by reflex. Enforcement has to live in the script, not the prose. So: build-app.sh refuses to build the DEV variant while queue/playtest.lock exists, and offers --probe instead."
+    },
+    {
+      "t": "2026-08-23T23:55:11.249Z",
+      "note": "Adversarial review (2). The shortest version that works is only the refusal, but that leaves the loop unable to verify anything in a real app for the whole length of a playtest, which is exactly when we want it working. The probe bundle is what keeps the loop productive, so both ship: the guard is the safety, the probe is the capability."
+    },
+    {
+      "t": "2026-08-23T23:55:11.249Z",
+      "note": "Adversarial review (3). Runners also kill the app by hand (pkill -f \"Photonz Dev\"), which no script can guard. Mitigation: give runners ONE verb, Scripts/probe-app.sh, so they never assemble their own build+kill+open line. The run-app skill currently tells them to always pkill Photonz Dev first, which is where the habit comes from, so that instruction has to change too. Probe executable is named Photonz Probe so neither pkill pattern can cross over."
+    },
+    {
+      "t": "2026-08-23T23:55:11.249Z",
+      "note": "Adversarial review (4). Honest limits: while the user playtests they will see a second viewfinder icon in the menu bar when a runner has the probe open, distinguishable only by its name reading Photonz (Probe). And the probe app will re-ask for Screen Recording whenever its binary changes, so capture-dependent verification stays awkward for the loop. Neither is a regression, and neither touches the users app."
+    },
+    {
+      "t": "2026-08-24T00:00:26.356Z",
+      "note": "Shipped. build-app.sh gained a --probe variant (dist/Photonz Probe.app, com.dzearing.photonz.probe, named \"Photonz (Probe)\") and a playtest guard that refuses to rebuild the DEV bundle while queue/playtest.lock exists, exit 2 with a message pointing at the probe. New Scripts/probe-app.sh is the one verb a runner uses: build, quit only its own processes, relaunch, print the pid, --quit to tidy up. PhotonzCore gained AppFlavor (release/dev/probe) so the probe names itself and skips update checks like a dev build; tests first, 1061 pass."
+    },
+    {
+      "t": "2026-08-24T00:00:26.357Z",
+      "note": "Verified, all four acceptance items, with the user app RUNNING (pid 7716) and the lock in place. Plain Scripts/build-app.sh refused with exit 2. Two full probe build-and-launch cycles plus a release --dmg build ran; the dev binary sha256 and mtime (16:50:29) were identical before and after and pid 7716 never moved. Both apps were live at once, distinct to the window server as \"Photonz (Dev)\" and \"Photonz (Probe)\", and the probe opened a fixture image into a real editor window. Probe quit at the end."
+    },
+    {
+      "t": "2026-08-24T00:00:26.357Z",
+      "note": "Adversarial review of the built thing. Good: the refusal message tells both audiences what to do next, and probe-app.sh needs no arguments to be useful. Two holes no script can close, so they are documented instead: a hand-written `pkill -f Photonz` (unanchored) still kills everything, and a runner can still `open` the users app and steal focus. Both are now called out as never-do in the runner contract and the run-app skill, and the run-app skill no longer tells anyone to routinely pkill the dev app, which is where the habit came from."
+    },
+    {
+      "t": "2026-08-24T00:00:26.357Z",
+      "note": "Known rough edges, carried not fixed: the probe re-asks for Screen Recording each time its binary changes, so capture-dependent verification still needs a person (the probe just means it is never the users grant being reset); and while a runner has the probe open the user sees a second viewfinder icon, reading Photonz (Probe). probe-app.sh --quit tidies it and the contract tells runners to call it. The probe deliberately does not export the .photonz document type, so a throwaway bundle can never win the default-handler race for real files."
     }
-  ]
+  ],
+  "started": "2026-08-23T23:53:09.156Z"
 }

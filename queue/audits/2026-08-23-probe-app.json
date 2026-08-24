@@ -1,0 +1,27 @@
+{
+  "feature": "The build loop stops touching your app",
+  "epic": "unmanned-loop",
+  "summary": "The unmanned loop now builds and launches its own copy of Photonz, called Photonz (Probe), whenever it needs to look at a running app. Your Photonz Dev app is no longer rebuilt, quit or relaunched behind your back, so a playtest session cannot be ended under you and macOS cannot be made to re-ask for Screen Recording.",
+  "setup": "Nothing to install. queue/playtest.lock is the switch: while that file exists, the build script refuses to rebuild your dev app at all.",
+  "try": [
+    { "do": "Leave Photonz Dev open and note its menu bar icon." },
+    { "do": "Run: Scripts/build-app.sh" },
+    { "do": "Read the refusal it prints, and check your app is still running." },
+    { "do": "Run: Scripts/probe-app.sh Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png" },
+    { "do": "Look at the menu bar: a second viewfinder icon appears, and its menu says Photonz (Probe)." },
+    { "do": "Confirm your own app and its windows are exactly as you left them." },
+    { "do": "Run: Scripts/probe-app.sh --quit" },
+    { "do": "To rebuild your own app on purpose, delete queue/playtest.lock first." }
+  ],
+  "evaluate": [
+    "Is the refusal message clear enough that you know immediately what to do next?",
+    "Is queue/playtest.lock the right switch, or should the loop simply never rebuild your dev app whether or not a lock exists?",
+    "Is a second viewfinder icon in the menu bar acceptable while a runner is checking its work, or should the probe be invisible there?",
+    "Should deleting the lock be the normal way to rebuild your own app, or would you rather the lock expired on its own after a few hours?"
+  ],
+  "rough": [
+    "No script can stop a runner from typing pkill -f Photonz or opening your app directly. That is now written as a never-do in the runner contract and the run-app skill, and the skill no longer tells anyone to routinely kill the dev app, but it rests on the runner reading it.",
+    "The probe app re-asks for Screen Recording every time its binary changes, so anything that needs a real capture still needs you. The win is that it is never your grant being reset.",
+    "The probe build is the same release-configuration compile as a dev build, so a runner that wants a running app still waits about twenty seconds for it."
+  ]
+}

@@ -92,13 +92,60 @@ public enum ReleaseTag {
     }
 }
 
+/// Which build of Photonz this is. Three bundles can sit on one machine at
+/// once and they must never be confused for each other, because each holds its
+/// own TCC grants, defaults and LaunchServices identity (see
+/// Scripts/build-app.sh):
+///
+/// - `release` — `Photonz.app`, what people install.
+/// - `dev` — `Photonz Dev.app`, the build a person uses while working on the
+///   app. Its code identity has to stay put: a screen-capture client whose
+///   binary changes has to be re-authorized, so rebuilding it under someone
+///   ends their session and re-prompts for Screen Recording.
+/// - `probe` — `Photonz Probe.app`, the build the unmanned task loop launches
+///   to check its own work. It is rebuilt constantly and nobody is using it,
+///   which is the whole point of keeping it separate from `dev`.
+public enum AppFlavor: String, Sendable, CaseIterable, Codable {
+    case release
+    case dev
+    case probe
+
+    /// The flavor a bundle id names. No bundle at all (a bare `swift build`
+    /// run) counts as `dev`, which is the conservative answer: it keeps
+    /// update checks off for a binary that reports no version.
+    public init(bundleIdentifier: String?) {
+        guard let id = bundleIdentifier else { self = .dev; return }
+        if id.hasSuffix(".probe") { self = .probe }
+        else if id.hasSuffix(".dev") { self = .dev }
+        else { self = .release }
+    }
+
+    /// True only for the build that reaches people, so everything that should
+    /// not run locally (update checks, self-updating) has one thing to ask.
+    public var isShipping: Bool { self == .release }
+
+    /// What this flavor adds to the end of the app's name, or nil for the one
+    /// that is just "Photonz".
+    public var nameSuffix: String? {
+        switch self {
+        case .release: nil
+        case .dev: AppNaming.devSuffix
+        case .probe: AppNaming.probeSuffix
+        }
+    }
+}
+
 /// How the app names itself. The name follows the release you're running, so
 /// "About", "Quit" and the window that greets you all say which Photonz this
-/// is: `Photonz`, `Photonz Next`, and dev builds keep their `(Dev)` on the end
-/// (`Photonz Next (Dev)`).
+/// is: `Photonz`, `Photonz Next`, and non-shipping builds keep their flavor on
+/// the end (`Photonz Next (Dev)`, `Photonz Next (Probe)`).
 public enum AppNaming {
     /// What dev bundles append to their name (see Scripts/build-app.sh).
     public static let devSuffix = "(Dev)"
+
+    /// What the task loop's own bundle appends to its name, so two viewfinder
+    /// icons in the menu bar are never mistaken for each other.
+    public static let probeSuffix = "(Probe)"
 
     /// The plain product name behind a bundle name, so a dev bundle's
     /// "Photonz (Dev)" and a release bundle's "Photonz" both come back as
@@ -106,8 +153,10 @@ public enum AppNaming {
     /// was already decorated can't produce "Photonz Next Next".
     public static func baseName(fromBundleName bundleName: String) -> String {
         var name = bundleName
-        if let range = name.range(of: " \(devSuffix)", options: .backwards) {
-            name.removeSubrange(range)
+        for suffix in [devSuffix, probeSuffix] {
+            if let range = name.range(of: " \(suffix)", options: .backwards) {
+                name.removeSubrange(range)
+            }
         }
         for release in Release.allCases {
             guard let word = release.appNameWord else { continue }
@@ -118,12 +167,18 @@ public enum AppNaming {
         return name.trimmingCharacters(in: .whitespaces)
     }
 
-    /// The user-facing app name for one release.
-    public static func appName(base: String, release: Release, isDevBuild: Bool) -> String {
+    /// The user-facing app name for one release and build flavor.
+    public static func appName(base: String, release: Release, flavor: AppFlavor) -> String {
         var name = base
         if let word = release.appNameWord { name += " \(word)" }
-        if isDevBuild { name += " \(devSuffix)" }
+        if let suffix = flavor.nameSuffix { name += " \(suffix)" }
         return name
+    }
+
+    /// Older two-way spelling, kept so callers that only know "dev or not"
+    /// keep working.
+    public static func appName(base: String, release: Release, isDevBuild: Bool) -> String {
+        appName(base: base, release: release, flavor: isDevBuild ? .dev : .release)
     }
 }
 

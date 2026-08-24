@@ -1,19 +1,29 @@
 #!/bin/bash
 # Builds the Photonz app bundle (arm64 release) into dist/.
 #
-# Usage: Scripts/build-app.sh [--dmg|--dmg-only]
+# Usage: Scripts/build-app.sh [--probe|--dmg|--dmg-only]
+#   --probe     build the task loop's own bundle instead of the dev one
 #   --dmg       also produce dist/Photonz.dmg
 #   --dmg-only  skip the build and package the EXISTING dist/Photonz.app into
 #               the DMG — the release pipeline uses this after notarizing and
 #               stapling the app, so the DMG contains the stapled bundle
 #
-# Variants — dev and release must coexist on one machine:
+# Variants — three bundles must coexist on one machine, each with its own
+# bundle id so each holds its own TCC grants / defaults / LaunchServices
+# identity:
 #   dev (default)        → "dist/Photonz Dev.app", bundle id
 #                          com.dzearing.photonz.dev, display name "Photonz (Dev)".
-#                          Own TCC grants / defaults / LaunchServices identity, so
-#                          it runs side by side with the installed release app and
+#                          Runs side by side with the installed release app, and
 #                          a release re-sign can never invalidate the dev Screen
 #                          Recording grant again (the 2026-07-07 prompt-loop bug).
+#                          This is the app a PERSON uses; see the playtest guard
+#                          below for why it is not always rebuildable.
+#   probe (--probe)      → "dist/Photonz Probe.app", com.dzearing.photonz.probe,
+#                          display name "Photonz (Probe)". The unmanned task loop
+#                          builds and relaunches THIS one to check its own work,
+#                          as often as it likes, because nobody is using it.
+#                          Prefer Scripts/probe-app.sh, which builds, relaunches
+#                          and reports in one step.
 #   release              → dist/Photonz.app, com.dzearing.photonz. Chosen when
 #                          CODESIGN_IDENTITY is set (CI) or a DMG is requested
 #                          (a DMG is always a release artifact; the local release
@@ -29,6 +39,11 @@ if [[ -n "${CODESIGN_IDENTITY:-}" || "${1:-}" == "--dmg" || "${1:-}" == "--dmg-o
   APP_NAME="Photonz"
   DISPLAY_NAME="Photonz"
   BUNDLE_ID="com.dzearing.photonz"
+elif [[ "${1:-}" == "--probe" ]]; then
+  VARIANT="probe"
+  APP_NAME="Photonz Probe"
+  DISPLAY_NAME="Photonz (Probe)"
+  BUNDLE_ID="com.dzearing.photonz.probe"
 else
   VARIANT="dev"
   APP_NAME="Photonz Dev"
@@ -36,6 +51,32 @@ else
   BUNDLE_ID="com.dzearing.photonz.dev"
 fi
 APP="$DIST/$APP_NAME.app"
+
+# Playtest guard. While queue/playtest.lock exists someone is using
+# "dist/Photonz Dev.app" right now, and rebuilding it under them ends their
+# session AND makes macOS re-ask for Screen Recording, because a screen-capture
+# client whose binary changed has to be re-authorized. This has bitten a real
+# session, so it is enforced here rather than left to whoever remembers.
+# The probe and release variants are untouched by this: they are different
+# bundles that nobody is playtesting.
+LOCK="queue/playtest.lock"
+if [[ "$VARIANT" == "dev" && -f "$LOCK" && -z "${PHOTONZ_ALLOW_DEV_BUILD:-}" ]]; then
+  cat >&2 <<GUARD
+!! Refusing to rebuild "$APP": a playtest is in progress ($LOCK).
+
+   Someone is using that exact app. Replacing its binary quits it under them
+   and re-triggers the Screen Recording prompt.
+
+   If you are the task loop and need a running app to check your work:
+       Scripts/probe-app.sh              # builds + launches "Photonz Probe.app"
+       Scripts/probe-app.sh <file>       # ...and opens a file in it
+
+   If you are the person playtesting and you DO want your app rebuilt:
+       rm $LOCK                          # ends the playtest, or
+       PHOTONZ_ALLOW_DEV_BUILD=1 Scripts/build-app.sh
+GUARD
+  exit 2
+fi
 
 make_dmg() {
   echo "==> Creating dist/Photonz.dmg"
@@ -64,6 +105,36 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # The executable carries the variant name too, so `ps`/Activity Monitor make
 # unmistakable which build is running.
 cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/$APP_NAME"
+
+# Only the shipping and dev bundles EXPORT the .photonz type. The probe is a
+# throwaway the loop rebuilds all day; letting a third claimant into the
+# default-handler race could hand a person's own files to it. It still DECLARES
+# the document types, which is what `open -a "Photonz Probe.app" <file>` needs.
+if [[ "$VARIANT" == "probe" ]]; then
+  EXPORTED_TYPES=""
+else
+  EXPORTED_TYPES=$(cat <<'TYPES'
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.document</string>
+            <key>UTTypeDescription</key><string>Photonz Document</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>com.apple.package</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>photonz</string>
+                </array>
+            </dict>
+        </dict>
+    </array>
+TYPES
+)
+fi
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -114,24 +185,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
             </array>
         </dict>
     </array>
-    <key>UTExportedTypeDeclarations</key>
-    <array>
-        <dict>
-            <key>UTTypeIdentifier</key><string>com.photonz.document</string>
-            <key>UTTypeDescription</key><string>Photonz Document</string>
-            <key>UTTypeConformsTo</key>
-            <array>
-                <string>com.apple.package</string>
-            </array>
-            <key>UTTypeTagSpecification</key>
-            <dict>
-                <key>public.filename-extension</key>
-                <array>
-                    <string>photonz</string>
-                </array>
-            </dict>
-        </dict>
-    </array>
+${EXPORTED_TYPES}
 </dict>
 </plist>
 PLIST

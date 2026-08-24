@@ -14,7 +14,15 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 ## Hard rules
 
-- **NEVER rebuild, re-sign, kill or relaunch `dist/Photonz Dev.app` while `queue/playtest.lock` exists.** The user plays with that exact app. Replacing the binary ends their session, and because a screen-capture client that changes on disk must be re-authorized, it also makes macOS demand the Screen Recording permission again. That has already happened to them once. Check for the lock before any build that produces an app bundle; `swift build` and `Scripts/test.sh` are always safe because they touch nothing the user is running.
+- **`dist/Photonz Dev.app` is the user's app. Never build, sign, kill or relaunch it.** That is the exact app they playtest with. Replacing the binary ends their session, and because a screen-capture client that changes on disk must be re-authorized, it also makes macOS demand the Screen Recording permission again. That has already happened to them once. `Scripts/build-app.sh` now refuses to rebuild it while `queue/playtest.lock` exists, but no script can stop you from killing it by hand, so never write `pkill -f "Photonz Dev"` or `open "dist/Photonz Dev.app"` at all.
+
+- **When you need a running app, use the loop's own copy:**
+  ```
+  Scripts/probe-app.sh              # build + launch "Photonz Probe.app"
+  Scripts/probe-app.sh <file>       # ...and open a file in it
+  Scripts/probe-app.sh --quit       # quit it when you are done
+  ```
+  It is a separate bundle (`com.dzearing.photonz.probe`, named "Photonz (Probe)" in the menu bar) with its own permissions and settings, so you can rebuild and relaunch it as often as you like without anyone noticing. Quit it before you finish, so the user is not left with a second viewfinder icon. `swift build` and `Scripts/test.sh` remain safe at any time: they touch nothing that is running.
 
 - All Photonz app work happens in the "next" release only (`Sources/Photonz/Releases/Next/` or behind flags scoped to next), unless the task file explicitly says `"release": "current"`. Never touch current-release behavior otherwise.
 - Follow the repo rules in `CLAUDE.md` (TDD for core modules, `Scripts/test.sh` green before commit, pure PhotonzCore, and so on).

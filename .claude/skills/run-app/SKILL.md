@@ -11,7 +11,25 @@ window** — it lives as the camera-viewfinder icon in the menu bar. Capture,
 history, the Quick Access Overlay, and pinned windows all spawn from there.
 "Nothing appeared" after launch is the *expected* state; check the menu bar.
 
-## Two ways to run — pick by what you're verifying
+## Whose app is it? Read this before you build a bundle
+
+Three bundles can be on this machine at once, and they are NOT interchangeable:
+
+| Bundle | Who it belongs to | Rebuild it? |
+| --- | --- | --- |
+| `dist/Photonz Dev.app` | **a person**, working in the app | only when they ask |
+| `dist/Photonz Probe.app` | the unmanned task loop | freely, all day |
+| `dist/Photonz.app` | the shipping build | release pipeline only |
+
+**If you are an unmanned runner, "Photonz Dev.app" is not yours.** Rebuilding it
+quits the session out from under whoever is using it, and because macOS
+re-authorizes any screen-capture client whose binary changed, it also re-prompts
+them for Screen Recording. Use the probe (option C below).
+`Scripts/build-app.sh` refuses to rebuild the dev bundle while
+`queue/playtest.lock` exists, but nothing can stop a hand-written
+`pkill -f "Photonz Dev"`, so simply never write one.
+
+## Three ways to run — pick by what you're verifying
 
 ### A. Fast debug binary — `.build/debug/Photonz`
 For iterating on behavior and for **headless verification** (logs go to your
@@ -46,11 +64,34 @@ open "dist/Photonz Dev.app"
   are OFF for dev bundles by design — `AppInfo.isDevBuild`.)
 - Output does **not** go to your terminal (launched via `open`).
 
-Always kill stale DEV instances first so you're testing the new build — match
-the dev paths only, so a running release Photonz.app is left alone:
+Kill stale instances first so you're testing the new build. Match only the
+bundle you own, so a running release app — or somebody's dev session — is left
+alone:
 ```bash
-pkill -f "Photonz Dev.app/Contents/MacOS"; pkill -f ".build/debug/Photonz"
+pkill -f "Photonz Dev.app/Contents/MacOS"   # ONLY if this dev app is yours
+pkill -f ".build/debug/Photonz"
 ```
+
+### C. Probe bundle — `dist/Photonz Probe.app`
+**This is the one an unmanned runner uses.** Same app, its own bundle id
+(`com.dzearing.photonz.probe`), its own permissions, defaults and menu-bar entry
+("Photonz (Probe)"), so building and relaunching it disturbs nobody.
+
+```bash
+Scripts/probe-app.sh                 # build + launch
+Scripts/probe-app.sh some/shot.png   # ...and open a file in it
+Scripts/probe-app.sh --no-build      # relaunch what's already built
+Scripts/probe-app.sh --quit          # quit it when you're done
+```
+
+- Quits only its own processes (matched on `Photonz Probe.app/Contents/MacOS`),
+  waits for the agent to come up, and prints its pid.
+- Quit it when you finish, so nobody is left with a second viewfinder icon.
+- It does not export the `.photonz` document type, so a throwaway build can
+  never win the default-handler race for somebody's files.
+- Its Screen Recording grant resets whenever its binary changes (that is the
+  cost of a bundle that is rebuilt constantly). Capture-dependent checks still
+  need a human; everything else works.
 
 ## Confirm it's actually running (as an agent)
 
@@ -99,6 +140,8 @@ self-test only for the AppKit shell wiring the tests can't reach.
 
 ## Quit
 
-`pkill -f "Photonz Dev.app"` (dev only — a bare `pkill -f Photonz` also kills a
-running release app), or **Quit Photonz (Dev)** in the menu (⌘Q). Closing the
+`Scripts/probe-app.sh --quit` for the probe. For a dev app that is yours,
+`pkill -f "Photonz Dev.app"` (never a bare `pkill -f Photonz` — that also kills
+a running release app and every other flavor), or **Quit Photonz (Dev)** in the
+menu (⌘Q). Closing the
 last editor window does **not** quit — it's a resident agent by design.

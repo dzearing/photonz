@@ -411,6 +411,52 @@ struct AppNamingTests {
         #expect(AppNaming.appName(base: AppNaming.baseName(fromBundleName: name),
                                   release: .next, isDevBuild: true) == name)
     }
+
+    @Test func probeBuildsSayProbeSoTheMenuBarTellsThemApart() {
+        // The build loop's own app runs alongside the one a person is using;
+        // the only thing separating two viewfinder icons is this word.
+        #expect(AppNaming.appName(base: "Photonz", release: .next, flavor: .probe)
+                == "Photonz Next (Probe)")
+        #expect(AppNaming.appName(base: "Photonz", release: .current, flavor: .probe)
+                == "Photonz (Probe)")
+    }
+
+    @Test func everyFlavorRoundTripsThroughItsBundleName() {
+        for flavor in AppFlavor.allCases {
+            let name = AppNaming.appName(base: "Photonz", release: .next, flavor: flavor)
+            #expect(AppNaming.baseName(fromBundleName: name) == "Photonz")
+            #expect(AppNaming.appName(base: AppNaming.baseName(fromBundleName: name),
+                                      release: .next, flavor: flavor) == name)
+        }
+    }
+}
+
+@Suite("AppFlavor")
+struct AppFlavorTests {
+
+    @Test func theBundleIdSaysWhichBuildThisIs() {
+        #expect(AppFlavor(bundleIdentifier: "com.dzearing.photonz") == .release)
+        #expect(AppFlavor(bundleIdentifier: "com.dzearing.photonz.dev") == .dev)
+        #expect(AppFlavor(bundleIdentifier: "com.dzearing.photonz.probe") == .probe)
+    }
+
+    @Test func aBareBuildWithNoBundleCountsAsDev() {
+        // `swift build` runs have no Info.plist at all; treating them as
+        // release would switch on update checks that report 0.0.0 forever.
+        #expect(AppFlavor(bundleIdentifier: nil) == .dev)
+    }
+
+    @Test func onlyTheReleaseFlavorIsShippable() {
+        #expect(AppFlavor.release.isShipping)
+        #expect(!AppFlavor.dev.isShipping)
+        #expect(!AppFlavor.probe.isShipping)
+    }
+
+    @Test func onlyTheReleaseFlavorHasNoNameSuffix() {
+        #expect(AppFlavor.release.nameSuffix == nil)
+        #expect(AppFlavor.dev.nameSuffix == "(Dev)")
+        #expect(AppFlavor.probe.nameSuffix == "(Probe)")
+    }
 }
 
 @Suite("ExperimentsStore")

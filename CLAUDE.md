@@ -34,7 +34,22 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | App bundle | `Scripts/build-app.sh` → `dist/Photonz Dev.app` (dev variant: own bundle id `….photonz.dev`, coexists with the release app; `--dmg`/`CODESIGN_IDENTITY` produce release-named `dist/Photonz.app`) |
 | App + DMG | `Scripts/build-app.sh --dmg` |
 | Run the app | `open "dist/Photonz Dev.app"` |
+| Run the app *as an agent* | `Scripts/probe-app.sh [file]` → builds and launches `dist/Photonz Probe.app` (`….photonz.probe`). Unmanned runners use this, never the dev app — see below |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
+
+### Three bundles, three owners
+
+`dist/Photonz Dev.app` belongs to **the person working in the app**;
+`dist/Photonz Probe.app` belongs to **the unmanned task loop**;
+`dist/Photonz.app` is the shipping build. They carry different bundle ids so
+each holds its own permissions, settings and menu-bar identity.
+
+Rebuilding the dev app quits whoever is using it, and macOS re-authorizes any
+screen-capture client whose binary changed, so it also re-prompts them for
+Screen Recording. `Scripts/build-app.sh` therefore refuses to rebuild the dev
+bundle while `queue/playtest.lock` exists (override for your own session with
+`PHOTONZ_ALLOW_DEV_BUILD=1`, or delete the lock). Automation that needs a
+running app uses `Scripts/probe-app.sh`, which never touches the dev bundle.
 
 ### Dev signing & Screen Recording permission (grant once per machine)
 
