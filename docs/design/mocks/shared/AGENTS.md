@@ -312,6 +312,19 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
   `title` is upgraded to `data-tip` automatically, and the old `.tooltip` class
   is gone. For a doc page that needs one sitting in the flow, use `.tip-demo`.
   Lives in `shared/components/tooltip.{css,js}`.
+- **A tip is also the accessible name.** An icon button is a picture of a label,
+  and a picture is worth nothing to somebody who cannot see the hover: a tool
+  strip with no names reads as "button, button, button" and the bar is unusable
+  without sight. So `tooltip.js` copies the tip's label into `aria-label`, and
+  its keystroke into `aria-keyshortcuts`, for any control that has NO other name
+  — never over a hand-written `aria-label` and never over visible text, because
+  replacing a visible "Delete" with a longer tip breaks voice control, which
+  listens for the word on screen. What that asks of a page is one thing only:
+  **every icon-only control carries a `title` or a `data-tip`.** Run
+  `node shared/check-a11y-names.mjs` — it fails on a button with no text inside
+  it and nothing to name it with. An element that is clickable but is not a
+  `<button>` or an `<a>` needs `role` and `tabindex` too, or it is not merely
+  unnamed, it is absent from the accessibility tree altogether.
 - **Elevation:** depth comes from a TOKEN, never a hand-written shadow.
   `--shadow-1` raised a hair (handle, knob, selected segment) · `--shadow-2` the
   hover lift · `--shadow` the window · `--lg-shadow` a float over live content

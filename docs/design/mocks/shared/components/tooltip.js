@@ -17,7 +17,12 @@
    ADOPTION: any element that has a `title` and no `data-tip` is upgraded
    automatically and its `title` is removed, so the browser does not also draw
    its own. That is how ~700 existing title= controls get the styled one without
-   editing 51 pages. */
+   editing 51 pages.
+
+   NAMING: a tip is also the control's accessible name whenever the control has
+   no other one, so an icon button reads as "Measure" rather than "button" to a
+   screen reader, and its keystroke lands in aria-keyshortcuts. See name() near
+   upgrade() for why that is deliberately narrow. */
 (function () {
   if (window.__photonzTip) return;           // idempotent: safe to run twice
   window.__photonzTip = true;
@@ -230,19 +235,85 @@
   document.addEventListener('scroll', function () { hide(true); }, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(true); });
 
+  /* THE NAME A SCREEN READER READS. A styled tooltip is a picture of a label,
+     and a picture is worth nothing to somebody who cannot see the hover. Two
+     separate things left the icon controls in this corpus anonymous:
+
+       1. upgrade() below moves `title` into `data-tip` and then REMOVES it, so
+          the one accessible name those ~2500 buttons had is deleted on load.
+       2. Controls that author `data-tip` by hand never had a `title` to lose;
+          they were born anonymous.
+
+     Either way VoiceOver reached a tool strip and said "button, button,
+     button". So every tip becomes a name as well as a picture.
+
+     Only when there is nothing else. An element that already carries an
+     aria-label, or that says its own name in visible text, keeps what it has:
+     overwriting a visible "Delete" with a longer tip breaks both the
+     label-in-name rule and voice control, which listens for the word on
+     screen. So the rule is narrow on purpose: name only what has NO name.
+
+     The keystroke goes to aria-keyshortcuts, not into the name, because the
+     name has to match the label the tooltip shows word for word (⌘ and its
+     friends spell out, which is the attribute's own vocabulary). */
+  var NAMEABLE = 'a[href],button,input,select,textarea,summary,[role],[tabindex]';
+  var MODS = { '⌘': 'Meta', '⇧': 'Shift', '⌥': 'Alt', '⌃': 'Control' };
+
+  function keystroke(k) {
+    var mods = [];
+    var rest = k.replace(/[⌘⇧⌥⌃]/g, function (c) { mods.push(MODS[c]); return ''; }).trim();
+    return mods.concat(rest ? [rest] : []).join('+');
+  }
+
+  function name(el) {
+    if (el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) return;
+    if (!el.matches || !el.matches(NAMEABLE)) return;   // a plain div takes no name
+    if (el.textContent.trim()) return;                  // already named by its own text
+    var bits = (el.getAttribute('data-tip') || '').split('|');
+    var text = bits[0].trim();
+    if (!text) return;
+    el.setAttribute('aria-label', text);
+    el.setAttribute('data-tip-named', '1');   // ours to revise, unlike an author's
+    var key = (bits[1] || '').trim();
+    if (key && !el.hasAttribute('aria-keyshortcuts')) el.setAttribute('aria-keyshortcuts', keystroke(key));
+  }
+
   /* Upgrade native title= to the styled tooltip. Runs once now and again
      whenever the shell component adds controls (it sets title= on harvested
      buttons), so nothing has to know about tooltips to get one. */
   function upgrade(root) {
-    var els = (root || document).querySelectorAll('[title]:not([data-tip])');
-    [].slice.call(els).forEach(function (el) {
+    var scope = root || document;
+    /* EVERY title, including one on a control that already has a tip. Pages
+       retitle a control to say what it does NEXT — Play becomes Pause, "Dock
+       the conversation" becomes "Float the conversation" — and while this only
+       claimed untipped elements, the new title just sat there: the styled
+       tooltip went on saying "Play", the browser drew its own bubble saying
+       "Pause", and the two labels on one button disagreed. A fresh title is a
+       relabelling, so it wins, and the name we derived from the old one is
+       thrown away with it (an author's own aria-label is not ours to touch,
+       which is what the marker distinguishes). */
+    [].slice.call(scope.querySelectorAll('[title]')).forEach(function (el) {
       var t = el.getAttribute('title');
       if (!t) return;
       // "Split at playhead (B)" / "Ask the agent, or run a command (⌘K)"
       var m = t.match(/^(.*?)\s*[（(]([^)）]{1,12})[)）]\s*$/);
-      el.setAttribute('data-tip', m ? m[1] + '|' + m[2] : t);
+      var tip = m ? m[1] + '|' + m[2] : t;
       el.removeAttribute('title');
+      if (el.getAttribute('data-tip') === tip) return;
+      el.setAttribute('data-tip', tip);
+      if (el.getAttribute('data-tip-named')) {
+        el.removeAttribute('aria-label');
+        el.removeAttribute('aria-keyshortcuts');
+        el.removeAttribute('data-tip-named');
+      }
+      // a label already on screen must say the new thing, not the old one
+      if (el === current && node && node.classList.contains('on')) node.innerHTML = label(el);
     });
+    /* Sweep EVERY tip, not just the ones just converted: most pages author
+       data-tip by hand, and those controls never passed through the loop
+       above. The :not() pair is what keeps this cheap on the observer's
+       repeat runs, since anything already named drops out of the query. */
+    [].slice.call(scope.querySelectorAll('[data-tip]:not([aria-label]):not([aria-labelledby])')).forEach(name);
   }
   window.photonzUpgradeTips = upgrade;
   if (document.readyState === 'loading') {
@@ -315,7 +386,16 @@
   // component builds chrome). Watch rather than guess at timing: a control that
   // appears in step 6 gets the same tooltip as one that was there at load.
   if (window.MutationObserver) {
-    var queued = null;
+    /* A TRAILING DEBOUNCE ALONE STARVES ON A BUSY PAGE, so this one has a
+       ceiling. A playing timeline mutates ~1100 nodes a second, and every one
+       of them pushed the 50ms timer out again, so on video-captions.html the
+       sweep after "play" simply never ran: the button's new title="Pause" sat
+       unconverted, the styled tooltip went on saying "Play", and the name a
+       screen reader read stayed wrong for as long as playback lasted. The
+       trailing wait still keeps a quiet page cheap; MAX_WAIT is what promises
+       that a page which never falls quiet still gets swept. */
+    var MAX_WAIT = 200;
+    var queued = null, since = 0;
     new MutationObserver(function () {
       /* A label must never outlive the thing it labels — including when that
          thing is REPLACED rather than left. Pages here re-render whole rows on
@@ -326,7 +406,9 @@
          document, so the DOM change itself has to be the signal. */
       if (current && !document.contains(current)) hide(true);
       clearTimeout(queued);
-      queued = setTimeout(function () { upgrade(); }, 50);
+      if (!since) since = Date.now();
+      if (Date.now() - since >= MAX_WAIT) { since = 0; upgrade(); return; }
+      queued = setTimeout(function () { since = 0; upgrade(); }, 50);
     }).observe(document.documentElement, {
       childList: true, subtree: true, attributeFilter: ['title']
     });

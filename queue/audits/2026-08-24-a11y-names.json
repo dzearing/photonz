@@ -1,0 +1,27 @@
+{
+  "feature": "Every control in the design study says its own name",
+  "epic": "design-system",
+  "summary": "Turn VoiceOver on over any mock page and the tool bar now reads Select, Rectangle, Ellipse, Pen, Gradient, Sample a color, Measure, Hand, Zoom instead of saying \"button\" nine times. Every icon-only control in the study got the name its tooltip was already showing, and its keystroke with it.",
+  "setup": "This is the design study in the browser, not the app. The dashboard serves it at http://127.0.0.1:8791. Nothing to enable.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/icon-gradient-wt.html" },
+    { "do": "Press Command F5 to turn VoiceOver on." },
+    { "do": "Tab into the tool bar under the picture and arrow across it. Each tool should say its name and its key.", "shot": "2026-08-24-a11y-names-1.png" },
+    { "do": "Turn VoiceOver off and hover the ruler icon. The tooltip should read Measure with an I keycap, exactly as before." },
+    { "do": "Open http://127.0.0.1:8791/pages/video-captions.html and press the play button in the timeline." },
+    { "do": "Hover play again while it runs. The tooltip should now say Pause, not Play." },
+    { "do": "Open http://127.0.0.1:8791/pages/lang-toolbars.html and press Tab until you reach the Brand chip in the tool bar. It should take focus and read its name." }
+  ],
+  "evaluate": [
+    "Is Measure the right thing to hear for the ruler, or should it say what it measures?",
+    "The name is the tooltip's label and the key goes separately, so you hear \"Sample a color\" and not \"Sample a color shift I\". Is that the right split?",
+    "Six style chips became keyboard reachable in the language pages. Do the new tab stops feel useful or in the way?",
+    "The color slot buttons read out their hex, like \"#7C4DFF\", because that is the text on screen. Would you rather hear \"Fill, #7C4DFF\"?"
+  ],
+  "rough": [
+    "Only controls with NO name get one. A button with visible text keeps its text, even where the tooltip is longer and better, because overwriting the visible word breaks voice control, which listens for what is on screen. Four pages have hand written labels that are deliberately shorter than their tooltip and were left alone.",
+    "Two bugs turned up underneath this one and were fixed here. A control that retitles itself (Play becoming Pause, Dock becoming Float) kept showing its old tooltip forever AND drew a second native browser bubble with the new one. And on a playing timeline the tooltip sweep was starved outright: about 1100 DOM changes a second kept pushing its 50ms timer back, so nothing added or relabelled during playback was ever picked up.",
+    "The stepper arrows on comp-fields.html say \"up\" and \"down\". They are hand written names that predate this and they should probably say what they do to the value, not which way they point.",
+    "node shared/check-a11y-names.mjs now fails a page that adds an icon button with nothing to name it with. It reads source, so it exempts the handful of controls a shared component names at load, each with the reason written next to it."
+  ]
+}

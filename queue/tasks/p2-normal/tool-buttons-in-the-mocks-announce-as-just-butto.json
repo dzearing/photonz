@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 400,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T04:05:17.109Z",
-  "updated": "2026-08-24T04:05:17.109Z",
+  "updated": "2026-08-24T04:23:18.327428Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while sweeping the Measure shortcut on 2026-08-24. docs/design/mocks/shared/components/tooltip.js upgrade() copies title into data-tip and then calls el.removeAttribute(chr39)titlechr39(), which drops the accessible name; nothing sets aria-label in its place. Confirmed with a Chrome a11y-tree snapshot of pages/icon-gradient-wt.html: the ten tool-strip buttons all come back as bare \"button\" with no name. Fix is probably to set aria-label to the label half of the data-tip during upgrade (and in any place that authors data-tip directly, e.g. pages/comp-color.html), then re-snapshot a couple of pages to confirm names appear. Applies to every .tool and every icon-only .btn in the corpus, not just tool strips.",
@@ -22,6 +22,51 @@
     {
       "t": "2026-08-24T04:05:17.109Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T04:06:51.901Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Adversarial review, before building: the mock's own answer (add aria-label everywhere) is wrong in one place. A button with visible text must keep that text as its name, or voice control (\"click Delete\") stops matching what is on screen. So the rule is narrow: name only a control that has NO name. Also decided the keystroke does not belong in the name, since acceptance asks the name to match the tooltip label word for word; it goes to aria-keyshortcuts instead."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Reproduced first, on pages/icon-gradient-wt.html: a Chrome a11y-tree snapshot returned 21 bare \"button\" nodes, the ten tool-strip buttons among them."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Fixed in shared/components/tooltip.js. upgrade() now names any tipped control that has no aria-label/aria-labelledby and no visible text, and sweeps EVERY [data-tip] rather than only the ones it just converted from title, since ~69 controls author data-tip by hand. Marker data-tip-named distinguishes our label from an author's."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Two bugs found underneath, both fixed here because they make the name wrong rather than missing. (1) A control that retitles itself for state (playBtn.title = playing ? 'Pause' : 'Play', agent.js dock/float, dock.js collapse/show, img-masking before/after) was skipped by the old [title]:not([data-tip]) selector, so it kept the stale tip AND grew a second native browser bubble with the new text. upgrade() now takes every [title]; a fresh title wins and discards the name derived from the old one. (2) The MutationObserver's 50ms trailing debounce starved outright on a playing timeline: measured ~1093 mutations/sec on video-captions.html, so the sweep after 'play' never ran at all. Added MAX_WAIT 200ms."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "shared/components/shell.js: the harvest that turns toolbar chips into .tool buttons kept the original tag, so a <span class=\"chip\" data-target> became a tool-strip button that was not focusable and absent from the a11y tree entirely. Non-native harvested controls now get role=button, tabindex=0 and Enter/Space. Six of these across the lang-* pages."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Named 19 icon-only specimen buttons by hand across comp-buttons, comp-color, comp-index, comp-toolbars, comp-agent, panes-panels."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "New gate: shared/check-a11y-names.mjs, in the idiom of check-shortcuts.mjs. Mutation-tested (strip one title -> exit 1). Exempts controls a shared component names at load, each with its reason inline."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Verified on the real corpus, not by inspection: an iframe sweep of all 88 mock pages reports 0 nameless interactive controls (was 23 plus every tool strip), 942/942 .tool named, 2692 controls named from their tip, 0 leftover title attributes, 0 JS errors. The only 4 name/tip differences are hand-written author labels (data-tip-named absent). Tooltip unchanged: #tMeasure still renders 'Measure' + keycap 'I' on hover and on keyboard focus. Cost of the added sweep measured at 0.01ms on the busiest page. All five mock checkers green; Scripts/test.sh 1094 tests pass."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Rule written into shared/AGENTS.md next to the tooltip contract. Audit at queue/audits/2026-08-24-a11y-names.json."
+    },
+    {
+      "t": "2026-08-24T04:23:18.327428Z",
+      "note": "Staging note: this task's epic design-system is staged next, not now. It was small, self-contained and finishable in one pass, so it was completed rather than dropped, but the queue should not hold more design-system tasks while measure-redline is the focus."
     }
-  ]
+  ],
+  "started": "2026-08-24T04:06:51.900Z"
 }

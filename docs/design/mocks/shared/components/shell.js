@@ -224,6 +224,23 @@
         var icon = b.querySelector('.ic');
         b.className = 'tool';
         b.setAttribute('title', label || 'Action');
+        /* The harvest keeps whatever TAG the control arrived as, and a `.chip`
+           carrying data-target is usually a span. Styling one as a tool built a
+           button that looks like every neighbour in the strip but is not
+           focusable and never reaches the accessibility tree at all — worse
+           than an unlabelled button, because it is simply absent. Hand a
+           non-native control the role, the tab stop and the key handling a
+           <button> would have brought with it. */
+        if (b.tagName !== 'BUTTON' && b.tagName !== 'A') {
+          b.setAttribute('role', 'button');
+          if (!b.hasAttribute('tabindex')) b.setAttribute('tabindex', '0');
+          if (!b.dataset.pzKeyed) {
+            b.dataset.pzKeyed = '1';
+            b.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+            });
+          }
+        }
         b.innerHTML = '';
         var i = document.createElement('i');
         i.className = 'ic sm ' + (icon ? (icon.className.match(/ic-[\w-]+/) || ['ic-more'])[0] : 'ic-more');
