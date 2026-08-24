@@ -1,17 +1,17 @@
 {
   "id": "language-spec-pages-demo-the-real-ds-controls-in",
   "title": "Language spec pages demo the real DS controls instead of lookalikes",
-  "goal": "The pages that explain the visual language make their points with hand-drawn imitations of app windows, buttons, dialogs and keycaps, so the explanation and the product disagree. This rebuilds those examples from the real shared parts.",
+  "goal": "The nine pages that teach the visual language draw their examples by hand instead of using the real product parts, so the lesson and the product have quietly drifted apart: the color page is still showing two greys the app stopped using, the keyboard page writes shortcuts with a plus sign the design system explicitly rules out, and one page puts the panel dock on the left while the page next to it says the dock is always on the right. This rebuilds those examples from the real shared parts so the explanation stays true as the product moves.",
   "priority": "p3-low",
   "seq": 120,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
-  "area": "app",
+  "area": "mocks",
   "created": "2026-08-23T06:34:07.561Z",
-  "updated": "2026-08-23T06:34:07.562Z",
+  "updated": "2026-08-24T00:35:36.170Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From ux-audit rescan 2026-08-23 ('Lang family'). Pages: language, lang-color, lang-elevation, lang-keyboard, lang-motion, lang-overlays, lang-selection, lang-spacing (+ do/don't label standardization incl lang-resize). Key items: lang-color and lang-elevation fake app windows (inline traffic dots, left-sidebar Layers) become real shells or bare specimens (high); states ladders and buttons use real .btn not .obtn/.lg-obtn; dialogs use .dlg (language .lg-modal, lang-overlays .lo-dlg); lang-overlays .lo-pal to .cpal; lang-keyboard keycaps from DS .kbd/.sc; lang-motion animates real DS components + renames .rail collision; language dock specimen gains the Library group its copy names; lang-spacing renames .rrow .bar collision; lang-selection removes em dashes x5; standardize do/don't label on Don't across the family. Verify 200 + audit-sweep.",
+  "notes": "Objective: design-system (page conformance). ALL CLAIMS VERIFIED IN A BROWSER 2026-08-24, see log for measurements. Pages: language, lang-color, lang-elevation, lang-keyboard, lang-motion, lang-overlays, lang-selection, lang-spacing, lang-resize.\n\nDO FIRST (highest value, the page contradicts the product):\n1. lang-color:74-89 hand-copies 20 token values per theme under '#lang-color [data-theme=...]' rather than using the DS ':root[data-theme]' blocks (tokens.css:159/:171), so it drifts silently. Two already have: --dim #9aa1af vs DS #b0b6c2, --faint #666d7b vs DS #8b93a2, both darker than what ships.\n2. lang-keyboard forks the keycap. DS has canonical '.kbd' (badge.css:58, 16px tall) and '.kbds', whose comment states the rule: a chord is a run of caps, never a '+' between them (macOS writes CMD-SHIFT-E). The page's '.kc' (:31, 22px) + '.combo' (39 uses) + '.plus' renders a literal + in 2 places, teaching the notation the DS forbids. Only 1 page in the whole corpus uses '.kbds' today.\n3. language.html:205 says the dock holds Layers, Properties, Effects, Library; its own specimen below has 3 dgrp-h and no Library.\n4. lang-elevation:246-252 puts the Layers dock on the LEFT (measured: side 88-238, canvas 238-796) while language.html:205 asserts one dock, on the right. Same block hand-rolls a titlebar ('.lights' r/y/g, DS has titlebar.css) and a context menu ('.pop'/'.mi'/'.sep').\n\nTHEN (mechanical):\n5. lang-motion '.rail' (:62) collides with the GLOBAL DS '.rail' (tokens.css:207, glass.css:73) and visibly leaks: measured live, each ease track picks up 12px/10px padding, a 1px right border, a translucent glass background and backdrop blur, inflating a 14px hairline track to 24px. Rename it.\n6. Dialog lookalikes. NOTE the earlier notes named the wrong classes: '.lg-modal' (language:74) and '.lo-dlg' (lang-overlays:85) are the artboard stage and the centring wrapper and should STAY. The actual '.dlg' lookalikes are '#language .lg-mcard' (:76, own bg/border/radius/shadow/padding + h4/p/'.lg-macts') and '#lang-overlays .lo-dlgc' (:87).\n7. lang-overlays '.lo-pal' (:128) re-declares '.cpal's glass recipe verbatim (glass.css:95) while already using the DS children '.cpin'/'.cplist'. One-line rename.\n8. Fake buttons are TWO pages only, not the family: lang-color has 18 '.obtn', language has 7 '.lg-obtn'. lang-overlays already uses real '<button class=\"btn secondary sm\">'.\n9. lang-color:239 and :253 '.miniapp' hand-draws traffic dots. Note inspector.css:251 '.shot .bar' already is a shared window-shot specimen; check it fits before writing a new one.\n10. Do/Don't caption is spelled three ways. The settled standard is \"Don't\" (8 pages, including every recently refreshed lang page: lang-frame, lang-panels, lang-sections, lang-overlays, lang-selection, lang-toolbars, plus layers-pane and panes-panels). Change \"Not\" on language, lang-color, lang-elevation, lang-keyboard, lang-motion, lang-resize, and \"No\" on lang-spacing.\n11. lang-selection has 5 em dashes in user-facing copy (:312, :313, :326, :481, :547; a 6th at :32 is a CSS comment). This is a standing repo rule violation and a 5-character fix - do it first whenever this unblocks.\n\nDOWNGRADED: lang-spacing '.rrow .bar' (:33) does collide with the global '.bar' (canvas.css:94), but measured it is cosmetically inert - the only leaked properties are position:relative and overflow:hidden; width, height and background all render as the page intends. Naming hygiene, not a defect.\n\nSTATE TODAY: all 9 pages return 200 and pass shared/audit-sweep.js clean (9 pages, 1 seg, 3 dock managers, zero issues). Nothing here is broken, it is unfaithful, which is why it stays p3.",
   "acceptance": [
     "Every example on the visual language pages is built from real shared components, with no page-local lookalikes",
     "The do and don't captions use one consistent wording across the family",
@@ -22,6 +22,23 @@
     {
       "t": "2026-08-23T06:34:07.562Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:29:39.208Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T01:05:00.000Z",
+      "note": "Verified every claim in a browser before deciding, so the next run does not re-discover them, and corrected three that the notes had wrong. CONFIRMED: lang-color's hand-copied theme tokens have already drifted from the DS in 2 of 20 values (--dim, --faint, both darker than ships); lang-keyboard's forked keycap renders the '+' chord separator the DS comment explicitly forbids; language.html's dock specimen omits the Library group its own caption names; lang-elevation docks Layers on the LEFT (measured 88-238 against a canvas at 238-796) while the sibling page says the dock is always on the right; lang-motion's '.rail' really does inherit the global DS rail and blows a 14px track up to 24px with padding, a border and a glass background. CORRECTED: '.lg-modal' and '.lo-dlg' are the stage and the centring wrapper, not dialog lookalikes - the lookalikes are '.lg-mcard' and '.lo-dlgc'; '.sc' is the menu-item shortcut string, not a keycap, so the targets are '.kbd' and '.kbds' and lang-elevation's existing '.sc' use is already right; the fake-button finding is 2 pages, not the family, since lang-overlays already uses real '.btn'. DOWNGRADED: lang-spacing's '.bar' collision is cosmetically inert when measured. All 9 pages return 200 and pass audit-sweep clean. No mock files touched."
+    },
+    {
+      "t": "2026-08-24T01:06:00.000Z",
+      "note": "Stage gate: this serves design-system, staged 'next' with every child 'later', while the focus is measure-redline. Per objectives principle 5 only epics staged 'now' may hold open tasks, so dropping rather than building. Held the line on the two items that were tempting to just do (the 5 em dashes and the Do/Don't relabel): a partial fix would make the queue record dishonest about what shipped, and both are listed in notes as first jobs whenever this unblocks."
+    },
+    {
+      "t": "2026-08-24T00:35:36.169Z",
+      "note": "Stage gate: serves design-system (page conformance), staged 'next' with every child 'later', while the focus is measure-redline. Verified all eleven claims in a browser first and left the evidence in notes and log: five confirmed (lang-color's copied theme tokens have already drifted from the DS in --dim and --faint; lang-keyboard's forked keycap renders the '+' chord separator the DS explicitly forbids; language.html's dock specimen omits the Library group its own caption names; lang-elevation docks Layers on the left while the sibling page says the dock is always right; lang-motion's .rail inherits the global DS rail and blows a 14px track to 24px), three corrected (.lg-modal and .lo-dlg are the stage and centring wrapper, not the dialog lookalikes; .sc is a menu shortcut string, not a keycap; fake buttons are 2 pages, not the family), one downgraded (lang-spacing's .bar collision is cosmetically inert when measured). All 9 pages return 200 and pass audit-sweep clean, so nothing is broken, only unfaithful. No mock files touched."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:29:39.208Z"
 }
