@@ -4,11 +4,11 @@
   "goal": "In the properties panel, the row that tells you which shared component an item came from cuts the name off after a few letters, so you cannot tell what it is linked to. This makes that name readable at the panel's normal width.",
   "priority": "p3-low",
   "seq": 180,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T16:15:25.935Z",
-  "updated": "2026-08-24T00:51:14.973Z",
+  "updated": "2026-08-24T01:00:04.868Z",
   "deps": [],
   "blockedBy": [],
   "notes": "On states.html (and any page using the same .irow.split Main row) the .select showing the linked main renders as 'Butt...' at the default 267px dock width: 76px label + Detach leaves the .select .lead only 45px for a 56px word. Pre-existing, verified against the unmodified page. Either give the row more of the dock, shorten the Detach affordance to an icon, or let the select wrap under its label.",
@@ -53,8 +53,13 @@
     {
       "t": "2026-08-24T00:59:41.884632Z",
       "note": "Audit: queue/audits/2026-08-23-component-main-row.json with before/after screenshots."
+    },
+    {
+      "t": "2026-08-24T01:00:04.867Z",
+      "note": "Six mock pages (states, ui-variants, editor, lang-panels, composites, video) now show the linked component name in full. New shared .irow.wide rule in inspector.css drops the redundant 'Main' label, since the section header above already reads 'Component linked', giving the name 119px of text room instead of 45. Measured in a browser at the default 267px dock before and after: select 87 -> 175px, zero truncated, zero overflow, gridTemplateColumns asserted in effect on every page, standing audit-sweep clean. Audit at queue/audits/2026-08-23-component-main-row.json with before/after shots. Redline's 'Color / Redline red / Reset' row has the same squeeze but needs a different fix; filed as redline-color-row-stops-clipping-its-color-name."
     }
   ],
   "started": "2026-08-24T00:51:14.972Z",
-  "epic": "design-system"
+  "epic": "design-system",
+  "completed": "2026-08-24T01:00:04.868Z"
 }
