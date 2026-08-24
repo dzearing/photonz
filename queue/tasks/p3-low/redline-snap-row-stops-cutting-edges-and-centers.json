@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 290,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T02:45:51.930Z",
-  "updated": "2026-08-24T03:11:08.067Z",
+  "updated": "2026-08-24T03:18:56.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": "redline.html Tool options section. Measured 2026-08-23 at the 267px dock: the .lead gets 102px for 104px of content, so it clips by 2px with no ellipsis (flex + overflow:hidden hard-cuts). Two-item row, no trailing action, so .irow.stacked and .irow.wide are both heavier than the problem. Proven dead end: you cannot make the 76px label track yield to the value in CSS grid. minmax(0,76px) on the label plus min-width:max-content on the value overflows the row in Chrome (label stays 76, select grows to 126, row total 255.6 vs 232); min(max-content,100%) resolves to 100% and changes nothing; fit-content(76px) works but shrinks the label to 27px and breaks the label column alignment with the neighbouring rows. So the fix is either a shorter value string or a per-section label width.\n\nRESOLVED 2026-08-23: the premise was wrong. The squeeze was not the value, it was the label column. Every label in the Properties dock is under 28px, so 76px was 48px of waste per row. .irow now takes --rl-w (default 76px) and redline's Properties .dgrp-b sets 44px, which fixes the Snap value AND the Show segment together and keeps every row aligned. Files: shared/components/inspector.css, pages/redline.html.",
@@ -54,7 +54,12 @@
     {
       "t": "2026-08-23T20:18:00.000Z",
       "note": "Left alone deliberately: the Color row two sections down is .irow.split.stacked from an earlier task because it could not fit inline. With --rl-w:44px it now fits with 8px to spare. Un-stacking would quietly reverse a decision the user has not reviewed, so it is an evaluate question in the audit instead. shared checks pass (check-elevation, check-states, check-selection); page 200s with no console errors beyond the pre-existing favicon 404."
+    },
+    {
+      "t": "2026-08-24T03:18:56.986Z",
+      "note": "The redline Properties panel's label column went from 76px to 44px (--rl-w on the panel), so Snap reads 'Edges and centers' in full with 30.3px of headroom and the Show segment stopped clipping. Measured in Chrome at the 264px default dock, before and after, in both themes; shared mock checks pass. Audit: queue/audits/2026-08-23-redline-snap-row.json. Commit 2973457."
     }
   ],
-  "started": "2026-08-24T03:11:08.066Z"
+  "started": "2026-08-24T03:11:08.066Z",
+  "completed": "2026-08-24T03:18:56.987Z"
 }
