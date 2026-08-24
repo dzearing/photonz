@@ -138,10 +138,35 @@
 }
 [data-mtag="below"] .mtag { top: auto; bottom: -30px }
 
-/* A multi-selection frames the union of the bounds and drops per-object
-   handles: you transform the group, not one member of it. */
-.selwrap.multi .handle, .selwrap.multi .rot, .selwrap.multi .rotstem { display: none }
-.selwrap.multi .sel-ring { border-style: dashed }
+/* ---- MULTI-SELECTION ----
+   Select two objects and there is ONE frame, on the union of their bounds, and
+   it is the ordinary frame: .selwrap + the ring + the corner grabs. Nothing new
+   to learn, because a multi-selection transforms exactly like one object does.
+
+   What changes is the MEMBERS. Each draws a thin outline so you can see what is
+   in the selection, and none of them draws grabs of its own — dragging a corner
+   scales the group, not the member you happened to grab. That is the only rule
+   here, and it is one class:
+
+     <div class="mem-ring"></div>   inside each member's box
+     <div class="selwrap" data-sel-frame="2 selected"></div>   over the union
+
+   There WAS a `.selwrap.multi` here that dashed the union ring and hid its
+   handles. No page ever used it, and it said the opposite of what the study
+   teaches (lang-selection: "give the group frame the only handles in a
+   multi-select"): a frame with no grabs says the selection cannot be resized,
+   and a multi-selection is the most ordinary thing there is to resize. A dashed
+   ring already means something else in this family — the marquee, the band you
+   are dragging right now — so spending it on a committed selection would have
+   made both unreadable. */
+.mem-ring {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  opacity: .7;
+  pointer-events: none;
+}
 
 /* ============================================================
    THE REST OF THE BOUNDS-RING FAMILY
@@ -161,6 +186,7 @@
      .marq         accent, dashed         the band you are dragging right now
      .hover-ring   accent, hairline 1px   what a click would grab
      .lock-ring    muted, dashed          inspectable, not transformable
+     .mem-ring     accent, 1px at 70%     one member of a multi-selection
 */
 
 /* COMPONENT INSTANCE. Same geometry as the selection frame, in the component

@@ -59,11 +59,10 @@
   /* Edge handles and the rotate handle come from the shared DS
      (.handle.tc/.bc/.ml/.mr, .rotstem, .rot). */
 
-  /* multi-select frames */
-  #lang-selection .lx-group{position:absolute;border:1.5px solid var(--accent);border-radius:2px;pointer-events:none}
-  #lang-selection .lx-thin{position:absolute;border:1px solid var(--accent);border-radius:2px;pointer-events:none;opacity:.7}
-  #lang-selection .lx-count{position:absolute;top:-24px;right:0;background:var(--accent);color:var(--accent-ink);
-    font-size:10px;font-weight:640;padding:2px 8px;border-radius:6px}
+  /* multi-select comes from the shared DS: the union is a plain .selwrap frame
+     and each member wears a .mem-ring. The only page-local part is the member's
+     positioned box. */
+  #lang-selection .lx-mem{position:absolute}
 
   /* snapping guide + gap measure */
   #lang-selection .lx-guide{position:absolute;background:rgba(76,111,255,.6);z-index:4}
@@ -396,19 +395,24 @@
             <div class="spec-b">
               <div class="cnv lx-plinth short">
                 <div class="canvas">
-                  <div style="position:relative;width:160px;height:100px">
-                    <div class="lx-obj" style="position:absolute;left:0;top:8px;width:82px;height:54px;border-radius:10px"></div>
-                    <div class="lx-thin" style="left:-3px;top:5px;width:88px;height:60px"></div>
-                    <div class="lx-obj alt" style="position:absolute;right:0;bottom:0;width:68px;height:48px;border-radius:10px"></div>
-                    <div class="lx-thin" style="right:-3px;bottom:-3px;width:74px;height:54px"></div>
-                    <div class="lx-group" style="left:-9px;top:-4px;right:-9px;bottom:-9px"></div>
-                    <span class="handle tl" style="left:-13px;top:-8px"></span><span class="handle tr" style="right:-13px;top:-8px"></span>
-                    <span class="handle bl" style="left:-13px;bottom:-13px"></span><span class="handle br" style="right:-13px;bottom:-13px"></span>
-                    <span class="lx-count">2 selected</span>
+                  <div style="position:relative;width:130px;height:100px">
+                    <div class="lx-mem" style="left:0;top:8px;width:67px;height:54px">
+                      <div class="lx-obj" style="width:67px;height:54px;border-radius:10px"></div>
+                      <div class="mem-ring"></div>
+                    </div>
+                    <div class="lx-mem" style="right:0;bottom:0;width:55px;height:48px">
+                      <div class="lx-obj alt" style="width:55px;height:48px;border-radius:10px"></div>
+                      <div class="mem-ring"></div>
+                    </div>
+                    <!-- the union of the two boxes: the ordinary frame, no offsets.
+                         130px wide so the corner grabs clear the canvas edge, the
+                         same width the Single specimen next to it uses. -->
+                    <div class="selwrap" data-sel-frame="2 selected"
+                         style="position:absolute;left:0;top:8px;right:0;bottom:0"></div>
                   </div>
                 </div>
               </div>
-              <p class="lx-cap">A thin outline per object, one group frame with the handles, and a count. Properties shows what they share.</p>
+              <p class="lx-cap">A thin outline per object, one frame on the union of their bounds carrying the only handles, and a count. It is the ordinary frame: a multi-selection resizes like a single object. Properties shows what they share.</p>
             </div>
           </div>
 
@@ -508,9 +512,9 @@
                     <div class="selwrap" style="position:absolute;left:14px;top:14px;width:196px">
                       <div style="height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(255,255,255,.5))"></div>
                       <div class="sel-ring"></div>
-                      <span class="handle tl" style="left:-11px;top:-11px"></span><span class="handle tr" style="right:-11px;top:-11px"></span>
-                      <span class="handle bl" style="left:-11px;bottom:-11px"></span><span class="handle br" style="right:-11px;bottom:-11px"></span>
-                      <span class="mtag" style="top:-28px">196 × 26</span>
+                      <span class="handle tl"></span><span class="handle tr"></span>
+                      <span class="handle bl"></span><span class="handle br"></span>
+                      <span class="mtag">196 × 26</span>
                     </div>
                     <div style="position:absolute;left:14px;top:78px">
                       <div class="uibtn grad" style="font-size:10px;padding:7px 12px">Get started</div>
