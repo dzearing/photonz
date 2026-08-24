@@ -319,7 +319,10 @@
           <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Measurement</span>
             <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
           </div>
-          <div class="dgrp-b">
+          <!-- --rl-w: every label in this panel is under 28px wide, so the
+               default 76px label column spent 48px a row on nothing while the
+               values ran out of room. See inspector.css. -->
+          <div class="dgrp-b" style="--rl-w:44px">
 
             <div class="section">
               <div class="sec-h">Tool options <span class="mut">Measure</span></div>

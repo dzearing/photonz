@@ -1,0 +1,26 @@
+{
+  "feature": "Redline Snap row reads its whole setting",
+  "epic": "measure-redline",
+  "summary": "In the redline properties panel, the Snap setting now reads \"Edges and centers\" in full instead of losing its last letter, and the Show buttons stopped touching the edge of their control. The panel's label column shrank from 76px to 44px, which was space nothing in this panel was using.",
+  "setup": "Design study, http://127.0.0.1:8791/pages/redline.html. No flags. The measurement in the capture is already selected, so the Properties panel shows its settings.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/redline.html and look at the Properties panel on the right.", "shot": "2026-08-23-redline-snap-after.png" },
+    { "do": "Read the Snap row: it says \"Edges and centers\" with clear space before the chevron. It used to cut the final letter.", "shot": "2026-08-23-redline-snap-before.png" },
+    { "do": "Read the Show row under it: All, Size and Spacing now sit inside the control instead of Spacing pressing on the right edge." },
+    { "do": "Run your eye down the left edge: Units, Snap and Show all start at the same place, and so do their controls." },
+    { "do": "Scroll down to the \"Save Changes · width\" section and check its Role, Label and Color rows line up with the ones above.", "shot": "2026-08-23-redline-props-lower.png" },
+    { "do": "Switch the page to the light theme and read the Snap row again.", "shot": "2026-08-23-redline-snap-light.png" }
+  ],
+  "evaluate": [
+    "Is the gap between a short label like Snap and its control now too tight, or does the pairing read better close together?",
+    "The controls all moved 32px left and got 32px wider. Does the panel feel roomier, or does it now look like the labels are crammed against the edge?",
+    "The Color row could go back to a single line now that the panel has the room: \"Redline red\" fits with 8px to spare. Is an even list of one-line rows worth losing that 8px of safety?",
+    "Every label in this panel is under 28px wide. Should a narrower label column be the default for panels like this, or stay something a panel opts into?"
+  ],
+  "rough": [
+    "The task notes said the fix had to be a shorter value string or a per-section label width, because you cannot make a fixed 76px label track yield to the value in CSS grid. Both were wrong turns: the whole panel's labels are short, so the column itself was the wrong size. \"Snap\" is 25.4px, the widest label anywhere in the panel is \"Show\" at 27.4px, and the column was 76px. Cutting it to 44px gave the value 134px for 103.7px of text, so it fits with 30px of headroom.",
+    "This was two clipped controls, not one. \"All / Size / Spacing\" needed 155px of a 144px segment and nobody had noticed. Both are fixed by the same move.",
+    "The Color row two sections down was stacked onto two lines by an earlier task because it could not fit. It can fit now, with 8px to spare. I left it stacked rather than quietly undoing a decision that has not been looked at yet, and put the question in evaluate instead.",
+    "A value that is still too long for its slot gets hard-sliced rather than ellipsised, because text-overflow does nothing on a flex container and .select .lead is one. Eight other pages have a visibly cut dropdown value today: \"Brand / gradient\" needs 111px of 94px on app-shell, draw-boolean, dsys, editor, paint and typography, \"Semantic / Good\" needs 113px of 94px on states, and \"Button\" needs 56px of 45px on lang-sections. That belongs to the design-system epic, which is not staged now, so it is recorded here rather than queued."
+  ]
+}

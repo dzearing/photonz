@@ -268,8 +268,22 @@
 .section.grp.closed>.sec-h{margin-bottom:0}
 
 /* labeled inspector rows with properly sized controls (no tiny mystery pills) */
-.irow{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:var(--s3);margin:var(--s2) 0}
-.irow.split{grid-template-columns:76px 1fr auto}
+/* --rl-w — the width of the label column. 76px is the default rhythm and most
+   panels want it, but a panel whose labels are ALL short is paying for space it
+   never uses, and in a 267px dock that space is the difference between a value
+   that reads and one that gets sliced. Set --rl-w on the PANEL (the .dgrp-b, or
+   the .section if only one group is short), never on a single row: the whole
+   point of the column is that every row in view starts its control at the same
+   x, and a per-row override is how you get a ragged ladder.
+   Measured 2026-08-23, the redline Properties dock at 264px: the widest label
+   in the entire panel is "Show" at 27.4px, so 76px left 48px of dead air on
+   every row while "Edges and centers" (103.7px of text) was cut off inside a
+   102px slot and "All / Size / Spacing" needed 155px of a 144px segment. At
+   --rl-w:44px the value slot is 134px and the segment 176px: both fit, the
+   labels still line up down the left edge, and the controls still line up with
+   each other because the whole panel narrowed together. */
+.irow{display:grid;grid-template-columns:var(--rl-w,76px) 1fr;align-items:center;gap:var(--s3);margin:var(--s2) 0}
+.irow.split{grid-template-columns:var(--rl-w,76px) 1fr auto}
 /* .irow.wide — the control IS the row, so there is no 76px label column.
    Reach for it when three things on one skinny row is one too many and the
    label is already said by the section header. Measured: the Component
