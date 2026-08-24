@@ -234,47 +234,59 @@
           </div>
         </div>
 
-        <!-- HISTORY OVERLAY (⇧⌘H) · the front door for captures -->
-        <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
-          <div class="sheet-h">
-            <span class="ttl"><i class="ic sm ic-history"></i> History</span>
-            <span class="sp"></span>
-            <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
-            <span class="sp"></span>
-            <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
-            <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
-          </div>
+        <!-- THE CAPTURE HISTORY PANE (⇧⌘H) · the front door for captures.
+             CHROMELESS by definition: no .sheet-h, no close button. It is the
+             one global surface the menu-bar agent owns; the History button in
+             the canvas action cluster is a convenience door onto the same
+             pane, never a second, window-shaped version of it. -->
+        <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
           <div class="sheet-b">
-            <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
-              <div class="filmcard sel" tabindex="0" role="button">
+            <div class="histbar">
+              <div class="seg" data-radio="button"><button class="on" id="hsAll">All</button><button id="hsShots">Screenshots</button><button id="hsVids">Videos</button></div>
+              <span class="hb-r"><button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button></span>
+            </div>
+            <div class="filmstrip" id="histStrip" data-radio=".filmcard" data-radio-class="sel">
+              <div class="filmcard sel fk-shot" tabindex="0" role="button">
                 <span class="th" style="background:linear-gradient(150deg,#f5f5f7,#c9cdd6)"></span>
                 <span class="cap"><span class="nm">settings-capture</span><span class="ago">just now</span></span>
                 <span class="acts">
                   <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
                   <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                   <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                 </span>
               </div>
-              <div class="filmcard" tabindex="0" role="button">
+              <div class="filmcard fk-shot" tabindex="0" role="button">
                 <span class="th" style="background:linear-gradient(150deg,#dfe6f5,#8ea4cd)"></span>
                 <span class="cap"><span class="nm">sidebar-states</span><span class="ago">9 min ago</span></span>
                 <span class="acts">
                   <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
                   <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                   <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                 </span>
               </div>
-              <div class="filmcard" tabindex="0" role="button">
+              <div class="filmcard fk-clip" tabindex="0" role="button">
+                <span class="th" style="background:linear-gradient(150deg,#3ecf8e,#12c2e9)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:12</span></span>
+                <span class="cap"><span class="nm">onboarding-run</span><span class="ago">40 min ago</span></span>
+                <span class="acts">
+                  <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                  <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                  <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                </span>
+              </div>
+              <div class="filmcard fk-shot" tabindex="0" role="button">
                 <span class="th" style="background:linear-gradient(150deg,#ffe9a8,#f0a45c)"></span>
                 <span class="cap"><span class="nm">onboarding-2</span><span class="ago">1 hr ago</span></span>
                 <span class="acts">
                   <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
                   <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                  <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
                   <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
                 </span>
               </div>
             </div>
-            <p class="note" style="margin:0">Capture, measure, copy. Pick any capture to open it here and keep the loop one keystroke long.</p>
           </div>
         </div>
       </div>
@@ -528,6 +540,17 @@
     var p={x:e.clientX-f.left,y:e.clientY-f.top};
     if(!start){clearLive();start=p;addDot(p);}
     else{drawLive(start,p);start=null;}
+  });
+
+  // ---- history scope filter: live for direct clicks (rules in history.css) ----
+  var histStrip=document.getElementById('histStrip');
+  [['hsAll',''],['hsShots','flt-shot'],['hsVids','flt-vid']].forEach(function(p){
+    var b=document.getElementById(p[0]);
+    if(!b||!histStrip) return;
+    b.addEventListener('click',function(){
+      histStrip.classList.remove('flt-shot','flt-vid');
+      if(p[1]) histStrip.classList.add(p[1]);
+    });
   });
 
   // ---- Library scope switch + tile selection (shared behavior) ----

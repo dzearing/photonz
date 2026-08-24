@@ -500,6 +500,13 @@ Canonical composition (chrome marked ⚙ is built, not written):
   plus `.hb-r` holding a top-right **Clear All** with `ic-trash`. Those two
   controls and the filmstrip are the entire surface. Esc or an outside click
   dismisses it; there is no close button to draw.
+  **There is exactly ONE history shape.** A History button on a window's canvas
+  action cluster is a legitimate extra DOOR onto this pane, never a second,
+  window-shaped version of it: no `.sheet-h`, no title, no close button, ever.
+  WHERE it hangs follows what the page depicts, not what opened it — a page
+  showing a desktop puts it in `.deskbody` (`capture-wt`, `walk`, the `app-shell`
+  Capture history specimen); a page showing only an editor window puts it in that
+  window's `.cnv` (`redline`, `composites`, `video-transitions`, `ui-build-screen`).
 - **`.filmstrip` › `.filmcard`** — the capture filmstrip, scrolls horizontally:
   `.th` (video captures add a `.pl` play affordance and a `.dur` duration badge),
   `.cap` › `.nm` + **`.ago` relative time on EVERY card** ("14 minutes ago"), and

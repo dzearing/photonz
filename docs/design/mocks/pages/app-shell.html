@@ -31,11 +31,12 @@
   .narrowwrap{max-width:420px}
   .narrowwrap .win{height:400px;min-height:0}
   .hc-cta .ic{width:14px;height:14px}
-  /* The two GLOBAL shell surfaces need a screen to float over. The .desk plate,
+  /* The three GLOBAL shell surfaces need a screen to float over. The .desk plate,
      the .mbar strip, the menu and the toasts are all shared DS; only the plate
      height and the desktop artwork's scale are page-local. */
   #app-shell .mbdesk{height:440px}
   #app-shell .tdesk{height:560px}
+  #app-shell .hdesk{height:400px}
   /* anchored left so the open menu (top right) never covers the copy */
   #app-shell .dhint{position:absolute;left:var(--s5);top:50%;transform:translateY(-50%);
     color:var(--faint);font-size:12.5px;line-height:1.6;max-width:min(330px,46%);margin:0}
@@ -43,6 +44,9 @@
   #app-shell .dhint b{color:var(--dim);font-weight:600}
   /* a small screen is all menu; the aside would only be covered by it */
   @container desk (max-width:560px){ #app-shell .dhint{display:none} }
+  /* the history pane spans the plate's full width at the top, so ITS hint sits
+     under the pane rather than vertically centered like the menu specimen's */
+  #app-shell .hhint{top:auto;bottom:var(--s5);transform:none;max-width:min(430px,66%)}
   /* the desktop behind the toast is the SAME .wshot artwork the toast holds a
      thumbnail of, just at screen scale, so "this is what you captured" reads */
   #app-shell .deskscene .w{inset:11% 24%}
@@ -168,78 +172,6 @@
             </div>
           </div>
 
-          <!-- 5 · SLIDE-DOWN HISTORY OVERLAY (⇧⌘H): the app's front door.
-               Overlays slide over the canvas, so they cost no permanent width. -->
-          <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
-            <div class="sheet-h">
-              <span class="ttl"><i class="ic sm ic-history"></i> History</span>
-              <span class="sp"></span>
-              <div class="seg" data-radio="button">
-                <button class="on">All</button><button>Screenshots</button><button>Videos</button>
-              </div>
-              <span class="sp"></span>
-              <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
-              <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
-            </div>
-            <div class="sheet-b">
-              <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
-                <div class="filmcard sel" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
-                  <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
-                  <span class="acts">
-                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                  </span>
-                </div>
-                <div class="filmcard" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)">
-                    <span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
-                  <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
-                  <span class="acts">
-                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                  </span>
-                </div>
-                <div class="filmcard" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
-                  <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
-                  <span class="acts">
-                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                  </span>
-                </div>
-                <div class="filmcard" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#7c4dff,#b14dff)">
-                    <span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
-                  <span class="cap"><span class="nm">Hover states</span><span class="ago">Yesterday</span></span>
-                  <span class="acts">
-                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                  </span>
-                </div>
-                <div class="filmcard" tabindex="0" role="button">
-                  <span class="th" style="background:linear-gradient(135deg,#5c6680,#26463a)"></span>
-                  <span class="cap"><span class="nm">Empty state</span><span class="ago">Yesterday</span></span>
-                  <span class="acts">
-                    <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                    <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                    <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                    <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                  </span>
-                </div>
-              </div>
-              <p class="note" style="margin:0">Pick a card to open it in the editor. Images open as a raster layer, videos open the same
-                document with a time dimension, so the timeline and transport appear.</p>
-            </div>
-          </div>
         </div>
 
         <!-- SPLITTER: drag to resize the dock (Photoshop-like) -->
@@ -561,91 +493,57 @@
         </div>
       </div>
 
-      <!-- HISTORY: the front door -->
+      <!-- ============================================================
+           SHELL SURFACE 3 · THE CAPTURE HISTORY PANE
+           PRODUCT-MODEL §4b req 5. The third GLOBAL surface, so it gets a
+           desktop plate like the two above it: history belongs to the
+           menu-bar agent, not to any window, and it is CHROMELESS — no
+           title bar, no traffic lights, no .sheet-h, no close button.
+           Composed by the shared component (entry.js builds the .histbar
+           and the standard past into [data-entry-fill]), so this specimen
+           cannot drift from the pane every other page shows.
+           ============================================================ -->
       <div class="spec wide">
-        <div class="spec-h"><i class="ic sm ic-history"></i> History overlay <span class="sub">(⇧⌘H · the front door · slides over the canvas)</span></div>
+        <div class="spec-h"><i class="ic sm ic-history"></i> Capture history
+          <span class="sub">(⇧⌘H · the front door · global, chromeless, floats over the screen)</span></div>
         <div class="spec-b">
-          <div class="win cq specwin shell" data-shell="Photonz · no document open" data-ws="none"
-               style="display:flex;flex-direction:column">
-            <div class="edit lean" id="histShell" data-dock="closed" style="flex:1">
-              <div class="cnv">
-                <div class="canvas">
-                  <div class="empty"><i class="ic lg ic-history"></i>No document open. Pick a capture above, or drop a file on the canvas.</div>
-                </div>
-                <div class="sheet down on" id="histSheet2" aria-label="Capture history">
-                  <div class="sheet-h">
-                    <span class="ttl"><i class="ic sm ic-history"></i> History</span>
-                    <span class="sp"></span>
-                    <div class="seg" data-radio="button"><button class="on">All</button><button>Screenshots</button><button>Videos</button></div>
-                    <span class="sp"></span>
-                    <button class="btn ghost sm"><i class="ic ic-trash"></i> Clear All</button>
-                    <button class="btn ghost icon sm" data-sheet-close title="Close"><i class="ic ic-x"></i></button>
-                  </div>
-                  <div class="sheet-b">
-                    <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
-                      <div class="filmcard sel" tabindex="0" role="button">
-                        <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
-                        <span class="cap"><span class="nm">Settings window</span><span class="ago">2 min ago</span></span>
-                        <span class="acts">
-                          <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                          <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                          <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                        </span>
-                      </div>
-                      <div class="filmcard" tabindex="0" role="button">
-                        <span class="th" style="background:linear-gradient(135deg,#3ecf8e,#12c2e9)"><span class="dur"><i class="ic xs ic-play"></i> 0:12</span></span>
-                        <span class="cap"><span class="nm">Onboarding run</span><span class="ago">14 min ago</span></span>
-                        <span class="acts">
-                          <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                          <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                          <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                        </span>
-                      </div>
-                      <div class="filmcard" tabindex="0" role="button">
-                        <span class="th" style="background:linear-gradient(135deg,#ffb36b,#ff5d8f)"></span>
-                        <span class="cap"><span class="nm">Pricing page</span><span class="ago">1 hr ago</span></span>
-                        <span class="acts">
-                          <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                          <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                          <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                        </span>
-                      </div>
-                      <div class="filmcard" tabindex="0" role="button">
-                        <span class="th" style="background:linear-gradient(135deg,#7c4dff,#b14dff)"><span class="dur"><i class="ic xs ic-play"></i> 0:06</span></span>
-                        <span class="cap"><span class="nm">Hover states</span><span class="ago">Yesterday</span></span>
-                        <span class="acts">
-                          <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                          <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                          <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                        </span>
-                      </div>
-                      <div class="filmcard" tabindex="0" role="button">
-                        <span class="th" style="background:linear-gradient(135deg,#f0685c,#ffb057)"></span>
-                        <span class="cap"><span class="nm">Release notes</span><span class="ago">2 days ago</span></span>
-                        <span class="acts">
-                          <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
-                          <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
-                          <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
-                          <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
-                        </span>
-                      </div>
+          <div class="desk hdesk" data-entry>
+            <div class="mbar">
+              <span class="sp"></span>
+              <button class="mbicon" title="Photonz"><i class="ic sm ic-aperture"></i></button>
+              <button class="mbicon" title="Sound"><i class="ic sm ic-volume"></i></button>
+              <span class="clock">Mon 9:41</span>
+            </div>
+            <div class="deskbody">
+              <p class="dhint hhint"><span class="g"><i class="ic lg ic-history"></i></span>
+                <b>No window open</b>, and every capture is still one keystroke away.</p>
+
+              <div class="sheet down hist on" id="histSheet2" aria-label="Capture history">
+                <div class="sheet-b">
+                  <!-- .histbar and the STANDARD PAST are injected by entry.js;
+                       this page authors only the newest card, selected so the
+                       action row a card reveals is part of the specimen. -->
+                  <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel" data-entry-fill>
+                    <div class="filmcard fk-shot sel" tabindex="0" role="button">
+                      <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
+                      <span class="cap"><span class="nm">signup-form</span><span class="ago">just now</span></span>
+                      <span class="acts">
+                        <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                        <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                        <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                        <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div class="drail">
-                <button class="drailtab" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
-              </div>
             </div>
           </div>
-          <p class="note">Capture lands here. Segmented <b>All / Screenshots / Videos</b>, a filmstrip of cards with relative times, and
-            the selected card reveals copy, edit, pin, and delete. <b>Clear All</b> empties it. Picking a card opens that image or video
-            in the editor, which is the fast path the whole app is built around. The overlay slides over the canvas, so adding scope
-            never costs the canvas any width.</p>
+          <p class="note">The whole surface is a centered <b>All / Screenshots / Videos</b> filter with <b>Clear All</b> beside it,
+            over a filmstrip of captures with relative times. The selected card reveals copy, edit, pin, and delete; a recording
+            carries a play badge and its duration. There is <b>no title bar and no close button</b>: Esc or a click outside puts it
+            away. It floats over the screen rather than inside a window because there is one history for the whole machine, not one
+            per document. Picking a card opens that capture in an editor, which is the fast path the whole app is built around.</p>
         </div>
       </div>
 

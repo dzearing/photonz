@@ -1,0 +1,27 @@
+{
+  "feature": "One shape for the capture history pane",
+  "epic": "measure-redline",
+  "summary": "The capture history panel now looks the same everywhere the redline flow can reach it: a chromeless glass pane with a centered All / Screenshots / Videos filter, Clear All, and a strip of captures. The old version with a title bar and a close button is gone from the shell reference and from the measure and redline page.",
+  "setup": "The design study, on the dashboard at http://127.0.0.1:8791. No app build needed.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/app-shell.html and scroll to the Capture history specimen.", "shot": "2026-08-24-history-appshell.png" },
+    { "do": "Click Screenshots, then Videos, then All, and watch the strip filter." },
+    { "do": "Switch the dashboard to light theme and look at the same specimen again.", "shot": "2026-08-24-history-appshell-light.png" },
+    { "do": "Open http://127.0.0.1:8791/pages/redline.html and click the clock-arrow History button at the top right of the canvas.", "shot": "2026-08-24-history-redline.png" },
+    { "do": "Press Esc to put the pane away, then click the History button again and click anywhere on the capture to dismiss it." },
+    { "do": "Compare the two panes: they should read as the same surface in two places." }
+  ],
+  "evaluate": [
+    "With no title and no close button, is it still obvious what the pane is and how to put it away?",
+    "On the reference page the pane floats over a dark desktop plate; on the redline page it floats inside the editor window. Does that difference read as one surface, or as two?",
+    "The strip holds nine captures on the reference page and scrolls sideways. Is horizontal scrolling the right way to get to older captures, or do you want a grid?",
+    "The selected card is the only one showing copy, edit, pin and delete. Is one action row enough, or should hovering reveal them too?",
+    "Was the ruling right? A History button on a window is allowed, but it opens this one global pane and never a window-shaped copy of it."
+  ],
+  "rough": [
+    "Thirty-six other study pages still draw the old title-bar-and-close-button version of this pane, about forty panes in all (editor, image, video, paint, typography, the lang-* and ui-* pages, and more). This task only covered the shell reference and the redline page. The rest is a corpus sweep worth doing.",
+    "On the redline page the pane hangs inside the editor window rather than over the desktop, because that page only draws a window. It matches what every other window-only page does, but a surface described as global sitting inside a window frame is still a small lie.",
+    "The scope filter is wired by hand in page code on redline and composites, while desk pages get it from the shared entry component. Same behavior, two implementations.",
+    "The shell reference page had a second, unreachable history pane hidden in its main window with nothing to open it. It was deleted rather than converted, so the page teaches the surface in exactly one place."
+  ]
+}

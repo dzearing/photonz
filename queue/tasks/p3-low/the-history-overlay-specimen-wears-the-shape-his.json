@@ -4,11 +4,11 @@
   "goal": "The capture history panel is specified as a chromeless panel floating over the whole screen, but the reference page other pages copy still shows an older shape with a title bar and close button inside a window. This settles which shape is right and makes the reference say so.",
   "priority": "p3-low",
   "seq": 210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:23:03.471Z",
-  "updated": "2026-08-23T17:23:03.472Z",
+  "updated": "2026-08-24T01:35:37.926Z",
   "deps": [],
   "blockedBy": [],
   "notes": "history.css says the capture history is a GLOBAL, chromeless pane: .sheet.down.hist with NO .sheet-h, whose only chrome is the centered .histbar (All / Screenshots / Videos + Clear All) over a .filmstrip, floating near the top of the SCREEN rather than inside a window. app-shell's 'History overlay' specimen and redline's #histSheet still draw the older shape: a .sheet.down with a .sheet-h title row and a close button, inside a window. Since app-shell is the spec other pages conform to, its version of a shared surface must match the component that owns it. Decide whether the in-window overlay is still a legitimate second form (an in-window convenience, per AGENTS 'an in-window History button is a convenience, never the taught path') or whether both should become .hist over a .desk like capture-wt does, then make the exemplar say so.",
@@ -21,6 +21,35 @@
     {
       "t": "2026-08-23T17:23:03.472Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T01:21:30.630Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T01:25:04.133Z",
+      "note": "Adversarial review, before building. (1) A first-time reader of app-shell meets three global surfaces in a row: the menu-bar menu and the capture toast both float over a desktop plate, and history floats inside a window with a title bar and a close button. They would reasonably conclude history belongs to that window and is per-document. That is the exact opposite of the product model, where one history holds every capture on the machine. (2) The .sheet-h row is decorative: the filmstrip of thumbnails already says what the surface is, the scope filter is already in the pane, and the close button duplicates Esc and outside-click, which the overlay behavior already provides. Cut it. (3) Nothing in the chromeless form is harder to deliver than the header form; it is strictly less UI. (4) Shortest version: change the markup on the two dissenting pages. Do NOT restructure redlines editor window, whose caliper geometry is anchored in JS and which is the focus epics page."
+    },
+    {
+      "t": "2026-08-24T01:25:04.133Z",
+      "note": "RULING: there is ONE history surface shape, the chromeless global pane (.sheet.down.hist > .sheet-b > .histbar + .filmstrip). An in-window History BUTTON stays legitimate as a trigger (AGENTS.md: a convenience, never the taught path), but it opens the same one surface; there is no in-window variant of the pane itself. Not filed as a user decision because it is not an open question: history.css, AGENTS.md and PRODUCT-MODEL 4b req 5 already say chromeless, and 21 of 23 pages already draw it that way. app-shell and redline are drift against a settled spec, not a second opinion. PLACEMENT is separate from shape and already has a consistent corpus answer: pages depicting a desktop (capture-wt, walk) put the pane in .deskbody; pages depicting only an editor window (composites, video-motion, video-transitions, ui-build-screen) put it in that windows .cnv. app-shell is the exemplar for a GLOBAL surface and already shows the other two globals over a .desk plate, so its history specimen moves onto a plate too."
+    },
+    {
+      "t": "2026-08-24T01:35:37.926Z",
+      "note": "Built. app-shell: the History overlay specimen is now a Capture history specimen on a .desk plate with a .mbar, matching the two global-surface specimens above it, holding a chromeless .sheet.down.hist.on whose .histbar and standard past are injected by entry.js so the exemplar is literally built by the component that owns the surface. Also found and DELETED a second, unreachable .sheet.down history pane inside the reference window (line 173 at HEAD, no data-sheet trigger anywhere on the page): dead markup in the old shape on the very page that defines the shape. redline: #histSheet is now .sheet.down.hist, chromeless, with an authored .histbar (the page is not an entry desk), .fk-shot/.fk-clip card kinds, one .fk-clip with .pl + .dur so the Videos scope is not empty, and the scope filter wired the way composites wires it. The in-window History button in .cnv-act is untouched, per the ruling."
+    },
+    {
+      "t": "2026-08-24T01:35:37.926Z",
+      "note": "Verified in the browser, both themes. app-shell: 1 history pane on the page (was 2), no .sheet-h, 9 cards, 1 selected with its action row, scope filter live (All 9 / Videos 3 / Screenshots 6), reference window intact with all 9 numbered callouts, no console errors. redline: pane inset 16px on three sides inside .cnv, no .sheet-h and no close button, filter live (All 4 / Videos 1 / Screenshots 3), Esc dismisses, outside click dismisses, no console errors. Corpus-wide: 23 of 23 .sheet.down.hist panes carry no .sheet-h and no close button. Page sweep: 92 URLs all 200. check-selection, check-elevation and check-states all pass."
+    },
+    {
+      "t": "2026-08-24T01:35:37.926Z",
+      "note": "Adversarial review of the built thing. The chromeless pane loses nothing: Esc and outside-click were verified to dismiss it, so the close button was pure duplication. WHAT I COULD NOT FIX IN SCOPE: 36 other study pages still draw the old header form, about 40 panes (editor, image, paint, typography, video-*, lang-*, ui-*, ds-*, agent-*, brush-*, and others). That is a corpus sweep, and it serves design-system which is staged next, not now, so it is recorded in the audit rough list for the user to promote rather than filed as an open task. Second rough edge: the redline pane hangs inside the editor window because the page draws only a window, which is what every window-only page does but is still a compromise for a surface described as global. Third: the scope filter is hand-wired in page JS on redline and composites while desk pages get it from entry.js; one component behavior would be better."
+    },
+    {
+      "t": "2026-08-24T01:35:37.926Z",
+      "note": "Wrote queue/audits/2026-08-24-history-pane-shape.json with three screenshots."
     }
-  ]
+  ],
+  "started": "2026-08-24T01:21:30.630Z"
 }
