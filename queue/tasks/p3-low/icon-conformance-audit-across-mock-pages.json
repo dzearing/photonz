@@ -4,14 +4,14 @@
   "goal": "Some places in the study still stand in a typed character or an emoji where an icon belongs, so those spots look wrong next to the real icons. This finds every one and replaces it with a proper icon from the shared set.",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T22:40:48.802Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:08:07.868Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: design-system > icon-conformance. Scan docs/design/mocks/pages for ascii/unicode/emoji glyphs used as icons and for non ic-* icon styles. Fix by adding missing glyphs to shared/icons.mjs and regenerating. Acceptance: zero ascii icon hits in a grep sweep.",
+  "notes": "Objective: design-system > icon-conformance (epic staged 'later'; parent 'design-system' staged 'next'). Focus epic is measure-redline.\n\nSWEEP RUN 2026-08-24 BEFORE DROPPING — THE PREMISE DOES NOT HOLD. The study is already icon-conformant; there is no work to do here as written.\n\nMethod: three passes over all 91 files in docs/design/mocks/pages plus 62 in shared/components.\n  Pass 1, every non-ASCII pictographic/arrow/geometric codepoint: 1290 raw hits across 114 files.\n  Pass 2, minus keycap context and dimension separators: 146.\n  Pass 3, minus multipliers, keycap strings and code-comment prose: 96, all read by hand.\n\nAll 96 survivors are correct typography, not icons standing in for icons:\n  - keycap glyphs in shortcut labels (⌘ ⌥ ⇧ ⌃ ⌦ ⎋ ↩) — 736 of the raw hits; correct macOS convention\n  - <kbd>← →</kbd> and <kbd>↑ ↓</kbd> documenting arrow keys (lang-resize.html:270, layers-pane.html:377,624)\n  - × as a multiplier or dimension separator (×3, 2×, 5×, '1024 × 768', 'Variant × state matrix')\n  - → and › as prose connectors in body copy and ASCII diagrams inside CSS/JS comments\n  - − as a negative value in a grade readout (img-grade-wt.html:296,321)\n  - •••••••• as a password field mask (ui-entry-wt.html:106) — the right glyph for that job\nZERO emoji in the entire study: pass 1 matched U+1F300–U+1FAFF and U+2600–U+27BF and returned no hits at all.\n\nSecond half of the claim, 'non ic-* icon styles', also does not hold. 220 distinct ic-* names are in use.\nInline <svg> appears in 19 pages and every instance is artwork or content, not an icon: redline arrows\n(capture-wt, walk), boolean shape demos (draw-boolean), audio waveforms (video-audio), dashboard charts,\nthe 24x24 icon-design artboard (icon-draw-wt).\n\nONLY REAL DRIFT FOUND, and it is cosmetic-neutral, so it does not justify re-filing on its own:\n  shared/components/inspector.css:163 hand-inlines a close cross as a ::after mask\n  shared/components/inspector.css:301 hand-inlines a chevron-updown as a <select> background-image\nBoth already use the house grid (24 viewBox, 1.75 stroke, round caps/joins), so neither looks wrong next to\nthe real set. Neither can take a .ic-* class: one is a pseudo-element, the other is a native <select>\nbackground. Fixing them means exporting the data URIs from shared/icons.mjs as CSS custom properties so\nthese two call sites reference the source of truth instead of copying it. That is a build-plumbing change\nto build-icons.mjs, worth ~30 minutes, and worth doing only if design-system is ever staged 'now'.",
   "acceptance": [
     "A sweep over every page finds no typed characters, symbols or emoji being used as icons",
     "Any icon that was missing is added to the shared icon set and regenerated rather than pasted into one page",
@@ -33,6 +33,19 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:05:55.400Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:07:59.713Z",
+      "note": "Verified before dropping. Ran a three-pass sweep over all 91 pages and 62 shared components: 1290 raw glyph hits narrow to 96 after filtering keycaps, multipliers and comment prose, and every one of the 96 is correct typography rather than a character standing in for an icon. Zero emoji in the study. Zero non-ic-* icon implementations (all 19 inline <svg> uses are artwork or content). The task's premise is false, so there is no work to do even setting the stage gate aside. Full evidence and the one cosmetic-neutral drift found (two hand-inlined data URIs in inspector.css) are preserved in notes."
+    },
+    {
+      "t": "2026-08-24T00:08:07.867Z",
+      "note": "Two independent grounds. (1) Stage gate: serves design-system > icon-conformance, a child staged 'later' under a parent staged 'next'; the focus epic is measure-redline and only epics staged 'now' may hold open tasks. Same gate that dropped decide-zoom-semantics-on-mock-canvases and show-save-and-dirty-state-across-editor-mocks. (2) The premise was verified first and is false: a three-pass sweep over all 91 pages and 62 shared components narrows 1290 raw glyph hits to 96, and every one is correct typography (keycaps, <kbd> arrow keys, multipliers, prose connectors, a negative value, a password mask) rather than a character standing in for an icon. Zero emoji anywhere. All 220 ic-* names are in use and all 19 inline <svg> instances are artwork or content, not icons. So there is nothing to fix even if the epic were re-staged. The one cosmetic-neutral drift found (two hand-inlined icon data URIs in inspector.css that already match the house grid) is preserved in the task notes with its fix."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:05:55.399Z"
 }
