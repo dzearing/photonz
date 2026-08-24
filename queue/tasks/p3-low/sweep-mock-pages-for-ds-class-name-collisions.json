@@ -4,11 +4,11 @@
   "goal": "Some pages give their own styles the same names as shared ones, so those elements silently pick up styling meant for something else and will drift further as the shared styles change. This finds every overlap and renames the page-local ones.",
   "priority": "p3-low",
   "seq": 60,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.102Z",
-  "updated": "2026-08-23T00:27:39.524Z",
+  "updated": "2026-08-24T00:16:35.018Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: design-system (zero drift: page-local names must not shadow DS classes). From study-tasks.json fix-class-collisions. Page-local class names that shadow DS classes (bar, btn, card, dsub, sw) silently inherit DS rules. ui-grid and ui-prototype were fixed; sweep the rest of the 88 pages and namespace offenders. The audit agent has a grep rule for this; run it and fix hits.",
@@ -33,6 +33,47 @@
     {
       "t": "2026-08-23T00:27:39.524Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:12:11.491Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "stage gate: serves design-system (staged 'next', all children 'later'); focus is measure-redline. Verified the premise before dropping and it no longer holds."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "Check method (repeatable): parse every selector in shared/components/*.css, keep the classes whose DS rule is a SINGLE COMPOUND with no id and no combinator (535 names) - those are the ones an element inherits no matter where it sits, so they are the only names that can silently shadow. Then parse the <style> block of every page and flag any page rule that touches one of those names."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "Coverage: 90/90 pages have a page-local <style> block and all 90 were parsed. 440 raw class/page overlaps, which is the number that makes this look scary; almost all are the scoped refinement AGENTS.md encourages."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "Pass A (the unambiguous bug: a page rule that redefines a DS name globally, no page scope at all): 5 hits, all refinements of the SAME component, none a shadow. brush-library .selwrap{width} over DS .selwrap{position:relative}; image .photo 400x300 over DS .photo 360x270; img-bg-remove + img-masking .artboard-label{z-index:4}; video .clip.comp{background} which is the missing DS pairing next to .chip.comp/.badge.comp/.select.comp, not a page invention."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "Pass B (page re-declares 3+ high-impact DS properties on a DS name, i.e. having to fight the DS rule): 43 candidates. Spot-checked every shape at the top: .shot on redline and the 6 video walkthroughs, .body on lang-elevation, .bar on lang-spacing and image, .dot on 6 pages, .playhead on 5, .clip on 7. Every one is the same component refined under a page scope (#redline .shot is a screenshot frame, #lang-elevation .scene .body is the app body grid, .rrow .bar is a measure bar). No shadow."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "Root cause of why it is clean: the six names AGENTS.md calls the worst offenders are no longer bare in the DS at all. .ghost is only .btn.ghost (the standalone drag preview was renamed .aghost, button.css:268), .meta is only .comp .meta (canvas.css:114 renamed the effects one .emeta), .sheet is only .dlg.sheet, .card is only .rl-co .card, .sw is only .chip.style .sw / .tokrow .sw / .cpick .sw, and .panel is gone. The DS de-collided itself, so those names cannot shadow any more."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "ui-grid and ui-prototype, the two the task says were already fixed, appear in neither pass - the earlier fix held."
+    },
+    {
+      "t": "2026-08-24T00:16:29.167147Z",
+      "note": "No mock files were touched. If design-system is ever staged 'now', the two passes above are the work: they take about ten minutes to re-derive and they currently return nothing to fix."
+    },
+    {
+      "t": "2026-08-24T00:16:35.017Z",
+      "note": "Stage gate: serves design-system, staged 'next' with all children 'later'; focus is measure-redline. Verified the premise first and it no longer holds. All 90 mock pages parsed against the 535 DS class names that match unconditionally: zero page-local names shadow a DS name with a different meaning. The 5 globally-scoped hits and the 43 property-conflict candidates are all the same component refined under a page scope, which the pattern doc encourages. The six worst historical offenders (ghost, meta, sheet, panel, sw, card) are no longer bare in the DS at all, so they cannot collide. No mock files touched."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:12:11.490Z"
 }
