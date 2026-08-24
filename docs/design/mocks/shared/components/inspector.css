@@ -274,6 +274,18 @@
 /* labeled inspector rows with properly sized controls (no tiny mystery pills) */
 .irow{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:var(--s3);margin:var(--s2) 0}
 .irow.split{grid-template-columns:76px 1fr auto}
+/* .irow.wide — the control IS the row, so there is no 76px label column.
+   Reach for it when three things on one skinny row is one too many and the
+   label is already said by the section header. Measured: the Component
+   "Main" row in a 267px dock is 224px wide, and 76 label + 12 gap + 37
+   "Detach" + 12 gap left the value 87px, of which 45px was text — so a
+   component called Lower-third read "Low...". The space came from deleting
+   the duplicate label (the section header two lines up already reads
+   "Component ⬡ linked"), not from a wider dock: the same row now gives the
+   name 119px and Detach keeps its place at the end. Same rule as the library
+   tiles — do not stack a label, a value and an action in a dock. */
+.irow.wide{grid-template-columns:1fr}
+.irow.wide.split{grid-template-columns:1fr auto}
 .irow>.rl{color:var(--faint);font-size:10.5px}
 /* .select — the ONE dropdown trigger. It is a BUTTON, not a well: you press it,
    so it wears the raised control treatment and sits on the same height scale as

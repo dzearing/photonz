@@ -4,11 +4,11 @@
   "goal": "In the properties panel, the row that tells you which shared component an item came from cuts the name off after a few letters, so you cannot tell what it is linked to. This makes that name readable at the panel's normal width.",
   "priority": "p3-low",
   "seq": 180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T16:15:25.935Z",
-  "updated": "2026-08-23T16:15:25.936Z",
+  "updated": "2026-08-24T00:51:14.973Z",
   "deps": [],
   "blockedBy": [],
   "notes": "On states.html (and any page using the same .irow.split Main row) the .select showing the linked main renders as 'Butt...' at the default 267px dock width: 76px label + Detach leaves the .select .lead only 45px for a 56px word. Pre-existing, verified against the unmodified page. Either give the row more of the dock, shorten the Detach affordance to an icon, or let the select wrap under its label.",
@@ -21,6 +21,40 @@
     {
       "t": "2026-08-23T16:15:25.936Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:51:14.973Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Epic: design-system (staged next, not the measure-redline focus). Noting it rather than dropping, since the rule that drops work applies to `later` epics and this was already fully measured and fixed."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Adversarial review, before building. Measured all seven pages carrying this row shape at the default dock, and it is worse than the note said. Row is 224px: 76 label + 12 gap + value + 12 gap + 37 Detach, leaving the value 87px of which 45px is text. 'Button' needs 56 (states, editor, lang-panels). 'Lower-third' needs 84 (video). ui-variants clears it by 0.4px on a 252px row, which is luck, not design. So the three sanctioned fixes are not equal: shortening Detach to a 24px icon button buys only 13px and still clips 'Lower-third', and wrapping the value under its label costs a line at every dock width. Only taking the label's 76px actually solves it."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Design: the label is the duplicate. Every one of the six pages puts this row directly under a section header that already reads 'Component <glyph> linked', so 'Main' is 76px spent restating it. This is the same move AGENTS.md rule 8 already records for the library tiles: the space came from deleting a duplicate affordance, not from a wider dock. Rule 7 there is the matching principle, do not stack a label, a value and an action on one skinny row."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Shipped. New shared rule in shared/components/inspector.css: .irow.wide{grid-template-columns:1fr} and .irow.wide.split{grid-template-columns:1fr auto}, with the measurement written into the comment. Six rows converted to class='irow split wide' with the <span class='rl'>Main</span> removed and title='Main component: <name>' added, so the row still says what it is and a name too long for any width stays readable on hover: states, ui-variants, editor, lang-panels, composites, video (the last one inside the JS template string at video.html:863). shared/dist/photonz-ds.css rebuilt via node shared/build-ds.mjs."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Measured after, same iframe harness at 1440x900, default dock. states/editor/lang-panels/video: select 87 -> 175px, text room 45 -> 119px. 'Button' needs 56, 'Lower-third' needs 84, both fit with room to spare. ui-variants 115 -> 203. composites (the row is inside a wt-off step, un-hidden to measure) 175px, 'Card' needs 46. Zero truncated on all six, zero row overflow. In-effect assertion per the stray-*/ lesson: getComputedStyle(row).gridTemplateColumns computes to two tracks '174.98px 37.02px' on every page, not the 76px three-track form. Standing audit-sweep checks over the six pages: 0 issues (no horizontal overflow, no zero canvases, no clipped toolbars, no collapsed dock managers)."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Adversarial review, after building. The component row now starts at the panel's left edge while Variant and Size start 76px in; in the screenshot that reads as identity above attributes rather than as a broken row, but it is the one judgment worth the user's eye, so it is the second question in the audit. Detach kept its word rather than becoming an icon, since it is semi-destructive and there was no longer a reason to shrink it. Not fixed: redline.html's 'Color / Redline red / Reset' row still clips at 60.5px for 84px of content. Its label is a real property name, not a duplicate of its header, so .irow.wide is the wrong tool there. Filed as redline-color-row-stops-clipping-its-color-name with the measurements and three candidate fixes, including the systemic one (let the 76px label track yield to min-content before the value truncates), which needs a 64-page geometry diff."
+    },
+    {
+      "t": "2026-08-24T00:59:41.884632Z",
+      "note": "Audit: queue/audits/2026-08-23-component-main-row.json with before/after screenshots."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:51:14.972Z",
+  "epic": "design-system"
 }

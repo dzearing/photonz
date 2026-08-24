@@ -1,0 +1,25 @@
+{
+  "feature": "Component Main row reads its component name",
+  "epic": "design-system",
+  "summary": "In the design study, the Properties row that names the shared component an item came from now shows the whole name instead of cutting it off, and Detach still sits at the end of the same row.",
+  "setup": "Design dashboard at http://127.0.0.1:8791. No app build or flag needed. Panels are at their default 267px dock width.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/states.html and look at the Properties panel on the right.", "shot": "2026-08-23-main-row-after.png" },
+    { "do": "Read the Component section: the header says 'Component linked', and the row under it names the component." },
+    { "do": "Compare against how it read before, where the name was clipped mid-word.", "shot": "2026-08-23-main-row-before.png" },
+    { "do": "Hover the component row and confirm the tooltip reads 'Main component: Button'." },
+    { "do": "Open http://127.0.0.1:8791/pages/video.html, select the lower-third clip, and check its Component row reads 'Lower-third' in full." },
+    { "do": "Drag the Properties dock splitter narrower and wider and watch the name grow and shrink with it." }
+  ],
+  "evaluate": [
+    "The row lost its 'Main' label so the name could have the width. Does the section header 'Component linked' say enough on its own?",
+    "The component row now starts at the panel's left edge while Variant and Size start 76px in. Does that read as deliberate hierarchy or as a misaligned row?",
+    "Is Detach still obvious enough as a text link now that it is the only thing to the right of a wide control?",
+    "Does the component name deserve to be the most prominent thing in that section, or should Variant sit above it?"
+  ],
+  "rough": [
+    "The same three-things-on-a-skinny-row squeeze still clips the redline page's 'Color / Redline red / Reset' row to 'Redline...'. That row's label is a real property name, not a duplicate of its header, so the same fix does not apply. Filed as its own task.",
+    "Names longer than about 119px still ellipsise; the tooltip is the only recovery. A component called 'Primary Button / Large' would need 126px.",
+    "The task notes offered shortening Detach to an icon. Measured, that only buys 13px, which is not enough for a name like 'Lower-third', so the label came out instead."
+  ]
+}

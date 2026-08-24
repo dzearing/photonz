@@ -1,0 +1,27 @@
+{
+  "id": "redline-color-row-stops-clipping-its-color-name",
+  "title": "Redline Color row stops clipping its color name",
+  "goal": "In the redline panel, the row that names the color you are drawing with cuts the name off, so \"Redline red\" reads \"Redline...\". This makes the color name readable at the panel's normal width without hiding the Reset action.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 250,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T00:59:17.913Z",
+  "updated": "2026-08-24T00:59:17.914Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "redline.html line ~334: <div class=\"irow split\"><span class=\"rl\">Color</span><span class=\"select\">...Redline red...</span><button class=\"linkbtn\">Reset</button></div>. Measured 2026-08-23 at the 267px dock: row 232px, label 76, select 102.5, .lead gets 60.5px for 84px of content, Reset 29.5. Same three-things-on-a-skinny-row squeeze as the Component Main row, but the .irow.wide fix used there does NOT apply: dropping the label worked there only because the section header already read \"Component linked\", and here \"Color\" is a real property name. Candidates: put the swatch and name on a full-width row with Reset as a trailing icon; move Reset into the section header; or make .irow.split let the 76px label track yield to min-content before the value truncates (grid: the fr track has no floor today because .select sets min-width:0, so the label never gives). The last one is the systemic fix and would cover every split row, but it needs a geometry diff across all 64 pages.",
+  "acceptance": [
+    "At the default panel width the color name reads in full, with no trailing ellipsis",
+    "Reset stays reachable in the same row",
+    "The row is measured in a browser at the default panel width before and after, and the numbers are recorded in the task log"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T00:59:17.914Z",
+      "note": "created (manual)"
+    }
+  ]
+}
