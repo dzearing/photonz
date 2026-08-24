@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 380,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T02:09:45.033Z",
-  "updated": "2026-08-24T02:09:45.034Z",
+  "updated": "2026-08-24T02:34:48.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-08-24 with an in-app AppKit hit-test sweep (queue task the-tool-bar-claims-more-room-than-it-draws-once). Window 700x760, inspector docked, canvas view 435pt wide: the tool bar band (y 18..62 from the canvas bottom) is claimed from x=2 to the canvas edge. A capsule that fitted would start its claim near x=30 at y=18. So the bar is wider than 435pt even after the overflow loop has run, EditorView.reconcileToolbarCount floors at toolbarVisibleCount 0 and the residual (compact tools capsule + colorBar + zoomBar + overflow menu) still exceeds toolbarBudget = canvasWidth - 32. The canvas .clipped() hides the overhang visually but does not clip hit testing. EditorChromeLayout.inspectorAutoCollapseWidth = 680 is documented as chosen so the overflowed toolbar always fits beside the panel, which this measurement disproves. Options: raise that threshold, let the side capsules collapse too, or scroll the bar.",
@@ -22,6 +22,56 @@
     {
       "t": "2026-08-24T02:09:45.034Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T02:11:09.610Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Adversarial review before building: the fix had to be 'make the bar fit', not 'take the inspector away'. Raising EditorChromeLayout.inspectorAutoCollapseWidth would hide a panel the user asked for, and a scrolling tool bar is a worse thing to aim at than a menu. Rejected both. Shortest version that delivers the value: make the existing overflow loop actually converge, and give up the one control in the bar that has full keyboard and trackpad equivalents."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Reproduced first, on the running app, with a temporary env-gated AppKit hit-test sweep in the probe bundle (PHOTONZ_TOOLBAR_PROBE=1). 700x760, inspector docked, canvas 435pt: the bar measured 862pt against a 403pt budget and claimed x=1..433, the whole width of the picture. Confirmed."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Root cause, and it is not the one the task file guessed. toolbarVisibleCount was NOT floored at 0: it was stuck at 11. reconcileToolbarCount stepped one tool per layout pass and depended on the new measurement being fed back for the next pass, and SwiftUI stops feeding a measurement back into the state that caused it after about two passes. Trajectory logged: 13 -> 12 -> 11 -> stop, 900pt of bar in a 435pt picture."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Second defect found while reading: the width preference was taken OUTSIDE the bar's 16pt insets while the budget already subtracted them, so the bar was charged for 32pt twice and lost a tool it had room for. The measuring background now sits inside the padding."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Fix, TDD in PhotonzCore (EditorChromeLayout, 14 new tests). fittedToolCount sizes the step from the actual overflow so it crosses the whole gap at once; shrinking counts a slot at its average 42pt (aggressive, so it always lands fitting), growing counts every slot at its widest 68pt (conservative, so putting a tool back cannot push the bar over the edge it just pulled back from). An earlier version grew on the average, overshot to 418pt in a 403pt budget, and stuck there."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "That still was not enough on its own: at zero inline tools the residual (tools capsule + color + zoom) is about 411pt in a 403pt budget. showsZoomSlider drops the zoom slider below a 620pt canvas, which is the one bar control with full keyboard and trackpad equivalents (the percentage menu keeps every stop, Fit and Actual Size, and cmd-0 / cmd-1 / pinch are untouched)."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Verified on the running app, release Next, four tool states at 700x760 and one at 1400x900. Narrow: bar 374pt in a 435pt canvas, capsules at x 31-235, 246-320, 331-404, so both rounded ends are inside the picture with about 31pt to spare, and nothing outside that range takes a click in the bar's band. Wide: count 13, the full tool set, same as before. Convergence now takes two passes at every width tried (868, 1103, 1410, 403)."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Adversarial review of the built thing: three inline tools on a 435pt canvas is tight, and two rows would show every tool at that width. That changes the bar's shape and everything stacked above it, so it is a design call for the user, not something to slip into a defect fix. Written into the audit's rough list instead."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Current-release residual, measured not assumed: with the Magic Wand in hand the bar is 465.5pt against 403 and the loop has nothing left to shed, because tool options still live in the bar there. Next is clean in every tool state (next-tool-options moves them to the inspector). Filed as picking-up-the-wand-in-the-current-release-still."
+    },
+    {
+      "t": "2026-08-24T02:34:48.373811Z",
+      "note": "Cleanup: temporary probe removed, swift build clean, Scripts/test.sh green (1076 tests), probe app quit. Stale docs corrected: EditorChromeLayout no longer claims overflow is done with ViewThatFits, and inspectorAutoCollapseWidth no longer claims it guarantees the bar fits, which this measurement disproved."
+    },
+    {
+      "t": "2026-08-24T02:34:48.404Z",
+      "note": "The bar now fits: at a 700pt window with the inspector docked it measures 374pt in a 435pt canvas, both rounded ends inside the picture, and nothing outside that range takes a click. Root cause was the overflow loop stalling after two layout passes (SwiftUI stops feeding a measurement back into the state that caused it), plus the bar being charged for its insets twice; the fit policy now lives in EditorChromeLayout with 14 tests, and the zoom slider steps aside below a 620pt canvas so the tools keep the room. Verified with an in-app AppKit hit-test sweep in four tool states narrow and one wide. Audit: queue/audits/2026-08-24-toolbar-narrow-fit.json. Follow-up filed for the current release: picking-up-the-wand-in-the-current-release-still."
     }
-  ]
+  ],
+  "started": "2026-08-24T02:11:09.609Z",
+  "completed": "2026-08-24T02:34:48.404Z"
 }

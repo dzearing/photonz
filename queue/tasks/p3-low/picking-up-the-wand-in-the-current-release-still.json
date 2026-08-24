@@ -1,0 +1,27 @@
+{
+  "id": "picking-up-the-wand-in-the-current-release-still",
+  "title": "Picking up the wand in the current release still widens the tool bar past the picture",
+  "goal": "In the release everyone gets today, picking up the Magic Wand puts a Tolerance label, slider and number into the floating tool bar. On a narrow window that makes the bar wider than the picture again, so its ends are cut off and clicks near the left and right edges of the picture hit controls that are not fully visible. The next release already avoids this by keeping tool options out of the bar.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T02:33:59.683Z",
+  "updated": "2026-08-24T02:33:59.683Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-08-24 with an in-app AppKit hit-test sweep while fixing the-tool-bar-runs-off-both-edges-of-the-picture. Release current, 700x760, canvas 435pt: with .wand active the bar measures 465.5pt against a 403pt budget and EditorView.toolbarVisibleCount is already 0, so the overflow loop has nothing left to shed. The residual is compact tools capsule + wandOptions (Tolerance label + 80pt slider + readout) + colorBar + zoomBar. The Next release is clean in every tool state (374pt) because FeatureCatalog.toolOptionsFlag (next-tool-options) is on by default there and moves wand tolerance to the inspector. Fix would need either a compact wandOptions on a cramped canvas or the same treatment the zoom slider got in EditorChromeLayout.showsZoomSlider.",
+  "acceptance": [
+    "With the current release, a 700 point window, the inspector open and the Magic Wand in hand, both ends of the tool bar are inside the picture",
+    "No click level with the bar near either edge of the picture lands on a control that is not visible",
+    "Wand tolerance is still reachable at that window size"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T02:33:59.683Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -38,6 +38,9 @@ struct EditorView: View {
     /// a `ViewThatFits` version recursed to death inside `GlassEffectContainer`).
     @State private var toolbarContentWidth: CGFloat = 0
     @State private var toolbarBudget: CGFloat = 0
+    /// The canvas's own width, so the bar can decide what it can afford to show
+    /// beyond its tools (the zoom slider is the first thing to give way).
+    @State private var canvasContentWidth: CGFloat = 0
 
     var body: some View {
         @Bindable var editorState = editorState
@@ -62,14 +65,18 @@ struct EditorView: View {
                         GlassEffectContainer {
                             toolbar
                         }
-                        .padding(.horizontal, 16)
-                        // The one inset the bar floats at, shared with whatever
-                        // stacks above it (EditorChromeLayout.aboveToolBar).
-                        .padding(.bottom, EditorChromeLayout.toolBarInset)
+                        // Measure the BAR, inside the insets. Measuring outside
+                        // them counted the 32pt of inset twice (the budget
+                        // already subtracts it) and cost the bar a tool it had
+                        // room for.
                         .background(GeometryReader { proxy in
                             Color.clear.preference(key: ToolbarContentWidthKey.self,
                                                    value: proxy.size.width)
                         })
+                        .padding(.horizontal, EditorChromeLayout.toolBarInset)
+                        // The one inset the bar floats at, shared with whatever
+                        // stacks above it (EditorChromeLayout.aboveToolBar).
+                        .padding(.bottom, EditorChromeLayout.toolBarInset)
                     }
                     // Sidebar toggle, top-trailing — the in-window affordance to
                     // collapse/reveal the inspector (Xcode/Finder-style), and the
@@ -124,7 +131,8 @@ struct EditorView: View {
             }
             // Keep the toolbar's fit budget current as the window / panel changes.
             .onChange(of: canvasWidth, initial: true) { _, width in
-                toolbarBudget = max(0, width - 32)  // 16 inset each side
+                canvasContentWidth = width
+                toolbarBudget = EditorChromeLayout.toolBarBudget(canvasWidth: width)
                 reconcileToolbarCount()
             }
         }
@@ -388,7 +396,9 @@ struct EditorView: View {
     /// `toolbarVisibleCount` leading tools inline (the full bar when that's all
     /// of them, so there is zero regression at large sizes); the rest collapse
     /// into the "…" overflow menu. The count is driven by `reconcileToolbarCount`
-    /// from real measured widths, so nothing clips at the window edge.
+    /// from real measured widths, so nothing clips at the window edge. On a
+    /// canvas too cramped even for that, the zoom slider steps aside as well —
+    /// see `EditorChromeLayout.showsZoomSlider`.
     private var toolbar: some View {
         HStack(spacing: 10) {
             if toolbarVisibleCount >= ToolbarSlot.allCases.count {
@@ -400,21 +410,18 @@ struct EditorView: View {
         }
     }
 
-    /// Grow or shrink the visible tool count by one step toward the largest set
-    /// that fits `toolbarBudget`. Called whenever the measured content width or
-    /// the available budget changes; converges over a couple of frames without
-    /// oscillating (it only grows when one more tool would still fit).
+    /// Move the visible tool count to the largest set that fits `toolbarBudget`.
+    /// Called whenever the measured content width or the available budget
+    /// changes. The policy (and the reason it steps by many tools at once) lives
+    /// in `EditorChromeLayout.fittedToolCount`, where it is unit-tested.
     private func reconcileToolbarCount() {
         guard toolbarBudget > 0, toolbarContentWidth > 0 else { return }
-        let maxCount = ToolbarSlot.allCases.count
-        if toolbarContentWidth > toolbarBudget {
-            if toolbarVisibleCount > 0 { toolbarVisibleCount -= 1 }
-        } else if toolbarVisibleCount < maxCount,
-                  toolbarContentWidth + 48 <= toolbarBudget {
-            // 48 ≈ one tool + gap (worst case, the wider marquee slot). Only grow
-            // when the extra tool is sure to still fit, so it can't ping-pong.
-            toolbarVisibleCount += 1
-        }
+        let fitted = EditorChromeLayout.fittedToolCount(
+            current: toolbarVisibleCount,
+            maximum: ToolbarSlot.allCases.count,
+            contentWidth: toolbarContentWidth,
+            budget: toolbarBudget)
+        if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
     }
 
     /// The color + zoom capsules, always present at the trailing end.
@@ -870,13 +877,18 @@ struct EditorView: View {
         HStack(spacing: 8) {
             // Zoom is shown in POINT terms (displayZoom), so 100% matches the
             // on-screen size even for Retina (pixelScale 2) screenshots.
-            Slider(value: Binding(
-                get: { Double(log2(editorState.displayZoom)) },
-                set: { editorState.setDisplayZoom(CGFloat(pow(2, $0))) }),
-                in: -5...5)
-                .controlSize(.small)
-                .frame(width: 110)
-                .help("Zoom")
+            // On a cramped canvas the slider steps aside so the tools keep the
+            // room: the percentage menu below still has every stop, Fit and
+            // Actual Size, and ⌘0 / ⌘1 / pinch are untouched.
+            if EditorChromeLayout.showsZoomSlider(canvasWidth: canvasContentWidth) {
+                Slider(value: Binding(
+                    get: { Double(log2(editorState.displayZoom)) },
+                    set: { editorState.setDisplayZoom(CGFloat(pow(2, $0))) }),
+                    in: -5...5)
+                    .controlSize(.small)
+                    .frame(width: 110)
+                    .help("Zoom")
+            }
             Menu {
                 ForEach(Self.zoomStops, id: \.self) { stop in
                     Button(stop.formatted(.percent.precision(.fractionLength(0)))) {

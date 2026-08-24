@@ -1,0 +1,27 @@
+{
+  "feature": "The tool bar fits the picture it floats over",
+  "epic": "measure-redline",
+  "summary": "Narrow the window with the inspector open and the floating tool bar now stays inside the picture instead of running off both edges, so nothing near the left or right edge takes a click you meant for the image.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags to change.",
+  "try": [
+    { "do": "Open a screenshot, then drag the window narrow until it is about 700 points wide, with the inspector still docked." },
+    { "do": "Look at both ends of the floating tool bar: both rounded ends should sit inside the picture." },
+    { "do": "Click the picture just inside its left edge, level with the bar. You should be clicking the picture, not a tool." },
+    { "do": "Do the same just inside the right edge." },
+    { "do": "Open the bar's … menu and pick a tool that is not showing. It should appear in the bar." },
+    { "do": "Notice the zoom slider is gone at this width. Use the percentage menu beside it, or ⌘0 and ⌘1." },
+    { "do": "Drag the window wide again. Every tool should come back inline and the zoom slider with them." }
+  ],
+  "evaluate": [
+    "At 700 points you get three tools inline and the rest behind …. Is that the right trade, or would you rather the bar wrapped to two rows and showed them all?",
+    "Losing the zoom slider on a cramped canvas: does the percentage menu cover you, or do you miss the drag?",
+    "Does the bar settle instantly as you drag the window, or do you catch it resizing?",
+    "Are the three tools it keeps (select, selection, arrow) the three you would want kept?"
+  ],
+  "rough": [
+    "Three inline tools on a 435 point canvas is tight. Two rows of tools would show every tool at that width, but it changes the bar's shape and everything that stacks above it, so it is a design call rather than a bug fix and it is not in here.",
+    "The zoom slider hiding below a 620 point canvas is a judgment I made, not something the task asked for. It is what buys the tools their room.",
+    "In the current release, picking up the Magic Wand still pushes the bar past the picture: its Tolerance row lives in the bar there and cannot be shed. The next release keeps tool options out of the bar, so it is clean in every tool state. Filed as picking-up-the-wand-in-the-current-release-still.",
+    "There is a four point wide strip at the canvas's trailing edge that takes clicks at every height. It is the inspector's resize handle, not the bar, and it is visible as the panel divider, so I left it alone."
+  ]
+}

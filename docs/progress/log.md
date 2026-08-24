@@ -4283,3 +4283,33 @@ colour capsule, intentional). One thing spotted while placing the crop pill and
 NOT verified: the measure hint chip is a bottom overlay with 14pt of padding on
 the same view the tool bar overlays, so it may be sitting behind the bar.
 Queued.
+
+## 2026-08-24 — The floating tool bar fits the picture again
+
+The bar was running off both edges of the canvas on a narrow window with the
+inspector docked, and its cut-off ends still took clicks. Reproduced on the
+running app with a temporary AppKit hit-test sweep before changing anything:
+at 700x760 the canvas is 435pt and the bar measured 862pt, claiming the whole
+width.
+
+Two causes. The overflow loop stepped one tool per layout pass and relied on the
+new measurement being fed back for the next pass; SwiftUI stops feeding a
+measurement back into the state that caused it after about two passes, so the
+bar shed two tools and stopped. And the bar's width was measured outside its own
+16pt insets while the budget already subtracted them, charging it twice.
+
+`EditorChromeLayout` now owns the policy (`toolBarBudget`, `fittedToolCount`,
+`showsZoomSlider`) with unit tests. The step is sized from the actual overflow so
+it crosses the gap at once, shrinking aggressively and growing conservatively so
+it always lands fitting. Even at zero inline tools the three capsules exceed a
+435pt canvas, so the zoom slider steps aside below a 620pt canvas — it is the one
+bar control with full keyboard and trackpad equivalents.
+
+Verified on the running app in the Next release: 374pt of bar in a 435pt canvas,
+both rounded ends inside the picture, full tool set restored at 1400pt.
+
+Next: the current release still widens the bar when the Magic Wand is in hand
+(tool options live in the bar there); filed as
+`picking-up-the-wand-in-the-current-release-still`. Open question in the audit:
+whether a cramped bar should wrap to two rows and show every tool instead of
+keeping three inline behind a "…" menu.
