@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 340,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:54:00.535Z",
-  "updated": "2026-08-24T03:54:00.535Z",
+  "updated": "2026-08-24T04:29:27.350Z",
   "deps": [],
   "blockedBy": [],
   "notes": "docs/design/mocks/pages/lang-keyboard.html, the .cats grid in block 04. Measured live: the COMPONENTS .cat has .scut rows overflowing its box by 16px on the right; TOOLS, EDIT and VIEW clear by 8-13px. The long labels are Create component / Edit component and Swap instance / Reset overrides, which pair two long names into one two-up row. Pre-existing, not caused by the tool-key work. Same block also leaves the EDIT card with dead space because .cat boxes stretch to the tallest in the grid row.",
@@ -21,6 +21,35 @@
     {
       "t": "2026-08-24T03:54:00.535Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T04:29:27.350Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T05:05:00.000Z",
+      "note": "Reproduced first, at 1200px: the COMPONENTS card clips 'Edit component' and 'Reset overrides' by 16.3px. Measured every row on the page, not just the reported ones."
+    },
+    {
+      "t": "2026-08-24T05:06:00.000Z",
+      "note": "Root cause is NOT a narrow card. The four category bodies were <div class=\"body\">, and .body is a RESERVED design-system name: tokens.css defines .body{display:grid;grid-template-columns:220px 1fr;min-height:0} for the app shell (rail + content). The page overrode only padding, so the shortcut rows were being laid into an app-shell grid, two-up, in a 220px column and a 140px one. 140px cannot hold 'Edit component' plus a keycap, and .cat{overflow:hidden} clipped the rest. This is the exact collision the RESERVED CLASS NAMES header and the PREFIX rule in shared/AGENTS.md exist to prevent."
+    },
+    {
+      "t": "2026-08-24T05:07:00.000Z",
+      "note": "Adversarial review before building: the reported fix ('widen the card') would have papered over the collision and left the two-up layout that nobody chose. The page's own block 01 copy says a shortcut row is 'right-aligned, so a column of them scans as a table', so one row per line is the documented intent. Rejected the mock-literal reading; fixed the cause."
+    },
+    {
+      "t": "2026-08-24T05:08:00.000Z",
+      "note": "Fix, three parts. (1) Renamed the local class .body -> .lk-rows, per the page-prefix rule. (2) .cats was grid-template-columns:1fr 1fr with a viewport media query - the same fixed-count anti-pattern AGENTS.md calls out. It is now columns:260px, so the block picks its own column count from its own width and the 720px breakpoint override is gone. Cards no longer stretch to the tallest sibling, which also removes the dead space the notes flagged inside the EDIT card. (3) .scut wraps and .combo is flex:none, so if a label ever leaves no room the combo drops to its own line still right-aligned, instead of being pushed out of the card."
+    },
+    {
+      "t": "2026-08-24T05:09:00.000Z",
+      "note": "Verified in the browser, not by eye alone: scanned every .kc against its nearest clipping ancestor across stage widths 360-1600 and viewport widths down to 360. Zero clipped keycaps everywhere. Legend block height 701px -> 640px at the default width. Checked light and dark."
+    },
+    {
+      "t": "2026-08-24T05:10:00.000Z",
+      "note": "Same collision found on three other pages while scanning; filed as color-and-elevation-reference-pages-reuse-a-rese (p2). lang-color is genuinely broken by it today: its 230px swatch card inherits the 220px+1fr grid and .desc starts 3px past the card's right edge. Not fixed here, to keep this task to one page."
     }
-  ]
+  ],
+  "started": "2026-08-24T04:29:27.349Z"
 }

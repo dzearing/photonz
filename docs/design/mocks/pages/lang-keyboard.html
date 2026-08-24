@@ -41,9 +41,13 @@
   #lang-keyboard .then{font-size:9px;font-weight:600;color:var(--faint);letter-spacing:.04em;padding:0 var(--s1)}
 
   /* ── shortcut row (command left, combo right) ── */
-  #lang-keyboard .scut{display:flex;align-items:center;gap:var(--gap-sm);font-size:11.5px;color:var(--dim);padding:var(--s1) 0}
+  #lang-keyboard .scut{display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-sm);font-size:11.5px;color:var(--dim);padding:var(--s1) 0}
   #lang-keyboard .scut .cmd{color:var(--ink);font-weight:520}
-  #lang-keyboard .scut .combo{margin-left:auto}
+  /* The combo keeps its caps at full size and never shrinks; when a long
+     command name leaves it no room, the row wraps and the combo drops to its
+     own line, still right-aligned. A key you cannot read is worse than a
+     two-line row. */
+  #lang-keyboard .scut .combo{margin-left:auto;flex:none}
 
   /* ── anatomy callouts ── */
   #lang-keyboard .anat{display:flex;flex-direction:column;gap:var(--pad);align-items:flex-start}
@@ -55,11 +59,16 @@
   #lang-keyboard .rowspec{width:100%;border:1px solid var(--line);border-radius:var(--r3);background:var(--panel);padding:var(--gap-sm) var(--pad-sm)}
 
   /* ── the legend-by-category grid ── */
-  #lang-keyboard .cats{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  #lang-keyboard .cat{border:1px solid var(--line);border-radius:var(--r3);background:var(--panel);overflow:hidden}
+  /* Column WIDTH, not a fixed count: the block decides how many category cards
+     fit its own width, so it reflows with the container instead of at a
+     viewport breakpoint. 260px is the floor a card needs for its longest row
+     ("Create component" + a three-cap combo) to sit inside its edges. */
+  #lang-keyboard .cats{columns:260px;column-gap:var(--gap)}
+  #lang-keyboard .cat{border:1px solid var(--line);border-radius:var(--r3);background:var(--panel);overflow:hidden;break-inside:avoid;margin-bottom:var(--gap)}
+  #lang-keyboard .cat:last-child{margin-bottom:0}
   #lang-keyboard .cat h4{margin:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:660;padding:var(--gap-sm) var(--pad-sm);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:var(--s2)}
   #lang-keyboard .cat h4 .dot{width:6px;height:6px;border-radius:50%;flex:none}
-  #lang-keyboard .cat .body{padding:var(--s1) var(--pad-sm) var(--gap-sm)}
+  #lang-keyboard .cat .lk-rows{padding:var(--s1) var(--pad-sm) var(--gap-sm)}
 
   /* ── modifier conventions ── */
   #lang-keyboard .mods{display:flex;flex-direction:column;gap:var(--gap-sm)}
@@ -98,7 +107,7 @@
   @media (max-width:720px){
     #lang-keyboard .blk{grid-template-columns:1fr}
     #lang-keyboard .meta{border-left:0;border-top:1px solid var(--line)}
-    #lang-keyboard .cats,#lang-keyboard .disc{grid-template-columns:1fr}
+    #lang-keyboard .disc{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -195,7 +204,7 @@
         <div class="cats">
           <div class="cat">
             <h4><span class="dot" style="background:var(--accent)"></span>Tools</h4>
-            <div class="body">
+            <div class="lk-rows">
               <div class="scut"><span class="cmd">Move</span><span class="combo"><span class="kc">V</span></span></div>
               <div class="scut"><span class="cmd">Marquee</span><span class="combo"><span class="kc">M</span></span></div>
               <div class="scut"><span class="cmd">Text</span><span class="combo"><span class="kc">T</span></span></div>
@@ -214,7 +223,7 @@
           </div>
           <div class="cat">
             <h4><span class="dot" style="background:var(--good)"></span>Edit</h4>
-            <div class="body">
+            <div class="lk-rows">
               <div class="scut"><span class="cmd">Undo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
               <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⇧</span><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
               <div class="scut"><span class="cmd">Copy</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">C</span></span></div>
@@ -225,7 +234,7 @@
           </div>
           <div class="cat">
             <h4><span class="dot" style="background:#12c2e9"></span>View</h4>
-            <div class="body">
+            <div class="lk-rows">
               <div class="scut"><span class="cmd">Zoom in</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">+</span></span></div>
               <div class="scut"><span class="cmd">Zoom out</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">−</span></span></div>
               <div class="scut"><span class="cmd">Fit</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">0</span></span></div>
@@ -236,7 +245,7 @@
           </div>
           <div class="cat">
             <h4><span class="dot" style="background:var(--comp)"></span>Components</h4>
-            <div class="body">
+            <div class="lk-rows">
               <div class="scut"><span class="cmd">Create component</span><span class="combo"><span class="kc mod">⌥</span><span class="kc mod">⌘</span><span class="kc">K</span></span></div>
               <div class="scut"><span class="cmd">Edit component</span><span class="combo"><span class="kc">↩</span></span></div>
               <div class="scut"><span class="cmd">Swap instance</span><span class="combo"><span class="kc mod">⇧</span><span class="kc mod">⌘</span><span class="kc">O</span></span></div>

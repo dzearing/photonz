@@ -1,0 +1,27 @@
+{
+  "id": "color-and-elevation-reference-pages-reuse-a-rese",
+  "title": "Color and elevation reference pages reuse a reserved layout name",
+  "goal": "Three reference pages in the design study accidentally reuse a class name the design system already owns for the main app layout, so their cards get laid out as if they were an app window. On the color page this pushes each swatch description right off the edge of its card, where you cannot read it.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 410,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T04:36:01.002Z",
+  "updated": "2026-08-24T04:36:01.002Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Same root cause as component-shortcuts-run-off-the-edge-of-their-ca: tokens.css owns .body{display:grid;grid-template-columns:220px 1fr;min-height:0} (the app shell rail + content). Shadowing pages: pages/lang-color.html (#lang-color .swcard .body overrides padding only, so the 230px card inherits a 220px+1fr grid and .desc starts 3px past the card right edge, measured live, genuinely broken); pages/lang-elevation.html (#lang-elevation .scene .body fully overrides display+columns so it is currently harmless but still a violation); pages/video-compositing.html (.subject .body is NOT scoped to a page id at all, and inherits display:grid). Fix is the documented one: prefix the local class per page (see RESERVED CLASS NAMES in shared/components/tokens.css and the PREFIX rule in shared/AGENTS.md), then re-check layout. Worth adding a guard that greps pages for bare reserved names.",
+  "acceptance": [
+    "On the color reference page, every swatch card shows its description inside the card, nothing past the edge",
+    "No page in the design study uses a bare class name that the design system reserves for itself",
+    "The color, elevation and compositing pages each look the same or better after the change, checked in both light and dark"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T04:36:01.002Z",
+      "note": "created (manual)"
+    }
+  ]
+}
