@@ -1,0 +1,29 @@
+{
+  "feature": "One key for the Arrow tool",
+  "epic": "measure-redline",
+  "summary": "The Arrow tool answers to A everywhere now, and P is left to the Pen. The editor's collapsed tool bar also prints each tool's letter in its overflow menu instead of hiding it.",
+  "setup": "Photonz Dev, release Next, any capture open. Nothing to turn on. The mock side is at http://127.0.0.1:8791/pages/redline.html.",
+  "try": [
+    { "do": "Open the redline mock page and hover the curved arrow in the floating tool bar. The tip should read Arrow / annotate, keycap A.", "shot": "2026-08-23-arrow-key-1.png" },
+    { "do": "Hover the pen in the editor mock page tool bar and confirm it still reads P, so the two no longer fight." },
+    { "do": "In the app, hover the Arrow button in the tool bar and read the tooltip." },
+    { "do": "Press A on the canvas and confirm the Arrow tool comes up." },
+    { "do": "Drag the window narrow until the tool bar collapses to a row plus a chevron." },
+    { "do": "Open the chevron menu and read the rows: each tool should print its letter on the right." },
+    { "do": "Close the menu, press A, and confirm the Arrow still comes up with the window narrow." },
+    { "do": "Press M, then I, then G with the window narrow, and confirm selection, measure and fill still respond." }
+  ],
+  "evaluate": [
+    "Is A the letter your hand reaches for when you want a callout arrow, or would you rather it were something else?",
+    "The Arrow is not a Photoshop tool, so A is borrowed from Snagit and Preview. Does that feel right for this app, or does Photoshop parity matter more than it looks here?",
+    "In the collapsed menu, does printing the letter on every row help, or does it just add noise to a menu you only open when you are already reaching for the mouse?",
+    "The redline surface has no Pen tool at all, so P does nothing there. Should P stay silent, or should something answer it?"
+  ],
+  "rough": [
+    "The last four try steps are the ones I could not verify myself. This runner has neither Screen Recording nor Accessibility, so it cannot press a key into the app or look at what happened. The keystroke behavior is reasoned from the code and covered by unit tests on the letter map, not observed.",
+    "The overflow menu rows carry the letter for display, and a separate set of invisible buttons is what actually makes the letter fire while the menu is closed, because a SwiftUI menu cannot do both. If a letter ever fires twice or not at all in a narrow window, that pairing is the first place to look.",
+    "The Resize row in the overflow menu still prints no shortcut. Its key is a command chord and already lives in the menu bar, which is where chords belong, so it seemed wrong to reprint it next to bare letters.",
+    "Three other mock tool bars still give one key to two different tools, on the image, iconography and prototype pages. Left alone and filed as its own task rather than folded in here.",
+    "The tool buttons in the mock tool bars have no accessible name at all: the a11y tree reads them as bare buttons, with the label living only in a hover tip. Noticed while inspecting the page, not fixed, not filed."
+  ]
+}

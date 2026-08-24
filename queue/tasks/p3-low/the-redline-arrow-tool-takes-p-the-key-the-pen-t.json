@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 300,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T02:57:10.425Z",
-  "updated": "2026-08-24T02:57:10.425Z",
+  "updated": "2026-08-24T03:33:28.143Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Surfaced while giving the Arrow tool its own glyph (redline-arrow-annotations-get-an-arrow-glyph-not). Site: pages/redline.html tool button title=\"Arrow / annotate (P)\"; every other tool bar in the corpus (app-shell, editor, capture-wt, composites, documents, color, components, ds-build-wt, agent-generate-wt, component-configure-wt, brush-*) binds P to Pen. Photoshop parity is the house rule, and Photoshop has no annotation arrow, so the key is a genuine choice: A (Snagit/Preview convention, free in the corpus) is the obvious candidate. Worth a decision card rather than a silent pick.",
@@ -22,6 +22,64 @@
     {
       "t": "2026-08-24T02:57:10.425Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T03:19:27.306Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Pre-build review. The premise is half right. The mock IS the outlier: pages/redline.html is the only file in the whole corpus binding P to anything but the Pen, and it is the only page anywhere with an Arrow/annotate tool. But the SHIPPING APP already answered the question: EditorView.swift binds the Arrow tool to A (toolButton(.arrow, \"arrow.up.right\", \"Arrow\", \"a\")). So there is no open UX choice to put in front of the user and no decision card to file. A is already what a person pressing keys in Photonz gets; the mock is just stale."
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Correcting the task notes: A is not free in the corpus. icon-draw-wt uses A for Edit nodes (Photoshop parity, Direct Selection), agent.html uses A for Agent region, video-speed uses A for Add a stop. None of them share a tool bar with an annotation arrow, and none ever will (a redline surface has no bezier node editor, a vector surface has no redline arrow), so the letter is safe. Recording it so the next person does not think the corpus was swept clean."
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Adversarial read of acceptance item 3, \"pressing P in the redline screen does the same thing it does in the editor\". Taken literally that argues for a Pen tool in the redline bar. That would be building decoration: nobody draws bezier paths while marking up a screenshot. The honest reading is that P must never mean something DIFFERENT, and an absent tool is not a competing meaning. Leaving P unbound in redline, not adding a Pen."
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Found the version of this bug that is in the real product, not the mock. The editor toolbar collapses into a chevron overflow menu when the window is narrow, and those menu rows show the tool name with no key at all. So the one surface in the app that LISTS the Arrow tool by name teaches no shortcut, while its button tooltip says (A). That is acceptance item 2, in the app. Fixing it."
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Also found while sweeping: the letter map lives as bare string literals scattered through EditorView, which is exactly how redline drifted in the first place. Moving it into Tool.shortcutKey in PhotonzCore with a uniqueness test, so a future collision fails a test instead of shipping."
+    },
+    {
+      "t": "2026-08-24T03:23:48.042Z",
+      "note": "Out of scope, filing separately: three mock pages bind one key to two different tools in the SAME bar. image.html has Patch (P) next to Pen (P), iconography.html has Marquee (M) next to Measure (M), ui-prototype.html has Connect (X) next to Swap foreground and background (X)."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "Shipped. Mock: pages/redline.html now reads Arrow / annotate (A). Verified in the browser, not just in the file: the rendered tip shows the A keycap, and no two controls in that tool bar share a letter (queue/audits/2026-08-23-arrow-key-1.png)."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "Model: Tool.shortcutKey and Tool.shortcutHint in PhotonzCore now hold the whole letter map, with the Photoshop-parity reasoning and the two deliberate departures (Arrow A, Measure I) written into the doc comment. Five new tests in ToolTests: arrow is a and nothing claims p, no two tools share a letter, every non-group tool has one, letters are lowercase, and the printed hint is derived from the key so the two cannot drift. Full suite green, 1087 tests."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "App: EditorView no longer carries hand-written key literals. Every tool button and both ToolModeButton call sites read the letter from the model, so the tooltip and the shortcut are one fact read twice. The collapsed tool bar overflow menu now prints each tool letter on its row, which is acceptance item 2 in the app, and invisible stand-ins keep the overflowed letters firing (a SwiftUI Menu cannot carry a shortcut for a closed menu, the same limitation the selection group already works around)."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "Honest limit on verification. Scripts/test.sh is green and the probe app builds, launches and logs no shortcut warnings, but this runner has neither Screen Recording nor Accessibility (screencapture returns could not create image from display, AXIsProcessTrusted is false, System Events refuses Apple events), so I could not press a key into the running app or look at the collapsed menu. The app-side keystroke behavior is reasoned from the code and guarded by the model tests, not observed. It is the last four steps of the audit so the user can confirm it in half a minute."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "Also updated docs/design/mocks/shared/AGENTS.md with a one key means one tool rule that points at Tool.shortcutKey as the source of truth, and added an Arrow / A row next to Pen / P in the lang-keyboard legend, so the next mock author sees the pair."
+    },
+    {
+      "t": "2026-08-24T03:33:12.622Z",
+      "note": "Filed three-mock-tool-bars-give-one-key-to-two-differe for the same-bar collisions on image, iconography and ui-prototype."
+    },
+    {
+      "t": "2026-08-24T03:33:28.142Z",
+      "note": "Arrow is A everywhere. Mock pages/redline.html fixed and verified in the browser; the letter map moved into Tool.shortcutKey in PhotonzCore with 5 new tests; EditorView reads the letter from the model instead of hard-coded literals and the collapsed tool bar overflow menu now prints each tool key. Suite green at 1087 tests. App keystroke behavior could not be observed (no Screen Recording or Accessibility for this runner) so it is the last four steps of queue/audits/2026-08-23-arrow-shortcut.json."
     }
-  ]
+  ],
+  "started": "2026-08-24T03:19:27.306Z",
+  "completed": "2026-08-24T03:33:28.143Z"
 }

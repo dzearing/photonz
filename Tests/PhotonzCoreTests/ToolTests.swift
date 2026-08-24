@@ -207,4 +207,54 @@ struct AnnotationBuilderTests {
         let halfWidth = Geometry.arrowheadHalfWidth(strokeWidth: 6)
         #expect(abs(abs(points[1].y - 50) - halfWidth) < 1e-9)
     }
+
+    // MARK: Keyboard shortcuts
+    //
+    // The letter map is a product decision, not a rendering detail, so it lives
+    // in the model where a test can hold it still. It drifted once already: the
+    // redline mock had the Arrow tool on P, the letter every other surface uses
+    // for the vector Pen.
+
+    @Test func arrowIsOnAAndNeverOnP() {
+        #expect(Tool.arrow.shortcutKey == "a")
+        // P belongs to the Pen everywhere else in the product. Nothing in the
+        // tool set may claim it until an actual Pen tool exists to do so.
+        #expect(!Tool.allCases.contains { $0.shortcutKey == "p" })
+    }
+
+    @Test func noTwoToolsClaimTheSameKey() {
+        var seen: [Character: Tool] = [:]
+        for tool in Tool.allCases {
+            guard let key = tool.shortcutKey else { continue }
+            if let other = seen[key] {
+                Issue.record("\(tool) and \(other) both claim \(key)")
+            }
+            seen[key] = tool
+        }
+    }
+
+    @Test func everyToolbarToolTeachesAKey() {
+        // A tool a person can pick from the bar can be picked from the keyboard.
+        // The marquee family is the one exception: the three region selectors
+        // share a slot and M / ⇧M / W are resolved by the group, not per tool.
+        for tool in Tool.allCases where !tool.isRegionSelectionTool {
+            #expect(tool.shortcutKey != nil, "\(tool) has no keyboard shortcut")
+        }
+    }
+
+    @Test func shortcutKeysAreLowercaseLetters() {
+        for tool in Tool.allCases {
+            guard let key = tool.shortcutKey else { continue }
+            #expect(key.isLetter && key.isLowercase, "\(tool) key \(key) is not a lowercase letter")
+        }
+    }
+
+    @Test func theKeyHintMatchesTheKey() {
+        // What a tooltip or menu row prints is derived from the same letter the
+        // shortcut fires on, so the two can never disagree.
+        #expect(Tool.arrow.shortcutHint == "A")
+        #expect(Tool.select.shortcutHint == "V")
+        #expect(Tool.rectSelect.shortcutHint == nil)
+    }
+
 }

@@ -455,18 +455,18 @@ struct EditorView: View {
 
     private var toolsBar: some View {
         HStack(spacing: 14) {
-            toolButton(.select, "cursorarrow", "Select", "v")
+            toolButton(.select, "cursorarrow", "Select")
             regionSelectButtons
             if editorState.activeTool == .wand, !Experiments.shared.toolOptionsEnabled {
                 wandOptions
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
-            toolButton(.arrow, "arrow.up.right", "Arrow", "a")
-            toolButton(.line, "line.diagonal", "Line", "l")
-            toolButton(.rectangle, "rectangle", "Rectangle", "r")
-            toolButton(.ellipse, "circle", "Ellipse", "o")
-            toolButton(.highlight, "highlighter", "Highlight", "h")
-            toolButton(.text, "character.cursor.ibeam", "Text", "t")
+            toolButton(.arrow, "arrow.up.right", "Arrow")
+            toolButton(.line, "line.diagonal", "Line")
+            toolButton(.rectangle, "rectangle", "Rectangle")
+            toolButton(.ellipse, "circle", "Ellipse")
+            toolButton(.highlight, "highlighter", "Highlight")
+            toolButton(.text, "character.cursor.ibeam", "Text")
             Divider().frame(height: 20)
             cropToolButton
             if editorState.activeTool == .crop, !Experiments.shared.toolOptionsEnabled {
@@ -474,11 +474,11 @@ struct EditorView: View {
                     .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
             }
             resizeButton
-            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
+            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
             // I, not M: M is the Photoshop marquee (rect/ellipse select), and
             // Photoshop itself files the Ruler under I.
             measureToolButton
-            toolButton(.fill, help: "Fill", key: "g") {
+            toolButton(.fill, help: "Fill") {
                 PaintBucketIcon().frame(width: 22, height: 21)
             }
         }
@@ -524,6 +524,7 @@ struct EditorView: View {
             }
             contextualToolOptions
         }
+        .background { overflowShortcuts(overflow) }
         .buttonStyle(.borderless)
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
@@ -543,6 +544,12 @@ struct EditorView: View {
                 } label: {
                     Label(slot.title, systemImage: slot.menuSymbol)
                 }
+                // The row prints the same letter the button's tooltip does, so
+                // the collapsed bar still TEACHES the keyboard instead of
+                // hiding it. Nothing here fires: a SwiftUI Menu cannot carry a
+                // shortcut for a closed menu, which is what the stand-ins below
+                // are for.
+                .keyboardShortcut(slot.keyEquivalent.map { KeyboardShortcut($0, modifiers: []) })
             }
         } label: {
             Image(systemName: "ellipsis")
@@ -666,6 +673,20 @@ struct EditorView: View {
             }
         }
 
+        /// The letter this slot answers to, for the overflow menu row. The
+        /// marquee slot borrows M from the group it stands for; Resize is a
+        /// ⌥⌘I menu command and keeps its hint in the menu bar where chords
+        /// belong, so it prints nothing here.
+        var shortcutKey: Character? {
+            switch self {
+            case .marquee: "m"
+            case .resize: nil
+            default: tool?.shortcutKey
+            }
+        }
+
+        var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
+
         /// The `Tool` this slot activates, if any (resize opens a dialog; the
         /// marquee slot resolves to the remembered variant, so both are nil).
         var tool: Tool? {
@@ -698,23 +719,53 @@ struct EditorView: View {
     /// uses, so the two stay visually identical for the tools that show.
     @ViewBuilder private func slotButton(_ slot: ToolbarSlot) -> some View {
         switch slot {
-        case .select: toolButton(.select, "cursorarrow", "Select", "v")
+        case .select: toolButton(.select, "cursorarrow", "Select")
         case .marquee: selectionGroupButton
-        case .arrow: toolButton(.arrow, "arrow.up.right", "Arrow", "a")
-        case .line: toolButton(.line, "line.diagonal", "Line", "l")
-        case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle", "r")
-        case .ellipse: toolButton(.ellipse, "circle", "Ellipse", "o")
-        case .highlight: toolButton(.highlight, "highlighter", "Highlight", "h")
-        case .text: toolButton(.text, "character.cursor.ibeam", "Text", "t")
+        case .arrow: toolButton(.arrow, "arrow.up.right", "Arrow")
+        case .line: toolButton(.line, "line.diagonal", "Line")
+        case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle")
+        case .ellipse: toolButton(.ellipse, "circle", "Ellipse")
+        case .highlight: toolButton(.highlight, "highlighter", "Highlight")
+        case .text: toolButton(.text, "character.cursor.ibeam", "Text")
         case .crop: cropToolButton
         case .resize: resizeButton
-        case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout", "z")
+        case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
         case .measure: measureToolButton
         case .fill:
-            toolButton(.fill, help: "Fill", key: "g") {
+            toolButton(.fill, help: "Fill") {
                 PaintBucketIcon().frame(width: 22, height: 21)
             }
         }
+    }
+
+    /// Keeps every tool's letter alive at every window width.
+    ///
+    /// A tool that slid into the chevron stops being rendered, and its
+    /// `.keyboardShortcut` goes with it, so at narrow widths the letter would
+    /// have nothing left to fire on. A `Menu` cannot carry the shortcut for
+    /// its own rows either (the same limitation the selection group works
+    /// around below), so the overflowed slots get invisible stand-ins. Only
+    /// the OVERFLOWED ones, so a letter is never registered twice.
+    private func overflowShortcuts(_ slots: [ToolbarSlot]) -> some View {
+        ZStack {
+            ForEach(slots, id: \.self) { slot in
+                if let key = slot.keyEquivalent {
+                    Button("") { activateSlot(slot) }
+                        .keyboardShortcut(key, modifiers: [])
+                }
+                // The marquee slot stands for three tools, so it carries the
+                // whole group vocabulary, not just M.
+                if slot == .marquee {
+                    Button("") { activateSelectionTool(cycledSelectionTool) }
+                        .keyboardShortcut("m", modifiers: .shift)
+                    Button("") { activateSelectionTool(.wand) }
+                        .keyboardShortcut("w", modifiers: [])
+                }
+            }
+        }
+        .opacity(0)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     /// Activate a slot picked from the overflow menu.
@@ -1021,7 +1072,7 @@ struct EditorView: View {
             : [.distance]
         return ToolModeButton(
             toolTitle: "Measure",
-            key: "i",
+            key: Tool.measure.keyEquivalent,
             isActive: editorState.activeTool == .measure,
             modes: modes.map {
                 ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help)
@@ -1058,7 +1109,7 @@ struct EditorView: View {
         if Experiments.shared.toolOptionsEnabled {
             ToolModeButton(
                 toolTitle: "Crop",
-                key: "c",
+                key: Tool.crop.keyEquivalent,
                 isActive: editorState.activeTool == .crop,
                 modes: CropAspect.allCases.map {
                     ToolMode(mode: $0, title: $0.label, symbol: $0.symbol, help: $0.help)
@@ -1070,7 +1121,7 @@ struct EditorView: View {
                 keyCycles: false,
                 pressedKey: { editorState.setTool(.crop) })
         } else {
-            toolButton(.crop, "crop", "Crop", "c")
+            toolButton(.crop, "crop", "Crop")
         }
     }
 
@@ -1451,19 +1502,24 @@ struct EditorView: View {
         .frame(width: 220)
     }
 
-    private func toolButton(_ tool: Tool, _ symbol: String, _ help: String,
-                            _ key: KeyEquivalent) -> some View {
-        toolButton(tool, help: help, key: key) {
+    private func toolButton(_ tool: Tool, _ symbol: String, _ help: String) -> some View {
+        toolButton(tool, help: help) {
             Image(systemName: symbol).font(.system(size: 15, weight: .medium))
         }
     }
 
-    private func toolButton(_ tool: Tool, help: String, key: KeyEquivalent?,
+    /// The key is never passed in: it comes from `Tool.shortcutKey`, so the
+    /// letter this button fires on and the letter its tooltip prints are the
+    /// same fact read twice. Hand-written literals here are how the redline
+    /// surface ended up teaching P for the Arrow while the Pen owns P
+    /// everywhere else.
+    private func toolButton(_ tool: Tool, help: String,
                             modifiers: EventModifiers = [],
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = editorState.activeTool == tool
         let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
-        let keyHint = key.map { " (\(shiftHint)\(String(describing: $0.character).uppercased()))" } ?? ""
+        let keyHint = tool.shortcutHint.map { " (\(shiftHint)\($0))" } ?? ""
+        let key = tool.keyEquivalent
         return Button {
             editorState.setTool(tool)
         } label: {
@@ -1657,4 +1713,11 @@ struct PaintBucketIcon: View {
             }
         }
     }
+}
+
+extension Tool {
+    /// `Tool.shortcutKey` in SwiftUI's currency. The letter itself is a
+    /// product decision and lives in PhotonzCore, where a test holds it still;
+    /// this is only the type conversion.
+    var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
 }

@@ -25,6 +25,47 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     case ellipseSelect
     case wand
 
+    /// The single key that picks this tool, everywhere in the product.
+    ///
+    /// Photoshop parity is the house rule, so V/C/T/L/R/O/G land where a
+    /// Photoshop user reaches for them. Two deliberate departures, both because
+    /// Photoshop has no equivalent tool to be compatible with:
+    ///
+    /// - **Arrow is A**, the Snagit / Preview convention for a callout arrow.
+    ///   It is emphatically NOT P: P is the vector Pen everywhere else in the
+    ///   product, and a key that means two things depending on which surface
+    ///   you are looking at teaches people to stop trusting shortcuts.
+    /// - **Measure is I**, not M. M is the Photoshop marquee, and Photoshop
+    ///   itself files the Ruler under I.
+    ///
+    /// Nil for the marquee pair: rectangle and ellipse select share one toolbar
+    /// slot, and M picks whichever you used last while ⇧M cycles them, so the
+    /// key belongs to the group rather than to either tool.
+    public var shortcutKey: Character? {
+        switch self {
+        case .select: "v"
+        case .crop: "c"
+        case .arrow: "a"
+        case .line: "l"
+        case .rectangle: "r"
+        case .ellipse: "o"
+        case .highlight: "h"
+        case .text: "t"
+        case .zoomCallout: "z"
+        case .measure: "i"
+        case .fill: "g"
+        case .wand: "w"
+        case .rectSelect, .ellipseSelect: nil
+        }
+    }
+
+    /// How the key is PRINTED in a tooltip or a menu row. Derived from
+    /// `shortcutKey`, so what a surface teaches can never drift from what the
+    /// keyboard actually does.
+    public var shortcutHint: String? {
+        shortcutKey.map { String($0).uppercased() }
+    }
+
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
         switch self {

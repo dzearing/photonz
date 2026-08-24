@@ -39,7 +39,9 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// The tool's display name, for the tooltip.
     let toolTitle: String
     /// The tool's key, which both picks the tool up and cycles its modes.
-    let key: KeyEquivalent
+    /// Comes from `Tool.shortcutKey`; nil for a tool whose letter is resolved
+    /// by a group rather than by the tool itself.
+    let key: KeyEquivalent?
     /// Whether this tool is the one in hand.
     let isActive: Bool
     /// Every mode on offer, in cycle order. One entry means no menu.
@@ -69,14 +71,20 @@ struct ToolModeButton<Mode: Hashable>: View {
         modes.first { $0.mode == selection } ?? modes.first
     }
 
-    private var keyLabel: String {
-        String(describing: key.character).uppercased()
+    private var keyLabel: String? {
+        key.map { String(describing: $0.character).uppercased() }
+    }
+
+    /// " (A)", or nothing at all when the tool has no letter of its own.
+    private var keySuffix: String {
+        keyLabel.map { " (\($0))" } ?? ""
     }
 
     private var tooltip: String {
-        guard let current else { return "\(toolTitle) (\(keyLabel))" }
-        guard modes.count > 1 else { return "\(current.help) (\(keyLabel))" }
-        guard keyCycles else { return "\(current.help) (\(keyLabel))\nPress and hold for the list." }
+        guard let current else { return "\(toolTitle)\(keySuffix)" }
+        guard modes.count > 1 else { return "\(current.help)\(keySuffix)" }
+        guard let keyLabel else { return "\(current.help)\nPress and hold for the list." }
+        guard keyCycles else { return "\(current.help)\(keySuffix)\nPress and hold for the list." }
         return "\(current.help)\n\(keyLabel) cycles modes. Press and hold for the list."
     }
 
@@ -141,7 +149,7 @@ struct ToolModeButton<Mode: Hashable>: View {
                 }
             }
             .pickerStyle(.inline)
-            if keyCycles {
+            if keyCycles, let keyLabel {
                 Divider()
                 // One line for the whole list, because every mode shares the
                 // tool's key: printing the same letter on four rows would say
@@ -172,7 +180,7 @@ struct ToolModeButton<Mode: Hashable>: View {
             Color.clear.frame(width: 0, height: 0)
         }
         .buttonStyle(.plain)
-        .keyboardShortcut(KeyboardShortcut(key, modifiers: []))
+        .keyboardShortcut(key.map { KeyboardShortcut($0, modifiers: []) })
         .frame(width: 0, height: 0)
         .opacity(0)
         .allowsHitTesting(false)

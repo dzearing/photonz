@@ -4313,3 +4313,33 @@ Next: the current release still widens the bar when the Magic Wand is in hand
 `picking-up-the-wand-in-the-current-release-still`. Open question in the audit:
 whether a cramped bar should wrap to two rows and show every tool instead of
 keeping three inline behind a "…" menu.
+
+## 2026-08-23 — one key for the Arrow tool
+
+The redline mock had the Arrow tool on P, the letter the vector Pen owns on
+every other page in the design study. The shipping app had already answered the
+question (`EditorView` bound the Arrow to A), so there was nothing to decide:
+the mock was simply stale, and no decision card was filed.
+
+- `docs/design/mocks/pages/redline.html` now reads `Arrow / annotate (A)`.
+  Verified in a browser, not just in the file.
+- The letter map moved out of scattered string literals in `EditorView` and into
+  `Tool.shortcutKey` / `Tool.shortcutHint` in `PhotonzCore`, where the
+  Photoshop-parity reasoning and the two deliberate departures (Arrow is A,
+  Measure is I) are written down. Five new tests in `ToolTests` make a future
+  collision fail the suite.
+- Every tool button and both `ToolModeButton` call sites now derive their key
+  and their printed hint from that one property.
+- The collapsed tool bar's overflow menu prints each tool's letter on its row,
+  and invisible stand-ins keep the overflowed letters firing (a SwiftUI `Menu`
+  cannot carry a shortcut for a closed menu).
+- `shared/AGENTS.md` gained a "one key means one tool" rule pointing at
+  `Tool.shortcutKey`; `lang-keyboard.html` gained an Arrow / A row next to
+  Pen / P.
+
+Not verified: the runner has neither Screen Recording nor Accessibility, so no
+key could be pressed into the running app. Those steps are the tail of
+`queue/audits/2026-08-23-arrow-shortcut.json`.
+
+Next: `three-mock-tool-bars-give-one-key-to-two-differe` covers the remaining
+same-bar collisions on the image, iconography and prototype pages.
