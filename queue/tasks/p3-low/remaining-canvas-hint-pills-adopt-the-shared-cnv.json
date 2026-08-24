@@ -1,26 +1,44 @@
 {
   "id": "remaining-canvas-hint-pills-adopt-the-shared-cnv",
-  "title": "Remaining canvas hint pills adopt the shared .cnv-hint",
-  "goal": "The small floating hint that names the current gesture on the canvas is redrawn on eight pages, each with its own near-identical copy of the same styling. This points them all at the shared one so the hint stays consistent as it changes.",
+  "title": "Canvas hint pills on the image pages adopt the shared one",
+  "goal": "The small floating hint that names the current gesture on the canvas is redrawn on four image and grading pages, each with its own near-identical copy of the same styling. This points them all at the shared one so the hint stays consistent as it changes.",
   "priority": "p3-low",
   "seq": 160,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T15:45:10.429Z",
-  "updated": "2026-08-23T15:45:10.430Z",
+  "updated": "2026-08-24T00:46:53.262Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The 2026-08-23 draw/icon pass promoted .cnv-hint to shared/components/canvas.css (the dark glass pill on the artboard that names the gesture) and adopted it on draw, draw-boolean and vector-wt. Eight pages still hand-roll the same pill under their own name: image, img-bg-remove, img-grade-wt, img-masking (x2), img-retouch-wt, video-audio, video-compositing, video-transitions. Swap each local rule for the shared class, keeping only the page's own top/bottom as a scoped refinement. Verify 200 + audit-sweep.",
+  "notes": "VERIFIED IN THE SOURCE (2026-08-24). The page list in the original notes is wrong: it named eight pages / nine rules, and only FOUR pages actually hand-roll the canvas hint pill.\n\nREAL ADOPTERS (4 pages, 4 rules), all center-bottom on the artboard, all with a `.X b{color:#fff;font-weight:640}` child rule:\n- pages/image.html:36 `.cvhint`, bottom:12px, font-size:10px, color rgba(255,255,255,.72), bg rgba(0,0,0,.36), padding 4px 10px, border-radius:7px, NO border, NO z-index, NO pointer-events.\n- pages/img-bg-remove.html:61 `.cvhint`, bottom:12px, 10.5px, color .86, bg rgba(10,12,20,.5), padding 5px 12px, radius 999px, 1px border rgba(255,255,255,.16), z-index:4, pointer-events:none.\n- pages/img-masking.html:57 `.cvhint`, byte-identical to img-bg-remove. ONE rule, not the two the notes claimed.\n- pages/img-grade-wt.html:55 `.g-hint`, bottom:12px, 10px, color .74, bg rgba(0,0,0,.4), padding 4px 10px, radius 7px, z-index:2, no border. Plus a page refinement at line 83: `@container shell (max-width:620px){ #img-grade-wt .g-hint{display:none} }`.\n\nNOT ADOPTERS, the other four named pages have no canvas hint pill at all:\n- img-retouch-wt.html:75 `.fqtag` is a technique tag sitting BELOW the artwork (bottom:-26px, radius 7px, no border) that labels a layer split (\"skin split · color + detail\"). Different component, different anchor, do not fold it in.\n- video-audio.html has nothing matching (no hint/badge/pill rule anywhere).\n- video-compositing.html `#ckHint` is a `<p class=\"note\">` built into a PROPERTIES panel string at line 525, not on the canvas.\n- video-transitions.html:28 `.tbadge` is a top-right selection readout with an accent border, showing the selected transition name and duration. Same glass family, different job (selection state, not gesture instruction).\n\nMISSED BY THE NOTES: pages/redline.html:99 `.rl-hint` is a fifth hint, but it is stacked top-left under the legend with an accent icon and var(--dim) text, not center-bottom. Folding it in means overriding left/transform as well as top, so it is a judgment call, not a mechanical swap. Worth deciding before this task is revived.\n\nTHE ACCEPTANCE ITEMS CONTRADICT EACH OTHER for two of the four pages. \"Use the shared styling\" and \"render the same as before\" cannot both hold on image.html and img-grade-wt.html: both draw a 7px rounded RECTANGLE with no border, and `.cnv-hint` is a 999px pill WITH a 1px border, at a different opacity and weight. Those two pages will visibly change. img-bg-remove and img-masking are near-identical to the shared rule and will barely move (bottom 12->10, bg .5->.72, color .86->.9, padding 12px->11px, weight inherits->560). Whoever revives this should rewrite acceptance item 2 as \"the two pill-shaped hints are unchanged and the two rounded-rect hints become pills\" rather than pretending nothing moves.\n\nCORRECTED RECIPE:\n1. `.cnv-hint` has no `b` rule, and all four pages bold a word inside the hint. Either add `.cnv-hint b{color:#fff;font-weight:640}` to shared/components/canvas.css (and rebuild shared/dist/photonz-ds.css, which carries the same rule at line 433), or keep a one-line scoped `b` refinement per page. Adding it to the shared component is right: every existing adopter (draw, draw-boolean, vector-wt) bolds too.\n2. Delete the four local rules, change the four markup class names to `cnv-hint` (image.html:128, img-bg-remove.html:192, img-masking.html:146, img-grade-wt.html:139).\n3. Keep exactly two scoped refinements: nothing for image/img-bg-remove/img-masking (bottom:10px is fine on all three; do not re-add bottom:12px just to preserve a 2px difference), and for img-grade-wt keep only the container-query hide, retargeted to `#img-grade-wt .cnv-hint`.\n4. The ids `cvhint` (img-bg-remove:455-465, img-masking:516) and `gHint` (img-grade-wt:536,576) are read by page JS to rewrite the text. Keep the ids, only the class changes.\n5. Verify: all four pages 200 plus the audit sweep, and eyeball image.html and img-grade-wt.html specifically since those two intentionally change shape.",
   "acceptance": [
-    "All eight pages use the shared hint styling, keeping only their own placement on the canvas",
-    "The hints render the same as before on each page",
-    "Every touched page loads without error and passes the automated page sweep"
+    "The four pages that actually hand-roll the canvas hint pill (image, img-bg-remove, img-masking, img-grade-wt) use the shared styling instead",
+    "The bolded word inside every hint still reads white and heavier, on the shared pages too",
+    "img-grade-wt still hides its hint when the window gets narrow",
+    "All four pages load without error and pass the automated page sweep"
   ],
   "log": [
     {
       "t": "2026-08-23T15:45:10.430Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:44:55.085Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:46:42.493Z",
+      "note": "Verified every claim in the source instead of assuming. Only FOUR pages hand-roll the pill (image, img-bg-remove, img-masking .cvhint, img-grade-wt .g-hint), not eight: img-retouch-wt .fqtag is a technique tag below the artwork, video-audio has no hint at all, video-compositing #ckHint is a properties-panel paragraph, and video-transitions .tbadge is a top-right selection readout. Found a fifth candidate the notes missed (redline.html .rl-hint, top-left in the legend stack) and a blocker the notes missed (the shared class has no b rule, but all four pages bold a word). Corrected notes, recipe and acceptance written into the task."
+    },
+    {
+      "t": "2026-08-24T00:46:42.493Z",
+      "note": "Stage gate: this serves design-system, staged next with every child later, while focus is measure-redline. It is cosmetic de-duplication on three image pages and one grade walkthrough, and touches no measure-redline surface: capture-wt.html has no canvas hint pill (its .deskhint is a full-size empty-state block) and redline.html was left alone on purpose. Dropping with the evidence so a revive is cheap."
+    },
+    {
+      "t": "2026-08-24T00:46:53.262Z",
+      "note": "Serves design-system, staged next with every child later, while focus is measure-redline. Cosmetic de-duplication on three image pages and one grading walkthrough, unblocking nothing in focus. Verified every claim first rather than assuming: only FOUR of the eight named pages actually hand-roll the pill, the other four are different components (a technique tag below the artwork, a properties-panel paragraph, a top-right selection readout, and one page with no hint at all). Also found a fifth candidate the notes missed (redline.html .rl-hint) and a blocker they missed (the shared class has no bold-word rule, but all four pages bold a word). Corrected notes, recipe and acceptance are in the task file."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:44:55.085Z"
 }
