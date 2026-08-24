@@ -208,6 +208,7 @@ export const CATEGORIES = [
       ['patch', P('M2.9 7.7a4.8 4.8 0 0 1 4.8-4.8h3.4a4.8 4.8 0 1 1 0 9.6H7.7a4.8 4.8 0 0 1-4.8-4.8z', "stroke-dasharray='3 2.8'") + P('M8.3 16.3a4.8 4.8 0 0 1 4.8-4.8h3.4a4.8 4.8 0 1 1 0 9.6h-3.4a4.8 4.8 0 0 1-4.8-4.8z'), 'Patch an area from a clean source', 'replace region source-fill'],
       ['dodge-burn', C(8.9, 12, 5.5) + `<circle cx='15.1' cy='12' r='5.5' fill='black' stroke='none'/>`, 'Lighten or darken by hand', 'dodge burn exposure-brush o'],
       ['blur-tool', P('M12 3.2c0 0 6.4 6.5 6.4 10.6a6.4 6.4 0 1 1-12.8 0C5.6 9.7 12 3.2 12 3.2z') + P('M9.4 14.6a2.6 2.6 0 0 0 2.6 2.6'), 'Soften an area by hand', 'soften smudge droplet r'],
+      ['arrow-annotate', P('M4.4 19.6C10.2 18.8 15.2 14.8 16.8 10.7') + SOLID('M19.2 4.8l.8 7.25-6.45-2.64z'), 'Point at something with an annotation arrow', 'arrow annotate callout point curved redline mark'],
       ['text', P('M5.4 6.6V4.4h13.2v2.2M12 4.4v15.2M9 19.6h6'), 'Add or edit a text layer', 'type font letter t'],
     ],
   },

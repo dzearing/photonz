@@ -1,0 +1,27 @@
+{
+  "id": "the-redline-arrow-tool-takes-p-the-key-the-pen-t",
+  "title": "The redline Arrow tool takes P, the key the Pen tool uses everywhere else",
+  "goal": "In the capture and redline screen, the key P selects the Arrow tool. In every other screen of the app, P selects the vector Pen. Someone who learns one keystroke gets a different tool depending on where they are, which is the kind of thing that quietly trains people to distrust shortcuts. Pick one key for the Arrow and use it everywhere.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 300,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T02:57:10.425Z",
+  "updated": "2026-08-24T02:57:10.425Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Surfaced while giving the Arrow tool its own glyph (redline-arrow-annotations-get-an-arrow-glyph-not). Site: pages/redline.html tool button title=\"Arrow / annotate (P)\"; every other tool bar in the corpus (app-shell, editor, capture-wt, composites, documents, color, components, ds-build-wt, agent-generate-wt, component-configure-wt, brush-*) binds P to Pen. Photoshop parity is the house rule, and Photoshop has no annotation arrow, so the key is a genuine choice: A (Snagit/Preview convention, free in the corpus) is the obvious candidate. Worth a decision card rather than a silent pick.",
+  "acceptance": [
+    "The Arrow tool has one keyboard shortcut, and it is not the one the Pen tool uses",
+    "The shortcut shown in the Arrow tool tip matches the one shown in any menu that lists the Arrow tool",
+    "Pressing P in the redline screen does the same thing it does in the editor"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T02:57:10.425Z",
+      "note": "created (manual)"
+    }
+  ]
+}

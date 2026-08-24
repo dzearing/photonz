@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 270,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T01:19:44.003Z",
-  "updated": "2026-08-24T01:19:44.003Z",
+  "updated": "2026-08-24T02:57:31.736Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Deliberately left out of scope by edit-is-one-glyph-across-the-corpus-ic-pencil-no, which only separated the edit verb from the nib. Remaining sites: pages/redline.html button.tool title=\"Arrow / annotate (P)\" (1), pages/layers-pane.html .lrow \"Arrow · curved\" (7, all styled color:#f0685c), pages/icon-draw-wt.html #lrArrow (1). shared/icons.mjs already has arrow-up/down/left/right but no diagonal pointer arrow; a redline arrow probably wants a new glyph drawn on the 24x24 grid rather than a reused compass arrow, which means adding it to icons.mjs and running node shared/build-icons.mjs. Check pages/iconography.html first.",
@@ -22,6 +22,36 @@
     {
       "t": "2026-08-24T01:19:44.003Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T02:49:30.351Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T02:57:31.706734Z",
+      "note": "Adversarial review before building: (1) The task notes list pages/icon-draw-wt.html #lrArrow as a remaining site. It is not. There, 'Arrow' is a vector path the user DRAWS on the icon grid, sitting beside Cloud (ic-bezier), Crown/Shoulders (ic-circle) and Base (ic-square) — the row icons there name the shape primitive, not an annotation. Swapping it would make an icon-drawing layer claim to be a redline mark. Left alone deliberately. (2) A plain diagonal compass arrow would have been the cheap answer and the wrong one: the Navigation category's own rule is 'arrows move you or move a thing', so a diagonal arrow in a tool bar reads as move/open-external. A tool glyph has to depict the mark it makes, the way the nib depicts a path and T depicts type. (3) The mocks already draw a redline arrow (pages/capture-wt.html #caArrow, pages/walk.html #waArrow): a gentle curve with a solid triangular head. The glyph is that shape miniaturised, so the button matches what lands on the canvas."
+    },
+    {
+      "t": "2026-08-24T02:57:31.706734Z",
+      "note": "Built: new 'arrow-annotate' glyph in shared/icons.mjs (Tools category, before 'text'), drawn to the house grid — curve P('M4.4 19.6C10.2 18.8 15.2 14.8 16.8 10.7') stroke 1.75 round, plus SOLID head. The curve stops at the head's base so the round cap cannot blunt the point. Regenerated with node shared/build-icons.mjs (icons.css, iconography.html, AGENTS.md name list). Three tuning passes against pen/cursor/ruler/arrow-up at 14/16/20/24px: the first two read too small and the head too thin at tool-bar size; final bbox is ~15.6 x 14.8, matching the optical weight of its neighbours."
+    },
+    {
+      "t": "2026-08-24T02:57:31.706734Z",
+      "note": "Applied: pages/redline.html arrow tool button (1) and pages/layers-pane.html 'Arrow · curved' rows (7) now use ic-arrow-annotate. pages/icon-draw-wt.html left on ic-pen on purpose (see review note 1). Added a one-picture-one-meaning entry for ic-arrow-annotate to shared/AGENTS.md so the next author does not reach for a compass arrow."
+    },
+    {
+      "t": "2026-08-24T02:57:31.706734Z",
+      "note": "Verified in the browser at 127.0.0.1:8791: the redline tool bar reads cursor · lasso | crop · ARROW · box · T · redact | ruler with the arrow legible at 14px and matching its neighbours' weight; the layers pane shows a red curved arrow on 'Arrow · curved', distinct from Box (square), the text mark (T) and 'Path 1 · vector' / 'Glyph', which both still wear the nib. Screenshots in temp/."
+    },
+    {
+      "t": "2026-08-24T02:57:31.706734Z",
+      "note": "Surfaced, not fixed: the redline Arrow tool is bound to P, the key every other tool bar in the corpus gives the Pen. Filed as the-redline-arrow-tool-takes-p-the-key-the-pen-t (p3-low) rather than silently rebinding, since which key the Arrow gets is a product call."
+    },
+    {
+      "t": "2026-08-24T02:57:31.736Z",
+      "note": "New arrow-annotate glyph (curve + solid head, drawn to the 24px grid) in shared/icons.mjs; redline tool button and all 7 'Arrow · curved' layer rows now wear it, vector paths keep the nib. Verified in the browser at 127.0.0.1:8791 at 14/16/20/24px against pen, cursor, ruler and arrow-up."
     }
-  ]
+  ],
+  "started": "2026-08-24T02:49:30.351Z",
+  "completed": "2026-08-24T02:57:31.736Z"
 }

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 260,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T01:08:27.964Z",
-  "updated": "2026-08-24T02:47:14.469Z",
+  "updated": "2026-08-24T02:49:17.616Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while sweeping the design study for modifier order (keyboard-shortcuts-read-in-one-modifier-order-ac). Sources has 34 occurrences of the cmd-first glyph pair but 33 are code comments; exactly ONE is user-facing: Sources/Photonz/HistoryOverlay.swift:65 emptyMessage(\"No captures yet. CMD-SHIFT-4 grabs a rectangle, CMD-SHIFT-3 the full screen, CMD-SHIFT-5 records.\"). Swap to shift-first. HistoryOverlay.swift is shared (not forked into Releases/Next), so one edit reaches both releases, but it does change Current-release copy, which is why the sweep task left it alone. Zero occurrences of the cmd-before-option pair in Sources. The comments are worth normalising in the same pass for grep-ability but are not user-facing. The authoring rule now lives in docs/design/mocks/shared/AGENTS.md under the keyboard-shortcut carve-out, and the study publishes it on pages/lang-keyboard.html section 05.",
@@ -42,7 +42,12 @@
     {
       "t": "2026-08-24T03:08:00.000Z",
       "note": "No audit written: this is a one-string copy correction, not a feature slice."
+    },
+    {
+      "t": "2026-08-24T02:49:17.616Z",
+      "note": "Empty capture history now reads \"⇧⌘4 grabs a rectangle, ⇧⌘3 the full screen, ⇧⌘5 records\" (HistoryOverlay.swift:65), matching macOS and the Welcome window. Swept 33 command-first pairs out of code comments in Sources/ and Tests/ too. swift build clean, Scripts/test.sh green (1076 tests). Pushed to main as 4150ac7."
     }
   ],
-  "started": "2026-08-24T02:47:14.469Z"
+  "started": "2026-08-24T02:47:14.469Z",
+  "completed": "2026-08-24T02:49:17.616Z"
 }

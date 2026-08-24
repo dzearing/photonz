@@ -907,6 +907,10 @@ breaking this is pen and pencil, so it is spelled out:
   `shared/components/entry.js` injects are the exemplars).
 - `ic-pen` is the **vector pen nib** and nothing else — the Pen tool, a vector
   layer row, text on a path, SVG. If your control is a verb, it is not a nib.
+- `ic-arrow-annotate` is the **redline arrow you draw to point at something** —
+  the Arrow tool in the redline tool bar and every arrow annotation layer row
+  (`pages/redline.html`, `pages/layers-pane.html`). It is a mark, not a nib and
+  not a compass arrow: `ic-arrow-up`/`-down`/`-left`/`-right` still mean move.
 
 Same rule for the rest: `ic-chat` is a comment, `ic-ruler` is a measurement,
 `ic-swatch` is a color. When a glyph looks nearly right for a second job, that
@@ -938,7 +942,7 @@ The full searchable library, with the grid and the drawing rules, is
 
 **View & canvas** — zoom-in zoom-out zoom-fit zoom-actual hand maximize minimize sidebar-left sidebar-right panel-bottom canvas-grid rulers snap
 
-**Tools** — cursor move marquee-rect marquee-ellipse lasso wand subject crop straighten ruler eyedropper pen pencil brush eraser fill gradient clone heal patch dodge-burn blur-tool text
+**Tools** — cursor move marquee-rect marquee-ellipse lasso wand subject crop straighten ruler eyedropper pen pencil brush eraser fill gradient clone heal patch dodge-burn blur-tool arrow-annotate text
 
 **Shapes & vector** — square circle line triangle polygon frame bezier node corner-radius path-close boolean-union boolean-subtract boolean-intersect boolean-exclude flatten
 
