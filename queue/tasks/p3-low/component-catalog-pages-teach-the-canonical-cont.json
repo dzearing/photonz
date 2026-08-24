@@ -4,14 +4,14 @@
   "goal": "The pages that document each control demonstrate it with a hand-drawn imitation rather than the real thing, so the catalog teaches a version of the product that does not exist. This rebuilds every example from the real shared parts.",
   "priority": "p3-low",
   "seq": 130,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:34:07.590Z",
-  "updated": "2026-08-23T06:34:07.590Z",
+  "updated": "2026-08-24T00:38:48.814Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From ux-audit rescan 2026-08-23 ('comp-* catalog'). Pages: comp-agent, comp-buttons, comp-feedback, comp-fields, comp-index, comp-overlays, comp-panels, comp-segmented, comp-toolbars, comp-tooltips, layers-pane, panes-panels. Key items: comp-overlays sheet figure becomes a real data-shell window (high); comp-agent drops fake traffic-dot mini-windows and restates the conversation as the right-dock Agent group per the one-dock model; comp-index inventory on .libgrid/.libtile; comp-toolbars/comp-buttons/comp-index retire .pill.ai in favor of .askbtn; comp-tooltips .ct-strip to .tbar/.tstrip; comp-feedback toast from the shared toast component; comp-segmented real .btn + .slider in demos; comp-fields ic-arrow-right + real .dgrp inspector column; comp-panels real .pdock in the demo; layers-pane/panes-panels replace inert .bar meters with .setrow/.slrow + add the missing .tbar in panes-panels' full shells; rename .hero collisions. Verify 200 + audit-sweep.",
+  "notes": "From ux-audit rescan 2026-08-23 (\"comp-* catalog\"). RE-VERIFIED 2026-08-24 before dropping at the stage gate; the original note was part right and part stale, so here is what actually holds. All 12 pages return 200 today and nothing on them is broken, only unfaithful.\n\nCONFIRMED (worth doing when design-system is staged now):\n1. .pill.ai survives ONLY on comp-index, comp-toolbars and comp-buttons. This is not a hand-drawn stand-in: it is a real DS class, but shared/components/ask.css says in its own header that the Ask launcher spectrum \"already existed as .pill.ai but only survived on the component spec pages\" and that .askbtn (on .btn.hero) is the resolution. So these three pages are the last holdouts of a superseded affordance. Swap the 3 occurrences to .askbtn.\n2. comp-tooltips forks the canvas tool bar: #comp-tooltips .ct-strip (defined at line 29, used at lines 116 and 185) reimplements what shared/components/toolbar.css already gives as .cnv .tbar > .tstrip.\n3. Example app windows are hand-drawn on comp-overlays (.co-win) and comp-toolbars (.cb-stage) while 63 of the ~90 mock pages already build theirs from shell.js data-shell. comp-overlays is the higher-value one: its sheet figure at lines 140-146 already uses the real .titlebar and .dlg.sheet, so only the frame around them is hand-authored.\n4. Page-local .hero shadows the DS vocabulary on exactly 2 pages, not the family: #comp-overlays .co-win .hero (line 16) and #comp-toolbars .cb-stage .hero (line 13). Both are scoped under a page-local ancestor so they are cosmetically inert, but the DS owns .btn.hero and .hero-card and the name should not be reused. Rename to .co-art / .cb-art.\n5. Inert class=\"bar\" meters: 5 on layers-pane, 4 on panes-panels, where slider.css .slrow and progress.css already own the row form.\n6. panes-panels has zero .tbar, so its full editor shells show a canvas with no floating tool bar.\n7. comp-fields has zero .dgrp, so its inspector column is drawn rather than composed from the DS group.\n\nCORRECTED (the original note was wrong; do not spend time here):\n- comp-agent has NO fake traffic-dot mini-windows. The only dot hits (lines 152, 182, 257) are <span class=\"dot live accent\"> status dots inside the shared .chat-h header, which is correct usage.\n- comp-panels ALREADY uses the real parts: 1 .pdock and 11 .dgrp.\n- comp-index ALREADY carries .dgrp and .tstrip; panes-panels ALREADY carries .libtile (4) and .dgrp (67).\n- \"comp-feedback toast from the shared toast component\" cannot be done as written: there is no shared component of that shape. shared/components/toast.css is the CAPTURE toast (.ctoast / .ctoast-stack), and the only generic .toast in the DS is a green success banner in inspector.css line 186. comp-feedback .cf-toast specs the report-with-thumbnail-and-Undo toast, which the DS does not have. The real work is to PROMOTE .cf-toast into the DS, which is a design decision, not a swap.\n\nVerified by: grepping all 90 pages and 62 shared components for each named class, reading ask.css/toolbar.css/toast.css/shell.js, and curling all 12 pages (all 200).",
   "acceptance": [
     "Each catalog page demonstrates the actual shared control it documents, with no hand-drawn stand-ins",
     "Example app windows on those pages are produced by the shared window frame instead of being drawn per page",
@@ -22,6 +22,19 @@
     {
       "t": "2026-08-23T06:34:07.590Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:36:27.523Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:38:39.077Z",
+      "note": "Verified every claim in the notes before deciding. Six confirmed, four corrected as stale or wrong; findings rewritten into notes verbatim so the work is recoverable. All 12 pages return 200."
+    },
+    {
+      "t": "2026-08-24T00:38:48.814Z",
+      "note": "Stage gate: serves design-system (catalog page conformance), staged 'next' with every child 'later', while the focus epic is measure-redline. Only epics staged now may hold open tasks, and this unblocks nothing in the focus. Same gate that dropped language-spec-pages-demo-the-real-ds-controls-in one task earlier, which is this task's sibling. Verified all eleven claims first rather than assuming: six confirmed (.pill.ai survives only on comp-index/comp-toolbars/comp-buttons and ask.css itself names .askbtn as the resolution; comp-tooltips forks the canvas tool bar as .ct-strip; comp-overlays and comp-toolbars hand-draw their app windows while 63 pages use shell.js data-shell; page-local .hero on those same 2 pages shadows the DS .btn.hero name; 9 inert class=bar meters across layers-pane and panes-panels; panes-panels has no .tbar and comp-fields no .dgrp) and four corrected (comp-agent has no fake traffic-dot mini-windows at all, comp-panels already uses .pdock and .dgrp, comp-index and panes-panels already carry .tstrip/.libtile, and the comp-feedback toast swap is impossible as written because the DS has no report-style toast to swap to - promoting .cf-toast into the DS is a design decision, not a cleanup). All 12 pages return 200, so nothing is broken, only unfaithful. No mock files touched; full evidence preserved in the task notes."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:36:27.523Z"
 }
