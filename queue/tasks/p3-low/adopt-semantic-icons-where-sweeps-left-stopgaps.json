@@ -4,14 +4,14 @@
   "goal": "A handful of controls in the study borrow an icon that means something else, so the picture does not match what the control does. This gives them icons that actually depict the action, such as left, center and right alignment and horizontal and vertical flip.",
   "priority": "p3-low",
   "seq": 50,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.127Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:11:27.979Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: design-system > icon-conformance. From study-tasks.json icon-semantic-refine. Pages are ascii/emoji clean; this is semantic polish: lang-toolbars text-align seg should use ic-align-left/center/right, flip H/V should use ic-flip-horizontal/vertical instead of ic-transition, walkthrough back/next could adopt chevrons. Complements (does not duplicate) the queued icon-conformance-audit task, which hunts ascii glyphs.",
+  "notes": "Objective: design-system > icon-conformance (child staged 'later', parent 'design-system' staged 'next'). Focus epic is measure-redline.\n\nVERIFIED 2026-08-24 BEFORE DROPPING - THE PREMISE NO LONGER HOLDS. All three named stopgaps were already replaced by earlier sweeps; there is no work left as written.\n\nClaim by claim, checked against the live files:\n  1. \"lang-toolbars text-align seg should use alignment icons\" - already does. lang-toolbars.html:635 is\n     ic-text-align-left / -center / -right. Landed in 3717b7e.\n  2. \"flip H/V should use flip icons instead of ic-transition\" - already does. lang-toolbars.html:486-487\n     and :610-611 are ic-flip-horizontal / ic-flip-vertical. Landed in 559a888. No ic-transition anywhere\n     is standing in for a flip: all 24 uses across 8 pages mean a real transition (video cross-dissolve),\n     a prototype connection, or a motion mapping.\n  3. \"walkthrough back/next could adopt chevrons\" - already does, on all 20 walkthrough pages:\n     ic-chevron-left + Back, Next + ic-chevron-right, with no variants. Landed in 559a888.\n\nTHE TASK'S OWN SUGGESTION WAS WRONG AND WOULD REGRESS THE PAGE IF RUN LITERALLY. It asked for\nic-align-left/center/right on the TEXT alignment segment. icons.mjs:318 forbids exactly that: \"Text-alignment\nglyphs are the ragged-line family. Object alignment lives in Transform & arrange and never uses these.\"\nThe page already draws the correct distinction. Anyone re-staging this epic should ignore that line of the note.\n\nWIDER SWEEP, since the title is broader than the three spots. Extracted every icon class across all 90 mock\nHTML files and resolved each against icons.mjs plus its ALIASES map: 216 known names, ZERO icons used that\nare not in the source of truth. Then audited every control whose label or title says align, flip, rotate,\nmirror or distribute (35 call sites): object alignment uses ic-align-*, text alignment uses ic-text-align-*,\nflips use ic-flip-*, rotation uses ic-rotate-*, distribution uses ic-distribute-*. Every one is semantically\nright. The single ic-align-center (alias) use is iconography.html:465, which is the page that documents the\naliases, so it is correct by design.\n\nA label-vs-icon lexical overlap pass flagged 1089 pairs but is not usable evidence: it has no synonym model,\nso ic-pen<-\"Edit\", ic-check<-\"Accept\", ic-trash<-\"Clear All\" and ic-plus<-\"New conversation\" all trip it.\nSpot-reading the head of that list found no genuine mismatch. Recording it so nobody re-runs the same\nheuristic and mistakes its noise for findings.\n\nNO ICON WAS DELIBERATELY LEFT AS A STAND-IN, so acceptance item 2 has an empty list rather than an unmet one.",
   "acceptance": [
     "The text-alignment and flip controls on the toolbar spec page use alignment and flip icons rather than a stand-in",
     "Any icon deliberately left as a stand-in is listed in the task log with the reason",
@@ -33,6 +33,23 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:08:43.831Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:11:23.275Z",
+      "note": "Verified before dropping, and the premise does not hold. All three named stopgaps are already fixed in the live files: lang-toolbars.html:635 uses ic-text-align-left/center/right, :486-487 and :610-611 use ic-flip-horizontal/vertical (no ic-transition stand-in anywhere), and all 20 walkthrough pages use ic-chevron-left/right for Back/Next. Wider sweep over all 90 mock HTML files: every icon used resolves to one of the 216 canonical names or aliases in icons.mjs, and all 35 align/flip/rotate/distribute controls carry the semantically correct glyph. Separately, the task's own suggestion was wrong: it asked for ic-align-* on the text-alignment segment, which icons.mjs:318 explicitly forbids, so running it literally would have regressed the page."
+    },
+    {
+      "t": "2026-08-24T00:11:23.276Z",
+      "note": "Two independent grounds for dropping. (1) Stage gate: this serves design-system > icon-conformance, a child staged 'later' under a parent staged 'next'; the focus epic is measure-redline and only epics staged 'now' may hold open tasks. Same gate that dropped icon-conformance-audit-across-mock-pages, decide-zoom-semantics-on-mock-canvases and show-save-and-dirty-state-across-editor-mocks. (2) The work is already done: every acceptance item passes against the current files without any change from me. No mock files were touched. Full evidence is in notes."
+    },
+    {
+      "t": "2026-08-24T00:11:27.978Z",
+      "note": "Serves design-system > icon-conformance, staged 'later'; focus is measure-redline. Verified first and the premise no longer holds: all three named stopgaps were already fixed by earlier sweeps, and every icon across the 90 mock pages resolves to the source of truth. Evidence in notes."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:08:43.831Z"
 }
