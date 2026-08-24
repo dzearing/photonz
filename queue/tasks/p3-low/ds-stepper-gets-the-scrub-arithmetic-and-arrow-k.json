@@ -4,24 +4,42 @@
   "goal": "The number fields in the study are documented as ones you can drag sideways to change, type simple math into, and nudge with the arrow keys, but none of that actually works and each page wires up its own partial version. This builds the behaviour once so every number field does what it promises.",
   "priority": "p3-low",
   "seq": 170,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T16:15:25.906Z",
-  "updated": "2026-08-23T16:15:25.906Z",
+  "updated": "2026-08-24T00:50:30.443Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "input.css documents the .stepper as a numeric field whose label scrubs sideways, which accepts arithmetic (320/2, +16), steps with arrows and 10x with shift, and has spinner buttons. None of that is implemented: there is no stepper.js, so every page that adopts .stepper hand-wires its own input listener and spinner clicks (ui-autolayout, ui-grid do this now). Add a shared component so the behaviour is one file, then drop the per-page wiring.",
+  "notes": "STAGE-GATE DROP 2026-08-23. Serves design-system (staged next, every child later) while focus is measure-redline. redline.html has no number fields at all, so this unblocks nothing in focus, and the mock corpus stepper is HTML/CSS that has no path into the Next release SwiftUI controls. Reopen when design-system is staged now. Everything below was verified against the corpus, and the original notes were substantially wrong.\n\nCONFIRMED. input.css lines 20-25 promise four behaviours: the label is a scrub handle, the field accepts arithmetic (320/2, +16), it steps with arrows and 10x with shift, and spinners appear on hover. .stepper>.k carries cursor:ew-resize, so the drag affordance is drawn. There is no stepper.js anywhere in the repo and no stepper entry in shared/components/order.json.\n\nCORRECTED - the page list. 13 files mention the word stepper, but only SEVEN render one: comp-fields 15, comp-panels 4, comp-index 3, ui-grid 3, video.html 3, ui-autolayout 2, video-motion 1. That is 31 in total. The other six (creation-vision, component-configure-wt, composites, documents, iconography, img-grade-wt) only mention it in prose, a spec table or a CSS rule.\n\nCORRECTED - who hand-wires. The notes named ui-autolayout and ui-grid. video-motion.html hand-wires too, and it is the ONLY page in the corpus with any arrow-key support (ArrowUp/ArrowDown on the stagger field, no shift multiplier).\n\nWORSE THAN THE NOTES SAY - the scrub is implemented nowhere. 30 of the 31 steppers carry a .k label, so 30 fields draw a drag cursor over a handle that does nothing. Not one page, including the three that wire spinners, implements the gesture.\n\nWORSE THAN THE NOTES SAY - arithmetic is implemented nowhere. All three wiring pages use parseFloat/parseInt, so 320/2 silently becomes 320 and +16 becomes 16. The spec headline behaviour fails hardest on the pages that look wired.\n\nSPINNERS. Only 12 of 31 steppers have buttons at all; 19 have no .sp, so hovering them shows nothing. Of the 12, six are wired (2 ui-autolayout, 3 ui-grid, 1 video-motion) and six are dead specimens in comp-fields and comp-index. No stepper has an empty .sp, so there is no empty-hover-well bug to fix.\n\nHOW TO BUILD IT. Copy slider.js: idempotent dataset.pz* marking, a PZ.all sweep, and re-dispatch a bubbling input event after writing a value. Register stepper in order.json js after slider. If it dispatches bubbling input, ui-autolayout and ui-grid keep working untouched (both listen on input) and their spinner wiring can simply be deleted. video-motion is the exception: it listens on change and owns its own ArrowUp/ArrowDown, so its keydown block must go in the same pass or arrows will double-step. Preserve ui-grid setNum behaviour of never writing into a field that holds focus, or typing gets fought.",
   "acceptance": [
-    "Dragging sideways on a number field's label changes its value",
-    "Typing a simple expression such as 320/2 or +16 resolves to the computed number",
-    "Arrow keys step the value, Shift steps ten times as far, and the small up and down buttons work",
-    "Pages that previously wired this up themselves use the shared behaviour and still work"
+    "Dragging sideways on a number field's label changes its value, on all 30 fields that draw the ew-resize handle",
+    "Typing 320/2 or +16 into a number field resolves to the computed number instead of being silently truncated",
+    "Arrow keys step the value, Shift steps ten times as far, and every number field that shows spinner buttons responds to them",
+    "ui-autolayout, ui-grid and video-motion drop their own wiring and still work, with video-motion no longer double-stepping on arrow keys"
   ],
   "log": [
     {
       "t": "2026-08-23T16:15:25.906Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:47:24.571Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:50:25.143Z",
+      "note": "Audited the whole corpus. Verified the spec promise and the absent stepper.js; corrected the page list (7 pages render 31 steppers, not the 2 named), found video-motion hand-wires as well, and found scrub and arithmetic implemented on zero pages while 30 fields draw an ew-resize handle. Notes and acceptance rewritten."
+    },
+    {
+      "t": "2026-08-24T00:50:25.144Z",
+      "note": "Dropped at the stage gate: serves design-system (next), focus is measure-redline, and no measure/redline page carries a number field."
+    },
+    {
+      "t": "2026-08-24T00:50:30.442Z",
+      "note": "Serves design-system (staged next, all children later) while focus is measure-redline; no measure/redline page has a number field, and the mock stepper has no path into Next's SwiftUI controls. Audited the corpus first and rewrote notes + acceptance with the corrected findings."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:47:24.570Z",
+  "epic": "design-system"
 }
