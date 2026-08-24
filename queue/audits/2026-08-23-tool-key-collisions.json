@@ -1,0 +1,26 @@
+{
+  "feature": "One key, one tool, in every mock tool bar",
+  "epic": "design-system",
+  "summary": "Three tool bars in the design study each handed the same letter to two different tools, so one of the pair could never be reached from the keyboard. Every bar now gives each key to exactly one tool, and a checker keeps it that way.",
+  "setup": "Design dashboard at http://127.0.0.1:8791. Nothing to build or install. From docs/design/mocks, node shared/check-shortcuts.mjs is the guard.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/image.html and click the three-dot More tools button at the right of the bottom tool bar.", "shot": "2026-08-23-toolkeys-1.png" },
+    { "do": "Read the Heal and Patch rows: Heal is J, Patch is now the shifted sibling, and Pen has its P back instead of a blank." },
+    { "do": "Open http://127.0.0.1:8791/pages/iconography.html, scroll to the In Context block, and hover the ruler at the right end of the tool bar. It reads I now, not M, so it no longer clashes with Marquee." },
+    { "do": "Open http://127.0.0.1:8791/pages/ui-prototype.html and open its More tools menu. Connect reads N; X is left to swap foreground and background, as it is on 44 other screens." },
+    { "do": "Open http://127.0.0.1:8791/pages/lang-keyboard.html and read the Tools column and the paragraph beside it." },
+    { "do": "Run node shared/check-shortcuts.mjs from docs/design/mocks and watch it pass." }
+  ],
+  "evaluate": [
+    "Does the shifted key on Patch read as a real keystroke, or does it look like a typo next to the plain letters?",
+    "Sitting two rows under Heal J, does Patch's shifted J explain itself, or does it need words?",
+    "Is N a letter you would guess for Connect, or would you rather Connect stop being a tool at all and live in a prototype mode?",
+    "The Tools column of the legend is now thirteen rows against Edit's six. Does the taller column read as thorough or as lopsided?",
+    "Should the checker run in CI, or is a line in the rules doc enough?"
+  ],
+  "rough": [
+    "The ruler is still the loose end. The app binds Measure to I, iconography.html now says I, and 59 other screens still say M. Sweeping them is not mechanical: icon-gradient-wt.html shows Sample a color (I) and Measure in the same strip, so moving Measure to I collides there. Filed as its own task with the fork spelled out, because picking between moving the ruler and moving the eyedropper is a call worth making deliberately.",
+    "Found while checking: on the keyboard reference page the Components card is too narrow and clips the key badges for Edit component and Reset overrides by about 16px. Pre-existing, filed separately, not touched here.",
+    "Two overflow menu rows called the component tool Component while the button above them called it Component insert. Renamed the rows to match the button. Two other pages spell it Insert component and Insert instance, but those sit in real menus rather than in a tool bar, so they were left alone."
+  ]
+}

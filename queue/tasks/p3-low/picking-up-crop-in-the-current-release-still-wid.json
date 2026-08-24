@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 310,
-  "status": "in_progress",
+  "status": "done",
   "release": "current",
   "area": "app",
   "created": "2026-08-24T03:09:36.758Z",
-  "updated": "2026-08-24T03:34:18.457Z",
+  "updated": "2026-08-24T03:45:15.066Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured offscreen 2026-08-24 with the same harness used for the wand fix (temp/measure-bar.swift): cropOptions is 217pt, which puts the residual bar at about 520pt against a 403pt budget on a 435pt canvas, versus the wand's 473pt. The wand fix landed EditorChromeLayout.showsFullToolOptions(canvasWidth:) (threshold 520) and split EditorView.wandOptions into wandToleranceControl plus compactWandOptions, a Tol chip with a chevron that opens the full slider in a popover. Crop needs the same treatment on cropOptions, but 217pt will not fit in one chip the same way: the aspect locks probably want a single Aspect chip that opens a menu, and apply/cancel may want to move to the canvas the way Next does it behind next-tool-options. Only affects .current, since the flag is releases: [.next] and turns this whole code path off there.",
@@ -50,7 +50,12 @@
     {
       "t": "2026-08-24T04:51:00.000Z",
       "note": "Porting rule: nothing to carry. The whole path is behind !Experiments.shared.toolOptionsEnabled, a flag that exists only in Next's catalog, so this is Current-only by construction. Next already solves the same problem its own way, with the aspect locks in the crop button's flyout and apply/cancel on the canvas."
+    },
+    {
+      "t": "2026-08-24T03:45:15.065Z",
+      "note": "Crop's four aspect locks fold into one chip below 545pt of canvas, bringing the bar from 505pt to 392pt inside a 403pt budget: both ends now sit inside the picture instead of hanging 51pt off each end. Tick and cross stay in the bar; Return and Escape untouched. New EditorChromeLayout.showsFullCropOptions with six tests written first; Scripts/test.sh green at 1094. Current release only, nothing to port to Next. Audit: queue/audits/2026-08-24-crop-bar-fit.json. Shipped in a06a68d."
     }
   ],
-  "started": "2026-08-24T03:34:18.456Z"
+  "started": "2026-08-24T03:34:18.456Z",
+  "completed": "2026-08-24T03:45:15.066Z"
 }

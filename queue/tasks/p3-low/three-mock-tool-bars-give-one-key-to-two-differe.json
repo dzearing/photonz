@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 320,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:32:18.732Z",
-  "updated": "2026-08-24T03:32:18.732Z",
+  "updated": "2026-08-24T03:54:42.307720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing the redline Arrow key. Same-bar collisions: docs/design/mocks/pages/image.html Patch (P) sits next to Pen (P) - Photoshop files Patch under J with the healing group, and Heal (J) already exists in the corpus, so the fix is probably Patch -> J as a grouped slot. iconography.html Marquee (M) next to Measure (M) - the app already resolved this one, Tool.shortcutKey has measure on I because M is the Photoshop marquee. ui-prototype.html Connect (X) next to Swap foreground and background (X). Detection script: grep title=\"...(K)\" per page and group by K. Note app-shell.html and lang-toolbars.html also flag but are false positives - they render several DIFFERENT tool bars on one page as a gallery, so C=Crop in an image bar vs C=Component insert in a UI bar is mode-dependent, not a collision. Canonical letters now live in Sources/PhotonzCore/Tools.swift Tool.shortcutKey and the rule is written up in docs/design/mocks/shared/AGENTS.md.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-08-24T03:32:18.732Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T03:45:34.324Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Epic design-system is staged next, not now. Kept it: it is a small conformance fix that also lands a permanent guard, and it was already claimed. Recorded rather than dropped."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Adversarial review before building. (1) The task's grep found 3 collisions; a bar-scoped detector found 5, and cleared app-shell.html and lang-toolbars.html as galleries of different mode bars, as the notes predicted. (2) image.html had already half-solved Patch/Pen by silently deleting Pen's key from the overflow menu, so the bar's tooltip promised P and its own menu showed nothing. Worse than the collision. (3) Photoshop puts Patch in Heal's J group, one slot with a flyout, so the two cannot both print a bare J; the honest answer is the shifted sibling, and capture-wt.html already prints Redact (shift-R). (4) Connect has no Photoshop equivalent and no entry in Tool.shortcutKey, so its letter is free; X is swap foreground/background on 44 pages, so Connect moves, not X. Free letters corpus-wide were D, N, Q, Y, and only N ties to the name. (5) Nothing here is decorative; shortest version is five attribute edits."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Built: iconography.html Measure M -> I; image.html Patch P -> shift-J plus Pen's P restored in the overflow menu; ui-prototype.html Connect X -> N; agent.html and export-share.html overflow rows renamed Component -> Component insert to match the button they stand for. lang-keyboard.html Tools legend gained Measure I, Connect N, Heal J, Patch shift-J plus a paragraph explaining the group idiom. shared/AGENTS.md rewritten to name the checker and spell out the shifted-sibling and one-name rules."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "New guard: docs/design/mocks/shared/check-shortcuts.mjs walks every .tbar in pages/, reads the letters its buttons and overflow menu print, and fails on a same-bar duplicate. Was 5 red, now green. check-elevation.mjs and check-states.mjs still green; Scripts/test.sh 1094 tests pass."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Encoding gotcha for future runs: perl -0pi without -CSD double-encodes an entire UTF-8 file the moment the replacement introduces a wide character. It silently rewrote 51 lines of image.html before git diff caught it. Reverted and redid with python3. Use python3 for any edit that inserts a glyph."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Second adversarial pass on the rendered pages. Overflow menu on image.html reads Heal J / Patch shift-J two rows apart and the group is legible; the shifted keycap right-aligns with the plain letters without disturbing them. The DS tooltip upgrade takes up to 12 characters inside the parens, so shift-J flows through as data-tip=\"Patch|shift-J\" exactly like the existing chord tooltips. Left rough: the ruler still says M on 59 pages while the app and iconography.html say I, and a blind sweep collides with the eyedropper in icon-gradient-wt.html, so that fork is filed as its own task. Also found and filed: lang-keyboard.html's Components card clips its key badges by 16px, pre-existing."
+    },
+    {
+      "t": "2026-08-24T03:54:42.307720Z",
+      "note": "Filed follow-ups: the-ruler-tool-answers-to-a-different-key-on-alm (p2), component-shortcuts-run-off-the-edge-of-their-ca (p3). Audit: queue/audits/2026-08-23-tool-key-collisions.json"
     }
-  ]
+  ],
+  "started": "2026-08-24T03:45:34.323Z"
 }

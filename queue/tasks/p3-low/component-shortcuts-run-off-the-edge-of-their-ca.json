@@ -1,0 +1,26 @@
+{
+  "id": "component-shortcuts-run-off-the-edge-of-their-ca",
+  "title": "Component shortcuts run off the edge of their card on the keyboard page",
+  "goal": "On the keyboard reference screen, the Components group is too narrow for its rows, so the key badges for Edit component and Reset overrides are cut off by the edge of the card and you cannot read what to press.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T03:54:00.535Z",
+  "updated": "2026-08-24T03:54:00.535Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "docs/design/mocks/pages/lang-keyboard.html, the .cats grid in block 04. Measured live: the COMPONENTS .cat has .scut rows overflowing its box by 16px on the right; TOOLS, EDIT and VIEW clear by 8-13px. The long labels are Create component / Edit component and Swap instance / Reset overrides, which pair two long names into one two-up row. Pre-existing, not caused by the tool-key work. Same block also leaves the EDIT card with dead space because .cat boxes stretch to the tallest in the grid row.",
+  "acceptance": [
+    "No row in any group on the keyboard reference screen extends past the edge of its card",
+    "Every key badge on that screen is fully readable at the default window width"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T03:54:00.535Z",
+      "note": "created (manual)"
+    }
+  ]
+}

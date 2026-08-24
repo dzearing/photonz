@@ -894,15 +894,34 @@ NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ 
    that documents this rule.
 
    **One key means one tool, on every page.** Before you put `(X)` in a tool's
-   `title`, grep the corpus for `(X)"` and make sure nothing else already
-   answers to it. The letters follow Photoshop wherever Photoshop has the same
-   tool (`V` move, `M` marquee, `T` text, `B` brush, `P` pen, `C` crop, `Z`
-   zoom, `L` lasso), and where it does not, the app's own `Tool.shortcutKey` in
+   `title`, run `node shared/check-shortcuts.mjs` — it reads every `.tbar` in
+   `pages/`, collects the letters its buttons and its overflow menu print, and
+   fails if one bar gives the same keystroke to two different tools. The letters
+   follow Photoshop wherever Photoshop has the same tool (`V` move, `M` marquee,
+   `T` text, `B` brush, `P` pen, `C` crop, `Z` zoom, `L` lasso, `J` heal), and
+   where it does not, the app's own `Tool.shortcutKey` in
    `Sources/PhotonzCore/Tools.swift` is the source of truth: notably the redline
    **Arrow is `A`** (never `P`, which belongs to the Pen) and **Measure is `I`**
-   (never `M`, which belongs to the marquee). Two tools in the SAME tool bar
-   sharing a letter is a bug; the same letter meaning different things in two
-   unrelated surfaces is how people learn to stop trusting shortcuts.
+   (never `M`, which belongs to the marquee — Photoshop files its ruler with the
+   eyedropper, so `I` is the Photoshop-faithful letter too). Two tools in the
+   SAME tool bar sharing a letter is a bug; the same letter meaning different
+   things in two unrelated surfaces is how people learn to stop trusting
+   shortcuts.
+
+   **A Photoshop group shown as two buttons takes the shifted sibling.** Several
+   tools that the study draws side by side live in ONE Photoshop toolbar slot
+   with a flyout — Heal and Patch are both `J`, the ruler and the eyedropper are
+   both `I`. When a bar shows two members of one group as separate buttons, the
+   primary keeps the bare letter and the sibling prints `⇧` plus that letter
+   (**Heal `J`**, **Patch `⇧J`**), which is the keystroke that actually cycles to
+   it. `pages/capture-wt.html` does the same with `Redact (⇧R)`. Never solve the
+   clash by deleting a tool's key hint: a bar whose tooltip promises `P` and
+   whose menu row shows nothing has taught two contradictory things.
+
+   Tools with no Photoshop equivalent take a free letter with a mnemonic tie to
+   the name (**Connect `N`**); `X` is always swap foreground and background.
+   A tool has exactly ONE name too: an overflow menu row reads the same as the
+   button it stands for ("Component insert", not "Component").
 2. **Typographic marks in running prose** — an arrow or middot used as a text
    connector in an explanatory sentence or caption ("before → after", "Tokens ·
    Styles · Components") is text, not an icon. Only convert a glyph when it acts
