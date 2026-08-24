@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 240,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T23:51:25.773Z",
-  "updated": "2026-08-24T02:10:20.873Z",
+  "updated": "2026-08-24T02:10:44.603Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Observed 2026-08-23 with a temporary env-gated geometry probe while fixing the measure hint chip. onGeometryChange on the GlassEffectContainer wrapping `toolbar` in EditorView reported h 48 in every state EXCEPT after EditorState.addMeasure in a 700pt-wide window, where it settled at h 200 with the bottom still pinned (544..744 in a 760pt canvas), i.e. it grew upward. Most likely benign: GlassEffectContainer reserves a morph region around newly inserted glass shapes, and the measureCountPill appears exactly then. Verify by hit-testing, not by reading frames: the container has no allowsHitTesting(false). Cannot affect the measure hint chip (that only shows while the document holds no measurements).",
@@ -58,7 +58,12 @@
     {
       "t": "2026-08-24T02:10:20.873Z",
       "note": "Cleanup: temporary probe (Sources/Photonz/DevHitTestProbe.swift, its AppDelegate hook, CanvasNSView.debugActiveTool) removed. swift build clean, Scripts/test.sh green (1061 tests). Probe app quit."
+    },
+    {
+      "t": "2026-08-24T02:10:44.602Z",
+      "note": "Hit-tested the live app in five states: the reported tall click blocker does not exist, the bar only ever claims the band it draws. The sweep found the reverse defect instead, the 10pt glass rim above and below the controls passed clicks through to the picture, so the tools, compact tools, color and zoom capsules now carry .contentShape(.capsule). Verified with the same in-app hit-test sweep plus real clicks that still switch tools. Audit: queue/audits/2026-08-24-toolbar-hit-area.json. Follow-up filed: the-tool-bar-runs-off-both-edges-of-the-picture."
     }
   ],
-  "started": "2026-08-24T01:50:10.728Z"
+  "started": "2026-08-24T01:50:10.728Z",
+  "completed": "2026-08-24T02:10:44.603Z"
 }
