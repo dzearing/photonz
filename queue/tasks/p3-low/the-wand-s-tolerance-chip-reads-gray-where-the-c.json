@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 330,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:44:35.869Z",
-  "updated": "2026-08-24T03:44:35.870Z",
+  "updated": "2026-08-24T04:28:59.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorView.compactWandOptions. Cause found while fixing the crop bar: a bare Text inside a .buttonStyle(.borderless) label is drawn as an NSButton title, which ignores foregroundStyle and comes out secondary. Giving the Text a .background(Color.clear) puts it back on SwiftUI's drawing path and the color sticks; that is what compactCropOptions does. The \"Tol\" word should stay secondary, only the value changes. Current release only (the whole path is behind !toolOptionsEnabled).",
@@ -21,6 +21,36 @@
     {
       "t": "2026-08-24T03:44:35.870Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T04:25:41.860Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-23T00:00:00.000Z",
+      "note": "Adversarial review before building: the fix is worth it but only just. The chip is a live value you press, and drawing its number like a dimmed caption is the one thing that makes it read as inert, so it is a real defect and not decoration. Shortest version that delivers the value is two view modifiers on one Text, so no bar layout, no new control, no popover change."
+    },
+    {
+      "t": "2026-08-23T00:00:01.000Z",
+      "note": "Reproduced first, before changing anything: rendered the shipping chip code through a real NSHostingView offscreen (cacheDisplay, no screen-capture permission needed) beside the crop chip. Confirmed the number comes out gray on the NSButton-title path while the crop chip's ratio comes out black. Evidence: queue/audits/2026-08-23-wand-tolerance-chip.png (left = before, middle = after, right = crop reference)."
+    },
+    {
+      "t": "2026-08-23T00:00:02.000Z",
+      "note": "Fix in EditorView.compactWandOptions: the value Text gains .foregroundStyle(Color.primary), .background(Color.clear) and .weight(.medium), matching compactCropOptions exactly. Tol stays secondary. Measured monospaced '128' at caption size: 18.54pt at both regular and medium weight, so the 22pt frame still holds three digits and the weight change costs nothing."
+    },
+    {
+      "t": "2026-08-23T00:00:03.000Z",
+      "note": "Acceptance verified, not assumed. (1) Re-rendered offscreen: the number now draws primary at the crop chip's weight. (2) Chip width measured with fittingSize: 55.0x28.0 before and 55.0x28.0 after, so the chip is not wider. swift build clean, Scripts/test.sh green (1094 tests, 140 suites)."
+    },
+    {
+      "t": "2026-08-23T00:00:04.000Z",
+      "note": "Review after building: no disabled-state regression, since the chip only exists while the wand is in hand and nothing on that path carries .disabled. EditorView.swift is shared, so Next carries the change automatically; there is no Next fork of this file. Audit written to queue/audits/2026-08-23-wand-tolerance-chip.json."
+    },
+    {
+      "t": "2026-08-24T04:28:59.763Z",
+      "note": "The compact wand chip's number now draws primary at the crop chip's medium weight (EditorView.compactWandOptions), matching compactCropOptions. Verified by offscreen NSHostingView render before and after, chip width unchanged at 55x28pt, swift build clean, 1094 tests green. Audit: queue/audits/2026-08-23-wand-tolerance-chip.json"
     }
-  ]
+  ],
+  "started": "2026-08-24T04:25:41.860Z",
+  "completed": "2026-08-24T04:28:59.764Z"
 }

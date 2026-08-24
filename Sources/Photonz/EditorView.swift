@@ -1042,8 +1042,19 @@ struct EditorView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text("\(Int(editorState.wandTolerance))")
-                    .font(.system(.caption, design: .monospaced))
+                    // Weight and color match the crop chip's ratio beside it:
+                    // both are live values you press, not dimmed captions. The
+                    // clear background is load-bearing — a bare Text in a
+                    // borderless button's label is drawn as an NSButton title,
+                    // which ignores foregroundStyle and comes out gray; giving
+                    // it a background puts it back on SwiftUI's own drawing
+                    // path, where the color sticks. Monospaced digits carry the
+                    // same advance width at every weight, so medium costs no
+                    // width and the 22pt frame still holds three digits.
+                    .font(.system(.caption, design: .monospaced).weight(.medium))
+                    .foregroundStyle(Color.primary)
                     .frame(width: 22, alignment: .trailing)
+                    .background(Color.clear)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(.secondary)

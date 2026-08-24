@@ -1,0 +1,22 @@
+{
+  "feature": "The wand's compact Tolerance chip",
+  "epic": "measure-redline",
+  "summary": "On a narrow window the Magic Wand's tolerance number no longer reads as switched off. It now draws in normal text at the same weight as the crop tool's ratio chip beside it, and the chip is exactly as wide as before.",
+  "setup": "Photonz Dev, release Current (the compact wand and crop chips only appear when the newer tool options are off). Pick up the Magic Wand.",
+  "try": [
+    { "do": "Narrow the window until the tolerance slider folds into a small chip reading Tol and a number.", "shot": "2026-08-23-wand-tolerance-chip.png" },
+    { "do": "Look at the number. It should read as live text, not grayed out." },
+    { "do": "Click the chip and drag the slider from 8 up to 128." },
+    { "do": "Watch the chip while you drag: nothing beside it should shift." },
+    { "do": "Switch to the Crop tool at the same window width and compare its ratio chip to the wand's number." }
+  ],
+  "evaluate": [
+    "Does the tolerance number now read as something you can press, the way the crop ratio does?",
+    "Do the two chips look like the same kind of control side by side?",
+    "Is Tol staying gray while the number is dark the right split, or should the whole chip be one color?"
+  ],
+  "rough": [
+    "Verified by rendering the exact chip code through real AppKit offscreen rather than by screenshotting a running window: screen capture is not available to the loop's build. The before/after/reference image is beside this file.",
+    "The number keeps its monospaced digits while picking up the crop chip's medium weight. Monospaced digits are the same width at every weight, so the chip measures 55pt before and after."
+  ]
+}
