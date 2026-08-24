@@ -96,7 +96,8 @@ struct ToolModeButton<Mode: Hashable>: View {
         .overlay { cycleKey }
     }
 
-    /// The glyph, wearing the accent circle when this tool is the one in hand.
+    /// The glyph, wearing the accent circle when this tool is the one in hand,
+    /// and a corner marker when it has modes to offer.
     private var glyph: some View {
         Image(systemName: current?.symbol ?? "questionmark")
             .font(.system(size: 15, weight: .medium))
@@ -108,6 +109,23 @@ struct ToolModeButton<Mode: Hashable>: View {
                         .matchedGeometryEffect(id: "activeTool", in: namespace)
                 }
             }
+            .overlay(alignment: .bottomTrailing) { moreMarker }
+    }
+
+    /// ONE control, not two. SwiftUI's own menu indicator hangs a second chevron
+    /// off the side of the button: at tool-bar scale that reads as a separate
+    /// widget sitting next to the tool, and it spends horizontal space the bar
+    /// does not have. The marker is a tiny wedge INSIDE the button's own
+    /// footprint instead, which is how a pro editor has always flagged a tool
+    /// group, and it costs zero extra width.
+    @ViewBuilder private var moreMarker: some View {
+        if modes.count > 1 {
+            Image(systemName: "arrowtriangle.down.fill")
+                .font(.system(size: 5, weight: .black))
+                .foregroundStyle(isActive ? Color.white.opacity(0.9) : Color.secondary)
+                .padding(1)
+                .allowsHitTesting(false)
+        }
     }
 
     private var plainButton: some View {
@@ -135,7 +153,10 @@ struct ToolModeButton<Mode: Hashable>: View {
         } primaryAction: {
             activate()
         }
-        .menuIndicator(.visible)
+        // Hidden, because the glyph carries its own corner marker: with this
+        // visible the button became a glyph AND a detached chevron, two things
+        // to look at and two slots wide for one tool.
+        .menuIndicator(.hidden)
         .menuStyle(.button)
         .buttonStyle(.borderless)
         .fixedSize()

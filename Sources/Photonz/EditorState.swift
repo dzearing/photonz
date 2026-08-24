@@ -1026,6 +1026,10 @@ final class EditorState {
     /// an alignment guide. Always visible in the tool options, session chrome,
     /// never persisted. Distance is the default and the only mode that draws
     /// nothing on the canvas until you act.
+    /// The mode STICKS, across tool switches and across launches. A tool that
+    /// forgets which mode you put it in makes you re-pick it every session, and
+    /// the button's glyph is the only place the bar says what the tool will do,
+    /// so a mode that resets is also a glyph that lies about your last choice.
     var measureToolMode: MeasureToolMode {
         get { Experiments.shared.measureModesEnabled ? storedMeasureToolMode : .distance }
         set {
@@ -1034,7 +1038,13 @@ final class EditorState {
             measureCandidateLevel = 0
         }
     }
-    private var storedMeasureToolMode: MeasureToolMode = .distance
+    private static let measureModeKey = "tool.measure.mode"
+    private var storedMeasureToolMode: MeasureToolMode = {
+        let raw = UserDefaults.standard.string(forKey: EditorState.measureModeKey) ?? ""
+        return MeasureToolMode(rawValue: raw) ?? .distance
+    }() {
+        didSet { UserDefaults.standard.set(storedMeasureToolMode.rawValue, forKey: Self.measureModeKey) }
+    }
 
     /// Which rung of the detected element ladder Size mode is showing, moved by
     /// `[` and `]`. Session chrome; clamped against the live candidate list by

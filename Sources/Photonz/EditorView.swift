@@ -417,34 +417,19 @@ struct EditorView: View {
         }
     }
 
-    /// The color + zoom capsules, always present at the trailing end. The
-    /// measurement count pill (§6, `next-measure-panel`) joins them while the
-    /// document holds any measurements.
+    /// The color + zoom capsules, always present at the trailing end.
+    ///
+    /// The mock's "7 measurements" pill used to sit here too. It was a whole
+    /// glass capsule of running text, permanently parked in the scarcest strip
+    /// in the app, to report a number the Measurements panel already shows
+    /// beside the list it is counting. Horizontal space in this bar is the
+    /// thing D15 exists to protect, so the count went back to the panel and the
+    /// bar kept its width.
     private var sideCapsules: some View {
         HStack(spacing: 10) {
-            if Experiments.shared.measurePanelEnabled, editorState.measurementCount > 0 {
-                measureCountPill
-            }
             colorBar
             zoomBar
         }
-    }
-
-    /// The mock's "7 measurements" toolbar pill: a glass capsule with the live
-    /// count; clicking it reveals the Measurements group in the inspector.
-    private var measureCountPill: some View {
-        Button {
-            editorState.revealMeasurementsPanel()
-        } label: {
-            let count = editorState.measurementCount
-            Text(count == 1 ? "1 measurement" : "\(count) measurements")
-                .font(.callout.monospacedDigit())
-        }
-        .buttonStyle(.borderless)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .glassEffect(.regular, in: .capsule)
-        .help("Show the Measurements panel")
     }
 
     private var toolsBar: some View {
