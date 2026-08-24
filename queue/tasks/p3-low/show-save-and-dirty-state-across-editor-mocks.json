@@ -4,14 +4,14 @@
   "goal": "The editing screens never show whether your work has unsaved changes or when it was last saved, so it is unclear where the work goes. This adds one consistent unsaved marker and saving indicator across every editing screen.",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.077Z",
-  "updated": "2026-08-23T00:27:39.524Z",
+  "updated": "2026-08-24T00:03:31.083Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: creation-vision > editor-surfaces. From study-tasks.json save-dirty-state (audit finding f-020). documents.html already shows the save/versions/autosave flow; this task carries the dirty-dot + autosave affordance into the editor shells so every editor mock answers where does my work go.",
+  "notes": "Objective: creation-vision > editor-surfaces. From study-tasks.json save-dirty-state (audit finding f-020). documents.html already shows the save/versions/autosave flow; this task carries the dirty-dot + autosave affordance into the editor shells so every editor mock answers where does my work go.\n\nStage-gate drop 2026-08-24. The underlying report was re-verified before dropping and is still accurate, so it can be re-filed verbatim when creation-vision is staged now: shared/components/badge.css already defines the macOS-style unsaved dot (.dot.edited, line 54, sitting before the document name), but only four pages reference an unsaved state at all (comp-overlays, lang-frame, documents, comp-feedback) and documents.html is the only one that carries the autosave line (\"Autosave on, unsaved change kept\", pages/documents.html:584). None of the editor shells (editor, draw, image, redline, video, the ui-* and icon-* clickthroughs) show a dirty marker or any indication that saving is automatic. shared/UX-PATTERNS.md and shared/AGENTS.md have zero occurrences of dirty, unsaved or autosave, so the pattern is drawn in one page rather than defined once in the shared set. The work is therefore: promote the documents.html treatment into the shared shell title bar (shell.js emits every page title bar, so one edit reaches all of them) and document it in UX-PATTERNS.md.",
   "acceptance": [
     "Every editing screen shows an unsaved marker that clears once saved, plus an indication that saving happens automatically",
     "The pattern is defined once in the shared set rather than per page",
@@ -33,6 +33,15 @@
     {
       "t": "2026-08-23T00:27:39.524Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:02:28.339Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:03:31.082Z",
+      "note": "Serves creation-vision > editor-surfaces, an epic staged 'later'; the focus epic is measure-redline, and only epics staged 'now' may hold open tasks. Same gate that dropped decide-zoom-semantics-on-mock-canvases. The report was re-verified first and is still real: badge.css already has the macOS unsaved dot (.dot.edited) but only 4 of ~90 pages mention an unsaved state, documents.html alone carries the autosave line, no editor shell shows either, and UX-PATTERNS.md has zero mentions of dirty/unsaved/autosave. Full evidence and the shortest fix (promote it into shell.js's title bar, document it in UX-PATTERNS.md) are preserved in the task notes for re-filing."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:02:28.339Z"
 }
