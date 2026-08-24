@@ -1,0 +1,27 @@
+{
+  "id": "redline-arrow-annotations-get-an-arrow-glyph-not",
+  "title": "Redline arrow annotations get an arrow glyph, not the vector pen nib",
+  "goal": "When you point at something with the arrow tool, the tool button and the layer row for that arrow both show a pen nib, the same picture the vector drawing tool uses. Someone scanning the layer list cannot tell an annotation arrow from a drawn path. This gives arrow annotations their own picture.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 270,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T01:19:44.003Z",
+  "updated": "2026-08-24T01:19:44.003Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Deliberately left out of scope by edit-is-one-glyph-across-the-corpus-ic-pencil-no, which only separated the edit verb from the nib. Remaining sites: pages/redline.html button.tool title=\"Arrow / annotate (P)\" (1), pages/layers-pane.html .lrow \"Arrow · curved\" (7, all styled color:#f0685c), pages/icon-draw-wt.html #lrArrow (1). shared/icons.mjs already has arrow-up/down/left/right but no diagonal pointer arrow; a redline arrow probably wants a new glyph drawn on the 24x24 grid rather than a reused compass arrow, which means adding it to icons.mjs and running node shared/build-icons.mjs. Check pages/iconography.html first.",
+  "acceptance": [
+    "The redline arrow tool button shows an arrow, not a pen nib",
+    "Every arrow annotation layer row shows the same arrow glyph as the tool that made it",
+    "A drawn vector path still shows the pen nib, so the two stay distinguishable at a glance"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T01:19:44.003Z",
+      "note": "created (manual)"
+    }
+  ]
+}

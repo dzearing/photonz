@@ -1,0 +1,26 @@
+{
+  "feature": "One glyph for Edit across the design study",
+  "epic": "design-system",
+  "summary": "Every Edit, Rename and edit-a-value control in the mock study now shows a pencil, and the pen nib is reserved for vector work. Before this, the same action wore two different pictures depending on which page you were on.",
+  "setup": "Design dashboard at http://127.0.0.1:8791. Nothing to enable. This is the mock study, not the app.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/documents.html and click the clock icon in the canvas tool bar to open Capture history.", "shot": "2026-08-23-edit-glyph-1.png" },
+    { "do": "Look at the two buttons under the Launch poster thumbnail: copy, then pencil." },
+    { "do": "Look down at the canvas tool bar in the same shot and find the pen nib, the fifth tool. Compare the two shapes." },
+    { "do": "Open http://127.0.0.1:8791/pages/app-shell.html and check the same row in its History sheet reads the same." },
+    { "do": "Open http://127.0.0.1:8791/pages/dsys.html and hover the color style names: Rename now shows a pencil too." },
+    { "do": "Open http://127.0.0.1:8791/pages/video-title-wt.html and look at the Words and Name value rows: the little pencil means the value is typeable." }
+  ],
+  "evaluate": [
+    "At filmcard size, do the pencil and the pen nib read as clearly different, or do they blur into the same mark?",
+    "On documents.html the second action button used to say Open and now says Edit. Is Edit the right word for what that button does to a capture?",
+    "The capture cards on capture-wt.html keep a primary button labelled Open but now lead it with a pencil. Does the word and the picture agree, or does Open want its own glyph?",
+    "In dsys.html, does a pencil next to a style name read as rename, or as edit the style?",
+    "The share sheet on export-share.html now shows a speech bubble for the Comment access level. Is that clearer than what was there?"
+  ],
+  "rough": [
+    "The spec panel on export-share.html gives its CSS section a document icon. The icon set has no code glyph, so this is a borrowed picture rather than the right one.",
+    "Redline arrow annotations still wear the pen nib, on the tool button and on their layer rows. They are vector paths so they do not clash with Edit, but an arrow reading as a nib is its own problem. Filed as redline-arrow-annotations-get-an-arrow-glyph-not rather than folded in here.",
+    "The task notes proposed a single find-and-replace on title=\"Edit\". That would have fixed 179 of the 206 wrong glyphs and quietly left 27, including every Rename button and both Open buttons. The sweep was done by classifying each control instead."
+  ]
+}

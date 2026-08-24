@@ -4,14 +4,14 @@
   "goal": "The Edit action shows a pencil on some pages and a pen nib on fifty others, and the pen nib already means the vector drawing tool. This makes Edit a pencil everywhere so one picture keeps one meaning.",
   "priority": "p3-low",
   "seq": 200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:22:52.670Z",
-  "updated": "2026-08-23T17:22:52.671Z",
+  "updated": "2026-08-24T01:19:32.833Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "app-shell and redline now use ic-pencil for the Edit action on filmcards and layer rows, which is what icons.mjs maps 'edit' to; ic-pen is the bezier TOOL and must not double as the edit verb. 50 other pages plus shared/components/entry.js (its injected history cards) still emit <i class=\"ic ic-pen\"> inside title=\"Edit\" controls, so the corpus disagrees with its own exemplar. Mechanical sweep: replace 'title=\"Edit\"><i class=\"ic ic-pen\"' with ic-pencil across pages/ and entry.js, then re-run the browser audit-sweep and spot-check the icon in a filmcard action row.",
+  "notes": "DONE. ic-pencil is the edit verb everywhere; ic-pen is vector only. 206 replacements in 58 pages + shared/components/entry.js; shared/dist rebuilt via node shared/build-ds.mjs. Rule recorded in shared/AGENTS.md under Iconography (\"One picture, one meaning\"). Verification was browser-side: match BOTH [title=\"Edit\"] and [data-tip=\"Edit\"] because the tooltip component rewrites title at runtime. Known borrowed glyph: pages/export-share.html spec panel uses ic-document for its CSS section header because shared/icons.mjs has no code glyph - add one if a code block ever needs a real icon. Left as vector on purpose: layers-pane/icon-draw-wt arrow layer rows and redline.html \"Arrow / annotate (P)\", filed separately.",
   "acceptance": [
     "Every Edit control across the study shows the pencil icon, including ones added automatically to generated cards",
     "The pen nib icon appears only for the vector pen tool",
@@ -21,6 +21,31 @@
     {
       "t": "2026-08-23T17:22:52.671Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T01:09:47.735Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T01:19:32.833Z",
+      "note": "Adversarial review of the premise, before touching anything. The task notes proposed a blind text replace of title=\"Edit\"><i class=\"ic ic-pen\". That is right for the bulk but wrong as the whole job: of 304 ic-pen occurrences in the study, 179 are the Edit button, and the remaining 125 split into real vector uses (73 Pen tool controls, 29 Pen menu items, 10 vector layer rows, 4 text-on-a-path, 1 SVG export) and 27 MORE edit-verb uses the proposed pattern would have missed entirely. Classified every occurrence by its enclosing control rather than by string."
+    },
+    {
+      "t": "2026-08-24T01:19:32.833Z",
+      "note": "Findings the notes missed: 13 filmcard action rows say title=\"Open\" instead of \"Edit\" on the IDENTICAL component the exemplar (app-shell.html History sheet) labels \"Edit\" - same verb, two spellings, both wearing the nib. 4 dsys.html Rename buttons and 1 ds-build-wt Rename button (icons.mjs describes pencil as \"Edit, rename, freehand line\", and dashboard.html already uses pencil for Rename). 2 primary [nib] Open buttons on capture cards (capture-wt, video-entry-wt). dsys \"Edit main\". export-share share-access Edit chip AND its JS ACCESS map, where the comment level also borrowed the nib. 2 video-title-wt editable-value carets. 1 export-share CSS section header, where the nib meant neither edit nor vector."
+    },
+    {
+      "t": "2026-08-24T01:19:32.833Z",
+      "note": "Judgment calls, recorded rather than guessed silently. (a) The 13 title=\"Open\" filmcard buttons were retitled to \"Edit\" as well as re-glyphed: leaving \"Open\" on a pencil would have swapped one mismatch for another, and the exemplar component says Edit. (b) The 2 labelled primary \"Open\" buttons kept their visible word (that copy is correct for what they do) and took the pencil, since opening a capture is opening it to edit it. (c) export-share ACCESS comment level went to ic-chat. (d) The CSS section header took ic-document because the icon set has no code glyph - a borrowed-but-honest glyph, noted below. No decision opened: none of these change what the product does, only which picture names it."
+    },
+    {
+      "t": "2026-08-24T01:19:32.833Z",
+      "note": "Swept 206 occurrences across 59 files (58 pages + shared/components/entry.js, so the auto-injected history cards are covered), then re-ran shared/build-ds.mjs so the static bundle matches. Verified in a real browser, not by grep: all 89 pages loaded in 1280x900 iframes, 231 live edit-verb controls across 61 pages, every one ic-pencil with a mask actually in effect and a >=8px box; 91 surviving pen nibs, every one on a vector meaning (Pen tool, vector layer, text on a path, SVG). The runtime tooltip component rewrites title to data-tip, so the check had to match both - a title-only assertion reports a false zero. Standing audit-sweep clean: 89 pages, 75 segs, 80 dock managers, zero issues. Every touched page returns 200."
+    },
+    {
+      "t": "2026-08-24T01:19:32.833Z",
+      "note": "Left alone on purpose, with the reason: the redline arrow annotation layers (8 rows) and the \"Arrow / annotate (P)\" tool wear the pen nib. They are vector paths, so they do not collide with the edit verb, but a redline arrow reading as a nib is a separate legibility question on the focus surface - filed rather than folded in. Also wrote the rule into shared/AGENTS.md so the corpus stops re-deriving it: pencil is the edit verb, the nib is vector, and a glyph that looks nearly right for a second job means the second job needs its own icon."
     }
-  ]
+  ],
+  "started": "2026-08-24T01:09:47.734Z"
 }

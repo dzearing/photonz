@@ -891,6 +891,21 @@ NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ 
    AS an icon: inside an interactive control (`.tool`/`.btn`/tab/menuitem), a
    `.lrow`/badge, a toolbar, or as a status/disclosure indicator.
 
+**One picture, one meaning.** A glyph never does two jobs. The pair that keeps
+breaking this is pen and pencil, so it is spelled out:
+
+- `ic-pencil` is the **edit verb** — Edit, Rename, "Edit main", an editable
+  value, an access level of "can edit". Every Edit control in the study wears it
+  (`pages/app-shell.html`, `pages/home.html`, `pages/redline.html` and the cards
+  `shared/components/entry.js` injects are the exemplars).
+- `ic-pen` is the **vector pen nib** and nothing else — the Pen tool, a vector
+  layer row, text on a path, SVG. If your control is a verb, it is not a nib.
+
+Same rule for the rest: `ic-chat` is a comment, `ic-ruler` is a measurement,
+`ic-swatch` is a color. When a glyph looks nearly right for a second job, that
+is the signal that the job needs its own icon in `shared/icons.mjs`, not a
+borrowed one.
+
 Usage: `<i class="ic ic-<name>"></i>` — inherits `currentColor`, sized by role
 with `.ic.xs` 12 / `.ic.sm` 14 / `.ic` 16 / `.ic.lg` 20 / `.ic.xl` 24. Never an
 ad-hoc `width:15px`. It works inside `.tool`, `.btn`, `.lrow`, `.menuitem` and

@@ -104,7 +104,7 @@
         '<span class="cap"><span class="nm">' + c.nm + '</span><span class="ago">' + c.ago + '</span></span>' +
         '<span class="acts">' +
           '<button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>' +
-          '<button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button>' +
+          '<button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>' +
           '<button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>' +
           '<button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>' +
         '</span>' +

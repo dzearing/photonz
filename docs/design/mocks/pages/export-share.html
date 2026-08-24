@@ -215,7 +215,7 @@
       <div class="seg" id="accessSeg">
         <button class="on" data-access="view"><i class="ic xs ic-eye"></i>View</button>
         <button data-access="comment">Comment</button>
-        <button data-access="edit"><i class="ic xs ic-pen"></i>Edit</button>
+        <button data-access="edit"><i class="ic xs ic-pencil"></i>Edit</button>
       </div>
       <button class="btn secondary" id="copyLinkBtn"><i class="ic ic-copy"></i>Copy link</button>
     </div>
@@ -347,12 +347,12 @@
               <div class="filmcard sel" tabindex="0" role="button">
                 <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></span>
                 <span class="cap"><span class="nm">Pricing screen</span><span class="ago">just now</span></span>
-                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button></span>
               </div>
               <div class="filmcard" tabindex="0" role="button">
                 <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
                 <span class="cap"><span class="nm">Launch poster</span><span class="ago">18 min ago</span></span>
-                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pen"></i></button></span>
+                <span class="acts"><button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button><button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button></span>
               </div>
             </div>
             <p class="note" style="margin:0">Open a capture and measure it the same way. Hand-off is a lens, not a mode.</p>
@@ -553,8 +553,8 @@
     var access="view";
     var ACCESS={
       view:   {lock:"ic-eye",  label:"anyone with the link can view"},
-      comment:{lock:"ic-pen",  label:"anyone with the link can comment"},
-      edit:   {lock:"ic-pen",  label:"anyone with the link can edit"}
+      comment:{lock:"ic-chat",  label:"anyone with the link can comment"},
+      edit:    {lock:"ic-pencil",  label:"anyone with the link can edit"}
     };
     function renderShare(){
       if(apiShare) apiShare.textContent='doc.share({ access: "'+access+'" })';
@@ -659,7 +659,7 @@
           '<button class="btn ghost sm" data-copy="token" style="margin-left:auto"><i class="ic sm ic-copy"></i>Copy</button></div>'+
           tokRows+
         '</div>'+
-        '<div class="section"><div class="sec-h"><i class="ic sm ic-pen"></i>CSS <span class="val" style="margin-left:auto">ready to paste</span></div>'+
+        '<div class="section"><div class="sec-h"><i class="ic sm ic-document"></i>CSS <span class="val" style="margin-left:auto">ready to paste</span></div>'+
           '<div class="codecopy"><button class="btn secondary sm cp" data-copy="css"><i class="ic sm ic-copy"></i>Copy</button>'+
           '<div class="codeblk">'+escapeHtml(s.code)+'</div></div>'+
         '</div>';
