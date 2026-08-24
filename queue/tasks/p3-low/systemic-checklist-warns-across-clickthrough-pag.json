@@ -4,11 +4,11 @@
   "goal": "A quality pass over the clickable prototypes found several small problems that repeat across many pages rather than failing any one of them: dropdown rows that cannot be reached by keyboard, play buttons that never say whether they are playing, and layer rows whose controls differ from row to row. This settles each of them across the whole set.",
   "priority": "p3-low",
   "seq": 80,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-22T23:43:53.742Z",
-  "updated": "2026-08-23T00:27:39.524Z",
+  "updated": "2026-08-24T00:22:11.885Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Objective: design-system > clickthrough-sweep. Rollup of warns from the checklist sweep that are not page failures but repeat everywhere: (1) .select rows usually lack role/tabindex (present on some pages, absent on video-title-wt, ds-build-wt, others). (2) Play buttons on all video transports lack aria-pressed, and the D8 loop control is absent set-wide including canonical video.html. (3) Layer-row asymmetry pattern: the locked Background row carries ic-lock while sibling rows carry only the eye, and some rows (img-grade-wt #lrRaw) have no eye at all; section 5 says affordances are identical on every row, but canonical image.html has the same variance, so rule or pages need a ruling. (4) walk.html smuggles a span through the data-status shell attribute. From sweep-every-clickthrough-page-for-checklist-conf.",
@@ -30,6 +30,15 @@
     {
       "t": "2026-08-23T00:27:39.524Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:21:39.611Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:22:11.885Z",
+      "note": "Stage gate: serves design-system > clickthrough-sweep, which is staged later (parent design-system is next); focus is measure-redline. Only epics staged now may hold open tasks. Scope is entirely design-study mock HTML under docs/design/mocks/pages/ (keyboard access on .select rows, aria-pressed on video play buttons, layer-row control asymmetry, walk.html data-status span) - no shipping app code, and nothing here unblocks measure-redline. The four findings stay recorded in notes so the work is recoverable verbatim when clickthrough-sweep is staged now."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:21:39.610Z"
 }
