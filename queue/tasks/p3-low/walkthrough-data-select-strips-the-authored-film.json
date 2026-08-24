@@ -4,14 +4,14 @@
   "goal": "Stepping through a walkthrough silently clears the selected item in the capture history panel, so its row of actions vanishes and the step no longer illustrates what the words describe. This keeps a panel's own selection unless the step is actually selecting something there.",
   "priority": "p3-low",
   "seq": 150,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T07:28:13.971Z",
-  "updated": "2026-08-23T07:28:13.971Z",
+  "updated": "2026-08-24T00:44:25.920Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Any wt step with data-select clears sel/selc from every .filmcard in the stage (walkthrough.js data-select handler), so the history pane loses its authored one-selected-card state (history.css says ship with ONE .filmcard.sel so the action row is visible) once a user steps a walkthrough. Affects every wt page with a hist sheet, e.g. composites, component-configure-wt. Fix idea: scope the deselect sweep to the panels the step actually selects in, or exclude .filmcard strips that carry data-radio.",
+  "notes": "VERIFIED IN A BROWSER (2026-08-23), the bug is real:\n- The data-select handler in docs/design/mocks/shared/components/walkthrough.js:201-210 clears sel/selc from EVERY .lrow,.libtile,.filmcard,.clip,.editpt,.xband in the stage, then lights only the step targets.\n- pages/composites.html: authored .filmcard.sel at line 241 inside .filmstrip#histStrip[data-radio]. At load the card is selected; after ONE click of .wnext (step 2, data-select=#lrFrame) no .filmcard carries sel and all four .acts rows compute display:none. The history pane loses its action row for the rest of the walkthrough.\n- pages/component-configure-wt.html: authored .filmcard.sel at line 182; by step 1 (data-select=#lrGroup) nothing in the strip is selected and all eight .acts rows are display:none, so this page never shows the action row at all once wt initialises.\n- pages/capture-wt.html is NOT affected: its history steps carry data-select=#fcNew, and the later layer-row steps run after data-sheet-shut=#histSheet. Worth knowing, because capture-wt is the clickthrough closest to the measure-redline focus.\n- 19 pages combine a .wt with filmcards and data-select (agent-generate-wt, capture-wt, component-configure-wt, composites, ds-build-wt, icon-draw-wt, icon-gradient-wt, img-grade-wt, img-retouch-wt, ui-build-screen, vector-wt, the seven video-*-wt, walk.html). Only the ones that author a .filmcard.sel in an always-visible strip show the damage.\n\nCORRECTED RECIPE (validated in-page on composites.html). Do NOT use the original idea of excluding [data-radio] strips from the sweep: that breaks acceptance item 2, because capture-wt legitimately selects INSIDE such a strip and would lose exclusivity there. Scope the sweep by group instead:\n  var SEL = '.lrow,.libtile,.filmcard,.clip,.editpt,.xband';\n  var groupOf = function (el) { return el.closest('[data-radio]') || stage; };\n  var targets = list(v);\n  var groups = new Set(targets.map(groupOf));\n  groups.forEach(function (g) {\n    all(SEL, g).forEach(function (r) { if (groupOf(r) === g) r.classList.remove('sel', 'selc'); });\n  });\n  targets.forEach(function (pick) { pick.classList.add(/* unchanged class resolution */); });\nMeasured result on composites: the filmstrip keeps its .sel card AND .lrow.sel is exactly [lrGroup], so panel exclusivity survives.\nWhy the stage fallback matters: layer rows sit in no [data-radio], so their group is the whole stage, which preserves the documented multi-surface behaviour (one step marks the same selection in every surface that shows it, found-selection). A step listing targets in several groups clears the union of those groups, so cross-surface steps still work.\nFollow-up when this is implemented: re-check the 19 pages above, and add a case to shared/check-selection.mjs so a stage-wide sweep cannot silently come back.",
   "acceptance": [
     "Stepping through a walkthrough that shows a history panel leaves that panel's selected item selected, with its row of actions still visible",
     "Steps that do select something still clear the previous selection in the panel they act on",
@@ -21,6 +21,24 @@
     {
       "t": "2026-08-23T07:28:13.971Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:41:36.846Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:44:21.736Z",
+      "note": "Reproduced in a browser on composites.html and component-configure-wt.html: the authored .filmcard.sel is gone and every .acts row computes display:none after the first data-select step. Validated a scoped-by-group fix in-page (filmstrip keeps its selection, layer list stays exclusive) and wrote it into notes. Not implemented, see the stage gate entry."
+    },
+    {
+      "t": "2026-08-24T00:44:21.736Z",
+      "note": "Stage gate: this serves design-system / clickthrough-sweep, and design-system is staged next with every child later, while focus is measure-redline. It unblocks no measure-redline feature: capture-wt.html, the clickthrough closest to that focus, is unaffected. Dropping with evidence and a validated recipe so it is cheap to revive."
+    },
+    {
+      "t": "2026-08-24T00:44:25.920Z",
+      "note": "Serves design-system / clickthrough-sweep, staged next with every child later, while focus is measure-redline. Bug confirmed in a browser and a validated fix recipe is in the notes, but it unblocks no measure-redline feature: capture-wt.html, the clickthrough closest to that focus, is unaffected."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:41:36.845Z",
+  "epic": "design-system"
 }
