@@ -25,8 +25,6 @@
   #ui-entry-wt #homeWin{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);
     width:min(640px,92%);height:auto;min-height:0;z-index:6}
   #ui-entry-wt #homeWin .tiles{grid-template-columns:repeat(2,1fr)}
-  #ui-entry-wt #homeWin .recents{grid-template-columns:repeat(3,1fr)}
-  #ui-entry-wt #homeWin .rec .pv{height:64px}
   #ui-entry-wt .tile.on{border-color:var(--accent-line);box-shadow:var(--glow)}
 
   /* the editor window a New click opens into */
@@ -290,10 +288,43 @@
               </div>
               <div>
                 <div class="h-lab" style="margin-bottom:10px">Recent</div>
-                <div class="recents">
-                  <div class="rec"><div class="pv" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></div><div class="cap"><span>hero-card</span><span>2h</span></div></div>
-                  <div class="rec"><div class="pv" style="background:linear-gradient(180deg,#ffb36b,#7b4397)"></div><div class="cap"><span>sunset-edit</span><span>y'day</span></div></div>
-                  <div class="rec"><div class="pv" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"></div><div class="cap"><span>launch-teaser</span><span>2d</span></div></div>
+                <!-- Recent is the SAME .filmstrip of .filmcards the landing
+                     window and the history overlay draw: same thumbnail, same
+                     relative time, same action row on the selected card. No
+                     card starts selected here, because the front door has just
+                     opened and nothing has been picked yet, and because the
+                     step's target is the Design UI tile above. -->
+                <div class="filmstrip" data-radio=".filmcard" data-radio-class="sel">
+                  <div class="filmcard fk-shot" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#7c4dff,#ff5d8f)"></span>
+                    <span class="cap"><span class="nm">hero-card</span><span class="ago">2 hours ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard fk-shot" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(180deg,#ffb36b,#7b4397)"></span>
+                    <span class="cap"><span class="nm">sunset-edit</span><span class="ago">yesterday</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
+                  <div class="filmcard fk-clip" tabindex="0" role="button">
+                    <span class="th" style="background:linear-gradient(135deg,#12c2e9,#7c4dff)"><span class="pl"><i class="ic ic-play"></i></span><span class="dur">0:15</span></span>
+                    <span class="cap"><span class="nm">launch-teaser</span><span class="ago">2 days ago</span></span>
+                    <span class="acts">
+                      <button class="btn ghost icon sm" title="Copy"><i class="ic ic-copy"></i></button>
+                      <button class="btn ghost icon sm" title="Edit"><i class="ic ic-pencil"></i></button>
+                      <button class="btn ghost icon sm" title="Pin"><i class="ic ic-pin"></i></button>
+                      <button class="btn ghost icon sm" title="Delete"><i class="ic ic-trash"></i></button>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

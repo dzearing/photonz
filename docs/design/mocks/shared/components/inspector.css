@@ -45,10 +45,6 @@
 .tile .ti{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px}
 .tile .tt{font-size:12.5px;font-weight:620;color:var(--ink)}
 .tile .td{font-size:11px;color:var(--faint);line-height:1.4}
-.recents{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.rec{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--panel)}
-.rec .pv{height:84px}
-.rec .cap{padding:7px 9px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between}
 
 /* foundations */
 .thesis{background:linear-gradient(120deg,var(--accent-soft),transparent);border:1px solid var(--accent-line);border-radius:var(--r4);padding:var(--pad);margin:0;font-size:13px;line-height:1.5}
