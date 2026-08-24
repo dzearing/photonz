@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p0-critical",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-08-23T23:42:58.666Z",
-  "updated": "2026-08-24T00:00:26.357Z",
+  "updated": "2026-08-24T00:01:02.516Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Playtest 2026-08-23. Evidence: queue/loop.log shows runners calling Scripts/build-app.sh followed by pkill -f \"Photonz Dev\" three times in one task, and the dist binary timestamp moved to 16:37 while the user had the app open. Signing itself is healthy: one Photonz Dev cert, and the designated requirement pins identifier plus that cert leaf, so the grant would survive a rebuild if macOS did not separately re-verify screen-capture clients whose binary changed. The stopgap is the lock file plus a hard rule in the runner contract. The real fix is a separate probe bundle id (for example com.dzearing.photonz.probe) built to its own path, granted once, so loop verification and user playtesting never share an app. Scripts/build-app.sh already takes a dev variant path, so add a probe variant rather than a new script.",
@@ -59,7 +59,12 @@
     {
       "t": "2026-08-24T00:00:26.357Z",
       "note": "Known rough edges, carried not fixed: the probe re-asks for Screen Recording each time its binary changes, so capture-dependent verification still needs a person (the probe just means it is never the users grant being reset); and while a runner has the probe open the user sees a second viewfinder icon, reading Photonz (Probe). probe-app.sh --quit tidies it and the contract tells runners to call it. The probe deliberately does not export the .photonz document type, so a throwaway bundle can never win the default-handler race for real files."
+    },
+    {
+      "t": "2026-08-24T00:01:02.516Z",
+      "note": "The loop now builds and launches its own bundle, dist/Photonz Probe.app (com.dzearing.photonz.probe), via the new Scripts/probe-app.sh; build-app.sh gained --probe and a guard that refuses to rebuild the dev bundle while queue/playtest.lock exists. Verified with the user's app running and the lock in place: plain build-app.sh refused (exit 2), two probe build+launch cycles plus a release --dmg build left the dev binary's sha256 and mtime identical and its pid untouched, and both apps ran side by side as Photonz (Dev) and Photonz (Probe). Scripts/test.sh green, 1061 tests. Audit: queue/audits/2026-08-23-probe-app.json. Commit 672a620."
     }
   ],
-  "started": "2026-08-23T23:53:09.156Z"
+  "started": "2026-08-23T23:53:09.156Z",
+  "completed": "2026-08-24T00:01:02.516Z"
 }

@@ -4,14 +4,14 @@
   "goal": "Zooming on the mock canvases changes the background grid but leaves the artwork exactly the same size, so the readout can say 260 percent while nothing looks any bigger. Someone needs to decide what zoom should mean here, and then every editing surface should behave that way.",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "mocks",
   "created": "2026-08-22T23:32:47.152Z",
-  "updated": "2026-08-23T00:27:39.523Z",
+  "updated": "2026-08-24T00:02:00.123Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Objective: creation-vision > editor-surfaces (needs a UX decision before any implementation). From study-tasks.json zoom-scales-grid-not-artwork. Zoom changes grid density but artwork stays the same size, so the readout can say 260 percent while the hero card renders at 1x. Honest fix: scale artwork by --zoom and counter-scale selection chrome by 1/--zoom. This changes what zoom means on every editor page: open a UX decision before implementing.",
+  "notes": "Objective: creation-vision > editor-surfaces (needs a UX decision before any implementation). From study-tasks.json zoom-scales-grid-not-artwork. Zoom changes grid density but artwork stays the same size, so the readout can say 260 percent while the hero card renders at 1x. Honest fix: scale artwork by --zoom and counter-scale selection chrome by 1/--zoom. This changes what zoom means on every editor page: open a UX decision before implementing.\n\nDROPPED 2026-08-24 (stage gate, not a judgment on the bug). Confirmed still real: canvas.css maps --zoom to grid cell size only; slider.js:157 sets it per .canvas. Artwork never scales. Re-file under creation-vision > editor-surfaces when that epic is staged now.",
   "acceptance": [
     "A decision is opened and answered on whether zoom scales the artwork or only the grid",
     "The chosen behaviour is implemented once in the shared canvas and holds on at least three editing pages at half, normal and double zoom",
@@ -33,6 +33,23 @@
     {
       "t": "2026-08-23T00:27:39.523Z",
       "note": "retriage 2026-08-23: notes groomed to name the objective served"
+    },
+    {
+      "t": "2026-08-24T00:01:26.185Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:01:56.847Z",
+      "note": "Epic check: this task serves creation-vision > editor-surfaces, and creation-vision is staged 'later' in queue/objectives.json. The focus epic is measure-redline (stage 'now'). Per the loop contract only epics staged 'now' may hold open tasks, so this is dropped rather than worked. No decision was opened: asking the user to rule on zoom semantics would spend their attention on a later epic."
+    },
+    {
+      "t": "2026-08-24T00:01:56.848Z",
+      "note": "Finding preserved for re-filing: the report is still accurate. In docs/design/mocks/shared/components/canvas.css the --zoom variable feeds only --grid-1 (calc(var(--grid-cell) * var(--zoom))); no artwork transform reads it, and shared/components/slider.js:157 sets --zoom on .canvas elements only. So the zoom readout can say 260% while every card renders at 1x. When creation-vision is staged 'now', re-file with the same acceptance items."
+    },
+    {
+      "t": "2026-08-24T00:02:00.122Z",
+      "note": "Serves creation-vision > editor-surfaces, an epic staged 'later'; focus is measure-redline. Only epics staged 'now' may hold open tasks. The underlying report is confirmed still real (canvas.css maps --zoom to grid cell size only) and is preserved in the task notes for re-filing."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:01:26.184Z"
 }
