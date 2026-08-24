@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 310,
-  "status": "pending",
+  "status": "in_progress",
   "release": "current",
   "area": "app",
   "created": "2026-08-24T03:09:36.758Z",
-  "updated": "2026-08-24T03:09:36.759Z",
+  "updated": "2026-08-24T03:34:18.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured offscreen 2026-08-24 with the same harness used for the wand fix (temp/measure-bar.swift): cropOptions is 217pt, which puts the residual bar at about 520pt against a 403pt budget on a 435pt canvas, versus the wand's 473pt. The wand fix landed EditorChromeLayout.showsFullToolOptions(canvasWidth:) (threshold 520) and split EditorView.wandOptions into wandToleranceControl plus compactWandOptions, a Tol chip with a chevron that opens the full slider in a popover. Crop needs the same treatment on cropOptions, but 217pt will not fit in one chip the same way: the aspect locks probably want a single Aspect chip that opens a menu, and apply/cancel may want to move to the canvas the way Next does it behind next-tool-options. Only affects .current, since the flag is releases: [.next] and turns this whole code path off there.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-08-24T03:09:36.759Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T03:34:18.457Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T04:05:00.000Z",
+      "note": "Reproduced offscreen (temp/measure-crop-bar.swift, same harness as the wand fix). At a 435pt canvas with Crop in hand and the bar already pulled back to zero inline tools, the bar measures 505pt against a 403pt budget: 51pt of capsule hangs off EACH end of the picture. Variants measured: four aspect chips + tick + cross 505 (OUTSIDE); one aspect chip with a glyph + tick + cross 410 (still 7pt OUTSIDE); one plain aspect chip + tick + cross 392 (INSIDE, 11pt slack); chip alone 350; no options at all 274."
+    },
+    {
+      "t": "2026-08-24T04:06:00.000Z",
+      "note": "Adversarial review before building. (1) The notes suggested moving apply/cancel to the canvas the way Next does. Rejected for Current: that is Next's design, not a fix for this bug, and it changes where a shipped release puts its two most important crop actions. The acceptance only asks that they stay reachable, and 392pt fits with them still in the bar. (2) Rejected an aspect Menu (the zoom percentage idiom): a borderless Menu sizes to its title and ignores a fixed-width label frame, so the bar would jump 8pt every time the lock changed. Measured: Free 41, 1:1 33, 4:3 36, 16:9 41. The chip honors the frame (1pt spread), so the chip it is. (3) Rejected a glyph in the chip: it costs 18pt and leaves the bar 7pt outside the picture, which is the bug. (4) The wand's 520 threshold does NOT cover crop: budget at 520 is 488, and crop's irreducible bar is 505. Crop needs its own, wider threshold."
+    },
+    {
+      "t": "2026-08-24T04:40:00.000Z",
+      "note": "Built it. PhotonzCore gains EditorChromeLayout.cropOptionsMinCanvasWidth (545) and showsFullCropOptions(canvasWidth:), with six new tests written before the code: the threshold has to cover the measured 505pt bar, it has to sit above the wand's 520 (which does not cover crop, budget 488), and neither the compacted 392pt bar nor the full 505pt bar may leave a full slot of slack, or the fit loop would put a tool back and the bar would flip forever. EditorView splits cropOptions into cropAspectLocks + cropCommitButtons + compactCropOptions, so the four locks are the same view inline and inside the popover. Apply and cancel stay in the bar at both widths."
+    },
+    {
+      "t": "2026-08-24T04:45:00.000Z",
+      "note": "Second adversarial pass, on the built thing. (1) The chip label came out gray, because a bare Text inside a borderless button's label is drawn as an NSButton title and ignores foregroundStyle; a clear background puts it back on SwiftUI's path so the live ratio reads as a value, like the zoom percentage. Filed the same bug against the wand's Tol chip as its own task. (2) Picking a lock dismisses the popover, since a lock is a one-shot choice unlike the wand's slider. (3) The popover flag is cleared both when the window widens past the threshold and when crop is put down, so it cannot spring open by itself. (4) Only one bar renders at a time, so the Return shortcut on the tick is still registered once. (5) Walked the widths 435 to 620: every one settles inside the budget in one step, no oscillation. Left as-is and recorded in the audit: at the threshold the bar prefers the four locks over inline tools, so widening can push a tool into the overflow menu. That is the existing rule the wand already follows, not something new."
+    },
+    {
+      "t": "2026-08-24T04:50:00.000Z",
+      "note": "Acceptance. (1) Both ends inside the picture at a 700pt window with the inspector open: measured 392pt against the 403pt budget, was 505pt. (2) No click near either edge lands on a half-drawn control: 0pt overhang at either end, down from 51pt. (3) Locks, apply and cancel all still reachable: the tick and the cross stay in the bar, the four locks are one press away in the chip's popover, and Return and Escape are untouched. Scripts/test.sh green, 1094 tests. Probe app built, launched on a real image and ran clean, then quit. Could NOT drive or photograph the running app: screen capture and Apple event automation are both denied to the probe bundle on this machine, so the widths come from an offscreen harness built from the same view code (temp/measure-crop-bar.swift, temp/render-crop-bar.swift). Said so in the audit."
+    },
+    {
+      "t": "2026-08-24T04:51:00.000Z",
+      "note": "Porting rule: nothing to carry. The whole path is behind !Experiments.shared.toolOptionsEnabled, a flag that exists only in Next's catalog, so this is Current-only by construction. Next already solves the same problem its own way, with the aspect locks in the crop button's flyout and apply/cancel on the canvas."
     }
-  ]
+  ],
+  "started": "2026-08-24T03:34:18.456Z"
 }

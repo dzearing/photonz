@@ -206,6 +206,68 @@ struct EditorChromeLayoutTests {
         #expect(297 + 69 <= budget)
     }
 
+    // MARK: Crop's options are wider than the wand's, so they give way sooner
+
+    @Test func cropOptionsLayOutInFullOnARoomyCanvas() {
+        #expect(EditorChromeLayout.showsFullCropOptions(canvasWidth: 1135) == true)
+    }
+
+    @Test func cropOptionsCompactOnACrampedCanvas() {
+        // The measured case: a 700pt window with the inspector docked leaves a
+        // 435pt canvas (403pt of budget). With crop in hand the bar has already
+        // shed every tool it has and still measures 505pt, because the four
+        // aspect chips plus the tick and the cross are 231pt of it that nothing
+        // can shed, so 51pt of capsule hangs off each end of the picture.
+        #expect(EditorChromeLayout.showsFullCropOptions(canvasWidth: 435) == false)
+    }
+
+    @Test func theCropThresholdClearsCropsIrreducibleBar() {
+        // At the threshold the bar with NO tools inline, all four aspect locks,
+        // the tick, the cross, the colors and the zoom menu measures 505pt, so
+        // the budget there has to cover it.
+        let t = EditorChromeLayout.cropOptionsMinCanvasWidth
+        #expect(EditorChromeLayout.toolBarBudget(canvasWidth: t) >= 505)
+    }
+
+    @Test func cropGivesWaySoonerThanTheWand() {
+        // Crop's options are 231pt of bar to the wand's 176pt, so the canvas
+        // that still holds them has to be wider. The wand's threshold does NOT
+        // cover crop: the budget at 520 is 488, and crop's bar is 505.
+        #expect(EditorChromeLayout.cropOptionsMinCanvasWidth
+                > EditorChromeLayout.toolOptionsMinCanvasWidth)
+        #expect(EditorChromeLayout.toolBarBudget(
+            canvasWidth: EditorChromeLayout.toolOptionsMinCanvasWidth) < 505)
+    }
+
+    @Test func theCompactCropOptionsFitTheMeasuredCrampedBar() {
+        // Measured offscreen against the real bar views: 274pt without any
+        // options, and the compact chip plus the tick and the cross add 118pt.
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 435)
+        #expect(274 + 118 <= budget)
+    }
+
+    @Test func compactCropOptionsLeaveTooLittleSlackToGrowAToolBack() {
+        // Freeing 113pt must not hand the fit loop enough room to put a tool
+        // back, or the bar would grow, overflow, compact, and flip forever.
+        // Measured: the compacted crop bar is 392pt, leaving 11pt of slack
+        // against a 68pt widest slot.
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 435)
+        #expect(EditorChromeLayout.fittedToolCount(current: 0, maximum: 13,
+                                                   contentWidth: 392,
+                                                   budget: budget) == 0)
+    }
+
+    @Test func theFullCropBarDoesNotOscillateJustAboveItsThreshold() {
+        // Just above the threshold the full options come back and the bar is
+        // 505pt. If that left a full slot of slack the fit loop would put a
+        // tool back, overflow, and start the whole cycle over.
+        let budget = EditorChromeLayout.toolBarBudget(
+            canvasWidth: EditorChromeLayout.cropOptionsMinCanvasWidth)
+        #expect(EditorChromeLayout.fittedToolCount(current: 0, maximum: 13,
+                                                   contentWidth: 505,
+                                                   budget: budget) == 0)
+    }
+
     @Test func compactToolOptionsLeaveTooLittleSlackToGrowAToolBack() {
         // Freeing 107pt must not hand the fit loop enough room to put a tool
         // back, or the bar would grow, overflow, compact, and flip forever.

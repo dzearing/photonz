@@ -132,6 +132,34 @@ public enum EditorChromeLayout {
         canvasWidth >= toolOptionsMinCanvasWidth
     }
 
+    /// The narrowest canvas on which the CROP tool's options still lay
+    /// themselves out along the tool bar.
+    ///
+    /// Crop needs its own threshold because its options are the widest in the
+    /// bar: four aspect chips plus a tick and a cross are 231pt, against the
+    /// wand's 176pt. Measured at a 435pt canvas with the bar already pulled
+    /// back to zero inline tools, the crop bar is 505pt against a 403pt
+    /// budget — 51pt of capsule off each end of the picture, where a click
+    /// near either edge lands on a control that is only half drawn.
+    ///
+    /// 505pt does not fit at the wand's 520 threshold either (the budget there
+    /// is 488), which is why this is a separate number and not a shared one.
+    /// The threshold is set so the budget at it covers the whole 505pt bar
+    /// with a little to spare, and so the slack it leaves stays under one
+    /// `toolBarWidestSlotWidth` — otherwise the fit loop would put a tool back,
+    /// push the bar out again, and flip forever.
+    ///
+    /// Below this width the four locks collapse to one chip showing the live
+    /// lock, which opens the same four in a popover. The tick and the cross
+    /// stay in the bar: at 392pt the compacted bar has 11pt to spare with them
+    /// still there, and they are the two things you reach for to finish a crop.
+    public static let cropOptionsMinCanvasWidth: CGFloat = 545
+
+    /// Whether the crop tool's aspect locks lay out in full at this canvas width.
+    public static func showsFullCropOptions(canvasWidth: CGFloat) -> Bool {
+        canvasWidth >= cropOptionsMinCanvasWidth
+    }
+
     // MARK: Inspector auto-collapse
 
     /// Below this window width the docked inspector hides itself so the canvas

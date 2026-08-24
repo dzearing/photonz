@@ -1,0 +1,26 @@
+{
+  "id": "the-wand-s-tolerance-chip-reads-gray-where-the-c",
+  "title": "The wand's Tolerance chip reads gray where the crop chip reads black",
+  "goal": "On a narrow window the Magic Wand's tolerance folds into a small chip showing the number. That number is drawn in gray, which makes it look switched off, while the crop tool's new ratio chip right beside it draws its value in normal text. The two should match.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 330,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T03:44:35.869Z",
+  "updated": "2026-08-24T03:44:35.870Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorView.compactWandOptions. Cause found while fixing the crop bar: a bare Text inside a .buttonStyle(.borderless) label is drawn as an NSButton title, which ignores foregroundStyle and comes out secondary. Giving the Text a .background(Color.clear) puts it back on SwiftUI's drawing path and the color sticks; that is what compactCropOptions does. The \"Tol\" word should stay secondary, only the value changes. Current release only (the whole path is behind !toolOptionsEnabled).",
+  "acceptance": [
+    "With the current release and a 700 point window, the wand's Tolerance chip draws its number in the same weight and color as the crop chip draws its ratio",
+    "The wand chip is no wider than it is today"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T03:44:35.870Z",
+      "note": "created (manual)"
+    }
+  ]
+}

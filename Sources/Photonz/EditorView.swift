@@ -16,6 +16,7 @@ struct EditorView: View {
     /// Whether the compact Tolerance chip's popover is open. Only ever used on
     /// a canvas too narrow for the wand's options to lay out along the bar.
     @State private var isWandToleranceShown = false
+    @State private var isCropAspectShown = false
     @State private var isShapeFillPickerShown = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
@@ -144,10 +145,14 @@ struct EditorView: View {
                 if EditorChromeLayout.showsFullToolOptions(canvasWidth: width) {
                     isWandToleranceShown = false
                 }
+                if EditorChromeLayout.showsFullCropOptions(canvasWidth: width) {
+                    isCropAspectShown = false
+                }
             }
             // Same for putting the wand down while the chip's popover is open.
             .onChange(of: editorState.activeTool) { _, tool in
                 if tool != .wand { isWandToleranceShown = false }
+                if tool != .crop { isCropAspectShown = false }
             }
         }
         // Fill the window even in the empty state — the HStack otherwise hugs
@@ -981,7 +986,6 @@ struct EditorView: View {
         .disabled(editorState.document == nil)
     }
 
-    /// Aspect locks plus commit/cancel, shown while the crop tool is active.
     /// Wand tolerance: how far a color may drift (0–255 Euclidean RGBA) and
     /// still join the flood. Applies to the next wand click.
     ///
@@ -1150,27 +1154,59 @@ struct EditorView: View {
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
-    private var cropOptions: some View {
-        HStack(spacing: 6) {
-            ForEach(CropAspect.allCases, id: \.self) { aspect in
-                let isActive = editorState.cropAspect == aspect
-                Button {
-                    editorState.setCropAspect(aspect)
-                } label: {
-                    Text(aspect.label)
-                        .font(.caption.weight(.medium))
-                        .fixedSize()
-                        .foregroundStyle(isActive ? Color.white : Color.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background {
-                            if isActive {
-                                Capsule().fill(Color.accentColor)
-                            }
-                        }
-                }
-                .help("Lock aspect to \(aspect.label)")
+    /// Aspect locks plus apply/cancel, shown while the crop tool is active.
+    ///
+    /// Laid out along the bar when the picture is wide enough to hold them, and
+    /// otherwise collapsed so the four locks become one chip — see
+    /// `EditorChromeLayout.showsFullCropOptions` for why (231pt of bar that the
+    /// overflow loop cannot shed, which left 51pt of capsule hanging off each
+    /// end of a 435pt picture, with clicks near either edge landing on controls
+    /// that were only half drawn).
+    ///
+    /// Apply and cancel stay in the bar at both widths. They are the two things
+    /// you reach for to finish a crop, and the compacted bar has room for them.
+    @ViewBuilder private var cropOptions: some View {
+        if EditorChromeLayout.showsFullCropOptions(canvasWidth: canvasContentWidth) {
+            HStack(spacing: 6) {
+                cropAspectLocks
+                cropCommitButtons
             }
+        } else {
+            compactCropOptions
+        }
+    }
+
+    /// The four locks as chips, at their natural size. Used inline on a roomy
+    /// canvas and inside the chip's popover on a cramped one, so the control
+    /// itself never changes — only where it is drawn.
+    private var cropAspectLocks: some View {
+        ForEach(CropAspect.allCases, id: \.self) { aspect in
+            let isActive = editorState.cropAspect == aspect
+            Button {
+                editorState.setCropAspect(aspect)
+                // A lock is a one-shot choice, unlike the wand's slider, so the
+                // popover gets out of the way the moment you make it.
+                isCropAspectShown = false
+            } label: {
+                Text(aspect.label)
+                    .font(.caption.weight(.medium))
+                    .fixedSize()
+                    .foregroundStyle(isActive ? Color.white : Color.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background {
+                        if isActive {
+                            Capsule().fill(Color.accentColor)
+                        }
+                    }
+            }
+            .help("Lock aspect to \(aspect.label)")
+        }
+    }
+
+    /// Apply and cancel, the pair that ends the crop.
+    private var cropCommitButtons: some View {
+        Group {
             Button {
                 editorState.commitCrop()
             } label: {
@@ -1188,6 +1224,57 @@ struct EditorView: View {
                     .frame(width: 24, height: 24)
             }
             .help("Cancel Crop (⎋)")
+        }
+    }
+
+    /// The cramped-canvas form: the live lock plus a chevron, opening the same
+    /// four locks in a popover, then apply and cancel as before.
+    ///
+    /// The chevron is the affordance this bar already uses for a value you
+    /// press to change it (the zoom percentage, the wand's Tolerance chip). A
+    /// menu would have been the closer match to the zoom capsule, but a
+    /// borderless menu sizes itself to its own title and ignores a fixed-width
+    /// label, so the bar shifted 8pt every time the lock changed; the chip pins
+    /// the label in a fixed frame, so switching from Free to 16:9 cannot reflow
+    /// the bar. No glyph beside the label, for the same reason the four chips
+    /// had to go: it costs 18pt, and 18pt is the difference between the bar
+    /// fitting inside the picture and not.
+    private var compactCropOptions: some View {
+        HStack(spacing: 6) {
+            Button {
+                isCropAspectShown = true
+            } label: {
+                HStack(spacing: 4) {
+                    Text(editorState.cropAspect.label)
+                        .font(.caption.weight(.medium))
+                        // Primary, not the borderless button's tint: this is a
+                        // live value you can press, the same as the zoom
+                        // percentage beside it, not a dimmed caption. The clear
+                        // background is load-bearing: a bare Text in a
+                        // borderless button's label is drawn as an NSButton
+                        // title, which ignores foregroundStyle and comes out
+                        // gray; giving it a background puts it back on
+                        // SwiftUI's own drawing path, where the color sticks.
+                        .foregroundStyle(Color.primary)
+                        .frame(width: 30, alignment: .leading)
+                        .background(Color.clear)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .fixedSize()
+                .frame(height: 28)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.borderless)
+            .fixedSize()
+            .help("Crop aspect: \(editorState.cropAspect.label). Click to lock the crop to a ratio.")
+            .popover(isPresented: $isCropAspectShown, arrowEdge: .top) {
+                HStack(spacing: 6) { cropAspectLocks }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+            }
+            cropCommitButtons
         }
     }
 

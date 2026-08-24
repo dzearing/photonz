@@ -1,0 +1,26 @@
+{
+  "feature": "Crop keeps the tool bar inside the picture",
+  "epic": "measure-redline",
+  "summary": "In the release everyone gets today, picking up Crop on a narrow window used to push 51 points of the floating tool bar off each end of the picture. Now the four aspect buttons fold into one chip that shows the live ratio and opens the other three, and the whole bar stays inside the picture.",
+  "setup": "Photonz Dev, release Current (not Next). No flags to turn on. This is a Current-release change, so it shows up the next time the dev app is built.",
+  "try": [
+    { "do": "Open any screenshot and drag the window down to about 700 points wide, inspector still showing." },
+    { "do": "Press C to pick up Crop.", "shot": "2026-08-24-crop-bar-fit-light.png" },
+    { "do": "Look at both ends of the floating bar: they should sit inside the picture, not run off it." },
+    { "do": "Click the chip that reads Free, and pick 16:9 from the popover." },
+    { "do": "Drag a crop rectangle and check it holds 16:9." },
+    { "do": "Click the tick to apply, or the cross to cancel. Return and Escape still do the same." },
+    { "do": "Widen the window past about 545 points and watch all four ratios come back inline." }
+  ],
+  "evaluate": [
+    "Does a chip reading just Free or 16:9 tell you it is the crop ratio, or does it need a word beside it?",
+    "Is one press plus a pick an acceptable price for changing ratio on a narrow window?",
+    "Should the tick and the cross have stayed in the bar, or would you rather they sat on the picture the way Next does it?",
+    "At the moment the four ratios come back, two tools drop out of the bar into the overflow menu. Does that read as wrong when the window just got bigger?"
+  ],
+  "rough": [
+    "The chip shows the ratio and a chevron with no label. A glyph or the word Aspect would read better but costs 18 points, and 18 points is exactly the difference between the bar fitting inside the picture and not.",
+    "Above the threshold the bar prefers the four ratios over inline tools, so widening the window can take a tool or two out of the bar and into the overflow menu. The wand already behaves this way; it is the existing rule, not something new here.",
+    "I could not check this in a running app. Screen capture and Apple event automation are both denied to the loop's probe app on this machine, so the widths come from an offscreen harness built from the same view code, and the app was only confirmed to launch and run without crashing."
+  ]
+}
