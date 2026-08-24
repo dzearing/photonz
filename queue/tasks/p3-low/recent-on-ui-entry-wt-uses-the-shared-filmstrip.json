@@ -4,11 +4,11 @@
   "goal": "One page still lists recent captures in an older one-off layout, so the same thing looks and behaves differently depending on where you meet it. This moves it to the shared layout and removes the leftover styling nothing else uses.",
   "priority": "p3-low",
   "seq": 220,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:23:03.502Z",
-  "updated": "2026-08-24T01:42:47.032211Z",
+  "updated": "2026-08-24T01:43:10.777Z",
   "deps": [],
   "blockedBy": [],
   "notes": "home.html's Recent grid is now the shared .filmstrip / .filmcard, so the landing window and the history overlay agree on what a capture looks like and what you can do to one. ui-entry-wt.html is the last page still drawing the old bespoke .recents / .rec grid. Port it, then delete .recents / .rec / .rec .pv / .rec .cap from shared/components/inspector.css (lines ~48-51) since nothing will use them.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-08-24T01:42:47.032211Z",
       "note": "adversarial review (after): the strip is left-aligned with three cards and empty space to its right where the old 3-column grid stretched edge to edge. That is correct, not a regression: it is exactly what the landing window does, and it is the visual promise that more captures scroll in from the right. The one thing I could not fix is shared: the action buttons' title attributes are stripped by the icon-button pass, so they have neither title nor aria-label. home.html has the identical defect, so it is pre-existing and corpus-wide rather than something this port introduced. Not filing it as a task for this cycle since it belongs to whoever owns the icon-button pass."
+    },
+    {
+      "t": "2026-08-24T01:43:10.776Z",
+      "note": "ui-entry-wt.html's Recent row is now the shared .filmstrip/.filmcard, matching the landing window card for card (152x126, 82px thumb, same four actions, exclusive selection, play badge and duration on the video). The retired .recents/.rec rules are gone from shared/components/inspector.css and the dist bundle is rebuilt; nothing loading photonz-ds.css refers to them. Verified in the browser at step 2, not by grep: check-selection, check-states and check-elevation pass and the sweep over all 90 pages reports zero issues. Pushed as be02f2e."
     }
   ],
-  "started": "2026-08-24T01:36:50.381Z"
+  "started": "2026-08-24T01:36:50.381Z",
+  "completed": "2026-08-24T01:43:10.777Z"
 }
