@@ -1,0 +1,27 @@
+{
+  "id": "redline-snap-row-stops-cutting-edges-and-centers",
+  "title": "Redline Snap row stops cutting Edges and centers",
+  "goal": "In the redline properties panel, the Snap setting reads \"Edges and centers\" but the last letter is sliced off. This makes the setting readable at the panel's normal width.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 290,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T02:45:51.930Z",
+  "updated": "2026-08-24T02:45:51.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "redline.html Tool options section. Measured 2026-08-23 at the 267px dock: the .lead gets 102px for 104px of content, so it clips by 2px with no ellipsis (flex + overflow:hidden hard-cuts). Two-item row, no trailing action, so .irow.stacked and .irow.wide are both heavier than the problem. Proven dead end: you cannot make the 76px label track yield to the value in CSS grid. minmax(0,76px) on the label plus min-width:max-content on the value overflows the row in Chrome (label stays 76, select grows to 126, row total 255.6 vs 232); min(max-content,100%) resolves to 100% and changes nothing; fit-content(76px) works but shrinks the label to 27px and breaks the label column alignment with the neighbouring rows. So the fix is either a shorter value string or a per-section label width.",
+  "acceptance": [
+    "At the default panel width the Snap value reads in full, with nothing cut off",
+    "The Snap row still lines up with the Units and Show rows above and below it",
+    "The row is measured in a browser at the default panel width before and after, and the numbers are recorded in the task log"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T02:45:51.931Z",
+      "note": "created (manual)"
+    }
+  ]
+}

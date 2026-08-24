@@ -1,0 +1,25 @@
+{
+  "feature": "Redline Color row reads its color name",
+  "epic": "measure-redline",
+  "summary": "In the redline properties panel, the color you are drawing with now shows its full name. It used to read \"Redline\" with the rest cut off, because the label, the color and the Reset action could not all fit on one row of a narrow dock.",
+  "setup": "Design study, http://127.0.0.1:8791/pages/redline.html. No flags. The measurement in the capture is already selected, so the Properties panel shows its settings.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/pages/redline.html", "shot": "2026-08-23-redline-color-row-before.png" },
+    { "do": "Scroll the Properties panel down to the section headed \"Save Changes · width\"." },
+    { "do": "Read the Color row: the name now sits under the word Color and reads \"Redline red\" in full.", "shot": "2026-08-23-redline-color-row-after.png" },
+    { "do": "Compare it with the Role and Label rows just above, which still put their label and control side by side." },
+    { "do": "Drag the left edge of the right dock narrower and wider, and watch the color name stay whole." },
+    { "do": "Switch the page to the light theme and check the row again.", "shot": "2026-08-23-redline-color-row-light.png" }
+  ],
+  "evaluate": [
+    "Does the Color row still read as a labeled property, or does \"Color\" look like a heading for everything under it?",
+    "Is one taller row in an otherwise even list acceptable, or does the section look ragged?",
+    "Would you rather the row lost the word Color entirely and gave the swatch the whole width, as in 2026-08-23-redline-color-row-alt-wide.png?",
+    "Is a Reset link worth its space here at all, given the color shown is the default one?"
+  ],
+  "rough": [
+    "The mock's own rule said to drop the label when three things crowd a row. I did not: with Role and Label directly above, a Color row with no label lost the left-hand column and read as a stray control. The label moved to its own line instead, which is a new shared row variant.",
+    "Nothing shrinks its way out of this row. The label column is 76px, Reset is 29.5px, and the color name needs 84px in a 102.5px slot. An icon Reset would have saved 5.5px and a tighter gap 4px, against a 23.5px shortfall.",
+    "The Snap row in the same panel still cuts \"Edges and centers\" by 2px. That is a two-item row with no action, so it is a different squeeze and is queued separately."
+  ]
+}

@@ -282,6 +282,21 @@
    tiles — do not stack a label, a value and an action in a dock. */
 .irow.wide{grid-template-columns:1fr}
 .irow.wide.split{grid-template-columns:1fr auto}
+/* .irow.stacked — same crowding problem as .wide, but the label survives: it
+   takes its own line and the control gets the whole row under it. Reach for it
+   when .wide would work except the label is a real property name the section
+   header does NOT already say, so deleting it would leave a control with no
+   name. Measured 2026-08-23, the redline Color row in the 267px dock: the row
+   is 232px, and 76 label + 12 gap + 29.5 "Reset" + 12 gap left the value
+   102.5px, of which 60.5px was text — so "Redline red" (84px of text) read
+   "Redline". Tightening does not reach: an icon Reset saves 5.5px and a
+   narrower trailing gap 4px, against a 23.5px shortfall. Stacked, the value
+   gets 190.5px and the row costs 16px of height. Labels still line up down the
+   left edge with the inline rows above and below, which is the alignment
+   .wide gives up. */
+.irow.stacked{grid-template-columns:1fr;row-gap:var(--s1)}
+.irow.stacked.split{grid-template-columns:1fr auto}
+.irow.stacked>.rl{grid-column:1/-1}
 .irow>.rl{color:var(--faint);font-size:10.5px}
 /* .select — the ONE dropdown trigger. It is a BUTTON, not a well: you press it,
    so it wears the raised control treatment and sits on the same height scale as

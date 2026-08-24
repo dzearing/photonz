@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 250,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T00:59:17.913Z",
-  "updated": "2026-08-24T00:59:17.914Z",
+  "updated": "2026-08-24T02:46:38.873Z",
   "deps": [],
   "blockedBy": [],
   "notes": "redline.html line ~334: <div class=\"irow split\"><span class=\"rl\">Color</span><span class=\"select\">...Redline red...</span><button class=\"linkbtn\">Reset</button></div>. Measured 2026-08-23 at the 267px dock: row 232px, label 76, select 102.5, .lead gets 60.5px for 84px of content, Reset 29.5. Same three-things-on-a-skinny-row squeeze as the Component Main row, but the .irow.wide fix used there does NOT apply: dropping the label worked there only because the section header already read \"Component linked\", and here \"Color\" is a real property name. Candidates: put the swatch and name on a full-width row with Reset as a trailing icon; move Reset into the section header; or make .irow.split let the 76px label track yield to min-content before the value truncates (grid: the fr track has no floor today because .select sets min-width:0, so the label never gives). The last one is the systemic fix and would cover every split row, but it needs a geometry diff across all 64 pages.",
@@ -22,6 +22,40 @@
     {
       "t": "2026-08-24T00:59:17.914Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T02:35:44.368Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T02:45:00.000Z",
+      "note": "Adversarial review before building. Measured the row at the default 267px dock: row 232px, label 76, gap 12, select 102.5, Reset 29.5, gap 12. The color name needs 84px of text and gets 60.5px, so it hard-cuts to \"Redline\" with no ellipsis. Shortfall 23.5px. Tightening cannot reach it: an icon Reset is 24px vs 29.5px text (saves 5.5), a trailing gap of --s2 instead of --s3 saves 4, select padding 10 to 8 saves 4. The row is over-subscribed by ~14px even after all three. Conclusion: one of the three things has to leave the line."
+    },
+    {
+      "t": "2026-08-24T02:50:00.000Z",
+      "note": "Tested the systemic grid fix from the notes in Chrome and it does not work. minmax(0,76px) for the label plus min-width:max-content on the value: the label track keeps its full 76px and the select grows to 126.1, so the row totals 255.6 against 232 and Reset is pushed out of the panel. min-width:min(max-content,100%) resolves to 100% and changes nothing. Plain minmax(0,76px) changes nothing. fit-content(76px) does free the space (label 27, select 151.4, no clipping) but each row then sizes its own label, so the control column no longer lines up between Role, Label and Color. Recorded so nobody retries it."
+    },
+    {
+      "t": "2026-08-24T02:55:00.000Z",
+      "note": "Tried .irow.wide (drop the label) as the notes' first candidate and screenshotted it: queue/audits/2026-08-23-redline-color-row-alt-wide.png. It fixes the clipping (select 190.5, lead 84.1) but with Role and Label immediately above it, the unlabeled row loses the left-hand label column and reads as a stray control. Rejected on that."
+    },
+    {
+      "t": "2026-08-24T03:00:00.000Z",
+      "note": "Shipped .irow.stacked: the label keeps its own line and the control gets the full row width under it, with the trailing action still beside the control. Added to shared/components/inspector.css next to .irow.wide with a measured comment, rebuilt shared/dist/photonz-ds.css, and applied to the redline Color row only (no other page uses the class, so the change is provably scoped to that row)."
+    },
+    {
+      "t": "2026-08-24T03:05:00.000Z",
+      "note": "After, measured on the live page: row 232px, height 48 against 32 before, so it costs 16px, select 190.5, lead 84.1 for 84 of text, clipped false. Reset is unchanged at 29.5 and stays vertically centred on the control inside the panel. Role, Label and Color labels all still start at x=870, so the left edge reading is intact. Held with no clipping at dock widths 220, 240, 275 and 360. Checked in both themes."
+    },
+    {
+      "t": "2026-08-24T03:08:00.000Z",
+      "note": "Second review, on the built thing: the label sits 4px above its control against 16px between rows, so proximity groups it correctly and it does not read as a section header (section headers are larger and bolder). One taller row in an even list is the cost, and it is called out in the audit for the user to react to. Also found the Snap row in the same panel cuts \"Edges and centers\" by 2px; filed as redline-snap-row-stops-cutting-edges-and-centers rather than widening this task."
+    },
+    {
+      "t": "2026-08-24T02:46:38.872Z",
+      "note": "Redline Color row now stacks its label above the control (new shared .irow.stacked variant in inspector.css). Measured live in Chrome at the default 267px dock: the color name had 60.5px for 84px of text and hard-cut to \"Redline\"; it now has 190.5px and reads \"Redline red\" in full, with Reset unchanged at 29.5px beside the control. Holds clean at dock widths 220 to 360 and in both themes. Audit: queue/audits/2026-08-23-redline-color-row.json."
     }
-  ]
+  ],
+  "started": "2026-08-24T02:35:44.368Z",
+  "completed": "2026-08-24T02:46:38.873Z"
 }
