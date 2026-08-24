@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 390,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:54:00.504Z",
-  "updated": "2026-08-24T03:54:00.505Z",
+  "updated": "2026-08-24T04:06:00.129Z",
   "deps": [],
   "blockedBy": [],
   "notes": "There is a real fork here and it is worth a decision card rather than a guess. Photoshop files its Ruler in the eyedropper group, so both tools are I. docs/design/mocks/pages/icon-gradient-wt.html renders Sample a color (I) and Measure (M) three buttons apart in ONE tstrip, so a blind corpus sweep of M -> I creates a fresh same-bar collision there. Options are (a) Measure takes I everywhere and the eyedropper becomes the shifted sibling in bars that show both, which is the group idiom already written into shared/AGENTS.md and used for Heal J / Patch shift-J, or (b) the eyedropper keeps I and the app moves Measure off I in Sources/PhotonzCore/Tools.swift. Corpus counts today: Measure (M) in 59 pages, Measure (I) in pages/iconography.html only, Sample a color (I) in color.html + icon-gradient-wt.html + shared/colorpicker.js + shared/photonz-ds.js. Detector: node shared/check-shortcuts.mjs from docs/design/mocks.",
@@ -23,6 +23,23 @@
     {
       "t": "2026-08-24T03:54:00.505Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T03:55:41.101Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T03:58:08.917Z",
+      "note": "Review before building. (1) Is I even right? Yes, and no decision card is needed: Tools.swift already binds Measure to i with a written rationale (M is Photoshop's marquee, Photoshop files its ruler under I), shared/AGENTS.md already states 'Measure is I, never M', and pages/lang-keyboard.html already prints I in the legend. The 68 M hints in the corpus are the drift, not the rule. (2) The only real fork the notes flagged: in a bar showing both the ruler and the eyedropper, who keeps the bare letter? Photoshop's I group defaults to the eyedropper, but Photonz has no eyedropper tool at all (Tool has .measure and no sampler; the eyedropper here is a button inside a color popover, and a modal tool in exactly one bar, icon-gradient-wt). Measuring is the product. So Measure keeps bare I and the eyedropper is the shifted sibling, which is the Heal J / Patch shift-J idiom already written into AGENTS.md. Deliberate departure from Photoshop's group default, so it gets written down. (3) Scope call: the eyedropper prints shift-I EVERYWHERE it prints a key, not only in bars where it collides. A key that changes per screen is the exact bug this task exists to kill. (4) Shortest version: sweep the corpus, add the eyedropper to the legend, note the departure in AGENTS.md. The app needs no change."
+    },
+    {
+      "t": "2026-08-24T04:06:00.101Z",
+      "note": "Shipped. Corpus sweep: 68 Measure key hints across 60 pages went from M to I, in both forms (the button title and the overflow menu keycap). The eyedropper became the shifted sibling on every surface that prints a key for it: tool-strip button and menu row in icon-gradient-wt, menu rows in color and paint, the four color-picker header buttons in color and icon-gradient-wt, the data-tip in comp-color, and the .cp-head sampler in shared/components/colorpicker.js, which is where most pages get theirs. Also gave the sampler ONE name (paint.html said 'Pick color' where every other surface says 'Sample a color') and dropped the now-stale bare 'i' search term from the eyedropper's keywords in shared/icons.mjs. Wrote the inversion down in shared/AGENTS.md so nobody reverses it, and added a Sample a color / shift-I row plus the reasoning to the lang-keyboard legend. Verified: check-shortcuts, check-selection, check-states, check-elevation all pass; all 68 study pages return 200; the DOM of icon-gradient-wt's one shared bar reads Sample a color shift-I next to Measure I in both the buttons and the overflow menu; hovered the eyedropper in a real browser and the tooltip renders 'Sample a color' with a shift-I keycap; Scripts/test.sh 1094 tests pass (no Swift changed)."
+    },
+    {
+      "t": "2026-08-24T04:06:00.128Z",
+      "note": "Review of the built thing. (a) The color-picker sampler now prints shift-I on every page, but that button lives in a popover, not in the tool group, so the keystroke is more a promise than a mechanism. Printing bare I there would have contradicted the ruler on the same screen, so shift-I is the best available answer; flagged in the audit's rough list and as an evaluate question rather than silently accepted. (b) 'Sample a color' wraps to two lines in the legend's Tools column. Pre-existing behavior for long labels (Brush size, Zoom out, Reset overrides all wrap), so left alone. (c) Discovered, out of scope, filed as tool-buttons-in-the-mocks-announce-as-just-butto: tooltip.js's upgrade() moves title into data-tip and deletes the title without setting aria-label, so every tool button in the study announces as a bare 'button'. Confirmed with a Chrome a11y-tree snapshot. (d) No app code changed, so there is nothing to playtest in Photonz Next; the audit says so plainly instead of implying a feature landed."
     }
-  ]
+  ],
+  "started": "2026-08-24T03:55:41.101Z"
 }

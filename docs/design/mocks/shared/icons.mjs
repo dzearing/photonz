@@ -196,7 +196,7 @@ export const CATEGORIES = [
       ['crop', P('M6.6 2.6v12.8a2.4 2.4 0 0 0 2.4 2.4h12.4M2.6 6.6h12.8a2.4 2.4 0 0 1 2.4 2.4v12.4'), 'Crop and re-frame', 'trim reframe c'],
       ['straighten', P('M3.4 16.6L20.6 7.4') + P('M3.4 20.6h17.2M3.4 20.6v-2.4M20.6 20.6v-2.4'), 'Level the horizon', 'rotate level horizon angle'],
       ['ruler', P('M15.6 2.9l5.5 5.5a1.4 1.4 0 0 1 0 2L10.4 21.1a1.4 1.4 0 0 1-2 0L2.9 15.6a1.4 1.4 0 0 1 0-2L13.6 2.9a1.4 1.4 0 0 1 2 0z') + P('M7.1 11.3l1.9 1.9M10.3 8.1l1.9 1.9M13.5 4.9l1.9 1.9'), 'Measure and redline', 'measure distance dimension redline'],
-      ['eyedropper', P('M3.4 20.6l1-1h3l8.8-8.8') + P('M4.4 19.6v-3l8.8-8.8') + P('M15.4 6.2l3.2-3.2a2.1 2.1 0 1 1 3 3l-3.2 3.2.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3z'), 'Pick a colour from the canvas', 'picker sample color i'],
+      ['eyedropper', P('M3.4 20.6l1-1h3l8.8-8.8') + P('M4.4 19.6v-3l8.8-8.8') + P('M15.4 6.2l3.2-3.2a2.1 2.1 0 1 1 3 3l-3.2 3.2.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3z'), 'Pick a colour from the canvas', 'picker sample color sampler'],
       ['pen', P('M8.4 4.4h7.2v8.7L12 20.6l-3.6-7.5z') + P('M8.4 13.1h7.2M12 14.8v5.8') + C(12, 8.6, 1.5), 'Draw a vector path', 'nib bezier path vector p'],
       ['pencil', P('M12 20.6h8.6') + P('M16.4 3.9a2.4 2.4 0 0 1 3.4 3.4L8.2 18.9l-4.5 1.1 1.1-4.5z'), 'Edit, rename, freehand line', 'edit write draw'],
       ['brush', P('M9.6 12.2l8.2-8.2a2.1 2.1 0 0 1 3 3l-8.2 8.2') + P('M7.2 14.2a3.1 3.1 0 0 0-3.1 3.1c0 1.4-2 1.6-2 2.1 1 1 2.6 2.1 4.1 2.1a4.1 4.1 0 0 0 4.1-4.1 3.1 3.1 0 0 0-3.1-3.2z'), 'Paint with the brush engine', 'paint stroke bristle b'],

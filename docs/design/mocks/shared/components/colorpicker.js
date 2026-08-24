@@ -176,7 +176,7 @@
       '<span class="cp-prev"><i class="was"></i><i class="now"></i></span>' +
       '<span class="cp-name"></span>' +
       '<span class="sp"></span>' +
-      '<button class="btn ghost icon" title="Sample a color from anywhere on screen (I)"><i class="ic ic-eyedropper"></i></button>' +
+      '<button class="btn ghost icon" title="Sample a color from anywhere on screen (⇧I)"><i class="ic ic-eyedropper"></i></button>' +
       '<button class="btn ghost icon" data-cp-close title="Close (esc)"><i class="ic ic-x"></i></button>' +
     '</div>' +
     '<div class="cp-types" data-cp-types role="group" aria-label="Paint type"></div>' +

@@ -1,0 +1,27 @@
+{
+  "id": "tool-buttons-in-the-mocks-announce-as-just-butto",
+  "title": "Tool buttons in the mocks announce as just \"button\" to a screen reader",
+  "goal": "Every tool in the design study shows its name on hover, but that name disappears for anyone who cannot see the hover. A person using VoiceOver hears \"button\" for the Select tool, the ruler, the pen and every other tool in the strip, so the tool bar is unusable without sight. Give each tool its name in a way assistive technology can read.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T04:05:17.109Z",
+  "updated": "2026-08-24T04:05:17.109Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while sweeping the Measure shortcut on 2026-08-24. docs/design/mocks/shared/components/tooltip.js upgrade() copies title into data-tip and then calls el.removeAttribute(chr39)titlechr39(), which drops the accessible name; nothing sets aria-label in its place. Confirmed with a Chrome a11y-tree snapshot of pages/icon-gradient-wt.html: the ten tool-strip buttons all come back as bare \"button\" with no name. Fix is probably to set aria-label to the label half of the data-tip during upgrade (and in any place that authors data-tip directly, e.g. pages/comp-color.html), then re-snapshot a couple of pages to confirm names appear. Applies to every .tool and every icon-only .btn in the corpus, not just tool strips.",
+  "acceptance": [
+    "Every tool bar button in the design study reports its tool name to assistive technology",
+    "The hover tooltip still shows the same name and the same key hint",
+    "The name a screen reader reads matches the name the tooltip shows, word for word"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T04:05:17.109Z",
+      "note": "created (manual)"
+    }
+  ]
+}

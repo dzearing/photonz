@@ -1,0 +1,26 @@
+{
+  "feature": "One key for the ruler",
+  "epic": "design-system",
+  "summary": "The Measure tool now prints the same key, I, on every screen of the design study, and that is the key the app actually binds. The eyedropper, which shares Photoshop's I group, prints its shifted sibling ⇧I everywhere it prints a key at all.",
+  "setup": "The design study at http://127.0.0.1:8791. No app change, so Photonz Dev looks the same as before: this is about what the mocks teach.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#lang-keyboard and read the Tools column of the legend.", "shot": "2026-08-24-ruler-key-legend.png" },
+    { "do": "Read the rule text beside it, block 04, the paragraph starting \"Two tools that share one of Photoshop's groups\"." },
+    { "do": "Open http://127.0.0.1:8791/index.html#redline and hover the ruler button in the tool strip." },
+    { "do": "Open http://127.0.0.1:8791/index.html#icon-gradient-wt and hover the eyedropper, then the ruler two buttons to its right.", "shot": "2026-08-24-ruler-key-eyedropper-tip.png" },
+    { "do": "On that same page open the More tools overflow menu and read the same two rows." },
+    { "do": "Open http://127.0.0.1:8791/index.html#color and hover the eyedropper in the color picker header." }
+  ],
+  "evaluate": [
+    "Reading only the legend, would you press I for the ruler without hesitating?",
+    "The eyedropper inside a color picker now says ⇧I. Does that read as a real keystroke you could press there, or as noise on a button you were going to click anyway?",
+    "Photoshop opens its I group on the eyedropper and files the ruler behind it. Photonz does the reverse. Does putting measuring first feel right for this app?",
+    "In the icon page's tool strip the eyedropper and the ruler sit two buttons apart with I and ⇧I. Do they read as two members of one family, or as two unrelated tools with confusingly similar keys?"
+  ],
+  "rough": [
+    "The eyedropper in a color picker header is not really the ruler's toolbar sibling: it is a sampler inside a popover that happens to share Photoshop's group. It prints ⇧I anyway, because printing bare I there would contradict the ruler on the very same screen. Best available answer, not an obviously right one.",
+    "In the legend's Tools column, Sample a color is long enough to wrap onto two lines. Brush size and Zoom out already do the same, so it matches, but it is the longest label there.",
+    "Nothing in the app changed. A person playtesting Photonz Next will see no difference; the win is that a person learning a shortcut from a mock now learns the one the app obeys.",
+    "Found while sweeping and filed separately, not fixed here: every tool button in the study loses its accessible name when the tooltip upgrade moves title into data-tip, so a screen reader announces plain \"button\"."
+  ]
+}

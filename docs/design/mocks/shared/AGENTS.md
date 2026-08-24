@@ -903,7 +903,8 @@ NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ 
    `Sources/PhotonzCore/Tools.swift` is the source of truth: notably the redline
    **Arrow is `A`** (never `P`, which belongs to the Pen) and **Measure is `I`**
    (never `M`, which belongs to the marquee — Photoshop files its ruler with the
-   eyedropper, so `I` is the Photoshop-faithful letter too). Two tools in the
+   eyedropper, so `I` is the Photoshop-faithful letter too; the eyedropper itself
+   takes `⇧I`, see the group rule below). Two tools in the
    SAME tool bar sharing a letter is a bug; the same letter meaning different
    things in two unrelated surfaces is how people learn to stop trusting
    shortcuts.
@@ -914,7 +915,22 @@ NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ 
    both `I`. When a bar shows two members of one group as separate buttons, the
    primary keeps the bare letter and the sibling prints `⇧` plus that letter
    (**Heal `J`**, **Patch `⇧J`**), which is the keystroke that actually cycles to
-   it. `pages/capture-wt.html` does the same with `Redact (⇧R)`. Never solve the
+   it. `pages/capture-wt.html` does the same with `Redact (⇧R)`.
+
+   **The `I` group is inverted on purpose: Measure `I`, eyedropper `⇧I`.**
+   Photoshop's `I` group opens on the eyedropper and files the ruler behind it.
+   Photonz is the other way round, because measuring IS the product and
+   `Tool.shortcutKey` binds `i` to `.measure`; there is no eyedropper in `Tool` at
+   all, only a sampler button inside the color picker plus one modal button in
+   `pages/icon-gradient-wt.html`. Letting the sampler hold the bare letter would
+   hand a redliner's most-reached key to the tool they use least. So the
+   eyedropper prints `⇧I` on EVERY surface that prints a key for it — tool bar
+   button, overflow row, command-menu row, and the `.cp-head` sampler in
+   `shared/components/colorpicker.js` — not only in the one bar where it would
+   otherwise collide. A key that changes from screen to screen is exactly the
+   drift this rule exists to stop.
+
+   Never solve the
    clash by deleting a tool's key hint: a bar whose tooltip promises `P` and
    whose menu row shows nothing has taught two contradictory things.
 

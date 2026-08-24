@@ -203,6 +203,7 @@
               <div class="scut"><span class="cmd">Pen</span><span class="combo"><span class="kc">P</span></span></div>
               <div class="scut"><span class="cmd">Arrow</span><span class="combo"><span class="kc">A</span></span></div>
               <div class="scut"><span class="cmd">Measure</span><span class="combo"><span class="kc">I</span></span></div>
+              <div class="scut"><span class="cmd">Sample a color</span><span class="combo"><span class="kc mod">⇧</span><span class="kc">I</span></span></div>
               <div class="scut"><span class="cmd">Connect</span><span class="combo"><span class="kc">N</span></span></div>
               <div class="scut"><span class="cmd">Heal</span><span class="combo"><span class="kc">J</span></span></div>
               <div class="scut"><span class="cmd">Patch</span><span class="combo"><span class="kc mod">⇧</span><span class="kc">J</span></span></div>
@@ -247,7 +248,7 @@
       <div class="meta">
         <div class="bnum">04</div><h3 class="bname">The legend</h3>
         <p class="rule">Grouped the way the menus are: <b>Tools</b>, <b>Edit</b>, <b>View</b>, <b>Components</b>. Tools take a bare letter, Photoshop's; edit and view take <b>⌘</b>; the component tier (purple) stacks <b>⌥⌘</b> so it never collides with a familiar key.</p>
-        <p class="rule">Two tools that share one of Photoshop's groups share its letter, and the second one adds <b>⇧</b>: Heal is <b>J</b>, Patch is <b>⇧J</b>. That is the keystroke that actually reaches it, so a tool bar never prints the same key twice. <b>Measure</b> is <b>I</b> (Photoshop files the ruler with the eyedropper) because <b>M</b> is the marquee's.</p>
+        <p class="rule">Two tools that share one of Photoshop's groups share its letter, and the second one adds <b>⇧</b>: Heal is <b>J</b>, Patch is <b>⇧J</b>. That is the keystroke that actually reaches it, so a tool bar never prints the same key twice. <b>Measure</b> is <b>I</b>, never <b>M</b>: <b>M</b> is the marquee’s, and Photoshop files its ruler with the eyedropper. Redlining is what this app is for, so here the ruler keeps the bare <b>I</b> and <b>Sample a color</b> is the <b>⇧I</b> sibling.</p>
         <div class="dd"><span class="do">Keep every tool one keystroke away.</span><span class="no">Let a new feature steal an established key.</span></div>
         <p class="api"><b>API</b> a category is just a menu: <code>menu("View").items</code> each carry their command and combo.</p>
       </div>
