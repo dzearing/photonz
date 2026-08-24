@@ -1,6 +1,6 @@
 import AppKit
 
-/// Full-screen "grab a rectangle" mode (⌘⇧4), freeze-frame style: every display
+/// Full-screen "grab a rectangle" mode (⇧⌘4), freeze-frame style: every display
 /// is screenshotted FIRST, the frozen images are shown full-screen on
 /// shielding-level panels covering everything (nothing underneath stays
 /// interactive or can float above the drag box), and the selection is dragged on

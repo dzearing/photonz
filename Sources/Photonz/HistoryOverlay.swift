@@ -62,7 +62,7 @@ struct HistoryOverlay: View {
     @ViewBuilder
     private var content: some View {
         if allEntries.isEmpty {
-            emptyMessage("No captures yet. ⌘⇧4 grabs a rectangle, ⌘⇧3 the full screen, ⌘⇧5 records.")
+            emptyMessage("No captures yet. ⇧⌘4 grabs a rectangle, ⇧⌘3 the full screen, ⇧⌘5 records.")
         } else if entries.isEmpty {
             emptyMessage(filterEmptyMessage)
         } else {

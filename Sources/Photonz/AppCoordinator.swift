@@ -38,7 +38,7 @@ final class AppCoordinator {
 
     /// The just-captured file, highlighted in the history overlay so the latest
     /// capture/recording stands out when the overlay pops after a capture. Nil
-    /// when the overlay was opened manually (⌘⇧H) or after it's dismissed.
+    /// when the overlay was opened manually (⇧⌘H) or after it's dismissed.
     private(set) var highlightedCaptureURL: URL?
 
     /// Floating tooltips for the history overlay's per-item icons (their own
@@ -177,7 +177,7 @@ final class AppCoordinator {
     /// After a capture/recording lands, stack a bottom-right toast (thumbnail +
     /// "Copied to clipboard") instead of popping the whole history overlay. The
     /// toast auto-fades; hovering it pins it and reveals Edit / Dismiss. History
-    /// is still a deliberate ⌘⇧H away. If a capture is highlighted in an open
+    /// is still a deliberate ⇧⌘H away. If a capture is highlighted in an open
     /// overlay, keep that behavior in sync.
     func showCaptureToast(_ entry: CaptureEntry) {
         if historyOverlay.isShown { highlightedCaptureURL = entry.url }
@@ -383,7 +383,7 @@ final class AppCoordinator {
 
     // MARK: - History overlay
 
-    /// ⌘⇧H / menu: show the global history overlay, or hide it if already up.
+    /// ⇧⌘H / menu: show the global history overlay, or hide it if already up.
     func toggleHistory() {
         if historyOverlay.isShown { hideHistory() } else { showHistory() }
     }

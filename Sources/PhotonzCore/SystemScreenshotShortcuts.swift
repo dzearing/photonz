@@ -1,7 +1,7 @@
 import Foundation
 
 /// macOS's own screenshot shortcuts (System Settings → Keyboard → Keyboard
-/// Shortcuts → Screenshots) swallow ⌘⇧3/⌘⇧4/⌘⇧5 before any app's global
+/// Shortcuts → Screenshots) swallow ⇧⌘3/⇧⌘4/⇧⌘5 before any app's global
 /// hotkeys can see them, even with Screen Recording granted. This maps the
 /// user's `com.apple.symbolichotkeys` → `AppleSymbolicHotKeys` dictionary to
 /// the Photonz capture hotkeys the system still owns, so the welcome flow can
@@ -11,9 +11,9 @@ public enum SystemScreenshotShortcuts {
     /// A Photonz capture hotkey that a built-in screenshot shortcut can shadow.
     /// Raw values are Apple's symbolic hotkey IDs.
     public enum Shortcut: Int, CaseIterable, Sendable {
-        case fullScreen = 28   // ⌘⇧3 "Save picture of screen as a file"
-        case region = 30       // ⌘⇧4 "Save picture of selected area as a file"
-        case toolbar = 184     // ⌘⇧5 "Screenshot and recording options"
+        case fullScreen = 28   // ⇧⌘3 "Save picture of screen as a file"
+        case region = 30       // ⇧⌘4 "Save picture of selected area as a file"
+        case toolbar = 184     // ⇧⌘5 "Screenshot and recording options"
 
         public var keyLabel: String {
             switch self {

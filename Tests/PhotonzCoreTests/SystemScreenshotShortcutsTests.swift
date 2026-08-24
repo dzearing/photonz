@@ -24,9 +24,9 @@ struct SystemScreenshotShortcutsTests {
 
     @Test func onlyStillEnabledEntriesConflict() {
         let hotkeys: [String: Any] = [
-            "28": ["enabled": false],   // ⌘⇧3 freed
+            "28": ["enabled": false],   // ⇧⌘3 freed
             // 30 missing → system default: enabled
-            "184": ["enabled": true],   // ⌘⇧5 still the system's
+            "184": ["enabled": true],   // ⇧⌘5 still the system's
         ]
         #expect(SystemScreenshotShortcuts.conflicting(in: hotkeys) == [.region, .toolbar])
     }
@@ -51,7 +51,7 @@ struct SystemScreenshotShortcutsTests {
     }
 
     @Test func unrelatedHotkeyIDsAreIgnored() {
-        // 29/31 are the copy-to-clipboard variants (⌃⌘⇧3/4) — not ours.
+        // 29/31 are the copy-to-clipboard variants (⌃⇧⌘3/4) — not ours.
         let hotkeys: [String: Any] = [
             "28": ["enabled": false],
             "29": ["enabled": true],

@@ -6,7 +6,7 @@ import SwiftUI
 
 /// First-run setup: a friendly window that walks through the one-time macOS
 /// settings Photonz needs — Screen Recording (required), Microphone (optional,
-/// for narrated recordings), and freeing ⌘⇧3/⌘⇧4/⌘⇧5 from the system's own
+/// for narrated recordings), and freeing ⇧⌘3/⇧⌘4/⇧⌘5 from the system's own
 /// screenshot shortcuts. Presented at launch until finished; reachable any
 /// time from the menu-bar menu and the history overlay's permission hint.
 ///
@@ -206,7 +206,7 @@ final class WelcomeState {
         needsRelaunch = screenRecordingGranted && !screenGrantedAtLaunch
     }
 
-    /// Which of ⌘⇧3/⌘⇧4/⌘⇧5 macOS's own screenshot shortcuts still swallow.
+    /// Which of ⇧⌘3/⇧⌘4/⇧⌘5 macOS's own screenshot shortcuts still swallow.
     private static func currentShortcutConflicts() -> [SystemScreenshotShortcuts.Shortcut] {
         let value = CFPreferencesCopyValue(
             "AppleSymbolicHotKeys" as CFString,

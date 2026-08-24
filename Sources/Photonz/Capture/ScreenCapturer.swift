@@ -63,7 +63,7 @@ enum ScreenCapturer {
                       height: local.height)
     }
 
-    /// Captures every attached screen (system ⌘⇧3 behavior: one image per display).
+    /// Captures every attached screen (system ⇧⌘3 behavior: one image per display).
     static func captureAllScreens() async throws -> [CGImage] {
         var images: [CGImage] = []
         for screen in NSScreen.screens {

@@ -5,7 +5,7 @@ import Carbon.HIToolbox
 /// that works without the Accessibility permission and fires even when the
 /// app is in the background.
 ///
-/// Caveat for ⌘⇧3/⌘⇧4: macOS's own Screenshots shortcuts intercept these
+/// Caveat for ⇧⌘3/⇧⌘4: macOS's own Screenshots shortcuts intercept these
 /// before any app while they're enabled. Registration still succeeds, and our
 /// hotkeys start firing as soon as the user disables the system ones
 /// (System Settings → Keyboard → Keyboard Shortcuts → Screenshots).

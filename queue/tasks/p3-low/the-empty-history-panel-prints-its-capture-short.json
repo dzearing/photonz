@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 260,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T01:08:27.964Z",
-  "updated": "2026-08-24T01:08:27.965Z",
+  "updated": "2026-08-24T02:47:14.469Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while sweeping the design study for modifier order (keyboard-shortcuts-read-in-one-modifier-order-ac). Sources has 34 occurrences of the cmd-first glyph pair but 33 are code comments; exactly ONE is user-facing: Sources/Photonz/HistoryOverlay.swift:65 emptyMessage(\"No captures yet. CMD-SHIFT-4 grabs a rectangle, CMD-SHIFT-3 the full screen, CMD-SHIFT-5 records.\"). Swap to shift-first. HistoryOverlay.swift is shared (not forked into Releases/Next), so one edit reaches both releases, but it does change Current-release copy, which is why the sweep task left it alone. Zero occurrences of the cmd-before-option pair in Sources. The comments are worth normalising in the same pass for grep-ability but are not user-facing. The authoring rule now lives in docs/design/mocks/shared/AGENTS.md under the keyboard-shortcut carve-out, and the study publishes it on pages/lang-keyboard.html section 05.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-08-24T01:08:27.965Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T02:47:14.469Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T03:05:00.000Z",
+      "note": "Adversarial review before building: the hint is the only shortcut copy the app shows a person outside the Welcome window, and WelcomeView.swift:131 already prints the same three chords shift-first. So this was one surface disagreeing with its own sibling, not a style preference. Shortest version that delivers the value: swap the two glyphs, change nothing else. Considered also aligning the verbs with the Welcome window (\"captures a region\" vs \"grabs a rectangle\") and left it alone: out of scope, and the two surfaces reading differently is not a defect."
+    },
+    {
+      "t": "2026-08-24T03:06:00.000Z",
+      "note": "Fixed HistoryOverlay.swift:65 to \"No captures yet. ⇧⌘4 grabs a rectangle, ⇧⌘3 the full screen, ⇧⌘5 records.\" Swept every cmd-first modifier pair out of Sources/ and Tests/ in the same pass (33 comment occurrences across 10 source files plus SystemScreenshotShortcutsTests) so grepping the glyph pair finds nothing again. Zero ⌘⇧ / ⌘⌥ / ⌘⌃ occurrences remain outside docs quoting the rule."
+    },
+    {
+      "t": "2026-08-24T03:07:00.000Z",
+      "note": "Verified: swift build clean, Scripts/test.sh green (1076 tests, 140 suites). HistoryOverlay is shared and has no fork under Releases/Next, so Next carries the change. The empty state itself was NOT reproduced live: it only renders when the capture store is empty, and the store reads the user's real capture folder with no override, so forcing it would mean deleting their captures. The changed literal goes straight into Text() with no formatting in between."
+    },
+    {
+      "t": "2026-08-24T03:08:00.000Z",
+      "note": "No audit written: this is a one-string copy correction, not a feature slice."
     }
-  ]
+  ],
+  "started": "2026-08-24T02:47:14.469Z"
 }

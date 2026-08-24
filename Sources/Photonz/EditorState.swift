@@ -2612,7 +2612,7 @@ final class EditorState {
         selectedLayerID = id
     }
 
-    // MARK: - Restacking (Photoshop ⌘] ⌘[ ⌘⇧] ⌘⇧[)
+    // MARK: - Restacking (Photoshop ⌘] ⌘[ ⇧⌘] ⇧⌘[)
 
     func bringLayerForward(id: UUID) { restack(id: id) { idx, count, _ in min(idx + 1, count - 1) } }
     func sendLayerBackward(id: UUID) { restack(id: id) { idx, _, floor in max(idx - 1, floor) } }

@@ -108,7 +108,7 @@ struct EditorCommands: Commands {
             // The same shortcuts are registered as global Carbon hotkeys
             // (CaptureCenter) on the resident agent; these menu items make them
             // discoverable and clickable, and work with no editor window open.
-            // ⌘⇧3/⌘⇧4 only reach us once the system Screenshots shortcuts are
+            // ⇧⌘3/⇧⌘4 only reach us once the system Screenshots shortcuts are
             // disabled in System Settings.
             Button("Capture Full Screen") { coordinator.capture.captureFullScreen() }
                 .keyboardShortcut("3", modifiers: [.command, .shift])

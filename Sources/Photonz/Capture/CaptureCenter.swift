@@ -7,10 +7,10 @@ import PhotonzCore
 /// Coordinates the screenshot feature: global hotkeys, capture modes, and the
 /// history panel's visibility.
 ///
-/// ⌘⇧4 → rectangle grab, ⌘⇧3 → full-screen capture, ⌘⇧H → history panel.
+/// ⇧⌘4 → rectangle grab, ⇧⌘3 → full-screen capture, ⇧⌘H → history panel.
 /// These fire system-wide once the user disables macOS's own Screenshots
 /// shortcuts (System Settings → Keyboard → Keyboard Shortcuts → Screenshots);
-/// until then the system swallows ⌘⇧3/⌘⇧4 before any app can see them.
+/// until then the system swallows ⇧⌘3/⇧⌘4 before any app can see them.
 @MainActor
 @Observable
 final class CaptureCenter {
@@ -25,7 +25,7 @@ final class CaptureCenter {
 
     /// History presentation now lives in the resident agent's global slide-down
     /// overlay (phase 11.4), not an in-editor panel — so capture just signals
-    /// the coordinator. `onToggleHistory` is ⌘⇧H; `onRequestHistory` ensures the
+    /// the coordinator. `onToggleHistory` is ⇧⌘H; `onRequestHistory` ensures the
     /// overlay is shown (e.g. to surface the permission hint).
     @ObservationIgnored var onToggleHistory: (() -> Void)?
     @ObservationIgnored var onRequestHistory: (() -> Void)?
@@ -59,7 +59,7 @@ final class CaptureCenter {
         hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.captureFullScreen() }
         hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.beginRectCapture() }
         hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.toggleRecording() }
-        // Dedicated stop shortcut for recording — ⌘⇧5 collides with macOS's own
+        // Dedicated stop shortcut for recording — ⇧⌘5 collides with macOS's own
         // screenshot toolbar, so ⌃⇧F5 reliably stops a recording in progress.
         hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.stopRecordingIfNeeded() }
         hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.onToggleHistory?() }
@@ -67,7 +67,7 @@ final class CaptureCenter {
 
     // MARK: - Recording (phase 12)
 
-    /// ⌘⇧5 / menu: stop if recording, otherwise open the setup card.
+    /// ⇧⌘5 / menu: stop if recording, otherwise open the setup card.
     func toggleRecording() {
         if recording.isRecording {
             Task { await recording.stop() }
