@@ -4,11 +4,11 @@
   "goal": "Across roughly fourteen pages the small rows of side-by-side choices squeeze their labels until words are cut off, so you cannot read the options. This gives those rows enough room to show their labels in full.",
   "priority": "p3-low",
   "seq": 100,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:14:46.156Z",
-  "updated": "2026-08-23T06:14:46.157Z",
+  "updated": "2026-08-24T00:28:01.132Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Browser-measured while verifying the Systems scope rollout: several non-Library .seg rows ellipsize labels (scrollWidth > clientWidth). Worst: brush-library category chips (Sketch:17px, Texture:18px, Custom:19px), paint fill-type seg (Angular:17px), img-masking (Gradient:17px), draw-boolean (Intersect:12px, Subtract:11px), video-speed (Slow-mo:11px), redline (Spacing:13px x2), ui-autolayout (Between:8px), color (Document:4px x3), typography, ui-grid, ui-variants, video-captions, video-motion, draw, brush-editor. Same bug class the .scopeseg fix solved for the Library row (segmented.css natural-width columns + border-compensated padding); these rows likely want .scopeseg geometry or the collapse-to-select treatment. Measure each in the browser before and after.",
@@ -21,6 +21,27 @@
     {
       "t": "2026-08-23T06:14:46.157Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:24:28.830Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:27:47.585Z",
+      "note": "Adversarial re-verification before building: measured every named page in a real browser (headless Chrome via devtools, same-origin iframes against the running mock server at 127.0.0.1:8791) at three viewport widths - 1512x945, 1280x900, 1100x900. Pages measured: brush-library, paint, img-masking, draw-boolean, video-speed, redline, ui-autolayout, color, typography, ui-grid, ui-variants, video-captions, video-motion, draw, brush-editor. Result at all three widths: ZERO visible clipped labels. Every .seg button with scrollWidth > clientWidth sits inside a .seg.collapsed row, where segmented.css line 171 sets the buttons visibility:hidden and shows the .seg-alt instead; no .seg-alt is clipped anywhere."
+    },
+    {
+      "t": "2026-08-24T00:27:47.585Z",
+      "note": "Before/after for the worst offenders named in notes. The naive scrollWidth check still reports them (brush-library Sketch 11px, Texture 12px, Custom 13px; img-masking Gradient 12px; draw-boolean Subtract 5px, Intersect 5px; redline Spacing 3px) but all of those buttons are inside collapsed rows and are not painted. Worked example: brush-library category row is .seg.catseg.has-plate.collapsed, 232px wide, its 7 buttons (All, Sketch, Ink, Paint, Air, Texture, Custom) are visibility:hidden, and what the user actually sees is a single 232px .seg-alt reading All with scrollWidth 230 = clientWidth 230, so nothing is cut off. The other pages named in notes (paint Angular, video-speed Slow-mo, ui-autolayout Between, color Document x3, typography, ui-grid, ui-variants, video-captions, video-motion, draw, brush-editor) report no clipping at all - zero .seg overflow, collapsed or otherwise."
+    },
+    {
+      "t": "2026-08-24T00:27:47.585Z",
+      "note": "Conclusion: the defect does not reproduce. The .scopeseg natural-width geometry and the collapse-to-select treatment the notes proposed as the fix have both already shipped and already cover these rows, so there is nothing left to change in segmented.css. Making the hidden buttons wider would only grow rows that are already collapsed on purpose. Dropping as obsolete. Secondary reason, had it reproduced: the whole scope is design-study mock CSS under docs/design/mocks/ serving design-system > clickthrough-sweep, staged later while focus is measure-redline, and only epics staged now may hold open tasks."
+    },
+    {
+      "t": "2026-08-24T00:28:01.131Z",
+      "note": "Does not reproduce. Measured all 15 named pages in a real browser at 1512x945, 1280x900 and 1100x900: zero visible clipped labels. Every remaining scrollWidth overflow is on a button inside a .seg.collapsed row, which segmented.css hides (visibility:hidden) in favour of a .seg-alt that is itself never clipped - e.g. brush-library's category row is a 232px collapsed seg showing a single legible 'All' control, and its 7 hidden buttons are what the old naive measurement flagged. The .scopeseg geometry and collapse-to-select treatment the notes proposed as the fix have already shipped and already cover these rows. Widening the hidden buttons would only regrow rows that collapse on purpose. Secondary reason had it reproduced: pure design-study mock CSS serving design-system > clickthrough-sweep, staged later while focus is measure-redline."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:24:28.830Z"
 }
