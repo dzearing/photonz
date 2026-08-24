@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 340,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T03:54:00.535Z",
-  "updated": "2026-08-24T04:29:27.350Z",
+  "updated": "2026-08-24T04:37:14.462Z",
   "deps": [],
   "blockedBy": [],
   "notes": "docs/design/mocks/pages/lang-keyboard.html, the .cats grid in block 04. Measured live: the COMPONENTS .cat has .scut rows overflowing its box by 16px on the right; TOOLS, EDIT and VIEW clear by 8-13px. The long labels are Create component / Edit component and Swap instance / Reset overrides, which pair two long names into one two-up row. Pre-existing, not caused by the tool-key work. Same block also leaves the EDIT card with dead space because .cat boxes stretch to the tallest in the grid row.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-08-24T05:10:00.000Z",
       "note": "Same collision found on three other pages while scanning; filed as color-and-elevation-reference-pages-reuse-a-rese (p2). lang-color is genuinely broken by it today: its 230px swatch card inherits the 220px+1fr grid and .desc starts 3px past the card's right edge. Not fixed here, to keep this task to one page."
+    },
+    {
+      "t": "2026-08-24T04:37:14.461Z",
+      "note": "Keyboard reference page: every keycap now sits inside its card. Root cause was the page reusing the reserved .body class, so the shortcut rows were laid into the app shell's 220px+1fr grid; renamed to .lk-rows, made .cats reflow on its own width, and let a row wrap rather than push its combo out. Verified by measuring every .kc against its clipping ancestor from 360px to 1600px in light and dark: zero clipped. Committed c291f7a."
     }
   ],
-  "started": "2026-08-24T04:29:27.349Z"
+  "started": "2026-08-24T04:29:27.349Z",
+  "completed": "2026-08-24T04:37:14.462Z"
 }
