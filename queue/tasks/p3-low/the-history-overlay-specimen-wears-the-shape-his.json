@@ -4,11 +4,11 @@
   "goal": "The capture history panel is specified as a chromeless panel floating over the whole screen, but the reference page other pages copy still shows an older shape with a title bar and close button inside a window. This settles which shape is right and makes the reference say so.",
   "priority": "p3-low",
   "seq": 210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:23:03.471Z",
-  "updated": "2026-08-24T01:35:37.926Z",
+  "updated": "2026-08-24T01:36:13.918Z",
   "deps": [],
   "blockedBy": [],
   "notes": "history.css says the capture history is a GLOBAL, chromeless pane: .sheet.down.hist with NO .sheet-h, whose only chrome is the centered .histbar (All / Screenshots / Videos + Clear All) over a .filmstrip, floating near the top of the SCREEN rather than inside a window. app-shell's 'History overlay' specimen and redline's #histSheet still draw the older shape: a .sheet.down with a .sheet-h title row and a close button, inside a window. Since app-shell is the spec other pages conform to, its version of a shared surface must match the component that owns it. Decide whether the in-window overlay is still a legitimate second form (an in-window convenience, per AGENTS 'an in-window History button is a convenience, never the taught path') or whether both should become .hist over a .desk like capture-wt does, then make the exemplar say so.",
@@ -49,7 +49,12 @@
     {
       "t": "2026-08-24T01:35:37.926Z",
       "note": "Wrote queue/audits/2026-08-24-history-pane-shape.json with three screenshots."
+    },
+    {
+      "t": "2026-08-24T01:36:13.917Z",
+      "note": "One shape for the capture history pane. app-shell's History overlay specimen is now a chromeless pane on a desktop plate, built by the entry component so it cannot drift; a second unreachable pane in that page's reference window was deleted. redline's pane goes chromeless with a live scope filter. Ruling recorded in AGENTS.md: one shape, and an in-window History button is a door onto it, never a window-shaped copy. Verified in both themes (no header or close button on any of the 23 panes, Esc and outside-click dismiss, filters work, 9 callouts intact), 92 page URLs 200, three mock checks pass. Audit: queue/audits/2026-08-24-history-pane-shape.json. Committed f073622, pushed."
     }
   ],
-  "started": "2026-08-24T01:21:30.630Z"
+  "started": "2026-08-24T01:21:30.630Z",
+  "completed": "2026-08-24T01:36:13.918Z"
 }
