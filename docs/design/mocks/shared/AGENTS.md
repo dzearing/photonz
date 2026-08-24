@@ -733,7 +733,7 @@ concrete: name the panel, the badge, the row, the chrome that appeared.
 - `?step=5` deep-links a walkthrough to one step, which is handy for review.
 - **History is global.** Photonz is a resident menu-bar agent, so a walkthrough
   that starts from capture history must invoke it from the **menu-bar icon** or
-  **⌘⇧H**, with no editor window open, and the editor is what a capture *opens
+  **⇧⌘H**, with no editor window open, and the editor is what a capture *opens
   into* (PRODUCT-MODEL §4b req 5). An in-window History button is a convenience,
   never the taught path. `pages/capture-wt.html` shows the small desktop +
   menu-bar agent representation this needs.
@@ -878,8 +878,13 @@ There is a monochrome SVG icon set in the shared DS. Use it for every glyph.
 NEVER use ascii/unicode symbols (◄ ▭ ✎ ◈ ⌗ ▾ ◉ ◆ ✦ ⋮⋮ ↺ ▶ 🖌 etc.) as icons.
 
 **Two carve-outs (these are NOT icons, leave them):**
-1. **Keyboard-shortcut symbols** — `⌘ ⌥ ⇧ ⌃ ⌦ ⌫ ↩ ⎋` inside a `.kbd`, `.sc`, or
+1. **Keyboard-shortcut symbols** — `⌃ ⌥ ⇧ ⌘ ⌦ ⌫ ↩ ⎋` inside a `.kbd`, `.sc`, or
    `<code>` shortcut hint are the correct macOS notation, not icons. Keep them.
+   **Modifiers always print in the macOS order `⌃ ⌥ ⇧ ⌘`, then the key**, with no
+   `+` between them: `⇧⌘H`, `⌥⌘L`, `⇧⌘4` — never `⌘⇧H` or `Cmd + Shift + H`. One
+   shortcut has exactly one spelling everywhere it appears, so a chord looks the
+   same in a menu, a tooltip, a keycap row and the `lang-keyboard.html` legend
+   that documents this rule.
 2. **Typographic marks in running prose** — an arrow or middot used as a text
    connector in an explanatory sentence or caption ("before → after", "Tokens ·
    Styles · Components") is text, not an icon. Only convert a glyph when it acts

@@ -102,7 +102,7 @@
               <div class="mlabel">Layer</div>
               <div class="menuitem"><i class="ic ic-frame"></i> Add auto-layout <span class="sc">⇧A</span></div>
               <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-              <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
               <div class="menu-sep"></div>
               <div class="mlabel">Component</div>
               <div class="menuitem"><i class="ic ic-copy"></i> Duplicate instance <span class="sc">⌘D</span></div>
@@ -230,7 +230,7 @@
               </div>
             </div>
 
-            <!-- HISTORY OVERLAY (⌘⇧H) · the canonical chromeless pane -->
+            <!-- HISTORY OVERLAY (⇧⌘H) · the canonical chromeless pane -->
             <div class="sheet down hist" id="histSheet" aria-hidden="true" aria-label="Capture history">
               <div class="sheet-b">
                 <div class="histbar">
@@ -292,7 +292,7 @@
             <div class="dgrp" id="gLayers" style="--gh:150px">
               <div class="dgrp-h" id="gLayersH">
                 <span class="ttl">Layers</span><span class="cnt" id="layCount">0</span>
-                <button class="btn ghost icon sm" id="btnMakeComp" title="Make component (⌘⌥K)"><i class="ic ic-component"></i></button>
+                <button class="btn ghost icon sm" id="btnMakeComp" title="Make component (⌥⌘K)"><i class="ic ic-component"></i></button>
                 <button class="btn ghost icon sm" title="Panel menu" data-menu="#layerMenu"><i class="ic ic-more"></i></button>
               </div>
               <div class="dgrp-b">
@@ -471,7 +471,7 @@
           <!-- Dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
           <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:200px;z-index:11">
             <div class="menuitem"><i class="ic ic-frame"></i> Add auto-layout <span class="sc">⇧A</span></div>
-            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+            <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
             <div class="menu-sep"></div>
             <div class="menuitem"><i class="ic ic-chevron-down"></i> Collapse all groups</div>
           </div>
@@ -481,7 +481,7 @@
           </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:212px;z-index:11">
             <div class="menuitem"><i class="ic ic-component"></i> Add selection as component</div>
-            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
+            <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⇧⌘I</span></div>
           </div>
         </div>
       </div>
@@ -545,7 +545,7 @@
           data-set="#lrFrameNm=Card|#propKind=Component">
         <div class="wt-cap comp">
           <span class="wt-n">4</span>
-          <p class="wt-do"><b>Make component</b> <code>⌘⌥K</code></p>
+          <p class="wt-do"><b>Make component</b> <code>⌥⌘K</code></p>
           <p class="wt-where">the <b>Layers</b> group header</p>
           <p class="wt-res">the frame plus its children becomes one <b>Card</b> component, a component made of components. It turns purple and lands in Library.</p>
         </div>

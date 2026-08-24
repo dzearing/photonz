@@ -82,7 +82,7 @@ Photonz today has three real surfaces. The model reconciles them:
 - **Image editor surface** and **Video editor surface** = one editor, two
   workspaces. The timeline appears when the document has time. Same layers,
   inspector, components, adjustments.
-- **History overlay (⌘⇧H)** = the app's **front door / launcher**: capture
+- **History overlay (⇧⌘H)** = the app's **front door / launcher**: capture
   history (screenshots + recordings) and the new-document entry. This is the
   "blank slate" a usage clickthrough starts from.
 - The **UI-design / design-system / agent** capabilities are the **aspirational
@@ -134,7 +134,7 @@ drives the identical calls. This is why an agent can "extract a design system" o
 
 The shipping app today is deliberately **lean and canvas-first**: a floating
 bottom tool bar whose overflow tools collapse, a single collapsible right Layers
-panel, the native macOS menu bar, and a slide-down history overlay (⌘⇧H). We are
+panel, the native macOS menu bar, and a slide-down history overlay (⇧⌘H). We are
 **extending scope** (UI design, components, design systems, richer video), which
 means more panels — so the layout must **scale without becoming a different app**.
 
@@ -163,7 +163,7 @@ collapsing, resizing, and scrolling — never by inventing new chrome per featur
 
    **History is a GLOBAL surface, not a panel inside an editor window.** It has
    exactly two entry points, and both work with no editor window open:
-   - the **global keystroke ⌘⇧H**, and
+   - the **global keystroke ⇧⌘H**, and
    - the **menu-bar (systray) app icon**, which shows the history.
 
    Photonz is a resident menu-bar agent, so the history overlay comes from that
@@ -397,7 +397,7 @@ A refine pass is "good" when all ten hold:
 7. **Responsive & collapsible** — every page renders at small widths; docks and
    panel groups collapse and resize; long lists scroll inside their own bounded
    group (§4b requirements 1-4).
-8. **History-first preserved** — the capture → edit fast path (⌘⇧H history →
+8. **History-first preserved** — the capture → edit fast path (⇧⌘H history →
    open an image or video in the editor) is intact and never buried by new scope
    (§4b requirement 5).
 9. **Every screen declares its kind** (§4c) — an app screen is complete and

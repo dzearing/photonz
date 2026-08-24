@@ -1,0 +1,27 @@
+{
+  "id": "the-empty-history-panel-prints-its-capture-short",
+  "title": "The empty history panel prints its capture shortcuts backwards",
+  "goal": "When you open the capture history with nothing in it, the app tells you which keys to press, and it prints those keys in the opposite order from how macOS itself writes them and from how the rest of the design study now writes them. This makes the one shortcut hint the app shows a person match everywhere else.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 260,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T01:08:27.964Z",
+  "updated": "2026-08-24T01:08:27.965Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while sweeping the design study for modifier order (keyboard-shortcuts-read-in-one-modifier-order-ac). Sources has 34 occurrences of the cmd-first glyph pair but 33 are code comments; exactly ONE is user-facing: Sources/Photonz/HistoryOverlay.swift:65 emptyMessage(\"No captures yet. CMD-SHIFT-4 grabs a rectangle, CMD-SHIFT-3 the full screen, CMD-SHIFT-5 records.\"). Swap to shift-first. HistoryOverlay.swift is shared (not forked into Releases/Next), so one edit reaches both releases, but it does change Current-release copy, which is why the sweep task left it alone. Zero occurrences of the cmd-before-option pair in Sources. The comments are worth normalising in the same pass for grep-ability but are not user-facing. The authoring rule now lives in docs/design/mocks/shared/AGENTS.md under the keyboard-shortcut carve-out, and the study publishes it on pages/lang-keyboard.html section 05.",
+  "acceptance": [
+    "The empty capture history message prints its three shortcuts in the macOS order, shift before command",
+    "No user-visible string anywhere in the app prints a command key before a shift or option key",
+    "Tests pass and the app builds"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T01:08:27.965Z",
+      "note": "created (manual)"
+    }
+  ]
+}

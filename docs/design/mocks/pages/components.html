@@ -142,10 +142,10 @@
       <div class="popover menu pop cmdpop" id="cmdMenu">
         <div class="menuitem"><i class="ic ic-component"></i> Insert component <span class="sc">⌘I</span></div>
         <div class="menuitem"><i class="ic ic-library"></i> Show Library <span class="sc">⌃⌘L</span></div>
-        <div class="menuitem"><i class="ic ic-import"></i> Add to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Add to Library <span class="sc">⇧⌘A</span></div>
         <div class="menu-sep"></div>
         <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock</div>
-        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+        <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⇧⌘H</span></div>
       </div>
 
       <div class="cnv">
@@ -164,7 +164,7 @@
         <!-- canvas action cluster: the panel toggle lives with the canvas -->
         <div class="cnv-act">
           <button class="tool on" data-dock-toggle="#shellComp" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-          <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+          <button class="tool" data-sheet="#histSheet" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
           <button class="tool" id="reset" title="Clear placed instances"><i class="ic sm ic-undo"></i></button>
           <button class="tool" data-target="dsys" title="Open the design system"><i class="ic sm ic-swatch"></i></button>
         </div>
@@ -424,13 +424,13 @@
       <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
       <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:196px;z-index:11">
         <div class="menuitem"><i class="ic ic-group"></i> Group selection <span class="sc">⌘G</span></div>
-        <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌘⌥K</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
         <div class="menu-sep"></div>
         <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
       </div>
       <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:206px;z-index:11">
-        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
-        <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+        <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⇧⌘I</span></div>
+        <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⇧⌘A</span></div>
         <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
       </div>
     </div>

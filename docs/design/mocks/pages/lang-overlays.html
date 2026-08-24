@@ -154,7 +154,7 @@
     <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Overlays &amp; menus</h2><span class="k">· Design language</span><a class="backchip" data-target="language"><i class="ic ic-chevron-left"></i> Design language</a></div>
     <p class="lo-lead">Overlays are how the app grows without the canvas shrinking. They <b>float over the document, do one job, and leave</b>,
       so a surface you browse occasionally costs no permanent width. The canonical one is the <b>slide-down sheet</b>
-      (<code>.sheet.down</code>), and the most important instance of it is the <b>capture history</b> at ⌘⇧H, which is the app's front door.
+      (<code>.sheet.down</code>), and the most important instance of it is the <b>capture history</b> at ⇧⌘H, which is the app's front door.
       Around it sit five smaller shapes: a popover menu, the ⌘K palette, a tooltip, a toast, and the rare blocking dialog. Each is one
       command away, so an <b data-target="agent">agent</b> can open exactly what you can.</p>
 
@@ -167,7 +167,7 @@
             <thead><tr><th>Overlay</th><th>When to use</th><th>Lifetime</th><th>Dismiss</th><th>Focus</th><th>Position</th></tr></thead>
             <tbody>
               <tr>
-                <td><span class="lo-ty">Slide-down sheet</span> <kbd>⌘⇧H</kbd></td>
+                <td><span class="lo-ty">Slide-down sheet</span> <kbd>⇧⌘H</kbd></td>
                 <td>A surface you browse occasionally and that needs room: capture history, a big catalog.</td>
                 <td class="lo-tr">Transient</td>
                 <td><kbd>Esc</kbd>, the close button, or picking an item.</td>
@@ -241,12 +241,12 @@
             <button class="tool" title="Commands" data-menu="#loCmd"><i class="ic sm ic-more"></i></button>
             <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> Search or run a command <span class="kbd">⌘K</span></span>
             <span class="tsep"></span>
-            <button class="btn ghost sm" data-sheet="#loHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⌘⇧H</span></button>
+            <button class="btn ghost sm" data-sheet="#loHist" title="Capture history"><i class="ic ic-history"></i> History <span class="kbd">⇧⌘H</span></button>
             <span class="tspacer"></span>
             <span class="chip style" data-target="dsys"><span class="sw"></span>Brand <i class="ic xs ic-chevron-down"></i></span>
             <div style="position:relative">
               <div class="popover menu pop" id="loCmd" style="position:absolute;right:0;top:26px;width:212px;z-index:14">
-                <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+                <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⇧⌘H</span></div>
                 <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
                 <div class="menu-sep"></div>
                 <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘E</span></div>
@@ -263,7 +263,7 @@
 
               <div class="cnv-act">
                 <button class="tool on" data-dock-toggle="#loShell" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-                <button class="tool" data-sheet="#loHist" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+                <button class="tool" data-sheet="#loHist" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
               </div>
 
               <div class="tbar">
@@ -383,9 +383,9 @@
           <div class="lo-stage">
             <div class="popover menu elev-2" style="min-width:214px">
               <div class="menuitem"><i class="ic ic-copy"></i>Duplicate<span class="sc">⌘D</span></div>
-              <div class="menuitem"><i class="ic ic-component"></i>Make component<span class="sc">⌘⌥K</span></div>
+              <div class="menuitem"><i class="ic ic-component"></i>Make component<span class="sc">⌥⌘K</span></div>
               <div class="menu-sep"></div>
-              <div class="menuitem"><i class="ic ic-layers"></i>Bring to front<span class="sc">⌘⇧]</span></div>
+              <div class="menuitem"><i class="ic ic-layers"></i>Bring to front<span class="sc">⇧⌘]</span></div>
               <div class="menuitem" style="color:var(--crit)"><i class="ic ic-trash"></i>Delete<span class="sc">⌦</span></div>
             </div>
           </div>
@@ -524,7 +524,7 @@
                   <div class="hero-card" style="width:190px"><div class="hc-h" style="font-size:19px">Ship it faster.</div></div>
                   <div class="popover menu elev-2" style="position:absolute;left:46%;top:26%;min-width:190px;z-index:6">
                     <div class="menuitem"><i class="ic ic-copy"></i>Duplicate<span class="sc">⌘D</span></div>
-                    <div class="menuitem"><i class="ic ic-component"></i>Make component<span class="sc">⌘⌥K</span></div>
+                    <div class="menuitem"><i class="ic ic-component"></i>Make component<span class="sc">⌥⌘K</span></div>
                     <div class="menu-sep"></div>
                     <div class="menuitem" style="color:var(--crit)"><i class="ic ic-trash"></i>Delete<span class="sc">⌦</span></div>
                   </div>
@@ -589,7 +589,7 @@
       <div class="lo-blk-h"><span class="lo-n">08</span><h3>In the API</h3><span class="lo-sub">Every overlay is a command</span></div>
       <div class="lo-blk-b">
         <div class="lo-api">
-          <div class="lo-r"><code>sheet.open("history")</code><span>Slides the history sheet down. <code>⌘⇧H</code> and the canvas <b>History</b> button run this.</span></div>
+          <div class="lo-r"><code>sheet.open("history")</code><span>Slides the history sheet down. <code>⇧⌘H</code> and the canvas <b>History</b> button run this.</span></div>
           <div class="lo-r"><code>menu.show(at, items)</code><span>Posts a context menu whose items are named commands, nothing more.</span></div>
           <div class="lo-r"><code>palette.open()</code><span>Raises ⌘K, the fourth equal way to reach any of these.</span></div>
           <div class="lo-r"><code>tooltip.for("align-left")</code><span>Reads a control's label and key, so the hint and the shortcut can never drift.</span></div>
@@ -618,10 +618,10 @@
                 <button class="tool" title="Commands" data-menu="#loCmdN"><i class="ic sm ic-more"></i></button>
                 <span class="cmdk" tabindex="0" role="button"><i class="ic sm ic-search"></i> <span class="kbd">⌘K</span></span>
                 <span class="tspacer"></span>
-                <button class="btn ghost icon sm" data-sheet="#loHistN" title="Capture history (⌘⇧H)"><i class="ic ic-history"></i></button>
+                <button class="btn ghost icon sm" data-sheet="#loHistN" title="Capture history (⇧⌘H)"><i class="ic ic-history"></i></button>
                 <div style="position:relative">
                   <div class="popover menu pop" id="loCmdN" style="position:absolute;left:0;top:22px;width:196px;z-index:13">
-                    <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+                    <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⇧⌘H</span></div>
                     <div class="menuitem"><i class="ic ic-export"></i> Export <span class="sc">⌘E</span></div>
                   </div>
                 </div>
@@ -631,7 +631,7 @@
                   <div class="canvas"><div class="vframe" style="width:170px;height:96px"></div></div>
                   <div class="cnv-act">
                     <button class="tool" data-dock-toggle="#loShellN" title="Show or hide the panel dock"><i class="ic sm ic-sidebar"></i></button>
-                    <button class="tool" data-sheet="#loHistN" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+                    <button class="tool" data-sheet="#loHistN" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
                   </div>
                   <div class="tbar">
                     <span class="tstrip" data-radio=".tool">

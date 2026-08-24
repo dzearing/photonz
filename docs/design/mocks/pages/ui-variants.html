@@ -81,13 +81,13 @@
         <!-- D3 command surface: THIS PAGE'S commands. The `…` that opens it, the
              title bar and Ask are built by the shell component. -->
         <div class="popover menu pop cmdpop" id="cmdMenu">
-          <div class="menuitem"><i class="ic ic-component"></i> Add variant <span class="sc">⌘⌥V</span></div>
+          <div class="menuitem"><i class="ic ic-component"></i> Add variant <span class="sc">⌥⌘V</span></div>
           <div class="menuitem"><i class="ic ic-sliders"></i> Add property</div>
-          <div class="menuitem"><i class="ic ic-undo"></i> Reset to main <span class="sc">⌘⌥R</span></div>
+          <div class="menuitem"><i class="ic ic-undo"></i> Reset to main <span class="sc">⌥⌘R</span></div>
           <div class="menu-sep"></div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Toggle panel dock <span class="sc">⌥⌘L</span></div>
           <div class="menuitem"><i class="ic ic-library"></i> Library <span class="sc">⌃⌘L</span></div>
-          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⌘⇧H</span></div>
+          <div class="menuitem"><i class="ic ic-history"></i> Capture history <span class="sc">⇧⌘H</span></div>
           <div class="menu-sep"></div>
           <div class="menuitem" data-target="dsys"><i class="ic ic-swatch"></i> Open the design system</div>
           <div class="menuitem" data-target="agent"><i class="ic ic-sparkle"></i> Ask the agent to set these props</div>
@@ -135,7 +135,7 @@
           <!-- canvas action cluster -->
           <div class="cnv-act">
             <button class="tool on" data-dock-toggle="#shellVar" title="Show or hide the panel dock (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
-            <button class="tool" data-sheet="#histSheet" title="Capture history (⌘⇧H)"><i class="ic sm ic-history"></i></button>
+            <button class="tool" data-sheet="#histSheet" title="Capture history (⇧⌘H)"><i class="ic sm ic-history"></i></button>
             <button class="tool" id="reset" title="Restore the main defaults"><i class="ic sm ic-undo"></i></button>
           </div>
 
@@ -175,7 +175,7 @@
             </div>
           </div>
 
-          <!-- HISTORY OVERLAY (⌘⇧H) -->
+          <!-- HISTORY OVERLAY (⇧⌘H) -->
           <div class="sheet down" id="histSheet" aria-hidden="true" aria-label="Capture history">
             <div class="sheet-h">
               <span class="ttl"><i class="ic sm ic-history"></i> History</span>
@@ -354,7 +354,7 @@
 
         <!-- dock popovers live outside .pdock so its scroll clipping cannot cut them off -->
         <div class="popover menu pop" id="layerMenu" style="position:absolute;right:var(--s4);top:34px;width:206px;z-index:11">
-          <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌘⌥K</span></div>
+          <div class="menuitem"><i class="ic ic-component"></i> Go to main <span class="sc">⌥⌘K</span></div>
           <div class="menuitem"><i class="ic ic-copy"></i> Duplicate instance <span class="sc">⌘D</span></div>
           <div class="menu-sep"></div>
           <div class="menuitem"><i class="ic ic-sidebar"></i> Hide this panel</div>
@@ -364,8 +364,8 @@
           <div class="menuitem"><i class="ic ic-undo"></i> Reset to main</div>
         </div>
         <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:210px;z-index:11">
-          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⌘⇧I</span></div>
-          <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⌘⇧A</span></div>
+          <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⇧⌘I</span></div>
+          <div class="menuitem"><i class="ic ic-component"></i> Add selection to Library <span class="sc">⇧⌘A</span></div>
           <div class="menuitem"><i class="ic ic-history"></i> From capture history</div>
         </div>
       </div>

@@ -89,7 +89,7 @@ not switch experiences mid-document; you open a different document.
    (`.transport`: volume, skip back, play, skip forward, a scrubber with in/out
    marks and timecodes, then edit actions) and the **timeline** (`.timeline`).
    Hidden in every other workspace.
-9. **Overlays** — the **slide-down history sheet** (`.sheet.down`, ⌘⇧H) and
+9. **Overlays** — the **slide-down history sheet** (`.sheet.down`, ⇧⌘H) and
    anything catalog-like that would crowd the canvas. Overlays slide over the
    canvas instead of permanently consuming width.
 
@@ -145,7 +145,7 @@ surface the mock shows, it must make the entry+exit legible:
 Every editor page should be able to answer, on screen: *what document am I in
 (title bar), what tool is active (the floating tool bar), what is selected (canvas
 + the Properties group), where is my content library (the Library group in the
-right dock), where do my captures live (the ⌘⇧H history overlay), how do I run a
+right dock), where do my captures live (the ⇧⌘H history overlay), how do I run a
 command (the native menu bar, plus the compact command surface and the Ask
 chat at ⌘K)*.
 
@@ -181,7 +181,7 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   Volume, transport buttons, scrubber with in/out marks and timecodes, edit
   actions.
 - **Overlay** (`.sheet.down`) — a surface that slides over the canvas rather than
-  consuming width forever. The **history overlay** (⌘⇧H) is the canonical one:
+  consuming width forever. The **history overlay** (⇧⌘H) is the canonical one:
   segmented All / Screenshots / Videos, a `.filmstrip` of `.filmcard`s with
   relative timestamps, and a selected card revealing its action row. Reach for an
   overlay when the surface is browsed occasionally, and a panel group when it is

@@ -4,14 +4,14 @@
   "goal": "The same keyboard shortcut is printed two different ways in different parts of the study, so it reads as though there were two shortcuts. This settles one order for modifier keys and applies it to every shortcut hint.",
   "priority": "p3-low",
   "seq": 190,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:00:45.836Z",
-  "updated": "2026-08-23T17:00:45.837Z",
+  "updated": "2026-08-24T01:00:33.115Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Audit rescan 2026-08-23 found the same shortcut printed two ways: 59 pages write Cmd-Shift-H, 10 write Shift-Cmd-H, and the macOS screenshot shortcuts appear as Shift-Cmd-4/3/5 on app-shell, capture-wt and walk but Cmd-Shift-4 on home and ui-entry-wt. Option-Cmd-L and Cmd-Option-K split the same way. Pick ONE order for every shortcut hint (macOS renders Control, Option, Shift, Command in that order, which argues for Shift-Cmd) and sweep every .sc, .kbd and <code> hint in docs/design/mocks/pages plus AGENTS.md so the study never teaches two spellings of one key. Design-system family task took the majority spelling for its two pages as a stopgap.",
+  "notes": "Audit rescan 2026-08-23 found the same shortcut printed two ways: 59 pages write Cmd-Shift-H, 10 write Shift-Cmd-H, and the macOS screenshot shortcuts appear as Shift-Cmd-4/3/5 on app-shell, capture-wt and walk but Cmd-Shift-4 on home and ui-entry-wt. Option-Cmd-L and Cmd-Option-K split the same way. Pick ONE order for every shortcut hint (macOS renders Control, Option, Shift, Command in that order, which argues for Shift-Cmd) and sweep every .sc, .kbd and <code> hint in docs/design/mocks/pages plus AGENTS.md so the study never teaches two spellings of one key. Design-system family task took the majority spelling for its two pages as a stopgap.\n\nDONE 2026-08-23. The order did not need choosing: pages/lang-keyboard.html section 05 already published 'macOS order control option shift command'. Swept 274 hints (265 adjacent glyph pairs + 9 split across keycap elements) across 77 files. Verified zero command-first pairs remain outside three deliberate exceptions (the AGENTS.md counter-example, the dated ux-audit record, study-tasks.json history). Rule now also lives in shared/AGENTS.md under the keyboard-shortcut carve-out. shared/dist rebuilt with shared/build-ds.mjs. Follow-up filed for the one user-facing app string: the-empty-history-panel-prints-its-capture-short.",
   "acceptance": [
     "One modifier order is chosen and written into the study's authoring guide",
     "Every shortcut hint in the study is printed in that order, and a sweep finds no page still using the other spelling",
@@ -21,6 +21,39 @@
     {
       "t": "2026-08-23T17:00:45.837Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T01:00:33.115Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T01:20:00.000Z",
+      "note": "Adversarial review first. The task framed this as 'pick an order', but the study has ALREADY picked one and publishes it: pages/lang-keyboard.html section 05 says 'Glyphs always print in the macOS order the control, option, shift, command sequence', and its own legend draws that sequence. So there was no UX judgment to make and no decision to open; the corpus was simply contradicting a rule it prints on its own reference page. Skipped the decision and swept."
+    },
+    {
+      "t": "2026-08-24T01:21:00.000Z",
+      "note": "Corrected the notes. The corpus is glyph notation, not words: 204 command-first shift pairs and 61 command-first option pairs, 265 adjacent-glyph hints in 77 files, plus 9 hints split across separate keycap elements (8 in lang-keyboard.html, 1 in comp-feedback.html) that a plain text sweep would have missed. Control pairs were already 100 percent correct (23 of 23) and there are zero three-modifier chords anywhere, which made the swap unambiguous and collision-free. Also: the shared components already emitted the correct order (entry.js menu, dock.js tooltips), so the drift was entirely in hand-written page hints."
+    },
+    {
+      "t": "2026-08-24T01:22:00.000Z",
+      "note": "Swept 274 hints to the macOS order across 77 files: pages, creation-vision.html, AGENTS.md, UX-PATTERNS.md, PRODUCT-MODEL.md and shared/components/badge.css. Also fixed two glyph legends that listed the modifiers in reverse and the lang-keyboard do-not example that spelled the combo the other way. Rebuilt shared/dist. Left three deliberate exceptions: the new AGENTS.md rule's own counter-example, the dated ux-audit md that records this very defect, and study-tasks.json history."
+    },
+    {
+      "t": "2026-08-24T01:23:00.000Z",
+      "note": "Wrote the rule into shared/AGENTS.md, extending the keyboard-shortcut carve-out: modifiers always print in the macOS order control, option, shift, command, then the key, with no plus signs, and one shortcut has exactly one spelling everywhere."
+    },
+    {
+      "t": "2026-08-24T01:24:00.000Z",
+      "note": "Verified, not assumed. Zero command-first pairs remain in any page, shared source or dist. Zero split-element cases remain. All 73 touched HTML pages return 200 over the dev server. Span tags stayed balanced in the two files whose markup was reordered. Loaded lang-keyboard.html and capture-wt.html in a browser: no console errors beyond the pre-existing favicon 404, the anatomy diagram now reads shift command Z, the stacked-modifier row reads option command K, and the capture menu reads shift command 3 / 5 / H."
+    },
+    {
+      "t": "2026-08-24T01:25:00.000Z",
+      "note": "Stage gate: this serves design-system rather than the measure-redline focus, so a drop was on the table. Did it anyway because it carried no product judgment (the order was already published), it costs one mechanical pass, and three of the broken pages are the focus clickthroughs: capture-wt.html was internally inconsistent with itself, and redline.html and walk.html both taught the wrong spelling."
+    },
+    {
+      "t": "2026-08-24T01:26:00.000Z",
+      "note": "Found and filed out of scope: the real app has ONE user-facing string with the same defect, the empty capture-history message in HistoryOverlay.swift. Left alone because it is Current-release copy and this task is scoped to the study. Filed as the-empty-history-panel-prints-its-capture-short. The other 33 app occurrences are code comments. Engineering plan docs and the CHANGELOG also carry the old spelling and were left as historical records."
     }
-  ]
+  ],
+  "started": "2026-08-24T01:00:33.114Z"
 }

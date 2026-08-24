@@ -120,14 +120,14 @@
       <div class="spec tile">
         <div class="anat">
           <div class="big">
-            <span class="kc lg">⌘</span><span class="plus">+</span><span class="kc lg">⇧</span><span class="plus">+</span><span class="kc lg">Z</span>
+            <span class="kc lg">⇧</span><span class="plus">+</span><span class="kc lg">⌘</span><span class="plus">+</span><span class="kc lg">Z</span>
           </div>
           <div class="rowspec">
-            <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">Z</span></span></div>
+            <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⇧</span><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
           </div>
           <div class="legend">
             <div class="li"><b>1</b><span><i>Keycap.</i> Mono glyph, raised 2px bottom bevel, 22px cap.</span></div>
-            <div class="li"><b>2</b><span><i>Modifier glyph.</i> Dimmed cap: ⌘ ⌥ ⇧ ⌃.</span></div>
+            <div class="li"><b>2</b><span><i>Modifier glyph.</i> Dimmed cap: ⌃ ⌥ ⇧ ⌘.</span></div>
             <div class="li"><b>3</b><span><i>Base key.</i> The one letter or symbol that fires.</span></div>
             <div class="li"><b>4</b><span><i>Command name.</i> The human label, left of the row.</span></div>
             <div class="li"><b>5</b><span><i>Combo.</i> The caps, right-aligned, in reading order.</span></div>
@@ -138,7 +138,7 @@
       <div class="meta">
         <div class="bnum">01</div><h3 class="bname">Anatomy</h3>
         <p class="rule">A <b>keycap</b> renders one key. A <b>shortcut row</b> pairs a command name with its combo, right-aligned, so a column of them scans as a table. The row is the shared atom: menus, tooltips, and the palette all print the exact same combo.</p>
-        <div class="dd"><span class="do">Show modifiers as glyphs, in reading order.</span><span class="no">Spell out "Cmd+Shift+Z" in running UI.</span></div>
+        <div class="dd"><span class="do">Show modifiers as glyphs, in reading order.</span><span class="no">Spell out "Shift+Cmd+Z" in running UI.</span></div>
         <p class="api"><b>API</b> <code>keymap.for("edit.redo")</code> returns the combo a row draws.</p>
       </div>
     </div>
@@ -149,7 +149,7 @@
         <div class="anat" style="gap:var(--gap-sm)">
           <div class="scut" style="width:100%"><span class="cmd">Single key</span><span class="combo"><span class="kc">V</span></span></div>
           <div class="scut" style="width:100%"><span class="cmd">Modifier combo (held together)</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">G</span></span></div>
-          <div class="scut" style="width:100%"><span class="cmd">Stacked modifiers</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">K</span></span></div>
+          <div class="scut" style="width:100%"><span class="cmd">Stacked modifiers</span><span class="combo"><span class="kc mod">⌥</span><span class="kc mod">⌘</span><span class="kc">K</span></span></div>
           <div class="scut" style="width:100%"><span class="cmd">Chord (pressed in sequence)</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">K</span><span class="then">then</span><span class="kc">B</span></span></div>
         </div>
         <div style="display:flex;align-items:flex-end;gap:var(--pad-sm);margin-top:var(--gap-sm)">
@@ -178,7 +178,7 @@
         </div>
         <div class="rowspec" style="margin-top:var(--gap-sm)">
           <div class="scut"><span class="cmd" style="color:var(--accent)">Zoom in</span><span class="combo"><span class="kc mod press">⌘</span><span class="kc press">+</span></span></div>
-          <div class="scut"><span class="cmd" style="color:var(--faint)">Redo</span><span class="combo"><span class="kc mod dis">⌘</span><span class="kc mod dis">⇧</span><span class="kc dis">Z</span></span></div>
+          <div class="scut"><span class="cmd" style="color:var(--faint)">Redo</span><span class="combo"><span class="kc mod dis">⇧</span><span class="kc mod dis">⌘</span><span class="kc dis">Z</span></span></div>
         </div>
       </div>
       <div class="meta">
@@ -210,7 +210,7 @@
             <h4><span class="dot" style="background:var(--good)"></span>Edit</h4>
             <div class="body">
               <div class="scut"><span class="cmd">Undo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
-              <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">Z</span></span></div>
+              <div class="scut"><span class="cmd">Redo</span><span class="combo"><span class="kc mod">⇧</span><span class="kc mod">⌘</span><span class="kc">Z</span></span></div>
               <div class="scut"><span class="cmd">Copy</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">C</span></span></div>
               <div class="scut"><span class="cmd">Paste</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">V</span></span></div>
               <div class="scut"><span class="cmd">Duplicate</span><span class="combo"><span class="kc mod">⌘</span><span class="kc">D</span></span></div>
@@ -231,17 +231,17 @@
           <div class="cat">
             <h4><span class="dot" style="background:var(--comp)"></span>Components</h4>
             <div class="body">
-              <div class="scut"><span class="cmd">Create component</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">K</span></span></div>
+              <div class="scut"><span class="cmd">Create component</span><span class="combo"><span class="kc mod">⌥</span><span class="kc mod">⌘</span><span class="kc">K</span></span></div>
               <div class="scut"><span class="cmd">Edit component</span><span class="combo"><span class="kc">↩</span></span></div>
-              <div class="scut"><span class="cmd">Swap instance</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⇧</span><span class="kc">O</span></span></div>
-              <div class="scut"><span class="cmd">Reset overrides</span><span class="combo"><span class="kc mod">⌘</span><span class="kc mod">⌥</span><span class="kc">R</span></span></div>
+              <div class="scut"><span class="cmd">Swap instance</span><span class="combo"><span class="kc mod">⇧</span><span class="kc mod">⌘</span><span class="kc">O</span></span></div>
+              <div class="scut"><span class="cmd">Reset overrides</span><span class="combo"><span class="kc mod">⌥</span><span class="kc mod">⌘</span><span class="kc">R</span></span></div>
             </div>
           </div>
         </div>
       </div>
       <div class="meta">
         <div class="bnum">04</div><h3 class="bname">The legend</h3>
-        <p class="rule">Grouped the way the menus are: <b>Tools</b>, <b>Edit</b>, <b>View</b>, <b>Components</b>. Tools take a bare letter, Photoshop's; edit and view take <b>⌘</b>; the component tier (purple) stacks <b>⌘⌥</b> so it never collides with a familiar key.</p>
+        <p class="rule">Grouped the way the menus are: <b>Tools</b>, <b>Edit</b>, <b>View</b>, <b>Components</b>. Tools take a bare letter, Photoshop's; edit and view take <b>⌘</b>; the component tier (purple) stacks <b>⌥⌘</b> so it never collides with a familiar key.</p>
         <div class="dd"><span class="do">Keep every tool one keystroke away.</span><span class="no">Let a new feature steal an established key.</span></div>
         <p class="api"><b>API</b> a category is just a menu: <code>menu("View").items</code> each carry their command and combo.</p>
       </div>
@@ -307,11 +307,11 @@
             <div class="in"><span class="sp"></span><span style="flex:1">Add a drop shadow</span><span style="font-family:var(--mono);font-size:9px;color:var(--faint)">⌘K</span></div>
             <div class="li on"><span>Effects · Drop shadow</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc sm">K</span><span class="then">then</span><span class="kc sm">S</span></span></div>
             <div class="li"><span>Layer · Group</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc sm">G</span></span></div>
-            <div class="li"><span>Make component</span><span class="combo"><span class="kc mod sm">⌘</span><span class="kc mod sm">⌥</span><span class="kc sm">K</span></span></div>
+            <div class="li"><span>Make component</span><span class="combo"><span class="kc mod sm">⌥</span><span class="kc mod sm">⌘</span><span class="kc sm">K</span></span></div>
           </div>
           <div class="popover menu">
             <div class="menuitem"><span class="ic ic-clone"></span>Duplicate<span class="sc">⌘D</span></div>
-            <div class="menuitem"><span class="ic ic-component"></span>Make component<span class="sc">⌘⌥K</span></div>
+            <div class="menuitem"><span class="ic ic-component"></span>Make component<span class="sc">⌥⌘K</span></div>
             <div class="menu-sep"></div>
             <div class="menuitem"><span class="ic ic-frame"></span>Group<span class="sc">⌘G</span></div>
           </div>
@@ -343,7 +343,7 @@
 <br>
 <span class="c">// user remaps freely; conflicts are reported, not silent</span><br>
 keymap.<span class="p">set</span>(<span class="s">"edit.redo"</span>, <span class="s">"cmd+y"</span>)</div>
-        <div class="remap"><span class="warnchip">Conflict</span><span><b style="color:var(--ink);font-weight:600">⌘Y</b> is free · rebinding <b style="color:var(--ink);font-weight:600">Redo</b> leaves <b style="color:var(--ink);font-weight:600">⌘⇧Z</b> unbound. Reset to defaults anytime.</span></div>
+        <div class="remap"><span class="warnchip">Conflict</span><span><b style="color:var(--ink);font-weight:600">⌘Y</b> is free · rebinding <b style="color:var(--ink);font-weight:600">Redo</b> leaves <b style="color:var(--ink);font-weight:600">⇧⌘Z</b> unbound. Reset to defaults anytime.</span></div>
       </div>
       <div class="meta">
         <div class="bnum">08</div><h3 class="bname">In the API</h3>
