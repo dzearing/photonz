@@ -4,14 +4,14 @@
   "goal": "Six video walkthroughs each carry their own identical copy of the animation timeline row, and a couple of steps claim something is selected without ever showing it. This moves the timeline row into the shared set and finishes the missing selection cues.",
   "priority": "p3-low",
   "seq": 110,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T06:33:20.632Z",
-  "updated": "2026-08-23T06:33:20.633Z",
+  "updated": "2026-08-24T00:29:16.241Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "From ux-audit rescan 2026-08-23 ('Video walkthroughs'). Pages: video-cut-wt, video-freeze-wt, video-move-wt, video-title-wt, video-transition-wt, video-zoom-wt. Promote the byte-identical .track.kft/.kfl/.kfd/.kfseg keyframe-lane CSS from move/zoom/cut into shared/components/video.css and delete page copies; video-title-wt add canvas sel-ring for the selected text layer in steps 5-6; add selwrap where .sel-ring is hosted bare; icon fixes (ic-speed for Speed, ic-trim for Shorten, chevron in .select caret, stop rotating ic-chevron-down in shared video.css .xbtn). Verify 200 + audit-sweep.",
+  "notes": "From ux-audit rescan 2026-08-23 ('Video walkthroughs'). Pages: video-cut-wt, video-freeze-wt, video-move-wt, video-title-wt, video-transition-wt, video-zoom-wt. Promote the byte-identical .track.kft/.kfl/.kfd/.kfseg keyframe-lane CSS from move/zoom/cut into shared/components/video.css and delete page copies; video-title-wt add canvas sel-ring for the selected text layer in steps 5-6; add selwrap where .sel-ring is hosted bare; icon fixes (ic-speed for Speed, ic-trim for Shorten, chevron in .select caret, stop rotating ic-chevron-down in shared video.css .xbtn). Verify 200 + audit-sweep.\n\nSTAGE-GATE DROP 2026-08-23. Verified before dropping so a future run starts from facts, not the original audit wording:\n- The keyframe lane is duplicated in THREE pages, not six: video-cut-wt, video-move-wt, video-zoom-wt each define .track.kft/.kfl/.kfd/.kfseg. video-freeze-wt, video-title-wt and video-transition-wt contain no kf* rules at all, so the goal sentence (\"six walkthroughs each carry their own identical copy\") overstates it. Promote from the three, leave the other three alone.\n- docs/design/mocks/shared/components/video.css exists and already carries one kf-ish rule; that is the destination file.\n- The remaining sub-items (title-wt sel-ring in steps 5-6, selwrap around bare .sel-ring, ic-speed/ic-trim/chevron icons, .xbtn rotation in shared video.css) were NOT re-verified; treat them as unconfirmed audit claims.\nReopen when video-editing (or design-system > clickthrough-sweep) moves to stage now.",
   "acceptance": [
     "The animation timeline row is defined once and shared, with no page keeping a copy",
     "Every walkthrough step that says something is selected shows a selection on the canvas",
@@ -22,6 +22,19 @@
     {
       "t": "2026-08-23T06:33:20.632Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:28:33.155Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:29:12.459Z",
+      "note": "Stage gate: serves video-editing (stage later); focus is measure-redline. Verified the duplication is 3 pages not 6, wrote findings into notes, dropped without building."
+    },
+    {
+      "t": "2026-08-24T00:29:16.240Z",
+      "note": "Serves video-editing (design-study mock walkthroughs), staged later; the current focus is measure-redline. Only epics staged now may hold open tasks. Verified findings preserved in the task notes for whenever video-editing opens."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:28:33.155Z"
 }
