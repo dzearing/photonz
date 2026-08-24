@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 240,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T23:51:25.773Z",
-  "updated": "2026-08-23T23:51:25.773Z",
+  "updated": "2026-08-24T02:10:20.873Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Observed 2026-08-23 with a temporary env-gated geometry probe while fixing the measure hint chip. onGeometryChange on the GlassEffectContainer wrapping `toolbar` in EditorView reported h 48 in every state EXCEPT after EditorState.addMeasure in a 700pt-wide window, where it settled at h 200 with the bottom still pinned (544..744 in a 760pt canvas), i.e. it grew upward. Most likely benign: GlassEffectContainer reserves a morph region around newly inserted glass shapes, and the measureCountPill appears exactly then. Verify by hit-testing, not by reading frames: the container has no allowsHitTesting(false). Cannot affect the measure hint chip (that only shows while the document holds no measurements).",
@@ -22,6 +22,43 @@
     {
       "t": "2026-08-23T23:51:25.773Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T01:50:10.728Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Adversarial review before building: the report reads a FRAME, and a frame is not a click. GlassEffectContainer reserves a morph region around glass shapes, so a tall frame with no hit-testable content in it swallows nothing. Decided to answer by hit-testing and to build nothing unless a click actually goes missing."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Offscreen harness first (temp/toolbar-hittest2.swift): canvas as an NSViewRepresentable, AppKit hitTest sweep, with controls proving the method discriminates (no overlay: canvas owns everything; a solid 200pt overlay: canvas loses exactly 200pt). Result: a GlassEffectContainer forced to 200pt tall, and the measuring .background(GeometryReader{Color.clear}), claim nothing. Only the controls claim."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Then the real app, which is the evidence that counts. Temporary env-gated probe (PHOTONZ_HITTEST_PROBE=1) in the probe bundle: sweeps the live editor window with AppKit hit tests, classifying every point as owned by CanvasNSView or taken. Five states: narrow 700x760 with no measurement, with the Measure tool active, with one measurement, with two, and wide 1400x900. In EVERY state the only rows the canvas loses are y=26..54 off the canvas bottom. Nothing above y=58 is ever taken. THE REPORTED PROBLEM IS NOT REAL: the tall frame costs no clicks."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "The sweep found the opposite defect. EditorChromeLayout says the bar is 48pt of glass around a 28pt control row; the claimed band was 28pt, so the 10pt glass rim above and below the controls was passing clicks THROUGH to the picture. With Measure active, aiming a few points high at a tool started a measurement on the image instead of picking the tool. Fixed: .contentShape(.capsule) on the tools capsule, the compact tools capsule, the color capsule and the zoom capsule, so each absorbs clicks on the whole capsule it draws."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Verified the fix on the real app with the same probe: the claimed band becomes y=18..62 (the drawn capsule, 16..64), with the capsule's rounded ends visible in the data (leftmost claim 250 at y=18, 234 at mid-height), and still nothing above y=62 in any of the five states. Also posted real clicks at the tool row inside the app: clicking across the bar still switches the tool (select -> rectSelect -> arrow), so the content shape did not steal the controls' own hits."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Found on the way, filed as the-tool-bar-runs-off-both-edges-of-the-picture: at 700x760 with the inspector docked the canvas is 435pt and the bar's claim runs from x=2 to the canvas edge, i.e. the bar is wider than the picture, clipped visually but not for input."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Shared-code note: EditorView is shared, so both releases get this fix. It is a defect fix, not a design difference, so it does not belong behind a next-scoped flag."
+    },
+    {
+      "t": "2026-08-24T02:10:20.873Z",
+      "note": "Cleanup: temporary probe (Sources/Photonz/DevHitTestProbe.swift, its AppDelegate hook, CanvasNSView.debugActiveTool) removed. swift build clean, Scripts/test.sh green (1061 tests). Probe app quit."
     }
-  ]
+  ],
+  "started": "2026-08-24T01:50:10.728Z"
 }

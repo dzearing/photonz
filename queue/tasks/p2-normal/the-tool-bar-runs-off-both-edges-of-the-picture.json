@@ -1,0 +1,27 @@
+{
+  "id": "the-tool-bar-runs-off-both-edges-of-the-picture",
+  "title": "The tool bar runs off both edges of the picture in a narrow window",
+  "goal": "With the window around 700 points wide and the inspector open, the floating tool bar is wider than the picture it floats over, so its ends are cut off by the edges of the picture. The cut-off ends still take clicks, so a click near the left or right edge of the picture, level with the bar, hits a tool you cannot see instead of the picture. Make the bar fit the space it has.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 380,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T02:09:45.033Z",
+  "updated": "2026-08-24T02:09:45.034Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-08-24 with an in-app AppKit hit-test sweep (queue task the-tool-bar-claims-more-room-than-it-draws-once). Window 700x760, inspector docked, canvas view 435pt wide: the tool bar band (y 18..62 from the canvas bottom) is claimed from x=2 to the canvas edge. A capsule that fitted would start its claim near x=30 at y=18. So the bar is wider than 435pt even after the overflow loop has run, EditorView.reconcileToolbarCount floors at toolbarVisibleCount 0 and the residual (compact tools capsule + colorBar + zoomBar + overflow menu) still exceeds toolbarBudget = canvasWidth - 32. The canvas .clipped() hides the overhang visually but does not clip hit testing. EditorChromeLayout.inspectorAutoCollapseWidth = 680 is documented as chosen so the overflowed toolbar always fits beside the panel, which this measurement disproves. Options: raise that threshold, let the side capsules collapse too, or scroll the bar.",
+  "acceptance": [
+    "At a 700 point window with the inspector open, both rounded ends of the tool bar are visible inside the picture",
+    "No click level with the bar, near the left or right edge of the picture, lands on a control that is not visible",
+    "The bar still shows the same tools it does today at wide window sizes"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T02:09:45.034Z",
+      "note": "created (manual)"
+    }
+  ]
+}

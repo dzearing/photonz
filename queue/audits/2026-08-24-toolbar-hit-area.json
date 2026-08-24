@@ -1,0 +1,27 @@
+{
+  "feature": "The floating tool bar's click area",
+  "epic": "measure-redline",
+  "summary": "The tool bar now takes clicks anywhere on the glass capsule it draws, so aiming slightly high or low at a tool no longer starts drawing on the picture behind it. The suspected tall invisible click blocker above the bar turned out not to exist.",
+  "setup": "Photonz Dev, release Next, any screenshot open. No flags to set.",
+  "try": [
+    { "do": "Open a screenshot and press I to pick the Measure tool." },
+    { "do": "Drag on the image to leave one measurement in the document." },
+    { "do": "Click the image a few points above the tool bar, along the bottom strip of the picture. It should behave exactly like clicking anywhere else on the picture." },
+    { "do": "Aim at the very top edge of the tool bar's glass, just above a tool icon, and click. Nothing should happen to the picture." },
+    { "do": "Aim at the glass between two tool icons and click. Nothing should happen to the picture." },
+    { "do": "Click a tool icon itself and confirm the tool still switches." },
+    { "do": "Resize the window narrow and wide and repeat the bottom-strip click." }
+  ],
+  "evaluate": [
+    "Does the bottom strip of the picture, right above the bar, feel like part of the picture?",
+    "When you miss a tool by a few points, does it feel right that nothing happens, or would you rather the click reached the picture?",
+    "Do the color and zoom capsules feel the same as the tool capsule when you click their edges?",
+    "Did any tool button get harder to hit?"
+  ],
+  "rough": [
+    "The original report, that the bar reserves about four times the height it draws once a measurement exists, is not true for clicks. Hit-testing the live app in five states (narrow and wide, with zero, one and two measurements, measure tool active and not) shows the bar only ever claiming the band it draws. The inflated height read off the glass container is a rendering artifact with no effect on input.",
+    "The real defect was the opposite one: the capsule is 48pt tall around a 28pt control row, and the 10pt of glass above and below was passing clicks through to the image. With Measure active that meant an aimed-but-high click started a measurement instead of picking a tool. That is what changed.",
+    "This is a shared file, so both releases get the fix; there is no design difference between them here.",
+    "Found on the way and filed separately: at a 700pt window with the inspector open the bar is wider than the picture, and its clipped-off ends still take clicks near the picture's left and right edges."
+  ]
+}

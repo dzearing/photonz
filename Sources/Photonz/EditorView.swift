@@ -465,6 +465,13 @@ struct EditorView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+        // The bar absorbs clicks on the whole capsule it draws, not just
+        // on the controls: the glass has a 10pt rim above and below the
+        // 28pt control row, and without this a click that lands on the
+        // rim falls through to the picture behind the bar — with Measure
+        // active, aiming slightly high at a tool started a measurement on
+        // the image instead of picking the tool.
+        .contentShape(.capsule)
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -500,6 +507,7 @@ struct EditorView: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
     }
 
@@ -717,6 +725,7 @@ struct EditorView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
     }
 
     /// Rectangle/ellipse have TWO tones — an interior fill and a border — so the
@@ -891,6 +900,7 @@ struct EditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
         .disabled(editorState.document == nil)
     }
 
