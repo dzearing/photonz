@@ -1,0 +1,27 @@
+{
+  "id": "picking-up-crop-in-the-current-release-still-wid",
+  "title": "Picking up Crop in the current release still widens the tool bar past the picture",
+  "goal": "In the release everyone gets today, picking up the Crop tool puts four aspect buttons plus a tick and a cross into the floating tool bar. On a narrow window that makes the bar wider than the picture, so its ends are cut off and clicks near the left and right edges of the picture land on controls that are only half drawn. This is the same problem the Magic Wand just had, and it is worse: crop adds more to the bar than the wand did.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 310,
+  "status": "pending",
+  "release": "current",
+  "area": "app",
+  "created": "2026-08-24T03:09:36.758Z",
+  "updated": "2026-08-24T03:09:36.759Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured offscreen 2026-08-24 with the same harness used for the wand fix (temp/measure-bar.swift): cropOptions is 217pt, which puts the residual bar at about 520pt against a 403pt budget on a 435pt canvas, versus the wand's 473pt. The wand fix landed EditorChromeLayout.showsFullToolOptions(canvasWidth:) (threshold 520) and split EditorView.wandOptions into wandToleranceControl plus compactWandOptions, a Tol chip with a chevron that opens the full slider in a popover. Crop needs the same treatment on cropOptions, but 217pt will not fit in one chip the same way: the aspect locks probably want a single Aspect chip that opens a menu, and apply/cancel may want to move to the canvas the way Next does it behind next-tool-options. Only affects .current, since the flag is releases: [.next] and turns this whole code path off there.",
+  "acceptance": [
+    "With the current release, a 700 point window, the inspector open and the Crop tool in hand, both ends of the tool bar are inside the picture",
+    "No click along the bar near either edge of the picture lands on a control that is not fully visible",
+    "The aspect locks and the apply and cancel actions are all still reachable at that window size"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T03:09:36.759Z",
+      "note": "created (manual)"
+    }
+  ]
+}

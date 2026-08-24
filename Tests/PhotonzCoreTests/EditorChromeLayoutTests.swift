@@ -168,4 +168,53 @@ struct EditorChromeLayoutTests {
     @Test func theZoomSliderThresholdSitsAboveTheNarrowestCanvas() {
         #expect(EditorChromeLayout.zoomSliderMinCanvasWidth > 435)
     }
+
+    // MARK: Tool options give way before the bar leaves the picture
+
+    @Test func toolOptionsLayOutInFullOnARoomyCanvas() {
+        #expect(EditorChromeLayout.showsFullToolOptions(canvasWidth: 1135) == true)
+    }
+
+    @Test func toolOptionsCompactOnACrampedCanvas() {
+        // The measured case: a 700pt window with the inspector docked leaves a
+        // 435pt canvas (403pt of budget). With the wand in hand the bar has
+        // already shed every tool it has and still measures 473pt, because the
+        // Tolerance label, slider and readout are 176pt of it that nothing can
+        // shed, so 35pt of capsule hangs off each end of the picture.
+        #expect(EditorChromeLayout.showsFullToolOptions(canvasWidth: 435) == false)
+    }
+
+    @Test func theToolOptionsThresholdClearsTheIrreducibleBar() {
+        // At the threshold the bar with NO tools inline, full options, colors
+        // and zoom measures 473pt, so the budget there has to cover it.
+        let t = EditorChromeLayout.toolOptionsMinCanvasWidth
+        #expect(EditorChromeLayout.toolBarBudget(canvasWidth: t) >= 473)
+    }
+
+    @Test func toolOptionsSurviveNarrowerThanTheZoomSlider() {
+        // The zoom slider has ⌘0, ⌘1, pinch and a menu, so it can simply go.
+        // Tool options have no equivalent, so they compact rather than vanish
+        // and they do it later, at a narrower canvas than the slider leaves at.
+        #expect(EditorChromeLayout.toolOptionsMinCanvasWidth
+                < EditorChromeLayout.zoomSliderMinCanvasWidth)
+    }
+
+    @Test func theCompactToolOptionsFitTheMeasuredCrampedBar() {
+        // Measured offscreen against the real bar views: 297pt without any
+        // options, and the compact Tolerance chip adds 69pt of it.
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 435)
+        #expect(297 + 69 <= budget)
+    }
+
+    @Test func compactToolOptionsLeaveTooLittleSlackToGrowAToolBack() {
+        // Freeing 107pt must not hand the fit loop enough room to put a tool
+        // back, or the bar would grow, overflow, compact, and flip forever.
+        // Measured: the compacted bar is 366pt, leaving 37pt of slack against
+        // a 68pt widest slot.
+        let budget = EditorChromeLayout.toolBarBudget(canvasWidth: 435)
+        let compactBar: CGFloat = 366
+        #expect(EditorChromeLayout.fittedToolCount(current: 0, maximum: 13,
+                                                   contentWidth: compactBar,
+                                                   budget: budget) == 0)
+    }
 }

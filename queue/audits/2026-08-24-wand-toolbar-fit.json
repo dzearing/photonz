@@ -1,0 +1,28 @@
+{
+  "feature": "The tool bar stays inside the picture with the Magic Wand in hand",
+  "epic": "measure-redline",
+  "summary": "In the release everyone gets today, picking up the Magic Wand on a narrow window no longer pushes the floating tool bar past the edges of the picture. The Tolerance slider folds into a small Tol chip that opens the same slider in a popover.",
+  "setup": "Photonz Dev, Experiments window, release Current. This is a Current-release fix; Next already avoids it because tool options live in the inspector there, so nothing changes in Next unless you turn the tool-options flag off.",
+  "try": [
+    { "do": "Open a screenshot and resize the window to about 700 points wide." },
+    { "do": "Leave the inspector showing on the right." },
+    { "do": "Press W to pick up the Magic Wand.", "shot": "2026-08-24-wand-toolbar-fit-1.png" },
+    { "do": "Look at both rounded ends of the floating bar: neither should touch or cross the edge of the picture." },
+    { "do": "Click the Tol 32 chip in the bar." },
+    { "do": "Drag the Tolerance slider in the popover and watch the number on the chip follow it." },
+    { "do": "Widen the window past about 900 points and confirm the full Tolerance label and slider come back into the bar." }
+  ],
+  "evaluate": [
+    "Does the Tol chip read as something you can click, or does it look like a number the app is just reporting?",
+    "Is one extra click to reach Tolerance acceptable on a window this narrow, or would you rather the slider stayed and something else gave way?",
+    "Is Tol clear enough as a word, or does it need to say Tolerance?",
+    "Does the bar switching between the chip and the full slider as you resize feel settled, or does it feel like it is popping?",
+    "When the chip appears, the bar still shows only the wand and the overflow menu. Would you rather it used the freed room for another tool or two?"
+  ],
+  "rough": [
+    "The Crop tool has the same bug and it is worse: its options are 217 points of bar against the wand's 176, which puts the bar around 520 points in a 403 point budget. Filed separately as picking-up-crop-in-the-current-release-still-wid rather than fixed here.",
+    "The chip appears below a 520 point canvas. Measurement says the bar only actually breaks below about 505, so on a canvas between 505 and 520 the chip now shows where the full slider would still have fit, by roughly 15 points. That margin is deliberate: the bar width was measured off a faithful copy of the views rather than the running app, and being 15 points early is a smaller failure than being 5 points late and clipping again.",
+    "Verification was offscreen, not in the running app. Accessibility permission is not granted to this loop, so the bar could not be hit-tested live; instead the real bar views were rebuilt offscreen and measured, which reproduced the bug independently at 473 points against a 403 point budget before confirming 366 after.",
+    "The chip wears a chevron because without one Tol 32 reads as a readout. That was judged from a rendered comparison of a plain chip, a chevron chip and a chip on a faint capsule, not from taste alone, but it is still a call worth disagreeing with."
+  ]
+}

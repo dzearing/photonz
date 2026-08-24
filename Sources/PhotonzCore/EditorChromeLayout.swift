@@ -105,6 +105,33 @@ public enum EditorChromeLayout {
         canvasWidth >= zoomSliderMinCanvasWidth
     }
 
+    /// The narrowest canvas on which the active tool's options still lay
+    /// themselves out along the tool bar.
+    ///
+    /// The Magic Wand's Tolerance label, slider and readout are 176pt of bar,
+    /// and unlike a tool they are not something the overflow loop can shed: on
+    /// a 435pt canvas the bar had already dropped every tool it has and still
+    /// measured 473pt against a 403pt budget, so 35pt of capsule hung off each
+    /// end of the picture and clicks near either edge landed on a control that
+    /// was only half drawn.
+    ///
+    /// Below this width the options collapse to one small chip that shows the
+    /// live value and opens the full control. Squeezing the slider instead was
+    /// measured and rejected: the only variant that fit left a 44pt track for a
+    /// 0 to 128 range, roughly three tolerance steps per point, with 6pt to
+    /// spare. The chip costs 69pt and brings the bar to 366pt, leaving 37pt —
+    /// deliberately less than one `toolBarWidestSlotWidth`, so freeing the room
+    /// cannot tempt the fit loop into putting a tool back and starting the
+    /// overflow over again.
+    ///
+    /// The threshold is set so the budget at it covers that whole 473pt bar.
+    public static let toolOptionsMinCanvasWidth: CGFloat = 520
+
+    /// Whether the active tool's options lay out in full at this canvas width.
+    public static func showsFullToolOptions(canvasWidth: CGFloat) -> Bool {
+        canvasWidth >= toolOptionsMinCanvasWidth
+    }
+
     // MARK: Inspector auto-collapse
 
     /// Below this window width the docked inspector hides itself so the canvas

@@ -13,6 +13,9 @@ struct EditorView: View {
     /// The bespoke HSB color picker popover (13.2).
     @State private var isFgPickerShown = false
     @State private var isBgPickerShown = false
+    /// Whether the compact Tolerance chip's popover is open. Only ever used on
+    /// a canvas too narrow for the wand's options to lay out along the bar.
+    @State private var isWandToleranceShown = false
     @State private var isShapeFillPickerShown = false
     /// Slider drafts so a drag doesn't snap back to the committed value mid-drag.
     @State private var strokeWidthDraft: CGFloat?
@@ -134,6 +137,17 @@ struct EditorView: View {
                 canvasContentWidth = width
                 toolbarBudget = EditorChromeLayout.toolBarBudget(canvasWidth: width)
                 reconcileToolbarCount()
+                // Widening past the threshold takes the compact Tolerance chip
+                // away, and its popover with it. Clear the flag too, or the
+                // popover springs open by itself the next time the window comes
+                // back down.
+                if EditorChromeLayout.showsFullToolOptions(canvasWidth: width) {
+                    isWandToleranceShown = false
+                }
+            }
+            // Same for putting the wand down while the chip's popover is open.
+            .onChange(of: editorState.activeTool) { _, tool in
+                if tool != .wand { isWandToleranceShown = false }
             }
         }
         // Fill the window even in the empty state — the HStack otherwise hugs
@@ -919,7 +933,25 @@ struct EditorView: View {
     /// Aspect locks plus commit/cancel, shown while the crop tool is active.
     /// Wand tolerance: how far a color may drift (0–255 Euclidean RGBA) and
     /// still join the flood. Applies to the next wand click.
-    private var wandOptions: some View {
+    ///
+    /// Laid out along the bar when the picture is wide enough to hold it, and
+    /// otherwise collapsed to a chip that shows the live value and opens the
+    /// same control in a popover — see `EditorChromeLayout.showsFullToolOptions`
+    /// for why (176pt of bar that the overflow loop cannot shed, which pushed
+    /// both ends of the capsule outside a 435pt picture).
+    @ViewBuilder private var wandOptions: some View {
+        if EditorChromeLayout.showsFullToolOptions(canvasWidth: canvasContentWidth) {
+            wandToleranceControl
+                .help("Wand tolerance: how similar a color must be to join the selection")
+        } else {
+            compactWandOptions
+        }
+    }
+
+    /// The label, slider and readout, at their natural size. Used inline on a
+    /// roomy canvas and inside the chip's popover on a cramped one, so the
+    /// control itself never changes — only where it is drawn.
+    private var wandToleranceControl: some View {
         HStack(spacing: 6) {
             Text("Tolerance")
                 .font(.caption)
@@ -934,7 +966,45 @@ struct EditorView: View {
                 .font(.system(.caption, design: .monospaced))
                 .frame(width: 22, alignment: .trailing)
         }
+    }
+
+    /// The cramped-canvas form: "Tol" plus the live number, opening the full
+    /// slider in a popover.
+    ///
+    /// It wears a chevron because without one the pair reads as a readout
+    /// rather than something to click — and a chevron is the affordance this
+    /// bar already uses for a value you press to change it (the zoom
+    /// percentage, the selection group's tool list). The number sits in a
+    /// fixed-width frame so dragging the slider from 8 to 128 cannot change the
+    /// chip's width and reflow the bar underneath the popover you are dragging
+    /// in.
+    private var compactWandOptions: some View {
+        Button {
+            isWandToleranceShown = true
+        } label: {
+            HStack(spacing: 4) {
+                Text("Tol")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("\(Int(editorState.wandTolerance))")
+                    .font(.system(.caption, design: .monospaced))
+                    .frame(width: 22, alignment: .trailing)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .fixedSize()
+            .frame(height: 28)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.borderless)
+        .fixedSize()
         .help("Wand tolerance: how similar a color must be to join the selection")
+        .popover(isPresented: $isWandToleranceShown, arrowEdge: .top) {
+            wandToleranceControl
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+        }
     }
 
     /// The Measure tool's button, which owns its own modes (D15). Distance,

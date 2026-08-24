@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 280,
-  "status": "pending",
-  "release": "next",
+  "status": "in_progress",
+  "release": "current",
   "area": "app",
   "created": "2026-08-24T02:33:59.683Z",
-  "updated": "2026-08-24T02:33:59.683Z",
+  "updated": "2026-08-24T02:58:09.255Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-08-24 with an in-app AppKit hit-test sweep while fixing the-tool-bar-runs-off-both-edges-of-the-picture. Release current, 700x760, canvas 435pt: with .wand active the bar measures 465.5pt against a 403pt budget and EditorView.toolbarVisibleCount is already 0, so the overflow loop has nothing left to shed. The residual is compact tools capsule + wandOptions (Tolerance label + 80pt slider + readout) + colorBar + zoomBar. The Next release is clean in every tool state (374pt) because FeatureCatalog.toolOptionsFlag (next-tool-options) is on by default there and moves wand tolerance to the inspector. Fix would need either a compact wandOptions on a cramped canvas or the same treatment the zoom slider got in EditorChromeLayout.showsZoomSlider.",
@@ -22,6 +22,39 @@
     {
       "t": "2026-08-24T02:33:59.683Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T02:58:09.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T03:20:00.000Z",
+      "note": "Adversarial review before building. The mock/current design puts tool options along the bar, which is unbounded: the overflow loop can shed tools but nothing can shed the options, so the bar has no upper limit. Reproduced independently rather than trusting the prior note, by rebuilding the real bar views offscreen and measuring: 473pt of bar in a 403pt budget on a 435pt canvas, 35pt hanging off EACH end. Prior note said 465.5pt, same story."
+    },
+    {
+      "t": "2026-08-24T03:25:00.000Z",
+      "note": "Squeezing the slider was measured and rejected. Tolerance+56 = 441pt (over), Tol+64 = 416pt (over), Tol+56 = 408pt (over). The only variant that fit, Tol+44, left a 44pt track for a 0-128 range with 6pt of margin: unusable and fragile. That killed the obvious fix on evidence, so no decision was filed for it."
+    },
+    {
+      "t": "2026-08-24T03:30:00.000Z",
+      "note": "Built: EditorChromeLayout.showsFullToolOptions(canvasWidth:) with toolOptionsMinCanvasWidth 520 (tests first, red then green). EditorView.wandOptions split into wandToleranceControl (the full labelled slider, used inline AND inside the popover so the control itself never changes) and compactWandOptions (a Tol chip with a chevron). Stale popover state cleared on widening past the threshold and on putting the wand down, or it would spring open by itself next time the window came back down."
+    },
+    {
+      "t": "2026-08-24T03:35:00.000Z",
+      "note": "Verified. Compacted bar measures 366pt in the 403pt budget: both ends inside, acceptance 1 and 2. Tolerance still reachable through the chip's popover, acceptance 3. Slack is 37pt, deliberately under the 68pt widest slot, so fittedToolCount cannot put a tool back and start an overflow/compact oscillation; asserted in a test. Chip width is 55pt for every value 0 to 128, so dragging the slider cannot reflow the bar under the popover. 1082 tests green."
+    },
+    {
+      "t": "2026-08-24T03:40:00.000Z",
+      "note": "Chevron affordance chosen from a rendered comparison (plain / chevron / faint capsule): plain Tol 32 reads as a readout, and a chevron is what this bar already uses for a value you press to change (zoom percentage, selection group). Faint capsule risked reading as the active-tool marker."
+    },
+    {
+      "t": "2026-08-24T03:45:00.000Z",
+      "note": "Out of scope but found: Crop has the same bug and worse (217pt of options, ~520pt bar). Filed as picking-up-crop-in-the-current-release-still-wid rather than fixed here. Also corrected this task's release field from next to current, since the bug only exists where next-tool-options is off and that flag is releases: [.next]."
+    },
+    {
+      "t": "2026-08-24T03:50:00.000Z",
+      "note": "Verification limits, stated honestly: no Accessibility permission for this loop, so the running app could not be hit-tested. Numbers come from the real bar views rebuilt offscreen. The probe app was rebuilt on the change, launched clean, and quit."
     }
-  ]
+  ],
+  "started": "2026-08-24T02:58:09.254Z"
 }
