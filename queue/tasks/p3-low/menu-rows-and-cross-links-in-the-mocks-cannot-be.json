@@ -1,0 +1,32 @@
+{
+  "id": "menu-rows-and-cross-links-in-the-mocks-cannot-be",
+  "title": "Menu rows and cross links in the mocks cannot be reached from the keyboard",
+  "goal": "In the design study, a lot of things you click are not buttons underneath: menu rows, the cards that link one page to another, even words in a sentence that jump you somewhere. A mouse reaches all of them and the keyboard reaches none, so anyone driving by keyboard hits a dead end at every menu. Make the things that respond to a click respond to Tab and Enter too.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 410,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-08-24T04:24:27.425Z",
+  "updated": "2026-08-24T04:25:07.725Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while giving icon buttons accessible names on 2026-08-24. shared/components/core.js binds click to ANY [data-target]; menus bind [data-menu] the same way. Measured across 12 representative pages: 63 of 151 [data-target]/[data-menu] elements are neither button/a nor carry role or tabindex, so they are absent from the accessibility tree entirely. The shell.js harvest path was already fixed in c57d129 (role=button + tabindex + Enter/Space for non-native harvested chips); the same treatment belongs in core.js for [data-target] (role=link) and wherever [data-menu] is bound, plus role=menuitem on .menuitem rows. Watch the tab-order cost: some [data-target] elements are big rows and cards, so consider whether a card and its inner controls should be one stop or several. check-a11y-names.mjs could grow a second rule to gate this.",
+  "acceptance": [
+    "Every menu row in the study takes keyboard focus and opens on Enter or Space",
+    "Every cross-page link card and inline jump word does the same",
+    "Tabbing through a page never passes a clickable thing without stopping on it",
+    "A screen reader announces each of them as a menu item or a link, not as plain text"
+  ],
+  "log": [
+    {
+      "t": "2026-08-24T04:24:27.426Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T04:25:07.724Z",
+      "note": "priority p2-normal -> p3-low"
+    }
+  ]
+}

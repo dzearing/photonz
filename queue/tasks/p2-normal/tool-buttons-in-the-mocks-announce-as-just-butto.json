@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 400,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T04:05:17.109Z",
-  "updated": "2026-08-24T04:23:18.327428Z",
+  "updated": "2026-08-24T04:23:55.870Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while sweeping the Measure shortcut on 2026-08-24. docs/design/mocks/shared/components/tooltip.js upgrade() copies title into data-tip and then calls el.removeAttribute(chr39)titlechr39(), which drops the accessible name; nothing sets aria-label in its place. Confirmed with a Chrome a11y-tree snapshot of pages/icon-gradient-wt.html: the ten tool-strip buttons all come back as bare \"button\" with no name. Fix is probably to set aria-label to the label half of the data-tip during upgrade (and in any place that authors data-tip directly, e.g. pages/comp-color.html), then re-snapshot a couple of pages to confirm names appear. Applies to every .tool and every icon-only .btn in the corpus, not just tool strips.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-08-24T04:23:18.327428Z",
       "note": "Staging note: this task's epic design-system is staged next, not now. It was small, self-contained and finishable in one pass, so it was completed rather than dropped, but the queue should not hold more design-system tasks while measure-redline is the focus."
+    },
+    {
+      "t": "2026-08-24T04:23:55.869Z",
+      "note": "Every icon-only control in the design study now reports its tooltip's name to assistive technology, with its keystroke in aria-keyshortcuts. tooltip.js names any tipped control that has no aria-label and no visible text; shell.js gives harvested non-button chips a role, a tab stop and Enter/Space; 19 specimen buttons named by hand. Verified by an iframe sweep of all 88 mock pages: 0 nameless interactive controls (was 23 plus every tool strip), 942/942 tools named, 2692 named from their tip, 0 leftover title attributes, 0 JS errors, and the only 4 name/tip differences are hand-written author labels. Tooltip unchanged (Measure + keycap I on hover and on focus). Fixed two bugs underneath: a retitled control kept its stale tip and drew a second native bubble, and the sweep starved entirely on a playing timeline (1093 mutations/sec vs a 50ms debounce). New gate shared/check-a11y-names.mjs; rule in shared/AGENTS.md; audit at queue/audits/2026-08-24-a11y-names.json. All five mock checkers green, Scripts/test.sh 1094 tests pass. Committed c57d129, pushed to main."
     }
   ],
-  "started": "2026-08-24T04:06:51.900Z"
+  "started": "2026-08-24T04:06:51.900Z",
+  "completed": "2026-08-24T04:23:55.870Z"
 }
