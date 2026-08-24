@@ -4,14 +4,14 @@
   "goal": "The main product walkthrough still hand-draws the empty screen a new user starts from, duplicating what the shared version now provides everywhere else. This switches it over so there is only one description of that screen.",
   "priority": "p3-low",
   "seq": 140,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T07:14:13.190Z",
-  "updated": "2026-08-23T07:14:13.191Z",
+  "updated": "2026-08-24T00:41:09.198Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "walk.html still hand-authors the menu-bar agent, histbar, and filler history cards that shared/components/entry.js now injects for .desk[data-entry] pages (capture-wt, ui-entry-wt, video-entry-wt). Convert it the way capture-wt was converted: add data-entry, add data-entry-fill to the filmstrip, delete the copied chrome, keep its own first card and artwork. Verify all 15 steps still replay and the cues land.",
+  "notes": "STAGE GATE: serves design-system (zero drift / clickthrough-sweep), staged next with every child later, while focus is measure-redline. Dropped unbuilt. It is pure mock de-duplication: it unblocks no measure-redline feature, so it does not clear the foundational-work bar.\n\nEvery claim in the original notes was verified against the files first, so the work is recoverable as written. Line numbers are from walk.html at commit 0d16ff9.\n\nCONFIRMED · the duplication is real and exactly where the notes said:\n- pages/walk.html:111 `<div class=\"desk\" id=\"walkDesk\">` has no data-entry.\n- :113-140 hand-authored .mbar copy of the canonical menu.\n- :428-433 hand-authored .histbar inside #histSheet .sheet-b.\n- :434 `.filmstrip[data-radio]` has no data-entry-fill.\n- :456-526 seven filler .filmcard entries after the page own card #fcNew (:435).\n- Reference conversion to copy: pages/capture-wt.html:106-110 (comment + data-entry) and :381 (data-entry-fill). ui-entry-wt.html and video-entry-wt.html are the other two converted pages.\n\nCONFIRMED · deletion is required, not just opt-in. shared/components/entry.js only injects .mbar when the desk has none (step 1) and only injects .histbar when .sheet-b has none (step 3), so leaving walk copies in place would silently keep the drift.\n\nCONFIRMED · no walkthrough cue breaks. All fifteen data-cue targets are #btnOpen #capRegion #gLibraryH #libCallout #lrCallout #mbAgent x2 #miCapture #miHistory #miMakeComp #selStyle #tMeasure #tText #waGap #waNote. #mbAgent #miCapture #miHistory are re-supplied by entry.js MENU with the same ids; the rest are page-local and untouched by the deletions. Nothing cues the histbar or a filler card.\n\nCORRECTED · the conversion is NOT content-neutral, which the original notes did not say. Two visible changes a reviewer must accept:\n1. The filler history changes. walk currently shows settings-capture (18 minutes ago), screen-recording, hero-card, onboarding-run, toast-states, nav-bar, checkout-review. entry.js PAST is pricing-page (22 minutes ago), screen-recording, hero-card, settings-window (yesterday), onboarding-run, toast-states, nav-bar, b-roll. So checkout-review disappears, pricing-page and b-roll appear, and settings-capture is renamed and re-dated to settings-window. Note pricing-page is also the subject of walk step 3, so after conversion the standard past contains a card named the same as the capture the walkthrough just took, sitting behind walk own #fcNew. Worth a look before shipping the change.\n2. Gains that only conversion can give: walk filler cards currently carry no .fk-shot/.fk-clip classes and its segmented buttons carry no #hsAll/#hsShots/#hsVids ids, so history scope filtering is dead on this page today. entry.js supplies both plus live click wiring, so All/Screenshots/Videos starts working and a step could drive it with data-activate=\"#hsVids\" data-class.\n\nCORRECTED · walk own menu copy is already behind the canonical one: it lacks the stable ids #miCaptureFull #miRecord #miNewWindow #miNewClipboard #miOpen that entry.js MENU defines. It hard-codes data-sheet=\"#histSheet\" on #miHistory, which entry.js step 2 derives automatically.\n\nHOW TO FINISH IT when design-system is staged now: add data-entry to :111 with the capture-wt comment, delete :113-140 and :428-433, add data-entry-fill to :434, delete the seven filler cards at :456-526, keep #fcNew and all page artwork. Then load http://127.0.0.1:8791 walk page, replay all fifteen steps, and check the console is clean. Requires entry.js to run before overlays/popover/segmented/walkthrough (shared/order.json already handles this for the other three pages).",
   "acceptance": [
     "The walkthrough's opening screen comes from the shared empty-state template instead of a copy inside the page",
     "All fifteen walkthrough steps still replay in order with their callouts pointing at the right things",
@@ -21,6 +21,20 @@
     {
       "t": "2026-08-23T07:14:13.191Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-08-24T00:39:16.424Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T00:41:04.499Z",
+      "note": "Stage gate: serves design-system (staged next, all children later); focus is measure-redline. Verified every claim against walk.html and entry.js first: duplication confirmed at the exact lines, no walkthrough cue breaks, and two things the original notes missed (the filler history set actually changes, and history scope filtering is dead on walk today and would start working). Evidence written into notes; dropped unbuilt."
+    },
+    {
+      "t": "2026-08-24T00:41:09.198Z",
+      "note": "Serves design-system (staged next, all children later) while focus is measure-redline. Pure mock de-duplication, unblocks no measure-redline feature. Verified all claims first and preserved the evidence plus a corrected conversion recipe in the task notes."
     }
-  ]
+  ],
+  "started": "2026-08-24T00:39:16.423Z",
+  "epic": "design-system"
 }
