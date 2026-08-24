@@ -4,11 +4,11 @@
   "goal": "The same keyboard shortcut is printed two different ways in different parts of the study, so it reads as though there were two shortcuts. This settles one order for modifier keys and applies it to every shortcut hint.",
   "priority": "p3-low",
   "seq": 190,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-23T17:00:45.836Z",
-  "updated": "2026-08-24T01:00:33.115Z",
+  "updated": "2026-08-24T01:09:21.251Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Audit rescan 2026-08-23 found the same shortcut printed two ways: 59 pages write Cmd-Shift-H, 10 write Shift-Cmd-H, and the macOS screenshot shortcuts appear as Shift-Cmd-4/3/5 on app-shell, capture-wt and walk but Cmd-Shift-4 on home and ui-entry-wt. Option-Cmd-L and Cmd-Option-K split the same way. Pick ONE order for every shortcut hint (macOS renders Control, Option, Shift, Command in that order, which argues for Shift-Cmd) and sweep every .sc, .kbd and <code> hint in docs/design/mocks/pages plus AGENTS.md so the study never teaches two spellings of one key. Design-system family task took the majority spelling for its two pages as a stopgap.\n\nDONE 2026-08-23. The order did not need choosing: pages/lang-keyboard.html section 05 already published 'macOS order control option shift command'. Swept 274 hints (265 adjacent glyph pairs + 9 split across keycap elements) across 77 files. Verified zero command-first pairs remain outside three deliberate exceptions (the AGENTS.md counter-example, the dated ux-audit record, study-tasks.json history). Rule now also lives in shared/AGENTS.md under the keyboard-shortcut carve-out. shared/dist rebuilt with shared/build-ds.mjs. Follow-up filed for the one user-facing app string: the-empty-history-panel-prints-its-capture-short.",
@@ -53,7 +53,12 @@
     {
       "t": "2026-08-24T01:26:00.000Z",
       "note": "Found and filed out of scope: the real app has ONE user-facing string with the same defect, the empty capture-history message in HistoryOverlay.swift. Left alone because it is Current-release copy and this task is scoped to the study. Filed as the-empty-history-panel-prints-its-capture-short. The other 33 app occurrences are code comments. Engineering plan docs and the CHANGELOG also carry the old spelling and were left as historical records."
+    },
+    {
+      "t": "2026-08-24T01:09:21.250Z",
+      "note": "Swept 274 shortcut hints across 77 study files to the macOS modifier order (Control Option Shift Command). The order was already published on pages/lang-keyboard.html section 05, so no decision was needed; the corpus was contradicting its own reference page. Includes 9 chords split across separate keycap elements a text sweep would miss, two reversed glyph legends, and the rule written into shared/AGENTS.md. Verified: zero command-first pairs left, all 73 touched pages 200, markup balanced, lang-keyboard.html and capture-wt.html render clean in a browser. Follow-up filed for the one user-facing app string with the same defect."
     }
   ],
-  "started": "2026-08-24T01:00:33.114Z"
+  "started": "2026-08-24T01:00:33.114Z",
+  "completed": "2026-08-24T01:09:21.251Z"
 }
