@@ -1,0 +1,30 @@
+{
+  "feature": "Loupe during a region capture",
+  "epic": "measure-redline",
+  "summary": "While you pick or drag a capture region, a small magnified view beside the pointer shows the pixels under it, boxes the one the crop will land on, and reads out the pointer's position in points and pixels plus the selection size. A crop can now start and stop on the pixel you mean.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Loupe during a region capture ships on, with Pixels across at 25. Have a window with a bordered button or text field on screen before you start.",
+  "try": [
+    { "do": "Press Shift Command 4 and hold still. The loupe should already be there beside the crosshair, below and to the right, showing the pixels under it.", "shot": "2026-09-02-capture-loupe-1-hover.png" },
+    { "do": "Move slowly across a button's edge. The border pixels should step through the loupe one device pixel at a time, and the boxed pixel should be exactly the one under the crosshair." },
+    { "do": "Read the two lines under the picture. They should match the pointer's position in points, and in pixels at twice that on a Retina display." },
+    { "do": "Drag from just outside a button's top-left corner past its bottom-right. The loupe should stay outside the box on the pointer's side, and a third line should show the selection size.", "shot": "2026-09-02-capture-loupe-2-drag.png" },
+    { "do": "Keep dragging into the bottom-right corner of the display. The loupe should jump to the upper-left of the pointer and the pixels past the edge should show as dark.", "shot": "2026-09-02-capture-loupe-3-corner.png" },
+    { "do": "Release, then drag from a bottom-right point up and to the left. The loupe should lead above and to the left of the pointer, never over the box.", "shot": "2026-09-02-capture-loupe-4-upleft.png" },
+    { "do": "Release and open the capture. Its edges should land exactly where the boxed pixel said they would." },
+    { "do": "In the Experiments window turn the flag off, then press Shift Command 4 again. The plain crosshair and the size pill should be back." }
+  ],
+  "evaluate": [
+    "Does the loupe help you place the start of a drag, or is it in the way until you start dragging?",
+    "Is 25 pixels at 5 points each the right magnification, or do you want fewer, bigger pixels?",
+    "Are points plus pixels the coordinates you want, or would you rather have one unit and the crop's pixel size instead?",
+    "The drag's size pill now hides while the loupe carries the size. Do you miss the pill at the box?",
+    "Would a colour value for the boxed pixel earn its line, or is that a different tool?"
+  ],
+  "rough": [
+    "The loupe is drawn in the overlay's own style (dark translucent panel, white type, soft shadow), not Liquid Glass, so it matches the size pill next to it rather than the toast. Glass would blur a still picture at a per-move cost and cannot be snapshotted offscreen.",
+    "The side flip at a display edge is instant; there is no slide animation.",
+    "The selection size shows in points only; the crop's pixel size is that times the display scale and the editor reports it once the capture opens.",
+    "There is no way to hide the loupe mid-capture short of the flag.",
+    "Verified offscreen on the real overlay view with a synthetic frozen picture and scripted events, because the loop has no Screen Recording grant. The live freeze on your displays is for you to try."
+  ]
+}

@@ -124,6 +124,22 @@ The `NSStatusItem` menu is the always-available entry point:
      the first move. Region recording shares the overlay, so a click there
      records that window's region live. Per-move cost measured at well under
      0.2 ms (partial invalidation of old and new chrome only).
+   - **Loupe (Next, `next-capture-loupe`, added 2026-09-02).** With the flag
+     on, a magnified patch of the frozen bitmap rides beside the pointer from
+     the moment the overlay opens: 25 device pixels across (a flag parameter)
+     at 5 pt each, nearest-neighbour, the pointer's own pixel boxed, a
+     two-tone crosshair, and a readout of the pointer in points, in pixels
+     (not on 1x displays), and the selection size while dragging. `CaptureLoupe`
+     in PhotonzCore owns the placement rule (beyond the pointer on the side
+     away from the drag start, so it stays outside the box and off its active
+     corner; flips per axis at a display edge; unit tested), the pixel sample
+     rect clamped to the picture with the pointer's pixel kept centred, and the
+     readout text. Drawn in `SelectionView.draw` from the bitmap the overlay
+     already holds (no extra capture), styled as the overlay's readout pill
+     with a soft shadow, invalidating only the old and new loupe frames. The
+     drag's size pill hides while the loupe shows so a drag has one readout.
+     Per-move cost measured at mean 0.2 to 0.4 ms, max about 1 ms, event plus
+     redraw, 2x display.
    - **The overlay must NOT activate the app.** With an editor window open the
      app is `.regular`, so `NSApp.activate(ignoringOtherApps:)` would raise
      *every* Photonz window — yanking the editor to the foreground when you

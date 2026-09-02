@@ -333,6 +333,20 @@ struct FeatureCatalogTests {
         #expect(FeatureCatalog.windowCaptureFlag == "next-window-capture")
     }
 
+    @Test func theCaptureLoupeFlagIsNextOnlyAndOnByDefault() {
+        // A redline crop has to start and stop on the pixel you mean, so the
+        // region capture overlay magnifies the pixels beside the pointer with
+        // its coordinates. Next only, on from the start, with the patch width
+        // as a tuning parameter.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.captureLoupeFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.captureLoupeFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.captureLoupeFlag })
+        #expect(FeatureCatalog.captureLoupeFlag == "next-capture-loupe")
+        let pixels = FeatureCatalog.defaultSettings(for: .next)
+            .number(FeatureCatalog.captureLoupeFlag, FeatureCatalog.captureLoupePixels)
+        #expect(pixels == Double(CaptureLoupe.defaultPixelsAcross))
+    }
+
     @Test func theHoverMeasureFlagIsGoneNowThatMeasureHasModes() {
         // Hover-to-measure was an always-on readout that nobody asked for, and
         // playtesting killed it. Its successor is not a flag: Size is one of the

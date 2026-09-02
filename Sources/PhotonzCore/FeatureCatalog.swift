@@ -45,6 +45,9 @@ public enum FeatureCatalog {
 
     public static let windowCaptureFlag = "next-window-capture"
 
+    public static let captureLoupeFlag = "next-capture-loupe"
+    public static let captureLoupePixels = "pixels"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -155,6 +158,19 @@ public enum FeatureCatalog {
                     description: "During a region capture, the window under the pointer lights up with its app and size. Click it to capture exactly that window; drag to select a region as before. Off means the overlay is drag only.",
                     isEnabled: false,
                     parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: captureLoupeFlag,
+                    title: "Loupe during a region capture",
+                    description: "While you pick or drag a capture region, a small magnified view beside the pointer shows the pixels under it, boxes the one the crop will land on, and reads out the pointer's position in points and pixels plus the selection's size. It keeps to the outside of the box you are drawing and steps aside near the edge of the display. Off means the plain crosshair.",
+                    isEnabled: false,
+                    parameters: [
+                        FeatureParameter(name: captureLoupePixels, label: "Pixels across",
+                                         value: .number(Double(CaptureLoupe.defaultPixelsAcross)),
+                                         bounds: NumberBounds(minimum: 11, maximum: 51, step: 2)),
+                    ]),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
             Definition(

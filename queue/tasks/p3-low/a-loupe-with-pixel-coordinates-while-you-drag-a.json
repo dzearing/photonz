@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.294Z",
-  "updated": "2026-09-02T05:50:57.295Z",
+  "updated": "2026-09-02T07:33:18.524Z",
   "deps": [],
   "blockedBy": [],
   "notes": "RectSelectionController freeze-frame overlay (docs/design/capture.md). Competitive baseline: docs/plan/competitive-cleanshot.md ('crosshair + magnifier/loupe with live pixel coords'). Show coordinates in screen points and pixels (backingScaleFactor). Keep it a small glass panel matching the toast's look.",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-02T05:50:57.295Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T07:19:04.377Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T07:23:09.646Z",
+      "note": "Adversarial review before building: (1) The value is placing the START pixel as much as the end one, so the loupe shows from the moment the overlay opens and while hovering, not only mid-drag; the selection size line joins it once a drag begins. macOS's own Shift-Command-4 shows coordinates by the crosshair, CleanShot adds the magnifier, so a first-time user has seen both idioms. (2) Placement rule: the loupe sits diagonally beyond the pointer on the side AWAY from the drag start, so it is always outside the box being drawn and never over its active corner; near a display edge it flips per axis. Hovering (no anchor) defaults to below-right. (3) Decorative cuts: no grid over every pixel (noise at 5 pt per pixel); only the pointer's pixel is boxed and thin crosshair lines lead to it. Fixed magnification of 25 pixels across at 5 pt each; a flag parameter sets the pixel count for tuning rather than a UI control. (4) Readout: coordinates in points always, in pixels when the display is not 1x, and the selection size in points while dragging, matching the existing size pill. Pixel size of the crop is left off to keep three short lines. (5) Look: drawn in the overlay's own draw pass and styled as the overlay's existing readout pill (dark translucent, white type, rounded), not a Liquid Glass hosting view. Glass would blur a still picture at a per-move cost, cannot be snapshotted offscreen, and would be the one glass surface inside a plain drawn overlay. Recorded in the audit for the user to push back on. (6) The existing size pill inside the selection stays; whether it is now redundant is a question for the audit. (7) Cost: the loupe is a crop of the frozen bitmap the overlay already holds, drawn nearest-neighbour into a 125 pt square; only the old and new loupe frames are invalidated per move."
+    },
+    {
+      "t": "2026-09-02T07:32:51.711Z",
+      "note": "Built: CaptureLoupe in PhotonzCore (placement, sampling, readout; 20 tests) and the flag next-capture-loupe (Next only, on, parameter Pixels across default 25) with a matching catalog test. SelectionView tracks the pointer from show time and on every move, drag and exit, lays the loupe out beyond the pointer away from the drag start, and draws it from the frozen bitmap with nearest-neighbour scaling, a boxed centre pixel, two-tone crosshair and a three-line readout. Both overlay call sites in CaptureCenter pass the setting through, so region recording gets the loupe too. Suite green (1178)."
+    },
+    {
+      "t": "2026-09-02T07:32:51.711Z",
+      "note": "Verified offscreen on the real overlay view with a temporary probe hook (never ordered front, removed before commit): synthetic 2x frozen picture of a dialog; scripted hover at a button edge showed white, border and blue pixels with the pointer's pixel boxed and the readout 471, 314 pt / 942, 629 px; a drag around the Save button read 104 x 36 pt; a drag into the bottom-right corner flipped the loupe above-left with the off-display pixels dark; an up-left drag put the loupe above-left of the pointer outside the box; the pointer at 1,1 kept its pixel centred with the missing patch dark. Per-move cost, event plus redraw, 240-step sweeps: hover mean 0.33 ms p95 0.86 ms max 1.04 ms; drag mean 0.22 ms p95 0.29 ms max 0.37 ms."
+    },
+    {
+      "t": "2026-09-02T07:32:51.711Z",
+      "note": "Adversarial review after building: (1) The first crosshair, white at 55 percent, vanished on light pixels; replaced with a dark hairline beside a light one, which reads on both. (2) The size pill and the loupe both said the size during a drag, two readouts 200 pt apart; the pill now hides while the loupe shows, the window highlight's pill stays. (3) Kept: the loupe shows on hover as well as drag, because placing the start pixel is half the point. (4) Not done, for the audit: pixel size of the crop (only points shown), a colour value for the pixel under the pointer, a way to hide the loupe mid-capture, any animation on the side flip. (5) Glass was not used; the loupe matches the overlay's own pill, recorded in the audit for the user to weigh."
+    },
+    {
+      "t": "2026-09-02T07:33:18.524Z",
+      "note": "Next region capture shows a loupe beside the pointer: 25 magnified device pixels from the frozen picture, the pointer's pixel boxed, a two-tone crosshair, and points, pixels and selection size readout. Sits outside the box on the pointer's side, flips at display edges. Flag next-capture-loupe (Next only, on, Pixels across parameter). CaptureLoupe in PhotonzCore with 20 tests; suite green (1178). Verified offscreen on the real overlay view with scripted events; per-move cost mean 0.2 to 0.4 ms, max about 1 ms. Audit queue/audits/2026-09-02-capture-loupe.json with five shots."
     }
-  ]
+  ],
+  "started": "2026-09-02T07:19:04.377Z",
+  "completed": "2026-09-02T07:33:18.524Z"
 }

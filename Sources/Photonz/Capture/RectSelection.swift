@@ -12,11 +12,18 @@ import PhotonzCore
 /// lights up with its app and size, and a click (a press that barely moves)
 /// captures exactly that window's bounds from the frozen picture. A drag still
 /// selects a region.
+///
+/// With the loupe on (`next-capture-loupe`), a magnified patch of the frozen
+/// picture rides beside the pointer with the pointer's coordinates and, while
+/// dragging, the selection's size, so a crop starts and stops on the pixel you
+/// mean. It is cut from the bitmap the overlay already holds: no extra capture.
 @MainActor
 final class RectSelectionController {
     private var windows: [SelectionWindow] = []
     private var escMonitors: [Any] = []
     private let windowPicking: Bool
+    /// Pixels the loupe shows across, or nil for no loupe.
+    private let loupePixels: Int?
     /// The cropped frozen image is non-nil in screenshot mode; region-recording
     /// ignores it and uses the (screen, rect) to record live.
     private let onComplete: (NSScreen, CGRect, CGImage?) -> Void
@@ -24,9 +31,11 @@ final class RectSelectionController {
     private var began = false
 
     init(windowPicking: Bool = false,
+         loupe: Int? = nil,
          onComplete: @escaping (NSScreen, CGRect, CGImage?) -> Void,
          onCancel: @escaping () -> Void) {
         self.windowPicking = windowPicking
+        self.loupePixels = loupe
         self.onComplete = onComplete
         self.onCancel = onCancel
     }
@@ -52,6 +61,8 @@ final class RectSelectionController {
         for (screen, image) in frozen {
             let window = SelectionWindow(screen: screen, frozenImage: image)
             window.selectionView.windowPicking = windowPicking
+            window.selectionView.loupePixels = loupePixels
+            window.selectionView.frozenImage = image
             window.selectionView.candidates = WindowLister.windows(onScreen, localTo: screen)
             window.selectionView.onSelect = { [weak self] rect in
                 self?.finish(screen: screen, rect: rect, frozen: image)
@@ -76,8 +87,8 @@ final class RectSelectionController {
         let keyWindow = windows.first { $0.screen?.frame.contains(mouse) == true } ?? windows.first
         keyWindow?.makeKey()
         NSCursor.crosshair.set()
-        // The window under the pointer lights up the moment the overlay is
-        // there, not after the first move.
+        // The window under the pointer lights up, and the loupe appears, the
+        // moment the overlay is there, not after the first move.
         for window in windows { window.selectionView.refreshHover() }
         // Belt and braces for Esc: local (we're key) plus global (if focus moves).
         if let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
@@ -176,6 +187,20 @@ private final class SelectionView: NSView {
     /// The overlay's own shield panels, never pickable.
     var excludedWindowIDs: Set<Int> = []
 
+    /// The loupe (`next-capture-loupe`): how many device pixels it shows
+    /// across, or nil for no loupe.
+    var loupePixels: Int?
+    /// The frozen picture this display shows, at its backing scale. The loupe
+    /// magnifies a patch of it.
+    var frozenImage: CGImage?
+
+    /// Where the pointer is, in this view's coordinates, while it is over this
+    /// display. Drives the loupe.
+    private var pointer: CGPoint?
+    /// The loupe as last laid out, so a move can invalidate exactly what it
+    /// covered and what it will cover next.
+    private var shownLoupe: CGRect = .null
+
     private var dragStart: CGPoint?
     private var dragCurrent: CGPoint?
     /// True once a press has travelled far enough to be a region drag rather
@@ -212,25 +237,46 @@ private final class SelectionView: NSView {
     override func cursorUpdate(with event: NSEvent) { NSCursor.crosshair.set() }
     override func mouseEntered(with event: NSEvent) {
         NSCursor.crosshair.set()
-        updateHover(at: convert(event.locationInWindow, from: nil))
+        let point = convert(event.locationInWindow, from: nil)
+        updateHover(at: point)
+        updatePointer(point)
     }
     override func mouseExited(with event: NSEvent) {
         // The pointer crossed onto another display: that display's overlay
-        // picks up the highlight, this one lets go.
+        // picks up the highlight and the loupe, this one lets go of both.
         updateHover(at: nil)
+        updatePointer(nil)
     }
     override func mouseMoved(with event: NSEvent) {
         NSCursor.crosshair.set()
-        updateHover(at: convert(event.locationInWindow, from: nil))
+        let point = convert(event.locationInWindow, from: nil)
+        updateHover(at: point)
+        updatePointer(point)
     }
 
     /// Highlights the window under the pointer right now, without waiting for
     /// a mouse event: called when the overlay first appears.
     func refreshHover() {
-        guard let window, windowPicking else { return }
+        guard let window else { return }
         let inWindow = window.mouseLocationOutsideOfEventStream
         let point = convert(inWindow, from: nil)
-        updateHover(at: bounds.contains(point) ? point : nil)
+        let inside = bounds.contains(point) ? point : nil
+        updateHover(at: inside)
+        updatePointer(inside)
+    }
+
+    /// Moves the loupe with the pointer: whatever it covered before and
+    /// wherever it lands now are the only pixels redrawn.
+    private func updatePointer(_ point: CGPoint?) {
+        pointer = point
+        relayoutLoupe()
+    }
+
+    private func relayoutLoupe() {
+        let next = loupeLayout?.dirty ?? .null
+        guard next != shownLoupe else { return }
+        invalidate(shownLoupe.union(next))
+        shownLoupe = next
     }
 
     private func updateHover(at point: CGPoint?) {
@@ -252,6 +298,7 @@ private final class SelectionView: NSView {
         dragCurrent = point
         isDragging = !windowPicking
         if isDragging { needsDisplay = true }
+        updatePointer(point)
     }
 
     override func mouseDragged(with event: NSEvent) {
@@ -261,6 +308,7 @@ private final class SelectionView: NSView {
         NSCursor.crosshair.set()
         let previous = selectionRect
         dragCurrent = convert(event.locationInWindow, from: nil)
+        defer { updatePointer(dragCurrent) }
         if !isDragging, let start = dragStart, let current = dragCurrent,
            !WindowPick.isClick(from: start, to: current) {
             // Past the click threshold: the press became a region drag and the
@@ -365,11 +413,16 @@ private final class SelectionView: NSView {
             // …except the selection, which shows the frozen picture through a
             // crisp outline.
             cutOut(rect, lineWidth: 1)
-            if windowPicking { drawLabel(WindowPick.sizeLabel(for: rect.size), for: rect) }
+            // The size pill steps aside while the loupe carries the size, so a
+            // drag has one readout, at the corner being placed.
+            if windowPicking, loupeLayout == nil { drawLabel(WindowPick.sizeLabel(for: rect.size), for: rect) }
         } else if let hovered, let rect = WindowPick.captureRect(for: hovered, within: bounds) {
             // …or the window under the pointer, which is what a click captures.
             cutOut(rect, lineWidth: 2)
             drawLabel(WindowPick.label(for: hovered), for: rect)
+        }
+        if let layout = loupeLayout, layout.dirty.intersects(dirtyRect), let frozenImage {
+            drawLoupe(layout, from: frozenImage)
         }
     }
 
@@ -390,5 +443,130 @@ private final class SelectionView: NSView {
         attributedLabel(text).draw(at: CGPoint(x: frame.minX + Self.labelPadding.width,
                                                y: frame.minY + Self.labelPadding.height))
     }
-}
 
+    // MARK: - Loupe
+
+    private static let loupePadding: CGFloat = 4
+    private static let loupeReadoutSpacing: CGFloat = 5
+    private static let loupeLineHeight: CGFloat = 15
+    private static let loupeShadowReach: CGFloat = 14
+    private static let loupeFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+
+    /// One frame's worth of loupe: where the panel and its picture sit, what
+    /// the readout says, and the pointer it was laid out for.
+    private struct LoupeLayout {
+        var frame: CGRect
+        var square: CGRect
+        var lines: [String]
+        var pointer: CGPoint
+        var pixels: Int
+        var scale: CGFloat
+        /// The panel plus its shadow: everything a move has to repaint.
+        var dirty: CGRect { frame.insetBy(dx: -SelectionView.loupeShadowReach, dy: -SelectionView.loupeShadowReach) }
+    }
+
+    /// The frozen picture's pixels per point on this display.
+    private var frozenScale: CGFloat {
+        guard let frozenImage, bounds.width > 0 else { return 1 }
+        return CGFloat(frozenImage.width) / bounds.width
+    }
+
+    private var loupeLayout: LoupeLayout? {
+        guard let pixels = loupePixels, let pointer, frozenImage != nil else { return nil }
+        let square = CGFloat(pixels) * CaptureLoupe.pointsPerPixel
+        let lines = CaptureLoupe.readout(pointer: pointer, scale: frozenScale, selection: selectionRect?.size)
+        let size = CGSize(width: square + Self.loupePadding * 2,
+                          height: Self.loupePadding + square + Self.loupeReadoutSpacing
+                              + CGFloat(lines.count) * Self.loupeLineHeight + Self.loupePadding)
+        var origin = CaptureLoupe.origin(pointer: pointer, anchor: isDragging ? dragStart : nil,
+                                         size: size, gap: CaptureLoupe.gap, within: bounds)
+        // Whole points, so every magnified pixel lands on a crisp boundary.
+        origin = CGPoint(x: floor(origin.x), y: floor(origin.y))
+        let frame = CGRect(origin: origin, size: size)
+        let squareRect = CGRect(x: frame.minX + Self.loupePadding, y: frame.minY + Self.loupePadding,
+                                width: square, height: square)
+        return LoupeLayout(frame: frame, square: squareRect, lines: lines, pointer: pointer,
+                           pixels: pixels, scale: frozenScale)
+    }
+
+    private func drawLoupe(_ layout: LoupeLayout, from image: CGImage) {
+        // The panel: the overlay's own readout-pill look, with a soft shadow so
+        // it reads over a bright picture too.
+        NSGraphicsContext.saveGraphicsState()
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.35)
+        shadow.shadowBlurRadius = 8
+        shadow.shadowOffset = CGSize(width: 0, height: -3)
+        shadow.set()
+        let panel = NSBezierPath(roundedRect: layout.frame, xRadius: 10, yRadius: 10)
+        NSColor.black.withAlphaComponent(0.72).setFill()
+        panel.fill()
+        NSGraphicsContext.restoreGraphicsState()
+        NSColor.white.withAlphaComponent(0.18).setStroke()
+        let rim = NSBezierPath(roundedRect: layout.frame.insetBy(dx: 0.5, dy: 0.5), xRadius: 9.5, yRadius: 9.5)
+        rim.lineWidth = 1
+        rim.stroke()
+
+        // The magnified patch, nearest-neighbour so each device pixel is a
+        // crisp square. Past the picture's edge the square stays dark.
+        NSGraphicsContext.saveGraphicsState()
+        NSBezierPath(roundedRect: layout.square, xRadius: 6, yRadius: 6).addClip()
+        NSColor.black.withAlphaComponent(0.85).setFill()
+        layout.square.fill()
+        if let sample = CaptureLoupe.sample(pointer: layout.pointer, scale: layout.scale,
+                                            pixelsAcross: layout.pixels,
+                                            imageSize: CGSize(width: image.width, height: image.height),
+                                            square: layout.square.width),
+           let patch = image.cropping(to: sample.source) {
+            NSGraphicsContext.current?.imageInterpolation = .none
+            NSGraphicsContext.current?.cgContext.interpolationQuality = .none
+            NSImage(cgImage: patch, size: sample.source.size)
+                .draw(in: sample.destination.offsetBy(dx: layout.square.minX, dy: layout.square.minY),
+                      from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true,
+                      hints: [.interpolation: NSImageInterpolation.none])
+        }
+        // Crosshair lines lead to the pointer's pixel and stop short of it, so
+        // that one cell is boxed rather than covered.
+        let cell = CaptureLoupe.centerCell(pixelsAcross: layout.pixels, square: layout.square.width)
+            .offsetBy(dx: layout.square.minX, dy: layout.square.minY)
+        // Two-tone, a dark hairline beside a light one, so they read on
+        // light and dark pixels alike.
+        func crosshair(offset: CGFloat) -> NSBezierPath {
+            let lines = NSBezierPath()
+            lines.lineWidth = 1
+            let midX = round(cell.midX) + offset, midY = round(cell.midY) + offset
+            lines.move(to: CGPoint(x: layout.square.minX, y: midY)); lines.line(to: CGPoint(x: cell.minX - 2, y: midY))
+            lines.move(to: CGPoint(x: cell.maxX + 2, y: midY)); lines.line(to: CGPoint(x: layout.square.maxX, y: midY))
+            lines.move(to: CGPoint(x: midX, y: layout.square.minY)); lines.line(to: CGPoint(x: midX, y: cell.minY - 2))
+            lines.move(to: CGPoint(x: midX, y: cell.maxY + 2)); lines.line(to: CGPoint(x: midX, y: layout.square.maxY))
+            return lines
+        }
+        NSColor.black.withAlphaComponent(0.45).setStroke()
+        crosshair(offset: -0.5).stroke()
+        NSColor.white.withAlphaComponent(0.6).setStroke()
+        crosshair(offset: 0.5).stroke()
+        // The pixel under the pointer: a white box with a dark rim, visible on
+        // any ink.
+        NSColor.black.withAlphaComponent(0.7).setStroke()
+        let outer = NSBezierPath(rect: cell.insetBy(dx: -1.5, dy: -1.5))
+        outer.lineWidth = 1
+        outer.stroke()
+        NSColor.white.setStroke()
+        let inner = NSBezierPath(rect: cell.insetBy(dx: -0.5, dy: -0.5))
+        inner.lineWidth = 1
+        inner.stroke()
+        NSGraphicsContext.restoreGraphicsState()
+
+        // The readout.
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: Self.loupeFont,
+            .foregroundColor: NSColor.white,
+        ]
+        var y = layout.square.maxY + Self.loupeReadoutSpacing
+        for line in layout.lines {
+            NSAttributedString(string: line, attributes: attributes)
+                .draw(at: CGPoint(x: layout.square.minX + 2, y: y))
+            y += Self.loupeLineHeight
+        }
+    }
+}

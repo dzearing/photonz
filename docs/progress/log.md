@@ -4438,6 +4438,14 @@ compiled against `.build/debug` objects). Audit:
 `queue/audits/2026-09-02-caliper-subjects.json`. Follow-ups filed (p3-low): the
 boxed-in full-width-rows case, and tuning the sideways travel limit.
 
+## 2026-09-02 — Loupe during a region capture (go loop)
+
+- Next's region capture (⇧⌘4, and the ⇧⌘5 region recording) shows a loupe beside the pointer: 25 device pixels magnified 5 pt each from the frozen picture, the pointer's pixel boxed, a two-tone crosshair, and a readout of the pointer in points and pixels plus the selection size while dragging. Flag `next-capture-loupe`, Next only, on by default, with a Pixels across parameter. Current's overlay is untouched (`loupe` defaults to nil).
+- `CaptureLoupe` (PhotonzCore, 20 tests): placement beyond the pointer on the side away from the drag start so the loupe never sits on the box or its active corner, per-axis flip at display edges, clamp on absurdly small displays; sample rect clamped to the picture with the pointer's pixel kept centred; readout lines that floor rather than round.
+- The drag's size pill (from window capture) hides while the loupe shows, so a drag has one readout, at the corner being placed. The window highlight's pill stays.
+- Verified by driving the real overlay view offscreen (never ordered front) with synthetic events on a synthetic 2x frozen picture: hover, drag, corner flip, up-left drag, display edge. Per-move cost (event plus redraw) mean 0.2 to 0.4 ms, p95 under 1 ms, max about 1 ms. The loop has no Screen Recording grant, so the live freeze itself is for the playtest.
+- Audit: `queue/audits/2026-09-02-capture-loupe.json` with five shots.
+
 ## 2026-09-02 — Arrow captions playtest and audit (go loop)
 
 - Played the Next arrow-caption flow end to end through the real render pipeline (offscreen, screen capture is denied to the loop). Legibility over light and dark, head clearance, and follow-on-move/resize all held.
