@@ -10,9 +10,15 @@ import Foundation
 /// Interior is defined by the even-odd rule everywhere (containment, ants,
 /// fill clipping), which is what the CGPath boolean ops emit.
 public struct SelectionRegion: Equatable, @unchecked Sendable {
-    // @unchecked: CGPath is not marked Sendable because CGMutablePath subclasses
-    // it, but `path` is always an immutable copy made at init and never escapes
-    // for mutation, so sharing across threads is safe.
+    // @unchecked, and why it cannot be plain Sendable: the macOS 26 SDK does not
+    // mark `CGPath` Sendable (its subclass `CGMutablePath` is mutable), so a
+    // struct holding one fails strict-concurrency checking outright. The only
+    // alternative would be to store the path as value-typed elements and rebuild
+    // a CGPath on every `contains`/`bounds` call, which the marching ants and
+    // fill clipping hit constantly. Instead this type guarantees the invariant
+    // the compiler cannot see: `path` is always an immutable `CGPath` copy made
+    // by `init` (a `CGMutablePath` source is never retained; if the copy fails
+    // the init fails), and nothing here ever hands it out for mutation.
 
     /// The region outline. Immutable; may contain multiple subpaths (disjoint
     /// blobs) and holes (even-odd).
@@ -37,8 +43,9 @@ public struct SelectionRegion: Equatable, @unchecked Sendable {
     /// and `nil` uniformly means "no selection".
     public init?(path: CGPath) {
         let box = path.boundingBoxOfPath
-        guard !path.isEmpty, !box.isNull, box.width > 0, box.height > 0 else { return nil }
-        self.path = path.copy() ?? path
+        guard !path.isEmpty, !box.isNull, box.width > 0, box.height > 0,
+              let copy = path.copy() else { return nil }
+        self.path = copy
     }
 
     public static func rect(_ rect: CGRect) -> SelectionRegion? {

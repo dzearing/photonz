@@ -4476,3 +4476,10 @@ boxed-in full-width-rows case, and tuning the sideways travel limit.
 - The dead, disabled Preferences… item is gone from the menu bar menu until a settings window exists.
 - Audit: `queue/audits/2026-09-02-edit-last-capture.json`. Follow-ups queued for the Touch Bar system shortcut warning and for aligning capture command names across the two menus.
 - Open question: unmanned sessions cannot press global hotkeys or read the live menu (no Accessibility/Automation grant), so those checks fall to the playtest.
+
+## 2026-09-02 — Edge map path loses its force unwraps (go loop)
+
+- `EdgeMap.init` validates an optional luma field without `luma!`; `EdgeMapAnalyzer` guards the sRGB colour space instead of force-unwrapping it. A grep for force unwraps across PhotonzCore and PhotonzRender now returns nothing.
+- `SelectionRegion` keeps `@unchecked Sendable` because the macOS 26 SDK does not mark `CGPath` Sendable (verified: a Sendable struct holding a CGPath fails strict-concurrency typechecking). The comment now says exactly why, and the init fails instead of retaining the caller's possibly mutable path when the copy fails, so the immutability invariant the comment promises is airtight.
+- Tests added: luma of the wrong size yields an empty map, the right size keeps it; a region built from a CGMutablePath is unaffected by later mutation of the source. Note for future tests: `is CGMutablePath` is always true for any CGPath in Swift (one CFTypeID), so it cannot pin immutability.
+- No user-visible change; no audit.

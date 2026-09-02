@@ -98,9 +98,10 @@ public enum EdgeMapAnalyzer {
         var field = LumaField.empty
         let drewImage = rgba.withUnsafeMutableBytes { raw -> Bool in
             guard let base = raw.baseAddress,
+                  let srgb = CGColorSpace(name: CGColorSpace.sRGB),
                   let cg = CGContext(data: base, width: w, height: h,
                                      bitsPerComponent: 8, bytesPerRow: w * 4,
-                                     space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                     space: srgb,
                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
             else { return false }
             cg.draw(image, in: bounds)

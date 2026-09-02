@@ -33,6 +33,15 @@ struct SelectionRegionTests {
         #expect(SelectionRegion(path: CGMutablePath()) == nil)
     }
 
+    @Test func regionHoldsAnIndependentCopyOfAMutableSourcePath() throws {
+        let source = CGMutablePath()
+        source.addRect(CGRect(x: 0, y: 0, width: 40, height: 40))
+        let region = try #require(SelectionRegion(path: source))
+        source.addRect(CGRect(x: 200, y: 200, width: 40, height: 40))
+        #expect(region.bounds == CGRect(x: 0, y: 0, width: 40, height: 40))
+        #expect(!region.contains(CGPoint(x: 220, y: 220)))
+    }
+
     // MARK: Booleans
 
     @Test func addingDisjointRectsKeepsBoth() throws {

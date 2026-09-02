@@ -160,3 +160,24 @@ struct EdgeMapBandEnergyTests {
     }
 }
 
+@Suite("EdgeMap luma validation")
+struct EdgeMapLumaTests {
+
+    @Test func lumaOfTheWrongSizeYieldsAnEmptyMapInsteadOfTrapping() {
+        var f = Field(w: 64, h: 32)
+        f.addHorizontalEdge(row: 10, x0: 0, x1: 63, magnitude: 4.0)
+        let short = EdgeMap(width: f.w, height: f.h, gxMagnitude: f.gx, gyMagnitude: f.gy,
+                            luma: [Double](repeating: 0.5, count: f.w * f.h - 1))
+        #expect(short.isEmpty)
+        #expect(short.horizontalEdges(inXRange: 0...63).isEmpty)
+    }
+
+    @Test func lumaOfTheRightSizeKeepsTheMap() {
+        var f = Field(w: 64, h: 32)
+        f.addHorizontalEdge(row: 10, x0: 0, x1: 63, magnitude: 4.0)
+        let map = EdgeMap(width: f.w, height: f.h, gxMagnitude: f.gx, gyMagnitude: f.gy,
+                          luma: [Double](repeating: 0.5, count: f.w * f.h))
+        #expect(!map.isEmpty)
+        #expect(map.horizontalEdges(inXRange: 0...63).map(\.position) == [10])
+    }
+}

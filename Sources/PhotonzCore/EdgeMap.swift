@@ -76,7 +76,7 @@ public struct EdgeMap: Equatable, Sendable {
         let valid = width > 0 && height > 0 && blockSize > 0
             && gxMagnitude.count == width * height
             && gyMagnitude.count == width * height
-            && (luma == nil || luma!.count == width * height)
+            && (luma?.count ?? width * height) == width * height
         guard valid else {
             self.width = 0; self.height = 0; self.blockSize = max(blockSize, 1)
             hSums = []; vSums = []; hLuma = []; vLuma = []
