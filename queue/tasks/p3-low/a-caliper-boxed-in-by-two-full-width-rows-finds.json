@@ -4,12 +4,12 @@
   "goal": "When you measure the space between two rows that run the full width of the picture, the number has nowhere clear within reach and stays on the line, covering a bit of both rows. Decide with the user what the better last resort is, for example tucking it in the page margin or past the rows on a longer connector.",
   "epic": "measure-redline",
   "priority": "p3-low",
-  "seq": 450,
+  "seq": 10,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T07:59:40.615Z",
+  "updated": "2026-09-02T12:06:02.578Z",
   "deps": [],
   "blockedBy": [
     "a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between"
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-02T07:59:40.614Z",
       "note": "Waiting on the decision: where the number goes when two full-width rows box the caliper in. Four options rendered on the audit capture; straddle (today) recommended."
+    },
+    {
+      "t": "2026-09-02T12:06:02.578Z",
+      "note": "seq 450 -> 10"
     }
   ],
   "started": "2026-09-02T07:51:00.891Z"

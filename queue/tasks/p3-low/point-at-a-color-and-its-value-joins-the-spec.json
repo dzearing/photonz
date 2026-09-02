@@ -4,12 +4,12 @@
   "goal": "A spec hand-off usually carries colors as well as sizes, and Figma and Sketch show an element color beside its dimensions. Photonz cannot read a color off the picture. A Color mode in the Measure tool would let you click a spot and get a small swatch pill with the hex value, listed with the measurements and included in the spec list.",
   "epic": "measure-redline",
   "priority": "p3-low",
-  "seq": 570,
+  "seq": 50,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:30.132Z",
-  "updated": "2026-09-02T09:42:35.633Z",
+  "updated": "2026-09-02T12:06:02.692Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass: the user has said speculative features get confirmed before they are built. Sampling reads the composited base image through ImageStore in PhotonzRender; the readout can reuse the measure pill (PillRasterizer) and MeasureSpecList.specLine gains a color case. Open thread since the 2026-09-01 manager pass (Figma and Sketch parity).",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-02T09:42:35.632Z",
       "note": "Waiting on the decision: should Measure read colors off the picture"
+    },
+    {
+      "t": "2026-09-02T12:06:02.691Z",
+      "note": "seq 570 -> 50"
     }
   ]
 }

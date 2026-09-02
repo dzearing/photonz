@@ -4,12 +4,12 @@
   "goal": "Two hover-detection speed tests fail now and then when the computer is busy, each missing its time limit by under a millisecond, which makes a green test run a matter of luck. They should measure what they mean to measure without failing because of other work on the machine.",
   "epic": "epic-uehjr1",
   "priority": "p3-low",
-  "seq": 550,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T08:44:12.445Z",
-  "updated": "2026-09-02T08:44:12.446Z",
+  "updated": "2026-09-02T12:06:02.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Tests/PhotonzCoreTests/ElementBoundsTests.swift:268 (50 ms budget over 20 runs, saw 55.9 ms) and :535 (30 ms budget, saw 30.6 ms). Options: take the best of several batches instead of one mean, run them serialized (.serialized trait) so parallel suites do not compete, or widen the budgets with a comment. Serves measure-redline only indirectly (keeps its commits unblocked); filed under the arrow-caption epic because that is where it bit.",
@@ -21,6 +21,10 @@
     {
       "t": "2026-09-02T08:44:12.446Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.662Z",
+      "note": "seq 550 -> 40"
     }
   ]
 }

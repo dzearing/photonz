@@ -4,11 +4,11 @@
   "goal": "Today every measurement you take hands the tool back to the arrow, so measuring several things means pressing I before each one. Decide whether the Measure tool should stay in your hand until you put it down, and build whichever the user picks.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 500,
+  "seq": 10,
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:59:36.527Z",
-  "updated": "2026-09-02T11:00:54.834Z",
+  "updated": "2026-09-02T12:06:02.436Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json): four measurements cost seven presses of I. EditorState.addMeasure / addElementSize / addGapMeasure / addAlignmentCheck all call finishCreating(layer.id) which is setTool(.select). The arrow tool has precedent for staying in hand while a caption field is open (ArrowCaptionEntry.toolAfterLanding). If Measure stays, Esc and V put it down; the mode hint should not re-raise on every landing.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-02T11:00:54.834Z",
       "note": "Waiting on the decision: stay in hand, hand back to Select, or stay for Size and Gap only"
+    },
+    {
+      "t": "2026-09-02T12:06:02.435Z",
+      "note": "seq 500 -> 10"
     }
   ],
   "status": "blocked"

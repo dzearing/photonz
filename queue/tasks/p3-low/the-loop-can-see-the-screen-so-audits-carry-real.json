@@ -4,12 +4,12 @@
   "goal": "Every audit written this week says the same thing: the unmanned copy of the app cannot record the screen, so nothing was verified live and every picture is an offscreen render. If the loop may take screenshots, each audit gets a real picture of the app and window capture, the loupe and the toast can be checked for real. This needs a one-time permission grant only a person can make.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 580,
+  "seq": 60,
   "status": "blocked",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T09:41:37.764Z",
-  "updated": "2026-09-02T09:42:35.659Z",
+  "updated": "2026-09-02T12:06:02.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass, since the user has to grant the permission by hand. dist/Photonz Probe.app (com.dzearing.photonz.probe) is signed with the stable Photonz Dev identity by Scripts/build-app.sh, so one grant survives rebuilds. Do not touch the dev app or its grants. The same denial blocks Apple Events to System Events (audit 2026-09-02-capture-menu-names rough 2), which the Accessibility or Automation grant to the loop terminal would lift.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-02T09:44:17.782Z",
       "note": "area app -> queue (manager pass 2026-09-02: loop work, not app work)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.719Z",
+      "note": "seq 580 -> 60"
     }
   ]
 }

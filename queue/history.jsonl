@@ -721,3 +721,32 @@
 {"t":"2026-09-02T11:47:43.545Z","ev":"task_done","id":"the-capture-toast-says-how-to-open-the-editor","from":"in_progress","note":"Next flag next-capture-toast-edit (on by default): the capture toast gains a full-width Edit row under the message with Shift Command 6 at its end; hover pill drops the pencil; Current unchanged. Verified by 1279 green tests, offscreen renders of the footer in light and dark, probe app launched and idle. Audit queue/audits/2026-09-02-capture-toast-edit.json"}
 {"t":"2026-09-02T11:48:11.536Z","ev":"task_started","id":"the-legend-steps-aside-instead-of-sitting-on-a-m","title":"The legend steps aside instead of sitting on a measurement when every corner is taken","priority":"p2-normal"}
 {"t":"2026-09-02T12:01:09.287Z","ev":"task_done","id":"the-legend-steps-aside-instead-of-sitting-on-a-m","from":"in_progress","note":"PanelPlacement (was CornerPlacement) walks the four corners then the middle of the left and right edges; on a 435 pt canvas with calipers in both top corners the legend parks mid-left, crossing no measurement and no chrome. Pinned by PanelPlacementTests (13, incl. a 435 to 800 pt sweep), verified on the probe app with a temporary harness; renders and audit in queue/audits/2026-09-02-legend-edge-slot*. Scripts/test.sh green (1284)."}
+{"t":"2026-09-02T12:05:40.988Z","ev":"task_reprioritized","id":"hide-all-measurements-joins-the-measure-menu-so","from":"p3-low","to":"p2-normal"}
+{"t":"2026-09-02T12:05:41.018Z","ev":"task_reprioritized","id":"clicking-the-arrow-tool-button-while-a-caption-f","from":"p3-low","to":"p2-normal"}
+{"t":"2026-09-02T12:05:41.047Z","ev":"task_reprioritized","id":"a-caliper-readout-pill-draws-whole-at-the-edge-o","from":"p3-low","to":"p2-normal"}
+{"t":"2026-09-02T12:05:41.075Z","ev":"task_reprioritized","id":"the-capture-loupe-and-the-editor-call-the-same-n","from":"p3-low","to":"p2-normal"}
+{"t":"2026-09-02T12:05:41.106Z","ev":"task_created","id":"every-pill-on-the-canvas-finds-its-spot-through","priority":"p3-low","title":"Every pill on the canvas finds its spot through one placer"}
+{"t":"2026-09-02T12:05:41.136Z","ev":"task_created","id":"an-alignment-guide-counts-items-the-way-a-person","priority":"p3-low","title":"An alignment guide counts items the way a person would"}
+{"t":"2026-09-02T12:05:41.166Z","ev":"task_created","id":"the-inspector-toggle-and-the-roles-legend-stop-o","priority":"p3-low","title":"The inspector toggle and the roles legend stop overlapping in the top-right corner"}
+{"t":"2026-09-02T12:05:41.197Z","ev":"task_created","id":"the-capture-toast-and-menu-bar-menu-in-the-mocks","priority":"p3-low","title":"The capture toast and menu bar menu in the mocks match what shipped"}
+{"t":"2026-09-02T12:06:02.436Z","ev":"task_resequenced","id":"the-measure-tool-stays-in-hand-after-a-measureme","from":500,"to":10}
+{"t":"2026-09-02T12:06:02.465Z","ev":"task_resequenced","id":"hide-all-measurements-joins-the-measure-menu-so","from":535,"to":20}
+{"t":"2026-09-02T12:06:02.493Z","ev":"task_resequenced","id":"clicking-the-arrow-tool-button-while-a-caption-f","from":590,"to":30}
+{"t":"2026-09-02T12:06:02.522Z","ev":"task_resequenced","id":"a-caliper-readout-pill-draws-whole-at-the-edge-o","from":600,"to":40}
+{"t":"2026-09-02T12:06:02.550Z","ev":"task_resequenced","id":"the-capture-loupe-and-the-editor-call-the-same-n","from":610,"to":50}
+{"t":"2026-09-02T12:06:02.578Z","ev":"task_resequenced","id":"a-caliper-boxed-in-by-two-full-width-rows-finds","from":450,"to":10}
+{"t":"2026-09-02T12:06:02.607Z","ev":"task_resequenced","id":"how-far-a-readout-may-travel-to-find-whitespace","from":460,"to":20}
+{"t":"2026-09-02T12:06:02.634Z","ev":"task_resequenced","id":"the-loop-treats-a-spend-limit-refusal-on-a-diges","from":540,"to":30}
+{"t":"2026-09-02T12:06:02.663Z","ev":"task_resequenced","id":"timing-budget-tests-pass-reliably-on-a-busy-mach","from":550,"to":40}
+{"t":"2026-09-02T12:06:02.692Z","ev":"task_resequenced","id":"point-at-a-color-and-its-value-joins-the-spec","from":570,"to":50}
+{"t":"2026-09-02T12:06:02.720Z","ev":"task_resequenced","id":"the-loop-can-see-the-screen-so-audits-carry-real","from":580,"to":60}
+{"t":"2026-09-02T12:06:02.747Z","ev":"task_resequenced","id":"a-reusable-scripted-playtest-harness-for-the-pro","from":620,"to":70}
+{"t":"2026-09-02T12:06:02.776Z","ev":"task_resequenced","id":"an-alignment-guide-counts-items-the-way-a-person","from":640,"to":80}
+{"t":"2026-09-02T12:06:02.804Z","ev":"task_resequenced","id":"the-inspector-toggle-and-the-roles-legend-stop-o","from":650,"to":90}
+{"t":"2026-09-02T12:06:02.832Z","ev":"task_resequenced","id":"every-pill-on-the-canvas-finds-its-spot-through","from":630,"to":100}
+{"t":"2026-09-02T12:06:02.861Z","ev":"task_resequenced","id":"the-capture-toast-and-menu-bar-menu-in-the-mocks","from":660,"to":110}
+{"t":"2026-09-02T12:06:02.883Z","ev":"triage","summary":"12 open before (p2 1, p3 11), 16 after (p2 5, p3 11): 0 merged, 4 moved p3 to p2 (focus work outranks), 0 reset, 4 filed from the design review (shared pill placer, honest guide item count, legend vs inspector toggle, capture mock scrub), 4 groomed (placer deps, harness epic, spend-limit goal, hide-all acceptance), all priorities renumbered to steps of 10"}
+{"t":"2026-09-02T12:07:28.444Z","ev":"task_created","id":"a-distance-measurement-can-be-one-drag-instead-o","priority":"p3-low","title":"A Distance measurement can be one drag instead of three clicks"}
+{"t":"2026-09-02T12:07:28.472Z","ev":"task_resequenced","id":"a-distance-measurement-can-be-one-drag-instead-o","from":540,"to":120}
+{"t":"2026-09-02T12:08:50.842Z","ev":"triage","summary":"addendum: 1 more filed after judging the walk as a user (Distance as one drag, p3); open now 17 (p2 5, p3 12)"}
+{"t":"2026-09-02T12:08:50.867Z","ev":"digest","file":"2026-09-02.md"}

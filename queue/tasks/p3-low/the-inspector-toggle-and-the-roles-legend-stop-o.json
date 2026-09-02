@@ -1,0 +1,31 @@
+{
+  "id": "the-inspector-toggle-and-the-roles-legend-stop-o",
+  "title": "The inspector toggle and the roles legend stop overlapping in the top-right corner",
+  "goal": "When the roles legend parks in the top-right corner of the canvas, the button that shows and hides the inspector sits on the legend's top edge. Nothing is unreadable yet, but two pieces of chrome touching reads as a bug. The legend should leave room for the toggle, or the toggle should count as something the legend keeps clear of.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T12:05:41.165Z",
+  "updated": "2026-09-02T12:06:02.804Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: audit 2026-09-02-legend-edge-slot rough 3 (pre-existing, not changed there). PanelPlacement already keeps the legend off the tool bar and the notice slot; the toggle is one more rect to block. Filed by the 2026-09-02 digest design review.",
+  "acceptance": [
+    "With measurements of two roles on a wide canvas and the inspector hidden, the legend in the top-right corner and the inspector toggle do not overlap, verified on the probe app and pinned by a PanelPlacement test.",
+    "The legend still prefers the top corners and its other slots are unchanged.",
+    "Scripts/test.sh green; audit updated under queue/audits/."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T12:05:41.166Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.803Z",
+      "note": "seq 650 -> 90"
+    }
+  ]
+}

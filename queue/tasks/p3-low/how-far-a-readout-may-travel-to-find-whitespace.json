@@ -4,12 +4,12 @@
   "goal": "A measurement number now steps sideways up to three of its own heights to get off the elements it is describing, on a connector line. Confirm with the user that this distance feels right on dense captures, and tune it (or make it depend on the connector length) if a 100 px hop reads as a different measurement.",
   "epic": "measure-redline",
   "priority": "p3-low",
-  "seq": 460,
+  "seq": 20,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.592Z",
-  "updated": "2026-09-02T08:19:07.904Z",
+  "updated": "2026-09-02T12:06:02.606Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 2 and 2026-08-23-size-readout-placement rough item 2. Only worth doing after the user reacts to the audit; drop if they are happy.",
@@ -49,6 +49,10 @@
     {
       "t": "2026-09-02T08:19:07.904Z",
       "note": "Waiting on the decision: how far a number may travel sideways to find whitespace. Three leashes rendered on the audit capture; keeping today's three pill lengths recommended."
+    },
+    {
+      "t": "2026-09-02T12:06:02.606Z",
+      "note": "seq 460 -> 20"
     }
   ],
   "started": "2026-09-02T08:10:57.621Z"

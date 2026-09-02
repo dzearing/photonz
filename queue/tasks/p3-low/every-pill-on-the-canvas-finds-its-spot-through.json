@@ -1,0 +1,39 @@
+{
+  "id": "every-pill-on-the-canvas-finds-its-spot-through",
+  "title": "Every pill on the canvas finds its spot through one placer",
+  "goal": "Three different pieces of code now decide where a label goes on the picture: one for arrow captions, one for measurement numbers, and one for the roles legend. Each one scores candidate spots its own way, and every placement fix this week landed in only one of them. Fold them into a single placer that all three feed, so a rule like never cover the subject holds everywhere at once. Serves the redlining focus: readout placement is where most of its rough edges came from.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T12:05:41.105Z",
+  "updated": "2026-09-02T12:06:02.832Z",
+  "deps": [
+    "a-caliper-boxed-in-by-two-full-width-rows-finds",
+    "how-far-a-readout-may-travel-to-find-whitespace"
+  ],
+  "blockedBy": [],
+  "notes": "Evidence: manager pass 2026-09-02 02:40 (Repeated code) names CaptionPlanner.plan in AnnotationEditing.swift and MeasureLabelPlacement.plan as two scorers of one idea; the legend gained PanelPlacement (was CornerPlacement) in fcf2775 as a third. Wait for the two placement decisions before starting: this task depends on the two blocked tasks that carry them. Filed by the 2026-09-02 digest design review.",
+  "acceptance": [
+    "Arrow captions, measurement readouts and the roles legend all ask one shared placer for a spot, with each surface only describing its candidates and what it must avoid.",
+    "Every existing placement test still passes unchanged, and the four audit renders from 2026-09-02 (caliper subjects, gap under label, guide edge chip, legend edge slot) come out pixel-identical or the difference is explained in the audit.",
+    "The resolved answers to the two open placement decisions (the boxed-in caliper and how far a readout may travel) are implemented in the shared placer, and the fallback order is written down in docs/design/next-measure.md.",
+    "Scripts/test.sh green; audit written under queue/audits/."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T12:05:41.106Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.400Z",
+      "note": "deps set to the two placement-decision tasks (triage 2026-09-02): start after both resolve"
+    },
+    {
+      "t": "2026-09-02T12:06:02.831Z",
+      "note": "seq 630 -> 100"
+    }
+  ]
+}

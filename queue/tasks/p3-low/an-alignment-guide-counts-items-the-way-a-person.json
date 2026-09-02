@@ -1,0 +1,32 @@
+{
+  "id": "an-alignment-guide-counts-items-the-way-a-person",
+  "title": "An alignment guide counts items the way a person would",
+  "goal": "A guide's row says how many things it checked, like Left edges, 3 items, but the count comes from runs of ink, not from elements. One label can count twice when a gap splits it, and two things stacked close together can count once. A spec that says 3 items when a designer sees 2 loses trust. The count should match what a person would count, or say something honest when it cannot.",
+  "epic": "alignment-checks",
+  "priority": "p3-low",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T12:05:41.135Z",
+  "updated": "2026-09-02T12:06:02.775Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: audits 2026-09-02-alignment-guide-row (rough 3: items counts runs, a split label counts twice, stacked elements can merge), 2026-09-02-guide-edge-chip (rough 3: 4 items for two buttons) and 2026-09-02-guide-buttons-aligned (border flanks fixed one cause; rough 2 leaves the x-height case). AlignmentScan in PhotonzCore owns the runs. Filed by the 2026-09-02 digest design review.",
+  "acceptance": [
+    "On the settings-pane fixture, a guide across two buttons reads 2 items and a guide down a column of four single-line labels reads 4 items, pinned by tests.",
+    "A label the scan splits into two runs counts once; two stacked elements with a visible gap between them count twice.",
+    "Where the scan genuinely cannot tell, the row drops the count rather than printing a wrong one.",
+    "Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T12:05:41.136Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.775Z",
+      "note": "seq 640 -> 80"
+    }
+  ]
+}

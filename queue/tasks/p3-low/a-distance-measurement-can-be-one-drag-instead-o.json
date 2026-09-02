@@ -1,0 +1,32 @@
+{
+  "id": "a-distance-measurement-can-be-one-drag-instead-o",
+  "title": "A Distance measurement can be one drag instead of three clicks",
+  "goal": "Measuring the distance between two points takes three clicks: one per end and a third to place the number. Size and Gap already place their number themselves, and the number placer now keeps it off the things it measures, so the third click is mostly ceremony. Ask the user whether Distance should be one press-and-drag with the number placed automatically, keeping the third click only as a way to overrule the spot, and build what they pick.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T12:07:28.443Z",
+  "updated": "2026-09-02T12:07:28.472Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-02-redline-walk.json step 3 (click two edges, watch the line follow the pointer, click once more) and its earlier rough item that the line seemed stuck after two clicks; MeasureLabelPlanner already plans Size and Gap readouts. Related open card: whether the Measure tool stays in hand after a landing. Filed by the 2026-09-02 digest after judging the walk as a first-time user.",
+  "acceptance": [
+    "A decision card offers press-and-drag with automatic placement against the three clicks of today, with a rendered example of each on the audit capture, and one is chosen.",
+    "The chosen gesture ships in Next behind next-measure-modes, with the Distance hint line updated to match; Current unchanged.",
+    "If drag wins, the placer keeps the number off the measured elements exactly as it does for Gap, and a modifier or a later drag on the number still lets the user pick its spot.",
+    "Scripts/test.sh green; audit written under queue/audits/."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T12:07:28.443Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:07:28.471Z",
+      "note": "seq 540 -> 120"
+    }
+  ]
+}

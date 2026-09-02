@@ -1,0 +1,37 @@
+{
+  "id": "the-capture-toast-and-menu-bar-menu-in-the-mocks",
+  "title": "The capture toast and menu bar menu in the mocks match what shipped",
+  "goal": "The app's capture toast now carries an Edit row with its shortcut, and hover shows Copy and Dismiss, but the mock author rules still describe the toast as a thumbnail plus Copied to clipboard with no controls at all. The mock is the proposal the next capture task will build from, so it should show the shipped shape. Bring the rules and the capture mock page in line with the app, in that direction only.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "mocks",
+  "created": "2026-09-02T12:05:41.196Z",
+  "updated": "2026-09-02T12:07:28.409Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: docs/design/mocks/shared/AGENTS.md lines 587 to 635 (toast described as transient with no dismissal chrome, menu lists Stop Recording) against commits 17b11b9 (toast Edit row, next-capture-toast-edit) and 50b72c3 (capture command names). Rule scrub queued by the 2026-09-02 digest design review.",
+  "acceptance": [
+    "The GLOBAL surfaces section of docs/design/mocks/shared/AGENTS.md describes the toast as shipped: thumbnail, message, a full-width Edit row with Shift Command 6 at its end, Copy and Dismiss on hover, no key shown on a Touch Bar Mac.",
+    "The menu bar menu rows in that section match the app's Capture menu names and order (Capture Region, Capture Full Screen, Record Screen / Video, Edit Last Capture, Show History).",
+    "The capture mock page that renders .ctoast shows the Edit row and passes the page checklist.",
+    "No app code changes; nothing is back-ported from the mock into the app.",
+    "Section 3 of docs/design/mocks/shared/UX-PATTERNS.md names the canvas notice pill (the mode hint and the Copied pill share it) as its own transient surface, with its slot rule: bottom centre above the tool bar, one at a time, reserved while the Measure tool is in hand."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T12:05:41.196Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.860Z",
+      "note": "seq 660 -> 110"
+    },
+    {
+      "t": "2026-09-02T12:07:28.408Z",
+      "note": "folded in: UX-PATTERNS section 3 gains the canvas notice pill (digest design review 2026-09-02)"
+    }
+  ]
+}

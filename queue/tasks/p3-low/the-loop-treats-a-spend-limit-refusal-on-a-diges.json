@@ -1,15 +1,15 @@
 {
   "id": "the-loop-treats-a-spend-limit-refusal-on-a-diges",
   "title": "The loop treats a spend-limit refusal on a digest run as a failure, not a finished digest",
-  "goal": "When the agent refuses to run because the monthly spend limit is hit, it says so and exits as if it succeeded. On a task run the loop already notices, because the task is left unfinished. On the daily digest run it does not: the day gets written up as a failed digest and the loop reports healthy. The loop should read the refusal as an environment problem, say so on the dashboard, and retry the digest later instead of writing it off.",
+  "goal": "When the agent refuses to run because the monthly spend limit is hit, it says so and exits as if it succeeded. On a task run the loop already notices, because the task is left unfinished. On the daily digest run it does not: the day gets written up as a failed digest and the loop reports healthy. The loop should read the refusal as an environment problem, say so on the dashboard, and retry the digest later instead of writing it off. The digest is the one report the user reads on the focus feature each day, so a silent stub hides a stalled loop for a day; that is how this serves the redlining focus.",
   "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 540,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T07:49:54.831Z",
-  "updated": "2026-09-02T07:49:54.831Z",
+  "updated": "2026-09-02T12:06:02.634Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-08-26 05:38 in queue/loop.log: \"You have hit your monthly spend limit\" printed, result success, exit 0, then the digest stub was written. Same shape as the sign-in failure fixed by the-loop-tells-an-expired-login-apart-from-a-fai; the natural extension is a small table of environment signatures (sign-in, spend limit) in queue-lib.mjs feeding recordRunnerExit, with each signature carrying its own dashboard wording. Careful: scenario 1 of the drill uses the spend-limit text with exit 1 and expects a solo task to be PARKED after three tries, so a text match must not override the per-task rule for task runs, only stop the digest run from being counted as ok.",
@@ -27,6 +27,14 @@
     {
       "t": "2026-09-02T09:44:17.806Z",
       "note": "area app -> queue (manager pass 2026-09-02: loop work, not app work)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.406Z",
+      "note": "goal says how this serves the focus (triage 2026-09-02)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.634Z",
+      "note": "seq 540 -> 30"
     }
   ]
 }

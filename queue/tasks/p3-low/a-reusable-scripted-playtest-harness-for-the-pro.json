@@ -2,14 +2,14 @@
   "id": "a-reusable-scripted-playtest-harness-for-the-pro",
   "title": "A reusable scripted playtest harness for the probe app",
   "goal": "Three audits in a row have each rebuilt a throwaway harness to drive the real editor with scripted clicks and keys and render the window offscreen. Keep one in the repo, switched on only by a request file, so the next audit starts from a working walk instead of from nothing.",
-  "epic": "measure-redline",
+  "epic": "unmanned-loop",
   "priority": "p3-low",
-  "seq": 620,
+  "seq": 70,
   "status": "pending",
   "release": "next",
-  "area": "app",
+  "area": "queue",
   "created": "2026-09-02T10:59:36.613Z",
-  "updated": "2026-09-02T10:59:36.613Z",
+  "updated": "2026-09-02T12:06:02.747Z",
   "deps": [],
   "blockedBy": [],
   "notes": "temp/redline-walk/WalkHarness.swift (ignored, on this machine) is the version used for queue/audits/2026-09-02-redline-walk.json: opens a file window without activating the app, finds CanvasNSView, sends I/A through window.sendEvent, calls mouseDown/Up directly, renders contentView via cacheDisplay, drives SelectionView with a synthetic frozen picture. Gate it on the probe bundle id and compile it out of release with a build setting.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-09-02T10:59:36.613Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T12:06:02.403Z",
+      "note": "epic measure-redline -> unmanned-loop, area app -> queue (triage 2026-09-02): loop tooling that serves the focus by making every audit start from a working walk"
+    },
+    {
+      "t": "2026-09-02T12:06:02.746Z",
+      "note": "seq 620 -> 70"
     }
   ]
 }
