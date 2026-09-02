@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 560,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T20:15:00.139Z",
-  "updated": "2026-09-02T22:13:09.827Z",
+  "updated": "2026-09-02T22:26:18.199Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Done WITHOUT the Accessibility grant the task originally asked for. Reading another app's menus needs Apple Events or accessibility; the probe is our own app, so a new playtest step (\"menus\") walks NSApp.mainMenu and writes menus-<stage>.json and .txt into the walk's out folder. Step model: Sources/PhotonzCore/PlaytestScript.swift; driver: Sources/Photonz/Playtest/PlaytestHarness.swift (readMenuBar/describe(item:)/shortcut/outline). Ready-made walk: Scripts/playtest/menu-bar.json. Doc: docs/design/playtest-harness.md. NSMenu.update() runs on every submenu first, or titles that rename themselves report stale. Known limit: a walk never brings the probe to the front, so SwiftUI's window-scoped commands all report disabled; the reading says so in its first line and stops marking items dimmed rather than lying. The Accessibility grant is still unticked and still worth having the day something needs to drive an app that is not ours; Scripts/probe-app.sh still prints how.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-02T22:25:54.683Z",
       "note": "audit queue/audits/2026-09-02-loop-reads-menus.json, with the real menu bar reading and a Screen Recording capture of the walk. Follow-up filed: show-history-and-hide-history-agree-with-whether."
+    },
+    {
+      "t": "2026-09-02T22:26:18.198Z",
+      "note": "A playtest \"menus\" step writes the running app's whole menu bar to menus-<stage>.json and .txt, with no privacy grant needed. Verified on the probe with Scripts/playtest/menu-bar.json; Scripts/test.sh green (1485). Audit: queue/audits/2026-09-02-loop-reads-menus.json."
     }
   ],
-  "started": "2026-09-02T22:13:09.826Z"
+  "started": "2026-09-02T22:13:09.826Z",
+  "completed": "2026-09-02T22:26:18.199Z"
 }

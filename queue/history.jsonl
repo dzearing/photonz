@@ -904,3 +904,4 @@
 {"t":"2026-09-02T22:22:39.696Z","ev":"task_created","id":"a-caption-being-typed-grows-from-the-arrow-not-a","priority":"p1-high","title":"A caption being typed grows from the arrow, not away from it"}
 {"t":"2026-09-02T22:22:39.728Z","ev":"task_resequenced","id":"a-caption-being-typed-grows-from-the-arrow-not-a","from":140,"to":104}
 {"t":"2026-09-02T22:25:34.439Z","ev":"task_created","id":"show-history-and-hide-history-agree-with-whether","priority":"p3-low","title":"Show History and Hide History agree with whether history is open"}
+{"t":"2026-09-02T22:26:18.199Z","ev":"task_done","id":"the-loop-can-read-menus-and-drive-other-apps","from":"in_progress","note":"A playtest \"menus\" step writes the running app's whole menu bar to menus-<stage>.json and .txt, with no privacy grant needed. Verified on the probe with Scripts/playtest/menu-bar.json; Scripts/test.sh green (1485). Audit: queue/audits/2026-09-02-loop-reads-menus.json."}

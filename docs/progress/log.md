@@ -5099,3 +5099,30 @@ temporary probe-only harness, removed before commit; the audit
 (`queue/audits/2026-09-02-window-title-middle.json`) carries two pictures of
 the overlay's own drawing. Next: the audit asks whether a third is the right
 share for the ending.
+
+## 2026-09-02 — a walk can read the app's own menu bar
+
+An audit had to admit it could not check a menu name against the running app,
+because reading another app's menus needs an Accessibility grant nobody had
+ticked. The premise was wrong: the app whose menus we want is the probe, our
+own app, and an app can enumerate its own menu bar with no permission at all.
+
+New `menus` playtest step (`PlaytestScript` + `PlaytestHarness`). It walks
+`NSApp.mainMenu`, runs `update()` on every submenu first so a title that
+renames itself is current, and writes `menus-<stage>.json` plus a readable
+`menus-<stage>.txt`: every title, order, submenu and shortcut as the chord a
+person sees, with the open windows alongside. `Scripts/playtest/menu-bar.json`
+is the ready-made walk. The `Grants:` line in `Scripts/probe-app.sh` no longer
+claims menu titles need Accessibility; driving apps that are not ours still
+does, and that grant is still unticked.
+
+Known limit, stated in the reading's own first line: a walk never brings the
+probe to the front, so SwiftUI's window-scoped commands all report themselves
+disabled. Pulling focus away from whoever is working would be the wrong fix,
+and macOS refuses a background app the activation anyway, so the step reports
+titles exactly and stops marking anything dimmed.
+
+Audit: `queue/audits/2026-09-02-loop-reads-menus.json`. Found on the way:
+⇧⌘H at an unfocused probe does not open the history window and the menu stays
+"Show History", which leaves the capture-names audit's step 5 unverified —
+filed as `show-history-and-hide-history-agree-with-whether`.
