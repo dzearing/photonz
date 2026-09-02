@@ -1,0 +1,33 @@
+{
+  "id": "a-line-of-text-counts-as-an-element-size-mode-re",
+  "title": "A line of text counts as an element: Size mode reads a heading or label, and a caliper across a label keeps its number off the words",
+  "goal": "Pointing the Measure tool at a heading or a text label in Size mode shows nothing today, because text has no border for the tool to find, and a caliper drawn across a label parks its number right on the words it measures. Redliners measure text as often as buttons, so a line of text should read as an element: hover it for its width and height, click to keep them, and every number near it stays off the letters.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:27:30.272Z",
+  "updated": "2026-09-02T14:27:41.043Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-02-legend-under-toggle.json rough 3 (headings are not detected in Size mode, so the walk used a Distance caliper), and queue/audits/2026-09-02-caliper-head-3-size.png where the 121 px pill sits on the word clipboard. ElementBounds.candidates requires a pair of horizontal boundaries that agree on 85% of their run (Sources/PhotonzCore/ElementBounds.swift, comments at lines 21, 55, 77 explain why glyphs are thrown out on purpose). A text line needs its own rule: take the LumaField ink band under the pointer, grow up and down while any column in the band has ink within the x-height step, then run left and right while gaps stay under the visible-gap width AlignmentScan.groupedByPixels already uses (8 logical px scaled). Offer it as a rung of the ladder so [ and ] still climb to the row and the card. Subjects for the readout come through CanvasNSView.subjects(of:) (CanvasView.swift near line 1291). Competitive: Figma and Sketch inspect give the size of a text box; Photonz gives nothing for text today.",
+  "acceptance": [
+    "Try it: Photonz, Experiments window, release Next, flag next-measure-modes on (default). Open Tests/Fixtures (the settings-pane capture the audits use), press I until the pill reads Size, hover the General heading: it outlines as one element and a click commits its width and height as one undo step. The same works on a row label such as Launch at login.",
+    "A caliper whose feet land on the two ends of a label (Distance mode, or the Size commit) keeps its number off the words, the way it already keeps off buttons: the label is handed to the readout planner as a subject.",
+    "Flat background, a single word space and a hairline divider still read nothing; existing element detections on the fixture (buttons, switches, rows, cards, fields) are unchanged and their pinned values still pass.",
+    "Detection stays under 1 ms per mouse move on the fixture and lives in PhotonzCore with tests written first (fixture pinned in ElementDetectionFixtureTests).",
+    "Scripts/test.sh green; audit written under queue/audits/ with an offscreen render of the heading outlined and one of the label caliper; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:27:30.272Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T14:27:41.043Z",
+      "note": "seq 110 -> 5"
+    }
+  ]
+}

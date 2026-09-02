@@ -1,0 +1,31 @@
+{
+  "id": "the-measure-tool-s-canvas-code-moves-out-of-the",
+  "title": "The Measure tool's canvas code moves out of the canvas view into its own file, with no change in behavior",
+  "goal": "The canvas view file is over 3,500 lines and the Measure tool's hover previews, subject lookups and readout planning are a growing slice of it. Moving that slice into a file of its own makes the next two measure changes (text as an element, one shared pill placer) safe to land and review, and nothing the user sees changes.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:27:30.279Z",
+  "updated": "2026-09-02T14:27:41.099Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: manager pass 2026-09-02 02:40 (Architecture) recorded CanvasView.swift at 3430 lines; it is 3556 today, EditorState.swift 3550. The measure slice is roughly CanvasView.swift lines 1160 to 1340 (updateSizePreview, updateGapPreview, subjects(of:), the raster cache key at 1329) plus the alignment drag handling. Keep it an extension or a helper owned by CanvasNSView so nothing crosses a module boundary; the point is a smaller file, not a new architecture. Unblocks: the text-as-element task (p1) and every-pill-on-the-canvas-finds-its-spot-through (p3). Walk scripts: Scripts/playtest/*.json.",
+  "acceptance": [
+    "The Size, Gap and Alignment preview code, the neighbour and subject lookups, and the readout planning calls that live in the canvas view today are in a new file under Sources/Photonz with a one-paragraph header saying what it owns.",
+    "CanvasView.swift shrinks by at least the moved lines, and no line of Measure behavior changes: the four audit renders from 2026-09-02 (caliper subjects, gap under label, guide edge chip, legend under toggle) come out pixel-identical when Scripts/playtest.sh replays their walks.",
+    "Scripts/test.sh green; a two-line entry in docs/design/next-measure.md names the new file; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:27:30.279Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T14:27:41.099Z",
+      "note": "seq 550 -> 90"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "the-grab-points-of-a-selected-caliper-show-a-han",
+  "title": "The grab points of a selected caliper show a hand cursor",
+  "goal": "A selected measurement's number pill and its two feet can be dragged, but nothing tells you so: the pointer stays an arrow over them. Every other draggable thing on a Mac changes the cursor, so these should too.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:27:30.281Z",
+  "updated": "2026-09-02T14:27:41.126Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-02-caliper-head.json rough 1 (no hover cue on the pill; the feet dots have none either). The app already swaps cursors in Sources/Photonz/SelectionCursor.swift and Capture/RectSelection.swift; the caliper hit-testing for the head grab landed in 392ce3b. If the arrow caption pill becomes draggable (the p2 arrow caption task), give it the same cursor in the same pass or file the follow-up.",
+  "acceptance": [
+    "Try it: Photonz, Experiments window, release Next, flags on by default. Take any measurement, click it to select it, rest the pointer on its number pill: the cursor becomes the open hand, and the closed hand while dragging. The same on either foot dot. Off the caliper the arrow returns.",
+    "An unselected caliper does not change the cursor, so hovering a busy picture stays calm.",
+    "Scripts/test.sh green; audit written under queue/audits/ (a cursor cannot be rendered offscreen, so the audit says how it was verified); anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:27:30.281Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T14:27:41.126Z",
+      "note": "seq 560 -> 110"
+    }
+  ]
+}

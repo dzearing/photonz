@@ -1,0 +1,32 @@
+{
+  "id": "an-arrow-s-caption-pill-can-be-dragged-to-the-sp",
+  "title": "An arrow's caption pill can be dragged to the spot you want",
+  "goal": "The caption on an arrow lands where the app decides, and there is no way to move it if the automatic spot is wrong. A selected caliper's number can already be dragged, so the arrow caption should behave the same way: grab the pill, drop it where it reads best, and it stays there while the arrow is moved.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:27:30.276Z",
+  "updated": "2026-09-02T14:27:41.072Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-02-arrow-captions.json rough 5 (the tool picks, you cannot overrule it) and the manager open thread of 2026-09-02 02:40; the caliper pill became the head grab in 392ce3b, so the two pills now disagree. The model already carries ArrowContent.captionOffset (Sources/PhotonzCore/Layer.swift:86) as the planned offset from the tail when the default spot left the picture; a hand-placed pill needs a flag that tells CaptionPlanner.plan (AnnotationEditing.swift near line 174) to leave the offset alone, and AnnotationEditing line 185 currently clears the offset when the arrow changes. Hit-testing on the canvas: CanvasView.swift near line 1601 (beginCaptionSession) is where the caption is already hit. Decode default for old documents: not pinned.",
+  "acceptance": [
+    "Try it: Photonz, Experiments window, release Next, flag next-arrow-captions on (default). Press A, draw an arrow, type a caption, press Return, then drag the caption pill: it follows the pointer and stays where dropped. Drag the arrow afterwards and the pill keeps its place relative to the tail.",
+    "A dragged pill is one undo step; undo returns it to the automatic spot. Moving an endpoint, resizing the caption or editing the text keeps a hand-placed pill where it was put, and a pill that would leave the picture is pulled back on.",
+    "The placement logic lives in PhotonzCore next to the existing caption placement, with tests written first; Current is unchanged (the flag is Next only).",
+    "Scripts/test.sh green; audit written under queue/audits/ with an offscreen render before and after the drag; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:27:30.276Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T14:27:41.072Z",
+      "note": "seq 550 -> 15"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "a-shortened-window-title-keeps-its-ending-so-two",
+  "title": "A shortened window title keeps its ending, so two windows that differ only at the end read differently",
+  "goal": "During a region capture the window under the pointer is named by its title, but a long title is cut at the end. Two documents called Report v1 and Report v2 in a long folder path then read the same, and the highlight is the only way to tell them apart. Shorten long titles in the middle instead, the way the Finder does, so the ending survives.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:27:30.284Z",
+  "updated": "2026-09-02T14:27:41.155Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-09-02-window-highlight-title.json rough 2, and the manager open thread of 2026-09-02 02:40. Title stripping and the pill live in Sources/Photonz/Capture (see commit 3596afd). The loop has no Screen Recording grant, so titles are empty for the probe; verify with the same invented-window overlay render that audit used.",
+  "acceptance": [
+    "Try it: Photonz, Experiments window, release Next, flag next-window-capture on (default). Open two windows whose titles share a long start and differ at the end, press Shift Command 4 and hover each: the pill shows the differing ending of each title.",
+    "The shortening rule lives in PhotonzCore with tests written first: a title that fits is untouched; a long one keeps its start and end around one ellipsis character; the app name stripping already in place still applies first.",
+    "Scripts/test.sh green; audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:27:30.284Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T14:27:41.154Z",
+      "note": "seq 570 -> 130"
+    }
+  ]
+}
