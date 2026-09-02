@@ -81,9 +81,17 @@ mkdir -p "$QDIR/manager"
 manager_due() { # $1 = ready task count; true when a pass should run now
   (( SANDBOX == 0 )) || return 1
   (( MANAGER_LOW_WATER > 0 )) || return 1
-  (( $1 < MANAGER_LOW_WATER )) || return 1
   [[ -f "$MANAGER_STAMP" ]] || return 0
   local last; last=$(stat -f %m "$MANAGER_STAMP" 2>/dev/null || echo 0)
+  # The objectives are the user talking to the loop. When they change what the
+  # app is FOR, a queue full of the old focus is the wrong queue, however full
+  # it is, so a pass runs regardless of the ready count (2026-09-02: the user
+  # moved the focus to building components and nothing would have noticed until
+  # the queue drained days later). The cooldown still applies, so a burst of
+  # edits costs one pass.
+  local objectives="$QDIR/objectives.json" changed=0
+  [[ -f "$objectives" ]] && (( $(stat -f %m "$objectives" 2>/dev/null || echo 0) > last )) && changed=1
+  (( changed )) || (( $1 < MANAGER_LOW_WATER )) || return 1
   (( $(date +%s) - last >= MANAGER_COOLDOWN ))
 }
 manager_pass() { # $1 = ready task count (for the log)

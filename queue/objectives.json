@@ -1,6 +1,6 @@
 {
-  "updated": "2026-09-02T05:51:08.687Z",
-  "focus": "measure-redline",
+  "updated": "2026-09-02T23:48:07.363Z",
+  "focus": "ui-building",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "One focus at a time. A feature is not done when it compiles, it is done when it is playtestable and has an audit report the user can act on.",
@@ -9,6 +9,49 @@
     "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built."
   ],
   "epics": [
+    {
+      "id": "ui-building",
+      "title": "Make Photonz the best tool for building UI",
+      "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
+      "stage": "now",
+      "children": [
+        {
+          "id": "ui-components",
+          "title": "Component design: create once, reuse everywhere, override safely",
+          "note": "",
+          "stage": "now",
+          "children": []
+        },
+        {
+          "id": "ui-layout",
+          "title": "Auto-layout and grids that behave like real UI",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "ui-screens",
+          "title": "Build full screens from nothing fast",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "ui-design-systems",
+          "title": "Design systems: tokens, styles, and switching them",
+          "note": "",
+          "stage": "later",
+          "children": []
+        },
+        {
+          "id": "ui-prototyping",
+          "title": "Click-through prototyping",
+          "note": "",
+          "stage": "later",
+          "children": []
+        }
+      ]
+    },
     {
       "id": "measure-redline",
       "title": "Make Photonz the best UX redlining tool",
@@ -89,49 +132,6 @@
         {
           "id": "found-colorpicker",
           "title": "The one color picker, everywhere a color lives",
-          "note": "",
-          "stage": "later",
-          "children": []
-        }
-      ]
-    },
-    {
-      "id": "ui-building",
-      "title": "Make Photonz the best tool for building UI",
-      "note": "Screens, components, and design systems in one canvas. Includes component design end to end: create, reuse, variants, overrides.",
-      "stage": "next",
-      "children": [
-        {
-          "id": "ui-components",
-          "title": "Component design: create once, reuse everywhere, override safely",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-layout",
-          "title": "Auto-layout and grids that behave like real UI",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-screens",
-          "title": "Build full screens from nothing fast",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-design-systems",
-          "title": "Design systems: tokens, styles, and switching them",
-          "note": "",
-          "stage": "later",
-          "children": []
-        },
-        {
-          "id": "ui-prototyping",
-          "title": "Click-through prototyping",
           "note": "",
           "stage": "later",
           "children": []
