@@ -3074,11 +3074,20 @@ final class EditorState {
     /// Committing back to the original frame is a recognized no-op (History
     /// skips it), which is how an Esc-cancelled drag restores the real render.
     /// `resized(to:)` remaps annotation endpoints so resize scales the shape.
+    /// A captioned arrow then re-picks its pill spot: a whole-arrow drag or
+    /// nudge that parks the tail at the picture's edge would otherwise carry
+    /// the label off the picture, and one dragged back into the open gets its
+    /// default spot behind the tail again. Captionless layers pass through.
     func commitLayerFrame(id: UUID, frame: CGRect) {
         previewMove = nil
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
-        perform { $0.updateLayer(id: id) { $0 = $0.resized(to: frame) } }
+        perform { document in
+            let canvas = document.canvasSize
+            document.updateLayer(id: id) {
+                $0 = AnnotationBuilder.planningCaption($0.resized(to: frame), canvas: canvas)
+            }
+        }
     }
 
     /// Live rotate/skew update. With a CA preview active the canvas applies

@@ -254,6 +254,95 @@ struct AnnotationCaptionPlacementTests {
         #expect(abs(pill.midY - (tail.y + (offset?.height ?? 0))) < 0.5)
     }
 
+    @Test func wholeArrowDraggedToTheLeftEdgeKeepsItsPillOnThePicture() {
+        // Drawn in open space (pill behind the tail), then the whole arrow is
+        // dragged so its tail touches the left edge: the frame offset alone
+        // pushes the pill off the picture, and the re-plan brings it back.
+        let bounds = CGRect(origin: .zero, size: canvas)
+        let layer = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                    from: CGPoint(x: 400, y: 496), to: CGPoint(x: 880, y: 496)),
+            canvas: canvas)
+        #expect(layer.annotation?.captionOffset == nil)
+        let tail = layer.annotationEndpoint(.start)!
+        let dropped = layer.resized(to: layer.frame.offsetBy(dx: 4 - tail.x, dy: 0))
+        #expect(!bounds.contains(pillRect(dropped)))
+        let planned = AnnotationBuilder.planningCaption(dropped, canvas: canvas)
+        let pill = pillRect(planned)
+        #expect(bounds.contains(pill))
+        #expect(planned.frame.contains(pill))
+        // The drop landed where the user put it: endpoints moved by the drag, nothing else.
+        #expect(planned.annotationEndpoint(.start) == CGPoint(x: 4, y: 496))
+        #expect(planned.annotationEndpoint(.end) == CGPoint(x: 484, y: 496))
+    }
+
+    @Test func nudgingToTheBottomEdgeKeepsThePillOnThePictureEveryStep() {
+        // Arrow keys move the frame one point at a time and commit each step;
+        // the pill must be on the picture after every one, with no flicker
+        // between spots once it has settled.
+        let bounds = CGRect(origin: .zero, size: canvas)
+        var layer = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.layer(content: arrowContent(caption: "Secondary"),
+                                    from: CGPoint(x: 300, y: 900), to: CGPoint(x: 300, y: 790)),
+            canvas: canvas)
+        // Which side of the tail the pill sits on: the planner may slide the
+        // pill along the edge as the tail keeps moving, but it must not hop
+        // between sides from one key press to the next.
+        func side(_ layer: Layer) -> String {
+            let tail = layer.annotationEndpoint(.start)!
+            let pill = pillRect(layer)
+            if pill.maxX < tail.x { return "left" }
+            if pill.minX > tail.x { return "right" }
+            return pill.midY < tail.y ? "above" : "below"
+        }
+        var sides: [String] = []
+        for step in 1...59 {
+            layer = AnnotationBuilder.planningCaption(layer.resized(to: layer.frame.offsetBy(dx: 0, dy: 1)),
+                                                      canvas: canvas)
+            #expect(bounds.contains(pillRect(layer)), "step \(step)")
+            #expect(layer.annotationEndpoint(.start) == CGPoint(x: 300, y: 900 + CGFloat(step)))
+            sides.append(side(layer))
+        }
+        #expect(layer.annotationEndpoint(.start) == CGPoint(x: 300, y: 959))
+        #expect(layer.annotation?.captionOffset != nil)
+        // Starts below the tail (the default), moves beside it once, and stays.
+        let hops = zip(sides, sides.dropFirst()).filter { $0 != $1 }.count
+        #expect(hops == 1, "sides: \(sides)")
+        #expect(sides.last != "below")
+    }
+
+    @Test func wholeArrowDraggedInOpenSpaceKeepsThePillBehindTheTail() {
+        // Nowhere near an edge: the pill rides along exactly, frame included.
+        let layer = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.layer(content: arrowContent(caption: "Primary action"),
+                                    from: CGPoint(x: 760, y: 650), to: CGPoint(x: 500, y: 770)),
+            canvas: canvas)
+        let target = layer.frame.offsetBy(dx: -120, dy: -200)
+        let planned = AnnotationBuilder.planningCaption(layer.resized(to: target), canvas: canvas)
+        #expect(planned.annotation?.captionOffset == nil)
+        func close(_ a: CGRect, _ b: CGRect) -> Bool {
+            abs(a.minX - b.minX) < 0.001 && abs(a.minY - b.minY) < 0.001
+                && abs(a.width - b.width) < 0.001 && abs(a.height - b.height) < 0.001
+        }
+        #expect(close(planned.frame, target))
+        #expect(close(pillRect(planned), pillRect(layer).offsetBy(dx: -120, dy: -200)))
+    }
+
+    @Test func arrowDraggedBackIntoOpenSpaceReturnsThePillBehindTheTail() {
+        // Planned beside the tail at the margin; once there is room again the
+        // pill goes back to its default spot instead of staying displaced.
+        let edge = AnnotationBuilder.planningCaption(
+            AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                    from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496)),
+            canvas: canvas)
+        #expect(edge.annotation?.captionOffset != nil)
+        let planned = AnnotationBuilder.planningCaption(
+            edge.resized(to: edge.frame.offsetBy(dx: 300, dy: 0)), canvas: canvas)
+        #expect(planned.annotation?.captionOffset == nil)
+        #expect(planned.annotationEndpoint(.start) == CGPoint(x: 324, y: 496))
+        #expect(CGRect(origin: .zero, size: canvas).contains(pillRect(planned)))
+    }
+
     @Test func noCanvasMeansNoPlan() {
         let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
                                             from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))

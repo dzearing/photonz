@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p3-low",
   "seq": 470,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:47:21.073Z",
-  "updated": "2026-09-02T06:47:21.074Z",
+  "updated": "2026-09-02T08:26:16.325Z",
   "deps": [],
   "blockedBy": [],
   "notes": "AnnotationBuilder.planningCaption(_:canvas:) already does the placement; call it from the move commit path in EditorState (wherever a layer frame offset is committed, and nudges), only for arrows with hasCaption. The measure tool deliberately does not re-plan on move, so decide whether captions should differ; a caption off the picture is clearly wrong, a readout re-stacking is a judgment call.",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-02T06:47:21.074Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:19:40.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:24:45.705Z",
+      "note": "Review before building: the only commit path for a whole-arrow move is EditorState.commitLayerFrame, and arrow-key nudges go through the same onFrameCommit, so one wiring point covers drag, nudge, and handle resize. Captions differ from measure readouts on purpose: a caption off the picture is invisible, so it must re-plan; a readout re-stacking on move is the open readout-travel decision and stays untouched. Live drag does not re-plan (the sprite would jump mid-drag); the pill settles on drop, same as an endpoint drag today."
+    },
+    {
+      "t": "2026-09-02T08:24:45.705Z",
+      "note": "Tests first (PhotonzCore, AnnotationCaptionPlacementTests): drag to the left edge brings the pill back on the picture with endpoints exactly where dropped; 59 one-point nudges to the bottom edge keep the pill on the picture every step and hop sides exactly once (the planner slides the pill along the edge after that, which is intended, not flicker); open-space drag leaves offset nil and moves the pill rigidly; an edge-planned arrow dragged back into the open returns to the default spot. The core planner already supported all of this, so these pin the contract; the fix itself is the app wiring."
+    },
+    {
+      "t": "2026-09-02T08:24:45.705Z",
+      "note": "Fix: commitLayerFrame now runs AnnotationBuilder.planningCaption over the resized layer against document.canvasSize. Captionless layers pass through unchanged. EditorState is still shared (Next has not forked it), so Next has the change."
+    },
+    {
+      "t": "2026-09-02T08:26:16.295Z",
+      "note": "Verified: Scripts/test.sh green (1187 tests), swift build clean, probe app launched with a fixture and quit cleanly. The acceptance drags are covered by core tests over exactly the pair the commit now runs (resized(to:) then planningCaption): left-edge drop, 59 bottom-edge nudges, open-space drag, and the return to the default spot. Screen capture and Apple events are denied in this unmanned session, so the drop was not watched by eye; the pill will visibly settle on mouse-up rather than during the drag, same as endpoint drags today."
+    },
+    {
+      "t": "2026-09-02T08:26:16.325Z",
+      "note": "commitLayerFrame in EditorState now re-plans a captioned arrow's pill against the canvas after any whole-arrow drag, nudge or handle resize (shared file, so Next has it). Four new PhotonzCore placement tests pin the contract; Scripts/test.sh green, probe app smoke-launched."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:19:40.651Z",
+  "completed": "2026-09-02T08:26:16.325Z"
 }
