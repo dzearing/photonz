@@ -5,11 +5,11 @@
   "epic": "spec-export",
   "priority": "p2-normal",
   "seq": 430,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:40:38.074Z",
-  "updated": "2026-09-02T09:40:38.075Z",
+  "updated": "2026-09-02T10:20:10.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit 2026-09-02-spec-export-menu rough 3 (the Measurements panel has no click-to-multi-select). Code: row tap in Sources/Photonz/LayersPanel.swift calls editorState.selectLayer; the command-modified TapGesture near LayersPanel.swift:568 selects pixels (keep that on the thumbnail per Photoshop, move to name-toggle on the label if that is where it sits today); EditorState.multiSelectedLayerIDs and selectedLayerID are the two selection stores, selectedMeasureLayerIDs derives from them. Measurement rows come from MeasureSpecList.measureLayers, top-most first, so a shift range is over that order. Shared code, so Current gets the same gesture; that is fine, it is a list convention not a Next feature.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-02T09:40:38.075Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T10:09:18.688Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T10:14:00.620Z",
+      "note": "Adversarial review before building. (1) First-timer walk: the list already highlights the selected row, so shift/command-click are the two gestures every Mac list teaches; nothing to learn, nothing to discover. (2) State the app lacks: a range needs an ANCHOR (the row the last plain or command click landed on) and, to pivot like the Finder/NSTableView, the rows the last shift-click swept in. Neither exists; both go into a small pure ListSelection value in PhotonzCore, with the selection itself staying in selectedLayerID/multiSelectedLayerIDs so canvas marquee, delete, hide, lock keep working untouched. (3) Gesture collision: the row already uses command-click for Select Pixels (Photoshop loads transparency from the THUMBNAIL, not the name). Moving that to the thumbnail frees command-click on the rest of the row for toggle, exactly as PS does. (4) Parity check on the menu: Layers menu Duplicate/Delete/arrange key off the single primary selection and are DISABLED under a marquee multi-selection today; row context-menu Delete on a member deletes the whole selection, Duplicate/arrange act on that one row. Matching that is the task; widening the menus to multi is separate work. (5) Inspector: per-layer sections show only for a single primary selection; a marquee shows nothing. A one-line count for a multi-selection is cheap and worth adding so the inspector agrees with the list. (6) Shortest version: one tap gesture per row that reads the modifier flags, three-line switch in EditorState, no new UI chrome."
+    },
+    {
+      "t": "2026-09-02T10:14:00.620Z",
+      "note": "Semantics chosen (Finder/NSTableView): plain click selects only that row and sets the anchor; command-click toggles the row and moves the anchor to it; shift-click selects anchor..row inclusive, replacing rows the previous shift-click swept in but keeping rows added by command-click, anchor unchanged. No anchor (fresh document, after a canvas marquee, anchor deleted) makes shift-click behave as a plain click."
+    },
+    {
+      "t": "2026-09-02T10:19:36.037Z",
+      "note": "Built: PhotonzCore ListSelection (RowClick plain/extend/toggle, anchor + extendedRange, 14 tests written first, all green). EditorState.clickRow(_:_:in:) re-seeds a ListSelection from the two stores, applies the click, writes back 0/1/many the same way a canvas marquee does; selectedLayerID didSet re-seeds the anchor, a marquee clears it. LayersPanel: one tap gesture per row reads NSEvent.modifierFlags; Select Pixels moved to a high-priority command gesture on the thumbnail (with a help tip); Measurements rows range over measurePanelLayers order; a caption under each list reads N layers selected / N measurements selected once two or more are in."
+    },
+    {
+      "t": "2026-09-02T10:19:36.037Z",
+      "note": "Verification: swift build clean; Scripts/test.sh 1231 tests, one timing-budget test (readingTheSubjectsCostsFourProbes, 31ms vs 30ms) failed while a harness compile ran in parallel and passes alone; probe app launched with a fixture and stayed up. Gesture harness (synthetic NSEvents into an NSHostingView): command-click on the thumbnail fires only the thumbnail gesture, command-click on the name fires the row tap with the command flag readable, so the priority split holds. Synthetic plain and shift clicks never reached any tap gesture in the harness (real plain clicks work in the app), so the shift path is verified by tests and code reading only; noted in the audit."
+    },
+    {
+      "t": "2026-09-02T10:19:36.037Z",
+      "note": "Parity check on acceptance 3: after a canvas marquee the Layers menu Duplicate/Delete/arrange items are disabled (they key off the single primary), the canvas Delete key and the row context menu Delete remove the whole selection, eye/lock toggles act on all. List selection lands in the same stores so it behaves identically. Filed follow-up duplicate-delete-layer-and-the-arrange-commands for the menu gap. Audit: queue/audits/2026-09-02-list-multi-select.json."
+    },
+    {
+      "t": "2026-09-02T10:20:10.980Z",
+      "note": "Shift-click ranges and command-click toggles in the Layers and Measurements lists (shared LayersPanel, Next behavior), Select Pixels on the thumbnail's command-click, count caption under each list. ListSelection in PhotonzCore with 14 tests first; swift build and Scripts/test.sh green (one timing-budget test flaked under parallel load, passes alone); probe launched and quit. Audit queue/audits/2026-09-02-list-multi-select.json; follow-up task filed for the Layers menu under a multi-selection. Commit ca331c3."
     }
-  ]
+  ],
+  "started": "2026-09-02T10:09:18.688Z",
+  "completed": "2026-09-02T10:20:10.980Z"
 }

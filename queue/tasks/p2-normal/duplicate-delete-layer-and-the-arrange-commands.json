@@ -1,0 +1,28 @@
+{
+  "id": "duplicate-delete-layer-and-the-arrange-commands",
+  "title": "Duplicate, Delete Layer and the arrange commands in the Layers menu act on every selected row",
+  "goal": "When several layers or measurements are selected, the Layers menu commands Duplicate Layer, Delete Layer, Bring to Front, Bring Forward, Send Backward and Send to Back are greyed out. They should act on the whole selection, so someone who shift-clicked three measurements can delete or restack them from the menu or its shortcuts instead of reaching for the canvas.",
+  "epic": "spec-export",
+  "priority": "p2-normal",
+  "seq": 480,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T10:19:18.007Z",
+  "updated": "2026-09-02T10:19:18.007Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorCommands.swift: the Layers CommandMenu keys every item off `selectedID` (editor?.selectedLayerID), which is nil whenever multiSelectedLayerIDs holds two or more. EditorState.deleteLayers(ids:) already batches; duplicateLayer(id:) and restack(id:) are single-layer. Add multi-aware entry points (deleteSelectedLayers, duplicateSelectedLayers, restackSelection) and enable the menu items when either store is non-empty. Same gap exists after a canvas marquee, so this also fixes the marquee case. Found while building shift/command-click list selection (audit 2026-09-02-list-multi-select rough 1).",
+  "acceptance": [
+    "With three rows selected by shift-click, Layers > Delete Layer (command-Delete) removes all three in one undo step.",
+    "Layers > Duplicate Layer with several rows selected duplicates each one and the copies become the new selection.",
+    "The four arrange commands move the selected layers together, keeping their relative order, and stop at the locked Background.",
+    "Tests in PhotonzCore cover the reorder-with-gaps logic before implementation; Scripts/test.sh is green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T10:19:18.007Z",
+      "note": "created (manual)"
+    }
+  ]
+}

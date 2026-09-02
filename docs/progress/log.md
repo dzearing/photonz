@@ -4586,3 +4586,10 @@ the card's left end, over the icons.
   and Current both have it. Audit: queue/audits/2026-09-02-capture-menu-names.json.
 - Next: nothing pending from this task. Open question for the user in the
   audit: is Region the right noun, or Rectangle / Selection?
+
+## 2026-09-02 (go loop: shift-click and command-click in the Layers and Measurements lists)
+
+- **Next (shared lists), `spec-export`:** shift-click selects the run of rows from the anchor, command-click toggles one, the Finder's reading (NSTableView pivot rules: the previous shift range lets go, command-added rows stay, the anchor does not move). Both the Layers list and the Measurements list, each over its own row order. Select Pixels now lives on command-click of the layer THUMBNAIL (Photoshop's load-transparency spot), freeing command-click on the rest of the row. A caption under each list says "3 layers selected" / "3 measurements selected".
+- `ListSelection` + `RowClick` (PhotonzCore): anchor + `extendedRange` + `click(_:_:in:)`, 14 tests first. `EditorState.clickRow` re-seeds from `selectedLayerID`/`multiSelectedLayerIDs`, applies, writes back 0/1/many exactly as a canvas marquee does, so delete/hide/lock/Copy Measurements need nothing new; the `selectedLayerID` didSet re-seeds the anchor and a marquee clears it.
+- Verified by tests, build and probe launch. A synthetic-event harness confirmed the thumbnail's command gesture wins over the row tap and that the row tap fires on command-click with the flag readable; synthetic plain and shift clicks never reach SwiftUI's tap gesture, so shift-click on a live row is unexercised by hand. Audit: `queue/audits/2026-09-02-list-multi-select.json`.
+- Follow-up filed: Layers menu Duplicate/Delete/arrange stay disabled under any multi-selection (marquee too).
