@@ -1,0 +1,77 @@
+{
+  "out": "/tmp/photonz-playtest/measure-handback",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+
+    { "do": "measureMode", "mode": "size" },
+    { "do": "describe", "stage": "0-baseline", "note": "Measure in hand, Size mode, nothing measured yet" },
+
+    { "do": "move", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-size-landed", "note": "the card's promise: the arrow is back, the new caliper is selected, the mode is still Size" },
+    { "do": "snapshot", "name": "1-size-landed" },
+
+    { "do": "move", "at": [136, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [136, 786] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-arrow-click-on-element", "note": "same click, arrow in hand: the Reset button must NOT gain a caliper" },
+    { "do": "snapshot", "name": "2-arrow-click-on-element" },
+
+    { "do": "key", "key": "i" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-one-press-back", "note": "ONE press of I returns to Measure in the mode it was left in, no hunt through modes" },
+
+    { "do": "move", "at": [136, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [136, 786] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-second-size-landed", "note": "the identical click now lands, and hands back again" },
+
+    { "do": "measureMode", "mode": "gap" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "5-escape-puts-it-down", "note": "Esc puts the Measure tool down and keeps the mode" },
+
+    { "do": "move", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-arrow-click-in-gap", "note": "arrow in hand over a gap: nothing lands" },
+
+    { "do": "key", "key": "i" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-one-press-back-gap", "note": "one press of I comes back in Gap, the mode it was left in" },
+
+    { "do": "move", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "8-gap-landed", "note": "gap hands back the same way size does" },
+    { "do": "snapshot", "name": "8-gap-landed" },
+
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [236, 696] },
+    { "do": "click", "at": [476, 696] },
+    { "do": "click", "at": [476, 656] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "9-distance-landed", "note": "the three-click mode hands back on the click that places the number" },
+
+    { "do": "move", "at": [236, 620] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [236, 620] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "10-arrow-click-after-distance", "note": "the click that would have started the next caliper starts nothing" },
+
+    { "do": "key", "key": "i" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "11-one-press-back-distance", "note": "one press of I comes back in Distance" },
+    { "do": "snapshot", "name": "11-final" }
+  ]
+}

@@ -49,6 +49,11 @@
     }
   ],
   "recommended": "keep",
-  "status": "pending",
-  "created": "2026-09-02T08:18:25.333Z"
+  "status": "resolved",
+  "created": "2026-09-02T08:18:25.333Z",
+  "answer": {
+    "choice": "keep",
+    "note": "",
+    "resolved": "2026-09-02T15:11:00.693Z"
+  }
 }

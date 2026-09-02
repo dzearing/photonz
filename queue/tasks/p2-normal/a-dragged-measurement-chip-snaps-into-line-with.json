@@ -1,0 +1,44 @@
+{
+  "id": "a-dragged-measurement-chip-snaps-into-line-with",
+  "title": "A dragged measurement chip snaps into line with the other chips",
+  "goal": "When several size measurements sit near each other, their number chips should line up. Today dragging a chip is completely free, so lining them up is guesswork. Dragging a chip should snap to the position of the other chips on the page, and the same yellow guide that appears when a foot snaps to an edge should appear to show the snap. Holding command keeps the drag free, as it does for feet.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:57:23.206Z",
+  "updated": "2026-09-02T16:15:09.418Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Asked by the user on 2026-09-02: when I resize a sizer I would love it to snap to other elements; I am trying to align a bunch of measuring chips, if I grab the sizer for the chip on one I want it to snap to the positioning of other chips above it, and have the yellow guide show up. Code: CanvasView.swift measureHandleDrag; the .head handle (the chip bar position, MeasureContent.headOffset) is explicitly left free with snapGuide = nil while feet go through EdgeSnapping.snap with edgeMap candidates and the snapGuideLayer (systemYellow). Build the candidate set from the other measure layers in the document: each caliper geometry (MeasureContent.caliperGeometry, labelAnchor, feet) projected to document coordinates by the layer frame. Add those candidates alongside the edge map for feet, and as the only candidates for the head. EdgeSnapping is per-axis with a zoom-scaled tolerance; extend it to accept extra candidate lines rather than writing a second snapper. Keep it in PhotonzCore and tested (EdgeSnappingTests). Related earlier decision: the user rejected alignment guides drawn against image content in phase 16, so keep this strictly about measurement-to-measurement snapping, not content guides.",
+  "acceptance": [
+    "With two or more measurements on the canvas, dragging one chip snaps its position to line up with another chip along the drag axis when within the same tolerance feet use, and the yellow guide draws through the chip it lined up with",
+    "Dragging a foot also snaps to the feet and lines of other measurements, not only to detected edges, so calipers can share a start line",
+    "Holding command while dragging disables the snap, matching the feet",
+    "Snapping never changes the measured value of the chip being moved, only where its chip sits",
+    "Unit tests in PhotonzCore cover the candidate collection from other measurements and the per-axis snap, written before the implementation",
+    "Audit written under queue/audits/ with a screenshot of the guide at the moment of the snap, and anything rough filed as a follow-up"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:57:23.207Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T14:57:23.241Z",
+      "note": "seq 570 -> 5"
+    },
+    {
+      "t": "2026-09-02T16:14:53.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T16:15:09.418Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    }
+  ],
+  "started": "2026-09-02T16:14:53.130Z",
+  "failures": 1
+}

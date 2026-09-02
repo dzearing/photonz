@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 20,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.592Z",
-  "updated": "2026-09-02T12:06:02.606Z",
+  "updated": "2026-09-02T15:11:00.706Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 2 and 2026-08-23-size-readout-placement rough item 2. Only worth doing after the user reacts to the audit; drop if they are happy.",
@@ -53,6 +53,10 @@
     {
       "t": "2026-09-02T12:06:02.606Z",
       "note": "seq 460 -> 20"
+    },
+    {
+      "t": "2026-09-02T15:11:00.706Z",
+      "note": "decision \"How far may a measurement's number travel sideways to find whitespace?\" resolved: Keep the long leash (today)"
     }
   ],
   "started": "2026-09-02T08:10:57.621Z"

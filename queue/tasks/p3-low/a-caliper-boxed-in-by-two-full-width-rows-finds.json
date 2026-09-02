@@ -5,15 +5,13 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 10,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T12:06:02.578Z",
+  "updated": "2026-09-02T15:11:09.572Z",
   "deps": [],
-  "blockedBy": [
-    "a-caliper-boxed-in-by-two-full-width-rows-finds-when-a-gap-caliper-sits-between"
-  ],
+  "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
   "acceptance": [
     "A decision card offers the user two or three visible options for the boxed-in case with rendered examples on the audit capture.",
@@ -55,6 +53,10 @@
     {
       "t": "2026-09-02T12:06:02.578Z",
       "note": "seq 450 -> 10"
+    },
+    {
+      "t": "2026-09-02T15:11:09.572Z",
+      "note": "decision \"When a gap caliper sits between two full-width rows and its number cannot fit anywhere clear, where should the number go?\" resolved: Stay on the line, straddling both rows"
     }
   ],
   "started": "2026-09-02T07:51:00.891Z"

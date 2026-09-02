@@ -8,10 +8,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:59:36.527Z",
-  "updated": "2026-09-02T12:06:02.436Z",
+  "updated": "2026-09-02T16:22:16.387Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json): four measurements cost seven presses of I. EditorState.addMeasure / addElementSize / addGapMeasure / addAlignmentCheck all call finishCreating(layer.id) which is setTool(.select). The arrow tool has precedent for staying in hand while a caption field is open (ArrowCaptionEntry.toolAfterLanding). If Measure stays, Esc and V put it down; the mode hint should not re-raise on every landing.",
+  "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json): four measurements cost seven presses of I. EditorState.addMeasure / addElementSize / addGapMeasure / addAlignmentCheck all call finishCreating(layer.id) which is setTool(.select). The arrow tool has precedent for staying in hand while a caption field is open (ArrowCaptionEntry.toolAfterLanding). If Measure stays, Esc and V put it down; the mode hint should not re-raise on every landing. RESOLVED 2026-09-02: chosen option was \"Hand back to Select (today)\", so no behaviour change. Guard walk: Scripts/playtest/measure-handback.json (Size, Gap, Distance, pickup key, Esc). finishCreating carries the decision in its doc comment.",
   "acceptance": [
     "A decision card offers the two behaviours with what the screen does after a click lands, and one is chosen",
     "The chosen behaviour ships in Next behind next-measure-modes, Current unchanged",
@@ -30,7 +30,50 @@
     {
       "t": "2026-09-02T12:06:02.435Z",
       "note": "seq 500 -> 10"
+    },
+    {
+      "t": "2026-09-02T15:09:30.870Z",
+      "note": "decision \"After a measurement lands, should the Measure tool stay in your hand or hand back to the arrow?\" resolved: Hand back to Select (today)"
+    },
+    {
+      "t": "2026-09-02T16:15:02.534Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T16:15:09.419Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-02T16:15:30.451Z",
+      "note": "re-claimed after runner reset; decision resolved to hand back to Select"
+    },
+    {
+      "t": "2026-09-02T16:22:07.205Z",
+      "note": "Adversarial pass before building: the user chose hand back to Select, so the risk is not the choice, it is whether the app actually keeps the promises printed on the card. Three were checkable and unproven: that the fresh measurement is selected, that a second click drops nothing, and that one press of I comes back in the mode you left. If any of those were false the choice would have been made on a false description."
+    },
+    {
+      "t": "2026-09-02T16:22:07.206Z",
+      "note": "Reviewed the four landing paths (addMeasure, addElementSize, addGapMeasure, addAlignmentCheck): all four go through finishCreating, which sets Select and selects the new layer. The mode lives in UserDefaults and nothing on the landing path touches it, so the stickiness the card promised is real, not incidental."
+    },
+    {
+      "t": "2026-09-02T16:22:07.206Z",
+      "note": "Wrote Scripts/playtest/measure-handback.json and ran it on the probe app. Size: click lands two calipers, tool=select, width caliper selected. The identical click with the arrow in hand adds nothing. One press of I returns to Measure in Size and the same click then lands. Gap and Distance behave the same; Esc puts the tool down and keeps the mode. 60 steps, status ok."
+    },
+    {
+      "t": "2026-09-02T16:22:07.206Z",
+      "note": "Adversarial pass after: the only cost the walk still shows is the mode pill rising on every pickup, which was named as a con on the chosen card, so it is left as the user accepted it rather than softened behind their back. Recorded in the audit instead. Also noted a Size click selects only the width caliper of the two it lands, and a Distance readout parked on a label (already its own open task)."
+    },
+    {
+      "t": "2026-09-02T16:22:07.206Z",
+      "note": "No behaviour change shipped: the chosen option was today. Output is the guard walk, a comment on finishCreating recording the decision so it is not re-litigated, and queue/audits/2026-09-02-measure-handback.json. Scripts/test.sh green (1377 tests)."
+    },
+    {
+      "t": "2026-09-02T16:22:16.386Z",
+      "note": "Chosen option was hand back to Select, so no behaviour change. Shipped the guard: Scripts/playtest/measure-handback.json proves on the probe app that Size, Gap and Distance all hand back with the new measurement selected, that a second click drops nothing, and that one press of I returns in the same mode. Decision recorded on finishCreating; audit at queue/audits/2026-09-02-measure-handback.json; Scripts/test.sh green (1377 tests)."
     }
   ],
-  "status": "blocked"
+  "status": "done",
+  "started": "2026-09-02T16:15:02.534Z",
+  "failures": 1,
+  "completed": "2026-09-02T16:22:16.387Z"
 }

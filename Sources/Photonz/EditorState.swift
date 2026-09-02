@@ -1046,6 +1046,15 @@ final class EditorState {
     /// 17.12's sticky Photoshop-style tools — user request 2026-08-21: "when I
     /// draw a line or a measure or any object, I want the tool to switch to V
     /// and the object selected, so I can left/right arrow".)
+    ///
+    /// Re-affirmed for Measure on 2026-09-02: the end-to-end redline walk
+    /// counted seven presses of I for four measurements and asked whether the
+    /// ruler should stay in hand instead. The answer was no — every drawing
+    /// tool hands back, and a ruler that did not would be the one exception.
+    /// The cost is paid back by the mode being sticky: one press of I returns
+    /// to Measure in the mode you left it in, never a hunt through the modes.
+    /// `Scripts/playtest/measure-handback.json` walks all four Measure modes
+    /// and is the guard on this, so do not change it without a new decision.
     private func finishCreating(_ layerID: UUID, tool: Tool = .select) {
         setTool(tool)
         selectedLayerID = layerID

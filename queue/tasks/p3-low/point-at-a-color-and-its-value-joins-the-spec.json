@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 50,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:41:30.132Z",
-  "updated": "2026-09-02T12:06:02.692Z",
+  "updated": "2026-09-02T15:10:29.624Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass: the user has said speculative features get confirmed before they are built. Sampling reads the composited base image through ImageStore in PhotonzRender; the readout can reuse the measure pill (PillRasterizer) and MeasureSpecList.specLine gains a color case. Open thread since the 2026-09-01 manager pass (Figma and Sketch parity).",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-02T12:06:02.691Z",
       "note": "seq 570 -> 50"
+    },
+    {
+      "t": "2026-09-02T15:10:29.624Z",
+      "note": "decision \"Should the Measure tool read colors off the picture for the spec?\" resolved: Not now, ask again after the measure tools have been tried"
     }
   ]
 }

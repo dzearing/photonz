@@ -61,6 +61,11 @@
     }
   ],
   "recommended": "straddle",
-  "status": "pending",
-  "created": "2026-09-02T07:58:45.291Z"
+  "status": "resolved",
+  "created": "2026-09-02T07:58:45.291Z",
+  "answer": {
+    "choice": "straddle",
+    "note": "",
+    "resolved": "2026-09-02T15:11:09.559Z"
+  }
 }

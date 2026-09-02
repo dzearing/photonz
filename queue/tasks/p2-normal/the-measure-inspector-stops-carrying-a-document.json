@@ -1,0 +1,28 @@
+{
+  "id": "the-measure-inspector-stops-carrying-a-document",
+  "title": "The measure inspector stops carrying a document-wide Export section",
+  "goal": "Selecting a measurement shows an Export section with Copy Image and Export PNG in the layer inspector, but those two actions export the whole document, not the selected measurement, so they read as random. Move them out of the per-layer inspector: the menu bar and toolbar already own them, and what belongs beside a selected measurement is the measurement-specific copy (its one spec line).",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:48:48.090Z",
+  "updated": "2026-09-02T14:48:48.090Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user reacted to this on 2026-09-02 in Photonz Dev, release Next: why have a random export section in the workspace. Source: LayersPanel.swift exportSection, shown from the measure inspector when Experiments.shared.measurePanelEnabled. It was added per the redline mock (docs/design/next-measure.md section 7, Export: the redline sheet) which staged Copy image / Export PNG in the Properties panel; the app-wide actions already exist (copyCompositeToClipboard, exportComposite). Copy Measurement (copyMeasurement(id:)) now exists from the spec-export task and is the natural replacement. Update next-measure.md section 7 shipped shape when the section moves.",
+  "acceptance": [
+    "Selecting a measure layer no longer shows an Export section with Copy Image and Export PNG",
+    "Copy Image and Export PNG remain reachable from the File and Edit menus and their shortcuts, unchanged",
+    "If a per-measurement action stays in the inspector it is Copy Measurement, the one spec line for that measurement, and it says so",
+    "Audit written under queue/audits/ with a screenshot of the inspector for a selected measurement"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:48:48.090Z",
+      "note": "created (user)"
+    }
+  ]
+}

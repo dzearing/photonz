@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:52:46.438Z",
-  "updated": "2026-09-02T15:56:54.550Z",
+  "updated": "2026-09-02T16:14:35.234Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02: none of the tools have a tooltip like we have in the design language; I want the tools to tell me what keyboard button to press. The code already attaches .help(help + keyHint) in EditorView.swift toolButton, with the key from Tool.shortcutHint, and ToolModeButton applies .help(tooltip). So either .help does not surface on borderless buttons inside the glass capsule, or the Menu-hosted tools swallow it, or the delay is long enough that the user never sees one. Reproduce first on the probe (dist/Photonz Probe.app), then fix. UX-PATTERNS.md around line 855 and 894 describes the tooltip contract (about 400ms in, cannot steal hover). If the app has no shared tooltip component yet, build one small enough for the tool bar and note it as the pattern for other surfaces.\n\nOutcome: the design-language tooltip now lives in Sources/Photonz/HintTooltip.swift (controller, anchor view, SwiftUI view, .toolTip modifier) behind next-tool-tips. Follow-up not filed as a task (design-system is staged next, not now): the history overlay's TooltipController is a second tooltip component and should fold into HintTooltip when Next forks that surface. Real-pointer hover was not observable from the loop; the audit asks the user to confirm it.",
@@ -47,7 +47,12 @@
     {
       "t": "2026-09-02T16:14:06.000Z",
       "note": "Verified on the probe with Scripts/playtest/tool-tips.json: Arrow (A), Measure: Size (I), Crop: Free (C), Rectangle (R), Show Inspector (⌥⌘L) each appeared above their button; resting in the open showed nothing. Screenshots in queue/audits/2026-09-02-tool-tips-*.png; audit 2026-09-02-tool-tips.json."
+    },
+    {
+      "t": "2026-09-02T16:14:35.233Z",
+      "note": "Design-language tooltip (name + quieter key, beak) on every tool bar button, inspector toggle, overflow, Resize and the color capsule's icon buttons, behind Next's next-tool-tips flag (Sources/Photonz/HintTooltip.swift). Verified on the probe with the new playtest hover step (Scripts/playtest/tool-tips.json): Arrow (A), Measure: Size (I), Crop: Free (C), Rectangle (R), Show Inspector (⌥⌘L) each landed above their button; screenshots and audit in queue/audits/2026-09-02-tool-tips*. Real-pointer hover could not be observed from the loop (no Accessibility grant); the audit asks the user to confirm. Commit e8198f7 on main."
     }
   ],
-  "started": "2026-09-02T15:56:54.550Z"
+  "started": "2026-09-02T15:56:54.550Z",
+  "completed": "2026-09-02T16:14:35.234Z"
 }

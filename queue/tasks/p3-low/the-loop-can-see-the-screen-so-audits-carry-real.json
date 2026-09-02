@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 60,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T09:41:37.764Z",
-  "updated": "2026-09-02T12:06:02.720Z",
+  "updated": "2026-09-02T15:09:49.714Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Blocked on the decision opened by the 2026-09-02 manager pass, since the user has to grant the permission by hand. dist/Photonz Probe.app (com.dzearing.photonz.probe) is signed with the stable Photonz Dev identity by Scripts/build-app.sh, so one grant survives rebuilds. Do not touch the dev app or its grants. The same denial blocks Apple Events to System Events (audit 2026-09-02-capture-menu-names rough 2), which the Accessibility or Automation grant to the loop terminal would lift.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-02T12:06:02.719Z",
       "note": "seq 580 -> 60"
+    },
+    {
+      "t": "2026-09-02T15:09:49.714Z",
+      "note": "decision \"May the unmanned loop take screenshots of its own copy of the app?\" resolved: Grant the probe app Screen Recording and the loop terminal Accessibility"
     }
   ]
 }

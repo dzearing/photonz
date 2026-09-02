@@ -1,0 +1,28 @@
+{
+  "feature": "What the Measure tool does after a measurement lands",
+  "epic": "measure-redline",
+  "summary": "You picked hand back to Select, so nothing on screen changed. What is new is proof: every one of the four Measure modes now provably hands the ruler back with the fresh measurement selected, and one press of I brings the tool back in the same mode you left it in, so a second measurement is one press plus one click.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png with File > Open. Flags are at their defaults.",
+  "try": [
+    { "do": "Press I until the pill above the tool bar reads Size." },
+    { "do": "Click the Save Changes button. Two calipers land, the arrow comes back, and the width caliper is selected.", "shot": "2026-09-02-measure-handback-1-landed.png" },
+    { "do": "Click the Reset button. Nothing new lands: the arrow is in hand, so this is a plain click on the picture.", "shot": "2026-09-02-measure-handback-2-arrow-click.png" },
+    { "do": "Press I once and click Reset again. It measures this time, in Size, without you re-picking the mode." },
+    { "do": "Press I twice for Gap, press Esc to put the tool down, then press I once. You come back in Gap, not in Distance." },
+    { "do": "Take a Distance: three clicks. On the third the number lands and the arrow comes back.", "shot": "2026-09-02-measure-handback-3-final.png" },
+    { "do": "Press the left and right arrow keys. The measurement that just landed nudges, which is the reason the tool hands back at all." }
+  ],
+  "evaluate": [
+    "Measuring a second thing is now one press of I plus one click. Does that feel like the right cost, or still one press too many?",
+    "Changing mode after a landing costs the pickup press plus one press per mode. Sizing then gapping then aligning is where that adds up. Is walking the modes with I the right way to switch, or do you want each mode on its own key?",
+    "The mode pill rises again on every pickup, so it flashed once per measurement. Is that a useful reminder or noise by the fourth time?",
+    "A Size click lands two calipers but selects only the width one. Should the arrow keys nudge both?",
+    "Esc puts the tool down. Did you reach for Esc or for V?"
+  ],
+  "rough": [
+    "No code changed here beyond a comment. You chose today's behaviour, so this task's real output is the guard: Scripts/playtest/measure-handback.json walks Size, Gap, Distance and the pickup key on the real app and fails if the hand-back or the sticky mode ever regresses.",
+    "The pill re-raising on every pickup is the one cost of this choice that the walk still shows. It was listed as a con on the card and is left alone rather than quietly softened.",
+    "Alignment mode is not in the walk. It lands from a drag rather than a click, and its own walk already covers it.",
+    "The last Distance readout parked on top of the Copy to clipboard label. That is the readout-clearance question already open as its own task, not something this change caused."
+  ]
+}
