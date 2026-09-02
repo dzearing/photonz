@@ -1,0 +1,27 @@
+{
+  "id": "eight-page-private-click-targets-in-the-mocks-ar",
+  "title": "Eight page-private click targets in the mocks are still mouse-only",
+  "goal": "After the shared keyboard pass, a browser audit finds eight things across three design-study pages that react to a click through their own page script but cannot be reached with Tab or pressed with Enter: the mode names on the design-system modes page, the easing swatches on the motion page, and one icon and one chip on the image page. Give each of them a keyboard path so the study has no mouse-only control left.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T02:19:54.622Z",
+  "updated": "2026-09-02T02:19:54.622Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by shared/audit-keyboard.mjs on 2026-09-01 after core.js took over [data-target], .sec-h and .menuitem. Remaining (informational line of the audit): ds-modes span.cn x2 + span.cn.active, lang-motion div.ease.es/.ed/.esp, image i.ic.sm + div.ch. These bind their own click in the page inline script, so the fix is per page: role, tabindex=0, keydown Enter/Space -> click (see AGENTS.md Keyboard reach). Small, mechanical.",
+  "acceptance": [
+    "node shared/audit-keyboard.mjs (from docs/design/mocks) reports 0 private pointer targets",
+    "Each of the eight takes focus with Tab and activates with Enter or Space",
+    "Each announces a role to a screen reader"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T02:19:54.622Z",
+      "note": "created (manual)"
+    }
+  ]
+}

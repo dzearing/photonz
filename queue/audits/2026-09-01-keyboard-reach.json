@@ -1,0 +1,27 @@
+{
+  "feature": "Keyboard reach in the design study",
+  "epic": "design-system",
+  "summary": "Every menu row, every card or bold word that jumps to another page, and every collapsible section header in the mock study now takes keyboard focus and works from Enter, Space, the arrow keys and Escape. Before this, a keyboard user hit a dead end at every menu.",
+  "setup": "Design dashboard at http://127.0.0.1:8791 (any mock page). No app build involved; the change is in the shared mock components.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/index.html#home, click once in the page, then press Tab until a scenario card lights up with the accent ring.", "shot": "2026-09-01-keyboard-reach-1.png" },
+    { "do": "Press Enter on that card. The shell should switch to the page the card names, exactly as a click would." },
+    { "do": "Open the editor page, Tab to the three-dot Commands button at the top of the canvas, and press Enter. The menu opens with its first row highlighted.", "shot": "2026-09-01-keyboard-reach-2.png" },
+    { "do": "Press ArrowDown a few times, then Escape. Focus should land back on the Commands button and the menu should be gone." },
+    { "do": "Open the menu again and press Enter on Home. The shell should go to the home page." },
+    { "do": "On the Sections language page, Tab to a bold word in the prose that names another page and press Enter.", "shot": "2026-09-01-keyboard-reach-3.png" },
+    { "do": "Tab to a section header in an inspector panel and press Space. The section collapses; press it again to reopen.", "shot": "2026-09-01-keyboard-reach-4.png" }
+  ],
+  "evaluate": [
+    "Is one Tab stop per menu, with arrows for the rows, the right trade, or do you expect Tab to walk the rows too?",
+    "Does the focused menu row read as the same highlight the mouse hover gives, or does it look like a different state?",
+    "When a menu closes on Escape or after a pick, does focus land where your hand expects it, on the button that opened it?",
+    "Are there cards where the card itself and a button inside it both taking a Tab stop feels like one stop too many?"
+  ],
+  "rough": [
+    "Eight page-private click targets remain mouse-only (mode names on ds-modes, easing swatches on lang-motion, one icon and one chip on image). They bind their own click in page scripts; filed as a follow-up task.",
+    "A menu opened with a mouse click does not move focus into itself; only a keyboard open does. That matches native macOS menus but means a mouse-then-keyboard user has to press ArrowDown on the trigger to get in.",
+    "Cross-links are announced as links even when drawn as a select-style pill or a chip, because that is what they do. The mocks draw a few of them as selects, which a screen reader will now name differently from how they look.",
+    "The audit runs on the global Playwright install and the local Chrome, not on a repo dependency, so it is a measurement tool alongside audit-sweep.js rather than a build gate."
+  ]
+}

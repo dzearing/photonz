@@ -5,14 +5,14 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 410,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T04:24:27.425Z",
-  "updated": "2026-08-24T04:25:07.725Z",
+  "updated": "2026-09-02T02:21:17.233Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found while giving icon buttons accessible names on 2026-08-24. shared/components/core.js binds click to ANY [data-target]; menus bind [data-menu] the same way. Measured across 12 representative pages: 63 of 151 [data-target]/[data-menu] elements are neither button/a nor carry role or tabindex, so they are absent from the accessibility tree entirely. The shell.js harvest path was already fixed in c57d129 (role=button + tabindex + Enter/Space for non-native harvested chips); the same treatment belongs in core.js for [data-target] (role=link) and wherever [data-menu] is bound, plus role=menuitem on .menuitem rows. Watch the tab-order cost: some [data-target] elements are big rows and cards, so consider whether a card and its inner controls should be one stop or several. check-a11y-names.mjs could grow a second rule to gate this.",
+  "notes": "Found while giving icon buttons accessible names on 2026-08-24. shared/components/core.js binds click to ANY [data-target]; menus bind [data-menu] the same way. Measured across 12 representative pages: 63 of 151 [data-target]/[data-menu] elements are neither button/a nor carry role or tabindex, so they are absent from the accessibility tree entirely. The shell.js harvest path was already fixed in c57d129 (role=button + tabindex + Enter/Space for non-native harvested chips); the same treatment belongs in core.js for [data-target] (role=link) and wherever [data-menu] is bound, plus role=menuitem on .menuitem rows. Watch the tab-order cost: some [data-target] elements are big rows and cards, so consider whether a card and its inner controls should be one stop or several. check-a11y-names.mjs could grow a second rule to gate this.\n\nShipped 2026-09-01. core.js owns the keyboard sweep (upgradeLinks / upgradeSections / upgradeMenus, run at load + MutationObserver with a 200ms ceiling like tooltip.js) and publishes PZ.menu {enter, close, upgrade}; popover.js and dock.js call enter() on a keyboard open and close() on Escape; segmented.js marks its seg-menu data-keys=own. Focus rings: links.css [data-target][tabindex]:focus-visible, app-patterns.css .menuitem:focus-visible (hover fill + ring), inspector.css .sec-h:focus-visible. Measure with `node shared/audit-keyboard.mjs [pages] [--walk]` from docs/design/mocks (needs the dev server on :8791 and Playwright, resolved from npm root -g, plus /Applications/Google Chrome).",
   "acceptance": [
     "Every menu row in the study takes keyboard focus and opens on Enter or Space",
     "Every cross-page link card and inline jump word does the same",
@@ -27,6 +27,75 @@
     {
       "t": "2026-08-24T04:25:07.724Z",
       "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-08-24T05:07:07.148Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T06:13:38.843Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-08-24T06:30:32.114Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T11:10:36.784Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 2)"
+    },
+    {
+      "t": "2026-08-24T11:10:42.455Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-08-24T13:31:35.325Z",
+      "note": "parked after 3 runner failures in a row; last runner exited without finalizing the task"
+    },
+    {
+      "t": "2026-09-02T01:55:09.947Z",
+      "note": "unparked on 2026-09-01: the three failures were the machine sleeping mid-run and an expired login, not the task"
+    },
+    {
+      "t": "2026-09-02T01:57:31.066Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T02:21:01.684Z",
+      "note": "staging: epic design-system is staged next, not now; the user unparked this task today and the loop has shipped three design-system tasks this week, so treated as sanctioned"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "reproduced in headless Chrome (Playwright via the global @playwright/mcp install + local Google Chrome, new shared/audit-keyboard.mjs): on 4 sample pages 12/59 cross-links focusable, 2/62 navigate on Enter, 0/48 menu rows reachable, 0/8 menus open from the keyboard"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "adversarial review before building: (1) one Tab stop per MENU with arrow keys, not one per row, because a page holds up to 41 rows and a keyboard user should not pay 41 Tabs; (2) a card and the buttons inside it stay separate stops, with the key handler guarded to e.target so Enter on an inner button never also opens the card; (3) Enter only for role=link, Enter+Space for menu items and headers, matching native; (4) focus goes into a menu only on a keyboard open (:focus-visible on the trigger), like a native menu; (5) collapsible .sec-h headers were also mouse-only and live in core.js, so they got the same treatment; (6) no static gate is possible since the affordance is runtime, so the gate is the browser audit"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "found two real bugs on the way: dock.js .dgrp-h keydown handled Enter bubbling from ANY button inside the header (collapsed the group and swallowed the press, so menu triggers in panel headers never opened by key); shell.js appends the Home menu row after core.js has bound clicks, so Home had no click at all. Both fixed (guard e.target===h; core.js sweep re-runs on DOM change)"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "harness lessons: postMessage is a task so the nav check must wait rather than read immediately; walkthrough pages pre-open #mbMenu on step 1 so Enter correctly toggled it closed, the audit now closes popovers before each trigger test; a disabled slot trigger is not a failure"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "verified: full audit on all 90 pages: cross-links 391/391 focusable, Enter navigates 531/531, menu rows 1410/1410 reachable, triggers 306/306 focusable, 207/207 menus open/move/close by key; --walk (real Tab presses) misses 0 on a 10-page sample; 0 console errors on 11 pages; all 6 check-*.mjs gates green; Scripts/test.sh 1094 tests pass"
+    },
+    {
+      "t": "2026-09-02T02:21:01.685Z",
+      "note": "left over: 8 page-private click targets (ds-modes, lang-motion, image) bind their own click in page scripts and stay mouse-only; filed eight-page-private-click-targets-in-the-mocks-ar. Audit written to queue/audits/2026-09-01-keyboard-reach.json with 4 shots"
+    },
+    {
+      "t": "2026-09-02T02:21:17.233Z",
+      "note": "core.js now gives every cross-link card and jump word a tab stop and Enter, every section header Enter/Space, and every menu row a real menu (one Tab stop per menu, arrows, Enter/Space, Escape back to the trigger); popover.js/dock.js focus the menu on a keyboard open. Also fixed dock.js headers swallowing Enter on inner buttons and the shell's Home row having no click. Verified with new shared/audit-keyboard.mjs in headless Chrome on all 90 pages (391/391 links, 531/531 Enter, 1410/1410 rows, 207/207 menus) plus a real Tab walk; gates and Scripts/test.sh green. Commit a9eded8. Audit: queue/audits/2026-09-01-keyboard-reach.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T01:57:31.065Z",
+  "failures": 0,
+  "parked": false,
+  "parkReason": "",
+  "completed": "2026-09-02T02:21:17.233Z"
 }
