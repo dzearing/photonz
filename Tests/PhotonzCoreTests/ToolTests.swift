@@ -258,3 +258,106 @@ struct AnnotationBuilderTests {
     }
 
 }
+
+// MARK: - Tool groups and the family layout
+//
+// The bar groups tools the way a pro editor does: a family of tools shares one
+// slot, the slot shows the last member you used, and shift plus a member's key
+// walks the family. The model is pure so the order and the key vocabulary can
+// be held still here.
+struct ToolGroupTests {
+
+    @Test func everyGroupMemberBelongsToExactlyOneGroup() {
+        var seen: [Tool: ToolGroup] = [:]
+        for group in ToolGroup.allCases {
+            for tool in group.tools {
+                #expect(seen[tool] == nil, "\(tool) sits in \(group) and \(String(describing: seen[tool]))")
+                seen[tool] = group
+                #expect(ToolGroup.containing(tool) == group)
+            }
+        }
+        #expect(ToolGroup.containing(.select) == nil)
+        #expect(ToolGroup.containing(.arrow) == nil)
+    }
+
+    @Test func theSelectionGroupIsTheMarqueeFamily() {
+        #expect(ToolGroup.selection.tools == [.rectSelect, .ellipseSelect, .wand])
+        #expect(ToolGroup.selection.groupKey == "m")
+    }
+
+    @Test func theShapesGroupHoldsLineRectangleAndEllipse() {
+        #expect(ToolGroup.shapes.tools == [.line, .rectangle, .ellipse])
+        // Each shape keeps its own Photoshop letter, so no group key.
+        #expect(ToolGroup.shapes.groupKey == nil)
+    }
+
+    @Test func cyclingWalksTheGroupAndWraps() {
+        #expect(ToolGroup.shapes.next(after: .line) == .rectangle)
+        #expect(ToolGroup.shapes.next(after: .rectangle) == .ellipse)
+        #expect(ToolGroup.shapes.next(after: .ellipse) == .line)
+        // A tool from outside the group starts the walk at the first member.
+        #expect(ToolGroup.shapes.next(after: .wand) == .line)
+    }
+
+    @Test func shiftPlusAnyMemberKeyCyclesTheGroup() {
+        // Selection: M is the group key, W is the wand's own. Both cycle with shift.
+        #expect(ToolGroup.selection.cycleKeys == ["m", "w"])
+        #expect(ToolGroup.shapes.cycleKeys == ["l", "r", "o"])
+        for group in ToolGroup.allCases {
+            #expect(!group.cycleKeys.isEmpty)
+            #expect(Set(group.cycleKeys).count == group.cycleKeys.count)
+        }
+    }
+
+    @Test func rememberedMemberFallsBackToTheFirst() {
+        #expect(ToolGroup.shapes.member(from: "rectangle") == .rectangle)
+        #expect(ToolGroup.shapes.member(from: "wand") == .line)
+        #expect(ToolGroup.shapes.member(from: nil) == .line)
+        #expect(ToolGroup.selection.member(from: "garbage") == .rectSelect)
+    }
+
+    @Test func groupsHaveNamesForTheirMenus() {
+        #expect(ToolGroup.selection.title == "Selection")
+        #expect(ToolGroup.shapes.title == "Shapes")
+    }
+}
+
+struct ToolBarLayoutTests {
+
+    @Test func everyToolAppearsExactlyOnce() {
+        var counts: [Tool: Int] = [:]
+        for entry in ToolBarLayout.families.entries {
+            switch entry {
+            case .tool(let tool): counts[tool, default: 0] += 1
+            case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+            }
+        }
+        for tool in Tool.allCases {
+            #expect(counts[tool] == 1, "\(tool) appears \(counts[tool] ?? 0) times")
+        }
+    }
+
+    @Test func theFamiliesReadPickCutMeasureThenDrawThenPaint() {
+        let families = ToolBarLayout.families.families
+        #expect(families.count == 3)
+        #expect(families[0] == [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)])
+        #expect(families[1] == [.tool(.arrow), .group(.shapes), .tool(.highlight), .tool(.text), .tool(.zoomCallout)])
+        #expect(families[2] == [.tool(.fill)])
+    }
+
+    @Test func groupingTakesFewerSlotsThanOneButtonPerTool() {
+        // 13 slots before (12 tools with the marquee pair sharing one, plus
+        // Resize); the grouped bar must be strictly narrower.
+        #expect(ToolBarLayout.families.entries.count == 10)
+        #expect(ToolBarLayout.families.entries.count < 13)
+        #expect(!ToolBarLayout.families.families.contains { $0.isEmpty })
+    }
+
+    @Test func aToolResolvesToItsOwnSlot() {
+        #expect(ToolBarLayout.families.entry(for: .rectSelect) == .group(.selection))
+        #expect(ToolBarLayout.families.entry(for: .wand) == .group(.selection))
+        #expect(ToolBarLayout.families.entry(for: .ellipse) == .group(.shapes))
+        #expect(ToolBarLayout.families.entry(for: .arrow) == .tool(.arrow))
+        #expect(ToolBarLayout.families.entry(for: .fill) == .tool(.fill))
+    }
+}

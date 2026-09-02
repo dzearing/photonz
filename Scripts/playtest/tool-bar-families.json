@@ -1,0 +1,391 @@
+{
+  "out": "/tmp/photonz-playtest/toolbar-after",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "1-open",
+      "note": "grouped bar at 1280pt, inspector shown"
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-after-1280"
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-open-wide",
+      "note": "grouped bar at 1280pt, inspector hidden"
+    },
+    {
+      "do": "snapshot",
+      "name": "bar-after-1280-noinspector"
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipse"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipse"
+    },
+    {
+      "do": "describe",
+      "stage": "2-shapes",
+      "note": "O picks Ellipse even when Ellipse is the remembered shape (a cycle would have given Line)"
+    },
+    {
+      "do": "key",
+      "key": "l"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "line"
+    },
+    {
+      "do": "snapshot",
+      "name": "shapes-line"
+    },
+    {
+      "do": "key",
+      "key": "r",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "key",
+      "key": "o",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipse"
+    },
+    {
+      "do": "key",
+      "key": "l",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "line"
+    },
+    {
+      "do": "key",
+      "key": "l",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "describe",
+      "stage": "2-shapes",
+      "note": "shift R, shift O, shift L, shift L walked Line, Rectangle, Ellipse, Line, Rectangle"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "key",
+      "key": "l"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "line"
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipse"
+    },
+    {
+      "do": "snapshot",
+      "name": "shapes-ellipse"
+    },
+    {
+      "do": "key",
+      "key": "w"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "wand"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "wand"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "wand"
+    },
+    {
+      "do": "describe",
+      "stage": "3-selection",
+      "note": "M picks the remembered selector (wand) from Select; a cycle would have given Rectangle Select"
+    },
+    {
+      "do": "key",
+      "key": "m",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "m",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "ellipseSelect"
+    },
+    {
+      "do": "key",
+      "key": "w",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "wand"
+    },
+    {
+      "do": "key",
+      "key": "w",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "describe",
+      "stage": "3-selection",
+      "note": "shift M, shift M, shift W, shift W walked wand, rectangle, ellipse, wand, rectangle"
+    },
+    {
+      "do": "key",
+      "key": "a"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "arrow"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectSelect"
+    },
+    {
+      "do": "describe",
+      "stage": "3-selection",
+      "note": "M from Arrow picked the remembered selector (rectangle)"
+    },
+    {
+      "do": "key",
+      "key": "c"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "crop"
+    },
+    {
+      "do": "describe",
+      "stage": "4-crop",
+      "note": "crop in hand; the bar must be the same width"
+    },
+    {
+      "do": "snapshot",
+      "name": "crop-active"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "key",
+      "key": "z"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "zoomCallout"
+    },
+    {
+      "do": "key",
+      "key": "g"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "fill"
+    },
+    {
+      "do": "key",
+      "key": "h"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "highlight"
+    },
+    {
+      "do": "key",
+      "key": "t"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "text"
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "rectangle"
+    },
+    {
+      "do": "describe",
+      "stage": "5-keys",
+      "note": "I Z G H T R each landed on their tool"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "describe",
+      "stage": "6-end",
+      "note": "back on Select"
+    }
+  ]
+}

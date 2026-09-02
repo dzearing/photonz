@@ -59,6 +59,10 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// a deliberate pick, and the key stays a plain "pick this tool up". Only
     /// the wording changes here; `pressedKey` is what actually decides.
     var keyCycles: Bool = true
+    /// Extra rows at the foot of the list, below the modes: a command that
+    /// belongs to the same family but is not a mode (Crop carries Resize
+    /// Image, since both change the picture's bounds). Nil for none.
+    var footer: AnyView? = nil
     /// What the tool's key does: pick the tool up, or, when it is already in
     /// hand, move to the next mode. The caller decides from LIVE state rather
     /// than from `isActive`, because a keyboard shortcut's action is registered
@@ -124,15 +128,12 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// off the side of the button: at tool-bar scale that reads as a separate
     /// widget sitting next to the tool, and it spends horizontal space the bar
     /// does not have. The marker is a tiny wedge INSIDE the button's own
-    /// footprint instead, which is how a pro editor has always flagged a tool
-    /// group, and it costs zero extra width.
+    /// footprint instead (`ToolBarMoreMarker`, shared with the tool groups),
+    /// which is how a pro editor has always flagged a tool group, and it costs
+    /// zero extra width.
     @ViewBuilder private var moreMarker: some View {
         if modes.count > 1 {
-            Image(systemName: "arrowtriangle.down.fill")
-                .font(.system(size: 5, weight: .black))
-                .foregroundStyle(isActive ? Color.white.opacity(0.9) : Color.secondary)
-                .padding(1)
-                .allowsHitTesting(false)
+            ToolBarMoreMarker(isActive: isActive)
         }
     }
 
@@ -155,6 +156,10 @@ struct ToolModeButton<Mode: Hashable>: View {
                 // tool's key: printing the same letter on four rows would say
                 // nothing.
                 Text("Press \(keyLabel) to cycle")
+            }
+            if let footer {
+                Divider()
+                footer
             }
         } label: {
             glyph

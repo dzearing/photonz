@@ -412,6 +412,9 @@ private final class Run {
                 timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
                 context: nil, characters: key.characters, charactersIgnoringModifiers: key.characters,
                 isARepeat: false, keyCode: key.keyCode) else { continue }
+            // Straight to the window, so no event monitor sees this press;
+            // tell the tracker what a monitor would have.
+            KeyModifierTracker.record(event)
             if flags.isEmpty || type == .keyUp {
                 window.sendEvent(event)
             } else if window.performKeyEquivalent(with: event) {
@@ -478,6 +481,9 @@ private final class Run {
         }
         return [
             "tool": editor.activeTool.rawValue,
+            // The floating bar's measured width, so a walk can prove a
+            // change made it narrower rather than eyeballing a snapshot.
+            "toolBarWidth": editor.toolBarWidth,
             "measureMode": editor.measureToolMode.rawValue,
             "hint": editor.showsMeasureHint ? "\(editor.measureHintTitle ?? "") · \(editor.measureHintText)" : "none",
             "copied": editor.copyConfirmation.map { "\($0.title) · \($0.detail)" } ?? "none",

@@ -45,6 +45,8 @@ public enum FeatureCatalog {
 
     public static let toolOptionsFlag = "next-tool-options"
 
+    public static let toolGroupsFlag = "next-tool-groups"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -193,6 +195,15 @@ public enum FeatureCatalog {
                     name: toolOptionsFlag,
                     title: "Tool options off the tool bar",
                     description: "Picking up the Crop tool or the Magic Wand stops widening the floating tool bar. Crop keeps its aspect locks inside its own tool button and shows Cancel and Crop on the canvas while a crop is live; the wand's tolerance moves to a Magic Wand section in the inspector. Off means both tools lay their options out along the bar, which grows it and pushes tools into the overflow menu on a narrow window.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: toolGroupsFlag,
+                    title: "Tool bar families",
+                    description: "The floating tool bar groups its tools into families in a fixed order: pick, cut and measure the picture; draw on it; paint it. Line, Rectangle and Ellipse share one Shapes button that remembers the last one you used (Shift plus their letter cycles), and Resize Image moves into the Crop button's list and the Image menu. Off means one button per tool in the old order.",
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

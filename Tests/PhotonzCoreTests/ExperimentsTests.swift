@@ -371,6 +371,15 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measurePanelFlag })
     }
 
+    @Test func theToolGroupsFlagIsNextOnlyAndOnByDefault() {
+        // The tool bar groups tools into families (Shapes share a slot, Resize
+        // rides in the Crop flyout). Next only; Current keeps one button per tool.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.toolGroupsFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.toolGroupsFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.toolGroupsFlag })
+        #expect(FeatureCatalog.toolGroupsFlag == "next-tool-groups")
+    }
+
     @Test func theToastEditFlagIsNextOnlyAndOnByDefault() {
         // The capture toast used to hide its way into the editor behind a
         // hover. In Next the toast shows an Edit control and names the key;

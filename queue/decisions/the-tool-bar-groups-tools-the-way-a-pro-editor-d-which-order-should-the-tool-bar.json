@@ -1,0 +1,74 @@
+{
+  "id": "the-tool-bar-groups-tools-the-way-a-pro-editor-d-which-order-should-the-tool-bar",
+  "taskId": "the-tool-bar-groups-tools-the-way-a-pro-editor-d",
+  "question": "Which order should the tool bar's families take, and does a Recent slot earn a place?",
+  "context": "The Next tool bar now groups its tools into families (built, flag next-tool-groups, on by default). The order and the recent-tools idea are judgment calls about how the bar should feel, so they are yours. Strips of each option are in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Picture first",
+      "summary": "Left to right: Select, Selection, Crop, Measure, then a hairline, then Arrow, Shapes, Highlight, Text, Zoom Callout, then a hairline, then Fill beside its colors. This is what is built and running in Next now.",
+      "pros": [
+        "Reads as what you do to a picture: pick and cut and measure it, draw on it, paint it",
+        "Measure sits fourth, two slots from Select, so the redline tool is never far",
+        "Fill lands next to the color pair it uses"
+      ],
+      "cons": [
+        "Arrow, the most used redline tool, is fifth rather than second",
+        "Crop sits ahead of every drawing tool even though it is used less"
+      ],
+      "mitigation": "Every drawing tool keeps its letter (A, L, R, O, H, T, Z), so the bar order only matters when you reach with the mouse."
+    },
+    {
+      "id": "b",
+      "label": "Redline first",
+      "summary": "Left to right: Select, Measure, Arrow, Text, Shapes, Highlight, Zoom Callout, then a hairline, then Selection, Crop, Fill. The tools a redline uses lead; pixel editing trails.",
+      "pros": [
+        "Measure and Arrow sit right after Select, where a redliner reaches first",
+        "The pixel-editing tools (select a region, crop, fill) read as one family at the end"
+      ],
+      "cons": [
+        "Breaks the pro-editor convention that selection tools follow the pointer tool",
+        "A Photoshop hand will reach for the second slot expecting the marquee and find the ruler"
+      ],
+      "mitigation": "The families still have hairlines, so the bar still reads as a system, just ordered by how this app is used rather than by Photoshop."
+    },
+    {
+      "id": "c",
+      "label": "Photoshop literal",
+      "summary": "Left to right: Select, Selection, Crop, Measure, Fill, then a hairline, then Text, Arrow, Shapes, Highlight, Zoom Callout. Photoshop puts paint before type and shapes, so Fill moves up beside Measure.",
+      "pros": [
+        "Closest to the order a Photoshop user already has in their hands",
+        "Type leads the drawing family, as in Photoshop"
+      ],
+      "cons": [
+        "Fill is split from the color pair it acts on by the whole drawing family",
+        "Photoshop has no arrow, highlight or zoom callout, so half the bar is guesswork anyway"
+      ],
+      "mitigation": "The colors could move to sit right after Fill instead of at the end, at the cost of the zoom control moving too."
+    },
+    {
+      "id": "d",
+      "label": "Picture first, plus a Recent slot",
+      "summary": "Option A with one more group at the far end, after a hairline: a clock button that wears the tool you used before this one and lists the last three. Everything else stays where it is.",
+      "pros": [
+        "One click back to whatever you were just doing",
+        "Might help when a tool is in the overflow menu on a narrow window"
+      ],
+      "cons": [
+        "Every tool is already on the bar, and each family button already remembers its last member, so the slot shows a tool that is also somewhere else",
+        "It spends 42 points of the width this change just saved",
+        "A moving slot is the opposite of the predictability the regrouping is for"
+      ],
+      "mitigation": "It could appear only when the window is narrow enough that tools have overflowed, so it costs nothing at full width."
+    }
+  ],
+  "recommended": "a",
+  "status": "resolved",
+  "created": "2026-09-02T15:22:25.841Z",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-09-02T15:24:11.448Z"
+  }
+}

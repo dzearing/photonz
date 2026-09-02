@@ -178,6 +178,13 @@ extension Experiments {
     /// reads false and keeps both option rows in the bar.
     var toolOptionsEnabled: Bool { isEnabled(FeatureCatalog.toolOptionsFlag) }
 
+    /// `next-tool-groups`: whether the floating tool bar lays its tools out
+    /// as families (`ToolBarLayout.families`), with Line / Rectangle / Ellipse
+    /// sharing one Shapes button and Resize Image riding in the Crop flyout.
+    /// Exists only in the Next release's catalog, so Current always reads
+    /// false and keeps one button per tool.
+    var toolGroupsEnabled: Bool { isEnabled(FeatureCatalog.toolGroupsFlag) }
+
     /// `next-window-capture`: whether the region-capture overlay highlights
     /// the window under the pointer and captures it on a click. Exists only in
     /// the Next release's catalog, so Current always reads false and its

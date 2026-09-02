@@ -1021,6 +1021,17 @@ next click does while your hand is on the tool, and not enough to remind you
 three minutes later. The tool's properties carry the live mode as a word next to
 its settings, so the flyout stays the fast path rather than the only path.
 
+**A family of tools is the same idiom, one level up.** Tools that do the same
+kind of thing (the three region selectors; line, rectangle and ellipse) share
+ONE slot: the button wears the member you used last, a click picks it up,
+press-and-hold lists the family, each member keeps its own letter, and shift
+plus any of those letters walks the family. Same pull-down, same corner
+wedge as a tool's modes, so the bar has one way of saying "more inside". The
+bar is laid out as families in a fixed order (pick, cut and measure the
+picture; draw on it; paint it) with a hairline between families, so a person
+can predict where a tool lives. What is NOT a tool (Resize Image is a dialog)
+does not get a slot: it rides at the foot of the family it belongs to.
+
 **Actions are the third kind, and they belong on the thing they end.** A mode
 changes what a click does and lives in the tool button; a setting changes how
 the result looks and lives in the tool's properties; an ACTION ends a state

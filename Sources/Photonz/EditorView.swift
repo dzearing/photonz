@@ -458,7 +458,7 @@ struct EditorView: View {
     /// see `EditorChromeLayout.showsZoomSlider`.
     private var toolbar: some View {
         HStack(spacing: 10) {
-            if toolbarVisibleCount >= ToolbarSlot.allCases.count {
+            if toolbarVisibleCount >= toolbarSlots.count {
                 toolsBar
             } else {
                 compactToolsBar(visibleCount: toolbarVisibleCount)
@@ -475,7 +475,7 @@ struct EditorView: View {
         guard toolbarBudget > 0, toolbarContentWidth > 0 else { return }
         let fitted = EditorChromeLayout.fittedToolCount(
             current: toolbarVisibleCount,
-            maximum: ToolbarSlot.allCases.count,
+            maximum: toolbarSlots.count,
             contentWidth: toolbarContentWidth,
             budget: toolbarBudget)
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
@@ -498,31 +498,10 @@ struct EditorView: View {
 
     private var toolsBar: some View {
         HStack(spacing: 14) {
-            toolButton(.select, "cursorarrow", "Select")
-            regionSelectButtons
-            if editorState.activeTool == .wand, !Experiments.shared.toolOptionsEnabled {
-                wandOptions
-                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
-            }
-            toolButton(.arrow, "arrow.up.right", "Arrow")
-            toolButton(.line, "line.diagonal", "Line")
-            toolButton(.rectangle, "rectangle", "Rectangle")
-            toolButton(.ellipse, "circle", "Ellipse")
-            toolButton(.highlight, "highlighter", "Highlight")
-            toolButton(.text, "character.cursor.ibeam", "Text")
-            Divider().frame(height: 20)
-            cropToolButton
-            if editorState.activeTool == .crop, !Experiments.shared.toolOptionsEnabled {
-                cropOptions
-                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
-            }
-            resizeButton
-            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
-            // I, not M: M is the Photoshop marquee (rect/ellipse select), and
-            // Photoshop itself files the Ruler under I.
-            measureToolButton
-            toolButton(.fill, help: "Fill") {
-                PaintBucketIcon().frame(width: 22, height: 21)
+            if Experiments.shared.toolGroupsEnabled {
+                groupedToolRow
+            } else {
+                flatToolRow
             }
         }
         .buttonStyle(.borderless)
@@ -549,12 +528,63 @@ struct EditorView: View {
         // above, and the swatch still animates in when you pick the arrow tool.)
     }
 
+    /// The bar as families (`ToolBarLayout.families`), a hairline between
+    /// each: pick, cut and measure the picture; draw on it; paint it. Every
+    /// slot is the same widget the compact bar uses, so the two never drift.
+    @ViewBuilder private var groupedToolRow: some View {
+        ForEach(Array(ToolBarLayout.families.families.enumerated()), id: \.offset) { index, family in
+            if index > 0 {
+                Divider().frame(height: 20)
+            }
+            ForEach(family, id: \.self) { entry in
+                slotButton(ToolbarSlot(entry))
+            }
+            // With the tool-options flag off, Resize is still a button and it
+            // stays beside Crop, the family it belongs to.
+            if index == 0, !Experiments.shared.toolOptionsEnabled {
+                resizeButton
+            }
+        }
+        contextualToolOptions
+    }
+
+    /// One button per tool in the order the bar has always had. What Current
+    /// ships, and what Next shows with its tool-groups flag off.
+    @ViewBuilder private var flatToolRow: some View {
+            toolButton(.select, "cursorarrow", "Select")
+            regionSelectButtons
+            if editorState.activeTool == .wand, !Experiments.shared.toolOptionsEnabled {
+                wandOptions
+                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
+            }
+            toolButton(.arrow, "arrow.up.right", "Arrow")
+            toolButton(.line, "line.diagonal", "Line")
+            toolButton(.rectangle, "rectangle", "Rectangle")
+            toolButton(.ellipse, "circle", "Ellipse")
+            toolButton(.highlight, "highlighter", "Highlight")
+            toolButton(.text, "character.cursor.ibeam", "Text")
+            Divider().frame(height: 20)
+            cropToolButton
+            if editorState.activeTool == .crop, !Experiments.shared.toolOptionsEnabled {
+                cropOptions
+                    .transition(.scale(scale: 0.8, anchor: .leading).combined(with: .opacity))
+            }
+            resizeButton
+            toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
+            // I, not M: M is the Photoshop marquee (rect/ellipse select), and
+            // Photoshop itself files the Ruler under I.
+            measureToolButton
+            toolButton(.fill, help: "Fill") {
+                PaintBucketIcon().frame(width: 22, height: 21)
+            }
+    }
+
     /// The compact tool row used when the full set won't fit: the leading tools
     /// that fit, then a chevron overflow menu holding the rest, then the
     /// contextual options for the active tool (which stay reachable). The active
     /// tool is always kept out of the overflow so its options make sense.
     private func compactToolsBar(visibleCount: Int) -> some View {
-        let all = ToolbarSlot.allCases
+        let all = toolbarSlots
         let active = activeSlot
         let visible = all.enumerated().filter { index, slot in
             index < visibleCount || slot == active
@@ -619,6 +649,20 @@ struct EditorView: View {
         }
     }
 
+    /// Resize Image at the foot of the Crop flyout. Not a mode and not a tool:
+    /// it is the other way to change the picture's bounds, so it rides with
+    /// Crop rather than spending a slot of its own. The chord is printed for
+    /// teaching; the Image menu is what fires it.
+    private var resizeMenuRow: some View {
+        Button {
+            editorState.isResizeDialogPresented = true
+        } label: {
+            Label("Resize Image…", systemImage: "arrow.down.right.and.arrow.up.left.rectangle")
+        }
+        .keyboardShortcut("i", modifiers: [.command, .option])
+        .disabled(editorState.document == nil)
+    }
+
     /// The image-resize button (not a `Tool`, so it isn't part of `setTool`).
     private var resizeButton: some View {
         Button {
@@ -678,12 +722,33 @@ struct EditorView: View {
     private enum ToolbarSlot: String, CaseIterable {
         case select, marquee, arrow, line, rectangle, ellipse, highlight, text
         case crop, resize, zoomCallout, measure, fill
+        /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
+        case shapes
+
+        /// The slot for one entry of `ToolBarLayout`.
+        init(_ entry: ToolBarLayout.Entry) {
+            switch entry {
+            case .group(.selection): self = .marquee
+            case .group(.shapes): self = .shapes
+            case .tool(let tool): self = ToolbarSlot.allCases.first { $0.tool == tool } ?? .select
+            }
+        }
+
+        /// The family this slot stands for, nil for a lone tool.
+        var group: ToolGroup? {
+            switch self {
+            case .marquee: .selection
+            case .shapes: .shapes
+            default: nil
+            }
+        }
 
         /// Menu title when the slot is overflowed.
         var title: String {
             switch self {
             case .select: "Select"
             case .marquee: "Selection"
+            case .shapes: "Shapes"
             case .arrow: "Arrow"
             case .line: "Line"
             case .rectangle: "Rectangle"
@@ -703,6 +768,7 @@ struct EditorView: View {
             switch self {
             case .select: "cursorarrow"
             case .marquee: "rectangle.dashed"
+            case .shapes: "square.on.circle"
             case .arrow: "arrow.up.right"
             case .line: "line.diagonal"
             case .rectangle: "rectangle"
@@ -724,7 +790,8 @@ struct EditorView: View {
         var shortcutKey: Character? {
             switch self {
             case .marquee: "m"
-            case .resize: nil
+            // Each shape keeps its own letter, so the family prints none.
+            case .shapes, .resize: nil
             default: tool?.shortcutKey
             }
         }
@@ -746,17 +813,35 @@ struct EditorView: View {
             case .zoomCallout: .zoomCallout
             case .measure: .measure
             case .fill: .fill
-            case .marquee, .resize: nil
+            case .marquee, .shapes, .resize: nil
             }
         }
+    }
+
+    /// The slots the bar shows, in order. Families (`ToolBarLayout`) with the
+    /// tool-groups flag on; otherwise one button per tool in the old order,
+    /// which is what Current ships. Resize stays a button beside Crop only
+    /// while the Crop flyout (tool-options flag) is not there to hold it.
+    private var toolbarSlots: [ToolbarSlot] {
+        guard Experiments.shared.toolGroupsEnabled else {
+            return ToolbarSlot.allCases.filter { $0 != .shapes }
+        }
+        var slots = ToolBarLayout.families.entries.map(ToolbarSlot.init)
+        if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
+            slots.insert(.resize, at: crop + 1)
+        }
+        return slots
     }
 
     /// The slot matching the active tool (all region selectors fold to
     /// `.marquee`), so the compact bar keeps the active tool out of the overflow.
     private var activeSlot: ToolbarSlot? {
         let tool = editorState.activeTool
-        if tool.isRegionSelectionTool { return .marquee }
-        return ToolbarSlot.allCases.first { $0.tool == tool }
+        let slots = toolbarSlots
+        if let group = ToolGroup.containing(tool), let slot = slots.first(where: { $0.group == group }) {
+            return slot
+        }
+        return slots.first { $0.tool == tool }
     }
 
     /// Inline button for a slot in the compact bar — same widgets the full bar
@@ -764,7 +849,14 @@ struct EditorView: View {
     @ViewBuilder private func slotButton(_ slot: ToolbarSlot) -> some View {
         switch slot {
         case .select: toolButton(.select, "cursorarrow", "Select")
-        case .marquee: selectionGroupButton
+        case .marquee:
+            if Experiments.shared.toolGroupsEnabled {
+                groupButton(.selection,
+                            hint: "⇧ adds to the selection, ⌥ subtracts, ⇧⌥ intersects.")
+            } else {
+                selectionGroupButton
+            }
+        case .shapes: groupButton(.shapes)
         case .arrow: toolButton(.arrow, "arrow.up.right", "Arrow")
         case .line: toolButton(.line, "line.diagonal", "Line")
         case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle")
@@ -797,13 +889,14 @@ struct EditorView: View {
                     Button("") { activateSlot(slot) }
                         .keyboardShortcut(key, modifiers: [])
                 }
-                // The marquee slot stands for three tools, so it carries the
-                // whole group vocabulary, not just M.
-                if slot == .marquee {
-                    Button("") { activateSelectionTool(cycledSelectionTool) }
-                        .keyboardShortcut("m", modifiers: .shift)
-                    Button("") { activateSelectionTool(.wand) }
-                        .keyboardShortcut("w", modifiers: [])
+                // A family slot stands for several tools, so it carries the
+                // whole family's vocabulary, not just its own letter.
+                if let group = slot.group {
+                    ToolGroupShortcuts(
+                        group: group,
+                        activate: { editorState.setTool($0) },
+                        pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
+                        cycle: { cycleGroup(group) })
                 }
             }
         }
@@ -815,10 +908,34 @@ struct EditorView: View {
     /// Activate a slot picked from the overflow menu.
     private func activateSlot(_ slot: ToolbarSlot) {
         switch slot {
-        case .marquee: activateSelectionTool(lastSelectionTool)
         case .resize: editorState.isResizeDialogPresented = true
-        default: if let tool = slot.tool { editorState.setTool(tool) }
+        default:
+            if let group = slot.group {
+                editorState.setTool(editorState.lastTool(in: group))
+            } else if let tool = slot.tool {
+                editorState.setTool(tool)
+            }
         }
+    }
+
+    /// One family of tools as one slot: the button wears the member used
+    /// last, and the family's keys live behind it.
+    private func groupButton(_ group: ToolGroup, hint: String? = nil) -> some View {
+        ToolGroupButton(
+            group: group,
+            remembered: editorState.lastTool(in: group),
+            isActive: ToolGroup.containing(editorState.activeTool) == group,
+            namespace: toolbarNamespace,
+            hint: hint,
+            activate: { editorState.setTool($0) },
+            pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
+            cycle: { cycleGroup(group) })
+    }
+
+    /// Shift plus a family letter: the member after the one the family's
+    /// button stands for. Read live, never from a rendered snapshot.
+    private func cycleGroup(_ group: ToolGroup) {
+        editorState.setTool(group.next(after: editorState.lastTool(in: group)))
     }
 
     /// The single color capsule, adaptive to the active tool (17.12): a drawing
@@ -1173,6 +1290,7 @@ struct EditorView: View {
                 namespace: toolbarNamespace,
                 activate: { editorState.setTool(.crop) },
                 keyCycles: false,
+                footer: Experiments.shared.toolGroupsEnabled ? AnyView(resizeMenuRow) : nil,
                 pressedKey: { editorState.setTool(.crop) })
         } else {
             toolButton(.crop, "crop", "Crop")
@@ -1748,15 +1866,13 @@ struct EditorView: View {
         return tools[(idx + 1) % tools.count]
     }
 
-    /// The selection tool the grouped slot remembers (persisted).
+    /// The selection tool the grouped slot remembers (persisted by
+    /// `EditorState`, which records every tool pick).
     private var lastSelectionTool: Tool {
-        let raw = UserDefaults.standard.string(forKey: "tool.marquee.last") ?? ""
-        let tool = Tool(rawValue: raw)
-        return tool?.isRegionSelectionTool == true ? (tool ?? .rectSelect) : .rectSelect
+        editorState.lastTool(in: .selection)
     }
 
     private func activateSelectionTool(_ tool: Tool) {
-        UserDefaults.standard.set(tool.rawValue, forKey: "tool.marquee.last")
         editorState.setTool(tool)
     }
 

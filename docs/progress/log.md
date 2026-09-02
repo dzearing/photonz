@@ -4888,3 +4888,10 @@ the card's left end, over the icons.
 - Audit: `queue/audits/2026-09-02-caption-drag.json`.
 - Next: a hover cue on draggable pills (caption and caliper), and the
   pull-back slack that comes from the estimated pill size.
+
+## 2026-09-02 — Tool bar families (Next)
+
+- The Next tool bar groups its tools into families behind `next-tool-groups` (on by default): Select · Selection · Crop · Measure | Arrow · Shapes · Highlight · Text · Zoom Callout | Fill. `ToolGroup` and `ToolBarLayout` (PhotonzCore, tested) hold the families and the order; `ToolGroupButton` is the shared slot widget, and `ToolBarMoreMarker` is now the one corner wedge for groups and modes. Resize Image moved into the Crop flyout (and stays in the Image menu). `EditorState.lastTool(in:)` remembers each family's last member.
+- Measured at 1280pt: tools span 561pt before, 422pt after; nothing overflows. Walk: `Scripts/playtest/tool-bar-families.json` (80 steps, every letter and every shift cycle).
+- Found and worked around: SwiftUI `keyboardShortcut` matches a letter with modifiers and case ignored, arbitrary winner among duplicates (standalone repro in the task log). `KeyModifierTracker` records the flags of the key press in flight (event monitor; the playtest harness feeds it for synthetic keys) and each family letter is registered once. Current's old M / Shift M pair has the same coin toss and was left alone (Current is not touched from the queue).
+- Open: decision card on the order (A built and recommended, B redline first, C Photoshop literal, D A plus a Recent slot). Audit: `queue/audits/2026-09-02-tool-bar-families.json`.

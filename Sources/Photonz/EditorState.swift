@@ -729,6 +729,7 @@ final class EditorState {
             cropRect = nil
         }
         activeTool = tool
+        remember(tool)
         if tool == .measure { showMeasureModeHint() }
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't. The
@@ -749,6 +750,33 @@ final class EditorState {
         if !tool.preservesSelectionRegion {
             selectedLayerID = nil
         }
+    }
+
+    // MARK: - Tool groups
+
+    /// The member each tool family showed last (`ToolGroup`), so a group's
+    /// button wears the tool you last used and its key picks that one up.
+    /// Persisted per family; the selection family keeps the key it has had
+    /// since the marquee slot was born, so nobody's remembered selector moves.
+    private var lastGroupTools: [ToolGroup: Tool] = [:]
+
+    private static func groupMemoryKey(_ group: ToolGroup) -> String {
+        group == .selection ? "tool.marquee.last" : "tool.\(group.rawValue).last"
+    }
+
+    /// The tool `group`'s button stands for right now.
+    func lastTool(in group: ToolGroup) -> Tool {
+        if let tool = lastGroupTools[group] { return tool }
+        return group.member(from: UserDefaults.standard.string(forKey: Self.groupMemoryKey(group)))
+    }
+
+    /// Records `tool` as its family's last member. Called from every route
+    /// that picks a tool up (button, key, overflow menu, script), so the
+    /// memory can never lag the tool in hand.
+    private func remember(_ tool: Tool) {
+        guard let group = ToolGroup.containing(tool) else { return }
+        lastGroupTools[group] = tool
+        UserDefaults.standard.set(tool.rawValue, forKey: Self.groupMemoryKey(group))
     }
 
     // MARK: - Crop mode

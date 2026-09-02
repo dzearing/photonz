@@ -1,0 +1,74 @@
+{
+  "id": "the-tool-bar-groups-tools-the-way-a-pro-editor-d",
+  "title": "The tool bar groups tools the way a pro editor does, so it reads as a system and takes less width",
+  "goal": "The editor tool bar has no logic to its order: the three selection tools share one menu, but the shapes do not, the measuring tools do not, and the paint bucket sits alone at the end. Regroup the bar into a small number of families in a deliberate order, the way Photoshop groups its tools, so a person can predict where a tool lives and the bar takes less room. Decide, with the user, whether a recent-tools slot earns a place.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 105,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:54:37.045Z",
+  "updated": "2026-09-02T15:24:36.353Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reported by the user on 2026-09-02: the tools have weird and inconsistent grouping; selection tools are grouped in a menu but shapes are not, measuring tools are not, the paint bucket is just hanging out at the end; consider the order of buttons in Photoshop; logical grouping so the toolbar width condenses; maybe a recent tools group. Current order in EditorView.swift toolsBar: Select, selection group (rect/ellipse/wand), Arrow, Line, Rectangle, Ellipse, Highlight, Text, divider, Crop, Resize, Zoom Callout, Measure, Fill; the compact bar mirrors it through ToolbarSlot and slotButton. Photoshop order for reference: Move; Marquee group; Lasso group; Object/Quick/Magic Wand group; Crop and Slice group; Eyedropper, Ruler, Note, Count group (measurement lives with sampling); Healing, Brush, Clone, Eraser; Gradient and Paint Bucket group; Pen group; Type group; Shape group (rect, ellipse, polygon, line, custom); Hand and Zoom. A Photonz mapping to start the adversarial review from: Select | selection group | crop and resize group | measure group (Measure modes, and consider whether Zoom Callout is a measuring or annotating tool) | annotate: Arrow, shapes group (Line, Rectangle, Ellipse), Highlight, Text | Fill next to the color control it acts on. Keep Photoshop key parity (docs/plan/photoshop-parity.md and the Tool.shortcutKey table). ToolModeButton.swift already owns the mode marker and menu; the selection group in EditorView is the other group idiom, so unify on one. The recent-tools idea and the final order are UX judgments: open a decision with two to three orders as strips rather than guessing. Coordinate with the three open p1 tool bar tasks (icon brightness, hover states, tooltips): do this one first so they land on the new structure. DONE 2026-09-02 (see log): grouped bar shipped behind next-tool-groups; order A built; waiting on the decision for the final order and the Recent slot. If B or C wins, only ToolBarLayout.families (and its test) change; D adds a slot kind.",
+  "acceptance": [
+    "The bar shows a written grouping rationale in its audit: which families exist, why they sit in that order, and which single tools were folded into a group",
+    "Every group button shows the last-used tool in the group, opens its siblings from the same in-button marker the crop and measure buttons already use, and keeps every tool key working, including cycling within a group with shift plus the key",
+    "The full bar at a 1280pt window is narrower than before the change, measured in an offscreen snapshot, with no tool lost to the overflow menu at that width",
+    "A decision card is opened for the order and for the recent-tools slot if either is a judgment the user should make, with mock strips of each option in the brief",
+    "Audit written under queue/audits/ with a before and after strip of the bar"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:54:37.046Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-02T14:54:37.075Z",
+      "note": "seq 140 -> 105"
+    },
+    {
+      "t": "2026-09-02T15:01:30.263Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T15:06:28.241Z",
+      "note": "Baseline measured: Next bar at 1280pt has 13 slots plus a detached chevron beside the selection group (the old group idiom); crop and measure use the in-button marker (the new one). Before strip: /tmp/photonz-playtest/toolbar-before/strip-before.png"
+    },
+    {
+      "t": "2026-09-02T15:06:28.241Z",
+      "note": "Adversarial review of the idea. (1) A first-timer scans the bar left to right and expects families: pick, cut, measure, draw, paint. Today draw comes before cut and measure, and the bucket sits alone. (2) Photoshop's literal order does not transfer: it has no arrow, highlight or zoom callout, and puts the bucket before type and shapes, which would split the redline tools around a paint tool. Take its principle (families, group buttons remember the last member, shift+key cycles) not its sequence. (3) Resize Image is a dialog, not a tool; a tool group cannot show it as a last-used member. It moves to the foot of the Crop flyout (and stays in the Image menu with option command I), because crop and resize are the same family: change the picture's bounds. (4) Zoom Callout is an annotation (it draws a callout layer), not a measurement, so it lives with the drawing tools, last, since it is the least used. (5) Arrow stays its own button: it is the most used redline annotation and must never hide behind a group. (6) Line, Rectangle and Ellipse fold into one Shapes group; each keeps its own letter, shift plus any of them cycles. (7) Recent-tools slot: every tool is already visible and each group already remembers its last member, so a recents slot duplicates tools and moves them, which undoes the predictability this task exists for. Recommend no, but it is the user's call, so it goes on a decision card. (8) The detached chevron on the selection group goes; both groups use the in-button corner marker the crop and measure buttons already wear."
+    },
+    {
+      "t": "2026-09-02T15:06:28.241Z",
+      "note": "Recommended order (option A): Select, Selection group, Crop (Resize in its flyout), Measure | Arrow, Shapes group, Highlight, Text, Zoom Callout | Fill beside its colors. 10 slots instead of 13. Behind the Next-only flag next-tool-groups so Current keeps its bar."
+    },
+    {
+      "t": "2026-09-02T15:24:11.459Z",
+      "note": "decision \"Which order should the tool bar's families take, and does a Recent slot earn a place?\" resolved: Picture first"
+    },
+    {
+      "t": "2026-09-02T15:24:36.322Z",
+      "note": "Built behind next-tool-groups (Next only, on by default). Core: ToolGroup (selection, shapes) and ToolBarLayout.families in Sources/PhotonzCore/ToolBarLayout.swift, 12 tests in ToolTests.swift + ExperimentsTests.swift. App: ToolGroupButton.swift (shared slot widget + ToolBarMoreMarker + ToolGroupShortcuts + Tool.barSymbol/barTitle), ToolModeButton gained a footer (Crop carries Resize Image), EditorView.toolsBar splits into groupedToolRow / flatToolRow, ToolbarSlot gained .shapes and toolbarSlots drives overflow, EditorState.lastTool(in:) remembers each family's last member from every route."
+    },
+    {
+      "t": "2026-09-02T15:24:36.322Z",
+      "note": "Bug found by the walk: plain O landed on Rectangle, plain M on Rectangle Select. Standalone repro (/tmp/kbtest): SwiftUI keyboardShortcut matches a letter with modifiers AND case ignored, and among duplicate registrations the winner is arbitrary and changes between builds. Fix: each family letter is registered once; the action reads KeyModifierTracker.isShiftDown (local keyDown monitor installed at launch; the playtest harness feeds it for the synthetic keys it sends straight to the window). Current's old M / Shift M pair in selectionGroupButton has the same coin toss; left alone since Current is out of scope."
+    },
+    {
+      "t": "2026-09-02T15:24:36.322Z",
+      "note": "Verified: Scripts/test.sh green (1374 tests). Scripts/playtest/tool-bar-families.json, 80 steps ok: L/R/O pick, Shift R/O/L cycle and wrap, O returns Ellipse when Ellipse is already remembered (a cycle would give Line), M returns the remembered wand from Select, Shift M / Shift W cycle, I Z G H T R C V each land. Width at 1280pt measured off the snapshots (icon span, same method both sides): 561pt before, 422pt after, nothing overflowed; picking Crop or a shape leaves the width unchanged."
+    },
+    {
+      "t": "2026-09-02T15:24:36.322Z",
+      "note": "Audit: queue/audits/2026-09-02-tool-bar-families.json with before/after strips. Decision opened for the order and the Recent slot (A built and recommended). Harness now logs toolBarWidth in every state. UX-PATTERNS D15 gained the family paragraph. Offscreen snapshots never draw the accent circle on menu-backed buttons (pre-existing: the 2026-09-02 measure-hint snapshot shows the same), so the strips show the circle only on Select."
+    },
+    {
+      "t": "2026-09-02T15:24:36.353Z",
+      "note": "Grouped bar is built, tested and walked (order A); the final order and the Recent slot are on a decision card with strips of each option"
+    }
+  ],
+  "started": "2026-09-02T15:01:30.262Z"
+}

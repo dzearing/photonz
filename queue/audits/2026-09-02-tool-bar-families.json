@@ -1,0 +1,29 @@
+{
+  "feature": "Tool bar families",
+  "epic": "measure-redline",
+  "summary": "The editor tool bar now groups its tools into three families in a fixed order, so you can predict where a tool lives, and it is 139 points narrower. Line, Rectangle and Ellipse share one Shapes button, Resize Image rides in the Crop button's list, and both family buttons use the same corner wedge Crop and Measure already had.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flag Tool bar families (next-tool-groups) is on by default. Open any capture at a normal window size.",
+  "try": [
+    { "do": "Look at the bar: Select, Selection, Crop, Measure, a hairline, Arrow, Shapes, Highlight, Text, Zoom Callout, a hairline, Fill.", "shot": "2026-09-02-tool-bar-families-after.png" },
+    { "do": "Press L, then R, then O. The Shapes button wears the line, then the rectangle, then the circle.", "shot": "2026-09-02-tool-bar-families-shapes-ellipse.png" },
+    { "do": "Press Shift R twice. The shape cycles Line, Rectangle, Ellipse and wraps." },
+    { "do": "Press V, then O. Ellipse comes back, not the next shape." },
+    { "do": "Press and hold the Shapes button. The list names Line, Rectangle and Ellipse with their letters." },
+    { "do": "Press W, then V, then M. M brings back the wand, the selector you used last. Shift M cycles the three selectors." },
+    { "do": "Press and hold the Crop button. Resize Image is at the foot of its list; Option Command I still opens it too." },
+    { "do": "Pick up Crop, then the wand, then a shape. The bar does not change width." }
+  ],
+  "evaluate": [
+    "Can you predict which family a tool is in before you look for it?",
+    "Is Arrow far enough left, or does the drawing family need to lead?",
+    "Does folding Line, Rectangle and Ellipse into one button slow you down, or do the letters cover it?",
+    "Does Resize Image belong in the Crop list, or do you miss its own button?",
+    "Does the corner wedge read as \"more inside\" on the Selection and Shapes buttons the way it does on Crop and Measure?"
+  ],
+  "rough": [
+    "The family list rows show each tool's letter but no check mark on the one the button currently wears; the button's glyph is the only tell.",
+    "Offscreen snapshots never draw the accent circle on a button that is a menu (Crop, Measure, Selection, Shapes), so the strips here show the circle only on plain buttons; the running app draws it on every active tool.",
+    "SwiftUI matches a letter shortcut with its modifiers ignored, so M and Shift M cannot be two registrations. Each family letter is registered once and shift is read at press time. Current's old selection slot still registers both and gets the coin toss; Current was left as is.",
+    "The order and the Recent slot are on a decision card; the built order is option A."
+  ]
+}
