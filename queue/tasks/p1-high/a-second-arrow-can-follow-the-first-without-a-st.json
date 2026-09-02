@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T09:40:28.308Z",
-  "updated": "2026-09-02T09:44:34.359Z",
+  "updated": "2026-09-02T10:08:47.471Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit 2026-09-02-arrow-captions rough 1 (A right after an arrow lands types into the label) and 2026-09-02-arrow-caption-one-draft rough 3 (inspector Caption field commits on Return only). Code: the inline caption editor in Sources/Photonz/CanvasView.swift (opened by the fresh-arrow flow), the hand-back to Select in EditorState after an annotation lands, the Caption field in Sources/Photonz/LayersPanel.swift. Recommended shape, decide after the adversarial walk: while the fresh-arrow caption field is open and empty, the Arrow tool stays live so a canvas drag commits the empty caption and starts the next arrow; letters still go to the caption (a caption can start with a); the field shows a placeholder like Caption, Esc to skip. Keep Current byte-identical (flag off).",
@@ -44,7 +44,12 @@
     {
       "t": "2026-09-02T10:07:47.000Z",
       "note": "Shots under queue/audits/2026-09-02-second-arrow-*.png are the probe's view layers rendered offscreen (no Screen Recording for the loop). Placeholder renders white at 55% on the pill tone, field sized to the hint until you type."
+    },
+    {
+      "t": "2026-09-02T10:08:47.470Z",
+      "note": "Shipped in Next behind the Arrow captions flag: the Arrow tool stays in hand while the fresh caption field is open so a drag draws the next arrow and the first stays plain; the field reads Caption, Esc to skip; Return/Esc/click hand back to Select; the inspector Caption field commits on click-away as one undo step and Esc restores it. PhotonzCore.ArrowCaptionEntry holds the rules with 7 tests; Scripts/test.sh green (1217). Verified on the probe app with a scripted 8-scenario harness (deleted before commit). Audit queue/audits/2026-09-02-second-arrow.json; follow-up filed for the Arrow-button-while-field-open edge case."
     }
   ],
-  "started": "2026-09-02T09:44:34.358Z"
+  "started": "2026-09-02T09:44:34.358Z",
+  "completed": "2026-09-02T10:08:47.471Z"
 }
