@@ -592,6 +592,9 @@ final class CanvasNSView: NSView {
     private var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.
     private var textEditor: NSTextView?
+    /// The bubble drawn behind an arrow caption's editor, so the draft sits in
+    /// the same pill the committed caption renders in. Nil for text sessions.
+    private var captionPill: CaptionPillView?
     /// The zoom `textEditor`'s font was last scaled for.
     private var textEditorZoom: CGFloat = 0
     /// The style `textEditor` was last configured with (string empty), so
@@ -2885,12 +2888,12 @@ final class CanvasNSView: NSView {
     /// `layer` is passed in whole because the freshly created arrow may not
     /// have reached this view's `document` snapshot yet.
     func beginCaptionSession(layer: Layer) {
-        guard textSession == nil, let viewport,
+        guard textSession == nil, viewport != nil,
               let a = layer.annotation, a.shape == .arrow else { return }
         let anchor = a.captionAnchor()
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
-        let style = TextContent(string: "", fontName: "SF Pro",
-                                fontSize: a.captionFontSize, colorHex: "#FFFFFF")
+        let style = TextContent(string: "", fontName: "SF Pro", fontSize: a.captionFontSize,
+                                colorHex: AnnotationContent.captionTextColorHex)
         textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
                                       captionLayer: layer)
 
@@ -2899,13 +2902,22 @@ final class CanvasNSView: NSView {
         // A fresh (or never captioned) arrow says how to skip. A re-edit of an
         // existing label starts with that label selected instead.
         if a.caption == nil { editor.placeholder = ArrowCaptionEntry.placeholder }
-        let tone = a.captionChipColor
-        editor.drawsBackground = true
-        editor.backgroundColor = NSColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
-                                         alpha: AnnotationContent.captionChipOpacity)
-        editor.layer?.masksToBounds = true
-        editor.layer?.cornerRadius = 6 * viewport.zoom
+        // The draft sits INSIDE the bubble the caption will render in: a pill
+        // view behind the field carries the fill, border, capsule and shadow
+        // (a text view's own background is a plain rect and would clip the
+        // shadow), and the field's inset is the pill's padding. Typing and
+        // committing are then one shape, not two controls.
+        editor.drawsBackground = false
+        editor.layer?.borderWidth = 0
+        editor.layer?.cornerRadius = 0
+        // Selecting the label (a re-edit starts that way) tints the words
+        // rather than dropping a system-colored slab into the bubble.
+        editor.selectedTextAttributes = [.backgroundColor: NSColor(white: 1, alpha: 0.3),
+                                         .foregroundColor: NSColor.white]
         editor.string = a.caption ?? ""
+        let pill = CaptionPillView()
+        addSubview(pill)
+        captionPill = pill
         addSubview(editor)
         textEditor = editor
         textEditorZoom = 0 // force the style pass below to apply
@@ -2989,11 +3001,23 @@ final class CanvasNSView: NSView {
     /// at `textWrapWidth` but its frame HUGS the laid-out text (floored at the
     /// minimum width), so it grows with what you type instead of spanning to the
     /// canvas edge. Height hugs the laid-out text.
+    ///
+    /// A caption session measures the same way inside a bubble: the field is
+    /// inset by the caption pill's padding, so its frame IS the pill, sized and
+    /// centered exactly where the rasterizer will draw the committed caption.
     private func layoutTextEditor() {
         guard let editor = textEditor, let viewport, let session = textSession else { return }
+        let caption = session.captionStyle != nil ? session.captionLayer?.annotation : nil
         let topLeft = viewport.viewPoint(fromDocument: session.origin)
-        let capView = textWrapWidth(origin: session.origin) * viewport.zoom
-        let minView = TextRasterizer.minimumTextWidth * viewport.zoom
+        // The pill's padding in view points: text lays out inside it, the frame
+        // grows around it.
+        let inset = (caption?.captionPadding ?? 0) * viewport.zoom
+        editor.textContainerInset = NSSize(width: inset, height: inset)
+        // A caption hugs its text the way the committed pill does — no 80pt
+        // floor, or a short label's bubble would shrink the moment it lands.
+        let minView = caption == nil ? TextRasterizer.minimumTextWidth * viewport.zoom
+                                     : (editor.font?.pointSize ?? 20)
+        let capView = max(minView, textWrapWidth(origin: session.origin) * viewport.zoom - 2 * inset)
         var contentWidth = minView
         var height = (editor.font?.pointSize ?? 20) * 1.4
         if let container = editor.textContainer, let layoutManager = editor.layoutManager {
@@ -3012,7 +3036,9 @@ final class CanvasNSView: NSView {
             let hint = (placeholder as NSString).size(withAttributes: [.font: font]).width
             contentWidth = min(capView, max(contentWidth, ceil(hint) + 8))
         }
-        if session.captionStyle != nil {
+        contentWidth += 2 * inset
+        height = ceil(height) + 2 * inset
+        if let caption {
             // A caption session centers the editor where the pill for the
             // current draft will render: it grows away from the tail as you
             // type, and slides onto the picture when the tail is at an edge.
@@ -3028,11 +3054,14 @@ final class CanvasNSView: NSView {
                 }
             }
             let pillCenter = viewport.viewPoint(fromDocument: center)
-            editor.frame = CGRect(x: (pillCenter.x - contentWidth / 2).rounded(),
-                                  y: (pillCenter.y - ceil(height) / 2).rounded(),
-                                  width: contentWidth, height: ceil(height))
+            let frame = CGRect(x: (pillCenter.x - contentWidth / 2).rounded(),
+                               y: (pillCenter.y - height / 2).rounded(),
+                               width: contentWidth, height: height)
+            editor.frame = frame
+            captionPill?.frame = frame
+            captionPill?.style(for: caption, zoom: viewport.zoom)
         } else {
-            editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+            editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: height)
         }
     }
 
@@ -3080,6 +3109,8 @@ final class CanvasNSView: NSView {
         textSession = nil
         textEditorContent = nil
         textEditorZoom = 0
+        captionPill?.removeFromSuperview()
+        captionPill = nil
         guard let editor = textEditor else { return }
         textEditor = nil
         if let responder = window?.firstResponder as? NSView, responder.isDescendant(of: editor) {
@@ -3121,6 +3152,45 @@ extension CanvasNSView: NSTextViewDelegate {
             return true
         }
         return false
+    }
+}
+
+/// The bubble behind an open arrow caption. Everything it draws — the fill,
+/// the border in the arrow's ink, the capsule corner, the drop shadow — comes
+/// off `AnnotationContent`, the same values `AnnotationRasterizer` bakes into
+/// the committed caption, so typing and committing are one shape.
+///
+/// It is a view of its own rather than the text field's own background because
+/// a text view fills a plain rectangle and clips its layer to it: the capsule
+/// and its shadow need to live outside the field's bounds. Clicks pass
+/// straight through to the field on top of it.
+private final class CaptionPillView: NSView {
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.masksToBounds = false
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    func style(for annotation: AnnotationContent, zoom: CGFloat) {
+        guard let layer else { return }
+        let chip = annotation.captionChipColor
+        layer.backgroundColor = CGColor(srgbRed: chip.r, green: chip.g, blue: chip.b,
+                                        alpha: AnnotationContent.captionChipOpacity)
+        let ink = RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        layer.borderColor = CGColor(srgbRed: ink.r, green: ink.g, blue: ink.b, alpha: ink.a)
+        layer.borderWidth = max(1, annotation.captionBorderWidth * zoom)
+        layer.cornerRadius = annotation.captionCornerRadius(pillHeight: bounds.height)
+        // The rasterizer's shadow: a 4px blur two pixels down, black at 35%.
+        // A CALayer's blur radius is half a CGContext's.
+        layer.shadowColor = CGColor(gray: 0, alpha: 1)
+        layer.shadowOpacity = 0.35
+        layer.shadowRadius = 2 * zoom
+        layer.shadowOffset = CGSize(width: 0, height: 2 * zoom)
     }
 }
 

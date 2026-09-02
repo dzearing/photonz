@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T20:30:19.370Z",
-  "updated": "2026-09-02T20:30:19.405Z",
+  "updated": "2026-09-02T21:04:31.203882Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: when I use the arrow, drag it and then automatically a text bubble should appear at the tail so I can type, similar to the pill for the measure tool; Escape shows an arrow without the bubble; the bubble should have border, background and foreground just like the measure pill. The flow itself exists behind next-arrow-captions (on by default in Next) and the draw-then-type field was made to actually stay open on 2026-09-02 01:43 (audit 2026-09-02-arrow-caption-one-draft.json). The delta is styling and continuity: the pill today darkens the arrow color for its background (audit 2026-09-02-arrow-captions.json, colors shot), while the measure pill uses MeasureContent chipColorHex, chipOpacity and textColorHex with its border treatment (MeasureStyles.swift, the chip drawing in the measure renderer). Reuse the measure chip drawing for the caption pill, and make the inline editor (CanvasView caption field, AnnotationEditing.planningCaption) draw the same bubble around the text field so the typing state and the committed state are one shape. If the arrow color should tint the bubble at all, open a decision rather than guessing. Ask the user to confirm on the Dev build that the field opens on draw at all; if it does not, that is a p1 bug to file separately.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-09-02T20:30:19.404Z",
       "note": "seq 610 -> 6"
+    },
+    {
+      "t": "2026-09-02T20:47:56.977Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T21:04:31.203882Z",
+      "note": "reproduced first: drew an arrow on the probe and captured the typing state. The COMMITTED pill was already the measure treatment (capsule, dark red chip, red border, white text at 92%); the open field was a tight accent-bordered rounded rect with no padding. So the real defect is the typing state, not the committed colors."
+    },
+    {
+      "t": "2026-09-02T21:04:31.203882Z",
+      "note": "adversarial read of the ask: the measure system pairs a chip's tone with its OWN ink per role (red caliper -> #8C201A chip, blue caliper -> dark blue chip), so 'looks like the measure pill' generalizes to 'dark tone of the arrow's ink', which is what the caption already derives and what a default red arrow lands on exactly. Forcing every caption to the measure tool's red would cut the label's tie to its arrow, so acceptance item 4 is shipped as: fill and text follow the measure chip TREATMENT and stay readable on every arrow color (luminance clamp, already tested), border and tone follow the arrow's ink. The visible question (what a blue arrow's bubble should be) is question 2 in the audit rather than a guess."
+    },
+    {
+      "t": "2026-09-02T21:04:31.203882Z",
+      "note": "shipped: AnnotationContent now owns the pill's numbers (captionBorderWidth, captionTextColorHex, captionPillSize, captionCornerRadius, chip opacity raised to the measure chip's solid 1.0), the rasterizer reads them, and the on-canvas field draws the same bubble: a CaptionPillView behind the editor carries fill, ink border, capsule and the rasterizer's shadow, and the field's text inset is the pill's padding, so the field frame IS the pill. Selection inside the bubble is tinted rather than a system slab."
+    },
+    {
+      "t": "2026-09-02T21:04:31.203882Z",
+      "note": "verified on the probe with a real screen capture walk (Scripts/playtest/arrow-caption-pill.json): empty bubble on draw, typing bubble and committed pill share a center to within half a point and differ by ~2pt in width, Escape leaves a plain arrow, double-click reopens inside the bubble, clicking away commits with no bubble left behind. Comparison sheet beside a live caliper readout in queue/audits/2026-09-02-arrow-caption-pill-compare.png. Scripts/test.sh green (1469 tests)."
+    },
+    {
+      "t": "2026-09-02T21:04:31.203882Z",
+      "note": "acceptance item 5 asked for offscreen renders; the loop holds Screen Recording, so the audit ships real window captures instead, which is strictly what the rule prefers."
     }
-  ]
+  ],
+  "started": "2026-09-02T20:47:56.977Z"
 }

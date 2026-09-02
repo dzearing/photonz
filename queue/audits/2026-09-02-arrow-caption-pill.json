@@ -1,0 +1,29 @@
+{
+  "feature": "Arrow caption bubble",
+  "epic": "epic-uehjr1",
+  "summary": "The caption you type on an arrow now sits in the finished bubble from the first keystroke: the same capsule, border, fill and white text a measure readout uses. Committing no longer swaps a plain text field for a pill.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions is on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press A and drag an arrow across the picture.", "shot": "2026-09-02-arrow-caption-pill-empty.png" },
+    { "do": "Look at the bubble that opened at the tail before typing anything." },
+    { "do": "Type Primary action and watch the bubble grow around the words.", "shot": "2026-09-02-arrow-caption-pill-compare.png" },
+    { "do": "Press Return and watch whether the bubble moves or changes." },
+    { "do": "Press I, click two points and click again to place a caliper beside the arrow, and compare the two labels." },
+    { "do": "Press A, drag a second arrow and press Escape." },
+    { "do": "Double-click the first arrow to reopen its caption.", "shot": "2026-09-02-arrow-caption-pill-reedit.png" },
+    { "do": "Click empty canvas to close it." }
+  ],
+  "evaluate": [
+    "Does the bubble you type in read as the same object as the label that lands, or can you still see it change on Return?",
+    "The bubble takes its dark tone from the arrow's own color, the way a caliper's readout takes its tone from the caliper's ink. Set an arrow to blue: is a dark blue bubble right, or should every caption bubble be the measure readout's dark red?",
+    "The empty bubble is as wide as its hint, Caption, Esc to skip, and shrinks as soon as you type. Is the hint worth that jump?",
+    "The bubble is now fully opaque like the measure chip, where it used to be slightly see-through. Does it cover too much of the screenshot?",
+    "Sitting behind the tail: is that where you want to read the label, or would you rather it sat beside the head?"
+  ],
+  "rough": [
+    "The bubble settles by about two points wide on commit. The open field measures its text with AppKit and the committed pill measures it with the renderer; same center, same shape, a hair different width.",
+    "The fill stays a dark tone of the ARROW's color instead of switching to the measure tool's chip color, which is what the task asked for word for word. The measure pill pairs its chip with its own ink too (a blue caliper gets a dark blue chip), so a red arrow already lands on the exact dark red a red caliper uses, and forcing every caption to red would cut the tie to the arrow it belongs to. Left as the second question above.",
+    "Screen Recording is granted, so these are real captures, not offscreen renders. The probe window is not the frontmost window during a scripted walk, so its chrome draws inactive: that is why no caret shows in the empty bubble and why the re-edit shot shows a gray selection slab rather than the tinted one a live window gives you.",
+    "Because the empty bubble is as wide as its hint, it can cross the arrow's shaft until you start typing."
+  ]
+}

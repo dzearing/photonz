@@ -543,3 +543,51 @@ struct AnnotationCaptionPinningTests {
         #expect(old.captionOffset == CGSize(width: 12, height: -40))
     }
 }
+
+/// The caption bubble is the measure readout's pill: one description of the
+/// border, fill, text color and padding, so the field you type in and the
+/// label that lands can be drawn from the same numbers (task
+/// `the-arrow-caption-is-a-bubble-in-the-measure-pil`).
+@Suite("Annotation caption pill styling")
+struct AnnotationCaptionPillTests {
+
+    @Test func chipIsAsSolidAsTheMeasureChip() {
+        // The measure chip ships opaque; the caption used to be 92%, which read
+        // as a different, softer control next to a caliper's readout.
+        #expect(AnnotationContent.captionChipOpacity
+                == Double(MeasureRoleColors.sizeDefault.chipOpacity))
+    }
+
+    @Test func textIsTheMeasureReadoutColor() {
+        #expect(AnnotationContent.captionTextColorHex
+                == MeasureRoleColors.sizeDefault.textColorHex)
+    }
+
+    @Test func borderIsAHairlineNextToTheShaft() {
+        func border(_ strokeWidth: CGFloat) -> CGFloat {
+            var content = arrowContent(caption: "x")
+            content.strokeWidth = strokeWidth
+            return content.captionBorderWidth
+        }
+        // A thin arrow still gets a border thick enough to read...
+        #expect(border(1) == 1.5)
+        // ...the default 4pt arrow gets the measure caliper's 2pt chip border...
+        #expect(border(4) == 2)
+        // ...and a very heavy arrow's pill keeps a hairline instead of a slab.
+        #expect(border(20) == 3)
+    }
+
+    @Test func pillIsTheTextPlusPaddingOnEverySide() {
+        var content = arrowContent(caption: "Primary action")
+        content.captionFontSize = 20
+        let text = CGSize(width: 120, height: 24)
+        let pill = content.captionPillSize(forTextSize: text)
+        #expect(pill.width == text.width + 2 * content.captionPadding)
+        #expect(pill.height == text.height + 2 * content.captionPadding)
+    }
+
+    @Test func pillCornerIsACapsule() {
+        let content = arrowContent(caption: "x")
+        #expect(content.captionCornerRadius(pillHeight: 44) == 22)
+    }
+}

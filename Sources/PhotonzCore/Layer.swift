@@ -174,8 +174,28 @@ extension AnnotationContent {
     /// it. The default red pair (#8C201A) sits just under this.
     public static let captionChipMaxLuminance: Double = 0.24
 
-    /// The pill's fill opacity — the measure chip's default translucency.
-    public static let captionChipOpacity: Double = 0.92
+    /// The pill's fill opacity — as solid as the measure chip. It used to be
+    /// 92%, which read as a softer, different control beside a caliper's
+    /// readout; the two labels are one treatment.
+    public static let captionChipOpacity = Double(MeasureRoleColors.sizeDefault.chipOpacity)
+
+    /// The caption's text color — the measure readout's.
+    public static let captionTextColorHex = MeasureRoleColors.sizeDefault.textColorHex
+
+    /// The pill's border, in the arrow's own ink like the measure chip's border
+    /// is in the caliper's: heavy enough to read on a thin arrow, still a
+    /// hairline beside a thick shaft.
+    public var captionBorderWidth: CGFloat { min(max(1.5, strokeWidth / 2), 3) }
+
+    /// The pill around a laid-out line of caption text: padding on every side.
+    /// The rasterizer and the on-canvas field both size themselves with this,
+    /// so the bubble you type in is the bubble that lands.
+    public func captionPillSize(forTextSize text: CGSize) -> CGSize {
+        CGSize(width: text.width + 2 * captionPadding, height: text.height + 2 * captionPadding)
+    }
+
+    /// A capsule, whatever the pill's height — the measure chip's corner.
+    public func captionCornerRadius(pillHeight: CGFloat) -> CGFloat { pillHeight / 2 }
 
     /// A generous estimate of the caption pill's footprint, used for frame
     /// reservation and hit-testing. The rasterizer measures the real text and

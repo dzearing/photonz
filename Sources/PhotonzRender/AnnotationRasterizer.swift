@@ -110,7 +110,9 @@ public enum AnnotationRasterizer {
     /// treatment (dark tone of the arrow's ink, white text, bordered capsule)
     /// plus a soft drop shadow so the label reads over any screenshot. Baked
     /// into the layer raster like the measure chip, so exports carry it and
-    /// layer effects reach it.
+    /// layer effects reach it. Every number here comes off `AnnotationContent`,
+    /// because the on-canvas caption field draws the same bubble from the same
+    /// values: what you type in is what lands.
     private static func drawCaption(_ annotation: AnnotationContent, border: CGColor,
                                     in context: CGContext) {
         let text = (annotation.caption ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
@@ -120,12 +122,11 @@ public enum AnnotationRasterizer {
         let tone = annotation.captionChipColor
         let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                            alpha: AnnotationContent.captionChipOpacity)
-        // The pill border reads as the arrow's ink but stays a hairline next to
-        // the (thicker) shaft, like the measure chip next to its caliper.
-        let borderWidth = min(max(1.5, annotation.strokeWidth / 2), 3)
         PillRasterizer.draw(text, at: annotation.captionAnchor(), chipSize: chipSize,
-                            fontSize: annotation.captionFontSize, borderWidth: borderWidth,
-                            fill: fill, border: border, textColorHex: "#FFFFFF",
+                            fontSize: annotation.captionFontSize,
+                            borderWidth: annotation.captionBorderWidth,
+                            fill: fill, border: border,
+                            textColorHex: AnnotationContent.captionTextColorHex,
                             shadow: PillRasterizer.Shadow(), in: context)
     }
 
