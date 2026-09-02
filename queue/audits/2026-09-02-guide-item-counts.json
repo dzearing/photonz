@@ -1,0 +1,27 @@
+{
+  "feature": "An alignment guide counts items the way a person would",
+  "epic": "alignment-checks",
+  "summary": "A guide's row and inspector now count the things it crossed, not the edge runs the scan happened to see: six labels read 6 items, one label's top reads 1, four toggles read 4, and the page margin's heading, two cards and a button read 4. Before, those read 9, 10, 11 and 10. A guide that has no pixels to read says so instead of printing a count.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-align is on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Press I for Measure and set the mode to Alignment." },
+    { "do": "Drag a guide straight down just left of all six labels, from above Launch at login to below Copy to clipboard. The row should say Left edges, 6 items, with off 4 px beside it and one bracket on File name prefix.", "shot": "2026-09-02-guide-item-counts-1-six-labels.png" },
+    { "do": "Press I again, then drag a guide left to right along the tops of the Reset and Save Changes label text (not the buttons). The row should say Top edges, 2 items, aligned.", "shot": "2026-09-02-guide-item-counts-2-button-label-tops.png" },
+    { "do": "Press I, then drag a guide down the left ends of the four toggles. The row should say Left edges, 4 items.", "shot": "2026-09-02-guide-item-counts-3-toggles.png" },
+    { "do": "Press I, then drag a guide down the page's left margin from the General heading to the Reset button. The row should say Left edges, 4 items, with one tick per card rather than two.", "shot": "2026-09-02-guide-item-counts-4-margin.png" },
+    { "do": "Select the margin guide and read the inspector's Items line: 4 items, 1 off." },
+    { "do": "Open a document saved before today that holds an alignment guide. Its row should read Left edges with no count, and the inspector's Items line should say not counted." }
+  ],
+  "evaluate": [
+    "Do the counts now match what you would count by eye, on every guide you draw?",
+    "Along the tops of two labels the guide settles on the x-height line rather than the cap line. Is that where you expected it to sit?",
+    "Is a row that says Left edges with no count, for an older guide, better than a number that might be wrong, or would you rather it recounted on open?",
+    "Anything closer than 8 pt along the guide reads as one item, so an icon hugging its label counts with the label. Does that ever bite you?"
+  ],
+  "rough": [
+    "The off-state toggle reads 2 px off the others: its track is so faint against white that the scan takes the knob's edge, 2 px in, as the toggle's edge. The count is right; the verdict is not what a person would say. Filed as a follow-up.",
+    "Down the page margin the General heading reads 1 px off the cards, which is true of its G but not how the eye sees a heading against a card edge.",
+    "Two guides that end near the same corner stack their chips (Left edges, off 4 px above Left edges, off 1 px). Readable, but they nudge each other rather than sit in a line.",
+    "The pictures here are offscreen renders of the probe build driven by Scripts/playtest/alignment-counts.json, not screenshots of the dev app."
+  ]
+}

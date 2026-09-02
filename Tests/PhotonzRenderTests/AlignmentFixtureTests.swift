@@ -18,13 +18,15 @@ import Testing
 @Suite("Alignment guide on a real capture")
 struct AlignmentFixtureTests {
 
-    private static let edges: EdgeMap = {
+    private static let analysis: EdgeMapAnalyzer.Analysis = {
         guard let url = Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
                                           withExtension: "png"),
               let data = try? Data(contentsOf: url),
               let image = ImageCodec.decode(data) else { return .empty }
-        return EdgeMapAnalyzer.analyze(image)
+        return EdgeMapAnalyzer.analyzeFully(image)
     }()
+    private static var edges: EdgeMap { analysis.edges }
+    private static var luma: LumaField { analysis.luma }
 
     /// The drag the audit describes: down the left edge of the three labels in
     /// the second card. The press anchor snaps to the edge before the scan sees
@@ -36,9 +38,14 @@ struct AlignmentFixtureTests {
     /// every readout is in logical points.
     private static let pixelScale: CGFloat = 2
 
+    /// The scan the app runs: the edge map for the runs, the picture for what
+    /// the runs belong to, at the capture's own scale.
     private func scan(at position: CGFloat = AlignmentFixtureTests.guideX,
-                      span: ClosedRange<CGFloat> = AlignmentFixtureTests.guideSpan) -> [AlignmentItem] {
-        AlignmentScan.items(axis: .vertical, position: position, span: span, in: Self.edges)
+                      span: ClosedRange<CGFloat> = AlignmentFixtureTests.guideSpan,
+                      axis: MeasureMode = .vertical,
+                      in analysis: EdgeMapAnalyzer.Analysis = AlignmentFixtureTests.analysis) -> [AlignmentItem] {
+        AlignmentScan.items(axis: axis, position: position, span: span, in: analysis.edges,
+                            luma: analysis.luma, pixelScale: Self.pixelScale)
     }
 
     /// The committed guide, built the way `EditorState.addAlignmentCheck` builds
@@ -174,10 +181,9 @@ struct AlignmentFixtureTests {
     /// The tolerance the app uses on this capture: 1 logical px at 2x.
     private static let buttonsTolerance = AlignmentCheck.deviceTolerance(logical: 1, pixelScale: 2)
 
-    private func buttonsContent(in edges: EdgeMap = AlignmentFixtureTests.edges,
+    private func buttonsContent(in analysis: EdgeMapAnalyzer.Analysis = AlignmentFixtureTests.analysis,
                                 at position: CGFloat = AlignmentFixtureTests.buttonsY) -> MeasureContent {
-        let items = AlignmentScan.items(axis: .horizontal, position: position,
-                                        span: Self.buttonsSpan, in: edges)
+        let items = scan(at: position, span: Self.buttonsSpan, axis: .horizontal, in: analysis)
         var content = MeasureContent(headOffset: 0, mode: .horizontal, unit: .points)
         content.alignment = AlignmentCheck(items: items, tolerance: Self.buttonsTolerance)
         let reference = content.alignment?.verdict?.reference ?? position
@@ -216,11 +222,11 @@ struct AlignmentFixtureTests {
     /// The same capture with Save Changes moved down 2 logical px (4 device
     /// px): a real misalignment still reads as one, at its real size.
     @Test func aRealTwoPointMisalignmentIsStillReported() {
-        guard let edges = Self.edgesWithSaveButtonLowered(by: 4) else {
+        guard let doctored = Self.captureWithSaveButtonLowered(by: 4) else {
             Issue.record("could not doctor the fixture")
             return
         }
-        let content = buttonsContent(in: edges)
+        let content = buttonsContent(in: doctored)
         #expect(content.alignment?.items.count == 2)
         #expect(content.chipText(pixelScale: Self.pixelScale) == "Top edges, off 2 px")
     }
@@ -228,7 +234,7 @@ struct AlignmentFixtureTests {
     /// The fixture with the Save Changes button (device x 220...492,
     /// y 736...820, with room for its antialiased sides) painted `dy` rows
     /// lower and the rows it vacated filled with the background above it.
-    private static func edgesWithSaveButtonLowered(by dy: Int) -> EdgeMap? {
+    private static func captureWithSaveButtonLowered(by dy: Int) -> EdgeMapAnalyzer.Analysis? {
         guard let url = Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
                                           withExtension: "png"),
               let data = try? Data(contentsOf: url),
@@ -256,7 +262,87 @@ struct AlignmentFixtureTests {
                                        width: button.width, height: CGFloat(dy))))
         context.draw(crop, in: cg(button.offsetBy(dx: 0, dy: CGFloat(dy))))
         guard let doctored = context.makeImage() else { return nil }
-        return EdgeMapAnalyzer.analyze(doctored)
+        return EdgeMapAnalyzer.analyzeFully(doctored)
+    }
+
+    // MARK: Counting the way a person would
+
+    /// The count a person would give, on the real capture, for each kind of
+    /// thing the block-summed map used to split or merge. Each of these read
+    /// wrong before the scan regrouped its runs by the pixels: the S of "Show
+    /// in menu bar" was three left edges, a text line's top was ten, a toggle's
+    /// rounded end was its own item, and a card edge vanished wherever bold
+    /// text shared its block.
+    private func count(axis: MeasureMode, at position: CGFloat,
+                       span: ClosedRange<CGFloat>) -> Int {
+        scan(at: position, span: span, axis: axis).count
+    }
+
+    /// Down the left edges of the first card's three labels: L, S and P.
+    @Test func threeLabelsWithACurvedSCountThree() {
+        #expect(count(axis: .vertical, at: 96, span: 170...400) == 3)
+    }
+
+    /// Down all six labels in both cards, five at x 48 and one at 52.
+    @Test func sixLabelsDownBothCardsCountSix() {
+        let items = scan(at: 96, span: 170...700)
+        #expect(items.count == 6)
+        let (content, _, _) = committed(items)
+        #expect(MeasureSpecList.derivedName(for: content) == "Left edges, 6 items")
+        #expect(content.label(pixelScale: Self.pixelScale) == "off 4 px")
+    }
+
+    /// Along the top of one label: its cap line and x-height line are one
+    /// line of text.
+    @Test func oneLabelAlongItsTopCountsOne() {
+        #expect(count(axis: .horizontal, at: 180, span: 90...290) == 1)
+    }
+
+    /// Along the tops of the two button labels (Reset, Save Changes): two
+    /// items, aligned, judged by the line most of their letters share.
+    @Test func twoButtonLabelsAlongTheirTopsCountTwoAndAgree() {
+        let items = scan(at: 775, span: 90...450, axis: .horizontal)
+        #expect(items.count == 2)
+        #expect(AlignmentCheck(items: items, tolerance: Self.buttonsTolerance).verdict?.isAligned == true)
+    }
+
+    /// Along their baselines too, descender or not.
+    @Test func twoButtonLabelsAlongTheirBaselinesCountTwoAndAgree() {
+        let items = scan(at: 798, span: 90...450, axis: .horizontal)
+        #expect(items.count == 2)
+        #expect(AlignmentCheck(items: items, tolerance: Self.buttonsTolerance).verdict?.isAligned == true)
+    }
+
+    /// Down the left ends of the four toggles: rounded ends and all.
+    @Test func fourTogglesCountFour() {
+        #expect(count(axis: .vertical, at: 1260, span: 160...700) == 4)
+    }
+
+    /// Down the page's left margin: the heading, two white cards on the light
+    /// background, and the Reset button.
+    @Test func headingCardsAndButtonCountFour() {
+        let items = scan(at: 64, span: 60...820)
+        #expect(items.count == 4)
+        // A card is one item from its top to its bottom, not two halves.
+        #expect(items.contains { $0.spanStart <= 170 && $0.spanEnd >= 390 })
+        #expect(items.contains { $0.spanStart <= 470 && $0.spanEnd >= 690 })
+    }
+
+    /// A row's label and its toggle, on a guide drawn between their tops:
+    /// the label is one item even though the guide only clips its ascenders.
+    @Test func aLabelAndItsToggleCountTwo() {
+        #expect(count(axis: .horizontal, at: 172, span: 90...1350) == 2)
+    }
+
+    /// The app commits what it scanned with the picture in hand, so the row
+    /// shows the count; the same check without pixels does not.
+    @Test func theRowCountsOnlyWhenThePixelsWereRead() {
+        let withPixels = AlignmentCheck(items: scan(), tolerance: 1, itemsAreElements: true)
+        var content = MeasureContent(headOffset: 0, mode: .vertical, unit: .points)
+        content.alignment = withPixels
+        #expect(MeasureSpecList.derivedName(for: content) == "Left edges, 3 items")
+        content.alignment?.itemsAreElements = false
+        #expect(MeasureSpecList.derivedName(for: content) == "Left edges")
     }
 
     /// A guide is drawn by hand, so the answer must not depend on hitting one

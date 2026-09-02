@@ -1189,8 +1189,13 @@ final class EditorState {
     /// answer), and commit the check as one undoable layer in the caliper's ink.
     func addAlignmentCheck(axis: MeasureMode, position: CGFloat, span: ClosedRange<CGFloat>) {
         guard document != nil, Experiments.shared.measureAlignEnabled else { return }
+        let pixelScale = document?.pixelScale ?? 1
+        // The picture itself, so the scan counts elements rather than edge
+        // runs; empty only in the moment before the analysis lands, and then
+        // the check says its items are not counted.
+        let luma = measureLumaField
         let items = AlignmentScan.items(axis: axis, position: position, span: span,
-                                        in: snappingEdgeMap)
+                                        in: snappingEdgeMap, luma: luma, pixelScale: pixelScale)
         var content = measureStyle
         content.mode = axis
         content.headOffset = 0
@@ -1199,7 +1204,8 @@ final class EditorState {
         content.alignment = AlignmentCheck(
             items: items,
             tolerance: AlignmentCheck.deviceTolerance(logical: Experiments.shared.measureAlignTolerance,
-                                                      pixelScale: document?.pixelScale ?? 1))
+                                                      pixelScale: pixelScale),
+            itemsAreElements: !luma.isEmpty)
         let reference = content.alignment?.verdict?.reference ?? items.first?.edge ?? position
         let start: CGPoint, end: CGPoint
         switch axis {

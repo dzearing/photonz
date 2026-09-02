@@ -1633,9 +1633,11 @@ struct MeasureInspector: View {
     }
 
     /// How many elements the guide checked, and how many are off: "4 items" /
-    /// "4 items, 1 off".
+    /// "4 items, 1 off". A check whose items are raw edge runs (no pixels were
+    /// read, or an older guide) says "not counted" rather than a wrong number.
     private func itemsReadout(_ check: AlignmentCheck) -> String {
-        let count = MeasureSpecList.countPhrase(check.items.count)
+        let count = check.itemsAreElements
+            ? MeasureSpecList.countPhrase(check.items.count) : "not counted"
         guard let verdict = check.verdict, !verdict.isAligned else { return count }
         return "\(count), 1 off"
     }

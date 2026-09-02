@@ -1,0 +1,27 @@
+{
+  "id": "an-alignment-guide-down-toggles-reads-their-trac",
+  "title": "An alignment guide down toggles reads their tracks, not their knobs",
+  "goal": "Drawing a guide down the left ends of a row of toggles says the switched-off one is 2 px out of line, because its pale track is so faint against white that the guide takes the edge of its knob instead. The toggles line up to the eye, and the guide should say so.",
+  "epic": "alignment-checks",
+  "priority": "p3-low",
+  "seq": 540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T13:57:11.048Z",
+  "updated": "2026-09-02T13:57:11.048Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by audit 2026-09-02-guide-item-counts. The off toggle track is about #E9E9EB on white (contrast ~0.09); the knob edge/shadow 2 device px inside it wins the strength filter in AlignmentScan.runs (defaultElementStrength 0.2 of the boldest candidate in the sample window). Candidate direction: when the guide was drawn within a pixel or two of a faint edge that runs the whole element, prefer it over a bolder one further in, the same extent-over-boldness argument borderFlanks already makes. Playtest walk: Scripts/playtest/alignment-counts.json step 3.",
+  "acceptance": [
+    "On the settings-pane fixture a guide down the four toggles reads Left edges, 4 items, aligned.",
+    "A switched-off toggle whose track is faint still contributes its track edge, not its knob, when the guide was drawn on the track edge.",
+    "Scripts/test.sh green with the case pinned in AlignmentFixtureTests."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T13:57:11.048Z",
+      "note": "created (manual)"
+    }
+  ]
+}

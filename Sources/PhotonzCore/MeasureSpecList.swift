@@ -27,9 +27,13 @@ public enum MeasureSpecList {
     /// there to carry. "Alignment" is already said three times over — by the
     /// dashed swatch, by the verdict beside the name, and by the spec line's
     /// role word. The value (the verdict, for a guide) is shown beside the
-    /// name, not inside it.
+    /// name, not inside it. A check whose items are raw edge runs rather than
+    /// things a person would count (`AlignmentCheck.itemsAreElements` false:
+    /// no pixels were read, or the guide predates the scan reading them)
+    /// names the edges alone rather than print a count it cannot stand behind.
     public static func derivedName(for content: MeasureContent) -> String {
         if let check = content.alignment, let edges = content.alignmentEdgesPhrase {
+            guard check.itemsAreElements else { return edges }
             return "\(edges), \(countPhrase(check.items.count))"
         }
         switch content.role {

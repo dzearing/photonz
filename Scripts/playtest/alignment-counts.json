@@ -1,0 +1,198 @@
+{
+  "out": "/tmp/photonz-playtest/alignment-counts",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        96,
+        170
+      ],
+      "to": [
+        96,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-six-labels",
+      "note": "a guide down the left edges of all six labels"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-six-labels"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        90,
+        775
+      ],
+      "to": [
+        450,
+        775
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-button-label-tops",
+      "note": "a guide along the tops of the Reset and Save Changes labels"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-button-label-tops"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1260,
+        160
+      ],
+      "to": [
+        1260,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-toggles",
+      "note": "a guide down the left ends of the four toggles"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-toggles"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        64,
+        60
+      ],
+      "to": [
+        64,
+        820
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-margin",
+      "note": "a guide down the page margin: heading, two cards, Reset"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-margin"
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "action",
+      "action": "copySpecList"
+    },
+    {
+      "do": "readClipboard",
+      "stage": "5-spec"
+    },
+    {
+      "do": "render",
+      "name": "5-final-render"
+    }
+  ]
+}

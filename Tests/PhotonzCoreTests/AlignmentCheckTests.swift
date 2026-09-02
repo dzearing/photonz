@@ -581,3 +581,224 @@ struct AlignmentBuilderTests {
         #expect(caliper.hasEndpointHandles == true)
     }
 }
+
+// MARK: - Counting the way a person would
+
+/// The scan counts ELEMENTS, not edge runs. The edge map is block-summed, so a
+/// curved first letter, the cap-and-x-height tops of a line of text, a rounded
+/// pill end, or a faint card edge next to bold text all come back as several
+/// runs, while two things stacked closer than a block come back as one. These
+/// scenes are painted pictures (`PaintedCapture`), because the fix reads the
+/// pixels: anything joined by a continuing boundary or by ink on its own side
+/// is one item, and only visible whitespace along the guide separates two.
+@Suite("Alignment scan counts elements")
+struct AlignmentElementCountTests {
+
+    private func scan(_ c: PaintedCapture, axis: MeasureMode, position: CGFloat,
+                      span: ClosedRange<CGFloat>, pixelScale: CGFloat = 1,
+                      luma: LumaField? = nil) -> [AlignmentItem] {
+        AlignmentScan.items(axis: axis, position: position, span: span, in: c.map,
+                            luma: luma ?? c.luma, pixelScale: pixelScale)
+    }
+
+    /// A label whose first letter is a big C: the stroke bulges 6 px to the
+    /// right for the top and bottom sixteen rows, so the block-summed map
+    /// reads three different left edges down one letter.
+    private func curvedLabel(x: Int, y: Int, in c: inout PaintedCapture) {
+        c.fill(CGRect(x: x + 6, y: y, width: 4, height: 16), 40)
+        c.fill(CGRect(x: x, y: y + 16, width: 4, height: 32), 40)
+        c.fill(CGRect(x: x + 6, y: y + 48, width: 4, height: 16), 40)
+        c.text(x: x + 14, y: y, glyphs: 6, height: 64)
+    }
+
+    @Test func aCurvedFirstLetterCountsOnce() {
+        var c = PaintedCapture(w: 400, h: 300)
+        curvedLabel(x: 100, y: 32, in: &c)
+        c.text(x: 100, y: 140, glyphs: 8, height: 30)
+        let items = scan(c, axis: .vertical, position: 100, span: 20...190)
+        #expect(items.count == 2)
+        for item in items { #expect(abs(item.edge - 100) <= 1.5) }
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    /// Without pixels to read, runs a sample apart still join, so a curved
+    /// letter counts once even for a check built from the edge map alone.
+    @Test func withoutPixelsAdjacentRunsStillJoin() {
+        var c = PaintedCapture(w: 400, h: 300)
+        curvedLabel(x: 100, y: 32, in: &c)
+        c.text(x: 100, y: 140, glyphs: 8, height: 30)
+        let items = scan(c, axis: .vertical, position: 100, span: 20...190, luma: .empty)
+        #expect(items.count == 2)
+    }
+
+    /// Three words of stand-in text: tall glyphs at word starts, short ones
+    /// after, with word spaces narrower than a visible gap. Along its top the
+    /// map alternates between the cap line and the x-height line.
+    private func wordyLabel(x: Int, y: Int, words: [(tall: Int, short: Int)] = [(2, 6), (1, 5), (0, 6)],
+                            in c: inout PaintedCapture) {
+        var left = x
+        for (tall, short) in words {
+            for i in 0..<(tall + short) {
+                let top = i < tall ? y : y + 6
+                let height = i < tall ? 20 : 14
+                c.fill(CGRect(x: left, y: top, width: 4, height: height), 40)
+                left += 8
+            }
+            left += 2
+        }
+    }
+
+    @Test func aLineOfTextUnderATopGuideCountsOnce() {
+        var c = PaintedCapture(w: 480, h: 200)
+        wordyLabel(x: 40, y: 60, in: &c)
+        let items = scan(c, axis: .horizontal, position: 60, span: 30...230)
+        #expect(items.count == 1)
+        #expect(items.first?.elementSide == .after)
+    }
+
+    @Test func twoLabelsAlongTheirTopsCountTwice() {
+        var c = PaintedCapture(w: 480, h: 200)
+        wordyLabel(x: 40, y: 60, in: &c)
+        wordyLabel(x: 248, y: 60, in: &c)
+        let items = scan(c, axis: .horizontal, position: 60, span: 30...430)
+        #expect(items.count == 2)
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    /// A shorter second label 4 px lower: still two items, and the verdict is
+    /// the real offset, not the cap-to-x-height distance. (Shorter so the
+    /// longer label is the majority; two equal labels would tie and split the
+    /// difference, as `twoItemsSplitTheDifference` pins.)
+    @Test func aLowerLabelIsStillOneItemAtItsRealOffset() {
+        var c = PaintedCapture(w: 480, h: 200)
+        wordyLabel(x: 40, y: 60, in: &c)
+        wordyLabel(x: 248, y: 64, words: [(2, 6), (1, 5)], in: &c)
+        let items = scan(c, axis: .horizontal, position: 60, span: 30...430)
+        #expect(items.count == 2)
+        guard let verdict = AlignmentCheck(items: items, tolerance: 1).verdict else {
+            Issue.record("no verdict")
+            return
+        }
+        #expect(abs(verdict.maxDelta - 4) <= 1.5)
+        #expect(verdict.outlierIndex == 1)
+    }
+
+    @Test func stackedElementsWithAVisibleGapCountTwice() {
+        var c = PaintedCapture(w: 400, h: 200)
+        c.fill(CGRect(x: 100, y: 40, width: 120, height: 20), 120)
+        c.fill(CGRect(x: 100, y: 72, width: 120, height: 20), 120)
+        let items = scan(c, axis: .vertical, position: 100, span: 30...100)
+        #expect(items.count == 2)
+        guard items.count == 2 else { return }
+        #expect(abs(items[0].spanStart - 40) <= 2 && abs(items[0].spanEnd - 60) <= 2)
+        #expect(abs(items[1].spanStart - 72) <= 2 && abs(items[1].spanEnd - 92) <= 2)
+    }
+
+    /// Closer than a visible gap, two things read as one: that is the honest
+    /// limit, and it is measured in LOGICAL px, so a 2x capture needs twice the
+    /// device pixels of whitespace.
+    @Test func theVisibleGapIsInLogicalPixels() {
+        var c = PaintedCapture(w: 400, h: 200)
+        c.fill(CGRect(x: 100, y: 40, width: 120, height: 20), 120)
+        c.fill(CGRect(x: 100, y: 72, width: 120, height: 20), 120)
+        #expect(scan(c, axis: .vertical, position: 100, span: 30...100, pixelScale: 2).count == 1)
+        var tight = PaintedCapture(w: 400, h: 200)
+        tight.fill(CGRect(x: 100, y: 40, width: 120, height: 20), 120)
+        tight.fill(CGRect(x: 100, y: 64, width: 120, height: 20), 120)
+        #expect(scan(tight, axis: .vertical, position: 100, span: 30...100).count == 1)
+    }
+
+    /// A white card on a light background, with dark text inside it near the
+    /// edge. Wherever the text shares a block row with the edge, the edge is a
+    /// fraction as bold and the strength floor drops it, so the map reads the
+    /// card as two or three runs. The pixels say the edge never stops.
+    @Test func aFaintCardEdgeBesideBoldTextCountsOnce() {
+        var c = PaintedCapture(w: 480, h: 480)
+        c.fill(CGRect(x: 64, y: 100, width: 340, height: 200), 255)
+        for y in [128, 176, 240] { c.text(x: 96, y: y, glyphs: 8) }
+        c.fill(CGRect(x: 64, y: 320, width: 340, height: 100), 255)
+        c.text(x: 96, y: 336, glyphs: 8)
+        let items = scan(c, axis: .vertical, position: 64, span: 90...430)
+        #expect(items.count == 2)
+        guard items.count == 2 else { return }
+        for item in items { #expect(abs(item.edge - 64) <= 1.5) }
+        #expect(item(items[0], covers: 104...296))
+        #expect(item(items[1], covers: 324...416))
+    }
+
+    private func item(_ item: AlignmentItem, covers range: ClosedRange<CGFloat>) -> Bool {
+        item.spanStart <= range.lowerBound && item.spanEnd >= range.upperBound
+    }
+
+    /// A pill whose left end is a half circle: the map smears that end across
+    /// a dozen columns and reads it as its own run above and below the straight
+    /// part.
+    private func pill(x: Int, y: Int, width: Int, in c: inout PaintedCapture) {
+        let radius = 15
+        for row in y..<(y + 2 * radius) {
+            let dy = Double(row - y - radius) + 0.5
+            let inset = Double(radius) - (Double(radius * radius) - dy * dy).squareRoot()
+            c.fill(CGRect(x: x + Int(inset.rounded()), y: row,
+                          width: width - Int(inset.rounded()), height: 1), 120)
+        }
+    }
+
+    @Test func aRoundedEndCountsOnce() {
+        var c = PaintedCapture(w: 400, h: 200)
+        pill(x: 100, y: 40, width: 60, in: &c)
+        pill(x: 100, y: 100, width: 60, in: &c)
+        let items = scan(c, axis: .vertical, position: 100, span: 30...140)
+        #expect(items.count == 2)
+        for item in items { #expect(abs(item.edge - 100) <= 2) }
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    /// A guide drawn a little above a line of text, near enough to catch only
+    /// its ascenders: five scattered hits are still one label, because the
+    /// text's own ink runs under the guide the whole way.
+    @Test func scatteredAscenderHitsAreOneLabel() {
+        var c = PaintedCapture(w: 480, h: 200)
+        wordyLabel(x: 40, y: 70, in: &c)
+        let items = scan(c, axis: .horizontal, position: 62, span: 30...230)
+        #expect(items.count == 1)
+    }
+}
+
+@Suite("Alignment count honesty")
+struct AlignmentCountHonestyTests {
+
+    private func guide(itemsAreElements: Bool) -> MeasureContent {
+        var c = MeasureContent(headOffset: 0, mode: .vertical)
+        c.alignment = AlignmentCheck(items: [
+            AlignmentItem(edge: 40, spanStart: 0, spanEnd: 20, elementSide: .after),
+            AlignmentItem(edge: 40, spanStart: 40, spanEnd: 60, elementSide: .after),
+            AlignmentItem(edge: 44, spanStart: 80, spanEnd: 100, elementSide: .after),
+        ], tolerance: 1, itemsAreElements: itemsAreElements)
+        return c
+    }
+
+    /// A check whose items are raw edge runs (no pixels were read) does not
+    /// print a count it cannot stand behind.
+    @Test func aCheckBuiltWithoutPixelsDropsTheCount() {
+        #expect(MeasureSpecList.derivedName(for: guide(itemsAreElements: true)) == "Left edges, 3 items")
+        #expect(MeasureSpecList.derivedName(for: guide(itemsAreElements: false)) == "Left edges")
+    }
+
+    /// Guides saved before the scan read pixels counted runs, so they decode
+    /// as not-counted rather than keep a number that was already wrong.
+    @Test func olderChecksDecodeAsNotCounted() throws {
+        let json = #"{"items":[{"edge":100,"spanStart":10,"spanEnd":30}],"tolerance":1}"#
+        let check = try JSONDecoder().decode(AlignmentCheck.self, from: Data(json.utf8))
+        #expect(check.itemsAreElements == false)
+        #expect(check.items.count == 1)
+    }
+
+    @Test func theFlagRoundTripsThroughCodable() throws {
+        let content = guide(itemsAreElements: true)
+        let data = try JSONEncoder().encode(content)
+        let decoded = try JSONDecoder().decode(MeasureContent.self, from: data)
+        #expect(decoded.alignment?.itemsAreElements == true)
+        #expect(decoded == content)
+    }
+}
+

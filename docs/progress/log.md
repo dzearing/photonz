@@ -4787,3 +4787,20 @@ the card's left end, over the icons.
 - Chose "pill is the handle" over "shift the dot past the pill": dragging the number is what a first-time user tries anyway, and a fourth dot beside the pill was noise. Corrected a stale comment in `CanvasView` that still said the pills were NSView subviews.
 - Verified in the probe with `Scripts/playtest/redline-walk.json` (renders 3 and 4 show whole numbers) and a throwaway pill-drag walk (grab 8 px above centre, drag 48 px: head moved exactly 48). That walk's third snapshot was racing the re-render, so the shared walk now waits 0.4 s after the third click like the size and gap steps already did. Suite green (1301).
 - Audit: `queue/audits/2026-09-02-caliper-head.json`. Open: whether the pill wants a hover cue.
+
+## 2026-09-02 (go loop) — alignment guide counts elements, not runs
+
+- `AlignmentScan.items` now reads the picture (`LumaField`) and regroups its
+  edge runs into elements: boundary continuity or ink on the element's side
+  joins runs, a clean stretch of 8 logical px splits them. Item edge is the
+  dominant run, span is what the pixels covered. On the settings-pane
+  fixture six labels read 6 (was 9), a label's top 1 (was 10), four toggles 4
+  (was 11), heading + cards + button 4 (was 10).
+- `AlignmentCheck.itemsAreElements` gates the count: rows say "Left edges" and
+  the inspector says "not counted" for checks built without pixels, including
+  guides saved before today.
+- New `Scripts/playtest/alignment-counts.json` drives the probe through four
+  guides; audit `queue/audits/2026-09-02-guide-item-counts.json`.
+- Next: the off-state toggle's faint track loses to its knob (follow-up task
+  filed); the measure tool dropping to Select after each guide is a pending
+  decision.

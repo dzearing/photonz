@@ -72,10 +72,38 @@ public struct AlignmentCheck: Hashable, Codable, Sendable {
     /// How far (px) an edge may sit from the reference line and still count as
     /// aligned.
     public var tolerance: CGFloat
+    /// Whether each item is one thing a person would count. True when the scan
+    /// read the picture and joined the edge runs that belong to one element
+    /// (`AlignmentScan.items` given a `LumaField`); false when the items are
+    /// raw runs from the block-summed edge map, which split a curved letter or
+    /// a line of text into several and merge stacked things closer than a
+    /// block. A row and the inspector print the count only when this is true:
+    /// "Left edges, 3 items" against "Left edges". Checks saved before the
+    /// scan read pixels decode false, since their counts were runs.
+    public var itemsAreElements: Bool
 
-    public init(items: [AlignmentItem], tolerance: CGFloat = 1) {
+    public init(items: [AlignmentItem], tolerance: CGFloat = 1, itemsAreElements: Bool = true) {
         self.items = items
         self.tolerance = tolerance
+        self.itemsAreElements = itemsAreElements
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case items, tolerance, itemsAreElements
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        items = try c.decode([AlignmentItem].self, forKey: .items)
+        tolerance = try c.decode(CGFloat.self, forKey: .tolerance)
+        itemsAreElements = try c.decodeIfPresent(Bool.self, forKey: .itemsAreElements) ?? false
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(items, forKey: .items)
+        try c.encode(tolerance, forKey: .tolerance)
+        try c.encode(itemsAreElements, forKey: .itemsAreElements)
     }
 
     /// The device-px tolerance for a check on a capture of `pixelScale`, from
@@ -188,15 +216,25 @@ extension AlignmentCheck {
 /// Finds the element edges an alignment guide crosses. The guide is sampled
 /// along its span; at each sample the nearest detected edge within
 /// `captureRadius` of the guide's position is recorded, and consecutive samples
-/// that keep seeing the same edge merge into one item. A sample that sees no
-/// edge (a gap between elements) or a jump to a different edge position starts
-/// a new item — that jump is exactly the misalignment being hunted, so the
-/// merge tolerance is tighter than any delta worth flagging.
+/// that keep seeing the same edge form one RUN. A sample that sees no edge or a
+/// jump to a different edge position starts a new run.
 ///
-/// Resolution note: the edge map is block-summed (16px blocks), so two stacked
-/// elements whose gap is smaller than a block can merge into one item when
-/// their edges agree. That never changes the verdict — merged items were
-/// aligned with each other by construction.
+/// Runs are not items. The edge map is block-summed (16px blocks), so it reads
+/// a curved first letter as two or three left edges, the top of a line of text
+/// as cap line and x-height line by turns, a pill's rounded end as its own
+/// edge, and a faint card border as nothing wherever bold text shares its
+/// block; and it reads two things stacked closer than a block as one. A person
+/// counts none of those that way. So, given the picture (`LumaField`), the
+/// runs are regrouped by what the pixels say along the guide: a boundary that
+/// keeps reading between two runs, or ink on the element's own side between
+/// them, makes them one item; a clean stretch of at least `visibleGap` logical
+/// px is whitespace a person can see, and separates two. Each item's edge is
+/// its dominant (longest) run, so a line of text judges by the line most of
+/// its letters share, and its span is the stretch the pixels covered.
+///
+/// Without the picture (a check built from the edge map alone) runs a sample
+/// apart are joined and nothing else is known; `AlignmentCheck.itemsAreElements`
+/// is how the caller says which kind it stored.
 public enum AlignmentScan {
 
     /// How far (px) from the drawn guide an edge still counts as "the edge you
@@ -207,6 +245,26 @@ public enum AlignmentScan {
     /// Consecutive samples within this distance (px) of each other's edge are
     /// the same element edge.
     public static let runMergeTolerance: CGFloat = 1.5
+
+    /// Whitespace along the guide a person can see, in LOGICAL px: a clean
+    /// stretch at least this long separates two items; anything closer reads
+    /// as one thing. A word space is under 4 pt and letters are closer still,
+    /// while stacked or side-by-side elements are almost never closer than
+    /// 8 pt, so a line of text stays one item and two buttons stay two. An
+    /// icon hugging its label closer than this counts with the label.
+    public static let visibleGap: CGFloat = 8
+    /// The brightness step (0...1) across a pixel that counts as ink on the
+    /// element's side of an edge. Above a hairline divider's contrast, so a
+    /// rule crossing the band is not the element continuing; well under any
+    /// glyph, icon or fill edge.
+    public static let inkFloor: Double = 0.15
+    /// The brightness step that says the boundary itself is still there: the
+    /// same floor `EdgeRun` walks with, low enough for a white card on a light
+    /// grey background.
+    public static let boundaryFloor: Double = 0.02
+    /// How far either side of a run's edge the boundary may wander and still
+    /// be that boundary (a rounded corner leaving, antialiasing).
+    public static let boundaryDrift: CGFloat = 2
 
     /// How bold a boundary has to be, next to the boldest one its own sample
     /// window offers, before the guide will treat it as the edge of an ELEMENT.
@@ -273,12 +331,55 @@ public enum AlignmentScan {
 
     /// The element edges a guide line crosses, in document space. `axis` is the
     /// guide's direction: a `.vertical` guide at x = `position` spanning
-    /// y = `span` checks vertical edges; `.horizontal` mirrors it.
+    /// y = `span` checks vertical edges; `.horizontal` mirrors it. `luma` is
+    /// the picture the runs are regrouped by (see the type note); `pixelScale`
+    /// turns `visibleGap` into device px.
     public static func items(axis: MeasureMode, position: CGFloat,
                              span: ClosedRange<CGFloat>, in edges: EdgeMap,
+                             luma: LumaField = .empty, pixelScale: CGFloat = 1,
                              captureRadius: CGFloat = defaultCaptureRadius,
                              sampleStep: CGFloat = defaultSampleStep,
                              elementStrength: Double = defaultElementStrength) -> [AlignmentItem] {
+        let runs = runs(axis: axis, position: position, span: span, in: edges,
+                        captureRadius: captureRadius, sampleStep: sampleStep,
+                        elementStrength: elementStrength)
+        guard !runs.isEmpty else { return [] }
+        let groups = luma.isEmpty
+            ? groupedBySample(runs, sampleStep: sampleStep)
+            : groupedByPixels(runs, axis: axis, span: span, in: luma, pixelScale: pixelScale)
+        return groups.map { group in
+            // The dominant run speaks for the element: the one the guide ran
+            // along longest, and on a tie the one nearest the drawn line.
+            let dominant = group.runs.max { a, b in
+                let la = a.end - a.start, lb = b.end - b.start
+                return la != lb ? la < lb : abs(a.edge - position) > abs(b.edge - position)
+            }
+            let edge = dominant?.edge ?? position
+            let side = elementSide(axis: axis, edge: edge, span: group.span, in: edges)
+            return AlignmentItem(edge: edge, spanStart: group.span.lowerBound,
+                                 spanEnd: group.span.upperBound, elementSide: side)
+        }
+    }
+
+    /// One stretch of samples that kept seeing the same edge.
+    struct Run: Equatable {
+        var edge: CGFloat
+        var start: CGFloat
+        var end: CGFloat
+    }
+
+    /// Runs that belong to one element, and the stretch of the guide it covers.
+    struct Group: Equatable {
+        var runs: [Run]
+        var span: ClosedRange<CGFloat>
+    }
+
+    /// The raw runs, in guide order.
+    static func runs(axis: MeasureMode, position: CGFloat,
+                     span: ClosedRange<CGFloat>, in edges: EdgeMap,
+                     captureRadius: CGFloat = defaultCaptureRadius,
+                     sampleStep: CGFloat = defaultSampleStep,
+                     elementStrength: Double = defaultElementStrength) -> [Run] {
         guard !edges.isEmpty, span.upperBound > span.lowerBound, sampleStep > 0 else { return [] }
         let length = span.upperBound - span.lowerBound
         let sampleCount = max(1, Int((length / sampleStep).rounded(.up)))
@@ -301,15 +402,13 @@ public enum AlignmentScan {
         }
         let flanks = borderFlanks(in: samples)
 
-        var items: [AlignmentItem] = []
+        var runs: [Run] = []
         var run: (edges: [CGFloat], start: CGFloat, end: CGFloat)?
 
         func closeRun() {
             guard let r = run else { return }
             let mean = r.edges.reduce(0, +) / CGFloat(r.edges.count)
-            let side = elementSide(axis: axis, edge: mean, span: r.start...r.end, in: edges)
-            items.append(AlignmentItem(edge: mean, spanStart: r.start, spanEnd: r.end,
-                                       elementSide: side))
+            runs.append(Run(edge: mean, start: r.start, end: r.end))
             run = nil
         }
 
@@ -339,7 +438,125 @@ public enum AlignmentScan {
             }
         }
         closeRun()
-        return items
+        return runs
+    }
+
+    /// Without pixels: runs with no empty sample between them are one element.
+    /// That joins a curved letter's fragments and a text line's cap and
+    /// x-height runs; it cannot see a gap smaller than a block, and says so
+    /// through `AlignmentCheck.itemsAreElements`.
+    static func groupedBySample(_ runs: [Run], sampleStep: CGFloat) -> [Group] {
+        var groups: [Group] = []
+        for run in runs {
+            if let last = groups.last, run.start - last.span.upperBound <= sampleStep * 1.5 {
+                groups[groups.count - 1].runs.append(run)
+                groups[groups.count - 1].span = last.span.lowerBound...run.end
+            } else {
+                groups.append(Group(runs: [run], span: run.start...run.end))
+            }
+        }
+        return groups
+    }
+
+    /// With pixels: walk the guide one px at a time and ask, at each step,
+    /// whether something is there. "Something" is the boundary itself still
+    /// reading within `boundaryDrift` of the nearest runs' edges (a card edge
+    /// the strength floor dropped, a curve on its way round a corner), or ink
+    /// on the element's side of that edge (the letters under a cap line, the
+    /// glyph a curved stroke belongs to). Only the response ACROSS the guide
+    /// counts, so a divider crossing the band is not the element continuing.
+    /// A clean stretch of `visibleGap` logical px ends an element. Runs are
+    /// then handed to the element they overlap most; a run the pixels never
+    /// backed (block bleed past the end of a thing) is dropped.
+    static func groupedByPixels(_ runs: [Run], axis: MeasureMode, span: ClosedRange<CGFloat>,
+                                in luma: LumaField, pixelScale: CGFloat) -> [Group] {
+        let lo = Int(span.lowerBound.rounded(.down))
+        let hi = Int(span.upperBound.rounded(.up))
+        guard hi >= lo, !runs.isEmpty else { return [] }
+        let gap = max(1, Int((visibleGap * max(1, pixelScale)).rounded()))
+        let bandLo = Int(sideBand.lowerBound), bandHi = Int(sideBand.upperBound)
+        let drift = Int(boundaryDrift.rounded(.up))
+
+        func response(along t: Int, cross c: Int) -> Double {
+            switch axis {
+            case .vertical: luma.verticalResponse(x: c, y: t)
+            case .horizontal: luma.horizontalResponse(x: t, y: c)
+            }
+        }
+
+        // Presence along the guide.
+        var present = [Bool](repeating: false, count: hi - lo + 1)
+        var next = 0  // first run whose end is not before t
+        for t in lo...hi {
+            while next < runs.count, runs[next].end < CGFloat(t) { next += 1 }
+            // The runs bracketing t: the one containing it, else its neighbours.
+            var edges: [CGFloat] = []
+            if next < runs.count, runs[next].start <= CGFloat(t) {
+                edges = [runs[next].edge]
+            } else {
+                if next > 0 { edges.append(runs[next - 1].edge) }
+                if next < runs.count { edges.append(runs[next].edge) }
+            }
+            guard let minEdge = edges.min(), let maxEdge = edges.max() else { continue }
+            let low = Int(minEdge.rounded()) - drift
+            let high = Int(maxEdge.rounded()) + drift
+            var found = false
+            for c in low...high where response(along: t, cross: c) >= boundaryFloor {
+                found = true
+                break
+            }
+            if !found {
+                // Ink on either side of the edge: the element's own body.
+                let after = (Int(maxEdge.rounded()) + bandLo)...(Int(maxEdge.rounded()) + bandHi)
+                let before = (Int(minEdge.rounded()) - bandHi)...(Int(minEdge.rounded()) - bandLo)
+                for band in [after, before] {
+                    for c in band where response(along: t, cross: c) >= inkFloor {
+                        found = true
+                        break
+                    }
+                    if found { break }
+                }
+            }
+            present[t - lo] = found
+        }
+
+        // Stretches: split on any clean run of `gap` px or more.
+        var stretches: [ClosedRange<Int>] = []
+        var open: (first: Int, last: Int)?
+        var clean = 0
+        for t in lo...hi {
+            if present[t - lo] {
+                if let o = open, clean >= gap {
+                    stretches.append(o.first...o.last)
+                    open = (t, t)
+                } else if open == nil {
+                    open = (t, t)
+                } else {
+                    open?.last = t
+                }
+                clean = 0
+            } else {
+                clean += 1
+            }
+        }
+        if let o = open { stretches.append(o.first...o.last) }
+
+        // Each stretch takes the part of every run that overlaps it: a run the
+        // block-summed map carried across a gap it could not see is two
+        // elements' worth of edge, and each gets its share. A run overlapping
+        // no stretch was never backed by the pixels, and goes.
+        var groups: [Group] = []
+        for stretch in stretches {
+            let span = CGFloat(stretch.lowerBound)...CGFloat(stretch.upperBound)
+            let clipped: [Run] = runs.compactMap { run in
+                let start = max(run.start, span.lowerBound)
+                let end = min(run.end, span.upperBound)
+                guard end >= start else { return nil }
+                return Run(edge: run.edge, start: start, end: end)
+            }
+            if !clipped.isEmpty { groups.append(Group(runs: clipped, span: span)) }
+        }
+        return groups
     }
 
     /// One boundary read twice, and the reading that is NOT the element's

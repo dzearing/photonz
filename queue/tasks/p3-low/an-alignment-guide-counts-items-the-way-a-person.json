@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p3-low",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:05:41.135Z",
-  "updated": "2026-09-02T12:06:02.775Z",
+  "updated": "2026-09-02T13:57:37.483Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: audits 2026-09-02-alignment-guide-row (rough 3: items counts runs, a split label counts twice, stacked elements can merge), 2026-09-02-guide-edge-chip (rough 3: 4 items for two buttons) and 2026-09-02-guide-buttons-aligned (border flanks fixed one cause; rough 2 leaves the x-height case). AlignmentScan in PhotonzCore owns the runs. Filed by the 2026-09-02 digest design review.",
@@ -27,6 +27,36 @@
     {
       "t": "2026-09-02T12:06:02.775Z",
       "note": "seq 640 -> 80"
+    },
+    {
+      "t": "2026-09-02T13:35:58.302Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:47:38.965Z",
+      "note": "Reproduced on the settings-pane fixture (2x): left edges of six labels read 9 items (S and L split into 2-3 runs), the top of one label reads 10 items (cap line and x-height line alternate), two button labels' tops read 8, four toggles read 11 (rounded ends), heading + two cards + button read 10 (a faint card edge is dropped wherever bold text shares its 16px block, so each card splits in two). Every miscount is a run split inside one element or a merge across a sub-block gap. The pinned three-label and two-button cases still pass, which is why nobody noticed."
+    },
+    {
+      "t": "2026-09-02T13:47:38.966Z",
+      "note": "Adversarial review of the idea: (1) counting runs can never match a person because runs are block-summed edge-map artifacts, and distance between runs cannot separate cap-vs-x-height (5-7 px) from a real misalignment (4-8 px), so the fix must read the picture. (2) The analyzer already keeps a full-resolution luma field for Size mode, so the scan can ask two per-pixel questions along the guide: does the boundary itself continue (card edge, curved letter, rounded end), and is there ink on the element side (a line of text under its cap line)? Anything joined by either is one item; a clean stretch of 8 logical px or more is a visible gap and splits. (3) Word spaces are under 8 pt and stacked elements are almost never closer than 8 pt, so 8 logical px is the threshold; an icon and its label closer than that read as one item, noted as rough. (4) Where there are no pixels to read (old documents, no analysis yet) the items are raw runs and the count is not shown: the row says Left edges and the inspector says not counted. (5) Each item's edge is its dominant (longest) run, so a label on a top guide is judged by its x-height line consistently across labels rather than by whichever fragment came first."
+    },
+    {
+      "t": "2026-09-02T13:57:37.450Z",
+      "note": "Built: AlignmentScan.items now takes the LumaField and pixelScale, keeps the run detection as it was, then regroups runs by walking the guide per pixel (boundary continues within 2 px of the bracketing runs, or ink in the 3..20 px band on either side; a clean stretch of 8 logical px splits). Item edge = dominant run, span = pixel-covered stretch. AlignmentCheck.itemsAreElements (Codable, missing key decodes false) gates the count in MeasureSpecList.derivedName and the inspector Items line (not counted). EditorState passes measureLumaField and sets the flag. PaintedCapture test helper moved out of ElementBoundsTests to share it."
+    },
+    {
+      "t": "2026-09-02T13:57:37.451Z",
+      "note": "Verified: 1323 tests green (Scripts/test.sh); new pins in AlignmentElementCountTests (painted scenes) and AlignmentFixtureTests (six labels 6, one label top 1, button labels 2 along tops and baselines, toggles 4, margin 4, label+toggle 2). Real app: probe build driven by Scripts/playtest/alignment-counts.json lands Left edges 6 items off 4 px, Top edges 2 items aligned, Left edges 4 items off 2 px (toggles), Left edges 4 items off 1 px (margin). Audit queue/audits/2026-09-02-guide-item-counts.json with four renders."
+    },
+    {
+      "t": "2026-09-02T13:57:37.451Z",
+      "note": "Acceptance note: the fixture has no column of exactly four single-line labels; pinned the real columns instead (three in the first card, six across both). Rough: the off-state toggle reads its knob rather than its faint track, filed as an-alignment-guide-down-toggles-reads-their-trac. Older saved guides now show Left edges with no count rather than a run count."
+    },
+    {
+      "t": "2026-09-02T13:57:37.482Z",
+      "note": "AlignmentScan regroups edge runs into elements by reading the luma field (boundary continuity or ink joins, 8 logical px of whitespace splits); AlignmentCheck.itemsAreElements hides the count when no pixels were read. Pinned on painted scenes and the settings-pane fixture (6/1/2/4/4 items), 1323 tests green, verified in the probe app via Scripts/playtest/alignment-counts.json; audit queue/audits/2026-09-02-guide-item-counts.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T13:35:58.301Z",
+  "completed": "2026-09-02T13:57:37.483Z"
 }

@@ -447,6 +447,41 @@ wobble is half a point, not a misalignment):
   at the corners; a descender line stops at the descender; the edge that runs
   the whole element is the element's. Equal-extent pairs (stems) still go to
   the guide's own position, so text edges behave as before.
+- **Items are elements, not runs (2026-09-02).** Runs are what the block-summed
+  map sees, and a person counts none of them that way: on the settings-pane
+  fixture the left edges of six labels read 9 items (the S of "Show in menu
+  bar" was three edges), the top of one label read 10 (cap line and x-height
+  line by turns), four toggles read 11 (each rounded end its own run), and
+  the page's heading, two cards and a button read 10 (a white card's edge is
+  a fraction as bold as the text beside it, so the strength floor dropped it
+  wherever they shared a block and each card split in two). So `items` now
+  takes the `LumaField` the analyzer already keeps for Size mode and regroups
+  the runs by walking the guide one device px at a time
+  (`AlignmentScan.groupedByPixels`): a position is "present" when the
+  boundary itself still reads within `boundaryDrift` (2 px) of the
+  bracketing runs' edges (`boundaryFloor` 0.02, the floor `EdgeRun` uses, low
+  enough for a white card on `#F2F2F7`), or when there is ink on either side
+  of the edge in the 3..20 px band (`inkFloor` 0.15, above a hairline
+  divider, under any glyph or fill edge). Only the response ACROSS the guide
+  counts, so a divider crossing a vertical guide's band is not an element
+  continuing. A clean stretch of `visibleGap` (8 logical px, scaled by the
+  capture's pixel scale) is whitespace a person can see and ends an item;
+  anything closer is one thing, which keeps a word space and a curved
+  letter inside their label and, honestly, folds an icon hugging its label
+  into the label. Each item's edge is its dominant (longest) run, so a text
+  line is judged by the line most of its letters share, consistently across
+  labels; its span is the stretch the pixels covered, so the tick and the
+  outlier bracket run the element's real length. A run the pixels never
+  backed is dropped. Without pixels (`luma` empty) runs a sample apart are
+  joined and nothing more is known, and `AlignmentCheck.itemsAreElements`
+  says which kind the check holds: the row and the inspector print the count
+  ("Left edges, 3 items", "3 items, 1 off") only when it is true, and
+  otherwise say "Left edges" and "not counted". Guides saved before this
+  decode false, since their counts were runs. Pinned on the fixture in
+  `AlignmentFixtureTests` (six labels 6, one label's top 1, two button
+  labels 2 along their tops and along their baselines, four toggles 4,
+  heading + cards + button 4, a label and its toggle 2) and on painted scenes
+  in `AlignmentElementCountTests`.
 - **Verdict (derived, never stored).** `AlignmentCheck.verdict`: the reference
   is the edge the MAJORITY of the crossed elements agree on, and the worst
   deviation beyond `tolerance` names the outlier. Fewer than two items → no
