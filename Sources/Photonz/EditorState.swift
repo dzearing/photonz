@@ -860,12 +860,40 @@ final class EditorState {
         }
         perform { document in
             guard let current = document.layer(id: layerID) else { return }
-            let restyled = AnnotationBuilder.restyled(current, caption: .some(newCaption))
+            // The pill re-picks its spot for the new text, so a label typed on
+            // an arrow drawn from the margin lands on the picture, not off it.
+            let restyled = AnnotationBuilder.planningCaption(
+                AnnotationBuilder.restyled(current, caption: .some(newCaption)),
+                canvas: document.canvasSize)
             document.updateLayer(id: layerID) {
                 $0.content = restyled.content
                 $0.frame = restyled.frame
             }
         }
+    }
+
+    /// Live inspector-slider caption size (no undo step).
+    func previewCaptionFontSize(layerID: UUID, _ size: CGFloat) {
+        guard var doc = document, doc.layer(id: layerID)?.annotation?.shape == .arrow else { return }
+        discardDragPreview()
+        doc.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, captionFontSize: size) }
+        submit(doc)
+    }
+
+    /// Slider release: one undo step; the pill re-picks its spot for the new
+    /// size, and the next arrow's caption starts at it.
+    func commitCaptionFontSize(layerID: UUID, _ size: CGFloat) {
+        guard document?.layer(id: layerID)?.annotation?.shape == .arrow else { return }
+        discardDragPreview()
+        perform { document in
+            let canvas = document.canvasSize
+            document.updateLayer(id: layerID) {
+                $0 = AnnotationBuilder.planningCaption(
+                    AnnotationBuilder.restyled($0, captionFontSize: size), canvas: canvas)
+            }
+        }
+        annotationStyles.setCaptionFontSize(size, forShape: .arrow)
+        saveAnnotationStyles()
     }
 
     /// Caption entry abandoned (Esc): the arrow keeps whatever caption it had.
@@ -3043,7 +3071,15 @@ final class EditorState {
         previewMove = nil
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
-        perform { $0.updateLayer(id: id) { $0 = AnnotationBuilder.updating($0, start: start, end: end) } }
+        perform { document in
+            // A moved tail can push the caption off the picture (or free the
+            // room it was missing), so the pill re-picks its spot.
+            let canvas = document.canvasSize
+            document.updateLayer(id: id) {
+                $0 = AnnotationBuilder.planningCaption(
+                    AnnotationBuilder.updating($0, start: start, end: end), canvas: canvas)
+            }
+        }
     }
 
     func zoomIn() { zoomTowardCenter(zoom * 1.25) }

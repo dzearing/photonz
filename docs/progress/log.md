@@ -4437,3 +4437,12 @@ Proof shots rendered through `DocumentRenderer` (`temp/caliper-subjects/Render.s
 compiled against `.build/debug` objects). Audit:
 `queue/audits/2026-09-02-caliper-subjects.json`. Follow-ups filed (p3-low): the
 boxed-in full-width-rows case, and tuning the sideways travel limit.
+
+## 2026-09-02 — Arrow captions playtest and audit (go loop)
+
+- Played the Next arrow-caption flow end to end through the real render pipeline (offscreen, screen capture is denied to the loop). Legibility over light and dark, head clearance, and follow-on-move/resize all held.
+- Found and fixed: a caption on an arrow drawn from a margin inward landed off the picture (clipped or invisible). `AnnotationContent.captionOffset` + `CaptionPlanner` / `AnnotationBuilder.planningCaption(_:canvas:)` now slide the pill beside the tail, clear of shaft and head, whenever the default spot leaves the canvas. Re-planned on caption commit, endpoint commit, and label-size commit. The inline field tracks the same spot for the current draft.
+- Light inks (white, yellow) got a chip too light for white text; `captionChipColor` now darkens to luminance <= 0.24. Default red pair unchanged.
+- Inspector gains a Label size slider for captions; `AnnotationStyles` remembers it per shape for the next arrow.
+- Audit: `queue/audits/2026-09-02-arrow-captions.json` with seven renders. Follow-ups filed: re-plan on whole-arrow move; inline field vs inspector field double draft.
+- Gotcha: after adding a stored property to `AnnotationContent`, the incremental test build kept stale objects in the render test module and crashed with garbage-size allocations at random tests. `rm -rf .build/debug/Photonz{Core,Render}*.build .build/debug/Modules` and rebuild fixed it.

@@ -145,6 +145,103 @@ extension AnnotationBuilder {
     }
 }
 
+extension AnnotationBuilder {
+    /// Picks where a captioned arrow's pill sits so it stays on the picture.
+    /// The default spot (behind the tail) wins whenever it fits; otherwise the
+    /// pill moves beside the tail, clear of the shaft and the head, and the
+    /// frame is rebuilt around it. Endpoints never move. Pass nil for `canvas`
+    /// to skip planning; captionless layers pass through.
+    public static func planningCaption(_ layer: Layer, canvas: CGSize?) -> Layer {
+        guard let canvas, let a = layer.annotation, a.hasCaption,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        var probe = a
+        probe.start = start
+        probe.end = end
+        let offset = CaptionPlanner.plan(for: probe, canvas: canvas)
+        guard offset != a.captionOffset else { return layer }
+        var content = a
+        content.captionOffset = offset
+        var updated = layer
+        updated.content = .annotation(content)
+        return updating(updated, start: start, end: end)
+    }
+}
+
+/// Where an arrow's caption pill goes when the tail is too close to the edge
+/// of the picture for the default spot. Pure geometry: `content` must be in
+/// document space (endpoints and canvas in the same coordinates).
+public enum CaptionPlanner {
+    /// Nil when the default spot behind the tail fits the canvas; otherwise
+    /// the pill center relative to the tail. Candidates, in order: the default
+    /// spot slid back onto the picture, then above, below, left of and right of
+    /// the tail (each slid onto the picture). Sitting on the head or the shaft
+    /// costs more than a lower-ranked spot, so the label never hides what the
+    /// arrow is pointing at.
+    public static func plan(for content: AnnotationContent, canvas: CGSize) -> CGSize? {
+        let bounds = CGRect(origin: .zero, size: canvas)
+        let size = content.estimatedCaptionSize
+        var free = content
+        free.captionOffset = nil
+        let defaultAnchor = free.captionAnchor()
+        if bounds.contains(rect(at: defaultAnchor, size: size)) { return nil }
+
+        let tail = content.start
+        let head = content.end
+        let gap = AnnotationContent.captionGap
+        let candidates = [
+            defaultAnchor,
+            CGPoint(x: tail.x, y: tail.y - gap - size.height / 2),
+            CGPoint(x: tail.x, y: tail.y + gap + size.height / 2),
+            CGPoint(x: tail.x - gap - size.width / 2, y: tail.y),
+            CGPoint(x: tail.x + gap + size.width / 2, y: tail.y),
+        ]
+        let headRadius = content.strokeWidth * 3 * content.arrowheadScale + gap
+        let headZone = CGRect(x: head.x - headRadius, y: head.y - headRadius,
+                              width: 2 * headRadius, height: 2 * headRadius)
+        var best: (anchor: CGPoint, score: CGFloat)?
+        for (rank, candidate) in candidates.enumerated() {
+            let anchor = slidOntoCanvas(candidate, size: size, bounds: bounds)
+            let pill = rect(at: anchor, size: size)
+            var score = CGFloat(rank)
+            if pill.intersects(headZone) { score += 100 }
+            if crossesShaft(pill.insetBy(dx: -gap / 2, dy: -gap / 2), from: tail, to: head) { score += 50 }
+            if !bounds.contains(pill) { score += 1000 }
+            if score < (best?.score ?? .infinity) { best = (anchor, score) }
+        }
+        guard let best else { return nil }
+        return CGSize(width: best.anchor.x - tail.x, height: best.anchor.y - tail.y)
+    }
+
+    private static func rect(at anchor: CGPoint, size: CGSize) -> CGRect {
+        CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
+               width: size.width, height: size.height)
+    }
+
+    /// The nearest center that keeps a `size` pill inside `bounds` (the pill's
+    /// own center when it already fits, the canvas center when it never can).
+    private static func slidOntoCanvas(_ anchor: CGPoint, size: CGSize, bounds: CGRect) -> CGPoint {
+        func clamp(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat {
+            lo <= hi ? min(max(v, lo), hi) : (lo + hi) / 2
+        }
+        return CGPoint(x: clamp(anchor.x, bounds.minX + size.width / 2, bounds.maxX - size.width / 2),
+                       y: clamp(anchor.y, bounds.minY + size.height / 2, bounds.maxY - size.height / 2))
+    }
+
+    /// Whether the shaft from `a` to `b` passes through `rect`, sampled along
+    /// its length (the shaft is a segment, the pill a box; 32 samples resolve
+    /// any pill wider than a few pixels).
+    private static func crossesShaft(_ rect: CGRect, from a: CGPoint, to b: CGPoint) -> Bool {
+        let steps = 32
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let p = CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+            if rect.contains(p) { return true }
+        }
+        return false
+    }
+}
+
 /// An in-progress endpoint drag on a line/arrow layer. Mirrors
 /// `AnnotationDrag`: the canvas feeds it pointer positions, the geometry
 /// (including ⇧ 45° snap around the fixed endpoint) lives here.

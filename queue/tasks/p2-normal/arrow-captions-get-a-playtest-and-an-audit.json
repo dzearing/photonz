@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.115Z",
-  "updated": "2026-09-02T05:50:57.115Z",
+  "updated": "2026-09-02T06:48:31.144Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Code: EditorState.beginCaptionEdit / commitCaptionEdit / setAnnotationCaption, the CanvasView caption editor, AnnotationBuilder.restyled(caption:), PillRasterizer; tests AnnotationCaptionTests and AnnotationCaptionRenderingTests. The only coverage so far is one line in queue/audits/2026-08-23-measure-redline.json ('arrow captions are exact'). Screen capture is denied to the loop; use offscreen renders like the other audits.",
@@ -23,6 +23,32 @@
     {
       "t": "2026-09-02T05:50:57.115Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T06:32:58.303Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T06:36:46.399Z",
+      "note": "Pre-build review (code walk of the shipped flow, before any fix). First-time user: draw an arrow, a chip-tinted field appears at the tail with a caret; typing labels it, Return commits, Esc leaves it plain, clicking anywhere commits. Findings: (1) The tool hands back to Select the moment the arrow lands, and the caption field owns the keyboard, so a tool shortcut typed right after drawing lands in the caption instead. Same trap as the text tool; the visible caret makes it recoverable, noted as rough. (2) A caption hangs a fixed distance behind the tail with no knowledge of the picture edge, so an arrow drawn from the margin inward (the common way to point at something) pushes its label off the canvas and it is clipped in the render and export. The measure tool plans its chip against the canvas; captions do not. Likely the biggest clumsy bit; verify with a render. (3) captionFontSize exists in the model but nothing in the UI changes it, while the measure inspector has a Label size slider. (4) The chip tone is the arrow color at 55 percent with white text; for light arrow colors (white, yellow) that may not be legible. Verify with a render. (5) Editing from the inspector while the inline field is open leaves a stale inline editor whose later commit overwrites the inspector value. Edge case, check on the real app. (6) Nothing decorative to cut: pill, border, shadow are all doing legibility work."
+    },
+    {
+      "t": "2026-09-02T06:47:21.125Z",
+      "note": "Rendered nine scenes through DocumentRenderer on the settings-pane fixture (light and an inverted dark copy). Confirmed: legible over light and dark, never covers the head, follows move and endpoint resize. Confirmed clumsy: an arrow from the left margin lost its pill entirely off-canvas, one from the top showed a sliver, a vertical arrow from the bottom was half clipped; white and yellow arrows gave gray and olive pills. Renders in temp/arrow-captions/before."
+    },
+    {
+      "t": "2026-09-02T06:47:21.125Z",
+      "note": "Fixed with tests first (10 new core tests): AnnotationContent.captionOffset (tail-relative, Codable, legacy nil) + CaptionPlanner/AnnotationBuilder.planningCaption pick a spot on the canvas clear of the shaft and head when the default does not fit; captionChipColor keeps darkening light inks until luminance <= 0.24 (red pair unchanged); AnnotationStyles remembers captionFontSize per shape. App: caption commit, endpoint commit and the new Label size slider re-plan; the inline field now sits where the pill for the current draft will land (grows away from the tail, slides onto the picture)."
+    },
+    {
+      "t": "2026-09-02T06:47:21.125Z",
+      "note": "Scripts/test.sh crashed with garbage-size allocations at random tests after the change; the untouched tree passed. Serial run pinned it to a plain-line render test, and a clean rebuild of the core/render/test modules made it pass: stale incremental objects compiled against the old AnnotationContent layout, not a code bug."
+    },
+    {
+      "t": "2026-09-02T06:48:31.144Z",
+      "note": "Played the caption flow through the real render pipeline; fixed the pill leaving the picture on edge-drawn arrows (CaptionPlanner + captionOffset, re-planned on caption/endpoint/label-size commits, inline field tracks it), darkened chips for light inks, added a Label size slider remembered per shape. 10 new core tests, Scripts/test.sh green (1142). Audit at queue/audits/2026-09-02-arrow-captions.json with seven renders; two follow-ups filed."
     }
-  ]
+  ],
+  "started": "2026-09-02T06:32:58.302Z",
+  "completed": "2026-09-02T06:48:31.144Z"
 }

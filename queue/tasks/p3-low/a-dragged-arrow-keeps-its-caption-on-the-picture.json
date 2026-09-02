@@ -1,0 +1,28 @@
+{
+  "id": "a-dragged-arrow-keeps-its-caption-on-the-picture",
+  "title": "A dragged arrow keeps its caption on the picture",
+  "goal": "Moving a captioned arrow so its tail sits near the edge of the picture can push the label off the picture, because the label only re-picks its spot when the text, size or an endpoint changes. After a whole-arrow drag or nudge the label should land on the picture too.",
+  "epic": "epic-uehjr1",
+  "priority": "p3-low",
+  "seq": 470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T06:47:21.073Z",
+  "updated": "2026-09-02T06:47:21.074Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "AnnotationBuilder.planningCaption(_:canvas:) already does the placement; call it from the move commit path in EditorState (wherever a layer frame offset is committed, and nudges), only for arrows with hasCaption. The measure tool deliberately does not re-plan on move, so decide whether captions should differ; a caption off the picture is clearly wrong, a readout re-stacking is a judgment call.",
+  "acceptance": [
+    "Drag a captioned arrow so its tail touches the left edge: the pill stays fully on the picture after the drop.",
+    "Nudge the same arrow with the arrow keys to the bottom edge: the pill stays on the picture.",
+    "An arrow dragged in open space keeps its pill exactly behind the tail, unchanged.",
+    "Scripts/test.sh green."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T06:47:21.074Z",
+      "note": "created (manual)"
+    }
+  ]
+}

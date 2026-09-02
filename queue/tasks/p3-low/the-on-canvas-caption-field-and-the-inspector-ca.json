@@ -1,0 +1,27 @@
+{
+  "id": "the-on-canvas-caption-field-and-the-inspector-ca",
+  "title": "The on-canvas caption field and the inspector Caption field agree",
+  "goal": "While a label is being typed on the canvas, the inspector also shows a Caption field. Editing both leaves two drafts and whichever is committed last silently wins. Starting to type in one should close the other, so there is only ever one draft.",
+  "epic": "epic-uehjr1",
+  "priority": "p3-low",
+  "seq": 480,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T06:47:21.102Z",
+  "updated": "2026-09-02T06:47:21.102Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "CanvasNSView.beginCaptionSession / commitTextSession and EditorState.setAnnotationCaption. The simplest fix is committing the inline session when its NSTextView resigns first responder (NSTextViewDelegate.textDidEndEditing), but teardown inside that callback re-enters makeFirstResponder, so test it on the probe app rather than reasoning about it.",
+  "acceptance": [
+    "With the on-canvas field open, clicking into the inspector Caption field closes the on-canvas field (committing its draft).",
+    "Pressing Return in the inspector never gets overwritten by a later click on the canvas.",
+    "Scripts/test.sh green; Current release unchanged."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T06:47:21.102Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -79,6 +79,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var caption: String?
     /// Arrow-only: the caption's text size in image pixels.
     public var captionFontSize: CGFloat
+    /// Arrow-only: where the pill centers, relative to the TAIL (`start`), when
+    /// the default spot behind the tail would leave the picture. Nil = the
+    /// default. Relative to the tail so an endpoint rebuild keeps it valid;
+    /// `AnnotationBuilder.planningCaption` picks it against the canvas.
+    public var captionOffset: CGSize?
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
@@ -94,6 +99,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.fillColorHex = fillColorHex
         self.caption = caption
         self.captionFontSize = captionFontSize
+        self.captionOffset = nil
     }
 
     public init(from decoder: Decoder) throws {
@@ -113,6 +119,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         caption = try c.decodeIfPresent(String.self, forKey: .caption)
         captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
             ?? Self.captionFontSizeDefault
+        // Planned placement postdates captions; absent = the tail default.
+        captionOffset = try c.decodeIfPresent(CGSize.self, forKey: .captionOffset)
     }
 }
 
@@ -143,8 +151,20 @@ extension AnnotationContent {
     /// a matching dark pill that white text stays legible on.
     public var captionChipColor: RGBA {
         let rgba = RGBA(hex: colorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
-        return RGBA(r: rgba.r * 0.55, g: rgba.g * 0.55, b: rgba.b * 0.55)
+        var tone = RGBA(r: rgba.r * 0.55, g: rgba.g * 0.55, b: rgba.b * 0.55)
+        // White text sits on the chip, so a light ink (white, yellow) keeps
+        // darkening until the chip is dark enough for it to read.
+        let luminance = tone.relativeLuminance
+        if luminance > Self.captionChipMaxLuminance {
+            let k = Self.captionChipMaxLuminance / luminance
+            tone = RGBA(r: tone.r * k, g: tone.g * k, b: tone.b * k)
+        }
+        return tone
     }
+
+    /// The lightest a caption chip gets: dark enough that white text reads on
+    /// it. The default red pair (#8C201A) sits just under this.
+    public static let captionChipMaxLuminance: Double = 0.24
 
     /// The pill's fill opacity — the measure chip's default translucency.
     public static let captionChipOpacity: Double = 0.92
@@ -162,8 +182,12 @@ extension AnnotationContent {
 
     /// Where the caption pill centers (same coordinate space as `start`/`end`):
     /// past the arrow's tail, along the shaft away from the head, clear of the
-    /// tail by `captionGap`. A zero-length arrow anchors above the point.
+    /// tail by `captionGap`. A zero-length arrow anchors above the point. A
+    /// planned `captionOffset` (the default spot left the picture) wins.
     public func captionAnchor() -> CGPoint {
+        if let captionOffset {
+            return CGPoint(x: start.x + captionOffset.width, y: start.y + captionOffset.height)
+        }
         let size = estimatedCaptionSize
         var dx = start.x - end.x
         var dy = start.y - end.y

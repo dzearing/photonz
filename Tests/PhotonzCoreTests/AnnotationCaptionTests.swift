@@ -167,3 +167,134 @@ struct AnnotationCaptionFrameTests {
         #expect(cleared.frame == layer.frame)
     }
 }
+
+// MARK: - Placement against the canvas
+
+/// The pill's rect in document space, from the same estimate the model hits
+/// and reserves with.
+private func pillRect(_ layer: Layer) -> CGRect {
+    let a = layer.annotation!
+    let anchor = a.captionAnchor()
+    let size = a.estimatedCaptionSize
+    return CGRect(x: layer.frame.minX + anchor.x - size.width / 2,
+                  y: layer.frame.minY + anchor.y - size.height / 2,
+                  width: size.width, height: size.height)
+}
+
+@Suite("Annotation caption placement")
+struct AnnotationCaptionPlacementTests {
+
+    private let canvas = CGSize(width: 1440, height: 960)
+
+    @Test func openSpaceKeepsTheTailPlacementAndFrame() {
+        // Plenty of room behind the tail: nothing changes, the frame included.
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Primary action"),
+                                            from: CGPoint(x: 760, y: 650), to: CGPoint(x: 500, y: 770))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        #expect(planned.annotation?.captionOffset == nil)
+        #expect(planned.frame == layer.frame)
+        #expect(planned.annotation?.captionAnchor() == layer.annotation?.captionAnchor())
+    }
+
+    @Test func arrowFromTheLeftMarginKeepsItsPillOnThePicture() {
+        // Drawn from the margin inward: the default spot is off the left edge.
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                            from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))
+        #expect(!CGRect(origin: .zero, size: canvas).contains(pillRect(layer)))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        let pill = pillRect(planned)
+        #expect(CGRect(origin: .zero, size: canvas).contains(pill))
+        // Clear of the shaft (y = 496) and nowhere near the head at x = 880.
+        #expect(pill.minY > 496 + 2 || pill.maxY < 496 - 2)
+        #expect(pill.maxX < 800)
+        // The frame still reserves room for wherever the pill went.
+        #expect(planned.frame.contains(pill))
+        // Endpoints did not move.
+        #expect(planned.annotationEndpoint(.start) == layer.annotationEndpoint(.start))
+        #expect(planned.annotationEndpoint(.end) == layer.annotationEndpoint(.end))
+    }
+
+    @Test func arrowFromTheBottomMarginKeepsItsPillOnThePicture() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Secondary"),
+                                            from: CGPoint(x: 136, y: 940), to: CGPoint(x: 136, y: 830))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        let pill = pillRect(planned)
+        #expect(CGRect(origin: .zero, size: canvas).contains(pill))
+        // Not sitting on the shaft (x = 136 between y 830 and 940).
+        let onShaft = pill.minX <= 136 && pill.maxX >= 136 && pill.maxY >= 830 && pill.minY <= 940
+        #expect(!onShaft)
+    }
+
+    @Test func topRightCornerArrowStaysInsideBothEdges() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Login toggle"),
+                                            from: CGPoint(x: 1300, y: 20), to: CGPoint(x: 1300, y: 160))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        #expect(CGRect(origin: .zero, size: canvas).contains(pillRect(planned)))
+    }
+
+    @Test func plannedPillIsHittableWhereItLanded() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                            from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        let center = CGPoint(x: pillRect(planned).midX, y: pillRect(planned).midY)
+        #expect(planned.contains(canvasPoint: center, zoom: 1))
+    }
+
+    @Test func endpointRebuildKeepsTheOffsetRelativeToTheTail() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                            from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: canvas)
+        let offset = planned.annotation?.captionOffset
+        #expect(offset != nil)
+        let moved = AnnotationBuilder.updating(planned, start: CGPoint(x: 60, y: 300), end: CGPoint(x: 700, y: 300))
+        #expect(moved.annotation?.captionOffset == offset)
+        let tail = moved.annotationEndpoint(.start)!
+        let pill = pillRect(moved)
+        #expect(abs(pill.midX - (tail.x + (offset?.width ?? 0))) < 0.5)
+        #expect(abs(pill.midY - (tail.y + (offset?.height ?? 0))) < 0.5)
+    }
+
+    @Test func noCanvasMeansNoPlan() {
+        let layer = AnnotationBuilder.layer(content: arrowContent(caption: "Path field"),
+                                            from: CGPoint(x: 24, y: 496), to: CGPoint(x: 880, y: 496))
+        let planned = AnnotationBuilder.planningCaption(layer, canvas: nil)
+        #expect(planned == layer)
+    }
+
+    @Test func offsetRoundTripsAndLegacyPayloadsHaveNone() throws {
+        var content = arrowContent(caption: "x")
+        content.captionOffset = CGSize(width: 12, height: -40)
+        let decoded = try JSONDecoder().decode(AnnotationContent.self, from: JSONEncoder().encode(content))
+        #expect(decoded.captionOffset == CGSize(width: 12, height: -40))
+        let legacy = """
+        {"shape":"arrow","strokeWidth":4,"colorHex":"#FF3B30","start":[10,20],"end":[110,20],"caption":"x"}
+        """.data(using: .utf8)!
+        #expect(try JSONDecoder().decode(AnnotationContent.self, from: legacy).captionOffset == nil)
+    }
+}
+
+@Suite("Annotation caption legibility")
+struct AnnotationCaptionLegibilityTests {
+
+    @Test func lightInkStillGetsADarkChip() {
+        // White text sits on the chip, so a white or yellow arrow cannot keep
+        // the plain 55 percent tone (a mid gray, an olive): the chip darkens
+        // until white reads on it.
+        for hex in ["#FFFFFF", "#FFD60A", "#34C759"] {
+            var content = arrowContent(caption: "x")
+            content.colorHex = hex
+            #expect(content.captionChipColor.relativeLuminance <= AnnotationContent.captionChipMaxLuminance + 1e-9)
+        }
+        // The default red pair is unchanged.
+        #expect(arrowContent(caption: "x").captionChipColor.hexString == "#8C201A")
+    }
+
+    @Test func captionSizeIsRememberedPerShape() throws {
+        var styles = AnnotationStyles()
+        #expect(styles.captionFontSize(forShape: .arrow) == AnnotationContent.captionFontSizeDefault)
+        styles.setCaptionFontSize(28, forShape: .arrow)
+        #expect(styles.content(for: .arrow)?.captionFontSize == 28)
+        let decoded = try JSONDecoder().decode(AnnotationStyles.self, from: JSONEncoder().encode(styles))
+        #expect(decoded.captionFontSize(forShape: .arrow) == 28)
+    }
+}

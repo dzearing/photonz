@@ -1101,6 +1101,7 @@ struct AnnotationInspector: View {
     @State private var headDraft: CGFloat?
     @State private var radiusDraft: CGFloat?
     @State private var captionDraft: String = ""
+    @State private var captionSizeDraft: CGFloat?
 
     private var annotation: AnnotationContent? {
         editorState.document?.layer(id: layer.id)?.annotation
@@ -1164,6 +1165,20 @@ struct AnnotationInspector: View {
                     // typing edits only the draft until Return commits.
                     .onChange(of: a.caption ?? "", initial: true) { _, new in
                         captionDraft = new
+                    }
+                    if a.hasCaption {
+                        sliderRow("Label size", value: captionSizeDraft ?? a.captionFontSize,
+                                  display: "\(Int((captionSizeDraft ?? a.captionFontSize).rounded())) px",
+                                  range: MeasureContent.labelSizeRangePx,
+                                  set: { v in
+                                      captionSizeDraft = v
+                                      editorState.previewCaptionFontSize(layerID: layer.id, v.rounded())
+                                  },
+                                  commit: {
+                                      editorState.commitCaptionFontSize(
+                                          layerID: layer.id, (captionSizeDraft ?? a.captionFontSize).rounded())
+                                      captionSizeDraft = nil
+                                  })
                     }
                 }
                 if a.shape == .arrow {

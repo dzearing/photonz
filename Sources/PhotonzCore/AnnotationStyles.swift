@@ -75,6 +75,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// Corner radius new rectangles start with.
     public func cornerRadius(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).cornerRadius }
 
+    /// Caption text size (image pixels) new arrows start with.
+    public func captionFontSize(forShape shape: AnnotationShape) -> CGFloat { defaults(forShape: shape).captionFontSize }
+
     /// The non-destructive effects (shadow, opacity, blur, …) a NEW annotation
     /// of this shape starts with — captured from the last one the user styled,
     /// so e.g. adding a drop shadow to one arrow carries to the next.
@@ -102,6 +105,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setCornerRadius(_ radius: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].cornerRadius = radius
+    }
+
+    public mutating func setCaptionFontSize(_ size: CGFloat, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].captionFontSize = size
     }
 
     // MARK: - Tool-keyed convenience (nil for non-annotation tools)
@@ -151,7 +158,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         let width = tool.usesStrokeWidth ? d.strokeWidth : AnnotationContent.defaultStrokeWidth
         return AnnotationContent(shape: shape, strokeWidth: width, colorHex: d.colorHex,
                                  arrowheadScale: d.arrowheadScale,
-                                 cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex)
+                                 cornerRadius: d.cornerRadius, fillColorHex: d.fillColorHex,
+                                 captionFontSize: d.captionFontSize)
     }
 
     // MARK: - Defaults & palettes
@@ -195,16 +203,20 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     /// Non-destructive effects (shadow/opacity/blur/border/corner) new objects
     /// of this shape inherit.
     public var layerStyle: LayerStyle
+    /// Caption text size for arrows (image pixels).
+    public var captionFontSize: CGFloat
 
     public init(colorHex: String, strokeWidth: CGFloat, arrowheadScale: CGFloat,
                 fillColorHex: String? = nil, cornerRadius: CGFloat = 0,
-                layerStyle: LayerStyle = LayerStyle()) {
+                layerStyle: LayerStyle = LayerStyle(),
+                captionFontSize: CGFloat = AnnotationContent.captionFontSizeDefault) {
         self.colorHex = colorHex
         self.strokeWidth = strokeWidth
         self.arrowheadScale = arrowheadScale
         self.fillColorHex = fillColorHex
         self.cornerRadius = cornerRadius
         self.layerStyle = layerStyle
+        self.captionFontSize = captionFontSize
     }
 
     public init(from decoder: Decoder) throws {
@@ -220,6 +232,9 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
         // `layerStyle` postdates per-shape prefs.
         layerStyle = try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? LayerStyle()
+        // `captionFontSize` postdates captions themselves.
+        captionFontSize = try c.decodeIfPresent(CGFloat.self, forKey: .captionFontSize)
+            ?? AnnotationContent.captionFontSizeDefault
     }
 
     /// The smart default for a shape: red strokes, yellow highlight (system

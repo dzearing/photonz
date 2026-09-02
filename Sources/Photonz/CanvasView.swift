@@ -584,6 +584,10 @@ final class CanvasNSView: NSView {
         /// Non-nil marks this as an arrow-caption session and carries the
         /// caption's fixed style (white text at the caption font size).
         var captionStyle: TextContent?
+        /// The arrow being captioned, so the editor can sit exactly where the
+        /// pill for the CURRENT draft will render (it grows away from the tail
+        /// and slides onto the picture the same way the committed pill does).
+        var captionLayer: Layer?
     }
     private var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.
@@ -3182,7 +3186,8 @@ final class CanvasNSView: NSView {
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
         let style = TextContent(string: "", fontName: "SF Pro",
                                 fontSize: a.captionFontSize, colorHex: "#FFFFFF")
-        textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style)
+        textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
+                                      captionLayer: layer)
 
         let editor = makeInlineEditor()
         editor.commitsOnPlainReturn = true
@@ -3292,10 +3297,23 @@ final class CanvasNSView: NSView {
             height = max(height, used.height + 2)
         }
         if session.captionStyle != nil {
-            // A caption session's origin is the pill CENTER: keep the editor
-            // centered there so the draft sits where the pill will render.
-            editor.frame = CGRect(x: (topLeft.x - contentWidth / 2).rounded(),
-                                  y: (topLeft.y - ceil(height) / 2).rounded(),
+            // A caption session centers the editor where the pill for the
+            // current draft will render: it grows away from the tail as you
+            // type, and slides onto the picture when the tail is at an edge.
+            var center = session.origin
+            if let layer = session.captionLayer {
+                let draft = editor.string.isEmpty ? "A" : editor.string
+                let probe = AnnotationBuilder.planningCaption(
+                    AnnotationBuilder.restyled(layer, caption: .some(draft)),
+                    canvas: viewport.documentSize)
+                if let a = probe.annotation {
+                    let anchor = a.captionAnchor()
+                    center = CGPoint(x: probe.frame.minX + anchor.x, y: probe.frame.minY + anchor.y)
+                }
+            }
+            let pillCenter = viewport.viewPoint(fromDocument: center)
+            editor.frame = CGRect(x: (pillCenter.x - contentWidth / 2).rounded(),
+                                  y: (pillCenter.y - ceil(height) / 2).rounded(),
                                   width: contentWidth, height: ceil(height))
         } else {
             editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))

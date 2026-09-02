@@ -1,0 +1,31 @@
+{
+  "feature": "Arrow captions",
+  "epic": "epic-uehjr1",
+  "summary": "Draw an arrow, type, and the label lands in a pill behind the tail. The pill now stays on the picture when the arrow starts at an edge, white text stays readable on any arrow color, and the inspector can resize the label.",
+  "setup": "Photonz Dev, Experiments window, release Next. The Arrow captions flag is on by default. The test capture is Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png.",
+  "try": [
+    { "do": "Open the test capture and press A for the Arrow tool." },
+    { "do": "Drag from the open space above and right of Save Changes down onto the button. A dark red field with a caret appears behind the tail." },
+    { "do": "Type Primary action and press Return. The pill lands where the field was, white on dark red, with a soft shadow.", "shot": "2026-09-02-arrow-captions-1-save.png" },
+    { "do": "Press A, draw a second arrow anywhere, and press Esc. It stays a plain arrow." },
+    { "do": "Press A and drag from the very left edge of the picture into the Save captures to field. Type Path field, Return. The label sits above the tail, on the picture, instead of falling off the left edge.", "shot": "2026-09-02-arrow-captions-4-edge-after.png" },
+    { "do": "Double-click the first pill, change the text, Return. Press Cmd Z once: the old label comes back." },
+    { "do": "With that arrow selected, drag the Label size slider in the inspector. The pill grows in place and re-picks its spot if it no longer fits.", "shot": "2026-09-02-arrow-captions-7-label-size.png" },
+    { "do": "Drag the arrow's tail handle to the bottom edge of the picture. The pill moves beside the tail rather than leaving the picture.", "shot": "2026-09-02-arrow-captions-5-vertical.png" }
+  ],
+  "evaluate": [
+    "The field appears the instant the arrow lands. Does that feel like an invitation to label, or an interruption you have to Esc out of?",
+    "When the tail is at an edge the label sits above or beside the tail instead of behind it. Is it still obviously this arrow's label?",
+    "Is the dark pill with white text the right weight next to a 4 pt arrow, or does it shout louder than the thing it points at?",
+    "Return commits and Esc abandons, and clicking anywhere else also commits. Is that what your hands expected?",
+    "Label size lives in the inspector next to the Caption field. Is that where you would look for it?"
+  ],
+  "rough": [
+    "The tool hands back to Select the moment the arrow lands and the caption field owns the keyboard, so pressing A for another arrow right away types an a into the label. The caret makes it recoverable, but it will catch people once.",
+    "Before this pass any arrow drawn from a margin inward, the most common way to point at something, pushed its label clean off the picture (see 2026-09-02-arrow-captions-3-edge-before.png). The pill now slides beside the tail. The spot is picked when the text, size or an endpoint changes, not when the whole arrow is dragged, so dragging an arrow to the edge can still push the label off until you touch an endpoint. Filed as a follow-up.",
+    "Typing in the on-canvas field while also editing the inspector Caption field leaves two drafts, and whichever commits last wins. Filed as a follow-up.",
+    "White and yellow arrows used to get a mid gray or olive pill that white text barely read on. The chip now keeps darkening until white reads on it (2026-09-02-arrow-captions-6-colors.png). A green arrow gets a very dark green pill as a result; judge whether that still reads as the arrow's color.",
+    "There is no way to drag the pill to a spot you prefer. The tool picks, you cannot overrule it.",
+    "Screen capture is denied to the loop, so every picture here is the real render pipeline drawn offscreen, not a screenshot of the app window. The inline field itself is not pictured."
+  ]
+}
