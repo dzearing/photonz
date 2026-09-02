@@ -284,6 +284,12 @@ public enum AlignmentScan {
     /// own.
     public static let defaultElementStrength: Double = 0.2
 
+    /// How faint a reading may get, next to the boldest reading of its OWN
+    /// boundary elsewhere along the guide, and still count as that boundary.
+    /// See `elementTracks`; a boundary that never reaches `elementStrength`
+    /// anywhere is not rescued by this at all.
+    public static let weakElementFraction: Double = 0.5
+
     /// Two boundaries closer together than this are one boundary read twice:
     /// the two flanks of a border, of a glyph stem, or of an antialiased edge.
     /// Same distance as `ElementBounds` uses for the same call, and the two
@@ -387,7 +393,7 @@ public enum AlignmentScan {
 
         // Every element-strength boundary near the guide, per sample, before
         // any is chosen: the pick needs to see whole runs, not one sample.
-        var samples: [[EdgeCandidate]] = []
+        var readings: [[EdgeCandidate]] = []
         var positions: [CGFloat] = []
         for i in 0...sampleCount {
             let t = span.lowerBound + length * CGFloat(i) / CGFloat(sampleCount)
@@ -395,11 +401,12 @@ public enum AlignmentScan {
             let candidates = (axis == .vertical
                 ? edges.verticalEdges(inYRange: window)
                 : edges.horizontalEdges(inXRange: window))
-                .filter { $0.strength >= elementStrength
+                .filter { $0.strength >= elementStrength * weakElementFraction
                     && abs($0.position - Double(position)) <= Double(captureRadius) }
-            samples.append(candidates)
+            readings.append(candidates)
             positions.append(t)
         }
+        let samples = elementTracks(in: readings, elementStrength: elementStrength)
         let flanks = borderFlanks(in: samples)
 
         var runs: [Run] = []
@@ -580,15 +587,23 @@ public enum AlignmentScan {
     /// stops at the corners, a descender line stops at the descender, and the
     /// edge that runs the whole element is the element's. Two readings of equal
     /// extent (a stem's two sides) are left to the guide's own position.
-    static func borderFlanks(in samples: [[EdgeCandidate]]) -> [Set<Int>] {
-        struct Track {
-            var sum: Double = 0
-            var count = 0
-            var first: Int
-            var last: Int
-            var members: [(sample: Int, index: Int)] = []
-            var mean: Double { sum / Double(max(count, 1)) }
-        }
+    /// One boundary followed along the guide: the readings, sample by sample,
+    /// that each landed within `runMergeTolerance` of the running mean of the
+    /// ones before them. A sample that offers nothing near the mean ends the
+    /// track: a boundary a person can see does not blink.
+    struct Track {
+        var sum: Double = 0
+        var count = 0
+        var first: Int
+        var last: Int
+        var members: [(sample: Int, index: Int)] = []
+        var mean: Double { sum / Double(max(count, 1)) }
+    }
+
+    /// Every boundary in `samples`, chained along the guide. Each sample's
+    /// readings extend the nearest open track they are close enough to, one
+    /// reading per track, and anything left over opens a track of its own.
+    static func tracks(in samples: [[EdgeCandidate]]) -> [Track] {
         var open: [Track] = []
         var closed: [Track] = []
         for (i, candidates) in samples.enumerated() {
@@ -622,7 +637,46 @@ public enum AlignmentScan {
             }
         }
         closed.append(contentsOf: open)
+        return closed
+    }
 
+    /// The readings that belong to an ELEMENT, by hysteresis: a boundary counts
+    /// if it reaches `elementStrength` ANYWHERE along its own track, and once
+    /// it has, its fainter readings count too, down to `weakElementFraction`
+    /// of its boldest. A boundary that never gets there is dropped whole.
+    ///
+    /// Strength is measured against the boldest reading in each SAMPLE, so a
+    /// pale boundary fades wherever something bolder shares its window. Judging
+    /// each reading alone therefore chops a pale edge into fragments, and a
+    /// short fragment sitting inside a longer reading a few pixels away is
+    /// exactly what `borderFlanks` throws out as the inner side of a border.
+    /// That is how a guide down a row of toggles came to call the switched-off
+    /// one 2 px out: its track is barely there against white, so its fragments
+    /// were discarded in favour of the bolder edge of the knob just inside it,
+    /// and the guide measured the knob.
+    ///
+    /// The rescue is deliberately relative to the boundary's own boldest
+    /// reading rather than a flat floor. A real edge dips to a good fraction of
+    /// itself; the ghost the block-summed map trails past a line of text is a
+    /// small fraction of the line it echoes, so it stays out.
+    static func elementTracks(in samples: [[EdgeCandidate]],
+                              elementStrength: Double) -> [[EdgeCandidate]] {
+        var keep = samples.map { [Bool](repeating: false, count: $0.count) }
+        for track in tracks(in: samples) {
+            let strengths = track.members.map { samples[$0.sample][$0.index].strength }
+            guard let peak = strengths.max(), peak >= elementStrength else { continue }
+            let faintest = min(elementStrength, peak * weakElementFraction)
+            for (member, strength) in zip(track.members, strengths) where strength >= faintest {
+                keep[member.sample][member.index] = true
+            }
+        }
+        return samples.indices.map { i in
+            samples[i].enumerated().filter { keep[i][$0.offset] }.map(\.element)
+        }
+    }
+
+    static func borderFlanks(in samples: [[EdgeCandidate]]) -> [Set<Int>] {
+        let closed = tracks(in: samples)
         var flanks = [Set<Int>](repeating: [], count: samples.count)
         for track in closed {
             let isFlank = closed.contains { other in

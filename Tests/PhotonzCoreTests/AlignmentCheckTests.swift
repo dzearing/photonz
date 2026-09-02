@@ -146,6 +146,64 @@ struct AlignmentScanTests {
         for item in items { #expect(abs(item.edge - 60) <= 1) }
     }
 
+    /// A row of toggles with their left ends level, one of them switched off.
+    ///
+    /// A switched-on toggle is a filled pill, so its left end is bold. The off
+    /// one is a pale track on white with its knob at that same end, and the
+    /// knob's edge — 4 px inside the track's, well within `pairSeparation` —
+    /// is three times as bold. The row's label ink is bolder in the lower half
+    /// of each row than the upper, so the pale track reads 0.28 of its window
+    /// at the top of the toggle and 0.19 at the bottom: the same two-thirds
+    /// fade a real capture shows, straddling the element floor.
+    ///
+    /// The toggles line up, and the guide has to say so. It used to report the
+    /// off one 4 px out: the samples where the track dipped under the floor
+    /// were dropped, and the fragment left behind was short enough to look
+    /// like the inner flank of the knob's edge, so the guide measured the knob.
+    private func togglesWithOneSwitchedOff(offTrackCol: Int = 100) -> Scene {
+        var s = Scene(w: 400, h: 480)
+        for (index, y) in [80, 144, 208, 272].enumerated() {
+            let off = index == 2
+            let col = off ? offTrackCol : 100
+            if off {
+                s.addVerticalEdge(col: col, y0: y, y1: y + 31, magnitude: 0.56)
+                s.addVerticalEdge(col: col + 4, y0: y, y1: y + 31, magnitude: 1.6)
+            } else {
+                s.addVerticalEdge(col: col, y0: y, y1: y + 31, magnitude: 2.0)
+            }
+            let ends = off ? 0.56 : 2.0
+            s.addHorizontalEdge(row: y, x0: col, x1: col + 60, magnitude: ends)
+            s.addHorizontalEdge(row: y + 31, x0: col, x1: col + 60, magnitude: ends)
+            // The row's label, bolder in its lower half than its upper.
+            s.addVerticalEdge(col: 40, y0: y, y1: y + 15, magnitude: 2.0)
+            s.addVerticalEdge(col: 40, y0: y + 16, y1: y + 31, magnitude: 2.95)
+        }
+        return s
+    }
+
+    @Test func aPaleToggleTrackBeatsTheBolderKnobInsideIt() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 70...320,
+                                        in: togglesWithOneSwitchedOff().map)
+        #expect(items.count == 4)
+        for item in items { #expect(abs(item.edge - 100) <= 1) }
+        #expect(AlignmentCheck(items: items, tolerance: 1).verdict?.isAligned == true)
+    }
+
+    /// And an off toggle that really is out of line still says so, at its real
+    /// size: the track wins because it is the track, not because the answer
+    /// was nudged onto the majority.
+    @Test func aPaleToggleTrackOutOfLineIsStillReported() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 70...320,
+                                        in: togglesWithOneSwitchedOff(offTrackCol: 106).map)
+        #expect(items.count == 4)
+        guard let verdict = AlignmentCheck(items: items, tolerance: 1).verdict else {
+            Issue.record("no verdict")
+            return
+        }
+        #expect(abs(verdict.maxDelta - 6) <= 1)
+        #expect(verdict.outlierIndex == 2)
+    }
+
     /// Two boundaries further apart than a border is thick are two elements,
     /// and the one the guide was drawn on is the one it means.
     @Test func aRealNeighbourSixPixelsAwayIsNotAbsorbed() {

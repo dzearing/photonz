@@ -5,11 +5,11 @@
   "epic": "alignment-checks",
   "priority": "p3-low",
   "seq": 540,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:57:11.048Z",
-  "updated": "2026-09-02T13:57:11.048Z",
+  "updated": "2026-09-02T21:47:23.485Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by audit 2026-09-02-guide-item-counts. The off toggle track is about #E9E9EB on white (contrast ~0.09); the knob edge/shadow 2 device px inside it wins the strength filter in AlignmentScan.runs (defaultElementStrength 0.2 of the boldest candidate in the sample window). Candidate direction: when the guide was drawn within a pixel or two of a faint edge that runs the whole element, prefer it over a bolder one further in, the same extent-over-boldness argument borderFlanks already makes. Playtest walk: Scripts/playtest/alignment-counts.json step 3.",
@@ -22,6 +22,35 @@
     {
       "t": "2026-09-02T13:57:11.048Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T21:47:23.485Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Adversarial review before building: this is a defect in a shipped slice, not a mock proposal, so the value is not in question. A guide that says off 2 px about a row that lines up is the worst failure mode for a redlining tool. Shortest version is a scan fix with no new UI or option, so that is what was built. Two tempting shortcuts were rejected: lowering the element strength floor globally would resurrect the ghost bug the floor exists for, and tightening pairSeparation would desync the guide from ElementBounds, which must agree with it."
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Reproduced first, both on the real capture (settings-pane-2x, guide at device x 1260: the off toggle read 1264, chip 'Left edges, off 2 px') and in a synthetic scene. Root cause was not the strength floor alone: the pale track at 1260 dipped to 0.188 for two of five samples, those samples were dropped, and the fragment left behind was short enough that borderFlanks classified it as the inner flank of the knob's edge at 1264 and threw it away."
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Tried strict-both-ends flank containment first. It fixed the toggles but broke aGuideStartedOnTheInnerFlankAgrees, because a border's inner flank and a toggle's pale track have the same extent signature when the guide starts mid-element. Strength is the only honest discriminator, so the fix is hysteresis instead."
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Shipped: AlignmentScan.elementTracks. A boundary counts if it reaches elementStrength anywhere along its own track, and then its fainter readings count too, down to weakElementFraction (0.5) of its own boldest. Relative to the boundary's own peak, not a flat floor: the toggle's dip is 0.68 of its peak while the cap-line ghost under a label is 0.24 of its peak, so the window is wide. borderFlanks' chaining was extracted into a shared AlignmentScan.tracks."
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Verified: 1483 tests green. Five new tests (AlignmentFixtureTests fourTogglesThatLineUpToTheEyeReadAligned, everyReasonableDragDownTheTogglesAgrees, aTogglePushedOutOfLineIsStillReported; AlignmentCheckTests aPaleToggleTrackBeatsTheBolderKnobInsideIt, aPaleToggleTrackOutOfLineIsStillReported) each fail on the pre-fix source and pass after. Real app: Scripts/playtest.sh Scripts/playtest/alignment-counts.json on the probe build, spec list reads 'Left edges, 4 items: aligned'. Screen Recording was granted, so queue/audits/2026-09-02-guide-toggle-track-*.png are real captures."
+    },
+    {
+      "t": "2026-09-02T22:06:15.351726Z",
+      "note": "Review of the built thing: the drag sweep 1254...1262 all read aligned, and the press anchor snaps to 1259 or jumps to 1268 from anywhere in that band, so every guide a hand can draw down this row is covered. A guide forced onto the knob's edge at 1264 still reports off 2 px; left as is, and recorded in the audit's rough. Guarded against the fix simply rounding everything onto the majority by doctoring the fixture (third toggle moved 6 device px) and pinning that it still reports off 3 px."
     }
-  ]
+  ],
+  "started": "2026-09-02T21:47:23.485Z"
 }

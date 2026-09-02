@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.284Z",
-  "updated": "2026-09-02T21:30:21.293Z",
+  "updated": "2026-09-02T21:47:06.887Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-window-highlight-title.json rough 2, and the manager open thread of 2026-09-02 02:40. Title stripping and the pill live in Sources/Photonz/Capture (see commit 3596afd). The loop has no Screen Recording grant, so titles are empty for the probe; verify with the same invented-window overlay render that audit used.",
@@ -46,7 +46,12 @@
     {
       "t": "2026-09-02T21:46:52.135230Z",
       "note": "Post-build review. Clumsy bits left: the ending's share is a fixed third, so on a very tight pill it can be two characters; and a title made of one long token still cuts mid-word at both ends because there is no word to step to. Both are recorded in the audit's rough for the user to judge rather than guessed at again. Nothing filed as a follow-up: neither is a defect, and the audit is the right place for a judgment call."
+    },
+    {
+      "t": "2026-09-02T21:47:06.887Z",
+      "note": "WindowPick.shortenedTitle cuts a long window title in the middle (Finder-style): the ending survives, takes a third of the budget and starts on a whole word; under three surviving characters the title is still dropped. Overlay untouched. 5 new/updated core tests, 1478 green; verified against real window titles and the real font measure via a temporary probe harness (removed). Audit: queue/audits/2026-09-02-window-title-middle.json. Commit 26a1725."
     }
   ],
-  "started": "2026-09-02T21:30:21.293Z"
+  "started": "2026-09-02T21:30:21.293Z",
+  "completed": "2026-09-02T21:47:06.887Z"
 }

@@ -318,6 +318,90 @@ struct AlignmentFixtureTests {
         #expect(count(axis: .vertical, at: 1260, span: 160...700) == 4)
     }
 
+    /// And they line up, so the guide says so. Three of the four are switched
+    /// on; the third is off, and its track is so pale against white that the
+    /// edge of its knob, 2 logical px inside it, reads bolder. The guide used
+    /// to measure that knob and accuse the row of being 2 px out.
+    @Test func fourTogglesThatLineUpToTheEyeReadAligned() {
+        let items = scan(at: Self.togglesX, span: Self.togglesSpan)
+        #expect(items.count == 4)
+        // Every toggle judged by its track's left end, not by a knob inside it.
+        for item in items { #expect(abs(item.edge - 1260) <= 1) }
+        let content = togglesContent()
+        #expect(MeasureSpecList.derivedName(for: content) == "Left edges, 4 items")
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges aligned")
+        #expect(content.label(pixelScale: Self.pixelScale) == "aligned")
+    }
+
+    /// Wherever along that edge the drag started. The press anchor snaps
+    /// before the scan runs and lands on 1259 from anywhere in this band, so
+    /// this is every guide a hand can actually draw down this row.
+    @Test func everyReasonableDragDownTheTogglesAgrees() {
+        for position in [CGFloat(1254), 1256, 1258, 1259, 1260, 1262] {
+            let content = togglesContent(at: position)
+            #expect(content.alignment?.items.count == 4, "guide at x \(position)")
+            #expect(content.label(pixelScale: Self.pixelScale) == "aligned",
+                    "guide at x \(position)")
+        }
+    }
+
+    /// A toggle really out of line still reads as one: the fix may not have
+    /// bought its answer by rounding everything onto the majority.
+    @Test func aTogglePushedOutOfLineIsStillReported() {
+        guard let doctored = Self.captureWithThirdToggleMoved(by: 6) else {
+            Issue.record("could not doctor the fixture")
+            return
+        }
+        let content = togglesContent(in: doctored)
+        #expect(content.alignment?.items.count == 4)
+        #expect(content.chipText(pixelScale: Self.pixelScale) == "Left edges, off 3 px")
+    }
+
+    private static let togglesX: CGFloat = 1259
+    private static let togglesSpan: ClosedRange<CGFloat> = 160...700
+
+    private func togglesContent(in analysis: EdgeMapAnalyzer.Analysis = AlignmentFixtureTests.analysis,
+                                at position: CGFloat = AlignmentFixtureTests.togglesX) -> MeasureContent {
+        let items = scan(at: position, span: Self.togglesSpan, in: analysis)
+        var content = MeasureContent(headOffset: 0, mode: .vertical, unit: .points)
+        content.alignment = AlignmentCheck(items: items, tolerance: Self.buttonsTolerance)
+        let reference = content.alignment?.verdict?.reference ?? position
+        content.start = CGPoint(x: reference, y: Self.togglesSpan.lowerBound)
+        content.end = CGPoint(x: reference, y: Self.togglesSpan.upperBound)
+        return content
+    }
+
+    /// The fixture with the third toggle (the switched-off one, device
+    /// x 1252...1332, y 336...400) shifted `dx` px right and the strip it
+    /// vacated filled with the column of card background to its left.
+    private static func captureWithThirdToggleMoved(by dx: Int) -> EdgeMapAnalyzer.Analysis? {
+        guard let url = Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
+                                          withExtension: "png"),
+              let data = try? Data(contentsOf: url),
+              let image = ImageCodec.decode(data),
+              let context = CGContext(data: nil, width: image.width, height: image.height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        let h = CGFloat(image.height)
+        func cg(_ r: CGRect) -> CGRect {
+            CGRect(x: r.minX, y: h - r.maxY, width: r.width, height: r.height)
+        }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let toggle = CGRect(x: 1252, y: 336, width: 80, height: 64)
+        guard let crop = image.cropping(to: toggle),
+              let bg = image.cropping(to: CGRect(x: 1244, y: 336, width: 1, height: 64)) else {
+            return nil
+        }
+        context.draw(bg, in: cg(CGRect(x: toggle.minX, y: toggle.minY,
+                                       width: CGFloat(dx), height: toggle.height)))
+        context.draw(crop, in: cg(toggle.offsetBy(dx: CGFloat(dx), dy: 0)))
+        guard let doctored = context.makeImage() else { return nil }
+        return EdgeMapAnalyzer.analyzeFully(doctored)
+    }
+
     /// Down the page's left margin: the heading, two white cards on the light
     /// background, and the Reset button.
     @Test func headingCardsAndButtonCountFour() {
