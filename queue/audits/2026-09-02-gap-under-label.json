@@ -1,0 +1,21 @@
+{
+  "feature": "Gap caliper under a row label",
+  "epic": "measure-redline",
+  "summary": "A Gap caliper dropped in the space between two cards now keeps its number off the row label above it. Before, measuring under the words of a row lost that row and the number climbed onto the text. Size mode hover benefits too: elements are found under their own labels and icons where they used to be missed.",
+  "setup": "Photonz Dev, Experiments window, release Next. Open the settings-pane capture from the measure audits (Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png).",
+  "try": [
+    { "do": "Press M for Measure and pick Gap mode." },
+    { "do": "Click in the space between the two settings cards, directly under the words Play sound on capture.", "shot": "2026-09-02-gap-under-label.png" },
+    { "do": "Click the same space again further right, over the blank part of the row." },
+    { "do": "Switch to Size mode and hover over the left end of a row, across its icon and label." }
+  ],
+  "evaluate": [
+    "Does the number under the label sit in the gap, clear of the text, the same way it does over the blank part of the row?",
+    "In Size mode, does the row light up as one element all along its width, including over its icon and label?",
+    "Does hovering feel as quick as before?"
+  ],
+  "rough": [
+    "In this 33 px gap the 44 px pill still overhangs both card edges by about 5 px a side. That is the separate boxed-in decision already open, not this fix.",
+    "Verified on the fixture capture through the real renderer and a sweep along the whole gap. Not tried live in the app: the unmanned loop cannot drive the pointer."
+  ]
+}

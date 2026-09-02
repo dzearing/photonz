@@ -120,24 +120,39 @@ public enum ElementBounds {
         let below = pairable(sides[1])
         guard !above.isEmpty, !below.isEmpty else { return [] }
 
-        // Grow the pair outward one boundary at a time, so the rungs come out
-        // smallest first and every rung is a real pair rather than a cross
+        // Every top paired with every bottom, shortest pair first, so the rungs
+        // come out smallest first. It has to be every pair: walking outward one
+        // boundary at a time misses elements whenever something is painted
+        // between the probe and one of their edges. Under a settings row's
+        // label the glyph edges above the probe are nearer than the row's top,
+        // so a walk keeps stepping the top up through them and, being nearer,
+        // steps the bottom past the row's own bottom before the top ever gets
+        // there: the pair that IS the row is never tried, and the row goes
+        // missing exactly where a caliper's foot lands under its text. Trying
+        // every pair is cheap — the run walks are memoized per row, and a
+        // pair whose runs disagree is rejected before anything else is done —
+        // and a rung is only ever a pair whose runs agree, never a cross
         // product of everything in range.
+        var pairs: [(top: Side, bottom: Side)] = []
+        for top in above {
+            for bottom in below where bottom.bound - top.bound >= minElement {
+                pairs.append((top, bottom))
+            }
+        }
+        pairs.sort { a, b in
+            let ha = a.bottom.bound - a.top.bound, hb = b.bottom.bound - b.top.bound
+            return ha != hb ? ha < hb : a.top.distance < b.top.distance
+        }
         var found: [CGRect] = []
         var runs: [Int: ClosedRange<Int>?] = [:]
-        var top = 0, bottom = 0
-        for _ in 0...(above.count + below.count) {
-            if let rect = rung(top: above[top], bottom: below[bottom], px: px, py: py,
+        for pair in pairs {
+            if let rect = rung(top: pair.top, bottom: pair.bottom, px: px, py: py,
                                left: sides[2], right: sides[3], luma: luma,
                                minElement: minElement, runs: &runs),
                grows(rect, beyond: found.last) {
                 found.append(rect)
                 if found.count >= limit { break }
             }
-            let nextTop = top + 1 < above.count ? above[top + 1].distance : Double.infinity
-            let nextBottom = bottom + 1 < below.count ? below[bottom + 1].distance : Double.infinity
-            if nextTop == .infinity, nextBottom == .infinity { break }
-            if nextTop <= nextBottom { top += 1 } else { bottom += 1 }
         }
         return found
     }

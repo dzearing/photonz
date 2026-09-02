@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 420,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:58:29.589Z",
-  "updated": "2026-09-02T07:58:29.589Z",
+  "updated": "2026-09-02T08:10:27.328Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while rendering options for a-caliper-boxed-in-by-two-full-width-rows-finds (temp/boxed-in/Render.swift, scene cards-left). ElementBounds.subjects(from:to:mode:in:luma:) at (330,417)->(330,450) returns only the whitespace band and the lower row; the upper row (96,322.5,1248,89) is missing, so MeasureLabelPlanner nudges the chip up to y 357.5..401.5, which covers the tail of the label. Likely the probe above the top foot hits the glyphs of the label and reads them as the element (too small, dropped by minElement) instead of the row. Compare x=700 where both rows come back.",
@@ -22,6 +22,36 @@
     {
       "t": "2026-09-02T07:58:29.589Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:00:12.783Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:10:12.478Z",
+      "note": "Reproduced with a diagnostic test: subjects at (330,417)->(330,450) returned only the whitespace band and the lower row; candidates at the probe (330,405) skipped straight from the row's top 322.5 to bottom 452, never offering (322.5, 411). Compared with x=700, where the row came back."
+    },
+    {
+      "t": "2026-09-02T08:10:12.479Z",
+      "note": "Cause is not glyphs read as an element (the task's guess) but the candidate ladder's monotone walk: it steps top or bottom outward one boundary at a time, whichever is nearer. Under the label the glyph edges 364..377 are nearer than the row top, so the walk steps the bottom past the row's own bottom (411 -> 452) before the top reaches 322.5, and the pair that is the row is never tried. The same walk lost both rows near the card's left end (x 110..180), where the icons sit."
+    },
+    {
+      "t": "2026-09-02T08:10:12.479Z",
+      "note": "Adversarial review of the fix: enumerating every top/bottom pair sorted by height could in principle admit new pairs, but a rung still needs 85% run agreement, the probe margin, and nested growth, so only real elements are added. Hover cost measured over a 5251-probe grid on the fixture: 4.16 ms before, 4.12 ms after per debug-build detect; hits rose 2854 -> 2988 (the previously missed elements)."
+    },
+    {
+      "t": "2026-09-02T08:10:12.479Z",
+      "note": "Fix: ElementBounds.candidates tries every above/below pair, shortest first (tie: nearer top), keeping the nested ladder via grows(). Tests added to MeasureCalloutClearanceTests: the exact x=330 case (upper row is a subject, chip clear of the label band) and a sweep along the whole cards gap at every 10 px requiring both rows as subjects. Both failed before, pass after. Full suite: 1183 tests green."
+    },
+    {
+      "t": "2026-09-02T08:10:12.479Z",
+      "note": "Rendered through DocumentRenderer (temp/row-label/Render.swift -> queue/audits/2026-09-02-gap-under-label.png): the pill sits in the gap at y 411.5..455.5, clear of the label at y 360..382. Audit written: queue/audits/2026-09-02-gap-under-label.json."
+    },
+    {
+      "t": "2026-09-02T08:10:27.327Z",
+      "note": "ElementBounds.candidates now tries every top/bottom boundary pair shortest-first instead of a monotone walk, so a row is found under its own label and icons. Verified: two new tests in MeasureCalloutClearanceTests (x=330 case + 10px sweep along the cards gap) fail before and pass after; full suite 1183 green; rendered shot queue/audits/2026-09-02-gap-under-label.png shows the pill in the gap, clear of the label; hover cost unchanged (4.16 -> 4.12 ms per debug probe)."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:00:12.782Z",
+  "completed": "2026-09-02T08:10:27.328Z"
 }

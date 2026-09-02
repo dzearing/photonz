@@ -4510,3 +4510,26 @@ Side find, filed p2 (`a-gap-caliper-whose-foot-lands-under-a-row-label`): a foot
 under a row's label text loses the row above as a subject, so the planner nudges
 the pill up onto the label. Worse than straddling, and a detection bug rather
 than a placement choice.
+
+## 2026-09-02 — A gap caliper under a row label keeps its row (go loop)
+
+Queue task `a-gap-caliper-whose-foot-lands-under-a-row-label` (epic measure-redline, Next).
+Reproduced on the audit capture: a Gap caliper in the space between the two
+settings cards, under the words "Play sound on capture", lost the upper row as
+a subject and the planner nudged the pill onto the label. The cause was the
+candidate ladder in `ElementBounds.candidates`, not glyphs being read as an
+element: the ladder walked top and bottom outward one boundary at a time,
+nearer first, so the label's glyph edges above the probe made it step the
+bottom past the row's own bottom before the top ever reached the row's top,
+and the pair that is the row was never tried. The same walk lost both rows at
+the card's left end, over the icons.
+
+- The ladder now tries every top/bottom pair, shortest first, still nested via
+  `grows`. Run agreement, the probe margin and nesting keep it honest; hover
+  cost is unchanged (4.16 -> 4.12 ms per debug probe over a 5251-point grid)
+  while 134 more grid points now find their element.
+- Tests: the exact x=330 case and a 10 px sweep along the whole cards gap
+  requiring both rows as subjects (`MeasureCalloutClearanceTests`).
+- Audit: `queue/audits/2026-09-02-gap-under-label.json` with a rendered shot.
+- Still open, unchanged: the boxed-in straddle decision (the pill overhangs
+  both card edges by ~5 px in a 33 px gap).

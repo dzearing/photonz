@@ -401,6 +401,68 @@ struct MeasureCalloutClearanceTests {
         #expect(chip.minY > 816 && chip.minY < 816 + 40, "\(chip)")
     }
 
+    /// The 33 px space between the two settings cards, read the way Gap mode
+    /// reads it at `x`: the bottom of the Play sound row to the top of the row
+    /// beneath it.
+    private func cardGap(atX x: CGFloat) -> GapMeasurement? {
+        guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: 432), in: Self.analysis.edges),
+              gap.axis == .vertical, gap.length > 20, gap.length < 60 else { return nil }
+        return gap
+    }
+
+    /// Whether `subjects` includes the settings row whose bottom edge is at
+    /// `y`: something row-sized, wider than any label, ending there.
+    private func rowEnding(at y: CGFloat, among subjects: [CGRect]) -> Bool {
+        subjects.contains { abs($0.maxY - y) <= 8 && $0.height > 60 && $0.width > 1000 }
+    }
+
+    /// The exact misread this exists for: a caliper across the space between
+    /// the two cards, dropped under the words "Play sound on capture". The
+    /// label's glyph edges sit between the probe and the row's top, and they
+    /// used to send the candidate ladder past the row's bottom before it ever
+    /// paired the row's top with it, so the upper row went missing and the
+    /// number climbed onto the label.
+    @Test func aCaliperUnderARowLabelStillKnowsTheRowAboveIt() {
+        guard let gap = cardGap(atX: 330) else {
+            Issue.record("no vertical gap read between the cards at x 330")
+            return
+        }
+        let subjects = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
+                                              in: Self.analysis.edges, luma: Self.analysis.luma)
+        #expect(rowEnding(at: gap.start.y, among: subjects),
+                "the row above the foot was not seen: \(subjects)")
+        // And the number stays off the label: the label's cap-to-baseline band
+        // at that x is roughly y 362 to 379 on the capture.
+        var ink = MeasureContent(mode: gap.axis, unit: .points)
+        let head = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start, to: gap.end,
+                                                     canvas: Self.canvas)
+        ink = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head).content
+        let chip = ink.labelRect(chipSize: ink.estimatedLabelSize)
+        let label = CGRect(x: 300, y: 360, width: 240, height: 22)
+        #expect(!chip.intersects(label), "the number sits on the row label: \(chip)")
+    }
+
+    /// What a foot stands on cannot depend on what is painted beside it. Along
+    /// the whole space between the two cards, over blank row and label text
+    /// alike, both rows have to come back as the caliper's subjects.
+    @Test func aCaliperBetweenTheCardsKnowsBothRowsWhereverItStands() {
+        var offenders: [String] = []
+        var checked = 0
+        for x in stride(from: CGFloat(110), through: 1330, by: 10) {
+            guard let gap = cardGap(atX: x) else { continue }
+            checked += 1
+            let subjects = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
+                                                  in: Self.analysis.edges, luma: Self.analysis.luma)
+            let upper = rowEnding(at: gap.start.y, among: subjects)
+            let lower = subjects.contains { abs($0.minY - gap.end.y) <= 8 && $0.height > 60 }
+            if !(upper && lower), offenders.count < 8 {
+                offenders.append("x=\(x) upper=\(upper) lower=\(lower) subjects=\(subjects)")
+            }
+        }
+        #expect(checked > 50, "the gap between the cards was not read along its length")
+        #expect(offenders.isEmpty, "a foot lost its row: \(offenders)")
+    }
+
     /// Every gap Gap mode can read anywhere on the capture, measured with the
     /// head Gap mode commits and with a hand-placed head on either side: no
     /// readout may sit on an element its feet landed on when any spot in the
