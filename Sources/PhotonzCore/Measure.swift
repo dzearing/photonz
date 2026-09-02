@@ -301,6 +301,15 @@ extension MeasureContent {
         displayValue(rawDistance, pixelScale: pixelScale)
     }
 
+    /// For an alignment guide, the edge of the elements it settled on (a
+    /// vertical guide with the items to its right is judging their left
+    /// edges). Nil for a caliper, and for a guide whose scan could not tell
+    /// which side its elements sit on.
+    public var alignedEdge: AlignedEdge? {
+        guard let side = alignment?.referenceSide else { return nil }
+        return AlignedEdge(axis: mode, side: side)
+    }
+
     /// The formatted readout: a caliper's distance ("120 px"), or an alignment
     /// check's verdict ("aligned" / "off 4 px" / "no edges").
     public func label(pixelScale: CGFloat) -> String {

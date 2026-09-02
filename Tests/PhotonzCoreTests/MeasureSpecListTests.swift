@@ -26,14 +26,14 @@ struct MeasureSpecListTests {
         return layer
     }
 
-    /// An alignment guide whose scan came back aligned.
-    private func alignedGuide() -> Layer {
+    /// An alignment guide whose scan came back aligned, down two left edges.
+    private func alignedGuide(side: EdgeSide? = .after) -> Layer {
         var content = MeasureContent()
         content.mode = .vertical
         content.headOffset = 0
         content.alignment = AlignmentCheck(items: [
-            AlignmentItem(edge: 40, spanStart: 10, spanEnd: 30),
-            AlignmentItem(edge: 40, spanStart: 50, spanEnd: 70),
+            AlignmentItem(edge: 40, spanStart: 10, spanEnd: 30, elementSide: side),
+            AlignmentItem(edge: 40, spanStart: 50, spanEnd: 70, elementSide: side),
         ], tolerance: 1)
         return MeasureBuilder.layer(content: content,
                                     from: CGPoint(x: 40, y: 0), to: CGPoint(x: 40, y: 100))
@@ -46,9 +46,32 @@ struct MeasureSpecListTests {
         #expect(MeasureSpecList.derivedName(for: MeasureContent(mode: .vertical, role: .size)) == "Height")
         #expect(MeasureSpecList.derivedName(for: MeasureContent(mode: .horizontal, role: .spacing)) == "Gap")
         #expect(MeasureSpecList.derivedName(for: MeasureContent(mode: .vertical, role: .spacing)) == "Gap")
-        var aligned = MeasureContent()
+        var aligned = MeasureContent(mode: .vertical)
         aligned.alignment = AlignmentCheck(items: [], tolerance: 1)
-        #expect(MeasureSpecList.derivedName(for: aligned) == "Alignment")
+        #expect(MeasureSpecList.derivedName(for: aligned) == "Vertical edges, no items")
+    }
+
+    /// A guide's name says which edges it judged and how many things it
+    /// checked (the mock's "Left edge alignment, 4 items", shortened so the
+    /// count survives the panel's default width). When the scan could not
+    /// tell which side the elements sit on, it names the guide's axis rather
+    /// than guess a side.
+    @Test func guideNamesCarryTheEdgeAndTheCount() {
+        func guide(_ mode: MeasureMode, _ side: EdgeSide?, count: Int) -> MeasureContent {
+            var c = MeasureContent(headOffset: 0, mode: mode)
+            c.alignment = AlignmentCheck(items: (0..<count).map {
+                AlignmentItem(edge: 40, spanStart: CGFloat($0 * 20), spanEnd: CGFloat($0 * 20 + 10),
+                              elementSide: side)
+            }, tolerance: 1)
+            return c
+        }
+        #expect(MeasureSpecList.derivedName(for: guide(.vertical, .after, count: 4)) == "Left edges, 4 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.vertical, .before, count: 2)) == "Right edges, 2 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.horizontal, .after, count: 3)) == "Top edges, 3 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.horizontal, .before, count: 2)) == "Bottom edges, 2 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.vertical, nil, count: 2)) == "Vertical edges, 2 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.horizontal, nil, count: 2)) == "Horizontal edges, 2 items")
+        #expect(MeasureSpecList.derivedName(for: guide(.vertical, .after, count: 1)) == "Left edges, 1 item")
     }
 
     @Test func displayNameDerivesUntilRenamedThenKeepsTheCustomName() {
@@ -62,7 +85,7 @@ struct MeasureSpecListTests {
 
         let guide = alignedGuide()
         #expect(guide.name == "Alignment") // builder default → derived
-        #expect(MeasureSpecList.displayName(for: guide) == "Alignment")
+        #expect(MeasureSpecList.displayName(for: guide) == "Left edges, 2 items")
     }
 
     // MARK: - Panel order
@@ -140,7 +163,17 @@ struct MeasureSpecListTests {
         let text = MeasureSpecList.render(document: doc, name: "Panel")
         #expect(text == """
         Panel · 100 × 100 px
-        - Alignment: aligned (alignment)
+        - Left edges, 2 items: aligned (alignment)
+        """)
+    }
+
+    @Test func aGuideThatCouldNotTellItsSideStillReadsItsCount() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+        doc.addLayer(alignedGuide(side: nil))
+        let text = MeasureSpecList.render(document: doc, name: "Panel")
+        #expect(text == """
+        Panel · 100 × 100 px
+        - Vertical edges, 2 items: aligned (alignment)
         """)
     }
 }

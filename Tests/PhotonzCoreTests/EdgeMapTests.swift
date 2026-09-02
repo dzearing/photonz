@@ -116,3 +116,47 @@ struct EdgeMapWindowTests {
         #expect(EdgeMap.empty.verticalEdges(inYRange: 0...100).isEmpty)
     }
 }
+
+/// The band-energy queries an alignment guide uses to learn which side of an
+/// edge the element is on: mean gradient per pixel over a rectangle, rounded
+/// outward to the map's blocks along the guide's axis.
+@Suite("EdgeMap band energy")
+struct EdgeMapBandEnergyTests {
+
+    @Test func verticalEnergyReadsInkOnlyWhereItIs() {
+        var f = Field(w: 400, h: 200)
+        // A text run to the right of x=100: many vertical strokes, rows 40..60.
+        var x = 104
+        while x < 150 {
+            f.addVerticalEdge(col: x, y0: 40, y1: 60, magnitude: 1.0)
+            x += 4
+        }
+        let map = f.map
+        let right = map.verticalGradientEnergy(xRange: 103...120, inYRange: 40...60)
+        let left = map.verticalGradientEnergy(xRange: 80...97, inYRange: 40...60)
+        #expect(right > 0.1)
+        #expect(left == 0)
+        // Elsewhere along the axis the same columns are empty.
+        #expect(map.verticalGradientEnergy(xRange: 103...120, inYRange: 120...140) == 0)
+    }
+
+    @Test func horizontalEnergyIsTheYAxisAnalog() {
+        var f = Field(w: 400, h: 200)
+        var y = 64
+        while y < 90 {
+            f.addHorizontalEdge(row: y, x0: 20, x1: 120, magnitude: 1.0)
+            y += 4
+        }
+        let map = f.map
+        #expect(map.horizontalGradientEnergy(yRange: 63...80, inXRange: 20...120) > 0.1)
+        #expect(map.horizontalGradientEnergy(yRange: 40...57, inXRange: 20...120) == 0)
+    }
+
+    @Test func energyOutsideTheImageOrOnAnEmptyMapIsZero() {
+        #expect(EdgeMap.empty.verticalGradientEnergy(xRange: 0...10, inYRange: 0...10) == 0)
+        let f = Field(w: 50, h: 50)
+        #expect(f.map.verticalGradientEnergy(xRange: 60...80, inYRange: 0...10) == 0)
+        #expect(f.map.horizontalGradientEnergy(yRange: -20...(-5), inXRange: 0...10) == 0)
+    }
+}
+

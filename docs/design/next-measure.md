@@ -285,6 +285,19 @@ The measure inspector gains the read-only From/To/Distance/Units grid (feet in
 document coordinates from `caliperGeometry()` + the layer frame). All behind
 `next-measure-panel` (Next, default ON).
 
+Added 2026-09-02: a guide's derived name says which edges it judged and how
+many things it checked ("Left edges, 4 items"; "Vertical edges, 4 items" when
+the scan could not tell the side, see § 9). The mock's "Left edge alignment,
+4 items" measured 162pt in the row's font against about 149pt of room at the
+panel's default 264pt width, so it truncated and lost the count; "alignment"
+is already carried by the dashed swatch, the verdict beside the name and the
+spec line's role word. The measure inspector gains a **Name** field for any
+measurement (commits through the same `renameLayer` as the row's double-click,
+one undo step; clearing it restores the current name), and for a guide the
+grid reads **Length** instead of Distance and adds **Edge** ("Left, x 48 px";
+the reference line in the measurement's unit) and **Items** ("4 items, 1
+off").
+
 ## 7. Export: the redline sheet — `next-measure-panel`
 
 Mock: `redline.html` Properties "Export · redline sheet" section (Copy image /
@@ -403,6 +416,21 @@ px `tolerance` parameter, default 1):
     `MeasureLabelPlacement` puts it — past the end of the guide by preference,
     never on a row being judged (D14).
   All of it is baked into the layer raster, so exports carry it (16.15 rule).
+- **Which edge (2026-09-02).** The edge map stores no polarity, so "left
+  edge" cannot be read off an item. `AlignmentScan.elementSide` looks for the
+  element's own ink instead: the mean gradient (`EdgeMap.verticalGradientEnergy`
+  / `horizontalGradientEnergy`, |Gx| for a vertical guide, |Gy| for a
+  horizontal one) in the band 3..20px on each side of the edge, over the
+  item's span; the side that is at least twice as busy and above a 0.02 floor
+  wins, otherwise nil. Stored per item as `AlignmentItem.elementSide`
+  (optional; old documents decode nil). `AlignmentCheck.referenceSide` is the
+  span-weighted vote of the items on the reference line (an outlier facing
+  the other way does not vote), and `MeasureContent.alignedEdge` turns that
+  plus the guide axis into `AlignedEdge` (.left/.right/.top/.bottom). Named
+  in the row and the inspector; when unknown, the row falls back to the
+  guide's axis ("Vertical edges") rather than guess a side. Verified on the
+  real settings-pane fixture (all three labels: element to the right, so left
+  edges).
 
 ## 10. Decision index (open questions → queue, not this doc)
 

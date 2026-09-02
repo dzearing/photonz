@@ -82,6 +82,17 @@ struct AlignmentFixtureTests {
         for item in items { #expect(item.spanEnd - item.spanStart >= 16) }
     }
 
+    /// The labels' text runs to the RIGHT of the guide, so this is their left
+    /// edge, and the row can say so: "Left edges, 3 items".
+    @Test func theGuideKnowsItIsRunningDownLeftEdges() {
+        let items = scan()
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { $0.elementSide == .after })
+        let (content, _, _) = committed(items)
+        #expect(content.alignedEdge == .left)
+        #expect(MeasureSpecList.derivedName(for: content) == "Left edges, 3 items")
+    }
+
     /// The headline number. The true offset is 4 logical px; the chip used to
     /// say 5.
     @Test func theVerdictReadsTheRealOffset() {

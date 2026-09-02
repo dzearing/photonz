@@ -1,0 +1,44 @@
+{
+  "feature": "An alignment guide's row says what it checked and which edge it settled on",
+  "epic": "alignment-checks",
+  "summary": "A guide in the Measurements list now reads like Left edges, 3 items instead of Alignment, the inspector says which edge it settled on and how many things it checked, and any measurement can be renamed from Properties.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-align and next-measure-panel are on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png (the capture from the 2026-08-23 alignment audit).",
+  "try": [
+    {
+      "do": "Press I for Measure and set the mode to Alignment."
+    },
+    {
+      "do": "Drag a guide straight down just left of the three labels in the second card, then release."
+    },
+    {
+      "do": "Read the Measurements row in the inspector. It should say Left edges, 3 items, with off 4 px beside it.",
+      "shot": "2026-09-02-alignment-row-1.png"
+    },
+    {
+      "do": "With the guide selected, look at the Measure section below. The grid should show Length, then Edge reading Left, x 48 px, then Items reading 3 items, 1 off."
+    },
+    {
+      "do": "Click into the Name field, type Form labels, press Return. The row should now say Form labels; press Command Z once and it should go back."
+    },
+    {
+      "do": "Draw a horizontal guide along the top of the Reset and Save Changes buttons. Its row should say Top edges, 2 items."
+    },
+    {
+      "do": "Use the panel menu's Copy as Spec List and paste somewhere. The guide lines should carry the same names and their verdicts."
+    }
+  ],
+  "evaluate": [
+    "Does Left edges, 3 items tell you what the guide judged without reading anything else, or do you miss the word alignment?",
+    "Is the item count a number you check, or noise?",
+    "In the inspector, is Left, x 48 px the readout you wanted for the settled edge, or would you rather see it drawn on the guide?",
+    "Does renaming from the Name field feel like the same thing as double-clicking the row, or like a second, different rename?",
+    "When a guide runs down the edge of a card or a button with wide padding, the row falls back to Vertical edges. Is that wording clear, or does it read as aligned vertically?"
+  ],
+  "rough": [
+    "Shortened from the mock's Left edge alignment, 4 items on purpose: that phrase is 162pt in the row's font against about 149pt of room at the panel's default width, so it truncated and lost the count. Alignment is already said by the dashed swatch, the verdict, and the spec line's role word.",
+    "Which side is inferred from ink within 20px of the edge, since the picture has no notion of an element. A card or button with padding wider than that reads as no side, and the row says Vertical edges or Horizontal edges instead of guessing.",
+    "Items counts what the guide crossed, not what a person would call elements: one label the scan splits into two runs counts twice, and two stacked elements closer than a 16px block can merge into one.",
+    "The guide's settled edge is a readout in the inspector only; nothing on the canvas names it.",
+    "I could not drive the running app on this machine, so the row and grid picture here is an offscreen render of the same layout at the panel's default width, not a screenshot of the app."
+  ]
+}

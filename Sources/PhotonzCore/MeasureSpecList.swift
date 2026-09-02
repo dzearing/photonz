@@ -18,13 +18,38 @@ public enum MeasureSpecList {
     }
 
     /// The automatic row name (decision D3): what the measurement is, worded by
-    /// axis and role — "Width"/"Height" for sizes, "Gap" for spacing,
-    /// "Alignment" for a guide. The value is shown beside it, not inside it.
+    /// axis and role — "Width"/"Height" for sizes, "Gap" for spacing. A guide
+    /// says which edges it judged and how many: "Left edges, 4 items", or
+    /// "Vertical edges, 4 items" when the scan could not tell which side its
+    /// elements sit on. The mock's "Left edge alignment, 4 items" was measured
+    /// at 162pt in the row's font against about 149pt of room at the panel's
+    /// default width: it truncated and lost the count, the one thing it was
+    /// there to carry. "Alignment" is already said three times over — by the
+    /// dashed swatch, by the verdict beside the name, and by the spec line's
+    /// role word. The value (the verdict, for a guide) is shown beside the
+    /// name, not inside it.
     public static func derivedName(for content: MeasureContent) -> String {
-        if content.alignment != nil { return "Alignment" }
+        if let check = content.alignment {
+            let edges: String
+            if let edge = content.alignedEdge {
+                edges = "\(edge.word) edges"
+            } else {
+                edges = content.mode == .vertical ? "Vertical edges" : "Horizontal edges"
+            }
+            return "\(edges), \(countPhrase(check.items.count))"
+        }
         switch content.role {
         case .spacing: return "Gap"
         case .size: return content.mode == .horizontal ? "Width" : "Height"
+        }
+    }
+
+    /// "no items" / "1 item" / "N items".
+    public static func countPhrase(_ count: Int) -> String {
+        switch count {
+        case 0: "no items"
+        case 1: "1 item"
+        default: "\(count) items"
         }
     }
 

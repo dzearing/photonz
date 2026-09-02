@@ -190,6 +190,51 @@ public struct EdgeMap: Equatable, Sendable {
                             minSeparation: minSeparation, floor: floor)
     }
 
+    /// Mean |Gx| per pixel over the columns `xRange` within the rows `range`
+    /// (rounded outward to block rows): how much vertical structure — glyph
+    /// strokes, borders — sits in that band. An alignment guide compares the
+    /// band on each side of an edge to learn which side the element is on.
+    /// Zero for an empty map or a band that misses the image.
+    public func verticalGradientEnergy(xRange: ClosedRange<Double>,
+                                       inYRange range: ClosedRange<Double>) -> Double {
+        guard !isEmpty,
+              let blocks = blockRange(range, limit: height, blockCount: rowBlocks),
+              let cols = pixelRange(xRange, limit: width) else { return 0 }
+        var sum = 0.0
+        var pixels = 0
+        for b in blocks {
+            pixels += (min((b + 1) * blockSize, height) - b * blockSize) * cols.count
+            let base = b * width
+            for c in cols { sum += vSums[base + c] }
+        }
+        return pixels > 0 ? sum / Double(pixels) : 0
+    }
+
+    /// The y-axis analog: mean |Gy| per pixel over the rows `yRange` within the
+    /// columns `range` (rounded outward to block columns).
+    public func horizontalGradientEnergy(yRange: ClosedRange<Double>,
+                                         inXRange range: ClosedRange<Double>) -> Double {
+        guard !isEmpty,
+              let blocks = blockRange(range, limit: width, blockCount: colBlocks),
+              let rows = pixelRange(yRange, limit: height) else { return 0 }
+        var sum = 0.0
+        var pixels = 0
+        for b in blocks {
+            pixels += (min((b + 1) * blockSize, width) - b * blockSize) * rows.count
+            let base = b * height
+            for r in rows { sum += hSums[base + r] }
+        }
+        return pixels > 0 ? sum / Double(pixels) : 0
+    }
+
+    /// Clamps a pixel range to the image, nil when nothing of it is inside.
+    private func pixelRange(_ range: ClosedRange<Double>, limit: Int) -> ClosedRange<Int>? {
+        let lo = max(0, Int(range.lowerBound.rounded(.down)))
+        let hi = min(limit - 1, Int(range.upperBound.rounded(.up)))
+        guard lo <= hi else { return nil }
+        return lo...hi
+    }
+
     /// Clamps a pixel range to the image and converts to block indices.
     private func blockRange(_ range: ClosedRange<Double>, limit: Int,
                             blockCount: Int) -> ClosedRange<Int>? {

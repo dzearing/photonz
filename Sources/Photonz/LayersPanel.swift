@@ -1300,14 +1300,51 @@ struct TextInspector: View {
 struct MeasureInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
+    @State private var nameDraft = ""
+    /// Which layer `nameDraft` was typed for. Selecting another measurement
+    /// while the field has focus drops focus AFTER `layer` has changed, and
+    /// the draft must not land on the new selection.
+    @State private var draftLayerID: UUID?
+    @FocusState private var nameFocused: Bool
 
     private var content: MeasureContent? {
         editorState.document?.layer(id: layer.id)?.measure
     }
 
+    /// The name the Measurements row shows: derived until renamed, then the
+    /// custom name. The Name field edits exactly this.
+    private var displayName: String {
+        MeasureSpecList.displayName(for: editorState.document?.layer(id: layer.id) ?? layer)
+    }
+
     var body: some View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
+                // The same rename the Measurements row offers on double-click
+                // (decision D3), reachable from Properties too. It commits
+                // through the same call, so it is one undo step either way.
+                if Experiments.shared.measurePanelEnabled {
+                    field("Name") {
+                        TextField("Measurement name", text: $nameDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .controlSize(.small)
+                            .focused($nameFocused)
+                            .onSubmit { commitName() }
+                            .onChange(of: nameFocused) { _, focused in
+                                if !focused { commitName() }
+                            }
+                            .help("What this measurement is called in the Measurements "
+                                  + "list and the copied spec list")
+                    }
+                    .id(layer.id)
+                    .onAppear {
+                        nameDraft = displayName
+                        draftLayerID = layer.id
+                    }
+                    .onChange(of: displayName) { _, name in
+                        if !nameFocused { nameDraft = name }
+                    }
+                }
                 // The mock's Role control (§5, `next-measure-roles`): Size vs
                 // Spacing, each with its own remembered color set. Alignment
                 // guides are their own kind, so they don't offer it.
@@ -1399,9 +1436,23 @@ struct MeasureInspector: View {
         }
     }
 
+    /// Commits the Name field the way the row's double-click rename does: a
+    /// trimmed, non-empty name that differs from what the row already shows.
+    /// Clearing the field just puts the current name back.
+    private func commitName() {
+        guard draftLayerID == layer.id else { return }
+        let trimmed = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != displayName else {
+            nameDraft = displayName
+            return
+        }
+        editorState.renameLayer(id: layer.id, to: trimmed)
+    }
+
     /// The mock's read-only From / To / Distance / Units grid (§6): the feet in
     /// document coordinates and the span, straight from `caliperGeometry()` —
-    /// no new model state.
+    /// no new model state. A guide (§9) reads Length instead of Distance, and
+    /// adds the edge it settled on and how many things it checked.
     @ViewBuilder private func geometryGrid(_ c: MeasureContent) -> some View {
         let frame = editorState.document?.layer(id: layer.id)?.frame ?? layer.frame
         let g = c.caliperGeometry()
@@ -1410,10 +1461,43 @@ struct MeasureInspector: View {
         VStack(alignment: .leading, spacing: 4) {
             readoutRow("From", point(g.footA, in: frame, scale: scale))
             readoutRow("To", point(g.footB, in: frame, scale: scale))
-            readoutRow("Distance", String(format: "%.\(max(0, c.decimals))f %@",
-                                          c.displayDistance(pixelScale: scale), c.unit.suffix))
+            readoutRow(c.alignment == nil ? "Distance" : "Length",
+                       String(format: "%.\(max(0, c.decimals))f %@",
+                              c.displayDistance(pixelScale: scale), c.unit.suffix))
+            if let check = c.alignment {
+                readoutRow("Edge", edgeReadout(c, check, in: frame, scale: scale))
+                readoutRow("Items", itemsReadout(check))
+            }
             readoutRow("Units", c.unit == .points ? "Logical px" : "Actual px")
         }
+    }
+
+    /// Which edge the guide settled on and where it is, in the measure's unit:
+    /// "Left, x 312 px", or just "x 312 px" when the scan could not tell the
+    /// side. The position is the reference line, which is where the guide
+    /// itself sits once committed.
+    private func edgeReadout(_ c: MeasureContent, _ check: AlignmentCheck,
+                             in frame: CGRect, scale: CGFloat) -> String {
+        guard let verdict = check.verdict else { return "no edges" }
+        let position: String
+        switch c.mode {
+        case .vertical:
+            let x = c.displayValue(frame.minX + verdict.reference, pixelScale: scale)
+            position = "x \(Int(x.rounded())) \(c.unit.suffix)"
+        case .horizontal:
+            let y = c.displayValue(frame.minY + verdict.reference, pixelScale: scale)
+            position = "y \(Int(y.rounded())) \(c.unit.suffix)"
+        }
+        guard let edge = c.alignedEdge else { return position }
+        return "\(edge.word), \(position)"
+    }
+
+    /// How many elements the guide checked, and how many are off: "4 items" /
+    /// "4 items, 1 off".
+    private func itemsReadout(_ check: AlignmentCheck) -> String {
+        let count = MeasureSpecList.countPhrase(check.items.count)
+        guard let verdict = check.verdict, !verdict.isAligned else { return count }
+        return "\(count), 1 off"
     }
 
     /// A document coordinate in the measure's unit, "x, y".

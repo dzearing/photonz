@@ -34,6 +34,21 @@ private struct Scene {
         addVerticalEdge(col: Int(r.maxX), y0: Int(r.minY), y1: Int(r.maxY), magnitude: magnitude)
     }
 
+    /// Text-like ink filling `r`: a vertical stroke every 4px and a horizontal
+    /// one every 4px, the way glyphs light up both gradient fields.
+    mutating func addInk(_ r: CGRect, magnitude: Double = 1.0) {
+        var x = Int(r.minX)
+        while x <= Int(r.maxX) {
+            addVerticalEdge(col: x, y0: Int(r.minY), y1: Int(r.maxY), magnitude: magnitude)
+            x += 4
+        }
+        var y = Int(r.minY)
+        while y <= Int(r.maxY) {
+            addHorizontalEdge(row: y, x0: Int(r.minX), x1: Int(r.maxX), magnitude: magnitude)
+            y += 4
+        }
+    }
+
     var map: EdgeMap {
         EdgeMap(width: w, height: h, gxMagnitude: gx, gyMagnitude: gy, luma: nil)
     }
@@ -139,6 +154,64 @@ struct AlignmentScanTests {
     /// The floor is relative to what each window offers, so a capture whose
     /// every boundary is faint still gets checked — quiet is not the same as
     /// absent.
+    /// Three labels whose text starts at x=100: ink to the RIGHT of every edge,
+    /// so the guide is running down their left edges.
+    private func labelsScene() -> Scene {
+        var s = Scene(w: 400, h: 300)
+        for y in [40, 112, 184] {
+            s.addInk(CGRect(x: 100, y: y, width: 90, height: 24))
+        }
+        return s
+    }
+
+    @Test func inkToTheRightOfTheEdgeMeansALeftEdge() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 36...212,
+                                        in: labelsScene().map)
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { $0.elementSide == .after })
+        var content = MeasureContent(headOffset: 0, mode: .vertical)
+        content.alignment = AlignmentCheck(items: items, tolerance: 1)
+        #expect(content.alignedEdge == .left)
+    }
+
+    @Test func inkToTheLeftOfTheEdgeMeansARightEdge() {
+        var s = Scene(w: 400, h: 300)
+        for y in [40, 112, 184] {
+            s.addInk(CGRect(x: 110, y: y, width: 90, height: 24))
+        }
+        let items = AlignmentScan.items(axis: .vertical, position: 200, span: 36...212, in: s.map)
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { $0.elementSide == .before })
+        var content = MeasureContent(headOffset: 0, mode: .vertical)
+        content.alignment = AlignmentCheck(items: items, tolerance: 1)
+        #expect(content.alignedEdge == .right)
+    }
+
+    @Test func aHorizontalGuideAlongTextTopsReadsATopEdge() {
+        var s = Scene(w: 400, h: 200)
+        for x in [20, 140, 260] {
+            s.addInk(CGRect(x: x, y: 60, width: 80, height: 24))
+        }
+        let items = AlignmentScan.items(axis: .horizontal, position: 60, span: 16...344, in: s.map)
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { $0.elementSide == .after })
+        var content = MeasureContent(headOffset: 0, mode: .horizontal)
+        content.alignment = AlignmentCheck(items: items, tolerance: 1)
+        #expect(content.alignedEdge == .top)
+    }
+
+    /// A bare box outline has nothing near either side of its edge, so the scan
+    /// says so instead of guessing; the name then says "Vertical edges".
+    @Test func anEdgeWithNothingNearEitherSideHasNoSide() {
+        let items = AlignmentScan.items(axis: .vertical, position: 100, span: 36...228,
+                                        in: stackedScene().map)
+        #expect(items.count == 3)
+        #expect(items.allSatisfy { $0.elementSide == nil })
+        var content = MeasureContent(headOffset: 0, mode: .vertical)
+        content.alignment = AlignmentCheck(items: items, tolerance: 1)
+        #expect(content.alignedEdge == nil)
+    }
+
     @Test func aUniformlyFaintSceneIsStillScanned() {
         var s = Scene(w: 400, h: 300)
         s.addBox(CGRect(x: 100, y: 40, width: 120, height: 40), magnitude: 0.2)
@@ -210,6 +283,38 @@ struct AlignmentVerdictTests {
         #expect(check.verdict.map { abs($0.reference - 100) < 0.001 } == true)
     }
 
+    private func item(_ edge: CGFloat, side: EdgeSide?, span: ClosedRange<CGFloat> = 0...10) -> AlignmentItem {
+        AlignmentItem(edge: edge, spanStart: span.lowerBound, spanEnd: span.upperBound,
+                      elementSide: side)
+    }
+
+    /// The side the guide settles on is the side of the items that DEFINE the
+    /// reference, weighed by guide length like the reference itself: an
+    /// outlier with the opposite side does not get a vote.
+    @Test func theReferenceSideFollowsTheItemsOnTheReference() {
+        let check = AlignmentCheck(items: [item(100, side: .after, span: 0...40),
+                                           item(100, side: .after, span: 50...90),
+                                           item(110, side: .before, span: 100...120)],
+                                   tolerance: 1)
+        #expect(check.referenceSide == .after)
+    }
+
+    @Test func aSplitVoteOnTheReferenceHasNoSide() {
+        let check = AlignmentCheck(items: [item(100, side: .after, span: 0...40),
+                                           item(100, side: .before, span: 50...90)],
+                                   tolerance: 1)
+        #expect(check.referenceSide == nil)
+        #expect(AlignmentCheck(items: [item(100, side: nil), item(100, side: nil)],
+                               tolerance: 1).referenceSide == nil)
+    }
+
+    @Test func itemsThatDoNotKnowTheirSideAbstain() {
+        let check = AlignmentCheck(items: [item(100, side: nil, span: 0...100),
+                                           item(100, side: .after, span: 0...8)],
+                                   tolerance: 1)
+        #expect(check.referenceSide == .after)
+    }
+
     @Test func twoItemsSplitTheDifference() {
         let check = AlignmentCheck(items: [item(100), item(104)], tolerance: 1)
         let v = check.verdict
@@ -242,6 +347,31 @@ struct AlignmentContentTests {
         let decoded = try JSONDecoder().decode(MeasureContent.self, from: data)
         #expect(decoded == content)
         #expect(decoded.alignment?.items.count == 3)
+    }
+
+    /// Items written before the side existed carry no key for it and must
+    /// still decode; the guide simply does not know its side.
+    @Test func itemsWithoutASideDecodeToNil() throws {
+        let json = #"{"edge":100,"spanStart":10,"spanEnd":30}"#
+        let item = try JSONDecoder().decode(AlignmentItem.self, from: Data(json.utf8))
+        #expect(item.elementSide == nil)
+        #expect(item.edge == 100)
+    }
+
+    @Test func alignedEdgeMapsSideThroughTheGuideAxis() {
+        func content(_ mode: MeasureMode, _ side: EdgeSide) -> MeasureContent {
+            var c = MeasureContent(headOffset: 0, mode: mode)
+            c.alignment = AlignmentCheck(items: [
+                AlignmentItem(edge: 100, spanStart: 0, spanEnd: 10, elementSide: side),
+                AlignmentItem(edge: 100, spanStart: 20, spanEnd: 30, elementSide: side),
+            ], tolerance: 1)
+            return c
+        }
+        #expect(content(.vertical, .after).alignedEdge == .left)
+        #expect(content(.vertical, .before).alignedEdge == .right)
+        #expect(content(.horizontal, .after).alignedEdge == .top)
+        #expect(content(.horizontal, .before).alignedEdge == .bottom)
+        #expect(MeasureContent(headOffset: 0, mode: .vertical).alignedEdge == nil)
     }
 
     @Test func payloadWithoutAlignmentDecodesToNil() throws {

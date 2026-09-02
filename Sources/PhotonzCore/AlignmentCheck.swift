@@ -1,6 +1,42 @@
 import CoreGraphics
 import Foundation
 
+/// Which side of an edge the element it belongs to sits on, in coordinate
+/// terms: `before` is the lower-coordinate side (left of a vertical edge,
+/// above a horizontal one), `after` the higher. The guide's axis turns this
+/// into the word a person uses (`AlignedEdge`).
+public enum EdgeSide: String, Hashable, Codable, Sendable {
+    case before
+    case after
+}
+
+/// The edge of the elements an alignment guide judged, as a redliner names it:
+/// a vertical guide with the elements to its right is checking their LEFT
+/// edges.
+public enum AlignedEdge: String, Hashable, Codable, Sendable, CaseIterable {
+    case left, right, top, bottom
+
+    /// The capitalized word for a row name or an inspector readout.
+    public var word: String {
+        switch self {
+        case .left: "Left"
+        case .right: "Right"
+        case .top: "Top"
+        case .bottom: "Bottom"
+        }
+    }
+
+    /// The edge a guide of `axis` is judging when its elements sit on `side`.
+    public init(axis: MeasureMode, side: EdgeSide) {
+        switch (axis, side) {
+        case (.vertical, .after): self = .left
+        case (.vertical, .before): self = .right
+        case (.horizontal, .after): self = .top
+        case (.horizontal, .before): self = .bottom
+        }
+    }
+}
+
 /// One element edge an alignment guide crossed: where that element's edge
 /// actually sits (cross-axis) and the along-axis run the element occupies.
 /// Stored in the same space as the owning `MeasureContent`'s feet (layer-local
@@ -12,11 +48,17 @@ public struct AlignmentItem: Hashable, Codable, Sendable {
     /// The along-axis extent of the element this edge belongs to.
     public var spanStart: CGFloat
     public var spanEnd: CGFloat
+    /// Which side of `edge` the element's ink is on, when the scan could tell
+    /// (`AlignmentScan.elementSide`). Nil when it could not, and for items
+    /// written before this existed.
+    public var elementSide: EdgeSide?
 
-    public init(edge: CGFloat, spanStart: CGFloat, spanEnd: CGFloat) {
+    public init(edge: CGFloat, spanStart: CGFloat, spanEnd: CGFloat,
+                elementSide: EdgeSide? = nil) {
         self.edge = edge
         self.spanStart = spanStart
         self.spanEnd = spanEnd
+        self.elementSide = elementSide
     }
 }
 
@@ -92,6 +134,27 @@ extension AlignmentCheck {
         return edges.count % 2 == 1 ? edges[mid] : (edges[mid - 1] + edges[mid]) / 2
     }
 
+    /// The side the elements ON THE REFERENCE sit on: the span-weighted vote of
+    /// the items within `tolerance` of the settled line, so an outlier facing
+    /// the other way does not get a say. Items that do not know their side
+    /// abstain; a tie, or no evidence at all, is nil.
+    public var referenceSide: EdgeSide? {
+        guard !items.isEmpty else { return nil }
+        let reference = items.count >= 2 ? referenceEdge : items[0].edge
+        var before: CGFloat = 0
+        var after: CGFloat = 0
+        for item in items where abs(item.edge - reference) <= tolerance {
+            let weight = max(abs(item.spanEnd - item.spanStart), 1)
+            switch item.elementSide {
+            case .before: before += weight
+            case .after: after += weight
+            case nil: break
+            }
+        }
+        if before == after { return nil }
+        return before > after ? .before : .after
+    }
+
     /// The check's result, nil when there are fewer than two edges to compare.
     public var verdict: AlignmentVerdict? {
         guard items.count >= 2 else { return nil }
@@ -153,6 +216,43 @@ public enum AlignmentScan {
     /// own.
     public static let defaultElementStrength: Double = 0.2
 
+    /// The band, measured out from an edge, in which the scan looks for the
+    /// element's own ink to learn which side it is on. It starts past the
+    /// edge's antialiasing ramp and reaches far enough to catch a button's
+    /// label sitting inside its border.
+    public static let sideBand: ClosedRange<CGFloat> = 3...20
+    /// How much more structure one side needs over the other before the scan
+    /// will name it. Below this the answer is nil, and the row says "Edge"
+    /// rather than guessing a side and being wrong.
+    public static let sideMargin: Double = 2
+    /// Mean gradient per pixel a band has to reach to count as ink at all; a
+    /// flat background on both sides means the element is a plain box whose
+    /// inside is as empty as its outside.
+    public static let sideFloor: Double = 0.02
+
+    /// Which side of an edge holds the element it belongs to, judged by which
+    /// side has visual structure close by: glyph strokes and borders light up
+    /// the gradient field on the ink side, background stays flat. Nil when
+    /// neither side is clearly busier than the other.
+    public static func elementSide(axis: MeasureMode, edge: CGFloat,
+                                   span: ClosedRange<CGFloat>, in edges: EdgeMap) -> EdgeSide? {
+        let lo = Double(sideBand.lowerBound), hi = Double(sideBand.upperBound)
+        let e = Double(edge)
+        let along = Double(span.lowerBound)...Double(span.upperBound)
+        let before: Double, after: Double
+        switch axis {
+        case .vertical:
+            before = edges.verticalGradientEnergy(xRange: (e - hi)...(e - lo), inYRange: along)
+            after = edges.verticalGradientEnergy(xRange: (e + lo)...(e + hi), inYRange: along)
+        case .horizontal:
+            before = edges.horizontalGradientEnergy(yRange: (e - hi)...(e - lo), inXRange: along)
+            after = edges.horizontalGradientEnergy(yRange: (e + lo)...(e + hi), inXRange: along)
+        }
+        if after >= sideFloor, after > before * sideMargin { return .after }
+        if before >= sideFloor, before > after * sideMargin { return .before }
+        return nil
+    }
+
     /// The element edges a guide line crosses, in document space. `axis` is the
     /// guide's direction: a `.vertical` guide at x = `position` spanning
     /// y = `span` checks vertical edges; `.horizontal` mirrors it.
@@ -172,7 +272,9 @@ public enum AlignmentScan {
         func closeRun() {
             guard let r = run else { return }
             let mean = r.edges.reduce(0, +) / CGFloat(r.edges.count)
-            items.append(AlignmentItem(edge: mean, spanStart: r.start, spanEnd: r.end))
+            let side = elementSide(axis: axis, edge: mean, span: r.start...r.end, in: edges)
+            items.append(AlignmentItem(edge: mean, spanStart: r.start, spanEnd: r.end,
+                                       elementSide: side))
             run = nil
         }
 

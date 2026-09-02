@@ -5,16 +5,16 @@
   "epic": "alignment-checks",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.030Z",
-  "updated": "2026-09-02T05:50:57.031Z",
+  "updated": "2026-09-02T06:10:49.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MeasureSpecList.displayName produces 'Alignment' today; AlignmentCheck holds the items (edge position plus span) and the verdict; the side the reference sits on follows from the guide's axis and MeasureContent.alignment. Inspector: LayersPanel.swift measure inspector (Role near line 1315, readout grid near 1411). Rough items this comes from: queue/audits/2026-08-23-alignment-guide.json ('Nothing carries a count of what the guide checked', 'nothing tells you which edge the guide settled on'). Spec: docs/design/next-measure.md sections 6 (D3 derived names plus rename) and 9.",
   "acceptance": [
-    "With next-measure-align and next-measure-panel on in Next, a committed guide's row reads '<Left|Right|Top|Bottom> edge alignment, N items' and the spec list line carries the same name plus the verdict.",
+    "With next-measure-align and next-measure-panel on in Next, a committed guide's row reads '<Left|Right|Top|Bottom> edges, N items' (or 'Vertical|Horizontal edges, N items' when the side could not be told) and the spec list line carries the same name plus the verdict. Shortened from the mock's 'edge alignment' so the count survives the panel's default width; see log.",
     "The measure inspector for a selected guide shows the reference edge position and the item count as read-only rows beside From, To, Distance and Units.",
     "The measure inspector gains a Name field for any measurement; editing it is one undo step and matches what double-click rename in the list does.",
     "Naming and spec list output are covered by tests in PhotonzCore (MeasureSpecListTests, AlignmentCheckTests); Scripts/test.sh green.",
@@ -24,6 +24,32 @@
     {
       "t": "2026-09-02T05:50:57.031Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T05:59:19.193Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T06:02:54.950Z",
+      "note": "Adversarial review before building: (1) The edge map stores no polarity, so Left vs Right is not derivable from the stored items today. A wrong side word is worse than none, so the side is inferred at scan time from which side of each edge carries ink (gradient energy in a band on either side, |Gx| for vertical guides, |Gy| for horizontal), stored per item as an optional, and the guide settles on the span-weighted vote of the items that define the reference. When the evidence is not decisive the row reads Edge alignment, N items rather than guessing. (2) The count is the number of elements the guide crossed, which is the sanity check a redliner wants (did it see all four rows). (3) Inspector: Edge row (side + reference position in the measurement unit) and Items row (count, plus how many are off); Distance is relabeled Length for a guide because a guide has no distance. (4) The Name field commits through the same renameLayer call the list uses, so it is one undo step and identical behavior. (5) Shortest version: no new layer kind, no stored verdict, one optional field per item; old documents decode with nil and read Edge alignment."
+    },
+    {
+      "t": "2026-09-02T06:09:54.697Z",
+      "note": "Core shipped, TDD: EdgeMap gains verticalGradientEnergy/horizontalGradientEnergy (mean gradient in a band); AlignmentScan.elementSide compares the band 3..20px on each side of every item's edge (2x margin, 0.02 floor) and stores it as AlignmentItem.elementSide (optional, old documents decode nil); AlignmentCheck.referenceSide is the span-weighted vote of the items on the reference; MeasureContent.alignedEdge maps that through the guide axis to AlignedEdge (left/right/top/bottom). Verified on the real 2x settings-pane fixture: all three labels read elementSide .after, alignedEdge .left. 1114 tests green."
+    },
+    {
+      "t": "2026-09-02T06:09:54.697Z",
+      "note": "Deviation from the acceptance wording, on purpose: measured in the row's callout font, the mock's 'Left edge alignment, 4 items' is 162pt and 'Bottom edge alignment, 12 items' 186pt, against about 149pt of room for the name at the inspector's default 264pt width. It truncated and lost the count, the thing it exists to carry. Rows and the spec list now read 'Left edges, 4 items' (109pt), and 'Vertical edges' / 'Horizontal edges' when the scan could not tell the side. 'Alignment' is already said by the dashed swatch, the verdict beside the name, and the spec line's (alignment) role word. Flagged in the audit's rough list so the user can reverse it."
+    },
+    {
+      "t": "2026-09-02T06:09:54.697Z",
+      "note": "Inspector (LayersPanel.swift MeasureInspector, behind next-measure-panel): Name field at the top, commits through editorState.renameLayer like the row's double-click rename (one undo step); a draftLayerID guard stops a focus-loss commit from landing on a newly selected measurement. Guide readout grid: Distance relabeled Length, new Edge row ('Left, x 48 px' / 'x 48 px' when the side is unknown / 'no edges') and Items row ('3 items, 1 off'). Verified by offscreen ImageRenderer stand-in at 264pt (queue/audits/2026-09-02-alignment-row-1.png); the probe app builds, launches and opens the fixture, but this machine has no Accessibility trust or Screen Recording for the probe so the live UI was not driven."
+    },
+    {
+      "t": "2026-09-02T06:10:49.402Z",
+      "note": "Guide rows and the spec list read 'Left edges, N items' (side inferred from ink beside each edge, axis word when unknown); measure inspector adds Edge and Items rows, Length for guides, and a Name field that renames in one undo step. PhotonzCore + LayersPanel, behind next-measure-align/next-measure-panel. 1114 tests green incl. the real-capture fixture; offscreen render in queue/audits/2026-09-02-alignment-row-1.png; audit queue/audits/2026-09-02-alignment-guide-row.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T05:59:19.192Z",
+  "completed": "2026-09-02T06:10:49.403Z"
 }

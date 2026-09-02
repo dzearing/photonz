@@ -4369,3 +4369,39 @@ same-bar collisions on the image, iconography and prototype pages.
 - `EditorState`: `measureModeHint` + timer task; `noteMeasurementLanded()` drops the toast early when the click it described lands. `EditorView.measureHintChip` gains a semibold mode-name lead.
 - Audit: `queue/audits/2026-09-02-measure-mode-hint.json`. Rough: could not drive the probe app (no Accessibility trust), so the timing was verified by tests, not by eye.
 - Next: playtest reaction; consider whether the per-pickup toast is noise for a fluent user.
+
+## 2026-09-02 — A guide's row says which edges it checked and how many (Next)
+
+The Measurements row for an alignment guide said "Alignment" and nothing else,
+and nothing anywhere said which edge the guide had settled on (both from the
+2026-08-23 alignment audit). Now the row and the copied spec list read "Left
+edges, 3 items", the inspector shows an Edge row ("Left, x 48 px") and an Items
+row ("3 items, 1 off"), Distance reads Length for a guide, and any measurement
+can be renamed from a Name field in Properties, through the same one-undo-step
+call as the row's double-click.
+
+The side had to be inferred: the edge map stores no polarity. The scan now
+compares gradient energy in a 3..20px band on each side of every item's edge
+(`EdgeMap.verticalGradientEnergy` / `horizontalGradientEnergy`, new) and stores
+the busier side per item; the guide's edge is the span-weighted vote of the
+items on the reference line. When neither side is clearly busier the row says
+"Vertical edges" instead of guessing. Checked against the real 2x settings-pane
+fixture: all three labels read as left edges.
+
+Deviation from the mock, deliberate: "Left edge alignment, 4 items" is 162pt in
+the row's font against about 149pt of room at the panel's default width, so it
+truncated and lost the count. "Left edges, 4 items" fits; "alignment" is already
+said by the dashed swatch, the verdict beside the name and the spec line's role
+word. Flagged in the audit so it can be reversed with one click.
+
+Verification: 1114 tests green (new: band energy, side inference on synthetic
+ink and on the fixture, the vote, the names, old items decoding without a
+side). The probe app builds, launches and opens the fixture; the inspector was
+rendered offscreen as a stand-in (`queue/audits/2026-09-02-alignment-row-1.png`)
+because this machine still has no Accessibility trust or Screen Recording for
+the probe.
+
+Audit: `queue/audits/2026-09-02-alignment-guide-row.json`.
+Next: a real playtest of the side inference on captures with buttons and cards
+(padding wider than 20px reads as "no side"), and whether "Vertical edges" is
+the right fallback wording.
