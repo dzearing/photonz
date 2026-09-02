@@ -66,6 +66,14 @@ public enum MeasureSpecList {
         content.alignment != nil ? "alignment" : content.role.rawValue
     }
 
+    /// One measurement's spec line: `- <name>: <value> (<role>)`. Nil for a
+    /// layer that is not a measurement.
+    public static func specLine(for layer: Layer, in document: PhotonzDocument) -> String? {
+        guard let content = layer.measure else { return nil }
+        let value = content.label(pixelScale: document.pixelScale)
+        return "- \(displayName(for: layer)): \(value) (\(roleWord(for: content)))"
+    }
+
     /// Plain-text spec list: a header line `<name> · <W> × <H> px`, then one
     /// line per **visible** measurement in panel order:
     /// `- <name>: <value> (<role>)`.
@@ -74,11 +82,19 @@ public enum MeasureSpecList {
             "\(Int(document.canvasSize.height.rounded())) px"
         let lines = measureLayers(in: document)
             .filter(\.isVisible)
-            .compactMap { layer -> String? in
-                guard let content = layer.measure else { return nil }
-                let value = content.label(pixelScale: document.pixelScale)
-                return "- \(displayName(for: layer)): \(value) (\(roleWord(for: content)))"
-            }
+            .compactMap { specLine(for: $0, in: document) }
         return ([header] + lines).joined(separator: "\n")
+    }
+
+    /// Copy Measurement: the spec lines of the SELECTED measurements only, in
+    /// panel order, with no header (they are lines to paste into a thread, not
+    /// a document). An explicit pick outranks the eye, so a hidden measurement
+    /// still copies. Ids that are not measurements contribute nothing; an
+    /// empty selection renders "".
+    public static func render(document: PhotonzDocument, ids: Set<UUID>) -> String {
+        measureLayers(in: document)
+            .filter { ids.contains($0.id) }
+            .compactMap { specLine(for: $0, in: document) }
+            .joined(separator: "\n")
     }
 }

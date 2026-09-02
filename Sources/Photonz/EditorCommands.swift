@@ -317,14 +317,29 @@ struct EditorCommands: Commands {
             .disabled(selectedID == nil)
         }
 
-        // The mock's Measure command group (§6, `next-measure-panel`): the tool
-        // plus the two whole-document actions. The flag exists only in Next's
-        // catalog, so Current never grows this menu.
+        // The mock's Measure command group (§6, `next-measure-panel`): the tool,
+        // the two copy actions (§7), and the two whole-document actions. The
+        // flag exists only in Next's catalog, so Current never grows this menu.
         if Experiments.shared.measurePanelEnabled {
             CommandMenu("Measure") {
                 let count = editor?.measurementCount ?? 0
+                let selectedCount = editor?.selectedMeasureLayerIDs.count ?? 0
                 Button("Measure Tool") { editor?.setTool(.measure) }
                     .disabled(editor?.document == nil)
+                Divider()
+                // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Image (PS
+                // Copy Merged), ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware
+                // Scale, both Photoshop keys.
+                Button("Copy as Spec List") { editor?.copyMeasureSpecList() }
+                    .keyboardShortcut("c", modifiers: [.command, .control])
+                    .disabled(count == 0)
+                // Plain ⌘C on a selected measurement already carries its spec
+                // line as text beside the layer payload; this is the text-only
+                // form, and the one that copies a multi-selection's lines.
+                Button(selectedCount > 1 ? "Copy Measurements" : "Copy Measurement") {
+                    editor?.copySelectedMeasurements()
+                }
+                .disabled(selectedCount == 0)
                 Divider()
                 Button("Show All Measurements") { editor?.setAllMeasurementsVisible(true) }
                     .disabled(count == 0)

@@ -5,11 +5,11 @@
   "epic": "spec-export",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.160Z",
-  "updated": "2026-09-02T05:50:57.161Z",
+  "updated": "2026-09-02T06:55:47.810Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorCommands.swift Measure menu (about lines 324 to 334) has Measure Tool, Show All Measurements and Clear Measurements only; LayersPanel.swift:793 has Copy as Spec List. MeasureSpecList.render(document:name:) renders all visible measurements; add a selection-filtered variant. The mock's command menu lists 'Copy measurement' (docs/design/mocks/pages/redline.html). Suggestion: option-command-C for the spec list. Plain command-C with a measure layer selected may already copy the layer image; check the pasteboard command group before changing it and record the choice in the log.",
@@ -23,6 +23,28 @@
     {
       "t": "2026-09-02T05:50:57.161Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T06:48:57.035Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T06:51:23.435Z",
+      "note": "Pre-build review. (1) The suggested option-command-C is Canvas Size, a Photoshop parity key; shift-command-C is Copy Image (PS Copy Merged); option-shift-command-C is PS Content-Aware Scale. Control-command-C is free in Photoshop, macOS, and Photonz, so Copy as Spec List takes it. (2) The mock puts Copy measurement in a Properties panel menu Photonz does not have; the menu bar Measure menu is its home, and the measurement row context menu gets it too since that is where a person right-clicks a row. (3) A first-time user selects a caliper, presses command-C, pastes into a chat and gets nothing: the pasteboard holds only the private layer payload. Cheapest fix: when the copied layer is a measurement, command-C also puts its spec line on the pasteboard as text. Photonz paste still prefers the layer payload, so nothing changes inside the app. (4) Copy Measurement copies every selected measurement (marquee multi-select), lines only, panel order, no header. A selected measurement copies even with its eye off: an explicit pick outranks the visibility filter."
+    },
+    {
+      "t": "2026-09-02T06:55:47.782Z",
+      "note": "Shipped. PhotonzCore: MeasureSpecList.specLine(for:in:) and render(document:ids:) (selected lines, panel order, no header, hidden-but-picked still copies), pinned by four new MeasureSpecListTests; render(document:name:) now builds on specLine so both paths share one format. App: EditorState.selectedMeasureLayerIDs, copySelectedMeasurements(), copyMeasurement(id:), copyText shared with copyMeasureSpecList; Measure menu gains Copy as Spec List (control-command-C, disabled at zero measurements) and Copy Measurement / Copy Measurements (disabled with none selected); measurement row context menu gains Copy Measurement; plain command-C on a measurement adds its line as .string beside the layer payload (paste() prefers the payload, so in-app paste unchanged; shared code, Current gets it). Docs: next-measure.md section 7 and progress log. Audit: queue/audits/2026-09-02-spec-export-menu.json. Follow-up filed: copy confirmation."
+    },
+    {
+      "t": "2026-09-02T06:55:47.782Z",
+      "note": "Verification: Scripts/test.sh green (1150 tests). Probe app built and launched with a three-caliper fixture package, stayed healthy, quit. This shell has no Accessibility, Apple-events or Screen Recording grant, so the menu items were not clicked or screenshotted; the acceptance items on menu contents and key are verified by code and build, the format by tests."
+    },
+    {
+      "t": "2026-09-02T06:55:47.809Z",
+      "note": "Measure menu gains Copy as Spec List (control-command-C) and Copy Measurement; row context menu too; plain command-C on a measurement pastes as text elsewhere. Core format pinned by MeasureSpecListTests; suite green (1150); probe launch clean. Audit queue/audits/2026-09-02-spec-export-menu.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T06:48:57.035Z",
+  "completed": "2026-09-02T06:55:47.810Z"
 }

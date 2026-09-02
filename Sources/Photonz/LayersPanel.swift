@@ -879,6 +879,8 @@ struct MeasurementsListView: View {
         .contentShape(Rectangle())
         .onTapGesture { editorState.selectLayer(layer.id) }
         .contextMenu {
+            Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
+            Divider()
             Button("Rename") { beginRename(layer) }
             Button(layer.isVisible ? "Hide" : "Show") {
                 editorState.toggleLayerVisibility(id: layer.id)

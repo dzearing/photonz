@@ -4446,3 +4446,11 @@ boxed-in full-width-rows case, and tuning the sideways travel limit.
 - Inspector gains a Label size slider for captions; `AnnotationStyles` remembers it per shape for the next arrow.
 - Audit: `queue/audits/2026-09-02-arrow-captions.json` with seven renders. Follow-ups filed: re-plan on whole-arrow move; inline field vs inspector field double draft.
 - Gotcha: after adding a stored property to `AnnotationContent`, the incremental test build kept stale objects in the render test module and crashed with garbage-size allocations at random tests. `rm -rf .build/debug/Photonz{Core,Render}*.build .build/debug/Modules` and rebuild fixed it.
+
+## 2026-09-02 — Copy as Spec List and Copy Measurement in the Measure menu (go loop)
+
+- Next's menu-bar Measure menu gains Copy as Spec List (⌃⌘C) and Copy Measurement (reads Copy Measurements for a multi-selection, no chord). Both land on the same `EditorState` paths as the Measurements panel menu. The task suggested ⌥⌘C; that is Canvas Size, a Photoshop key, and ⌥⇧⌘C is Photoshop's Content-Aware Scale, so ⌃⌘C it is.
+- `MeasureSpecList.specLine(for:in:)` and `render(document:ids:)` in PhotonzCore: the selected measurements' lines, panel order, no header; an explicit pick outranks the eye. Four new tests pin it (suite green, 1146 → 1150).
+- Plain ⌘C on a selected measurement now also puts its spec line on the pasteboard as `.string` beside the private layer payload, so ⌘C then ⌘V in a chat pastes the line. Photonz's `paste()` reads the layer payload first, so in-app paste is unchanged. Shared code, so Current gets this half too.
+- A measurement row's context menu gains Copy Measurement for that row (`copyMeasurement(id:)`, selection untouched).
+- Verification limits: this shell has no Accessibility, Apple-events or Screen Recording grant, so the probe app was launched with a fixture package (three calipers) and confirmed healthy, but the menu items were not clicked by hand. Audit: `queue/audits/2026-09-02-spec-export-menu.json`. Follow-up filed: a brief on-screen confirmation after a copy.

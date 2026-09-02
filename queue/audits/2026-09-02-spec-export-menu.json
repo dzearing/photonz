@@ -1,0 +1,29 @@
+{
+  "feature": "Copy a spec list or one measurement from the Measure menu",
+  "epic": "spec-export",
+  "summary": "The spec list and a single measurement's line can now be copied from the menu bar, and the spec list has a key. Plain command-C on a selected measurement also pastes as text in other apps.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-panel is on by default. Open a screenshot and draw two or three measurements with the Measure tool (I).",
+  "try": [
+    { "do": "Open the Measure menu in the menu bar. It now lists Copy as Spec List (control-command-C) and Copy Measurement between Measure Tool and Show All Measurements." },
+    { "do": "Press control-command-C, then paste into any text field. You get the header line and one line per visible measurement." },
+    { "do": "Click one measurement on the canvas, then choose Measure > Copy Measurement and paste. You get that one line, no header." },
+    { "do": "With the same measurement selected press plain command-C, then paste into a chat or a text editor. The same line appears; paste inside Photonz still lands a layer." },
+    { "do": "Marquee-select two measurements, open the Measure menu. The item reads Copy Measurements; choose it and paste to get both lines in panel order." },
+    { "do": "Turn a measurement's eye off in the Measurements panel, right-click its row, choose Copy Measurement. It still copies; Copy as Spec List leaves it out." },
+    { "do": "Delete every measurement. Copy as Spec List and Copy Measurement in the Measure menu are disabled." }
+  ],
+  "evaluate": [
+    "Is control-command-C a chord your hand finds, or would you rather Copy as Spec List sat on something else?",
+    "When you press it, do you trust that it worked? Nothing on screen confirms the copy.",
+    "Is plain command-C carrying the spec line as text a pleasant surprise or a confusion, for instance when you meant to paste the caliper somewhere else?",
+    "Should a hidden measurement copy when you explicitly pick it, or should the eye win everywhere?",
+    "Does Copy Measurement belong in the Measure menu, or would you look for it in Edit next to Copy?"
+  ],
+  "rough": [
+    "No confirmation after copying: the menu closes and nothing says the clipboard changed. Filed as a follow-up.",
+    "Copy Measurement has no chord of its own. Plain command-C already carries the line, and every free chord in the copy family needs three modifiers.",
+    "The Measurements panel has no click-to-multi-select; several measurements only select together through the canvas marquee.",
+    "The mock placed Copy measurement in a Properties panel menu Photonz does not have. It lives in the menu bar and in the row's context menu instead.",
+    "Verified by tests and a probe launch only: the loop cannot drive menus or take screenshots on this machine, so the menu was not clicked by hand."
+  ]
+}

@@ -1377,13 +1377,43 @@ final class EditorState {
     }
 
     /// Copy as spec list (§7): the pinned plain-text form of the visible
-    /// measurements goes on the clipboard.
+    /// measurements goes on the clipboard. The panel menu and the menu bar's
+    /// Measure menu both land here.
     func copyMeasureSpecList() {
         guard let document else { return }
+        copyText(MeasureSpecList.render(document: document, name: specListName))
+    }
+
+    /// The selected measurements, panel order: the primary selection when it
+    /// is a measure layer, or the measure members of a marquee multi-selection.
+    var selectedMeasureLayerIDs: [UUID] {
+        var ids = multiSelectedLayerIDs
+        if let id = selectedLayerID { ids.insert(id) }
+        return measurePanelLayers.map(\.id).filter { ids.contains($0) }
+    }
+
+    /// Copy Measurement: the selected measurements' spec lines (no header)
+    /// go on the clipboard as text, so one row pastes into a thread as one
+    /// line. Nothing selected, nothing copied.
+    func copySelectedMeasurements() {
+        guard let document else { return }
+        let ids = Set(selectedMeasureLayerIDs)
+        guard !ids.isEmpty else { return }
+        copyText(MeasureSpecList.render(document: document, ids: ids))
+    }
+
+    /// A row's context menu Copy Measurement: that one row's line, whether or
+    /// not it is selected, without disturbing the selection.
+    func copyMeasurement(id: UUID) {
+        guard let document, let layer = document.layer(id: id),
+              let line = MeasureSpecList.specLine(for: layer, in: document) else { return }
+        copyText(line)
+    }
+
+    private func copyText(_ text: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.setString(MeasureSpecList.render(document: document, name: specListName),
-                             forType: .string)
+        pasteboard.setString(text, forType: .string)
     }
 
     /// The role memory a style edit files under: the SELECTED measurement's
@@ -2824,6 +2854,12 @@ final class EditorState {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+            // A copied measurement also travels as its spec line, so ⌘C then
+            // ⌘V in a chat or a doc pastes "- Width: 128 px (size)" instead of
+            // nothing. Photonz's own paste still prefers the layer payload.
+            if let document, let line = MeasureSpecList.specLine(for: layer, in: document) {
+                pasteboard.setString(line, forType: .string)
+            }
             return
         }
         guard let document else { return }

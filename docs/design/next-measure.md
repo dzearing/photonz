@@ -328,6 +328,20 @@ Copy as Spec List puts it on the clipboard via
 release tag). The inspector's Export section offers Copy Image
 (`copyCompositeToClipboard`) and Export PNG (`exportComposite(.png, 1)`).
 
+Added 2026-09-02: the whole hand-off runs from the keyboard. The menu-bar
+Measure menu gains **Copy as Spec List** (⌃⌘C, the copy family's free chord:
+⇧⌘C is Copy Image, ⌥⌘C Canvas Size and ⌥⇧⌘C Content-Aware Scale are
+Photoshop keys) and **Copy Measurement** (no chord; reads "Copy Measurements"
+for a multi-selection). Both call the same `EditorState` paths as the panel
+menu. Copy Measurement puts the selected measurements' lines on the clipboard
+with no header, panel order, via `MeasureSpecList.render(document:ids:)`; an
+explicit pick outranks the eye, so a hidden measurement still copies. A
+measurement row's context menu offers Copy Measurement for that row without
+touching the selection. Plain ⌘C on a selected measurement now carries its
+spec line as text beside the private layer payload, so ⌘C then ⌘V in a chat
+pastes the line while Photonz's own paste still lands the layer. The mock's
+"Copy measurement" lived in a Properties panel menu Photonz does not have.
+
 ## 8. Snapping option: centers — `next-measure-center-snap` (shipped)
 
 Mock: `redline.html` tool options row `Snap: Edges and centers`.

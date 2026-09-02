@@ -176,4 +176,57 @@ struct MeasureSpecListTests {
         - Vertical edges, 2 items: aligned (alignment)
         """)
     }
+
+    // MARK: - Copying a selection (Copy Measurement)
+
+    @Test func selectedMeasurementsRenderTheirSpecLinesOnlyInPanelOrder() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 1280, height: 800))
+        let width = caliper(from: CGPoint(x: 0, y: 10), to: CGPoint(x: 128, y: 10))
+        let height = caliper(from: CGPoint(x: 20, y: 0), to: CGPoint(x: 20, y: 64))
+        let gap = caliper(from: CGPoint(x: 0, y: 50), to: CGPoint(x: 16, y: 50), role: .spacing)
+        doc.addLayer(width)
+        doc.addLayer(height)
+        doc.addLayer(gap)
+
+        // Ids in any order: the text keeps the panel's top-most-first order,
+        // and carries no header (these are lines to paste into a thread).
+        let text = MeasureSpecList.render(document: doc, ids: [width.id, gap.id])
+        #expect(text == """
+        - Gap: 16 px (spacing)
+        - Width: 128 px (size)
+        """)
+    }
+
+    @Test func aSelectedLineMatchesItsSpecListRow() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100), pixelScale: 2)
+        let named = caliper(from: CGPoint(x: 0, y: 10), to: CGPoint(x: 128, y: 10),
+                            unit: .points, name: "Save button")
+        doc.addLayer(named)
+        doc.addLayer(alignedGuide())
+
+        let one = MeasureSpecList.render(document: doc, ids: [named.id])
+        let full = MeasureSpecList.render(document: doc, name: "Retina")
+        #expect(one == "- Save button: 64 px (size)")
+        #expect(full.split(separator: "\n").map(String.init).contains(one))
+    }
+
+    @Test func anExplicitlySelectedHiddenMeasurementStillCopies() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 200, height: 100))
+        let hidden = caliper(from: CGPoint(x: 0, y: 40), to: CGPoint(x: 64, y: 40), visible: false)
+        doc.addLayer(hidden)
+
+        #expect(MeasureSpecList.render(document: doc, ids: [hidden.id]) == "- Width: 64 px (size)")
+    }
+
+    @Test func selectingNothingOrOnlyOtherLayersRendersNothing() {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 200, height: 100))
+        let picture = Layer(name: "Background",
+                            content: .image(ImageRef(pixelSize: CGSize(width: 200, height: 100))),
+                            frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        doc.addLayer(picture)
+        doc.addLayer(caliper(from: CGPoint(x: 0, y: 10), to: CGPoint(x: 128, y: 10)))
+
+        #expect(MeasureSpecList.render(document: doc, ids: []) == "")
+        #expect(MeasureSpecList.render(document: doc, ids: [picture.id]) == "")
+    }
 }

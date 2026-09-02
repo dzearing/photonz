@@ -1,0 +1,28 @@
+{
+  "id": "copying-a-spec-list-or-a-measurement-shows-a-bri",
+  "title": "Copying a spec list or a measurement shows a brief confirmation",
+  "goal": "After choosing Copy as Spec List or Copy Measurement, or pressing control-command-C, nothing on screen says the clipboard changed, so a person cannot tell whether the key landed. A short confirmation near where the eye already is (a toast, or the count pill briefly reading Copied) would close the loop.",
+  "epic": "spec-export",
+  "priority": "p3-low",
+  "seq": 490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T06:55:35.074Z",
+  "updated": "2026-09-02T06:55:35.075Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Copy paths: EditorState.copyMeasureSpecList, copySelectedMeasurements, copyMeasurement(id:) share copyText(_:). The toolbar count pill (revealMeasurementsPanel) is a candidate spot for the flash. Raised by queue/audits/2026-09-02-spec-export-menu.json.",
+  "acceptance": [
+    "Choosing Copy as Spec List or pressing its key shows a brief, unobtrusive confirmation that fades on its own within about two seconds.",
+    "Copy Measurement from the menu or a row context menu shows the same confirmation.",
+    "The confirmation never blocks input and never appears when the copy did nothing (no measurements, nothing selected).",
+    "Follows the overlay family in docs/design/mocks/shared/UX-PATTERNS.md; no new chrome invented locally."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T06:55:35.075Z",
+      "note": "created (manual)"
+    }
+  ]
+}
