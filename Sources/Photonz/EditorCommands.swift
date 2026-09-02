@@ -119,6 +119,9 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("5", modifiers: [.command, .shift])
             Divider()
+            Button("Edit Last Capture") { coordinator.editLastCapture() }
+                .keyboardShortcut("6", modifiers: [.command, .shift])
+                .disabled(coordinator.lastCapture == nil)
             Button(coordinator.isHistoryShown ? "Hide Capture History" : "Show Capture History") {
                 coordinator.toggleHistory()
             }

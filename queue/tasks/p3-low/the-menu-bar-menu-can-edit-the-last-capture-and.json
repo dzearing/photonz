@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.248Z",
-  "updated": "2026-09-02T05:50:57.249Z",
+  "updated": "2026-09-02T07:18:40.940Z",
   "deps": [],
   "blockedBy": [],
   "notes": "MenuBarMenu (struct MenuBarMenu in Sources/Photonz) carries the dead item 'Button(\"Preferences…\") {}'. AppCoordinator.editCapture(url) and openRecording(url) exist; capture.store holds history newest first. Global hotkeys go through HotkeyCenter; pick a chord that does not collide with shift-command-3, 4, 5 or H. Workflow finding from the manager pass: the toast is the only fast path from capture to editor and it auto-fades.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-02T05:50:57.249Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T07:12:55.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T07:18:29.000Z",
+      "note": "Pre-build review: the hotkey is the value, the menu item alone barely beats opening history. Chord is Shift-Command-6: continues the 3/4/5 family, and global Carbon hotkeys pre-empt the app's own key equivalents, so nothing the editor binds (Shift-Command-E is Export) could be reused. Last = whatever history lists first, so menu, hotkey and overlay agree. Preferences removed outright: a disabled placeholder is a promise the app is not keeping."
+    },
+    {
+      "t": "2026-09-02T07:18:29.000Z",
+      "note": "Built: CaptureCenter registers Shift-Command-6 (onEditLastCapture); AppCoordinator gains lastCapture + editLastCapture() routing recordings to the video editor; MenuBarMenu and the Capture CommandMenu both list Edit Last Capture, disabled when history is empty; Preferences item deleted. Mock docs' menu lists (PRODUCT-MODEL.md, AGENTS.md) updated to match."
+    },
+    {
+      "t": "2026-09-02T07:18:29.000Z",
+      "note": "Why shared, no flag: the menu bar menu, Capture menu, coordinator and hotkeys are shell code neither release has forked, so Next gets it by construction; a flag would gate a plain menu item with nothing visual to diverge on, and deleting a dead item is a fix Current should have too."
+    },
+    {
+      "t": "2026-09-02T07:18:29.000Z",
+      "note": "Verified: swift build clean, Scripts/test.sh 1157 tests green, probe app built and launched with no hotkey registration failure in the unified log. Could not press the hotkey or enumerate the live menu: the unmanned terminal has neither Accessibility (synthetic keys dropped, AXIsProcessTrusted false) nor Automation (System Events refused). Recorded in the audit's rough list; the audit's try steps are the live check."
+    },
+    {
+      "t": "2026-09-02T07:18:29.000Z",
+      "note": "Follow-ups filed: Welcome window warns about the Touch Bar Shift-Command-6 system shortcut; both menus use the same capture command names. Audit: queue/audits/2026-09-02-edit-last-capture.json."
+    },
+    {
+      "t": "2026-09-02T07:18:40.940Z",
+      "note": "Shift-Command-6 global hotkey plus Edit Last Capture in the menu bar menu and the Capture menu open the newest capture (video editor for recordings), disabled when history is empty; dead Preferences item removed. Shared shell code so both releases have it. swift build clean, Scripts/test.sh 1157 tests green, probe app launched cleanly; live hotkey/menu check left to the playtest (no Accessibility/Automation grant here). Audit queue/audits/2026-09-02-edit-last-capture.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T07:12:55.080Z",
+  "completed": "2026-09-02T07:18:40.940Z"
 }

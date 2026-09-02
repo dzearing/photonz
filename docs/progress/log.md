@@ -4461,3 +4461,10 @@ boxed-in full-width-rows case, and tuning the sideways travel limit.
 - `WindowPick` (PhotonzCore, 10 tests): frontmost pickable window at a point (layer 0, alpha > 0, not a shield panel, at least 8 pt a side), click threshold, capture rect clamped to the display and snapped to whole points, label text, label placement. `WindowLister` (app) reads `CGWindowListCopyWindowInfo` and converts to each display's space.
 - Verified on the probe app by driving the real overlay view with synthetic events: click captured the window's rect at 2x (3456x2054 from 1728x1027), drag produced the same rect as before, a click over bare desktop cancelled, Esc cancelled; per-move cost mean 0.002 ms, max 0.14 ms over a 240-step sweep. The probe has no Screen Recording grant, so the live freeze itself was not exercised.
 - Audit: `queue/audits/2026-09-02-window-capture.json`. Follow-ups filed: include the shadow and rounded-corner transparency like the system's window capture; window title in the label.
+
+## 2026-09-02 — Edit Last Capture from the menu bar (go loop)
+
+- Shift-Command-6 is a new global hotkey that opens the newest capture in an editor (a recording opens the video editor). Same item in the menu bar menu and the Capture menu, disabled when history is empty. Shared shell code, so both releases have it.
+- The dead, disabled Preferences… item is gone from the menu bar menu until a settings window exists.
+- Audit: `queue/audits/2026-09-02-edit-last-capture.json`. Follow-ups queued for the Touch Bar system shortcut warning and for aligning capture command names across the two menus.
+- Open question: unmanned sessions cannot press global hotkeys or read the live menu (no Accessibility/Automation grant), so those checks fall to the playtest.

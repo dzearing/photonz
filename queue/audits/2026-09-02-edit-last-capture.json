@@ -1,0 +1,26 @@
+{
+  "feature": "Edit Last Capture from the menu bar",
+  "epic": "measure-redline",
+  "summary": "Once the capture toast has faded, one keystroke (Shift-Command-6) or one menu item opens your newest capture in an editor. The menu bar menu no longer lists a Preferences item that did nothing.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flags: this is shared shell code, so Current has it too.",
+  "try": [
+    { "do": "Press Shift-Command-4 and capture any region. Wait for the toast to fade." },
+    { "do": "Press Shift-Command-6 from any app. The capture opens in a Photonz editor window." },
+    { "do": "Close that window. Open the menu bar icon and pick Edit Last Capture. The same capture opens again." },
+    { "do": "With an editor window frontmost, open the Capture menu in the menu bar. Edit Last Capture is listed there with the same shortcut." },
+    { "do": "Record a short clip with Shift-Command-5, stop it, then press Shift-Command-6. The video editor opens instead of the image editor." },
+    { "do": "Open the menu bar menu and look at the bottom group. Preferences is gone; every item there does something." }
+  ],
+  "evaluate": [
+    "Does Shift-Command-6 feel like the natural next number after 3, 4 and 5, or would you have reached for another chord?",
+    "After a capture, is the hotkey fast enough that you stop waiting on the toast at all?",
+    "Is Edit Last Capture in the right spot in the menu, next to Show History, or does it belong with the capture commands above the divider?",
+    "Do you miss the Preferences item as a hint that settings are coming, or is the shorter menu better?"
+  ],
+  "rough": [
+    "Edit Last Capture opens whatever history lists first. That is the newest file in your Screenshots folder, so a file you drop there by hand counts as the last capture.",
+    "On a Mac with a Touch Bar, Shift-Command-6 is the system's Touch Bar screenshot shortcut and will intercept ours until it is turned off in System Settings, the same way Shift-Command-3 and 4 do. The Welcome window's shortcut check does not mention it yet; filed as a follow-up.",
+    "This session could not press the hotkey or open the live menu itself (the unmanned terminal has neither Accessibility nor Automation permission), so the build, the test suite and a code walk are the verification. The steps above are the real check.",
+    "The two menus still name the region capture differently (Capture Region in the menu bar, Capture Rectangle in the Capture menu). Pre-existing; filed as a follow-up."
+  ]
+}

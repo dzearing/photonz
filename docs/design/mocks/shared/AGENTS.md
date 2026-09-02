@@ -608,9 +608,10 @@ and the specimen stays honest (PRODUCT-MODEL §4c: a specimen wears no app chrom
   `.menuitem` + `.sc` + `.menu-sep` and nothing else: no icons, no custom widget.
   Contents in order, groups split by `.menu-sep`:
   `Capture Region ⇧⌘4` · `Capture Full Screen ⇧⌘3` · `Stop Recording ⇧⌘5` /
-  `Show History ⇧⌘H` / `New Window` · `New from Clipboard` · `Open…` /
-  `Check for Updates…` · `Welcome & Permissions…` · `Preferences…` ·
-  `About Photonz` / `Quit Photonz ⌘Q`.
+  `Edit Last Capture ⇧⌘6` · `Show History ⇧⌘H` / `New Window` ·
+  `New from Clipboard` · `Open…` / `Check for Updates…` ·
+  `Welcome & Permissions…` · `Experiments…` · `About Photonz` /
+  `Quit Photonz ⌘Q`.
   Author each row as a `<button class="menuitem">` so it has real hover, focus,
   and `.disabled` states; hover fills the whole row in the accent like a real
   macOS menu. Add `[data-menu="#id"]` to make it toggleable, or leave `.pop` off

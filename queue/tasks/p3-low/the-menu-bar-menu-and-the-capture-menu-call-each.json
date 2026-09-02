@@ -1,0 +1,26 @@
+{
+  "id": "the-menu-bar-menu-and-the-capture-menu-call-each",
+  "title": "The menu bar menu and the Capture menu call each capture command by the same name",
+  "goal": "The menu bar icon says Capture Region while the Capture menu in the menu bar says Capture Rectangle for the very same command. One name in both places, so a person who learns it in one menu finds it in the other.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T07:18:16.616Z",
+  "updated": "2026-09-02T07:18:16.617Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MenuBarMenu in Sources/Photonz/PhotonzApp.swift vs CommandMenu(\"Capture\") in Sources/Photonz/EditorCommands.swift. History items also differ: Show History vs Show Capture History. Pick the shorter menu bar wording unless the Capture menu context needs the noun. Docs listing the menu: docs/design/mocks/shared/PRODUCT-MODEL.md and AGENTS.md.",
+  "acceptance": [
+    "Every command that appears in both the menu bar menu and the Capture menu uses identical wording in both.",
+    "The chosen names also appear in the Welcome window and the design study menu lists where those repeat them."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T07:18:16.617Z",
+      "note": "created (manual)"
+    }
+  ]
+}

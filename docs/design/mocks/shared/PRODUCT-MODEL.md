@@ -230,9 +230,9 @@ Photonz is a resident menu-bar agent, so this is the app's real root. It is a
 standard macOS menu popped from the status icon. Contents, in order:
 
 - **Capture Region** `⇧⌘4` · **Capture Full Screen** `⇧⌘3` · **Stop Recording** `⇧⌘5`
-- **Show History** `⇧⌘H`
+- **Edit Last Capture** `⇧⌘6` · **Show History** `⇧⌘H`
 - **New Window** · **New from Clipboard** · **Open…**
-- **Check for Updates…** · **Welcome & Permissions…** · **Preferences…** ·
+- **Check for Updates…** · **Welcome & Permissions…** · **Experiments…** ·
   **About Photonz**
 - **Quit Photonz** `⌘Q`
 

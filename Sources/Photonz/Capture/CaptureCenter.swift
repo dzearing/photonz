@@ -30,6 +30,10 @@ final class CaptureCenter {
     @ObservationIgnored var onToggleHistory: (() -> Void)?
     @ObservationIgnored var onRequestHistory: (() -> Void)?
 
+    /// ⇧⌘6: open the newest capture in an editor. The toast is the only fast
+    /// path from capture to editor and it fades, so this is the keyboard one.
+    @ObservationIgnored var onEditLastCapture: (() -> Void)?
+
     /// Fired after a capture lands in the store, so the resident agent can pop
     /// the post-capture Quick Access Overlay (phase 11.7). Carries the new entry.
     @ObservationIgnored var onCaptureComplete: ((CaptureEntry) -> Void)?
@@ -63,6 +67,9 @@ final class CaptureCenter {
         // screenshot toolbar, so ⌃⇧F5 reliably stops a recording in progress.
         hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.stopRecordingIfNeeded() }
         hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.onToggleHistory?() }
+        // ⇧⌘6 continues the 3/4/5 family. Global hotkeys pre-empt the app's own
+        // key equivalents, so it must not reuse anything the editor binds.
+        hotkeys.register(.commandShift(kVK_ANSI_6)) { [weak self] in self?.onEditLastCapture?() }
     }
 
     // MARK: - Recording (phase 12)

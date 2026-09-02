@@ -152,9 +152,10 @@ struct MenuBarLabel: View {
 
 /// The resident agent's status-item drop-down (phase 11.2). Every action works
 /// with no editor window open — capture, history, window-spawning, and the
-/// updater all route through the `AppCoordinator`. Items not yet implemented
-/// (Record → phase 12, Preferences → later) are present-but-disabled so the
-/// shape of the app is visible without pretending to work.
+/// updater all route through the `AppCoordinator`. Every item here does
+/// something: a menu item that only promises a feature is a dead end, so
+/// nothing is listed until it works (Preferences returns when there is a
+/// settings window behind it).
 struct MenuBarMenu: View {
     @Bindable var coordinator: AppCoordinator
 
@@ -171,7 +172,12 @@ struct MenuBarMenu: View {
 
         Divider()
 
-        // History
+        // History. Edit Last Capture is the keyboard path from a capture to
+        // its editor once the toast has faded (a recording opens the video
+        // editor); the shortcut is also a global hotkey (CaptureCenter).
+        Button("Edit Last Capture") { coordinator.editLastCapture() }
+            .keyboardShortcut("6", modifiers: [.command, .shift])
+            .disabled(coordinator.lastCapture == nil)
         Button(coordinator.isHistoryShown ? "Hide History" : "Show History") {
             coordinator.toggleHistory()
         }
@@ -200,8 +206,6 @@ struct MenuBarMenu: View {
         .disabled(coordinator.isCheckingForUpdates)
         Button("Welcome & Permissions…") { coordinator.showWelcome() }
         Button("Experiments…") { coordinator.showExperiments() }
-        Button("Preferences…") {}
-            .disabled(true)  // settings UI lands in a later phase
         Button("About \(AppInfo.name)") { coordinator.showAbout() }
 
         Divider()

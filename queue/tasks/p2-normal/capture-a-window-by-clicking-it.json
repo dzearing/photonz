@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:57.203Z",
-  "updated": "2026-09-02T07:12:30.104Z",
+  "updated": "2026-09-02T07:12:49.377Z",
   "deps": [],
   "blockedBy": [],
   "notes": "RectSelectionController owns the freeze-frame overlay (docs/design/capture.md, Capture flow). Window list from CGWindowListCopyWindowInfo with on-screen-only, filtered to layer 0 and nonzero alpha, converted into the display's coordinate space; exclude Photonz's own shield panels. Competitive baseline: docs/plan/competitive-cleanshot.md lists window capture with smart detection as a gap. Window shadows are out of scope (crop to bounds). Declare the flag in FeatureCatalog with the Next-only pattern the measure flags use. Shipped: WindowPick (PhotonzCore, tested) + WindowLister (app) + RectSelectionController(windowPicking:) with SelectionView hover/click/drag threshold and size pills; flag next-window-capture in FeatureCatalog; Experiments.windowCaptureEnabled; both beginRectCapture and the region-recording path pass the flag. Design note in docs/design/capture.md. Audit queue/audits/2026-09-02-window-capture.json.",
@@ -55,7 +55,7 @@
     }
   ],
   "started": "2026-09-02T07:06:42.604Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-09-02T07:06:11.763Z",
     "exit": 0,

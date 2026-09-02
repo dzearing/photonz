@@ -1,0 +1,27 @@
+{
+  "id": "the-welcome-window-warns-about-the-system-touch",
+  "title": "The Welcome window warns about the system Touch Bar shortcut that hides Edit Last Capture",
+  "goal": "On a Mac with a Touch Bar, the system uses Shift-Command-6 to screenshot the Touch Bar, so Photonz never sees its Edit Last Capture shortcut. The Welcome window already explains the same problem for Shift-Command-3, 4 and 5 and should cover 6 the same way, only on Macs where it applies.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T07:18:16.587Z",
+  "updated": "2026-09-02T07:18:16.588Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "SystemScreenshotShortcuts (PhotonzCore) models ids 28/30/184 read from com.apple.symbolichotkeys; the Touch Bar file shortcut is id 181 (Shift-Command-6). WelcomeController reads the model. Only surface it when the machine has a Touch Bar (DFRFoundation presence or the hotkey id existing in the plist at all).",
+  "acceptance": [
+    "On a Touch Bar Mac with the system shortcut enabled, the Welcome window lists Shift-Command-6 alongside 3, 4 and 5 as a shortcut the system is holding.",
+    "On a Mac without a Touch Bar the Welcome window does not mention it.",
+    "Scripts/test.sh passes, with a PhotonzCore test for the new shortcut entry."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T07:18:16.588Z",
+      "note": "created (manual)"
+    }
+  ]
+}

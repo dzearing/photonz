@@ -95,6 +95,7 @@ final class AppCoordinator {
         // History presentation: capture signals; the overlay is ours to drive.
         capture.onToggleHistory = { [weak self] in self?.toggleHistory() }
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
+        capture.onEditLastCapture = { [weak self] in self?.editLastCapture() }
         capture.onCaptureComplete = { [weak self] entry in
             // Auto-copy so the user can paste immediately (image data for
             // screenshots, the file for recordings).
@@ -524,6 +525,19 @@ final class AppCoordinator {
     func editCapture(_ url: URL) {
         if isHistoryShown { hideHistory() }
         openWindow(.file(url))
+    }
+
+    /// The newest item in history, or nil when the folder is empty. "Newest" is
+    /// whatever history lists first, so the menu, the hotkey and the overlay
+    /// all agree on which capture is the last one.
+    var lastCapture: CaptureEntry? { capture.store.entries.first }
+
+    /// ⇧⌘6 / menu "Edit Last Capture": open the newest capture in its editor
+    /// (a recording opens the video editor). The toast already offers this,
+    /// but it fades; this is the path that still works after it has gone.
+    func editLastCapture() {
+        guard let entry = lastCapture else { return }
+        if entry.kind == .video { openRecording(entry.url) } else { editCapture(entry.url) }
     }
 
     /// The edit round-trip back to history (phase 11.5). Called from the editor's
