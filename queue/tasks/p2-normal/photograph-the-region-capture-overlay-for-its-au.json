@@ -1,0 +1,28 @@
+{
+  "id": "photograph-the-region-capture-overlay-for-its-au",
+  "title": "Photograph the region capture overlay for its audit",
+  "goal": "The audit for the new capture overlay has no picture in it, because the machine was locked when it was written and a locked screen cannot be photographed. Take the picture, so anyone reading the audit can see the dimmed screen and the drag box rather than take our word for it.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 610,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T22:57:40.652Z",
+  "updated": "2026-09-02T22:57:40.653Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Scripts/probe-app.sh --no-build, then: open -a \"dist/Photonz Probe.app\" --args --capture-diag. It writes /tmp/photonz-capture-diag.txt (dim latency, double-dim ratio) and /tmp/photonz-capture-diag-drag.png, then quits itself. The first line of the report says whether the screen was locked; if it was, the whole run is of the lock screen and must be thrown away. Downscale the PNG before committing it, the raw one is 10 MB. See docs/design/playtest-harness.md.",
+  "acceptance": [
+    "The probe is run once on an unlocked screen and produces a real screen capture of the region capture overlay with a box being dragged",
+    "The picture shows the whole display dimmed, the box bright, the size pill, and nothing beside the pointer",
+    "The picture is saved under queue/audits/ and referenced from a step in 2026-09-02-capture-dim-no-loupe.json",
+    "If the dim, the pill or the timing look wrong in the picture, a task is filed for what is wrong"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T22:57:40.653Z",
+      "note": "created (manual)"
+    }
+  ]
+}

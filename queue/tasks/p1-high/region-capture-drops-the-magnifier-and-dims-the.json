@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 102,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:22:07.504Z",
-  "updated": "2026-09-02T22:22:07.534Z",
+  "updated": "2026-09-02T22:58:35.972Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: there is this magnified overlay when dragging a box to screenshot, I do not like it, remove it, and show the dimmed overlay immediately on start of grabbing a screenshot region. The loupe was filed by the manager pass as competitor parity (task a-loupe-with-pixel-coordinates-while-you-drag-a, flag next-capture-loupe, on by default in Next) and shipped without a decision card; the user rejected it on sight, so delete rather than default off. Code: Sources/Photonz/Capture/RectSelection.swift (CaptureLoupe, LoupeLayout, drawLoupe, loupePixels, the size pill stepping aside for the loupe), CaptureCenter.swift plumbing, FeatureCatalog captureLoupeFlag and captureLoupePixels, Experiments.swift accessor. Dim latency: RectSelection.begin() awaits freezeAndShow(), which screenshots every display with ScreenCapturer before any SelectionWindow exists, so nothing is on screen until the captures return. Put the selection windows up first with the 0.25 black dim over the live screen, then set frozenImage on each when its capture lands (the draw already handles a nil frozen image as the dim-the-live-screen fallback). Keep the no-flash rule at line 204 in mind when the frozen image swaps in. Update docs/design/capture.md and next-measure.md wherever the loupe is mentioned.",
@@ -28,6 +28,40 @@
     {
       "t": "2026-09-02T22:22:07.534Z",
       "note": "seq 140 -> 102"
+    },
+    {
+      "t": "2026-09-02T22:26:47.951Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T22:56:10.429037Z",
+      "note": "Adversarial review before building: the loupe needed no decision (the user rejected it by name), but the dim-first plan did need proof. Putting the overlay up before the freeze risks the freeze photographing our own dim. Tested it rather than assuming: a 300x200 dim panel at sharingType .readOnly dropped the captured mean luma 0.1938 -> 0.1453, exactly its alpha; the same panel at .none left the capture identical to the clean screen. So the panels hide from the freeze and go back to .readOnly once it lands."
+    },
+    {
+      "t": "2026-09-02T22:56:10.429128Z",
+      "note": "Freeze cost measured in a fresh process: 43 ms first display, 12 ms warm. Shortcut to every display covered: 10 to 18 ms, synchronous, no await in the way."
+    },
+    {
+      "t": "2026-09-02T22:56:10.429130Z",
+      "note": "Found while verifying: the dim never covered the display. SelectionView painted 25% black over bounds in draw, and a view only repaints the rectangles AppKit marks dirty, so a fresh overlay dimmed the hovered window's outline and nothing else (measured about a tenth of the display in a real capture). Rebuilt as DimView, a shape-layer-backed view between the picture and the chrome, even-odd path = display minus selection. Two AppKit traps written up in docs/design/capture.md."
+    },
+    {
+      "t": "2026-09-02T22:56:10.429131Z",
+      "note": "Loupe deleted: CaptureLoupe + 20 tests, next-capture-loupe and its Pixels across parameter, both Experiments accessors, the CaptureCenter plumbing, the drawing, the spec section. ExperimentsTests keeps a regression test that the flag stays gone, and competitive-cleanshot.md now says it was built and rejected so it cannot be refiled. The drag's size pill is the one readout again."
+    },
+    {
+      "t": "2026-09-02T22:56:10.429132Z",
+      "note": "Flip geometry pushed into PhotonzCore as CaptureDim.hole(for:in:) with six tests, so the one thing a locked screen cannot show (whether the hole lands where the pointer is or in its mirror image) is checked without a screen. Suite green, 1470."
+    },
+    {
+      "t": "2026-09-02T22:56:10.429133Z",
+      "note": "Verification limit: the machine locked partway through. No client can see past a lock screen, so every capture after that came back as the desktop picture. The real screenshots taken before the lock show the box, the size pill and no magnifier; the corrected full-screen dim is still owed a photograph. A background poller is waiting for the unlock to take one."
+    },
+    {
+      "t": "2026-09-02T22:58:35.971Z",
+      "note": "Loupe deleted outright (flag, parameters, CaptureLoupe, 20 tests, Experiments accessors, drawing, spec); the drag's size pill is the one readout again. Region capture now covers every display synchronously, measured 10 to 18 ms from begin() to every panel up, and each frozen picture slides in underneath as its shot lands (43 ms cold, 12 ms warm). The panels hide from their own freeze with sharingType .none, proved with a control (a .readOnly panel dropped the captured luma by exactly its alpha; .none left the capture identical to the clean screen). Found and fixed on the way: the dim never covered the display, it was a fill painted only into rectangles AppKit marked dirty, so a fresh overlay dimmed the hovered window's outline and little else; it is a shape-layer-backed view now, and its top-left-to-bottom-left turn is CaptureDim in PhotonzCore with six tests. Recording's region overlay shares all of it. Suite green, 1470. Audit: queue/audits/2026-09-02-capture-dim-no-loupe.json, with no screenshot because the machine locked partway through and nothing can photograph past a lock screen; follow-up filed to take the picture."
     }
-  ]
+  ],
+  "started": "2026-09-02T22:26:47.951Z",
+  "completed": "2026-09-02T22:58:35.972Z"
 }
