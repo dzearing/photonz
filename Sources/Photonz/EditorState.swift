@@ -129,7 +129,14 @@ final class EditorState {
     /// the two never coexist.
     private(set) var selectedLayerID: UUID? {
         didSet {
-            if oldValue != selectedLayerID { multiSelectedLayerIDs = [] }
+            if oldValue != selectedLayerID {
+                multiSelectedLayerIDs = []
+                // A fresh primary selection is what the next shift-click in
+                // a list ranges from, wherever it came from (canvas, panel,
+                // a new layer).
+                rowSelection = ListSelection(selected: selectedLayerID.map { [$0] } ?? [],
+                                             anchor: selectedLayerID)
+            }
             // Selecting anything (or explicitly deselecting) drops the Canvas
             // pseudo-selection; selectCanvas() re-raises the flag afterwards.
             isCanvasSelected = false
@@ -144,6 +151,12 @@ final class EditorState {
     /// hiding a member (which would make it fail a rect containment check)
     /// don't silently drop it from the selection.
     private(set) var multiSelectedLayerIDs: Set<UUID> = []
+    /// Row-click bookkeeping for the Layers and Measurements lists: the anchor
+    /// a shift-click ranges from and the rows the last shift-click swept in.
+    /// The selection itself lives in `selectedLayerID` /
+    /// `multiSelectedLayerIDs`; this only remembers how the list got there,
+    /// and is re-seeded from those stores before every click.
+    private var rowSelection = ListSelection()
     /// Frame override while a move drag is in flight — rendered as a preview,
     /// committed to history only on mouse-up.
     private var previewMove: (id: UUID, frame: CGRect)?
@@ -611,6 +624,9 @@ final class EditorState {
         } else {
             if !captured.isEmpty { selectedLayerID = nil }
             multiSelectedLayerIDs = Set(captured)
+            // A marquee has no anchor row: the next shift-click in a list
+            // starts over from the row it lands on.
+            rowSelection = ListSelection(selected: multiSelectedLayerIDs)
         }
     }
 
@@ -3049,6 +3065,32 @@ final class EditorState {
         // Explicit deselection dissolves the multi-selection even when the
         // primary was already nil (didSet only fires on change).
         if id == nil { multiSelectedLayerIDs = [] }
+    }
+
+    /// A click on a Layers or Measurements row, with the modifier keys read
+    /// the Finder's way: plain selects the row, shift ranges from the anchor,
+    /// command toggles. `order` is that list's rows top to bottom (the Layers
+    /// list and the Measurements list are different orders of the same
+    /// stack). One row becomes the primary selection, two or more the same
+    /// multi-selection a canvas marquee produces, so delete, hide, lock and
+    /// Copy Measurements need no new paths.
+    func clickRow(_ id: UUID, _ click: RowClick, in order: [UUID]) {
+        var next = rowSelection
+        next.selected = multiSelectedLayerIDs
+        if let selectedLayerID { next.selected.insert(selectedLayerID) }
+        next.click(id, click, in: order)
+        switch next.selected.count {
+        case 0:
+            selectLayer(nil)
+        case 1:
+            selectedLayerID = next.selected.first
+        default:
+            selectedLayerID = nil // didSet clears the multi-selection first
+            multiSelectedLayerIDs = next.selected
+        }
+        // After the stores: setting the primary re-seeds the anchor, and a
+        // toggle that leaves one row selected still anchors on the toggled row.
+        rowSelection = next
     }
 
     /// Selects the Canvas pseudo-layer (panel row click): boundary handles

@@ -1,0 +1,27 @@
+{
+  "feature": "Shift-click and command-click pick several rows in the Layers and Measurements lists",
+  "epic": "spec-export",
+  "summary": "Several layers or measurements can now be selected from the list the way the Finder does it: shift-click for a run of rows, command-click to add or drop one. Until now the only way to select more than one was a marquee on the canvas.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-panel is on by default. Open a screenshot and draw four or five measurements with the Measure tool (I).",
+  "try": [
+    { "do": "In the Measurements list click the first row, then shift-click the third row. Three rows highlight, the three calipers get outlines on the canvas, and the list ends with a line reading 3 measurements selected." },
+    { "do": "Open the Measure menu. It reads Copy Measurements; choose it and paste into a text editor. You get exactly those three lines, in list order." },
+    { "do": "Command-click the second row. It leaves the selection and the count line drops to 2. Command-click it again and it is back." },
+    { "do": "Shift-click a row further down. The run grows from the first row you clicked; anything you added with command-click stays in." },
+    { "do": "Click a row on the canvas, then shift-click a row in the list. The run starts from the layer you clicked on the canvas." },
+    { "do": "In the Layers list, shift-click two annotation rows, then click the eye on one of them. All of the selected rows hide together, in one undo step." },
+    { "do": "Command-click a layer's thumbnail (the small picture, not its name). The layer's pixels load as a selection, the same as before." }
+  ],
+  "evaluate": [
+    "Did your hand reach for shift-click before reading any of this, and did it do what you expected on the first try?",
+    "Does the count line under the list earn its space, or would you rather the inspector said something richer about the selection?",
+    "Command-click on the thumbnail still means Select Pixels while command-click on the name means toggle. Is that split obvious, or does it bite?",
+    "After a shift-click, is it clear which row the next shift-click will range from?",
+    "Should shift-clicking across a hidden or locked row include it in the selection, as it does now?"
+  ],
+  "rough": [
+    "The Layers menu items Duplicate Layer, Delete Layer and the four arrange commands stay disabled under a multi-selection, list or marquee alike. The Delete key on the canvas and the row context menu's Delete still remove the whole selection. Filed as a follow-up.",
+    "The inspector shows no properties for a multi-selection; the count line under the list is the only acknowledgement. Batch editing of shared properties is out of scope here.",
+    "Verified by tests, a build and a probe launch only. The loop cannot send real modifier-clicks on this machine, and synthetic events reach the tap gesture for command-click but not for plain or shift clicks, so shift-click on a live row was not exercised by hand."
+  ]
+}

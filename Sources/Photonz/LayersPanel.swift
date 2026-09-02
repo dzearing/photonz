@@ -3,6 +3,17 @@ import PhotonzCore
 import SwiftUI
 import UniformTypeIdentifiers
 
+extension RowClick {
+    /// The Finder's reading of a click's modifier keys: shift ranges,
+    /// command toggles, anything else is a plain click. Shift wins when
+    /// both are held.
+    init(modifiers: NSEvent.ModifierFlags) {
+        if modifiers.contains(.shift) { self = .extend }
+        else if modifiers.contains(.command) { self = .toggle }
+        else { self = .plain }
+    }
+}
+
 extension Color {
     /// The document model's hex form of this color (alpha dropped); nil for
     /// colors outside sRGB.
@@ -423,7 +434,25 @@ struct LayersListView: View {
             .scrollBounceBehavior(.basedOnSize)
             .onPreferenceChange(LayersContentHeightKey.self) { contentHeight = $0 }
 
+            multiSelectionCount
             resizeHandle
+        }
+    }
+
+    /// The inspector shows no per-layer sections for a multi-selection, so
+    /// this one line is what says the panel and the canvas agree: "3 layers
+    /// selected". Absent for zero or one.
+    private var multiSelectionCount: some View {
+        let count = editorState.multiSelectedLayerIDs.count
+        return Group {
+            if count >= 2 {
+                Text("\(count) layers selected")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 4)
+            }
         }
     }
 
@@ -562,12 +591,13 @@ struct LayersListView: View {
             }
         }
         .contentShape(Rectangle())
-        // ⌘-click loads the layer's opaque pixels as a selection (Photoshop's
-        // load-transparency); a plain click just selects the layer.
-        .highPriorityGesture(
-            TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: layer.id) }
-        )
-        .onTapGesture { editorState.selectLayer(layer.id) }
+        // One tap gesture reads the modifiers itself: shift ranges from the
+        // anchor row, command toggles the row, plain selects it. The
+        // thumbnail's own command gesture (Select Pixels) sits above this.
+        .onTapGesture {
+            editorState.clickRow(layer.id, RowClick(modifiers: NSEvent.modifierFlags),
+                                 in: editorState.panelLayers.map(\.id))
+        }
         .contextMenu {
             Button("Duplicate") { editorState.duplicateLayer(id: layer.id) }
                 .keyboardShortcut("d", modifiers: .command)
@@ -609,6 +639,14 @@ struct LayersListView: View {
             }
         }
         .frame(width: 40, height: 30)
+        .contentShape(Rectangle())
+        // ⌘-click on the THUMBNAIL loads the layer's opaque pixels as a
+        // selection (Photoshop's load-transparency lives on the thumbnail
+        // too); on the rest of the row command-click toggles the row instead.
+        .highPriorityGesture(
+            TapGesture().modifiers(.command).onEnded { editorState.selectLayerPixels(id: layer.id) }
+        )
+        .help("Command-click to select the layer's pixels")
     }
 
     private func beginRename(_ layer: Layer) {
@@ -822,6 +860,17 @@ struct MeasurementsListView: View {
             ForEach(editorState.measurePanelLayers, id: \.id) { layer in
                 row(layer)
             }
+            // How many of the rows are in the selection, once it is more than
+            // one: the number Copy Measurements will copy.
+            let count = editorState.selectedMeasureLayerIDs.count
+            if count >= 2 {
+                Text("\(count) measurements selected")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.horizontal, 6)
+                    .padding(.top, 4)
+            }
         }
         .padding(.horizontal, 8)
     }
@@ -877,7 +926,12 @@ struct MeasurementsListView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { editorState.selectLayer(layer.id) }
+        // Shift ranges from the anchor row, command toggles, plain selects:
+        // the same reading as the Layers rows, over this list's order.
+        .onTapGesture {
+            editorState.clickRow(layer.id, RowClick(modifiers: NSEvent.modifierFlags),
+                                 in: editorState.measurePanelLayers.map(\.id))
+        }
         .contextMenu {
             Button("Copy Measurement") { editorState.copyMeasurement(id: layer.id) }
             Divider()
