@@ -1,0 +1,29 @@
+{
+  "id": "an-alignment-guide-s-row-says-what-it-checked-an",
+  "title": "An alignment guide's row says what it checked and which edge it settled on",
+  "goal": "In the measurements list and the copied spec list, an alignment guide reads like 'Left edge alignment, 4 items' instead of just 'Alignment', so you can tell what it judged. Selecting it shows which edge the guide settled on, and any measurement can be renamed from the Properties panel, not only by double-clicking its row.",
+  "epic": "alignment-checks",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.030Z",
+  "updated": "2026-09-02T05:50:57.031Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MeasureSpecList.displayName produces 'Alignment' today; AlignmentCheck holds the items (edge position plus span) and the verdict; the side the reference sits on follows from the guide's axis and MeasureContent.alignment. Inspector: LayersPanel.swift measure inspector (Role near line 1315, readout grid near 1411). Rough items this comes from: queue/audits/2026-08-23-alignment-guide.json ('Nothing carries a count of what the guide checked', 'nothing tells you which edge the guide settled on'). Spec: docs/design/next-measure.md sections 6 (D3 derived names plus rename) and 9.",
+  "acceptance": [
+    "With next-measure-align and next-measure-panel on in Next, a committed guide's row reads '<Left|Right|Top|Bottom> edge alignment, N items' and the spec list line carries the same name plus the verdict.",
+    "The measure inspector for a selected guide shows the reference edge position and the item count as read-only rows beside From, To, Distance and Units.",
+    "The measure inspector gains a Name field for any measurement; editing it is one undo step and matches what double-click rename in the list does.",
+    "Naming and spec list output are covered by tests in PhotonzCore (MeasureSpecListTests, AlignmentCheckTests); Scripts/test.sh green.",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.031Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "the-loop-tells-an-expired-login-apart-from-a-fai",
+  "title": "The loop tells an expired login apart from a failing task",
+  "goal": "For nine days the unmanned loop could not sign in, and instead of saying so it blamed the only task in the queue, parked it, and wrote nine empty digests. Measure work sat idle the whole time. The loop should notice a sign-in failure, leave the task alone, say that sign-in is needed on the dashboard, and retry the digest once sign-in works again.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-02T05:50:57.383Z",
+  "updated": "2026-09-02T05:50:57.383Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/loop.log around lines 45581 to 45590 ('Failed to authenticate: OAuth session expired and could not be refreshed' followed by 'runner finished (success)'), digests 2026-08-24 through 2026-09-01 all read 'Digest generation failed', history.jsonl 2026-09-02T01:55 'unparked ... expired login, not the task'. Code: go-loop.sh run_runner and record_exit, queue-lib.mjs recordRunnerExit and the failureStreak environment rule. Serves the focus by keeping measure tasks moving unattended.",
+  "acceptance": [
+    "A runner whose output contains the sign-in failure line is recorded as an environment failure: the task is not charged a failure and is never parked for it; the status note and the dashboard hero say sign-in is needed.",
+    "The daily digest is not stubbed as failed on a sign-in failure; the loop retries it later the same day once a runner succeeds.",
+    "queue/bin/failure-drill.sh gains a case that replays the sign-in failure and asserts the above; the README's task lifecycle section documents it.",
+    "How a real task failure is handled does not change."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.383Z",
+      "note": "created (manager)"
+    }
+  ]
+}

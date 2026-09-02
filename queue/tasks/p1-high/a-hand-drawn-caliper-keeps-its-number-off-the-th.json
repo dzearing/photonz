@@ -1,0 +1,29 @@
+{
+  "id": "a-hand-drawn-caliper-keeps-its-number-off-the-th",
+  "title": "A hand-drawn caliper keeps its number off the things its feet landed on",
+  "goal": "When you measure a gap by clicking two points, the readout should know which elements the two feet snapped to and keep its number off them, the way a one-click Size measurement already steers clear of the element it measured. Today only Size mode knows its subject, so a two-point measurement can still park its number on a neighbouring row.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.076Z",
+  "updated": "2026-09-02T05:50:57.076Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MeasureLabelPlanner.plan(..., describing:) already takes subject rects and EditorState.addElementSize passes them for Size mode. For Distance, resolve ElementBounds.detect at each foot (the element whose edge the foot snapped to) at placement time in EditorState and store nothing new in the model; the planner already re-runs on endpoint commit. Rough items this comes from: queue/audits/2026-08-23-size-readout-placement.json ('Only Size mode knows what it measured') and 2026-08-23-measure-edge-readout.json ('A caliper only protects its own thin measuring line'). Shared placement code, so Current benefits too; note it in the log.",
+  "acceptance": [
+    "In Next with next-measure-modes on, a Distance caliper whose feet snap to two element edges hands those elements to the readout planner as subjects, and its number lands in whitespace when there is room.",
+    "Gap mode calipers hand over both bounding elements the same way.",
+    "A sweep over the audit capture used by ElementDetectionFixtureTests finds no Distance readout on an element either foot landed on where a clear spot exists; added as a test.",
+    "No extra work per mouse move beyond the existing element lookup (placement time only); Scripts/test.sh green.",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.076Z",
+      "note": "created (manager)"
+    }
+  ]
+}

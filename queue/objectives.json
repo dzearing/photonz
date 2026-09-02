@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-23T17:37:07.530Z",
+  "updated": "2026-09-02T05:51:08.687Z",
   "focus": "measure-redline",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -26,7 +26,7 @@
           "id": "epic-uehjr1",
           "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {
@@ -40,14 +40,14 @@
           "id": "alignment-checks",
           "title": "Alignment checking",
           "note": "Blocked on a UX decision.",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {
           "id": "spec-export",
           "title": "Spec export: copy a clean spec list from a capture",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         }
       ]

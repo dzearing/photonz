@@ -1,0 +1,28 @@
+{
+  "id": "arrow-captions-get-a-playtest-and-an-audit",
+  "title": "Arrow captions get a playtest and an audit",
+  "goal": "Arrow captions shipped without their own audit, so nobody has judged how it feels to draw an arrow, type a label and see it land in a pill. Play the feature as a first-time user would, fix what is clumsy, and write the audit so it can be tried and reacted to.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.115Z",
+  "updated": "2026-09-02T05:50:57.115Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Code: EditorState.beginCaptionEdit / commitCaptionEdit / setAnnotationCaption, the CanvasView caption editor, AnnotationBuilder.restyled(caption:), PillRasterizer; tests AnnotationCaptionTests and AnnotationCaptionRenderingTests. The only coverage so far is one line in queue/audits/2026-08-23-measure-redline.json ('arrow captions are exact'). Screen capture is denied to the loop; use offscreen renders like the other audits.",
+  "acceptance": [
+    "Walked end to end in Next with next-arrow-captions on: draw an arrow, type a caption, Return, Esc on a second arrow, double-click to edit, edit from the inspector, undo each step; findings written to the task log before any fix.",
+    "The caption pill is legible over light and dark image areas, never covers the arrow head, and follows the arrow when it is moved or resized (verified by rendering through the real pipeline; offscreen is fine).",
+    "Anything clumsy that fits the session is fixed with tests; Current release unchanged with the flag off; Scripts/test.sh green.",
+    "Audit written under queue/audits/ with five to eight try steps and screenshots or offscreen renders; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.115Z",
+      "note": "created (manager)"
+    }
+  ]
+}

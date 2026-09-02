@@ -1,0 +1,29 @@
+{
+  "id": "switching-measure-modes-says-which-mode-you-land",
+  "title": "Switching Measure modes says which mode you landed on",
+  "goal": "When you cycle the Measure tool's modes with the I key or pick one from its button, a short hint names the mode and what a click will do. Today the mode is only a small glyph on the button, and the hint that explains a click disappears for good after the first measurement, so a person switching to Gap or Size later gets no words at all.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:56.989Z",
+  "updated": "2026-09-02T05:50:56.990Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorView.measureToolButton pressedKey cycles editorState.measureToolMode; the existing hint chip is gated on showsMeasureHint (document has no measurements yet) in EditorState/CanvasView and positioned by EditorChromeLayout.aboveToolBar. Turn the hint into a transient state (mode-change timestamp) instead of a per-document one-shot; reuse the same glass pill. Rough item this comes from: queue/audits/2026-08-23-tool-mode-flyout.json ('Discoverability genuinely regressed against the old chips'). Spec: docs/design/next-measure.md section 3, hint chip.",
+  "acceptance": [
+    "With the Next release and next-measure-modes on, pressing I while Measure is in hand shows a hint naming the new mode and what a click does, for about two seconds, then fades.",
+    "Picking a mode from the Measure button's flyout shows the same hint; picking up the tool shows it once per pickup, not only before the first measurement.",
+    "The hint never covers the tool bar, the legend, or a live preview, and it never enters the document or the undo history.",
+    "Current release behavior is unchanged with the flag off; Scripts/test.sh green.",
+    "Audit written under queue/audits/ with the try path above; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:56.990Z",
+      "note": "created (manager)"
+    }
+  ]
+}

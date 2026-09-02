@@ -1,0 +1,29 @@
+{
+  "id": "capture-a-window-by-clicking-it",
+  "title": "Capture a window by clicking it",
+  "goal": "Most redlines start from one app window. During a region capture, moving the pointer over a window should highlight it, and one click captures exactly that window, instead of dragging a rectangle around it by hand and trimming the edges later. Dragging keeps working as before.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.203Z",
+  "updated": "2026-09-02T05:50:57.204Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "RectSelectionController owns the freeze-frame overlay (docs/design/capture.md, Capture flow). Window list from CGWindowListCopyWindowInfo with on-screen-only, filtered to layer 0 and nonzero alpha, converted into the display's coordinate space; exclude Photonz's own shield panels. Competitive baseline: docs/plan/competitive-cleanshot.md lists window capture with smart detection as a gap. Window shadows are out of scope (crop to bounds). Declare the flag in FeatureCatalog with the Next-only pattern the measure flags use.",
+  "acceptance": [
+    "In Next behind a new flag next-window-capture (default on in Next, absent in Current), starting a rectangle capture highlights the frontmost window under the pointer with its size shown; a click without a drag captures that window's bounds from the frozen screen image.",
+    "A drag behaves exactly as today; Esc cancels; the highlight keeps up with the pointer (per-move cost measured and noted in the log).",
+    "The captured image lands the same way a region capture does (toast, history, Edit) and its pixel scale matches the display.",
+    "Which window sits under a point, given window rects and layers, lives in a testable helper with unit tests; no AppKit in PhotonzCore.",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.204Z",
+      "note": "created (manager)"
+    }
+  ]
+}

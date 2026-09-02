@@ -1,0 +1,27 @@
+{
+  "id": "the-edge-map-path-loses-its-two-force-unwraps-an",
+  "title": "The edge map path loses its two force unwraps and its unchecked Sendable",
+  "goal": "Two spots in the measurement code crash rather than fail gracefully if their assumptions ever break, and one core type opts out of the compiler's thread-safety checks. Remove all three so the measure tools keep the repo's safety rules.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.338Z",
+  "updated": "2026-09-02T05:50:57.338Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/PhotonzCore/EdgeMap.swift:79 (luma!.count), Sources/PhotonzRender/EdgeMapAnalyzer.swift:103 (CGColorSpace(name:)!), Sources/PhotonzCore/SelectionRegion.swift:12 (@unchecked Sendable). CLAUDE.md: no force unwraps in core or render; core must be value-typed and Sendable. Shared code, both releases.",
+  "acceptance": [
+    "No force unwrap remains in Sources/PhotonzCore or Sources/PhotonzRender (the grep in the task log shows zero hits), behavior unchanged, tests green.",
+    "SelectionRegion in PhotonzCore is Sendable without @unchecked, or carries a comment explaining exactly why it cannot be.",
+    "ElementDetectionFixtureTests and AlignmentFixtureTests still pin the same numbers."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.338Z",
+      "note": "created (manager)"
+    }
+  ]
+}

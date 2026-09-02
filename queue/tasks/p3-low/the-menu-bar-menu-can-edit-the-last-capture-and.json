@@ -1,0 +1,28 @@
+{
+  "id": "the-menu-bar-menu-can-edit-the-last-capture-and",
+  "title": "The menu bar menu can edit the last capture, and stops offering an empty Preferences",
+  "goal": "If the capture toast fades before you reach it, editing that capture means opening the history and finding it again. The menu bar menu gains Edit Last Capture with a shortcut. The menu's Preferences item does nothing today and goes away until there is something behind it.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.248Z",
+  "updated": "2026-09-02T05:50:57.249Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "MenuBarMenu (struct MenuBarMenu in Sources/Photonz) carries the dead item 'Button(\"Preferences…\") {}'. AppCoordinator.editCapture(url) and openRecording(url) exist; capture.store holds history newest first. Global hotkeys go through HotkeyCenter; pick a chord that does not collide with shift-command-3, 4, 5 or H. Workflow finding from the manager pass: the toast is the only fast path from capture to editor and it auto-fades.",
+  "acceptance": [
+    "The menu bar menu and the Capture menu both list Edit Last Capture with a global shortcut that opens the most recent screenshot in an editor window (a recording opens the video editor); disabled when history is empty.",
+    "Preferences… is gone from the menu bar menu, or opens something real; no dead menu item remains.",
+    "Shell code shared by both releases, no flag needed; the log says why.",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.249Z",
+      "note": "created (manager)"
+    }
+  ]
+}

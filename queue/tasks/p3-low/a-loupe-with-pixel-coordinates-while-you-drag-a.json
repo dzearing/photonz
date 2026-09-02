@@ -1,0 +1,28 @@
+{
+  "id": "a-loupe-with-pixel-coordinates-while-you-drag-a",
+  "title": "A loupe with pixel coordinates while you drag a capture rectangle",
+  "goal": "When dragging out a capture rectangle, a small magnified view near the pointer shows the pixels under it with exact coordinates, so a redline crop can start and stop on the pixel you mean. Every competing capture tool has this and Photonz does not.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.294Z",
+  "updated": "2026-09-02T05:50:57.295Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "RectSelectionController freeze-frame overlay (docs/design/capture.md). Competitive baseline: docs/plan/competitive-cleanshot.md ('crosshair + magnifier/loupe with live pixel coords'). Show coordinates in screen points and pixels (backingScaleFactor). Keep it a small glass panel matching the toast's look.",
+  "acceptance": [
+    "In Next behind a new flag next-capture-loupe (default on in Next, absent in Current), the region capture overlay shows a magnified patch beside the pointer with a crosshair, the pointer's coordinates, and the live selection size while dragging.",
+    "The loupe steps to the other side of the pointer near screen edges and never covers the selection's active corner.",
+    "Drawn from the frozen screen image, so it costs no extra capture; per-move cost measured and noted in the log.",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.295Z",
+      "note": "created (manager)"
+    }
+  ]
+}

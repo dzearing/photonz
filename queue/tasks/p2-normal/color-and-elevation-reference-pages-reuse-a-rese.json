@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 410,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-08-24T04:36:01.002Z",
-  "updated": "2026-08-24T05:05:45.491770Z",
+  "updated": "2026-08-24T05:06:26.180Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Same root cause as component-shortcuts-run-off-the-edge-of-their-ca: tokens.css owns .body{display:grid;grid-template-columns:220px 1fr;min-height:0} (the app shell rail + content). Shadowing pages: pages/lang-color.html (#lang-color .swcard .body overrides padding only, so the 230px card inherits a 220px+1fr grid and .desc starts 3px past the card right edge, measured live, genuinely broken); pages/lang-elevation.html (#lang-elevation .scene .body fully overrides display+columns so it is currently harmless but still a violation); pages/video-compositing.html (.subject .body is NOT scoped to a page id at all, and inherits display:grid). Fix is the documented one: prefix the local class per page (see RESERVED CLASS NAMES in shared/components/tokens.css and the PREFIX rule in shared/AGENTS.md), then re-check layout. Worth adding a guard that greps pages for bare reserved names.",
@@ -62,8 +62,13 @@
     {
       "t": "2026-08-24T05:05:45.491770Z",
       "note": "Also filed an-elevation-annotation-covers-the-window-title: on lang-elevation the 'glass titlebar - elev 2' annotation sits on top of the window title it names. Pre-existing, unrelated to this fix, visible in the audit screenshots."
+    },
+    {
+      "t": "2026-08-24T05:06:26.179Z",
+      "note": "Four design study pages stopped borrowing a design system class name for their own boxes, and a new gate stops the fifth. lang-color .body -> .swbody (the swatch description was laid out 3px past the card edge and clipped away; it now runs 13px to 217px inside a 230px card), lang-elevation .body -> .scenebody, video-compositing .body -> .torso, and lang-motion .rail/.track/.dot -> .mo-rail/.mo-track/.mo-puck, found by eye during verification: its easing rail was rendering at 24px instead of 14px with inherited padding, a right border and a 22px backdrop blur. New guard shared/check-reserved.mjs gates the decidable damage (a design system stylesheet imposing grid columns, float or absolute position on a bare class that a page styles without redeclaring it); mutation-tested both ways. Widening it to padding and backdrop blur was tried and rejected at 74 hits, nearly all legitimate refinements, so the remainder is filed as reference-pages-borrow-design-system-names-witho. AGENTS.md's PREFIX rule repointed from the now-empty photonz-ds.css to components/tokens.css. Verified all four pages in light and dark in a real browser with the easing replay and chroma key exercised; six study guards green, 90 pages return 200, no console errors. Audit queue/audits/2026-08-24-reserved-names.json. Pushed as c0f479e."
     }
   ],
   "started": "2026-08-24T04:55:48.950Z",
-  "failures": 1
+  "failures": 1,
+  "completed": "2026-08-24T05:06:26.180Z"
 }

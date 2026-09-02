@@ -1,0 +1,28 @@
+{
+  "id": "copying-a-spec-list-or-one-measurement-is-a-menu",
+  "title": "Copying a spec list or one measurement is a menu item with a shortcut",
+  "goal": "Getting measurements out of the app should not require finding the Measurements panel's menu. The Measure menu in the menu bar gains Copy as Spec List, and with a measurement selected, Copy Measurement puts that one line on the clipboard as text, so the whole hand-off runs from the keyboard.",
+  "epic": "spec-export",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T05:50:57.160Z",
+  "updated": "2026-09-02T05:50:57.161Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "EditorCommands.swift Measure menu (about lines 324 to 334) has Measure Tool, Show All Measurements and Clear Measurements only; LayersPanel.swift:793 has Copy as Spec List. MeasureSpecList.render(document:name:) renders all visible measurements; add a selection-filtered variant. The mock's command menu lists 'Copy measurement' (docs/design/mocks/pages/redline.html). Suggestion: option-command-C for the spec list. Plain command-C with a measure layer selected may already copy the layer image; check the pasteboard command group before changing it and record the choice in the log.",
+  "acceptance": [
+    "In Next with next-measure-panel on, the Measure menu lists Copy as Spec List with a keyboard shortcut that collides with neither Copy Image (shift-command-C) nor a Photoshop parity key; it is disabled when the document has no measurements.",
+    "With one or more measurements selected, Copy Measurement in the Measure menu puts their spec lines on the clipboard as text, and the pasted text matches the spec list format for those rows.",
+    "The Measurements panel menu and the menu bar call the same code path; the format is pinned by a test in PhotonzCore.",
+    "Audit written under queue/audits/ naming the exact keys; anything left rough is filed as a follow-up task."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T05:50:57.161Z",
+      "note": "created (manager)"
+    }
+  ]
+}
