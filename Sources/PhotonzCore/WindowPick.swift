@@ -104,9 +104,45 @@ public enum WindowPick {
     /// that runs on past it is shortened.
     public static let maxLabelWidth: CGFloat = 400
 
-    /// A shortened title keeps at least this many characters before its
-    /// ellipsis; anything less says nothing and is dropped instead.
+    /// A shortened title keeps at least this many characters of the original,
+    /// counting both sides of its ellipsis; anything less says nothing and is
+    /// dropped instead.
     public static let minimumTitleLength = 3
+
+    /// `title` cut down to `count` of its characters plus one ellipsis, taken
+    /// out of the MIDDLE the way the Finder shortens a long name: the start
+    /// and the ending both survive, so two windows called "… Report v1" and
+    /// "… Report v2" still read differently. Whitespace either side of the cut
+    /// goes, so the seam reads cleanly. A title already that short comes back
+    /// untouched; one that would shrink below `minimumTitleLength` comes back
+    /// nil, since a stub says nothing.
+    public static func shortenedTitle(_ title: String, keeping count: Int) -> String? {
+        let characters = Array(title)
+        guard count < characters.count else { return title }
+        guard count > 0 else { return nil }
+        // The ending gets a third of the budget: enough to carry a "v2" or a
+        // file extension, while the start still reads as the name it is.
+        let tail = max(1, count / 3)
+        let head = max(0, count - tail)
+        let start = String(characters.prefix(head)).trimmingTrailingWhitespace()
+        var end = String(characters.suffix(tail)).trimmingLeadingWhitespace()
+        // A cut that lands inside a word leaves a fragment hanging off the
+        // ellipsis ("…s — Report v1"). Step past it so the ending starts on a
+        // word, and past a separator left stranded in front of it.
+        let tailStart = characters.count - tail
+        let insideAWord = tailStart > 0
+            && !characters[tailStart].isWhitespace
+            && !characters[tailStart - 1].isWhitespace
+        if insideAWord, let space = end.firstIndex(where: { $0.isWhitespace }) {
+            var word: Substring = end[space...]
+            word = word.drop(while: { $0.isWhitespace })
+            word = word.drop(while: { "-–—|·".contains($0) })
+            word = word.drop(while: { $0.isWhitespace })
+            if word.count >= 2 { end = String(word) }
+        }
+        guard start.count + end.count >= minimumTitleLength else { return nil }
+        return start + "…" + end
+    }
 
     /// "Safari · Apple  1440 × 900": the app, the window's title when it adds
     /// something, and the size. Just the size when the owner is unknown.
@@ -157,29 +193,32 @@ public enum WindowPick {
     }
 
     /// The label for `window` no wider than `maxWidth` as `measure` sees it:
-    /// the title is shortened with a trailing ellipsis until the whole label
-    /// fits, and dropped when fewer than `minimumTitleLength` characters of
-    /// it would survive. The app and the size are never shortened, so a label
-    /// that cannot fit even without the title comes back whole regardless.
+    /// the title is shortened in the middle (see `shortenedTitle`) until the
+    /// whole label fits, and dropped when fewer than `minimumTitleLength`
+    /// characters of it would survive. The app and the size are never
+    /// shortened, so a label that cannot fit even without the title comes
+    /// back whole regardless.
     public static func label(for window: ScreenWindow, fitting maxWidth: CGFloat,
                              measure: (WindowLabel) -> CGFloat) -> WindowLabel {
         let full = label(for: window)
         guard let title = full.title, measure(full) > maxWidth else { return full }
         let plain = WindowLabel(app: full.app, title: nil, size: full.size)
         let characters = Array(title)
-        func shortened(_ count: Int) -> String? {
-            let kept = String(characters.prefix(count)).trimmingCharacters(in: .whitespaces)
-            return kept.count >= minimumTitleLength ? kept + "…" : nil
-        }
+        func shortened(_ count: Int) -> String? { shortenedTitle(title, keeping: count) }
         func fits(_ count: Int) -> Bool {
             guard let short = shortened(count) else { return false }
             return measure(WindowLabel(app: full.app, title: short, size: full.size)) <= maxWidth
         }
-        // The longest prefix that fits, found by bisection: fits(n) is
-        // monotone in n for any measure that grows with the text.
-        var low = 0, high = characters.count - 1
-        guard high >= minimumTitleLength, fits(minimumTitleLength) else { return plain }
-        low = minimumTitleLength
+        // The smallest budget that still leaves a title worth showing. Usually
+        // `minimumTitleLength`, but a character or two more when the cut lands
+        // on a space and the trimming takes it back.
+        var smallest = minimumTitleLength
+        while smallest < characters.count, shortened(smallest) == nil { smallest += 1 }
+        let high0 = characters.count - 1
+        guard smallest <= high0, fits(smallest) else { return plain }
+        // The longest cut that fits, found by bisection: fits(n) is monotone
+        // in n for any measure that grows with the text.
+        var low = smallest, high = high0
         while low < high {
             let mid = (low + high + 1) / 2
             if fits(mid) { low = mid } else { high = mid - 1 }
@@ -224,5 +263,21 @@ public enum WindowPick {
         origin.x = min(max(origin.x, bounds.minX), bounds.maxX - labelSize.width)
         origin.y = min(max(origin.y, bounds.minY), bounds.maxY - labelSize.height)
         return origin
+    }
+}
+
+private extension String {
+    /// The string with any trailing whitespace removed, leading kept.
+    func trimmingTrailingWhitespace() -> String {
+        var trimmed = Substring(self)
+        while let last = trimmed.last, last.isWhitespace { trimmed = trimmed.dropLast() }
+        return String(trimmed)
+    }
+
+    /// The string with any leading whitespace removed, trailing kept.
+    func trimmingLeadingWhitespace() -> String {
+        var trimmed = Substring(self)
+        while let first = trimmed.first, first.isWhitespace { trimmed = trimmed.dropFirst() }
+        return String(trimmed)
     }
 }

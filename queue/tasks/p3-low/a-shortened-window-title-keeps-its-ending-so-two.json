@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:27:30.284Z",
-  "updated": "2026-09-02T14:27:41.155Z",
+  "updated": "2026-09-02T21:30:21.293Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-window-highlight-title.json rough 2, and the manager open thread of 2026-09-02 02:40. Title stripping and the pill live in Sources/Photonz/Capture (see commit 3596afd). The loop has no Screen Recording grant, so titles are empty for the probe; verify with the same invented-window overlay render that audit used.",
@@ -26,6 +26,27 @@
     {
       "t": "2026-09-02T14:27:41.154Z",
       "note": "seq 570 -> 130"
+    },
+    {
+      "t": "2026-09-02T21:30:21.293Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T21:46:52.135230Z",
+      "note": "Pre-build review. The mock is a one-liner but the failure mode it names is real, and the shortest fix is one rule in the core: the app draws whatever string the core hands it, so nothing in the overlay changes. Two things the task did not say and that decide whether it reads well: how the budget splits between start and ending, and what happens when the cut lands inside a word. Chose a third of the budget for the ending (enough for a 'v2', a file extension or a short last word, while the start still reads as the name it is), and stepping the ending forward to the next whole word when the cut landed mid-word, since a fragment hanging off an ellipsis ('...s - Report v1') reads as a mistake while a trailing cut does not. Left the START a plain cut: that is the shape everyone already reads as shortened. No decision card: the user's task already chose middle shortening, and the rest is how the same words are cut."
+    },
+    {
+      "t": "2026-09-02T21:46:52.135230Z",
+      "note": "Built, TDD. PhotonzCore: new WindowPick.shortenedTitle(_:keeping:), cutting in the middle, whitespace trimmed either side of the seam, the ending stepped to a whole word after a mid-word cut, nil under three surviving characters. label(for:fitting:measure:) now bisects through it; its feasibility probe had to change too, since trimming can push a three-character budget below the minimum, so it walks up to the smallest budget that yields a title before bisecting. 5 new/updated tests in WindowPickTests (22 in the suite), 1478 green."
+    },
+    {
+      "t": "2026-09-02T21:46:52.135230Z",
+      "note": "Verified on the real overlay. A temporary probe-only harness (removed before commit) rendered the overlay's OWN drawing offscreen for invented windows and dumped the pill text for every real window on this machine through the real kCGWindowName reader and the real NSAttributedString measure. Invented pair: 'Photonz . 2026 Checkout Redesign Handoff...Report v1' and '...Report v2', which before this change both ended '...Handoff N...'. Real ones came back sensible, e.g. Microsoft Edge 'LTX-2.5 IC-LoRA (Contr...leDiffusion' (no whitespace in the ending, so it stays a mid-word cut, correctly). Probe quit. Audit and two pictures in queue/audits/2026-09-02-window-title-middle.json."
+    },
+    {
+      "t": "2026-09-02T21:46:52.135230Z",
+      "note": "Post-build review. Clumsy bits left: the ending's share is a fixed third, so on a very tight pill it can be two characters; and a title made of one long token still cuts mid-word at both ends because there is no word to step to. Both are recorded in the audit's rough for the user to judge rather than guessed at again. Nothing filed as a follow-up: neither is a defect, and the audit is the right place for a judgment call."
     }
-  ]
+  ],
+  "started": "2026-09-02T21:30:21.293Z"
 }

@@ -5081,3 +5081,21 @@ is open with a real capture per option. An approving answer is a one-line
 default flip plus, if the Option variant wins, the held key. Also noted for
 whoever takes it: the auto placement always reaches to the growing side unless
 the picture's edge pushes back, and does not yet prefer the emptier side.
+
+## 2026-09-02 — window title pills keep their ending
+
+A window title too long for the capture highlight's pill used to lose its end.
+Two windows called "… Report v1" and "… Report v2" then read the same, and the
+highlight outline was the only way to tell which one a click would capture.
+`WindowPick.shortenedTitle` now cuts in the middle the way the Finder shortens
+a name: the start and the ending both survive, the ending gets a third of the
+budget and steps forward to a whole word when the cut landed inside one, and a
+title with fewer than three surviving characters is still dropped rather than
+shown as a stub. The overlay is unchanged — it draws whatever string the core
+hands it. Next only (the flag is `next-window-capture`).
+
+Verified against real window titles and the real font measure through a
+temporary probe-only harness, removed before commit; the audit
+(`queue/audits/2026-09-02-window-title-middle.json`) carries two pictures of
+the overlay's own drawing. Next: the audit asks whether a third is the right
+share for the ending.

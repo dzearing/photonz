@@ -1,0 +1,26 @@
+{
+  "feature": "A shortened window title keeps its ending",
+  "epic": "measure-redline",
+  "summary": "During a region capture, a window title too long for the pill is now cut in the middle instead of the end, so two windows whose names differ only at the end (Report v1 and Report v2) no longer read the same.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Capture a window by clicking it is on by default. Open two windows of one app whose titles share a long start and differ only at the end.",
+  "try": [
+    { "do": "Press Shift Command 4 and hover the first of the two windows. The pill reads the app, then the start of the title, an ellipsis, and the title's ending.", "shot": "2026-09-02-window-title-middle-v1.png" },
+    { "do": "Move to the second window. Only the ending changes, and that is enough to tell them apart.", "shot": "2026-09-02-window-title-middle-v2.png" },
+    { "do": "Hover a browser window with a long page title. The ending after the ellipsis should start on a whole word, not on the tail of one." },
+    { "do": "Hover a window whose title is one long unbroken name, like a file path with no spaces. It still cuts mid-word there, because there is no word to step to." },
+    { "do": "Shrink a window until only a few characters of its title survive. Below three characters the title should vanish rather than show a stub." },
+    { "do": "Hover a window whose title fits. Nothing should have an ellipsis in it at all." }
+  ],
+  "evaluate": [
+    "With two similar windows open, does the ending the pill keeps actually name the one you meant?",
+    "Is a third of the space the right share for the ending, or would you rather see more of the title's start?",
+    "Does the cut in the middle read as deliberate, or does it look like the title broke?",
+    "When the ending steps forward to a whole word, does dropping the few characters before it ever lose something you wanted?"
+  ],
+  "rough": [
+    "No live screenshot of the overlay exists: the loop can drive the editor from a script, but there is no scripted step that opens the capture overlay and hovers a window, so a real screen capture of the pill is out of reach. The two pictures are the overlay's own drawing code rendered offscreen over invented windows, which for this pill is faithful (it is a filled rounded rectangle and text, with no translucency to lose).",
+    "Real titles were checked end to end all the same: a temporary probe-only dump listed every window on this machine through the real reader and the real font measure, and long ones came back cut in the middle (a Reddit page title in Microsoft Edge, for example, kept its subreddit ending). That dump was removed before commit.",
+    "The start of the title is still a plain cut, mid-word and all. Only the ending is stepped forward to a whole word, on the grounds that a trailing cut is the shape everyone already reads as shortened, while a fragment after an ellipsis looks like a mistake.",
+    "The ending gets a third of the room, which is a guess. On a very tight pill that can be as little as two characters."
+  ]
+}

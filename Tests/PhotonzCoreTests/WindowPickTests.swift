@@ -143,15 +143,15 @@ struct WindowPickTests {
         // Plenty of room: the whole label.
         let whole = WindowPick.label(for: w, fitting: 10_000, measure: tenPerCharacter)
         #expect(whole.text == "Safari · A very long page title that goes on and on  1440 × 900")
-        // Tight: the title loses its tail and gains an ellipsis; app and size stay whole.
+        // Tight: the title is cut in its middle; app and size stay whole.
         let tight = WindowPick.label(for: w, fitting: 300, measure: tenPerCharacter)
         #expect(tight.app == "Safari")
         #expect(tight.size == "1440 × 900")
-        #expect(tight.title?.hasSuffix("…") == true)
+        #expect(tight.title?.contains("…") == true)
         #expect(tenPerCharacter(tight) <= 300)
         // The shortening takes as much of the title as fits, not less.
         #expect(tight.text.count == 30)
-        #expect(tight.text == "Safari · A very l…  1440 × 900")
+        #expect(tight.text == "Safari · A very…on  1440 × 900")
         // Fits exactly: no ellipsis.
         let exact = WindowPick.label(for: titled("Apple"), fitting: 260, measure: tenPerCharacter)
         #expect(exact.title == "Apple")
@@ -174,9 +174,61 @@ struct WindowPickTests {
         // Grapheme clusters (flags, emoji with skin tones) never get split.
         let w = titled("🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧🇬🇧")
         let short = WindowPick.label(for: w, fitting: 250, measure: tenPerCharacter)
-        #expect(short.title?.hasSuffix("…") == true)
-        #expect(short.title?.hasPrefix("🇬🇧🇬🇧🇬🇧") == true)
-        #expect(short.title?.dropLast().allSatisfy { $0 == "🇬🇧" } == true)
+        #expect(short.title == "🇬🇧🇬🇧…🇬🇧")
+        #expect(short.title?.allSatisfy { $0 == "🇬🇧" || $0 == "…" } == true)
+    }
+
+    // MARK: Shortening in the middle, so the ending survives
+
+    @Test func twoTitlesThatDifferOnlyAtTheEndStillReadDifferently() {
+        // The case that made this rule: same long start, one character apart
+        // at the very end. Cut at the end, both pills would say the same thing.
+        let one = titled("Big Redesign Spec Folder - Report v1")
+        let two = titled("Big Redesign Spec Folder - Report v2")
+        let first = WindowPick.label(for: one, fitting: 320, measure: tenPerCharacter)
+        let second = WindowPick.label(for: two, fitting: 320, measure: tenPerCharacter)
+        #expect(first.title == "Big Rede…v1")
+        #expect(second.title == "Big Rede…v2")
+        #expect(first.title != second.title)
+        #expect(tenPerCharacter(first) <= 320)
+        // The ellipsis sits in the middle, never at the end, so the ending shows.
+        #expect(first.title?.hasSuffix("…") == false)
+    }
+
+    @Test func shortenedTitleKeepsTheStartAndTheEndAroundOneEllipsis() {
+        // A title that already fits is untouched, ellipsis and all.
+        #expect(WindowPick.shortenedTitle("Short", keeping: 10) == "Short")
+        #expect(WindowPick.shortenedTitle("Short", keeping: 5) == "Short")
+        // Longer: the start, one ellipsis, the ending.
+        #expect(WindowPick.shortenedTitle("Report v1 draft", keeping: 8) == "Report…ft")
+        // Exactly one ellipsis, whatever the budget.
+        let cut = WindowPick.shortenedTitle("Report v1 draft", keeping: 6)
+        #expect(cut?.filter { $0 == "…" }.count == 1)
+        // Whitespace either side of the cut goes, so the seam reads cleanly.
+        #expect(WindowPick.shortenedTitle("Alpha Beta Gamma", keeping: 9) == "Alpha…mma")
+        // The ending starts on a word, not on the tail of one: a cut landing
+        // inside "Specs" steps forward instead of leaving "s — Report v1".
+        #expect(WindowPick.shortenedTitle("Handoff Notes and Specs - Report v1", keeping: 20)
+            == "Handoff Notes…v1")
+        #expect(WindowPick.shortenedTitle("Handoff Notes and Specs Report v1", keeping: 12)
+            == "Handoff…v1")
+        // Nothing to step to (one long word, a file name): the cut stands.
+        #expect(WindowPick.shortenedTitle("Documents/checkout-report-v1.png", keeping: 12)
+            == "Document….png")
+        // Too little left to say anything: no title at all.
+        #expect(WindowPick.shortenedTitle("abcdef", keeping: 2) == nil)
+        #expect(WindowPick.shortenedTitle("abcdef", keeping: 0) == nil)
+    }
+
+    @Test func theAppNameGoesBeforeTheTitleIsShortened() {
+        // Edge suffixes its own name; that goes first, so the whole budget
+        // is spent on the part that tells the two windows apart.
+        let w = titled("Big Redesign Spec Folder - Report v1 - Microsoft Edge",
+                       owner: "Microsoft Edge")
+        let label = WindowPick.label(for: w, fitting: 470, measure: tenPerCharacter)
+        #expect(label.app == "Microsoft Edge")
+        #expect(label.title?.contains("Microsoft Edge") == false)
+        #expect(label.title?.hasSuffix("v1") == true)
     }
 
     @Test func fittedLabelStaysInsideTheWindowOrElseTheDisplay() {
@@ -188,7 +240,7 @@ struct WindowPickTests {
         // it and the title is cut to keep it there (400 minus 8 pt insets each side).
         let roomy = titled(title, frame: CGRect(x: 100, y: 100, width: 400, height: 300))
         let inside = WindowPick.fittedLabel(for: roomy, in: roomy.frame, within: display, inset: 8, measure: pill)
-        #expect(inside.title?.hasSuffix("…") == true)
+        #expect(inside.title?.contains("…") == true)
         #expect(pill(inside).width <= 400 - 16)
         #expect(pill(inside).width > 300)
         // A window too narrow for even the plain label puts the pill below
@@ -215,7 +267,9 @@ struct WindowPickTests {
         let huge = titled(title, frame: display)
         let label = WindowPick.fittedLabel(for: huge, in: huge.frame, within: display, inset: 8, measure: pill)
         #expect(pill(label).width <= WindowPick.maxLabelWidth)
-        #expect(label.title?.hasSuffix("…") == true)
+        #expect(label.title?.contains("…") == true)
+        // A title of repeated words still ends on the real ending, not a cut.
+        #expect(label.title?.hasSuffix("word") == true)
     }
 
     @Test func labelSitsInsideTheWindowsTopLeftWhenItFitsElseBelowOrOnScreen() {

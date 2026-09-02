@@ -121,11 +121,14 @@ The `NSStatusItem` menu is the always-available entry point:
      1440 × 900"), so one of an app's several windows is tellable from the
      rest. `WindowLister` reads `kCGWindowName`, which the window server
      only fills in for clients holding the Screen Recording grant (the dev
-     and shipping apps; not the probe). `WindowPick.displayTitle` drops a
+     and shipping apps, and the probe once it has been granted once). `WindowPick.displayTitle` drops a
      title that only repeats the app name, including the Chromium-style
      "Page - Microsoft Edge" suffix; `WindowPick.fittedLabel` shortens the
-     title alone (trailing ellipsis, never fewer than three characters, else
-     dropped) so the pill stays inside the window when it sits there, inside
+     title alone (`WindowPick.shortenedTitle`: cut in the MIDDLE the way the
+     Finder shortens a name, the ending gets a third of the budget and starts
+     on a word, never fewer than three characters, else dropped) so two
+     windows that differ only at the end of their titles still read
+     differently, and the pill stays inside the window when it sits there, inside
      the display when it hangs below a small window, and never wider than
      400 pt. The app measures, the core decides. A press that moves under 4
      pt captures that window's bounds
