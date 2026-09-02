@@ -36,12 +36,19 @@ public enum PanelPlacement {
     /// taken, since a panel behind the tool bar is simply invisible. So the
     /// walk is: a slot clear of both, else a slot clear of the chrome, else
     /// the first anchor in `order`, which is where the user last saw it.
+    ///
+    /// `clearing` is a third kind of chrome: something small that lives IN a
+    /// corner (the inspector toggle). It neither takes the corner away nor
+    /// gets covered; the corner slot tucks in beside it, `gap` clear, and is
+    /// then judged like any other. See `frame(for:size:in:inset:clearing:gap:)`.
     public static func firstClear(size: CGSize, in bounds: CGSize, inset: CGFloat,
                                   avoiding occupied: [CGRect],
                                   blocked: [CGRect] = [],
+                                  clearing cornerChrome: [CGRect] = [], gap: CGFloat = 0,
                                   order: [PanelAnchor] = PanelAnchor.allCases) -> PanelAnchor {
         guard let fallback = order.first else { return .topLeading }
-        let frames = order.map { ($0, frame(for: $0, size: size, in: bounds, inset: inset)) }
+        let frames = order.map { ($0, frame(for: $0, size: size, in: bounds, inset: inset,
+                                            clearing: cornerChrome, gap: gap)) }
         let open = frames.filter { _, rect in !blocked.contains(where: { $0.intersects(rect) }) }
         if let clear = open.first(where: { _, rect in
             !occupied.contains(where: { $0.intersects(rect) }) }) { return clear.0 }
@@ -51,13 +58,22 @@ public enum PanelPlacement {
     /// Where a `size` box sits when parked at `anchor`. Corners sit `inset`
     /// off both of their edges; the edge slots sit `inset` off their edge,
     /// centred along it.
+    ///
+    /// A corner slot that would land on one of the `clearing` rects (a button
+    /// already parked in that corner) slides along its edge instead: a top
+    /// corner drops to `gap` below the chrome, a bottom corner rises to `gap`
+    /// above it. The slot keeps its inset from the side, so the two stack with
+    /// their outer edges in line, which is what makes them read as one column
+    /// of chrome rather than a panel that happens to be near a button. The
+    /// edge slots are never in a corner, so they ignore `clearing`.
     public static func frame(for anchor: PanelAnchor, size: CGSize, in bounds: CGSize,
-                             inset: CGFloat) -> CGRect {
+                             inset: CGFloat, clearing cornerChrome: [CGRect] = [],
+                             gap: CGFloat = 0) -> CGRect {
         let leadingX = inset
         let trailingX = bounds.width - size.width - inset
         let middleY = (bounds.height - size.height) / 2
         let x: CGFloat
-        let y: CGFloat
+        var y: CGFloat
         switch anchor {
         case .topLeading:      x = leadingX;   y = inset
         case .topTrailing:     x = trailingX;  y = inset
@@ -65,6 +81,17 @@ public enum PanelPlacement {
         case .bottomTrailing:  x = trailingX;  y = bounds.height - size.height - inset
         case .leading:         x = leadingX;   y = middleY
         case .trailing:        x = trailingX;  y = middleY
+        }
+        let plain = CGRect(origin: CGPoint(x: x, y: y), size: size)
+        let touching = cornerChrome.filter { $0.intersects(plain) }
+        guard !touching.isEmpty else { return plain }
+        switch anchor {
+        case .topLeading, .topTrailing:
+            y = touching.map { $0.maxY + gap }.max() ?? y
+        case .bottomLeading, .bottomTrailing:
+            y = touching.map { $0.minY - gap - size.height }.min() ?? y
+        case .leading, .trailing:
+            break
         }
         return CGRect(origin: CGPoint(x: x, y: y), size: size)
     }

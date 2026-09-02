@@ -309,4 +309,20 @@ struct EditorChromeLayoutTests {
         #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 9_999).width == budget)
         #expect(EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 300).width == 300)
     }
+
+    // MARK: Corner chrome
+
+    @Test func theInspectorToggleSitsInTheTopRightCorner() {
+        // The 30 pt toggle floats one corner inset off the top and the right
+        // edge of the canvas, wherever the canvas edge is. Same inset as the
+        // legend, so the two line up when they stack.
+        let canvas = CGSize(width: 1015, height: 808)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
+        #expect(toggle.minY == EditorChromeLayout.cornerInset)
+        #expect(toggle.maxX == 1015 - EditorChromeLayout.cornerInset)
+        #expect(toggle.width == EditorChromeLayout.inspectorToggleSize)
+        #expect(toggle.height == EditorChromeLayout.inspectorToggleSize)
+        #expect(EditorChromeLayout.cornerInset == 12)
+        #expect(EditorChromeLayout.inspectorToggleSize == 30)
+    }
 }

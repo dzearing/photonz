@@ -271,6 +271,11 @@ private final class Run {
             case .copyImage: editor.copyCompositeToClipboard()
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
+            case .hideInspector: editor.setInspectorVisible(false)
+            case .showInspector: editor.setInspectorVisible(true)
+            case .zoomIn: editor.zoomIn()
+            case .zoomOut: editor.zoomOut()
+            case .zoomToFit: editor.zoomToFit()
             }
             await sleep(0.2)
             note(number, step.name, action.rawValue, state: describe())
@@ -471,6 +476,8 @@ private final class Run {
             "arrows": arrows,
             "selected": editor.selectedLayerID?.uuidString ?? "nil",
             "legend": editor.measureLegendEntries.map(\.label),
+            "legendAnchor": editor.measureLegendAnchor.rawValue,
+            "legendTopInset": editor.measureLegendTopInset,
             "inspector": editor.isLayersPanelVisible,
             "edgeMap": !editor.snappingEdgeMap.isEmpty,
             "firstResponder": window?.firstResponder.map { String(describing: type(of: $0)) } ?? "nil",

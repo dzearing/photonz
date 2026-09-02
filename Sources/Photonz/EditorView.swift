@@ -88,7 +88,11 @@ struct EditorView: View {
                     .overlay(alignment: .topTrailing) {
                         if editorState.document != nil {
                             inspectorToggle(isShown: inspectorShown)
-                                .padding(12)
+                                // The one corner inset, shared with the measure
+                                // legend, which parks under this button when it
+                                // takes the top-right corner
+                                // (EditorChromeLayout.inspectorToggleFrame).
+                                .padding(EditorChromeLayout.cornerInset)
                         }
                     }
                     .clipped()  // keep a transient over-wide toolbar off the panel
@@ -324,7 +328,11 @@ struct EditorView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .glassEffect(.regular, in: .rect(cornerRadius: 10))
-        .padding(10)
+        // The slot's inset on every side, except the top, which the placement
+        // sets: in the top-right corner the legend hangs one stack gap under
+        // the inspector toggle instead of sitting on it.
+        .padding(.top, editorState.measureLegendTopInset)
+        .padding([.leading, .trailing, .bottom], EditorState.measureLegendInset)
         .allowsHitTesting(false)
         .transition(.opacity)
     }
@@ -636,7 +644,8 @@ struct EditorView: View {
         } label: {
             Image(systemName: isShown ? "sidebar.trailing" : "sidebar.leading")
                 .font(.system(size: 14, weight: .medium))
-                .frame(width: 30, height: 30)
+                .frame(width: EditorChromeLayout.inspectorToggleSize,
+                       height: EditorChromeLayout.inspectorToggleSize)
         }
         .buttonStyle(.borderless)
         .glassEffect(.regular, in: .capsule)

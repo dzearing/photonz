@@ -4804,3 +4804,24 @@ the card's left end, over the icons.
 - Next: the off-state toggle's faint track loses to its knob (follow-up task
   filed); the measure tool dropping to Select after each guide is a pending
   decision.
+
+## 2026-09-02 (go loop) — the legend tucks under the inspector toggle
+
+- The measure legend's top-right slot sat on the inspector toggle. Blocking
+  the toggle would have taken that corner away for good (the button is up
+  whenever a document is open), so the slot now steps below it instead:
+  `PanelPlacement.frame`/`firstClear` take `clearing:` corner chrome and a
+  `gap:`, and a corner slot that touches one slides along its edge, keeping
+  its side inset so the two stack with edges in line. The toggle's geometry
+  is now pure (`EditorChromeLayout.inspectorToggleFrame`, `cornerInset`,
+  `inspectorToggleSize`) and the legend's inset moved from 10 to 12 to match.
+- `EditorState.measureLegendTopInset` drives the legend's top padding; the
+  other three sides keep the plain inset.
+- Playtest harness: `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`,
+  `zoomToFit` actions (the button and the menu chords are unreachable from a
+  hidden, inactive probe); `describe` logs `legendAnchor` and
+  `legendTopInset`. New walk `Scripts/playtest/legend-under-toggle.json`.
+- Verified in the probe: top inset 54 with the inspector hidden and shown.
+  Suite green (1332). Audit `queue/audits/2026-09-02-legend-under-toggle.json`.
+- Noticed: headings are not detected as elements in Size mode (the walk uses
+  a Distance caliper to occupy the corner instead).

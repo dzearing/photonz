@@ -152,9 +152,12 @@ public enum PlaytestCondition: Hashable, Sendable {
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
-/// synthesized event and the script still needs the outcome.
+/// synthesized event and the script still needs the outcome. The inspector
+/// toggle is a button and the zoom commands are menu chords, so a walk that
+/// needs the canvas wide or the picture big asks for it here.
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
+    case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
 }
 
 public enum PlaytestStep: Sendable, Equatable {

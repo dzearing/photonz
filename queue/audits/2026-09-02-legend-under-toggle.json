@@ -1,0 +1,23 @@
+{
+  "feature": "The legend and the inspector toggle share the top-right corner",
+  "epic": "measure-redline",
+  "summary": "When the measure legend parks in the top-right corner it now hangs just below the inspector toggle, right edges in line, instead of sitting on the button. The corner is still the legend's second choice, so it moves there exactly as often as before.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open a screenshot and hide the inspector with the button in the top-right corner so the canvas is wide.",
+  "try": [
+    { "do": "Press M for the Measure tool, then click Save Changes in Size mode and the gap between the two cards in Gap mode. The legend appears top-left.", "shot": "2026-09-02-legend-under-toggle-1-fit.png" },
+    { "do": "Zoom in three times so the picture fills the canvas, then draw a Distance caliper across the top-left corner of the canvas." },
+    { "do": "The legend slides to the top-right corner and stops one gap below the inspector toggle. The two do not touch.", "shot": "2026-09-02-legend-under-toggle-2-hidden.png" },
+    { "do": "Show the inspector with the toggle. The canvas narrows, the toggle and the legend move together and keep their gap.", "shot": "2026-09-02-legend-under-toggle-3-shown.png" },
+    { "do": "Check the right edges of the toggle and the legend. They line up." }
+  ],
+  "evaluate": [
+    "Does the legend under the toggle read as one column of chrome, or as a panel that happens to be near a button?",
+    "Is the gap between the toggle and the legend right, or would you close it up?",
+    "When the legend slides from the top-left to the top-right it also drops a little to clear the toggle. Does that read as intended?"
+  ],
+  "rough": [
+    "The legend's inset from the canvas edges went from 10 to 12 points in every slot so it shares the toggle's inset and the two line up. A two point shift nobody will notice, but it is a change.",
+    "The screenshots are offscreen renders from the probe: the glass behind the legend and the toggle does not draw, so both look like bare text and a bare glyph.",
+    "Headings are not detected as elements in Size mode, so the walk uses a Distance caliper to occupy the top-left corner. Not this task's problem, but worth knowing when you try it."
+  ]
+}

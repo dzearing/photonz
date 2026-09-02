@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:05:41.165Z",
-  "updated": "2026-09-02T12:06:02.804Z",
+  "updated": "2026-09-02T14:09:13.241Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Evidence: audit 2026-09-02-legend-edge-slot rough 3 (pre-existing, not changed there). PanelPlacement already keeps the legend off the tool bar and the notice slot; the toggle is one more rect to block. Filed by the 2026-09-02 digest design review.",
+  "notes": "Evidence: audit 2026-09-02-legend-edge-slot rough 3 (pre-existing, not changed there). PanelPlacement already keeps the legend off the tool bar and the notice slot; the toggle is one more rect to block. Filed by the 2026-09-02 digest design review. Done: the top-right slot now steps below the toggle (PanelPlacement clearing:/gap:, fed EditorChromeLayout.inspectorToggleFrame). Legend inset is EditorChromeLayout.cornerInset (12) in every slot. The playtest harness has inspector and zoom actions and logs legendAnchor/legendTopInset.",
   "acceptance": [
     "With measurements of two roles on a wide canvas and the inspector hidden, the legend in the top-right corner and the inspector toggle do not overlap, verified on the probe app and pinned by a PanelPlacement test.",
     "The legend still prefers the top corners and its other slots are unchanged.",
@@ -26,6 +26,32 @@
     {
       "t": "2026-09-02T12:06:02.803Z",
       "note": "seq 650 -> 90"
+    },
+    {
+      "t": "2026-09-02T13:58:05.746Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T14:05:00.000Z",
+      "note": "Reproduced on the probe (gap-then-size walk): toggle at (canvas width - 42, 12, 30x30), legend's top-right slot at inset 10, so the two overlap by 30 points vertically whenever the legend takes that corner."
+    },
+    {
+      "t": "2026-09-02T14:08:00.000Z",
+      "note": "Adversarial review before building: treating the toggle as blocked chrome would take the top-right corner away for good (the toggle is up whenever a document is open), so the legend would skip to the bottom corners beside the tool bar far more often. Rejected. Instead the top-right slot tucks under the toggle, one stack gap clear, and the corner keeps its place as second choice. Also aligned the legend's inset with the toggle's (12) so their trailing edges line up; a 2 point shift in every slot."
+    },
+    {
+      "t": "2026-09-02T14:40:00.000Z",
+      "note": "Built: PanelPlacement.frame/firstClear take clearing: [CGRect] and gap; EditorChromeLayout.cornerInset, inspectorToggleSize, inspectorToggleFrame; EditorState.measureLegendTopInset drives the legend's top padding. Harness gained hideInspector/showInspector/zoomIn/zoomOut/zoomToFit actions and logs legendAnchor. 8 new tests; Scripts/test.sh green (1332)."
+    },
+    {
+      "t": "2026-09-02T14:55:00.000Z",
+      "note": "Verified on the probe with Scripts/playtest/legend-under-toggle.json: anchor topTrailing, top inset 54 (12 + 30 + 12), inspector hidden and shown. Review after building: the pair reads as a stack; the 12 point gap is a question for the audit. Audit queue/audits/2026-09-02-legend-under-toggle.json."
+    },
+    {
+      "t": "2026-09-02T14:09:13.240Z",
+      "note": "The measure legend's top-right slot now hangs one stack gap below the inspector toggle with their right edges in line, instead of sitting on it; the corner stays the legend's second choice. PanelPlacement takes corner chrome to clear (tested, 8 new tests), the toggle's geometry is in EditorChromeLayout, the playtest harness gained inspector and zoom actions. Verified on the probe with Scripts/playtest/legend-under-toggle.json (anchor topTrailing, top inset 54, inspector hidden and shown); Scripts/test.sh green (1332). Audit queue/audits/2026-09-02-legend-under-toggle.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T13:58:05.745Z",
+  "completed": "2026-09-02T14:09:13.241Z"
 }

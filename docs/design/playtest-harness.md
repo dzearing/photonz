@@ -97,7 +97,7 @@ read coordinates straight off the fixture.
 | `describe` | `stage`, optional `note` | Logs the editor's state under `stage`. |
 | `clearClipboard` | | Empties the clipboard. |
 | `readClipboard` | `stage` | Logs the clipboard's types and text. |
-| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`. |
+| `action` | `action` | Calls the editor directly: `copySpecList`, `copyImage`, `hideAllMeasurements`, `showAllMeasurements`, `hideInspector`, `showInspector`, `zoomIn`, `zoomOut`, `zoomToFit`. The inspector toggle is a button and the zoom commands are menu chords, so this is how a walk gets a wide canvas or a big picture. |
 
 ## Things to know
 

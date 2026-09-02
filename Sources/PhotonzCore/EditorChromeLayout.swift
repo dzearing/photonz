@@ -77,6 +77,24 @@ public enum EditorChromeLayout {
          toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth)]
     }
 
+    // MARK: Corner chrome
+
+    /// How far anything parked in a canvas corner floats off its two edges:
+    /// the inspector toggle and the measure legend both use it, so when the
+    /// legend stacks under the toggle their trailing edges line up.
+    public static let cornerInset: CGFloat = 12
+    /// The inspector toggle's glass capsule, a square around its 14 pt glyph.
+    public static let inspectorToggleSize: CGFloat = 30
+
+    /// Where the inspector toggle sits: `cornerInset` into the top-right
+    /// corner of a canvas of `canvasSize`. It is there whenever a document is
+    /// open, inspector shown or hidden, so the legend's top-right slot always
+    /// has to make room for it. Top-left origin.
+    public static func inspectorToggleFrame(canvasSize: CGSize) -> CGRect {
+        CGRect(x: canvasSize.width - cornerInset - inspectorToggleSize, y: cornerInset,
+               width: inspectorToggleSize, height: inspectorToggleSize)
+    }
+
     // MARK: Tool bar fit
 
     /// One tool slot's share of the bar: a 28pt control plus the 14pt gap that

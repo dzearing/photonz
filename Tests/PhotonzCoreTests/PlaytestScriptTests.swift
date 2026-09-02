@@ -192,4 +192,24 @@ struct PlaytestScriptTests {
         #expect(names.contains("open") && names.contains("waitFor") && names.contains("action"))
         #expect(names == names.sorted())
     }
+
+    @Test func theEditorActionsCoverTheChromeAWalkCannotReachByKey() throws {
+        // The inspector toggle is a button and the zoom keys are menu chords,
+        // neither of which a hidden, never-active probe window honours, so a
+        // walk that needs the canvas wide or the picture big says so directly.
+        let script = try decode("""
+        { "steps": [
+            { "do": "action", "action": "hideInspector" },
+            { "do": "action", "action": "showInspector" },
+            { "do": "action", "action": "zoomIn" },
+            { "do": "action", "action": "zoomOut" },
+            { "do": "action", "action": "zoomToFit" }
+        ] }
+        """)
+        let actions: [PlaytestAction] = script.steps.compactMap { step in
+            if case .action(let action) = step { return action } else { return nil }
+        }
+        let expected: [PlaytestAction] = [.hideInspector, .showInspector, .zoomIn, .zoomOut, .zoomToFit]
+        #expect(actions == expected)
+    }
 }

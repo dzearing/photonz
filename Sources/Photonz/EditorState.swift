@@ -1398,11 +1398,40 @@ final class EditorState {
         let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
                                                      toolBarWidth: toolBarWidth,
                                                      noticeSize: MeasureModeHint.reservedSize)
+        // The inspector toggle already lives in the top-right corner. It is
+        // neither content to dodge nor chrome that takes the corner away: the
+        // top-right slot tucks in underneath it, one stack gap clear.
         return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
                                           avoiding: occupied,
-                                          blocked: chrome)
+                                          blocked: chrome,
+                                          clearing: Self.measureLegendCornerChrome(in: viewport.viewSize),
+                                          gap: EditorChromeLayout.toolBarStackGap)
+    }
+
+    /// How far the legend sits below the canvas's top edge in its slot: the
+    /// plain inset, except in the top-right corner, where it hangs one stack
+    /// gap under the inspector toggle so the two never touch. The view pads
+    /// the legend by this on top and by `measureLegendInset` on every other
+    /// side.
+    var measureLegendTopInset: CGFloat {
+        guard let viewport else { return Self.measureLegendInset }
+        let anchor = measureLegendAnchor
+        guard anchor == .topLeading || anchor == .topTrailing else { return Self.measureLegendInset }
+        return PanelPlacement.frame(for: anchor,
+                                    size: Self.measureLegendSize(rows: measureLegendEntries.count),
+                                    in: viewport.viewSize,
+                                    inset: Self.measureLegendInset,
+                                    clearing: Self.measureLegendCornerChrome(in: viewport.viewSize),
+                                    gap: EditorChromeLayout.toolBarStackGap).minY
+    }
+
+    /// The chrome parked in a canvas corner that a corner slot tucks in
+    /// beside: today only the inspector toggle, which is up whenever a
+    /// document is open.
+    private static func measureLegendCornerChrome(in canvasSize: CGSize) -> [CGRect] {
+        [EditorChromeLayout.inspectorToggleFrame(canvasSize: canvasSize)]
     }
 
     /// The floating tool bar's measured width, reported by the editor view so
@@ -1416,8 +1445,10 @@ final class EditorState {
     static func measureLegendSize(rows: Int) -> CGSize {
         CGSize(width: 140, height: CGFloat(max(rows, 1)) * 21 + 16)
     }
-    /// Matches the legend's own `.padding(10)`.
-    static let measureLegendInset: CGFloat = 10
+    /// The legend's own padding inside the canvas: the one corner inset every
+    /// piece of corner chrome shares, so the legend and the inspector toggle
+    /// line up when they stack.
+    static let measureLegendInset: CGFloat = EditorChromeLayout.cornerInset
 
     /// One row of the canvas legend (§5): a measurement kind present in the
     /// document, with the ink to swatch it in.

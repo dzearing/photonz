@@ -1,0 +1,185 @@
+{
+  "out": "/tmp/photonz-playtest/legend-under-toggle",
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "size"
+    },
+    {
+      "do": "move",
+      "at": [
+        356,
+        786
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        356,
+        786
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "measureMode",
+      "mode": "gap"
+    },
+    {
+      "do": "move",
+      "at": [
+        720,
+        432
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        720,
+        432
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "measureMode",
+      "mode": "size"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-roles-fit",
+      "note": "Size and Spacing present at fit zoom, nothing near the top-left slot"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-legend-top-left-at-fit"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "click",
+      "at": [
+        100,
+        80
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        80
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        250,
+        120
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "measureMode",
+      "mode": "size"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-top-left-taken",
+      "note": "a caliper across the top-left slot, inspector hidden, wide canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-legend-top-right-inspector-hidden"
+    },
+    {
+      "do": "action",
+      "action": "showInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-inspector-shown",
+      "note": "same document with the inspector back"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-legend-top-right-inspector-shown"
+    }
+  ]
+}

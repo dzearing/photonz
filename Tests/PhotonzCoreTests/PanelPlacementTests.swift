@@ -153,4 +153,99 @@ struct PanelPlacementTests {
             }
         }
     }
+
+    // MARK: Corner chrome
+
+    @Test func aTopCornerSlotTucksUnderChromeInThatCorner() {
+        // A 30 pt button parked 12 pt into the top-right corner (the inspector
+        // toggle). The top-right slot drops below it, one gap clear, instead
+        // of sitting on it. The other corners are nowhere near it and stay put.
+        let toggle = CGRect(x: 400 - 12 - 30, y: 12, width: 30, height: 30)
+        let stepped = PanelPlacement.frame(for: .topTrailing, size: panel, in: bounds,
+                                           inset: 12, clearing: [toggle], gap: 8)
+        #expect(stepped.minY == toggle.maxY + 8)
+        #expect(stepped.maxX == 388)
+        #expect(!stepped.intersects(toggle))
+        let plain = PanelPlacement.frame(for: .topLeading, size: panel, in: bounds,
+                                         inset: 12, clearing: [toggle], gap: 8)
+        #expect(plain == PanelPlacement.frame(for: .topLeading, size: panel, in: bounds, inset: 12))
+    }
+
+    @Test func chromeThatDoesNotTouchASlotLeavesItAlone() {
+        let farAway = CGRect(x: 180, y: 12, width: 30, height: 30)
+        for anchor in PanelAnchor.allCases {
+            #expect(PanelPlacement.frame(for: anchor, size: panel, in: bounds, inset: 12,
+                                         clearing: [farAway], gap: 8)
+                    == PanelPlacement.frame(for: anchor, size: panel, in: bounds, inset: 12))
+        }
+    }
+
+    @Test func aBottomCornerSlotStacksAboveChromeInThatCorner() {
+        let badge = CGRect(x: 12, y: 300 - 12 - 30, width: 30, height: 30)
+        let stepped = PanelPlacement.frame(for: .bottomLeading, size: panel, in: bounds,
+                                           inset: 12, clearing: [badge], gap: 8)
+        #expect(stepped.maxY == badge.minY - 8)
+        #expect(stepped.minX == 12)
+        #expect(!stepped.intersects(badge))
+    }
+
+    @Test func theEdgeSlotsIgnoreCornerChrome() {
+        let toggle = CGRect(x: 400 - 12 - 30, y: 12, width: 30, height: 30)
+        #expect(PanelPlacement.frame(for: .trailing, size: panel, in: bounds, inset: 12,
+                                     clearing: [toggle], gap: 8)
+                == PanelPlacement.frame(for: .trailing, size: panel, in: bounds, inset: 12))
+    }
+
+    @Test func aSlotSteppedPastChromeIsStillCheckedAgainstTheContent() {
+        // Stepping down puts the top-right slot over a measurement that the
+        // un-stepped slot would have cleared, so the walk moves on.
+        let toggle = CGRect(x: 400 - 12 - 30, y: 12, width: 30, height: 30)
+        let topLeft = CGRect(x: 0, y: 0, width: 200, height: 60)
+        let underTheToggle = CGRect(x: 260, y: 100, width: 140, height: 40)
+        #expect(PanelPlacement.firstClear(size: panel, in: bounds, inset: 12,
+                                          avoiding: [topLeft, underTheToggle],
+                                          clearing: [toggle], gap: 8) == .bottomLeading)
+    }
+
+    @Test func theLegendInTheTopRightCornerClearsTheInspectorToggle() {
+        // The 2026-09-02 report: a wide canvas with the inspector hidden,
+        // measurements of two roles near the top-left, so the legend takes the
+        // top-right corner, where the inspector toggle already lives. The
+        // legend still takes that corner (it is the second choice and stays
+        // so), but hangs one gap below the toggle with its trailing edge on
+        // the toggle's. This is the exact call the editor makes.
+        let legend = CGSize(width: 140, height: 58)
+        let canvas = CGSize(width: 1200, height: 800)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
+        let piles = [CGRect(x: 0, y: 0, width: 300, height: 200)]
+        let chrome = EditorChromeLayout.bottomChrome(
+            canvasSize: canvas, toolBarWidth: 700,
+            noticeSize: MeasureModeHint.reservedSize)
+        let anchor = PanelPlacement.firstClear(size: legend, in: canvas,
+                                               inset: EditorChromeLayout.cornerInset,
+                                               avoiding: piles, blocked: chrome,
+                                               clearing: [toggle],
+                                               gap: EditorChromeLayout.toolBarStackGap)
+        #expect(anchor == .topTrailing)
+        let frame = PanelPlacement.frame(for: anchor, size: legend, in: canvas,
+                                         inset: EditorChromeLayout.cornerInset,
+                                         clearing: [toggle],
+                                         gap: EditorChromeLayout.toolBarStackGap)
+        #expect(!frame.intersects(toggle))
+        #expect(frame.minY == toggle.maxY + EditorChromeLayout.toolBarStackGap)
+        #expect(frame.maxX == toggle.maxX)
+    }
+
+    @Test func anEmptyTopRightCornerIsNotGivenUpBecauseOfTheToggle() {
+        // The toggle is chrome the slot tucks under, not chrome that takes
+        // the slot away: with the top-left busy the legend still lands
+        // top-right, never skips ahead to a bottom corner.
+        let canvas = CGSize(width: 1200, height: 800)
+        let toggle = EditorChromeLayout.inspectorToggleFrame(canvasSize: canvas)
+        let topLeft = CGRect(x: 0, y: 0, width: 300, height: 200)
+        #expect(PanelPlacement.firstClear(size: CGSize(width: 140, height: 58), in: canvas,
+                                          inset: EditorChromeLayout.cornerInset,
+                                          avoiding: [topLeft], clearing: [toggle],
+                                          gap: EditorChromeLayout.toolBarStackGap) == .topTrailing)
+    }
 }
