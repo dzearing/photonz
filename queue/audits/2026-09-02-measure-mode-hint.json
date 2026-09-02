@@ -1,0 +1,30 @@
+{
+  "feature": "Switching Measure modes says which mode you landed on",
+  "epic": "measure-redline",
+  "summary": "Picking up the Measure tool, or switching its mode with I, the button's flyout, or the inspector, now raises a short glass pill naming the mode and saying what a click will do. It fades on its own after about two seconds. Before, the only words were a first-run line that vanished for good after the first measurement.",
+  "setup": "Photonz Dev, Experiments window, release Next. The next-measure-modes flag is on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press V for Select, then I for Measure, and watch just above the floating tool bar.", "shot": "2026-09-02-measure-mode-hint-1.png" },
+    { "do": "Wait. The pill should be gone within about two seconds without you doing anything." },
+    { "do": "Press I again. The pill should come back reading Size, and stay a little longer, since its line is longer." },
+    { "do": "Press I twice quickly. The pill should stay up and its text should follow the mode you land on, fading only after the last press." },
+    { "do": "Click the small chevron beside the ruler on the Measure button and pick Gap from the list. The same pill should appear, reading Gap." },
+    { "do": "In Gap mode, click in the space between two elements. The pill should leave the moment the measurement lands, if it is still up." },
+    { "do": "Press V, then I again. The pill should show again on this second pickup, even though the document now has a measurement." },
+    { "do": "Press Command Z a few times. Undo should only ever remove measurements; the pill is never an undo step." }
+  ],
+  "evaluate": [
+    "Does the pill land where your eye already is after pressing I, or do you have to hunt for it?",
+    "Is about two seconds right, or does it leave before you have read the Size line?",
+    "Does the mode name in bold followed by the click instruction read as one thought, or as two labels stuck together?",
+    "Is showing the pill on every pickup of the tool welcome, or does it become noise once you know the tool?",
+    "Do you miss the old always-on first-run line for a brand-new document, or does the toast on pickup cover that moment?"
+  ],
+  "rough": [
+    "The old first-run behaviour (a line that stays until the first measurement lands) is gone in Next on purpose: the toast on pickup covers a fresh document, and a line that never fades was the thing an expert had to wait out. Current keeps the old behaviour unchanged.",
+    "The Size line is sixteen words, so its pill runs about 500pt wide and stays about 3.5 seconds instead of 2. Trimming the [ and ] tip would shorten it, but that tip is the only place the keys are taught.",
+    "On a canvas narrower than about 800pt with the legend parked in a bottom corner, the Size pill can overlap the legend for the seconds it is up. The legend prefers top corners, so this needs both a narrow window and measurements piled up top.",
+    "The pill is bottom-centre above the tool bar, so an element in the bottom band of the picture can have its live Size or Gap preview behind the pill for those two seconds. It never blocks the click.",
+    "I could not drive or capture the running app on this machine (no Accessibility trust, no Screen Recording for the probe), so the timing and the fade were checked by tests and by reading the code, and the picture here is an offscreen render of the pill with a material stand-in for the glass."
+  ]
+}

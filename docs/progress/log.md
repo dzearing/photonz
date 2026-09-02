@@ -4362,3 +4362,10 @@ same-bar collisions on the image, iconography and prototype pages.
   walk misses 0 on a 10-page sample. Documented in AGENTS.md.
 - Follow-up filed: 8 page-private click targets on ds-modes / lang-motion /
   image remain mouse-only.
+
+## 2026-09-02 (go loop): Measure mode hint becomes a toast
+
+- `MeasureModeHint` (PhotonzCore) + `MeasureModeHintTests`: the Measure tool's hint pill is now raised on every pickup and every mode change (I key, flyout, inspector) and fades on its own (2s, stretched by line length to 3.5s max). Current's one-shot first-run line is untouched behind `next-measure-modes`.
+- `EditorState`: `measureModeHint` + timer task; `noteMeasurementLanded()` drops the toast early when the click it described lands. `EditorView.measureHintChip` gains a semibold mode-name lead.
+- Audit: `queue/audits/2026-09-02-measure-mode-hint.json`. Rough: could not drive the probe app (no Accessibility trust), so the timing was verified by tests, not by eye.
+- Next: playtest reaction; consider whether the per-pickup toast is noise for a fluent user.

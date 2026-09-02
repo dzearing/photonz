@@ -286,6 +286,7 @@ struct EditorView: View {
                     if !entries.isEmpty { measureLegend(entries) }
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.measureModeHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
                 .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendCorner)
@@ -341,11 +342,17 @@ struct EditorView: View {
         .frame(width: 16, alignment: .leading)
     }
 
-    /// First-run hint for the Measure tool: a small glass pill saying what a
-    /// click does in the current mode, which lives until the document's first
-    /// measurement lands.
+    /// The Measure tool's hint: a small glass pill saying what a click does in
+    /// the current mode. In Next it is a toast that names the mode you just
+    /// landed on and fades on its own (`MeasureModeHint`); in Current it is the
+    /// first-run line that lives until the document's first measurement lands.
     private var measureHintChip: some View {
-        Text(editorState.measureHintText)
+        HStack(spacing: 8) {
+            if let title = editorState.measureHintTitle {
+                Text(title).fontWeight(.semibold)
+            }
+            Text(editorState.measureHintText)
+        }
             .font(.callout)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)

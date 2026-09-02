@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T05:50:56.989Z",
-  "updated": "2026-09-02T05:50:56.990Z",
+  "updated": "2026-09-02T05:58:57.410Z",
   "deps": [],
   "blockedBy": [],
   "notes": "EditorView.measureToolButton pressedKey cycles editorState.measureToolMode; the existing hint chip is gated on showsMeasureHint (document has no measurements yet) in EditorState/CanvasView and positioned by EditorChromeLayout.aboveToolBar. Turn the hint into a transient state (mode-change timestamp) instead of a per-document one-shot; reuse the same glass pill. Rough item this comes from: queue/audits/2026-08-23-tool-mode-flyout.json ('Discoverability genuinely regressed against the old chips'). Spec: docs/design/next-measure.md section 3, hint chip.",
@@ -24,6 +24,28 @@
     {
       "t": "2026-09-02T05:50:56.990Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T05:52:22.275Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T05:58:43.000Z",
+      "note": "Adversarial review of the ask: the old chip was a per-document one-shot, so it taught Distance once and then nothing. The useful moment for words is the ACT of switching, so the hint becomes a toast tied to pickup and mode change, not to whether the document has measurements. Kept Current's one-shot untouched behind the flag. Considered keeping the persistent first-run line for a fresh document in Next too, but a line that never fades was the thing an expert had to wait out, and it would have made the I-key hint unable to fade, contradicting the acceptance. Went transient everywhere in Next."
+    },
+    {
+      "t": "2026-09-02T05:58:43.000Z",
+      "note": "Built: MeasureModeHint (PhotonzCore, TDD: MeasureModeHintTests, 5 tests) holds mode + shownAt, isLive(at:), reshown(as:at:), title/detail, and a per-line lifetime (2s base, 0.22s per word, capped at 3.5s so Size's 16-word line is readable). EditorState raises it in the measureToolMode setter (covers I, flyout, inspector) and in setTool(.measure) (pickup), fades it with a cancellable Task, and drops it early when a measurement lands (noteMeasurementLanded replaces the four measureHintDismissed = true sites). showsMeasureHint branches on the next-measure-modes flag; measureHintTitle feeds a semibold lead in the existing glass pill (EditorView.measureHintChip). Chrome only: nothing touches the document or History."
+    },
+    {
+      "t": "2026-09-02T05:58:43.000Z",
+      "note": "Verified: Scripts/test.sh green (1099 tests), swift build clean. Could not drive the probe app (Apple events to System Events unauthorized, AXIsProcessTrusted false), so the running-app behaviour rests on tests + code reading; the audit picture is an offscreen ImageRenderer of the pill with a material stand-in for glass (glassEffect renders nothing offscreen). Audit: queue/audits/2026-09-02-measure-mode-hint.json."
+    },
+    {
+      "t": "2026-09-02T05:58:57.409Z",
+      "note": "Measure hint is now a toast in Next: raised on pickup and on every mode change (I, flyout, inspector), names the mode in bold and says what a click does, fades after ~2s (up to 3.5s for the long Size line), leaves early when the measurement lands. MeasureModeHint in PhotonzCore with tests; EditorState/EditorView wiring; Current unchanged behind next-measure-modes. Scripts/test.sh green (1099 tests). Audit: queue/audits/2026-09-02-measure-mode-hint.json; could not drive the probe app (no Accessibility trust), verified by tests and code reading."
     }
-  ]
+  ],
+  "started": "2026-09-02T05:52:22.274Z",
+  "completed": "2026-09-02T05:58:57.410Z"
 }

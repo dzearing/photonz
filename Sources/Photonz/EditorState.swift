@@ -677,6 +677,7 @@ final class EditorState {
             cropRect = nil
         }
         activeTool = tool
+        if tool == .measure { showMeasureModeHint() }
         // Drawing tools own the pointer; select-mode chrome (marquee ants,
         // layer handles) would read as interactive when it isn't. The
         // selection REGION survives within the selection family + fill
@@ -941,7 +942,7 @@ final class EditorState {
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
-        measureHintDismissed = true
+        noteMeasurementLanded()
         finishCreating(layer.id)
     }
 
@@ -987,7 +988,7 @@ final class EditorState {
             $0.addLayer(heightLayer)
         }
         recordRecentColor(hex: width.strokeColorHex)
-        measureHintDismissed = true
+        noteMeasurementLanded()
         finishCreating(widthLayer.id)
     }
 
@@ -1017,7 +1018,7 @@ final class EditorState {
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
-        measureHintDismissed = true
+        noteMeasurementLanded()
         finishCreating(layer.id)
     }
 
@@ -1036,6 +1037,9 @@ final class EditorState {
             guard newValue != storedMeasureToolMode else { return }
             storedMeasureToolMode = newValue
             measureCandidateLevel = 0
+            // Every way of switching (I, the button's flyout, the inspector)
+            // lands here, so this is the one place the chip needs to be raised.
+            showMeasureModeHint()
         }
     }
     private static let measureModeKey = "tool.measure.mode"
@@ -1092,28 +1096,66 @@ final class EditorState {
         layer.style = measureStyles.layerStyle
         perform { $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
-        measureHintDismissed = true
+        noteMeasurementLanded()
         finishCreating(layer.id)
     }
 
-    /// Once the first caliper lands in this document, the measure hint chip is
-    /// gone for good — deleting every measurement doesn't bring it back.
+    /// Current: once the first caliper lands in this document, the measure hint
+    /// chip is gone for good — deleting every measurement doesn't bring it back.
     /// Session-scoped on purpose: hint state is chrome and never persists into
     /// the document.
     private var measureHintDismissed = false
 
-    /// Whether the Measure tool's first-run hint chip shows: the Measure tool is
-    /// active and no measurement has ever landed in this document. It tells you
-    /// what a click does in the mode you are in, which is the one thing a mode
-    /// switcher costs you.
+    /// Next (`next-measure-modes`): the mode hint that is up right now, if any.
+    /// Raised on pickup and on every mode change, and dropped by its own clock
+    /// (`MeasureModeHint.lifetime`) or by the measurement it was explaining.
+    private(set) var measureModeHint: MeasureModeHint?
+    private var measureModeHintTimer: Task<Void, Never>?
+
+    /// Raise (or re-raise) the mode hint. Re-raising restarts the clock, so
+    /// three quick presses of I keep one chip up that fades from the last
+    /// press; the chip's text follows the mode so it never names a stale one.
+    private func showMeasureModeHint() {
+        guard Experiments.shared.measureModesEnabled else { return }
+        let now = Date()
+        let hint = measureModeHint?.reshown(as: measureToolMode, at: now)
+            ?? MeasureModeHint(mode: measureToolMode, shownAt: now)
+        measureModeHint = hint
+        measureModeHintTimer?.cancel()
+        measureModeHintTimer = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(hint.lifetime))
+            guard !Task.isCancelled, let self, self.measureModeHint == hint else { return }
+            self.measureModeHint = nil
+        }
+    }
+
+    /// A measurement just landed: the Current chip retires for the document,
+    /// and the Next chip leaves early, since the click it was describing has
+    /// happened and its words would only be sitting on the result.
+    private func noteMeasurementLanded() {
+        measureHintDismissed = true
+        measureModeHintTimer?.cancel()
+        measureModeHint = nil
+    }
+
+    /// Whether the Measure hint chip shows. It tells you what a click does in
+    /// the mode you are in, which is the one thing a mode switcher costs you.
+    /// Next (`next-measure-modes`): while a mode hint is live, on every pickup
+    /// and every mode change. Current: the Measure tool is active and no
+    /// measurement has ever landed in this document.
     var showsMeasureHint: Bool {
-        guard activeTool == .measure, !measureHintDismissed,
-              let document else { return false }
+        guard activeTool == .measure, let document else { return false }
+        if Experiments.shared.measureModesEnabled { return measureModeHint != nil }
+        guard !measureHintDismissed else { return false }
         return !document.layers.contains { $0.measure != nil }
     }
 
+    /// The chip's lead, set in its own weight: the mode's name. Nil in Current,
+    /// where the chip is one plain line and only ever names Distance's click.
+    var measureHintTitle: String? { measureModeHint?.title }
+
     /// That chip's line, for the current mode.
-    var measureHintText: String { measureToolMode.hint }
+    var measureHintText: String { measureModeHint?.detail ?? measureToolMode.hint }
 
     // MARK: - Measure styling
 
