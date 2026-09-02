@@ -63,6 +63,30 @@ enum ScreenCapturer {
                       height: local.height)
     }
 
+    /// Captures one window on its own, the way the built-in window capture
+    /// does: rendered by the window server from the window's own buffer, so
+    /// the rounded corners are transparent and nothing in front of or behind
+    /// the window is in the shot. With the shadow, the image is larger than
+    /// the window and the margin around it is transparent. The window is
+    /// captured whole even where it hangs off the display. Throws when the
+    /// window is no longer on screen or the capture fails; the caller falls
+    /// back to the frozen crop.
+    static func captureWindow(id: Int, includeShadow: Bool) async throws -> CGImage {
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        guard let window = content.windows.first(where: { Int($0.windowID) == id }) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+        let filter = SCContentFilter(desktopIndependentWindow: window)
+        let config = SCScreenshotConfiguration()
+        config.showsCursor = false
+        config.ignoreShadows = !includeShadow
+        config.ignoreClipping = true
+        config.dynamicRange = .sdr
+        let output = try await SCScreenshotManager.captureScreenshot(contentFilter: filter, configuration: config)
+        guard let image = output.sdrImage else { throw CocoaError(.fileReadCorruptFile) }
+        return image
+    }
+
     /// Captures every attached screen (system ⇧⌘3 behavior: one image per display).
     static func captureAllScreens() async throws -> [CGImage] {
         var images: [CGImage] = []

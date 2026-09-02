@@ -4555,3 +4555,10 @@ the card's left end, over the icons.
 - The pill is the same glass chip the Measure mode hint uses, now `EditorView.canvasNoticeChip(title:detail:)`; the two share the canvas-bottom slot and whichever was raised last wins, so they never stack. Chosen over the toolbar count badge (off screen when the inspector is hidden, which is the common state when the key is pressed) and over the bottom-right capture toast stack (a system panel with a thumbnail, built for captures).
 - Model: `PhotonzCore/CopyConfirmation.swift`, test-first (`CopyConfirmationTests`). `EditorState.showCopyConfirmation(_:)` runs only after `copyText`, so a copy that did nothing never confirms. Plain command-C on a measurement stays silent, like every other Copy on the Mac.
 - 1193 tests green. Probe app launched and quit; no screenshots (no Screen Recording grant for the unmanned session). Audit: `queue/audits/2026-09-02-copy-confirmation.json`.
+
+## 2026-09-02 (go loop: window capture keeps the shadow and rounded corners)
+
+- **Next, `next-window-capture`:** a click on a highlighted window now captures that window on its own through ScreenCaptureKit's per-window screenshot (macOS 26 `SCScreenshotConfiguration`), so the result has transparent rounded corners and, by default, the window's drop shadow around it, like the built-in window capture. Option while clicking gives the other choice; the flag grew an "Include the window shadow" checkbox that flips the default. Drags are untouched.
+- `WindowShot` (PhotonzCore, 5 tests) picks the style and sanity-checks the shot's pixel size against the window (shadowed must be larger, bare never smaller); a rejected or failed shot falls back to the bare shot and then to the frozen crop.
+- NOT verified live: neither the terminal nor the probe bundle has a Screen Recording grant and the dev app is off limits, so the shadow output is unconfirmed. Audit `queue/audits/2026-09-02-window-capture-shadow.json` asks the user to check it.
+- Known flake: the ElementBounds timing-budget tests fail by a hair in the full run on this loaded machine and pass in isolation.

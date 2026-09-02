@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 500,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T07:11:35.107Z",
-  "updated": "2026-09-02T07:11:35.107Z",
+  "updated": "2026-09-02T09:03:21.569Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Today the click path crops the frozen full-screen bitmap to the window bounds (RectSelectionController.finish -> crop). The system look needs a per-window capture (SCScreenshotManager with an SCContentFilter for that window id, or CGWindowListCreateImage with kCGWindowImageBoundsIgnoreFraming off) taken at freeze time or after dismiss; note the filter path drops shadows unless asked for them. Depends on next-window-capture.",
+  "notes": "Today the click path crops the frozen full-screen bitmap to the window bounds (RectSelectionController.finish -> crop). The system look needs a per-window capture (SCScreenshotManager with an SCContentFilter for that window id, or CGWindowListCreateImage with kCGWindowImageBoundsIgnoreFraming off) taken at freeze time or after dismiss; note the filter path drops shadows unless asked for them. Depends on next-window-capture. Shipped 2026-09-02: WindowShot (PhotonzCore) decides the style (shadow default, Option flips, flag parameter 'shadow' flips the default) and sanity-checks the shot size; ScreenCapturer.captureWindow uses the macOS 26 SCScreenshotManager.captureScreenshot(contentFilter:configuration:) with SCContentFilter(desktopIndependentWindow:), ignoreShadows = !includeShadow, ignoreClipping = true. RectSelectionController.finish takes the shot live after dismiss, falling back shadow -> bare -> frozen crop. Region recording passes producesImage: false. NOT verified live (no Screen Recording grant for the loop); see the audit.",
   "acceptance": [
     "Clicking a window during a region capture produces an image with the window shadow and transparent rounded corners, matching the system window capture",
     "A setting or modifier lets you capture the bare bounds instead, and the audit says which is the default",
@@ -22,6 +22,23 @@
     {
       "t": "2026-09-02T07:11:35.107Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:50:48.946Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:56:28.084Z",
+      "note": "Adversarial review before building: (1) The built-in macOS window capture is the reference, not a mock: shadow on by default, Option while clicking drops it. Matching that means nothing to learn, so the default is shadow on and Option-click gives the bare bounds; a checkbox on the window-capture flag flips the default for people who never want shadows, and Option always gives the other choice. (2) The overlay shows a frozen picture, but a per-window shot has to be taken live at click time (the window server renders one window from its own buffer, with its shadow and transparent corners). If the window changed in the second between freeze and click the shot differs from the picture. The system capture has the same property; accepted, and noted in the audit. (3) The per-window shot can fail (window closed, capture error); then the click falls back to the frozen crop it does today, so a click never comes back empty. (4) I cannot verify the shadow output live: neither the terminal nor the probe bundle holds a Screen Recording grant, and the dev app is off limits. The SDK doc for the macOS 26 screenshot API says the output defaults to the size of the content and ignoreShadows is off by default. Because ScreenCaptureKit is known to fit a shadowed window into the window-sized frame in some paths (shrinking the content), the shot is sanity-checked in a pure-core helper: a shadowed shot must come back larger than the window in both dimensions and a bare shot never smaller; anything else falls to the next fallback (bare shot, then frozen crop). So the worst case is the behavior of today, never a blurry scaled-down window. (5) A window partially off the display is captured whole (ignoreClipping), which the frozen crop could not do. (6) The highlight stays on the window bounds, like the system, not the shadow extent. (7) CGWindowListCreateImage is obsoleted on macOS 15, so ScreenCaptureKit is the only route."
+    },
+    {
+      "t": "2026-09-02T09:03:21.569Z",
+      "note": "Built: WindowShot (PhotonzCore, 5 tests: style truth table, faithful-size rules, degenerate sizes, the flag parameter) + ScreenCapturer.captureWindow (macOS 26 SCScreenshotConfiguration, desktopIndependentWindow filter, cursor off, clipping ignored, SDR) + RectSelectionController.finish taking the shot live at the click with the shadow-then-bare-then-frozen-crop fallback chain; SelectionView passes the picked window and the Option state; the next-window-capture flag grew an Include the window shadow checkbox (default on) read through Experiments.windowCaptureIncludesShadow. Full suite green: 1198 tests. Probe bundle built, launched and quit cleanly."
+    },
+    {
+      "t": "2026-09-02T09:03:21.569Z",
+      "note": "Adversarial review after building: (1) A click during region recording went through the per-window shot too and threw the image away; fixed with producesImage=false on that path, which also skips the pointless frozen crop it did before. (2) The shot is unverified live (no Screen Recording grant anywhere the loop may use), so the audit tells the user which of three results to expect and asks which they saw; the fallback chain guarantees the worst case is the old crop. (3) Latency after the click is one shareable-content query plus one screenshot, unmeasured; the audit asks about it. (4) The frozen picture and the live shot can disagree if the window changed between freeze and click; same as the system capture, noted. (5) A click over the desktop still cancels, and drags are untouched (the drag path passes no window). (6) The flag description tells you about Option, so nothing to learn beyond the system habit."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:50:48.945Z"
 }

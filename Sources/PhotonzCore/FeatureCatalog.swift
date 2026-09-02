@@ -44,6 +44,7 @@ public enum FeatureCatalog {
     public static let toolOptionsFlag = "next-tool-options"
 
     public static let windowCaptureFlag = "next-window-capture"
+    public static let windowCaptureShadow = "shadow"
 
     public static let captureLoupeFlag = "next-capture-loupe"
     public static let captureLoupePixels = "pixels"
@@ -155,9 +156,12 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: windowCaptureFlag,
                     title: "Capture a window by clicking it",
-                    description: "During a region capture, the window under the pointer lights up with its app and size. Click it to capture exactly that window; drag to select a region as before. Off means the overlay is drag only.",
+                    description: "During a region capture, the window under the pointer lights up with its app and size. Click it to capture exactly that window, the way the built-in window capture does: its shadow around it and see-through rounded corners. Hold Option while clicking for the other choice. Drag to select a region as before. Off means the overlay is drag only.",
                     isEnabled: false,
-                    parameters: []),
+                    parameters: [
+                        FeatureParameter(name: windowCaptureShadow, label: "Include the window shadow",
+                                         value: .boolean(true)),
+                    ]),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
             Definition(

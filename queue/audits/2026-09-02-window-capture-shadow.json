@@ -1,0 +1,26 @@
+{
+  "feature": "Window capture keeps the shadow and rounded corners",
+  "epic": "measure-redline",
+  "summary": "Clicking a window during a region capture now captures the window itself, with see-through rounded corners and its drop shadow around it, like the built-in macOS window capture. Before, it cut a hard rectangle out of the screen with the desktop showing through the corners.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Capture a window by clicking it is on, and its new checkbox Include the window shadow is on by default. Have a window with rounded corners over a busy or colourful desktop so corners and shadow are easy to judge.",
+  "try": [
+    { "do": "Press Shift Command 4, move over an app window so it lights up, and click it once." },
+    { "do": "Open the result with Edit. The corners should be see-through and a soft shadow should surround the window, with clear space around it." },
+    { "do": "Press Shift Command 4 again, hold Option, and click the same window. The result should be the bare window with see-through corners and no shadow." },
+    { "do": "In the Experiments window, turn off Include the window shadow, then click a window again. Now a plain click gives no shadow and an Option click gives one." },
+    { "do": "Press Shift Command 4 and drag out a region across a window. The result should be the rectangle you dragged, exactly as before." },
+    { "do": "Put a window half off the edge of the display and click it. The capture should include the whole window, not just the part that was on screen." }
+  ],
+  "evaluate": [
+    "Is shadow on the right default for a redline, or do you want bare bounds first and the shadow on Option?",
+    "Does the shadow come back at the window's true size, with the window sharp and not scaled down? If the shot looks like a hard rectangle instead, the fallback fired; say so.",
+    "Does the shot arrive as quickly as a drag capture did, or is there a noticeable pause after the click?",
+    "The shot is taken at the click, not from the frozen picture, so a window that changed after the freeze shows its new state. Does that ever surprise you?"
+  ],
+  "rough": [
+    "Unverified live: no unmanned copy of the app holds a Screen Recording grant, so the shadow output of the per-window capture is unconfirmed. If the system returns a window-sized image with the shadow squeezed inside, the app rejects it and gives you the bare bounds instead; if that fails too, you get the old frozen crop. Please report which of the three you see.",
+    "The window is shot live at the click, which is what the built-in capture does too, but it differs from the frozen picture the overlay shows if the window changed in between.",
+    "The highlight still outlines the window bounds, not the shadow, matching the system's highlight.",
+    "No screenshots with this audit, for the same permission reason."
+  ]
+}

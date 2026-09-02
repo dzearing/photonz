@@ -124,6 +124,24 @@ The `NSStatusItem` menu is the always-available entry point:
      the first move. Region recording shares the overlay, so a click there
      records that window's region live. Per-move cost measured at well under
      0.2 ms (partial invalidation of old and new chrome only).
+   - **Window shots (Next, `next-window-capture`, added 2026-09-02).** A click
+     on a highlighted window no longer crops the frozen picture. It asks the
+     window server for that one window (`ScreenCapturer.captureWindow`,
+     macOS 26 `SCScreenshotManager.captureScreenshot(contentFilter:configuration:)`
+     with a `desktopIndependentWindow` filter, cursor off, clipping ignored so
+     a window hanging off the display comes back whole) so the rounded
+     corners are transparent and nothing in front of it is in the shot. The
+     shadow is on by default like the built-in capture; Option while clicking
+     gives the other choice, and the flag's "Include the window shadow"
+     checkbox flips the default (`WindowShot.style`). The shot is live at the
+     click, not the frozen picture, exactly as the system capture behaves.
+     `WindowShot.isFaithful` (PhotonzCore, tested) rejects a shadowed shot
+     that is not larger than the window (ScreenCaptureKit has been seen to
+     squeeze window plus shadow into a window-sized frame) and a bare shot
+     smaller than the window; a rejected or failed shot falls to the bare
+     shot, then to the frozen crop, so a click never comes back empty. NOT
+     verified live as of 2026-09-02: no unmanned bundle holds a Screen
+     Recording grant; the playtest audit asks the user to confirm the look.
    - **Loupe (Next, `next-capture-loupe`, added 2026-09-02).** With the flag
      on, a magnified patch of the frozen bitmap rides beside the pointer from
      the moment the overlay opens: 25 device pixels across (a flag parameter)

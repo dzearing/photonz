@@ -178,6 +178,13 @@ extension Experiments {
     /// overlay stays drag only.
     var windowCaptureEnabled: Bool { isEnabled(FeatureCatalog.windowCaptureFlag) }
 
+    /// `next-window-capture`: whether a clicked window is captured with its
+    /// shadow (the built-in capture's default) or as its bare bounds. Option
+    /// while clicking gives the other choice either way.
+    var windowCaptureIncludesShadow: Bool {
+        boolean(FeatureCatalog.windowCaptureFlag, FeatureCatalog.windowCaptureShadow) ?? true
+    }
+
     /// `next-capture-loupe`: whether the region capture overlay magnifies the
     /// pixels beside the pointer with its coordinates. Next only, so Current
     /// always reads false and keeps the bare crosshair.

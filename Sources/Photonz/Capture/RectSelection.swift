@@ -10,8 +10,12 @@ import PhotonzCore
 ///
 /// With window picking on (`next-window-capture`), the window under the pointer
 /// lights up with its app and size, and a click (a press that barely moves)
-/// captures exactly that window's bounds from the frozen picture. A drag still
-/// selects a region.
+/// captures exactly that window: on its own, with its shadow and see-through
+/// rounded corners like the built-in window capture (Option while clicking for
+/// the bare bounds, or the other way round when the flag's shadow choice is
+/// off). That shot is taken live at the click; if it cannot be, the window's
+/// bounds are cropped from the frozen picture instead. A drag still selects a
+/// region.
 ///
 /// With the loupe on (`next-capture-loupe`), a magnified patch of the frozen
 /// picture rides beside the pointer with the pointer's coordinates and, while
@@ -22,6 +26,11 @@ final class RectSelectionController {
     private var windows: [SelectionWindow] = []
     private var escMonitors: [Any] = []
     private let windowPicking: Bool
+    /// Whether a clicked window is shot with its shadow (Option flips it).
+    private let windowShadow: Bool
+    /// Whether the caller wants pixels at all. Region recording only wants
+    /// the rect, so it skips the crop and the per-window shot.
+    private let producesImage: Bool
     /// Pixels the loupe shows across, or nil for no loupe.
     private let loupePixels: Int?
     /// The cropped frozen image is non-nil in screenshot mode; region-recording
@@ -31,10 +40,14 @@ final class RectSelectionController {
     private var began = false
 
     init(windowPicking: Bool = false,
+         windowShadow: Bool = true,
+         producesImage: Bool = true,
          loupe: Int? = nil,
          onComplete: @escaping (NSScreen, CGRect, CGImage?) -> Void,
          onCancel: @escaping () -> Void) {
         self.windowPicking = windowPicking
+        self.windowShadow = windowShadow
+        self.producesImage = producesImage
         self.loupePixels = loupe
         self.onComplete = onComplete
         self.onCancel = onCancel
@@ -64,8 +77,8 @@ final class RectSelectionController {
             window.selectionView.loupePixels = loupePixels
             window.selectionView.frozenImage = image
             window.selectionView.candidates = WindowLister.windows(onScreen, localTo: screen)
-            window.selectionView.onSelect = { [weak self] rect in
-                self?.finish(screen: screen, rect: rect, frozen: image)
+            window.selectionView.onSelect = { [weak self] rect, picked, optionHeld in
+                self?.finish(screen: screen, rect: rect, frozen: image, picked: picked, optionHeld: optionHeld)
             }
             window.selectionView.onCancel = { [weak self] in self?.cancel() }
             // Order front WITHOUT activating: the windows are non-activating
@@ -109,9 +122,48 @@ final class RectSelectionController {
         NSCursor.arrow.set()
     }
 
-    private func finish(screen: NSScreen, rect: CGRect, frozen: CGImage?) {
+    /// `picked` is the window a click landed on (nil for a drag); `optionHeld`
+    /// whether Option was down at the release.
+    private func finish(screen: NSScreen, rect: CGRect, frozen: CGImage?,
+                        picked: ScreenWindow? = nil, optionHeld: Bool = false) {
         dismiss()
-        onComplete(screen, rect, frozen.flatMap { Self.crop($0, to: rect, scale: screen.backingScaleFactor) })
+        guard producesImage else {
+            onComplete(screen, rect, nil)
+            return
+        }
+        let scale = screen.backingScaleFactor
+        let cropped = { frozen.flatMap { Self.crop($0, to: rect, scale: scale) } }
+        guard let picked else {
+            onComplete(screen, rect, cropped())
+            return
+        }
+        // A clicked window: shot on its own by the window server, live, in
+        // the look the click asked for. A shadowed shot that comes back no
+        // bigger than the window had the shadow squeezed inside it, so try
+        // the bare bounds; a failed or unfaithful bare shot leaves the frozen
+        // crop, exactly what a click captured before.
+        let style = WindowShot.style(includeShadow: windowShadow, optionHeld: optionHeld)
+        Task {
+            let image = await Self.windowShot(of: picked, style: style, scale: scale)
+            onComplete(screen, rect, image ?? cropped())
+        }
+    }
+
+    private static func windowShot(of window: ScreenWindow, style: WindowShot.Style,
+                                   scale: CGFloat) async -> CGImage? {
+        let styles: [WindowShot.Style] = style == .withShadow ? [.withShadow, .bareBounds] : [.bareBounds]
+        for candidate in styles {
+            guard let image = try? await ScreenCapturer.captureWindow(
+                id: window.id, includeShadow: candidate == .withShadow) else { continue }
+            let size = CGSize(width: image.width, height: image.height)
+            if WindowShot.isFaithful(pixelSize: size, windowSize: window.frame.size, scale: scale,
+                                     style: candidate) {
+                return image
+            }
+            NSLog("Window shot (\(candidate)) came back \(image.width)x\(image.height) for a "
+                  + "\(window.frame.size) pt window at \(scale)x; trying the next fallback")
+        }
+        return nil
     }
 
     private func cancel() {
@@ -175,8 +227,10 @@ private final class SelectionWindow: NSPanel {
 }
 
 private final class SelectionView: NSView {
-    /// Selected rect in this screen's local, top-left-origin points.
-    var onSelect: ((CGRect) -> Void)?
+    /// Selected rect in this screen's local, top-left-origin points, the
+    /// window it is (for a click on one; nil for a drag), and whether Option
+    /// was held at the release.
+    var onSelect: ((CGRect, ScreenWindow?, Bool) -> Void)?
     var onCancel: (() -> Void)?
 
     /// Window picking (`next-window-capture`): highlight the window under the
@@ -332,7 +386,7 @@ private final class SelectionView: NSView {
             // A click: capture the highlighted window, or, over nothing
             // pickable, treat it as today's bare click and let the capture go.
             if let hovered, let rect = WindowPick.captureRect(for: hovered, within: bounds) {
-                onSelect?(rect)
+                onSelect?(rect, hovered, event.modifierFlags.contains(.option))
             } else {
                 onCancel?()
             }
@@ -342,7 +396,7 @@ private final class SelectionView: NSView {
             onCancel?()
             return
         }
-        onSelect?(rect)
+        onSelect?(rect, nil, false)
     }
 
     override func keyDown(with event: NSEvent) {

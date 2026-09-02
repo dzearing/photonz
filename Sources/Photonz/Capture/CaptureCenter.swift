@@ -176,6 +176,8 @@ final class CaptureCenter {
             guard rectSelection == nil else { return }
             rectSelection = RectSelectionController(
                 windowPicking: Experiments.shared.windowCaptureEnabled,
+                windowShadow: Experiments.shared.windowCaptureIncludesShadow,
+                producesImage: false,
                 loupe: Experiments.shared.captureLoupeEnabled ? Experiments.shared.captureLoupePixels : nil,
                 onComplete: { [weak self] screen, rect, _ in
                     // Recording wants the LIVE region, not the frozen crop — the
@@ -220,6 +222,7 @@ final class CaptureCenter {
         guard rectSelection == nil else { return }
         rectSelection = RectSelectionController(
             windowPicking: Experiments.shared.windowCaptureEnabled,
+            windowShadow: Experiments.shared.windowCaptureIncludesShadow,
             loupe: Experiments.shared.captureLoupeEnabled ? Experiments.shared.captureLoupePixels : nil,
             onComplete: { [weak self] screen, rect, frozenCrop in
                 guard let self else { return }
