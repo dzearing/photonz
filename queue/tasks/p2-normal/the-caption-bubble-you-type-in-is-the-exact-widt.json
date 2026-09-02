@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p2-normal",
   "seq": 620,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:25:51.535Z",
-  "updated": "2026-09-02T23:25:51.536Z",
+  "updated": "2026-09-02T23:44:29.434871Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The on-canvas field measures its text with NSLayoutManager (plus 3px caret slack) while the committed pill measures with TextRasterizer/PillRasterizer.footprint, so widths differ by about ten image pixels on a long label. The near edge already matches exactly because the bubble is anchored there (task a-caption-being-typed-grows-from-the-arrow-not-a). Fix by having one measurer feed both, most likely by giving the field the rasterizer natural size for the draft string.",
@@ -22,6 +22,40 @@
     {
       "t": "2026-09-02T23:25:51.536Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T23:26:45.527Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T23:26:52.397Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-02T23:27:04.702Z",
+      "note": "runner claimed: aligning typing bubble width with committed pill"
+    },
+    {
+      "t": "2026-09-02T23:44:29.434871Z",
+      "note": "reviewed before building: the shortest fix is one measurer, but sizing the field from the rasterizer alone would clip the draft, because the draft's letters are genuinely spaced differently. So the draft is set in the document-size face scaled to the zoom, which fixes the size and the letter positions together. No product ambiguity, no decision needed."
+    },
+    {
+      "t": "2026-09-02T23:44:29.434871Z",
+      "note": "reproduced first, outside the app: SF spaces letters by point size, so a draft laid out at (caption size x zoom) is several percent wider at zoom 0.5 and narrower at zoom 2 than the pill the renderer bakes at document size. At 50% zoom a 45 character caption measured 27 points too wide."
+    },
+    {
+      "t": "2026-09-02T23:44:29.434871Z",
+      "note": "shipped: CaptionMetrics (PhotonzRender) is now the one measurer, used by AnnotationRasterizer and by the canvas caption field; the field is set in the document-size face with a scale transform (captionDraftFont) and its frame comes straight from the metric; the draft bubble's border straddles its edge like the rasterizer's stroke."
+    },
+    {
+      "t": "2026-09-02T23:44:29.434871Z",
+      "note": "verified on the probe (Scripts/playtest/caption-width-walk.json, Screen Recording granted): before, the bubble's far edge jumped 46 capture pixels (23 pt) on Return; after, 1 capture pixel. Letters in the draft line up with the committed letters to within a pixel across the whole label. Repeated zoomed in with a two letter caption: 2 capture pixels."
+    },
+    {
+      "t": "2026-09-02T23:44:29.434871Z",
+      "note": "5 new tests in Tests/PhotonzRenderTests/CaptionMetricsTests.swift pin the metric to the pixels the rasterizer actually draws; full suite 1483 tests green."
     }
-  ]
+  ],
+  "started": "2026-09-02T23:26:45.527Z",
+  "failures": 1
 }

@@ -2989,6 +2989,26 @@ final class CanvasNSView: NSView {
         return editor
     }
 
+    /// The face a caption draft is set in: the caption's DOCUMENT-size font with
+    /// a scale transform for the zoom, never the zoomed point size. SF spaces
+    /// letters differently at different point sizes, so a draft set at
+    /// (size x zoom) is a few percent wider or narrower than the pill the
+    /// rasterizer bakes at the document size and the canvas then scales. That
+    /// gap is what made a long caption's far edge jump on Return. Scaling the
+    /// document-size face instead gives the draft exactly the committed
+    /// letter spacing, so the words you type occupy the pill they will land in.
+    private static func captionDraftFont(_ content: TextContent, fontSize: CGFloat,
+                                         zoom: CGFloat) -> NSFont {
+        var document = content
+        document.fontSize = fontSize
+        let ctFont = TextRasterizer.font(for: document)
+        let descriptor = (CTFontCopyFontDescriptor(ctFont) as NSFontDescriptor).withSize(fontSize)
+        var transform = AffineTransform()
+        transform.scale(zoom)
+        return NSFont(descriptor: descriptor, textTransform: transform)
+            ?? NSFont.systemFont(ofSize: fontSize * zoom)
+    }
+
     /// Applies font/color to the editor, scaled to the current zoom so the
     /// draft is the same apparent size as the rasterized layer will be.
     /// `content.string` is ignored.
@@ -2999,13 +3019,18 @@ final class CanvasNSView: NSView {
         textEditorContent = stored
         textEditorZoom = viewport.zoom
 
-        var scaled = stored
-        scaled.fontSize = content.fontSize * viewport.zoom
-        // The rasterizer picks the face (family + weight); reuse it via its
-        // PostScript name so the draft and the final render match.
-        let ctFont = TextRasterizer.font(for: scaled)
-        let font = NSFont(name: CTFontCopyPostScriptName(ctFont) as String, size: scaled.fontSize)
-            ?? NSFont.systemFont(ofSize: scaled.fontSize)
+        let font: NSFont
+        if textSession?.captionStyle != nil {
+            font = Self.captionDraftFont(stored, fontSize: content.fontSize, zoom: viewport.zoom)
+        } else {
+            var scaled = stored
+            scaled.fontSize = content.fontSize * viewport.zoom
+            // The rasterizer picks the face (family + weight); reuse it via its
+            // PostScript name so the draft and the final render match.
+            let ctFont = TextRasterizer.font(for: scaled)
+            font = NSFont(name: CTFontCopyPostScriptName(ctFont) as String, size: scaled.fontSize)
+                ?? NSFont.systemFont(ofSize: scaled.fontSize)
+        }
         let rgba = RGBA(hex: content.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
         let color = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
         editor.font = font
@@ -3034,22 +3059,18 @@ final class CanvasNSView: NSView {
     /// minimum width), so it grows with what you type instead of spanning to the
     /// canvas edge. Height hugs the laid-out text.
     ///
-    /// A caption session measures the same way inside a bubble: the field is
-    /// inset by the caption pill's padding, so its frame IS the pill, sized and
-    /// centered exactly where the rasterizer will draw the committed caption.
+    /// A caption session is a different shape and hands off to
+    /// `layoutCaptionEditor`: its frame IS the pill it commits to, measured once
+    /// by the renderer rather than a second time here.
     private func layoutTextEditor() {
         guard let editor = textEditor, let viewport, let session = textSession else { return }
-        let caption = session.captionStyle != nil ? session.captionLayer?.annotation : nil
+        if session.captionStyle != nil, let caption = session.captionLayer?.annotation {
+            layoutCaptionEditor(editor, caption: caption, session: session, viewport: viewport)
+            return
+        }
         let topLeft = viewport.viewPoint(fromDocument: session.origin)
-        // The pill's padding in view points: text lays out inside it, the frame
-        // grows around it.
-        let inset = (caption?.captionPadding ?? 0) * viewport.zoom
-        editor.textContainerInset = NSSize(width: inset, height: inset)
-        // A caption hugs its text the way the committed pill does — no 80pt
-        // floor, or a short label's bubble would shrink the moment it lands.
-        let minView = caption == nil ? TextRasterizer.minimumTextWidth * viewport.zoom
-                                     : (editor.font?.pointSize ?? 20)
-        let capView = max(minView, textWrapWidth(origin: session.origin) * viewport.zoom - 2 * inset)
+        let minView = TextRasterizer.minimumTextWidth * viewport.zoom
+        let capView = max(minView, textWrapWidth(origin: session.origin) * viewport.zoom)
         var contentWidth = minView
         var height = (editor.font?.pointSize ?? 20) * 1.4
         if let container = editor.textContainer, let layoutManager = editor.layoutManager {
@@ -3061,42 +3082,64 @@ final class CanvasNSView: NSView {
             contentWidth = min(capView, max(minView, ceil(used.width) + 3))
             height = max(height, used.height + 2)
         }
+        editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: ceil(height))
+    }
+
+    /// A caption field IS the pill it commits to. Its frame comes straight from
+    /// `CaptionMetrics` — the same measurement the rasterizer bakes the
+    /// committed pill with — scaled to the zoom, so nothing here measures the
+    /// typed text a second way and the bubble does not resize on Return. The
+    /// draft lays out inside it at the pill's padding, in the document-size face
+    /// (`captionDraftFont`), which is why the words fit the measurement.
+    ///
+    /// The bubble hangs off the spot the session froze when it opened: its near
+    /// edge stays put on the arrow's tail and the words extend away from it, so
+    /// what you watch while typing is where the caption lands.
+    private func layoutCaptionEditor(_ editor: NSTextView, caption: AnnotationContent,
+                                     session: TextEditSession, viewport: Viewport) {
+        let zoom = viewport.zoom
+        let inset = caption.captionPadding * zoom
+        editor.textContainerInset = NSSize(width: inset, height: inset)
+        var pill = CaptionMetrics.pillSize(for: editor.string, in: caption)
         if editor.string.isEmpty, let placeholder = (editor as? InlineTextView)?.placeholder,
            let font = editor.font {
-            // An empty caption field is as wide as its hint, so the hint reads
-            // in one line and the field shrinks to the text once you type.
-            let hint = (placeholder as NSString).size(withAttributes: [.font: font]).width
-            contentWidth = min(capView, max(contentWidth, ceil(hint) + 8))
+            // An empty field is as wide as its hint, so the hint reads in one
+            // line; the bubble shrinks to the text on the first keystroke.
+            let hint = (placeholder as NSString).size(withAttributes: [.font: font]).width / zoom
+            pill.width = max(pill.width, hint + 2 * caption.captionPadding + 4)
         }
-        contentWidth += 2 * inset
-        height = ceil(height) + 2 * inset
-        if let caption {
-            // A caption session hangs the editor off the spot it froze when it
-            // opened: the bubble's near edge stays put on the arrow's tail and
-            // the words extend away from it, so what you watch while typing is
-            // where the caption lands.
-            var center = session.origin
-            if var probe = session.captionLayer?.annotation,
-               let tail = session.captionLayer?.annotationEndpoint(.start),
-               let head = session.captionLayer?.annotationEndpoint(.end) {
-                probe.start = tail
-                probe.end = head
-                probe.captionOffset = session.captionPlacement.attach
-                probe.captionGrowth = session.captionPlacement.growth
-                let pill = CGSize(width: contentWidth / viewport.zoom,
-                                  height: height / viewport.zoom)
-                center = probe.captionPillCenter(forPillSize: pill)
-            }
-            let pillCenter = viewport.viewPoint(fromDocument: center)
-            let frame = CGRect(x: (pillCenter.x - contentWidth / 2).rounded(),
-                               y: (pillCenter.y - height / 2).rounded(),
-                               width: contentWidth, height: height)
-            editor.frame = frame
-            captionPill?.frame = frame
-            captionPill?.style(for: caption, zoom: viewport.zoom)
-        } else {
-            editor.frame = CGRect(x: topLeft.x, y: topLeft.y, width: contentWidth, height: height)
+        // A caption is one line at any length, exactly like the committed pill,
+        // so the container is given the whole bubble and never wraps.
+        editor.textContainer?.containerSize = NSSize(width: max(1, pill.width * zoom),
+                                                     height: .greatestFiniteMagnitude)
+        var center = session.origin
+        if var probe = session.captionLayer?.annotation,
+           let tail = session.captionLayer?.annotationEndpoint(.start),
+           let head = session.captionLayer?.annotationEndpoint(.end) {
+            probe.start = tail
+            probe.end = head
+            probe.captionOffset = session.captionPlacement.attach
+            probe.captionGrowth = session.captionPlacement.growth
+            center = probe.captionPillCenter(forPillSize: pill)
         }
+        let pillCenter = viewport.viewPoint(fromDocument: center)
+        let width = pill.width * zoom
+        let height = pill.height * zoom
+        // Not rounded to whole points: the committed pill is drawn at document
+        // resolution and scaled, so it lands on fractions too, and snapping the
+        // bubble to the screen grid would put its edges up to half a point off
+        // the label it is standing in for.
+        let frame = CGRect(x: pillCenter.x - width / 2, y: pillCenter.y - height / 2,
+                           width: width, height: height)
+        editor.frame = frame
+        // The rasterizer's border straddles the pill's edge (a centered stroke)
+        // while a layer's border is drawn inside its bounds, so the bubble is
+        // grown by half a border and its inner stroke lands on the same band.
+        // Without this the drawn edge sits half a border in from where the
+        // committed one does.
+        let straddle = caption.captionBorderWidth * zoom / 2
+        captionPill?.frame = frame.insetBy(dx: -straddle, dy: -straddle)
+        captionPill?.style(for: caption, zoom: zoom)
     }
 
     /// Keeps the editor glued to the document while panning/zooming, and

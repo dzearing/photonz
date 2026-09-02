@@ -115,10 +115,9 @@ public enum AnnotationRasterizer {
     /// values: what you type in is what lands.
     private static func drawCaption(_ annotation: AnnotationContent, border: CGColor,
                                     in context: CGContext) {
-        let text = (annotation.caption ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = CaptionMetrics.committedText(annotation.caption ?? "")
         guard !text.isEmpty else { return }
-        let chipSize = PillRasterizer.footprint(for: text, fontSize: annotation.captionFontSize,
-                                                padding: annotation.captionPadding)
+        let chipSize = CaptionMetrics.pillSize(for: text, in: annotation)
         let tone = annotation.captionChipColor
         let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                            alpha: AnnotationContent.captionChipOpacity)

@@ -1,0 +1,29 @@
+{
+  "feature": "Arrow caption: the bubble you type in is the pill that lands",
+  "epic": "epic-uehjr1",
+  "summary": "The bubble you type an arrow caption into is now exactly the size of the pill that appears when you press Return, at any zoom. It used to be as much as 23 points wider at the far end, so the label visibly settled at the last moment.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default. Open any screenshot.",
+  "try": [
+    { "do": "Press A and drag an arrow pointing left, so the caption hangs off the tail on the right." },
+    { "do": "Type: This caption is longer than thirty characters.", "shot": "2026-09-02-caption-width-typing.png" },
+    { "do": "Rest your eye on the far end of the bubble, the end away from the arrow." },
+    { "do": "Press Return and watch whether that end moves.", "shot": "2026-09-02-caption-width-landed.png" },
+    { "do": "Zoom in twice, draw another arrow, and caption it Ok." },
+    { "do": "Press Return again and watch the small bubble the same way." },
+    { "do": "Draw a third arrow, and press Escape while the hint still reads Caption, Esc to skip." }
+  ],
+  "evaluate": [
+    "Does anything move at the moment you press Return, at any zoom you tried?",
+    "While you type, do the letters sit where they sit in the finished label, or do they shift?",
+    "The empty field is as wide as its hint and snaps narrower on the first character. Does that snap bother you enough to fix?",
+    "A long caption now runs past the edge of the picture instead of wrapping while you type, because the finished pill is always one line. Is running off the edge the right behavior?",
+    "Does the draft text look like the committed text, in weight and sharpness?"
+  ],
+  "rough": [
+    "Measured on the probe at 50% zoom with a 45 character caption: before this, the bubble's far edge jumped 23 points inward on Return; now it settles by half a point, which is under one screen pixel.",
+    "Half a point of drift remains, from antialiasing at the bubble's rounded ends. Both edges land within a pixel of the committed pill and the letters line up along the whole label.",
+    "The bubble is no longer snapped to whole screen points, because the committed pill is drawn at document resolution and lands on fractions. Text in the field stays crisp.",
+    "The draft used to wrap at 60% of the canvas while the committed pill never wraps, so a very long caption changed shape on Return. The draft now stays one line like the pill.",
+    "Screen Recording was granted, so both shots are real captures of the window, scaled to half size for the repo, not offscreen renders."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "a-text-block-is-the-same-size-while-you-type-it",
+  "title": "A text block is the same size while you type it as after you place it",
+  "goal": "When you type a text label on a picture, the box you type in is a slightly different width than the text that lands, and it wraps at a different point, so the label shifts as you finish it. Typing and placing should be one shape.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T23:44:29.466Z",
+  "updated": "2026-09-02T23:44:29.466Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Same class of drift the arrow caption had (fixed 2026-09-02): the inline editor lays the draft out at (fontSize x zoom) with NSLayoutManager while TextRasterizer measures at document size, and SF spaces letters by point size. The caption fix is the pattern to copy: CanvasNSView.captionDraftFont sets the draft in the document-size face with a scale transform, and layoutCaptionEditor takes its frame from CaptionMetrics. A text block also wraps, so its wrap cap has to be the same on both sides.",
+  "acceptance": [
+    "Typing a label and committing it leaves the words in the same place, at every zoom",
+    "A label long enough to wrap wraps at the same words while typing and after placing",
+    "Verified on the probe by measuring a typing snapshot against the committed one"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T23:44:29.466Z",
+      "note": "created (manual)"
+    }
+  ]
+}
