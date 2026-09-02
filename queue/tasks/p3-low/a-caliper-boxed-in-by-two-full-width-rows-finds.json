@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:31:42.562Z",
-  "updated": "2026-09-02T19:39:58.317859Z",
+  "updated": "2026-09-02T19:40:21.241Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes from queue/audits/2026-09-02-caliper-subjects.json rough item 1. MeasureLabelPlanner.maxCrossReach caps sideways travel at three chip heights; the boxed-in fallback is the flat subjectPenalty tie-break to .onLine. Same limit shows up for Size mode on a full-width row (2026-08-23-size-readout-placement rough item 1). Render scripts: temp/boxed-in/Scan.swift (sweep) and temp/boxed-in/Render.swift (four options); compile with swiftc -I .build/debug/Modules against .build/debug/PhotonzCore.build/*.o and PhotonzRender.build/*.o. Option renders live in queue/audits/2026-09-02-boxed-in-*.png.",
@@ -64,7 +64,7 @@
     },
     {
       "t": "2026-09-02T17:31:47.336Z",
-      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your session limit resets 11:50am (America/Los_Angeles)"
+      "note": "runner failed (exit 1, attempt 1): You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
     },
     {
       "t": "2026-09-02T19:30:00.754Z",
@@ -93,6 +93,10 @@
     {
       "t": "2026-09-02T19:39:58.317859Z",
       "note": "No user-visible change, so no audit was written: the chosen option is today's behaviour. Re-rendered the straddle for the record (temp/boxed-in/cards-a-straddle.png) and eyeballed it, the number reads as the gap's and both card edges stay legible. Scripts/test.sh green, 1449 tests."
+    },
+    {
+      "t": "2026-09-02T19:40:21.240Z",
+      "note": "The user's answer (stay on the line, straddling both rows) is now pinned rather than emergent: MeasureCalloutClearanceTests gets aCaliperBoxedInByTwoFullWidthRowsKeepsItsNumberAtTheGap and everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot (147 boxed-in placements on the audit capture, all centred), and MeasureLabelPlanner.subjectPenalty documents why it is flat. No behaviour change; verified by re-planning every gap before and after, by mutating the penalty (all three tests fail), and by eyeballing a fresh render. Scripts/test.sh green, 1449 tests. Pushed as 7c36a1f."
     }
   ],
   "started": "2026-09-02T19:30:00.753Z",
@@ -100,6 +104,7 @@
   "lastError": {
     "at": "2026-09-02T17:31:47.336Z",
     "exit": 1,
-    "message": "You've hit your monthly spend limit \u00b7 raise it at claude.ai/settings/usage?from=cc_cli_limit_message \u00b7 your session limit resets 11:50am (America/Los_Angeles)"
-  }
+    "message": "You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your session limit resets 11:50am (America/Los_Angeles)"
+  },
+  "completed": "2026-09-02T19:40:21.241Z"
 }
