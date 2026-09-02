@@ -1,0 +1,27 @@
+{
+  "id": "the-caption-bubble-you-type-in-is-the-exact-widt",
+  "title": "The caption bubble you type in is the exact width of the one that lands",
+  "goal": "While you type an arrow caption the bubble is a shade wider than the pill that appears when you press Return, so its far end settles by a hair at the last moment. The bubble on screen should be the same size as the label that lands.",
+  "epic": "epic-uehjr1",
+  "priority": "p2-normal",
+  "seq": 620,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T23:25:51.535Z",
+  "updated": "2026-09-02T23:25:51.536Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The on-canvas field measures its text with NSLayoutManager (plus 3px caret slack) while the committed pill measures with TextRasterizer/PillRasterizer.footprint, so widths differ by about ten image pixels on a long label. The near edge already matches exactly because the bubble is anchored there (task a-caption-being-typed-grows-from-the-arrow-not-a). Fix by having one measurer feed both, most likely by giving the field the rasterizer natural size for the draft string.",
+  "acceptance": [
+    "Typing a caption and committing it leaves the pill exactly the size it was on the last keystroke, at every caption size",
+    "The far edge of the bubble does not move on Return for a caption of at least thirty characters",
+    "Verified on the probe by measuring the pill in a typing snapshot and in the committed snapshot"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T23:25:51.536Z",
+      "note": "created (manual)"
+    }
+  ]
+}

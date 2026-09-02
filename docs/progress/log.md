@@ -5184,3 +5184,31 @@ Audit: `queue/audits/2026-09-02-loop-reads-menus.json`. Found on the way:
 ⇧⌘H at an unfocused probe does not open the history window and the menu stays
 "Show History", which leaves the capture-names audit's step 5 unverified —
 filed as `show-history-and-hide-history-agree-with-whether`.
+
+## 2026-09-02 — A caption grows from the arrow, not away from it
+
+Typing a caption on an arrow used to walk the label away from the tail: the
+model stored where the pill CENTRED, and the centre was derived from a
+character-count estimate that grew faster than the real text, so every keystroke
+pushed the bubble further out.
+
+The model now stores where the pill HANGS FROM. `AnnotationContent.captionOffset`
+is the attachment (the middle of the side facing the arrow), a new
+`captionGrowth` carries the direction, and `captionPillCenter(forPillSize:)`
+places a MEASURED pill off that point — the rasterizer and the on-canvas field
+both use it, so the near edge is fixed and only the far edge moves.
+`captionAnchor()` is the same thing at the estimated size, so frame reservation
+and hit-testing are untouched.
+
+Two follow-on findings from the playtest, both fixed: a caption is a wide, short
+capsule, so a spot above or below the tail must run off to one side rather than
+straddle it, and a diagonal arrow squares its growth off to the axis its shaft
+mostly runs on (a diagonal grower slides its nearest corner sideways with every
+character). `CaptionPlanner` now ranks spots by the sideways room they leave,
+and the caption field freezes its spot when it opens and holds it through every
+keystroke, so nothing re-picks on Return.
+
+Audit: `queue/audits/2026-09-02-arrow-caption-anchor.json`; walk:
+`Scripts/playtest/arrow-caption-anchor.json`. Next: the field's bubble measures
+~10px wider than the committed pill (two different text measurers), filed
+separately.

@@ -79,11 +79,17 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var caption: String?
     /// Arrow-only: the caption's text size in image pixels.
     public var captionFontSize: CGFloat
-    /// Arrow-only: where the pill centers, relative to the TAIL (`start`), when
-    /// the default spot behind the tail would leave the picture. Nil = the
-    /// default. Relative to the tail so an endpoint rebuild keeps it valid;
+    /// Arrow-only: where the pill HANGS FROM, relative to the TAIL (`start`):
+    /// the point on the pill's near side that stays put while the caption gets
+    /// longer. Nil = the default, one `captionGap` past the tail along the
+    /// shaft. Relative to the tail so an endpoint rebuild keeps it valid;
     /// `AnnotationBuilder.planningCaption` picks it against the canvas.
     public var captionOffset: CGSize?
+    /// Arrow-only: which way the pill grows from that point, as a unit vector.
+    /// Nil = along the shaft, away from the head. Picked once (when the caption
+    /// field opens, or when the arrow changes) so a caption being typed grows
+    /// away from the arrow instead of the whole bubble sliding off it.
+    public var captionGrowth: CGSize?
     /// Arrow-only: true once the pill was dragged by hand. `captionOffset` is
     /// then the spot the user chose (relative to the tail) and the planner
     /// leaves it alone, only pulling it back onto the picture; false means
@@ -105,6 +111,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         self.caption = caption
         self.captionFontSize = captionFontSize
         self.captionOffset = nil
+        self.captionGrowth = nil
         self.captionPinned = false
     }
 
@@ -127,6 +134,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
             ?? Self.captionFontSizeDefault
         // Planned placement postdates captions; absent = the tail default.
         captionOffset = try c.decodeIfPresent(CGSize.self, forKey: .captionOffset)
+        // Growth direction postdates the offset; absent = along the shaft.
+        captionGrowth = try c.decodeIfPresent(CGSize.self, forKey: .captionGrowth)
         // Hand placement postdates planning; an old offset was the planner's.
         captionPinned = try c.decodeIfPresent(Bool.self, forKey: .captionPinned) ?? false
     }
@@ -199,8 +208,8 @@ extension AnnotationContent {
 
     /// A generous estimate of the caption pill's footprint, used for frame
     /// reservation and hit-testing. The rasterizer measures the real text and
-    /// centers the (smaller) pill at the same anchor, so geometry derived from
-    /// this estimate never disagrees with what gets drawn.
+    /// hangs the (smaller) pill from the same attachment, so it always sits
+    /// inside the box this estimate reserved.
     public var estimatedCaptionSize: CGSize {
         let chars = CGFloat(max(caption?.count ?? 0, 1) + 1)
         let w = chars * captionFontSize * 0.75 + 2 * captionPadding
@@ -208,29 +217,71 @@ extension AnnotationContent {
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
     }
 
-    /// Where the caption pill centers (same coordinate space as `start`/`end`):
-    /// past the arrow's tail, along the shaft away from the head, clear of the
-    /// tail by `captionGap`. A zero-length arrow anchors above the point. A
-    /// planned `captionOffset` (the default spot left the picture) wins.
-    public func captionAnchor() -> CGPoint {
+    /// The pill a caption's spot is picked against when the field opens: room
+    /// for a real sentence (about 24 characters) at this caption's size, so the
+    /// direction chosen on the first keystroke still holds the last one.
+    public var captionRoomProbeSize: CGSize {
+        var probe = self
+        probe.caption = String(repeating: "n", count: 24)
+        let room = probe.estimatedCaptionSize
+        let now = estimatedCaptionSize
+        return CGSize(width: max(room.width, now.width), height: max(room.height, now.height))
+    }
+
+    /// Which way the pill grows from its attachment: a unit vector. The picked
+    /// direction when there is one, otherwise the way the shaft runs away from
+    /// the head, squared off to that shaft's dominant axis. A zero-length arrow
+    /// grows upward.
+    ///
+    /// Squared off because a caption is a wide, short capsule: let it grow on a
+    /// diagonal and the corner nearest the arrow slides sideways with every
+    /// character, which is the drift this whole anchoring exists to stop. On the
+    /// axes — where most arrows are drawn — this is exactly the shaft direction.
+    public func captionGrowthDirection() -> CGSize {
+        if let captionGrowth {
+            let length = hypot(captionGrowth.width, captionGrowth.height)
+            if length > 0 {
+                return CGSize(width: captionGrowth.width / length,
+                              height: captionGrowth.height / length)
+            }
+        }
+        let dx = start.x - end.x
+        let dy = start.y - end.y
+        if dx == 0, dy == 0 { return CGSize(width: 0, height: -1) }
+        if abs(dx) >= abs(dy) { return CGSize(width: dx < 0 ? -1 : 1, height: 0) }
+        return CGSize(width: 0, height: dy < 0 ? -1 : 1)
+    }
+
+    /// The point the pill hangs from (same coordinate space as `start`/`end`):
+    /// the middle of its near side, one `captionGap` past the tail along the
+    /// growth direction, or the picked/hand-placed spot. This point does NOT
+    /// move when the caption gets longer, which is what makes a caption being
+    /// typed grow away from the arrow instead of walking off it.
+    public func captionAttachment() -> CGPoint {
         if let captionOffset {
             return CGPoint(x: start.x + captionOffset.width, y: start.y + captionOffset.height)
         }
-        let size = estimatedCaptionSize
-        var dx = start.x - end.x
-        var dy = start.y - end.y
-        let length = hypot(dx, dy)
-        if length > 0 {
-            dx /= length
-            dy /= length
-        } else {
-            dx = 0
-            dy = -1
-        }
-        // Support extent of the pill rect along the shaft direction.
-        let extent = (abs(dx) * size.width + abs(dy) * size.height) / 2
-        let distance = Self.captionGap + extent
-        return CGPoint(x: start.x + dx * distance, y: start.y + dy * distance)
+        let d = captionGrowthDirection()
+        return CGPoint(x: start.x + d.width * Self.captionGap,
+                       y: start.y + d.height * Self.captionGap)
+    }
+
+    /// Where a pill of `size` centers: the attachment plus half the pill's
+    /// reach along the growth direction. Pass the measured pill (the rasterizer
+    /// and the on-canvas field both do) and the near side lands exactly on the
+    /// attachment; pass the estimate and you get `captionAnchor`.
+    public func captionPillCenter(forPillSize size: CGSize) -> CGPoint {
+        let d = captionGrowthDirection()
+        let attachment = captionAttachment()
+        let extent = (abs(d.width) * size.width + abs(d.height) * size.height) / 2
+        return CGPoint(x: attachment.x + d.width * extent, y: attachment.y + d.height * extent)
+    }
+
+    /// Where the pill centers at its ESTIMATED size: what frame reservation and
+    /// hit-testing use, so the generous box they draw around the label always
+    /// starts at the same attachment the real pill does.
+    public func captionAnchor() -> CGPoint {
+        captionPillCenter(forPillSize: estimatedCaptionSize)
     }
 }
 

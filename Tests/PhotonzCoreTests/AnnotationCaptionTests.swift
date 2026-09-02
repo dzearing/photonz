@@ -181,6 +181,13 @@ private func pillRect(_ layer: Layer) -> CGRect {
                   width: size.width, height: size.height)
 }
 
+/// Where the pill hangs from, in document space.
+private func pillAttachment(_ layer: Layer) -> CGPoint {
+    let a = layer.annotation!
+    let attachment = a.captionAttachment()
+    return CGPoint(x: layer.frame.minX + attachment.x, y: layer.frame.minY + attachment.y)
+}
+
 @Suite("Annotation caption placement")
 struct AnnotationCaptionPlacementTests {
 
@@ -249,9 +256,9 @@ struct AnnotationCaptionPlacementTests {
         let moved = AnnotationBuilder.updating(planned, start: CGPoint(x: 60, y: 300), end: CGPoint(x: 700, y: 300))
         #expect(moved.annotation?.captionOffset == offset)
         let tail = moved.annotationEndpoint(.start)!
-        let pill = pillRect(moved)
-        #expect(abs(pill.midX - (tail.x + (offset?.width ?? 0))) < 0.5)
-        #expect(abs(pill.midY - (tail.y + (offset?.height ?? 0))) < 0.5)
+        let attachment = pillAttachment(moved)
+        #expect(abs(attachment.x - (tail.x + (offset?.width ?? 0))) < 0.5)
+        #expect(abs(attachment.y - (tail.y + (offset?.height ?? 0))) < 0.5)
     }
 
     @Test func wholeArrowDraggedToTheLeftEdgeKeepsItsPillOnThePicture() {
@@ -355,11 +362,18 @@ struct AnnotationCaptionPlacementTests {
         content.end = corner
         let size = content.estimatedCaptionSize
         let plan = CaptionPlanner.plan(for: content, canvas: canvas)
-        #expect(plan == CGSize(width: size.width / 2, height: size.height / 2))
-        // Which is the default spot clamped onto the picture, not a step down
-        // the order: the pill's corner sits on the picture's corner.
-        #expect(CGRect(origin: .zero, size: canvas)
-            .contains(CGRect(x: 0, y: 0, width: size.width, height: size.height)))
+        content.captionOffset = plan.attach
+        content.captionGrowth = plan.growth
+        // Nothing to cross, so the pill keeps the first spot with room: hung
+        // from the point's own column and running off into the picture, slid
+        // only as far as the corner demands.
+        #expect(plan.growth == CGSize(width: 1, height: 0))
+        let attachment = content.captionAttachment()
+        #expect(abs(attachment.x - corner.x) < 0.001)
+        let center = content.captionPillCenter(forPillSize: size)
+        #expect(CGRect(origin: .zero, size: canvas).contains(
+            CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                   width: size.width, height: size.height).insetBy(dx: 0.001, dy: 0.001)))
     }
 
     @Test func noCanvasMeansNoPlan() {
@@ -436,9 +450,13 @@ struct AnnotationCaptionPinningTests {
         #expect(placed.annotationEndpoint(.start) == layer.annotationEndpoint(.start))
         #expect(placed.annotationEndpoint(.end) == layer.annotationEndpoint(.end))
         #expect(placed.frame.contains(pill))
-        // The offset is relative to the tail.
+        // The spot is stored as where the pill HANGS FROM, relative to the
+        // tail, with the direction it grows in frozen alongside it.
         let tail = placed.annotationEndpoint(.start)!
-        #expect(placed.annotation?.captionOffset == CGSize(width: target.x - tail.x, height: target.y - tail.y))
+        #expect(placed.annotation?.captionGrowth != nil)
+        let attachment = pillAttachment(placed)
+        #expect(placed.annotation?.captionOffset
+            == CGSize(width: attachment.x - tail.x, height: attachment.y - tail.y))
     }
 
     @Test func plannerLeavesAPinnedPillAlone() {
@@ -474,21 +492,25 @@ struct AnnotationCaptionPinningTests {
         #expect(abs(pill.midY - target.y) < 0.5)
     }
 
-    @Test func pinnedPillSurvivesTextAndSizeEdits() {
+    @Test func pinnedPillGrowsFromWhereItWasDroppedRatherThanSliding() {
+        // A hand-placed pill keeps the point it hangs from: a longer caption
+        // (or a bigger one) reaches further away instead of walking off it.
         let target = CGPoint(x: 900, y: 500)
         let placed = AnnotationBuilder.placingCaption(openSpaceArrow(), at: target, canvas: canvas)
+        let attachment = pillAttachment(placed)
         let retyped = AnnotationBuilder.planningCaption(
             AnnotationBuilder.restyled(placed, caption: .some("A much longer caption than before")),
             canvas: canvas)
         #expect(retyped.annotation?.captionPinned == true)
-        #expect(abs(pillRect(retyped).midX - target.x) < 0.5)
-        #expect(abs(pillRect(retyped).midY - target.y) < 0.5)
+        #expect(abs(pillAttachment(retyped).x - attachment.x) < 0.5)
+        #expect(abs(pillAttachment(retyped).y - attachment.y) < 0.5)
+        #expect(pillRect(retyped).width > pillRect(placed).width)
         #expect(retyped.frame.contains(pillRect(retyped)))
         let resized = AnnotationBuilder.planningCaption(
             AnnotationBuilder.restyled(placed, captionFontSize: 36), canvas: canvas)
         #expect(resized.annotation?.captionPinned == true)
-        #expect(abs(pillRect(resized).midX - target.x) < 0.5)
-        #expect(abs(pillRect(resized).midY - target.y) < 0.5)
+        #expect(abs(pillAttachment(resized).x - attachment.x) < 0.5)
+        #expect(abs(pillAttachment(resized).y - attachment.y) < 0.5)
     }
 
     @Test func pinnedPillIsPulledBackOntoThePicture() {
@@ -506,7 +528,9 @@ struct AnnotationCaptionPinningTests {
         let dragged = AnnotationBuilder.planningCaption(
             placed.resized(to: placed.frame.offsetBy(dx: 0, dy: -600)), canvas: canvas)
         let pulled = pillRect(dragged)
-        #expect(bounds.contains(pulled))
+        // A hair of tolerance: the pill is pulled to exactly the edge, so
+        // whether it lands at 0 or a rounding step under is float noise.
+        #expect(bounds.insetBy(dx: -0.001, dy: -0.001).contains(pulled))
         #expect(dragged.annotation?.captionPinned == true)
         #expect(abs(pulled.midX - pill.midX) < 0.5)
         #expect(abs(pulled.minY) < 0.5)
@@ -589,5 +613,168 @@ struct AnnotationCaptionPillTests {
     @Test func pillCornerIsACapsule() {
         let content = arrowContent(caption: "x")
         #expect(content.captionCornerRadius(pillHeight: 44) == 22)
+    }
+}
+
+// MARK: - Growing a caption
+
+@Suite("Annotation caption growth")
+struct AnnotationCaptionGrowthTests {
+
+    private let canvas = CGSize(width: 1440, height: 960)
+    private var bounds: CGRect { CGRect(origin: .zero, size: canvas) }
+    private let gap = AnnotationContent.captionGap
+
+    private func arrow(_ caption: String, from tail: CGPoint, to head: CGPoint) -> AnnotationContent {
+        var content = arrowContent(caption: caption)
+        content.start = tail
+        content.end = head
+        return content
+    }
+
+    private func pill(_ content: AnnotationContent, size: CGSize) -> CGRect {
+        let center = content.captionPillCenter(forPillSize: size)
+        return CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                      width: size.width, height: size.height)
+    }
+
+    @Test func theEdgeFacingTheArrowStaysPutAsTheTextGrows() {
+        // Arrow pointing right: the pill hangs off the tail to the left, so its
+        // RIGHT edge is the one facing the arrow, and typing never moves it.
+        let content = arrow("A", from: CGPoint(x: 600, y: 400), to: CGPoint(x: 900, y: 400))
+        let short = pill(content, size: CGSize(width: 80, height: 34))
+        let long = pill(content, size: CGSize(width: 320, height: 34))
+        #expect(abs(short.maxX - (600 - gap)) < 0.001)
+        #expect(abs(long.maxX - (600 - gap)) < 0.001)
+        #expect(long.minX < short.minX) // it grew AWAY from the arrow
+        #expect(short.midY == 400 && long.midY == 400)
+    }
+
+    @Test func everyArrowDirectionAnchorsTheNearEdge() {
+        let tail = CGPoint(x: 700, y: 500)
+        let heads = [CGPoint(x: 900, y: 500), CGPoint(x: 500, y: 500),
+                     CGPoint(x: 700, y: 300), CGPoint(x: 700, y: 700),
+                     CGPoint(x: 900, y: 700)]
+        for head in heads {
+            let content = arrow("A", from: tail, to: head)
+            let attachment = content.captionAttachment()
+            #expect(abs(hypot(attachment.x - tail.x, attachment.y - tail.y) - gap) < 0.001)
+            let direction = content.captionGrowthDirection()
+            // The pill's support plane on the arrow's side is the attachment,
+            // whatever the pill measures.
+            for size in [CGSize(width: 60, height: 34), CGSize(width: 400, height: 34)] {
+                let center = content.captionPillCenter(forPillSize: size)
+                let extent = (abs(direction.width) * size.width
+                              + abs(direction.height) * size.height) / 2
+                let near = CGPoint(x: center.x - direction.width * extent,
+                                   y: center.y - direction.height * extent)
+                #expect(abs(near.x - attachment.x) < 0.001)
+                #expect(abs(near.y - attachment.y) < 0.001)
+            }
+        }
+    }
+
+    @Test func aDiagonalArrowGrowsOnItsDominantAxis() {
+        // A caption is a wide, short capsule: growing it on a diagonal slides
+        // the corner nearest the arrow with every character. A diagonal arrow
+        // therefore squares its caption off to the axis the shaft mostly runs
+        // on, and the pill's near edge holds still from the first letter.
+        let content = arrow("A", from: CGPoint(x: 600, y: 400), to: CGPoint(x: 900, y: 260))
+        #expect(content.captionGrowthDirection() == CGSize(width: -1, height: 0))
+        let short = pill(content, size: CGSize(width: 80, height: 44))
+        let long = pill(content, size: CGSize(width: 420, height: 44))
+        #expect(abs(short.maxX - long.maxX) < 0.001)
+        #expect(abs(short.midY - long.midY) < 0.001)
+        // A mostly-vertical arrow squares off the other way, and its caption
+        // stays centred over the tail as it grows.
+        let steep = arrow("A", from: CGPoint(x: 600, y: 400), to: CGPoint(x: 700, y: 100))
+        #expect(steep.captionGrowthDirection() == CGSize(width: 0, height: 1))
+        #expect(abs(pill(steep, size: CGSize(width: 420, height: 44)).minY
+                    - (400 + gap)) < 0.001)
+    }
+
+    @Test func anchorMatchesThePillCenterForTheEstimatedSize() {
+        let content = arrow("Primary action", from: CGPoint(x: 400, y: 300),
+                            to: CGPoint(x: 600, y: 420))
+        let anchor = content.captionAnchor()
+        let center = content.captionPillCenter(forPillSize: content.estimatedCaptionSize)
+        #expect(abs(anchor.x - center.x) < 0.001)
+        #expect(abs(anchor.y - center.y) < 0.001)
+    }
+
+    @Test func aTailAtTheEdgeGrowsIntoTheRoomInstead() {
+        // Tail hard against the left edge, arrow pointing right: growing back
+        // along the shaft would run off the picture, so the planner sends the
+        // pill somewhere with room, still hanging off the tail by the gap.
+        var content = arrow("A caption with some length to it",
+                            from: CGPoint(x: 24, y: 400), to: CGPoint(x: 400, y: 400))
+        let placement = CaptionPlanner.plan(for: content, canvas: canvas)
+        #expect(placement.growth != nil)
+        content.captionOffset = placement.attach
+        content.captionGrowth = placement.growth
+        #expect(bounds.contains(pill(content, size: content.estimatedCaptionSize)))
+        // Rightward, into the open half of the picture, hung from the tail's
+        // own column and clear of the shaft: growing the caption from here
+        // never has to slide it back.
+        #expect(placement.growth == CGSize(width: 1, height: 0))
+        let attachment = content.captionAttachment()
+        #expect(abs(attachment.x - 24) < 0.5)
+        let row = gap + content.estimatedCaptionSize.height / 2
+        #expect(abs(abs(attachment.y - 400) - row) < 0.5)
+    }
+
+    @Test func theDirectionPickedAtOpenHasRoomForARealSentence() {
+        // Planned with the room probe (what the field does when it opens), the
+        // direction still holds a long caption on the picture, so it never has
+        // to flip halfway through a word.
+        var content = arrow("A", from: CGPoint(x: 24, y: 400), to: CGPoint(x: 400, y: 400))
+        let placement = CaptionPlanner.plan(for: content, canvas: canvas,
+                                            reserving: content.captionRoomProbeSize)
+        content.captionOffset = placement.attach
+        content.captionGrowth = placement.growth
+        content.caption = String(repeating: "n", count: 24)
+        #expect(bounds.contains(pill(content, size: content.estimatedCaptionSize)))
+    }
+
+    @Test func aFrozenPlacementIsWhatTheCommittedPillUses() {
+        // The field picked a spot when it opened; committing writes exactly
+        // that spot, so the pill does not jump on Return.
+        let layer = AnnotationBuilder.layer(content: arrowContent(),
+                                            from: CGPoint(x: 30, y: 420),
+                                            to: CGPoint(x: 500, y: 420))
+        let placement = CaptionPlacement(attach: CGSize(width: 0, height: -20),
+                                         growth: CGSize(width: 0, height: -1))
+        let captioned = AnnotationBuilder.captioning(layer, caption: "Grows upward",
+                                                     placement: placement)
+        #expect(captioned.annotation?.captionOffset == placement.attach)
+        #expect(captioned.annotation?.captionGrowth == placement.growth)
+        // The frame still reserves the pill, and the endpoints never moved.
+        #expect(captioned.annotationEndpoint(.start) == layer.annotationEndpoint(.start))
+        #expect(captioned.annotationEndpoint(.end) == layer.annotationEndpoint(.end))
+        guard let content = captioned.annotation else {
+            Issue.record("expected annotation content")
+            return
+        }
+        let rect = pill(content, size: content.estimatedCaptionSize)
+            .offsetBy(dx: captioned.frame.minX, dy: captioned.frame.minY)
+        #expect(captioned.frame.contains(rect))
+        // Clearing the caption clears the frozen spot with it.
+        let cleared = AnnotationBuilder.captioning(captioned, caption: nil, placement: placement)
+        #expect(cleared.annotation?.captionOffset == nil)
+        #expect(cleared.annotation?.captionGrowth == nil)
+    }
+
+    @Test func growthRoundTripsThroughCodable() throws {
+        var content = arrow("Save", from: .zero, to: CGPoint(x: 100, y: 0))
+        content.captionGrowth = CGSize(width: 0, height: 1)
+        let decoded = try JSONDecoder().decode(AnnotationContent.self,
+                                               from: JSONEncoder().encode(content))
+        #expect(decoded.captionGrowth == CGSize(width: 0, height: 1))
+        // A payload from before growth existed falls back to the shaft.
+        let legacy = """
+        {"shape":"arrow","strokeWidth":4,"colorHex":"#FF3B30",
+         "start":[10,20],"end":[110,20],"caption":"Hi","captionFontSize":20}
+        """.data(using: .utf8)!
+        #expect(try JSONDecoder().decode(AnnotationContent.self, from: legacy).captionGrowth == nil)
     }
 }

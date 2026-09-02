@@ -51,7 +51,7 @@ struct AnnotationCaptionRenderingTests {
             Issue.record("expected a rasterized captioned arrow")
             return
         }
-        let anchor = content.captionAnchor()
+        let anchor = content.captionPillCenter(forPillSize: realChipSize(content))
         let chip = realChipSize(content)
         let px = pixels(image)
         // The padding band between the pill's top edge and the glyph ascenders
@@ -70,7 +70,7 @@ struct AnnotationCaptionRenderingTests {
             Issue.record("expected a rasterized captioned arrow")
             return
         }
-        let anchor = content.captionAnchor()
+        let anchor = content.captionPillCenter(forPillSize: realChipSize(content))
         let chip = realChipSize(content)
         let px = pixels(image)
         var lightPixels = 0
@@ -90,7 +90,7 @@ struct AnnotationCaptionRenderingTests {
             Issue.record("expected a rasterized captioned arrow")
             return
         }
-        let anchor = content.captionAnchor()
+        let anchor = content.captionPillCenter(forPillSize: realChipSize(content))
         let chip = realChipSize(content)
         let px = pixels(image)
         // Alpha in a band below the pill (past the border stroke) should beat

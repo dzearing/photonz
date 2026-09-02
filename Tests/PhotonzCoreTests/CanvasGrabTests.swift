@@ -61,9 +61,11 @@ struct CanvasGrabTests {
     @Test func theTailHandleKeepsPriorityWherePillAndHandleOverlap() {
         // A caption parked ON the tail: the press starts an endpoint drag
         // there, so the cue must not promise a pill drag.
-        let layer = captionedArrow(offset: .zero)
+        let plain = captionedArrow()
+        let tail = try! #require(plain.annotationEndpoint(.start))
+        // Dropped right on the tail, so pill and endpoint handle share a spot.
+        let layer = AnnotationBuilder.placingCaption(plain, at: tail, canvas: nil)
         let pill = try! #require(CanvasGrab.captionPillRect(of: layer))
-        let tail = try! #require(layer.annotationEndpoint(.start))
         #expect(pill.contains(tail))
         #expect(CanvasGrab.hit(at: tail, layer: layer, zoom: 1, captionsEnabled: true) == nil)
         // ...but the far end of the same pill, clear of the handle, still cues.

@@ -122,7 +122,11 @@ public enum AnnotationRasterizer {
         let tone = annotation.captionChipColor
         let fill = CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                            alpha: AnnotationContent.captionChipOpacity)
-        PillRasterizer.draw(text, at: annotation.captionAnchor(), chipSize: chipSize,
+        // Hung from the attachment at the arrow's tail, measured pill and all:
+        // a longer caption reaches further away from the arrow instead of
+        // sliding the whole bubble off it.
+        let center = annotation.captionPillCenter(forPillSize: chipSize)
+        PillRasterizer.draw(text, at: center, chipSize: chipSize,
                             fontSize: annotation.captionFontSize,
                             borderWidth: annotation.captionBorderWidth,
                             fill: fill, border: border,

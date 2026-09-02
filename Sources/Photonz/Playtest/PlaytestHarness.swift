@@ -737,7 +737,12 @@ private final class Run {
                 // placed by hand, so a walk can prove a drag landed.
                 let anchor = annotation.captionAnchor()
                 let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
-                line += " pill \(short(center))\(annotation.captionPinned ? " pinned" : "")"
+                // The attachment too: the point the bubble hangs from, which a
+                // walk can watch stay put while the caption gets longer.
+                let hang = annotation.captionAttachment()
+                let attachment = CGPoint(x: layer.frame.minX + hang.x, y: layer.frame.minY + hang.y)
+                line += " pill \(short(center)) hangs \(short(attachment))"
+                line += annotation.captionPinned ? " pinned" : ""
             }
             return line
         }

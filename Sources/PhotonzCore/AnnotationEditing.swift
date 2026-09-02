@@ -160,15 +160,20 @@ extension AnnotationBuilder {
         var probe = a
         probe.start = start
         probe.end = end
-        let offset: CGSize?
+        let placement: CaptionPlacement
         if a.captionPinned, let pinned = a.captionOffset {
-            offset = CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas)
+            placement = CaptionPlacement(
+                attach: CaptionPlanner.keepingOnCanvas(pinned, for: probe, canvas: canvas),
+                growth: a.captionGrowth)
         } else {
-            offset = CaptionPlanner.plan(for: probe, canvas: canvas)
+            placement = CaptionPlanner.plan(for: probe, canvas: canvas)
         }
-        guard offset != a.captionOffset else { return layer }
+        guard placement.attach != a.captionOffset || placement.growth != a.captionGrowth else {
+            return layer
+        }
         var content = a
-        content.captionOffset = offset
+        content.captionOffset = placement.attach
+        content.captionGrowth = placement.growth
         var updated = layer
         updated.content = .annotation(content)
         return updating(updated, start: start, end: end)
@@ -183,13 +188,42 @@ extension AnnotationBuilder {
               let tail = layer.annotationEndpoint(.start) else { return layer }
         var content = a
         content.captionPinned = true
-        content.captionOffset = CGSize(width: center.x - tail.x, height: center.y - tail.y)
+        // The drop freezes the direction as well as the spot: a pill placed by
+        // hand must not swing around its attachment when the head later moves.
+        content.captionGrowth = a.captionGrowthDirection()
+        // The drop names where the PILL sits; the model stores where it hangs
+        // from, so a caption typed later still grows away from the arrow.
+        let attachment = CaptionPlanner.attachment(forPillCenter: center, of: a,
+                                                   size: a.estimatedCaptionSize)
+        content.captionOffset = CGSize(width: attachment.x - tail.x, height: attachment.y - tail.y)
         var updated = layer
         updated.content = .annotation(content)
         // Rebuild the frame around the new spot even without a canvas to clamp
         // against, then clamp when there is one.
         guard let end = layer.annotationEndpoint(.end) else { return layer }
         return planningCaption(updating(updated, start: tail, end: end), canvas: canvas)
+    }
+
+    /// Writes a caption and the spot the caption FIELD used, without re-picking
+    /// it: what you saw on the last keystroke is what lands, so the pill does
+    /// not jump on Return. An empty caption clears the spot with the text.
+    public static func captioning(_ layer: Layer, caption: String?,
+                                  placement: CaptionPlacement) -> Layer {
+        guard var content = layer.annotation,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        content.caption = caption
+        if content.hasCaption {
+            content.captionOffset = placement.attach
+            content.captionGrowth = placement.growth
+        } else {
+            content.captionOffset = nil
+            content.captionGrowth = nil
+            content.captionPinned = false
+        }
+        var updated = layer
+        updated.content = .annotation(content)
+        return updating(updated, start: start, end: end)
     }
 
     /// Hands a hand-placed pill back to the planner: the automatic spot again.
@@ -200,9 +234,27 @@ extension AnnotationBuilder {
         var content = a
         content.captionPinned = false
         content.captionOffset = nil
+        content.captionGrowth = nil
         var updated = layer
         updated.content = .annotation(content)
         return planningCaption(updating(updated, start: start, end: end), canvas: canvas)
+    }
+}
+
+/// Where a caption pill hangs from and which way it grows: the two things the
+/// planner decides, and the two the caption field freezes when it opens so
+/// nothing moves under the typing.
+public struct CaptionPlacement: Hashable, Sendable {
+    /// The attachment relative to the tail. Nil = the default spot, one gap
+    /// past the tail along the shaft.
+    public var attach: CGSize?
+    /// The growth direction as a unit vector. Nil = along the shaft, away from
+    /// the head.
+    public var growth: CGSize?
+
+    public init(attach: CGSize? = nil, growth: CGSize? = nil) {
+        self.attach = attach
+        self.growth = growth
     }
 }
 
@@ -214,29 +266,44 @@ extension AnnotationBuilder {
 /// the roles legend go through: this only says which spots exist and what the
 /// pill has to keep off.
 public enum CaptionPlanner {
-    /// Nil when the default spot behind the tail fits the canvas; otherwise
-    /// the pill center relative to the tail. Candidates, in order: the default
-    /// spot slid back onto the picture, then above, below, left of and right of
-    /// the tail (each slid onto the picture). Sitting on the head costs more
-    /// than any lower-ranked spot, and sitting on the shaft more than the rank
-    /// gap, so the label never hides what the arrow is pointing at.
-    public static func plan(for content: AnnotationContent, canvas: CGSize) -> CGSize? {
+    /// Nil-everything when the default spot behind the tail fits the canvas;
+    /// otherwise the spot the pill hangs from and the way it grows. Spots, in
+    /// order: back along the shaft, then above the tail, below it, and beside
+    /// it, each running whichever way has the room. Sitting on the head costs
+    /// more than any lower-ranked spot, and sitting on the shaft more than the
+    /// rank gap, so the label never hides what the arrow is pointing at.
+    ///
+    /// `reserving` is the pill the spot has to hold: the caption's own estimate
+    /// by default, or `captionRoomProbeSize` when a field is opening and the
+    /// sentence has not been typed yet.
+    public static func plan(for content: AnnotationContent, canvas: CGSize,
+                            reserving reserve: CGSize? = nil) -> CaptionPlacement {
         let bounds = CGRect(origin: .zero, size: canvas)
-        let size = content.estimatedCaptionSize
+        let size = reserve ?? content.estimatedCaptionSize
         var free = content
         free.captionOffset = nil
-        let defaultAnchor = free.captionAnchor()
-        if bounds.contains(rect(at: defaultAnchor, size: size)) { return nil }
+        free.captionGrowth = nil
+        let shaft = free.captionGrowthDirection()
+        if bounds.contains(rect(of: free, size: size)) { return CaptionPlacement() }
 
         let tail = content.start
         let head = content.end
         let gap = AnnotationContent.captionGap
-        let spots = [
-            defaultAnchor,
-            CGPoint(x: tail.x, y: tail.y - gap - size.height / 2),
-            CGPoint(x: tail.x, y: tail.y + gap + size.height / 2),
-            CGPoint(x: tail.x - gap - size.width / 2, y: tail.y),
-            CGPoint(x: tail.x + gap + size.width / 2, y: tail.y),
+        let right = CGSize(width: 1, height: 0)
+        let left = CGSize(width: -1, height: 0)
+        // Where the pill hangs from and which way it runs. A caption is one
+        // line, so it only ever grows sideways: a spot above or below the tail
+        // therefore starts AT the tail and runs off to one side, rather than
+        // straddling it and spreading both ways into whatever is beside it.
+        let row = gap + size.height / 2
+        let spots: [(attach: CGPoint, growth: CGSize?)] = [
+            (CGPoint(x: tail.x + shaft.width * gap, y: tail.y + shaft.height * gap), nil),
+            (CGPoint(x: tail.x, y: tail.y - row), right),
+            (CGPoint(x: tail.x, y: tail.y - row), left),
+            (CGPoint(x: tail.x, y: tail.y + row), right),
+            (CGPoint(x: tail.x, y: tail.y + row), left),
+            (CGPoint(x: tail.x - gap, y: tail.y), left),
+            (CGPoint(x: tail.x + gap, y: tail.y), right),
         ]
         // What the arrow is POINTING AT is the subject: the pill may never sit
         // on it. Its own shaft is softer — a pill on the shaft still reads as
@@ -245,47 +312,85 @@ public enum CaptionPlanner {
         let headRadius = content.strokeWidth * 3 * content.arrowheadScale + gap
         let headZone = CGRect(x: head.x - headRadius, y: head.y - headRadius,
                               width: 2 * headRadius, height: 2 * headRadius)
-        let candidates = spots.enumerated().map { rank, spot -> LabelCandidate<CGPoint> in
-            let anchor = slidOntoCanvas(spot, size: size, bounds: bounds)
-            let pill = rect(at: anchor, size: size)
+        let candidates = spots.enumerated().map { rank, spot -> LabelCandidate<CaptionPlacement> in
+            var probe = free
+            probe.captionGrowth = spot.growth
+            probe.captionOffset = CGSize(width: spot.attach.x - tail.x,
+                                         height: spot.attach.y - tail.y)
+            let wanted = rect(of: probe, size: size)
+            let pill = slidOntoCanvas(wanted, bounds: bounds)
+            // A caption grows sideways, so horizontal room is what a direction
+            // is worth: every point the pill has to slide left or right to fit
+            // is a point it will have to slide again on the next keystroke.
             var cost = CGFloat(rank) * LabelPlacer.rankCost
+            cost += abs(pill.minX - wanted.minX) * LabelPlacer.nudgeCost
             if LabelPlacer.segment(from: tail, to: head,
                                    crosses: [pill.insetBy(dx: -gap / 2, dy: -gap / 2)]) {
                 cost += LabelPlacer.crossingCost
             }
-            return LabelCandidate(rect: pill, payload: anchor, cost: cost)
+            let anchor = slid(probe.captionAttachment(), by: pill, from: wanted)
+            let placement = CaptionPlacement(
+                attach: CGSize(width: anchor.x - tail.x, height: anchor.y - tail.y),
+                growth: spot.growth)
+            return LabelCandidate(rect: pill, payload: placement, cost: cost)
         }
         let avoid = [LabelAvoidance(rects: [headZone], weight: .flat(LabelPlacer.subjectCost))]
         guard let best = LabelPlacer.best(among: candidates, avoiding: avoid,
-                                          within: bounds) else { return nil }
-        return CGSize(width: best.x - tail.x, height: best.y - tail.y)
+                                          within: bounds) else { return CaptionPlacement() }
+        return best
     }
 
-    /// A hand-placed pill's offset, pulled back onto the picture if the spot
-    /// (`offset` from the tail) would leave it. The person chose the spot, so
-    /// nothing else is second-guessed: it may sit on the shaft or the head.
+    /// A hand-placed pill's attachment, pulled back onto the picture if the
+    /// pill it holds would leave it. The person chose the spot, so nothing else
+    /// is second-guessed: it may sit on the shaft or the head.
     public static func keepingOnCanvas(_ offset: CGSize, for content: AnnotationContent,
                                        canvas: CGSize) -> CGSize {
         let bounds = CGRect(origin: .zero, size: canvas)
         let tail = content.start
-        let anchor = slidOntoCanvas(CGPoint(x: tail.x + offset.width, y: tail.y + offset.height),
-                                    size: content.estimatedCaptionSize, bounds: bounds)
+        var probe = content
+        probe.captionOffset = offset
+        let wanted = rect(of: probe, size: content.estimatedCaptionSize)
+        let anchor = slid(probe.captionAttachment(),
+                          by: slidOntoCanvas(wanted, bounds: bounds), from: wanted)
         return CGSize(width: anchor.x - tail.x, height: anchor.y - tail.y)
     }
 
-    private static func rect(at anchor: CGPoint, size: CGSize) -> CGRect {
-        CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
-               width: size.width, height: size.height)
+    /// The attachment a pill of `size` centered on `center` hangs from: the
+    /// middle of the side facing the arrow. The inverse of
+    /// `captionPillCenter(forPillSize:)`, used wherever a spot arrives as a
+    /// pill position (a drag's drop, a candidate slid back onto the picture).
+    public static func attachment(forPillCenter center: CGPoint, of content: AnnotationContent,
+                                  size: CGSize) -> CGPoint {
+        let d = content.captionGrowthDirection()
+        let extent = (abs(d.width) * size.width + abs(d.height) * size.height) / 2
+        return CGPoint(x: center.x - d.width * extent, y: center.y - d.height * extent)
     }
 
-    /// The nearest center that keeps a `size` pill inside `bounds` (the pill's
-    /// own center when it already fits, the canvas center when it never can).
-    private static func slidOntoCanvas(_ anchor: CGPoint, size: CGSize, bounds: CGRect) -> CGPoint {
+    /// An attachment carried along by however far its pill had to slide to sit
+    /// on the picture. The shift is applied to the point itself rather than
+    /// re-derived from the moved pill, so a spot that did not slide comes back
+    /// bit for bit.
+    private static func slid(_ attachment: CGPoint, by pill: CGRect, from wanted: CGRect) -> CGPoint {
+        CGPoint(x: attachment.x + (pill.minX - wanted.minX),
+                y: attachment.y + (pill.minY - wanted.minY))
+    }
+
+    /// The pill `content` would draw at `size`, in `content`'s own coordinates.
+    private static func rect(of content: AnnotationContent, size: CGSize) -> CGRect {
+        let center = content.captionPillCenter(forPillSize: size)
+        return CGRect(x: center.x - size.width / 2, y: center.y - size.height / 2,
+                      width: size.width, height: size.height)
+    }
+
+    /// The nearest position that keeps `pill` inside `bounds` (itself when it
+    /// already fits, centered when it never can).
+    private static func slidOntoCanvas(_ pill: CGRect, bounds: CGRect) -> CGRect {
         func clamp(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat {
             lo <= hi ? min(max(v, lo), hi) : (lo + hi) / 2
         }
-        return CGPoint(x: clamp(anchor.x, bounds.minX + size.width / 2, bounds.maxX - size.width / 2),
-                       y: clamp(anchor.y, bounds.minY + size.height / 2, bounds.maxY - size.height / 2))
+        return CGRect(x: clamp(pill.minX, bounds.minX, bounds.maxX - pill.width),
+                      y: clamp(pill.minY, bounds.minY, bounds.maxY - pill.height),
+                      width: pill.width, height: pill.height)
     }
 }
 

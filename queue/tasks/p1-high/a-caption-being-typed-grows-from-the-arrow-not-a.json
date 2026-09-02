@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 104,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:22:39.695Z",
-  "updated": "2026-09-02T22:22:39.728Z",
+  "updated": "2026-09-02T23:24:56.910725Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user on 2026-09-02 after the pill styling landed (task the-arrow-caption-is-a-bubble-in-the-measure-pil, audit 2026-09-02-arrow-caption-pill.json): the arrow text experience is weird, I type and the text moves away from the arrow as it grows in length; I want a pill with the text field within it so I can visualize it while typing. The pill now exists; this is about anchoring. Likely cause: the on-canvas field and AnnotationEditing.planningCaption keep the caption centered on the tail anchor (AnnotationContent.captionAnchor), so a wider string expands in both directions and the visual center walks. Anchor the bubble by the edge facing the arrow instead, pick the growth side once at open time from MeasureLabelPlacement style logic or the caption planner, and hold it for the session of that field. Files: Sources/Photonz/CanvasView.swift caption field layout, Sources/PhotonzCore/AnnotationEditing.swift planningCaption, and the rasterizer that draws the committed pill.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-09-02T22:22:39.727Z",
       "note": "seq 140 -> 104"
+    },
+    {
+      "t": "2026-09-02T22:59:15.915Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "adversarial review before building: the mock's centred pill is the bug. A caption is a single wide capsule, so it only ever grows sideways; centring it on an anchor means half of every new character pushes the label off the arrow. Shortest fix that delivers the value: stop storing where the pill CENTRES and store where it HANGS FROM, then let the measured pill (not the char-count estimate) decide the rest. No new UI, no new gesture."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "core: AnnotationContent.captionOffset now means the attachment (the near side of the bubble) and a new captionGrowth carries the direction. captionPillCenter(forPillSize:) hangs a measured pill off it; captionAnchor() is that at the estimated size, so frame reservation and hit-testing are unchanged. Rasterizer draws at the measured centre, so a wider label reaches further out instead of sliding."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "planner: CaptionPlanner.plan returns a CaptionPlacement (attach + growth) and ranks spots by the room they leave SIDEWAYS (a horizontal slide is charged per point), because that is the axis a caption grows on. Spots above and below the tail now hang from the tail's own column and run left or right rather than straddling it."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "session: the field freezes its placement when it opens (planned against room for a 24-character sentence, or the hand-placed spot if the pill was dragged) and holds it for every keystroke; commit writes that same spot through AnnotationBuilder.captioning, so nothing re-picks on Return."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "found while playtesting: a pill placed above or below a tail still spread sideways off the picture, and a diagonal arrow still slid its near corner along the shaft. Fixed both: vertical spots grow horizontally, and a diagonal arrow squares its growth off to its dominant axis."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "verified on the probe (Scripts/playtest/arrow-caption-anchor.json, Screen Recording granted so the shots are real captures): short then long caption at five arrow directions. Pill right edge measured at 788px typing short, 788px typing long, 789px committed. All five captions land on the picture. Audit queue/audits/2026-09-02-arrow-caption-anchor.json."
+    },
+    {
+      "t": "2026-09-02T23:24:56.910725Z",
+      "note": "rough, in the audit: the field's bubble is ~10px wider than the committed pill (two different text measurers), so the FAR edge can settle on Return; the near edge does not move."
     }
-  ]
+  ],
+  "started": "2026-09-02T22:59:15.914Z"
 }

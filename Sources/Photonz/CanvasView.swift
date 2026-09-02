@@ -126,7 +126,7 @@ struct CanvasView: NSViewRepresentable {
     let onTextCancel: () -> Void
     let onCaptionEditBegin: (UUID) -> Void
     /// (layer, draft, keepTool): keepTool is the press that starts the next arrow.
-    let onCaptionCommit: (UUID, String, Bool) -> Void
+    let onCaptionCommit: (UUID, String, CaptionPlacement, Bool) -> Void
     let onCaptionCancel: () -> Void
     let onDeleteLayer: (UUID) -> Void
     let onDeleteLayers: ([UUID]) -> Void
@@ -258,7 +258,7 @@ final class CanvasNSView: NSView {
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
     var onCaptionEditBegin: ((UUID) -> Void) = { _ in }
-    var onCaptionCommit: ((UUID, String, Bool) -> Void) = { _, _, _ in }
+    var onCaptionCommit: ((UUID, String, CaptionPlacement, Bool) -> Void) = { _, _, _, _ in }
     var onCaptionCancel: (() -> Void) = {}
     var onDeleteLayer: ((UUID) -> Void) = { _ in }
     var onDeleteLayers: (([UUID]) -> Void) = { _ in }
@@ -588,6 +588,11 @@ final class CanvasNSView: NSView {
         /// pill for the CURRENT draft will render (it grows away from the tail
         /// and slides onto the picture the same way the committed pill does).
         var captionLayer: Layer?
+        /// Where the pill hangs from and which way it grows, picked once when
+        /// the field opened and held for the whole session: what you type
+        /// extends the bubble away from the arrow, and nothing slides under the
+        /// cursor mid-word. Committing writes this same spot.
+        var captionPlacement = CaptionPlacement()
     }
     private var textSession: TextEditSession?
     /// The session's editor overlay, positioned/scaled to track the viewport.
@@ -2884,6 +2889,26 @@ final class CanvasNSView: NSView {
         refreshOverlays()
     }
 
+    /// The spot a caption field takes for its whole session: a hand-placed pill
+    /// keeps the spot it was dropped at, anything else is picked against the
+    /// picture with room for a sentence, so a long caption never has to slide
+    /// back or flip sides halfway through typing it.
+    private func captionPlacement(for layer: Layer, canvas: CGSize) -> CaptionPlacement {
+        guard var probe = layer.annotation,
+              let tail = layer.annotationEndpoint(.start),
+              let head = layer.annotationEndpoint(.end) else { return CaptionPlacement() }
+        if probe.captionPinned, probe.captionOffset != nil {
+            return CaptionPlacement(attach: probe.captionOffset, growth: probe.captionGrowth)
+        }
+        probe.start = tail
+        probe.end = head
+        // The planner only places a pill that has text; a fresh arrow's field
+        // is empty, so it plans against the room a caption will need.
+        if !probe.hasCaption { probe.caption = "A" }
+        return CaptionPlanner.plan(for: probe, canvas: canvas,
+                                   reserving: probe.captionRoomProbeSize)
+    }
+
     /// Opens the inline caption editor on an arrow (Next `next-arrow-captions`):
     /// a single-line field centered where the pill renders, tinted with the
     /// pill's tone so the draft is legible over any image. Return commits, Esc
@@ -2891,14 +2916,18 @@ final class CanvasNSView: NSView {
     /// `layer` is passed in whole because the freshly created arrow may not
     /// have reached this view's `document` snapshot yet.
     func beginCaptionSession(layer: Layer) {
-        guard textSession == nil, viewport != nil,
+        guard textSession == nil, let viewport,
               let a = layer.annotation, a.shape == .arrow else { return }
-        let anchor = a.captionAnchor()
+        let placement = captionPlacement(for: layer, canvas: viewport.documentSize)
+        var draft = a
+        draft.captionOffset = placement.attach
+        draft.captionGrowth = placement.growth
+        let anchor = draft.captionAnchor()
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
         let style = TextContent(string: "", fontName: "SF Pro", fontSize: a.captionFontSize,
                                 colorHex: AnnotationContent.captionTextColorHex)
         textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
-                                      captionLayer: layer)
+                                      captionLayer: layer, captionPlacement: placement)
 
         let editor = makeInlineEditor()
         editor.commitsOnPlainReturn = true
@@ -3042,19 +3071,21 @@ final class CanvasNSView: NSView {
         contentWidth += 2 * inset
         height = ceil(height) + 2 * inset
         if let caption {
-            // A caption session centers the editor where the pill for the
-            // current draft will render: it grows away from the tail as you
-            // type, and slides onto the picture when the tail is at an edge.
+            // A caption session hangs the editor off the spot it froze when it
+            // opened: the bubble's near edge stays put on the arrow's tail and
+            // the words extend away from it, so what you watch while typing is
+            // where the caption lands.
             var center = session.origin
-            if let layer = session.captionLayer {
-                let draft = editor.string.isEmpty ? "A" : editor.string
-                let probe = AnnotationBuilder.planningCaption(
-                    AnnotationBuilder.restyled(layer, caption: .some(draft)),
-                    canvas: viewport.documentSize)
-                if let a = probe.annotation {
-                    let anchor = a.captionAnchor()
-                    center = CGPoint(x: probe.frame.minX + anchor.x, y: probe.frame.minY + anchor.y)
-                }
+            if var probe = session.captionLayer?.annotation,
+               let tail = session.captionLayer?.annotationEndpoint(.start),
+               let head = session.captionLayer?.annotationEndpoint(.end) {
+                probe.start = tail
+                probe.end = head
+                probe.captionOffset = session.captionPlacement.attach
+                probe.captionGrowth = session.captionPlacement.growth
+                let pill = CGSize(width: contentWidth / viewport.zoom,
+                                  height: height / viewport.zoom)
+                center = probe.captionPillCenter(forPillSize: pill)
             }
             let pillCenter = viewport.viewPoint(fromDocument: center)
             let frame = CGRect(x: (pillCenter.x - contentWidth / 2).rounded(),
@@ -3089,7 +3120,7 @@ final class CanvasNSView: NSView {
         let string = editor.string
         if session.captionStyle != nil, let layerID = session.layerID {
             teardownTextSession()
-            onCaptionCommit(layerID, string, keepTool)
+            onCaptionCommit(layerID, string, session.captionPlacement, keepTool)
             return
         }
         // Same wrap cap the live editor used, so layout doesn't shift on commit.

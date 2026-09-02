@@ -932,7 +932,8 @@ final class EditorState {
     /// field finishes the arrow, so the Arrow tool that stayed live hands back
     /// to Select; `keepTool` is the canvas drag that starts the NEXT arrow with
     /// this same press and wants the tool to stay put.
-    func commitCaptionEdit(layerID: UUID, string: String, keepTool: Bool = false) {
+    func commitCaptionEdit(layerID: UUID, string: String,
+                           placement: CaptionPlacement? = nil, keepTool: Bool = false) {
         editingCaptionLayerID = nil
         if !keepTool { setTool(ArrowCaptionEntry.toolAfterClosing(activeTool)) }
         guard let layer = document?.layer(id: layerID),
@@ -947,11 +948,20 @@ final class EditorState {
         }
         perform { document in
             guard let current = document.layer(id: layerID) else { return }
-            // The pill re-picks its spot for the new text, so a label typed on
-            // an arrow drawn from the margin lands on the picture, not off it.
-            let restyled = AnnotationBuilder.planningCaption(
-                AnnotationBuilder.restyled(current, caption: .some(newCaption)),
-                canvas: document.canvasSize)
+            // The field already picked the pill's spot when it opened and held
+            // it through every keystroke, so committing writes that same spot:
+            // the label lands where it was, with no jump on Return. A caption
+            // set without a field (the inspector) has no spot yet, so the
+            // planner picks one against the picture.
+            let restyled: Layer
+            if let placement {
+                restyled = AnnotationBuilder.captioning(current, caption: newCaption,
+                                                        placement: placement)
+            } else {
+                restyled = AnnotationBuilder.planningCaption(
+                    AnnotationBuilder.restyled(current, caption: .some(newCaption)),
+                    canvas: document.canvasSize)
+            }
             document.updateLayer(id: layerID) {
                 $0.content = restyled.content
                 $0.frame = restyled.frame

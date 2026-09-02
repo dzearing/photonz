@@ -1,0 +1,29 @@
+{
+  "feature": "Arrow caption anchoring",
+  "epic": "epic-uehjr1",
+  "summary": "A caption being typed on an arrow now hangs off the tail and grows away from it. The edge of the bubble facing the arrow holds still from the first letter to the last, and the pill lands on Return exactly where the field was.",
+  "setup": "Photonz Dev, Experiments window, release Next. Arrow captions are on by default; any screenshot will do.",
+  "try": [
+    { "do": "Press A and drag an arrow pointing up and to the right." },
+    { "do": "Type Save, then keep typing: and close the window.", "shot": "2026-09-02-arrow-caption-anchor-typing.png" },
+    { "do": "Watch the bubble's right edge, the one touching the tail, while you type." },
+    { "do": "Press Return and check whether the pill moved." },
+    { "do": "Draw an arrow whose tail sits right against the left edge of the picture, pointing right.", "shot": "2026-09-02-arrow-caption-anchor-edge.png" },
+    { "do": "Type a long caption on it and watch which way the bubble runs." },
+    { "do": "Draw one arrow pointing straight up and one straight down, and caption both." }
+  ],
+  "evaluate": [
+    "While you type, does the bubble feel attached to the arrow, or does it still walk?",
+    "On a rightward arrow the label grows leftward, so the words you already typed slide left while the caret stays by the arrow. Does that read as growth, or as drift?",
+    "For an arrow drawn on a diagonal, the caption now sits squarely left, right, above or below the tail instead of trailing off along the shaft. Is that better or worse than yesterday?",
+    "At the picture's edge the label drops below the tail and runs into the open space. Is that where you would look for it?",
+    "Does anything visibly jump at the moment you press Return?"
+  ],
+  "rough": [
+    "The bubble is one or two characters wider while you type than it is once committed: the field measures text with the system layout engine and the committed pill measures it with the renderer. The near edge matches exactly; the far edge can settle by about ten pixels on Return.",
+    "The empty field is as wide as its Add a caption hint, so the bubble snaps narrower on the first character typed. That predates this change.",
+    "A very long caption typed at the edge of the picture can still reach past it: the direction is picked once for room for a sentence and then held, and it is not allowed to slide mid-word, which was the whole complaint.",
+    "Departure from the mock: on a diagonal arrow the caption no longer continues along the shaft. A wide capsule growing on a diagonal slides its nearest corner sideways with every character, so the caption squares off to whichever axis the arrow mostly runs on.",
+    "Screen Recording was granted, so the two shots here are real captures of the window, not offscreen renders."
+  ]
+}
