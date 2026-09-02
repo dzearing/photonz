@@ -2318,8 +2318,12 @@ final class CanvasNSView: NSView {
             hideMeasureHoverReadout()
             clearAnnotationPreview()
             // …but a typed text draft is worth keeping: commit it. Deferred a
-            // tick because this runs inside a SwiftUI update.
-            if textSession != nil {
+            // tick because this runs inside a SwiftUI update. A caption
+            // session is exempt from the hand-back to Select: drawing the
+            // arrow is what switches the tool, and that same mouse-up opened
+            // the editor, so committing here would close it before the first
+            // keystroke. Any other tool switch commits it like a text block.
+            if let session = textSession, !(session.captionStyle != nil && tool == .select) {
                 DispatchQueue.main.async { [weak self] in self?.commitTextSession() }
             }
             window?.invalidateCursorRects(for: self)
@@ -3380,6 +3384,18 @@ final class CanvasNSView: NSView {
 extension CanvasNSView: NSTextViewDelegate {
     func textDidChange(_ notification: Notification) {
         layoutTextEditor()
+    }
+
+    /// The caption editor losing keyboard focus (most often a click into the
+    /// inspector's Caption field) commits its draft, so there is only ever one
+    /// caption draft open and whichever field you type in next starts from the
+    /// committed text. Deferred a tick: this fires inside AppKit's responder
+    /// hand-off, and tearing the editor down there would re-enter
+    /// `makeFirstResponder`. Text-tool sessions are exempt on purpose: the font
+    /// picker takes focus mid-edit and the block must stay open through it.
+    func textDidEndEditing(_ notification: Notification) {
+        guard textSession?.captionStyle != nil else { return }
+        DispatchQueue.main.async { [weak self] in self?.commitTextSession() }
     }
 
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {

@@ -1168,6 +1168,12 @@ struct AnnotationInspector: View {
                     .onChange(of: a.caption ?? "", initial: true) { _, new in
                         captionDraft = new
                     }
+                    // The canvas opening its own editor on this arrow closes
+                    // the inspector's draft (one draft at a time): the field
+                    // falls back to the caption the canvas editor starts from.
+                    .onChange(of: editorState.editingCaptionLayerID) { _, editing in
+                        if editing == layer.id { captionDraft = annotation?.caption ?? "" }
+                    }
                     if a.hasCaption {
                         sliderRow("Label size", value: captionSizeDraft ?? a.captionFontSize,
                                   display: "\(Int((captionSizeDraft ?? a.captionFontSize).rounded())) px",

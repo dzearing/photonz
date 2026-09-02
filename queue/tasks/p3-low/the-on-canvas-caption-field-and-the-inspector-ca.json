@@ -5,14 +5,14 @@
   "epic": "epic-uehjr1",
   "priority": "p3-low",
   "seq": 480,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:47:21.102Z",
-  "updated": "2026-09-02T06:47:21.102Z",
+  "updated": "2026-09-02T08:44:19.064Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "CanvasNSView.beginCaptionSession / commitTextSession and EditorState.setAnnotationCaption. The simplest fix is committing the inline session when its NSTextView resigns first responder (NSTextViewDelegate.textDidEndEditing), but teardown inside that callback re-enters makeFirstResponder, so test it on the probe app rather than reasoning about it.",
+  "notes": "CanvasNSView.beginCaptionSession / commitTextSession and EditorState.setAnnotationCaption. The simplest fix is committing the inline session when its NSTextView resigns first responder (NSTextViewDelegate.textDidEndEditing), but teardown inside that callback re-enters makeFirstResponder, so test it on the probe app rather than reasoning about it. Shipped: CanvasNSView.textDidEndEditing commits caption sessions (deferred); tool-change handler exempts caption sessions on the hand-back to Select (that was closing the fresh-arrow editor); AnnotationInspector resets its draft on editingCaptionLayerID == layer.id.",
   "acceptance": [
     "With the on-canvas field open, clicking into the inspector Caption field closes the on-canvas field (committing its draft).",
     "Pressing Return in the inspector never gets overwritten by a later click on the canvas.",
@@ -22,6 +22,44 @@
     {
       "t": "2026-09-02T06:47:21.102Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:26:48.728Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Adversarial review before building: the fix must not touch text-tool sessions (the font picker takes focus mid-edit on purpose), must not run inside AppKit's responder hand-off (teardown re-enters makeFirstResponder), and the inspector must stay clickable while the canvas field is open (acceptance 1), so hiding it was not an option. Shortest version: commit the caption session when its text view resigns first responder, deferred a tick; reset the inspector draft when the canvas opens its own editor."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Reproduced on the probe app with a temporary in-app harness (deleted before commit) that drives the real views with synthesized events: after clicking into the inspector the inline editor stayed open, Return in the inspector landed 'inspector', and the next canvas click committed the stale canvas draft over it. Also: after the inspector Return the pill rendered behind the still-open editor."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Found a second, pre-existing defect while verifying: the caption editor that opens right after drawing an arrow closed itself one tick later. addAnnotation hands the tool back to Select, and the canvas's tool-change handler commits any open inline session. Confirmed by running the harness with the new hook disabled. Fixed in the same handler: a caption session survives the hand-back to Select; any other tool switch still commits it."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Fix: CanvasNSView.textDidEndEditing commits caption sessions (deferred a tick); the tool-change handler exempts a caption session when the new tool is Select; AnnotationInspector resets captionDraft when editingCaptionLayerID becomes this layer. Next-only in effect: every path is behind next-arrow-captions, so Current is unchanged."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Verified on the probe app: (1) canvas draft, click inspector: editor closes, draft committed, inspector shows it with caret at end; Return in inspector then canvas click keeps the inspector's text. (2) inspector draft pending, double-click arrow: editor opens with the real caption, inspector drops its draft, then follows the canvas commit. (3) inspector draft pending, draw a new arrow: editor opens on the new arrow, inspector empty. (4) draw, type, click inspector: label kept; switching to another tool with the editor open commits the draft."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Scripts/test.sh: 1187 tests green on the third run. Runs one and two each failed a different timing-budget test in the ElementBounds hover suite by under a millisecond (56 ms vs 50, 30.6 ms vs 30) while the machine was busy; unrelated to this change (PhotonzCore, no app code), follow-up filed."
+    },
+    {
+      "t": "2026-09-02T08:44:12.000Z",
+      "note": "Audit: queue/audits/2026-09-02-arrow-caption-one-draft.json. Not done: inspector Caption field still commits only on Return (raised as a question in the audit rather than changed)."
+    },
+    {
+      "t": "2026-09-02T08:44:19.064Z",
+      "note": "Caption fields share one draft: the canvas editor commits when it loses focus (click into the inspector), the inspector drops its draft when the canvas opens its editor, and the fresh-arrow editor no longer closes itself on the hand-back to Select. Sources/Photonz/CanvasView.swift and LayersPanel.swift, Next flag only. Verified on the probe app with synthesized events (four scenarios) and Scripts/test.sh green (1187). Audit queue/audits/2026-09-02-arrow-caption-one-draft.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:26:48.728Z",
+  "completed": "2026-09-02T08:44:19.064Z"
 }

@@ -1,0 +1,27 @@
+{
+  "feature": "Arrow caption: one draft at a time",
+  "epic": "epic-uehjr1",
+  "summary": "Drawing an arrow now really opens the caption editor on the canvas and keeps it open until you commit, click away, or click into the inspector's Caption field. The canvas field and the inspector field never hold two competing drafts: focusing one closes the other, so the last thing you typed is what the arrow shows.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flag Arrow captions is on by default. Open any screenshot and press A for the arrow tool.",
+  "try": [
+    { "do": "Drag an arrow across the picture. A caption field should open at the arrow's tail and stay open." },
+    { "do": "Type a word, then click into the inspector's Caption field instead of pressing Return." },
+    { "do": "Check that the canvas field closed, the pill shows your word, and the inspector field now holds that same word with the caret at its end." },
+    { "do": "Edit the word in the inspector and press Return, then click on empty canvas." },
+    { "do": "Check the pill keeps the inspector's text and nothing reverts." },
+    { "do": "Type something new in the inspector without pressing Return, then double-click the arrow." },
+    { "do": "Check the canvas editor opens with the arrow's real caption selected, and the inspector field has dropped the unfinished text." },
+    { "do": "With the canvas editor open, click another tool in the tool bar. The draft should land as the caption." }
+  ],
+  "evaluate": [
+    "When you click from the canvas field into the inspector field, does it feel like one label moving with you, or like something got committed behind your back?",
+    "After that click the inspector puts the caret at the end of the label instead of selecting it all. Is that where you wanted to keep typing?",
+    "Double-clicking the arrow throws away unfinished inspector text rather than carrying it onto the canvas. Is that the right call, or should the canvas editor start from what you were typing?",
+    "The inspector's Caption field still commits only on Return, unlike the canvas field which commits when you click away. Should the inspector also commit when you click away, the way Finder and Xcode fields do?"
+  ],
+  "rough": [
+    "Before this change, the caption editor that opens right after drawing an arrow closed itself one tick later (the tool handing back to Select committed it empty), so the draw-then-type flow never worked in the running app. Fixed here because the task could not be exercised without it.",
+    "Verified by driving the real probe app with synthesized events, not by eye: this unmanned session has no Screen Recording grant, so there are no screenshots.",
+    "The inspector field keeps its Return-only commit. Committing on focus loss would match macOS convention but changes existing behavior, so it is left as a question above."
+  ]
+}
