@@ -1,0 +1,27 @@
+{
+  "feature": "Copying a spec list or a measurement shows a brief confirmation",
+  "epic": "spec-export",
+  "summary": "Copy as Spec List and Copy Measurement now answer with a small Copied pill at the bottom of the canvas that names what landed on the clipboard and fades on its own. Before, the menu closed and nothing said the key was taken.",
+  "setup": "Photonz Dev, Experiments window, release Next. next-measure-panel is on by default. Open a screenshot and draw two or three measurements with the Measure tool (I).",
+  "try": [
+    { "do": "Press control-command-C. A glass pill appears just above the tool bar reading Copied, then Spec list with 3 measurements, and fades in under two seconds." },
+    { "do": "Click one measurement on the canvas and choose Measure > Copy Measurement. The pill reads Copied, 1 measurement." },
+    { "do": "Marquee-select two measurements and choose Measure > Copy Measurements. The pill reads 2 measurements." },
+    { "do": "Open the Measurements group in the inspector, right-click a row, choose Copy Measurement. The same pill appears on the canvas." },
+    { "do": "Press control-command-C twice quickly. One pill stays up and fades from the second press; two never stack." },
+    { "do": "With the Measure tool in hand, press I to switch mode, then press control-command-C while the mode hint is still up. The hint gives way to the Copied pill; they never sit on top of each other." },
+    { "do": "Delete every measurement. Copy as Spec List and Copy Measurement are disabled in the Measure menu, and nothing appears." }
+  ],
+  "evaluate": [
+    "Does the pill land where your eye already is when you press the key from the canvas?",
+    "When you copy from a row's context menu in the inspector, does a pill on the canvas still register, or do you want the count badge on the group header to flash too?",
+    "Is the count line worth the extra words, or would one word, Copied, do?",
+    "Is the fade fast enough that you never wait for it, and slow enough that you always catch it?"
+  ],
+  "rough": [
+    "The pill lives on the canvas only. A copy from the row context menu, made with the eye in the inspector, is confirmed at the bottom of the canvas rather than beside the row. Chosen because the inspector is often hidden when the key is pressed, so the canvas is the one place the notice is always on screen.",
+    "Copy as Spec List from the Measurements group menu is not disabled when every row is hidden: the header still copies, and the pill says Spec list with no visible measurements.",
+    "Plain command-C on a selected measurement stays silent, like every other Copy on the Mac.",
+    "Verified by tests and a probe launch only: the loop cannot drive menus or take screenshots on this machine, so the pill was not watched by hand."
+  ]
+}

@@ -273,7 +273,13 @@ struct EditorView: View {
                        onClearBackground: { editorState.clearBackgroundLayer() },
                        onWindowChange: { editorState.canvasDidMoveToWindow($0) })
                 .overlay(alignment: .bottom) {
-                    if editorState.showsMeasureHint { measureHintChip }
+                    // One slot: the "Copied" notice and the Measure mode hint
+                    // never stack. The notice wins while it is up.
+                    if let notice = editorState.copyConfirmation {
+                        canvasNoticeChip(title: notice.title, detail: notice.detail)
+                    } else if editorState.showsMeasureHint {
+                        measureHintChip
+                    }
                 }
                 .overlay(alignment: .bottom) {
                     if Experiments.shared.toolOptionsEnabled,
@@ -287,6 +293,7 @@ struct EditorView: View {
                 }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureModeHint)
+                .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
                 .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendCorner)
@@ -347,11 +354,18 @@ struct EditorView: View {
     /// landed on and fades on its own (`MeasureModeHint`); in Current it is the
     /// first-run line that lives until the document's first measurement lands.
     private var measureHintChip: some View {
+        canvasNoticeChip(title: editorState.measureHintTitle, detail: editorState.measureHintText)
+    }
+
+    /// The canvas-bottom glass pill every transient notice uses (the Measure
+    /// mode hint, the "Copied" confirmation): an optional lead in its own
+    /// weight, then one line. Never takes input, and fades with its owner.
+    private func canvasNoticeChip(title: String?, detail: String) -> some View {
         HStack(spacing: 8) {
-            if let title = editorState.measureHintTitle {
+            if let title {
                 Text(title).fontWeight(.semibold)
             }
-            Text(editorState.measureHintText)
+            Text(detail)
         }
             .font(.callout)
             .padding(.horizontal, 14)

@@ -1156,11 +1156,42 @@ final class EditorState {
     private(set) var measureModeHint: MeasureModeHint?
     private var measureModeHintTimer: Task<Void, Never>?
 
+    /// Next (`next-measure-panel`): the "Copied" notice that is up right now,
+    /// if any. Raised by Copy as Spec List and Copy Measurement, and dropped
+    /// by its own clock (`CopyConfirmation.lifetime`). It shares the
+    /// canvas-bottom slot with the mode hint: whichever was raised last is the
+    /// one on screen, so two pills never stack.
+    private(set) var copyConfirmation: CopyConfirmation?
+    private var copyConfirmationTimer: Task<Void, Never>?
+
+    /// Raise (or re-raise) the "Copied" notice after text landed on the
+    /// clipboard. Never called when a copy did nothing: the copy paths guard
+    /// before they get here. Re-raising restarts the clock, so two quick
+    /// copies keep one pill up that fades from the last one.
+    private func showCopyConfirmation(_ subject: CopyConfirmation.Subject) {
+        guard Experiments.shared.measurePanelEnabled else { return }
+        measureModeHintTimer?.cancel()
+        measureModeHint = nil
+        let now = Date()
+        let notice = copyConfirmation?.reshown(as: subject, at: now)
+            ?? CopyConfirmation(subject: subject, shownAt: now)
+        copyConfirmation = notice
+        copyConfirmationTimer?.cancel()
+        copyConfirmationTimer = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(CopyConfirmation.lifetime))
+            guard !Task.isCancelled, let self, self.copyConfirmation == notice else { return }
+            self.copyConfirmation = nil
+        }
+    }
+
     /// Raise (or re-raise) the mode hint. Re-raising restarts the clock, so
     /// three quick presses of I keep one chip up that fades from the last
     /// press; the chip's text follows the mode so it never names a stale one.
     private func showMeasureModeHint() {
         guard Experiments.shared.measureModesEnabled else { return }
+        // The slot is shared with the "Copied" notice: the latest raise wins.
+        copyConfirmationTimer?.cancel()
+        copyConfirmation = nil
         let now = Date()
         let hint = measureModeHint?.reshown(as: measureToolMode, at: now)
             ?? MeasureModeHint(mode: measureToolMode, shownAt: now)
@@ -1382,6 +1413,8 @@ final class EditorState {
     func copyMeasureSpecList() {
         guard let document else { return }
         copyText(MeasureSpecList.render(document: document, name: specListName))
+        let listed = MeasureSpecList.measureLayers(in: document).filter(\.isVisible).count
+        showCopyConfirmation(.specList(measurements: listed))
     }
 
     /// The selected measurements, panel order: the primary selection when it
@@ -1400,6 +1433,7 @@ final class EditorState {
         let ids = Set(selectedMeasureLayerIDs)
         guard !ids.isEmpty else { return }
         copyText(MeasureSpecList.render(document: document, ids: ids))
+        showCopyConfirmation(.measurements(count: ids.count))
     }
 
     /// A row's context menu Copy Measurement: that one row's line, whether or
@@ -1408,6 +1442,7 @@ final class EditorState {
         guard let document, let layer = document.layer(id: id),
               let line = MeasureSpecList.specLine(for: layer, in: document) else { return }
         copyText(line)
+        showCopyConfirmation(.measurements(count: 1))
     }
 
     private func copyText(_ text: String) {

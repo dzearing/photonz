@@ -5,14 +5,14 @@
   "epic": "spec-export",
   "priority": "p3-low",
   "seq": 490,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T06:55:35.074Z",
-  "updated": "2026-09-02T06:55:35.075Z",
+  "updated": "2026-09-02T08:50:09.744Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Copy paths: EditorState.copyMeasureSpecList, copySelectedMeasurements, copyMeasurement(id:) share copyText(_:). The toolbar count pill (revealMeasurementsPanel) is a candidate spot for the flash. Raised by queue/audits/2026-09-02-spec-export-menu.json.",
+  "notes": "Copy paths: EditorState.copyMeasureSpecList, copySelectedMeasurements, copyMeasurement(id:) share copyText(_:). The toolbar count pill (revealMeasurementsPanel) is a candidate spot for the flash. Raised by queue/audits/2026-09-02-spec-export-menu.json. Shipped: PhotonzCore/CopyConfirmation.swift + tests; EditorState.showCopyConfirmation; EditorView.canvasNoticeChip shared with the mode hint.",
   "acceptance": [
     "Choosing Copy as Spec List or pressing its key shows a brief, unobtrusive confirmation that fades on its own within about two seconds.",
     "Copy Measurement from the menu or a row context menu shows the same confirmation.",
@@ -23,6 +23,24 @@
     {
       "t": "2026-09-02T06:55:35.075Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T08:44:53.809Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T08:47:04.342Z",
+      "note": "Adversarial review before building. The eye is not in one place: control-command-C is pressed with the eye on the canvas, the panel menu is used with the eye in the inspector, and the row context menu likewise, and the inspector may be hidden entirely when the key is pressed. So the count pill cannot be the confirmation (it is off screen for the most common path). The bottom-right capture toast stack is a system-level panel with a thumbnail, built for captures that happen while the app may have no window; too heavy for a clipboard text copy and it lands outside the window. The right home is the glass pill at the bottom of the canvas that Next already uses for the Measure mode hint: same chrome, same fade, one slot. A copy replaces any mode hint in that slot so two pills never stack. Plain command-C on a measurement stays silent like every other Copy on the Mac. Wording: Copied, with a plain count line (Spec list with 3 measurements / 1 measurement / 2 measurements)."
+    },
+    {
+      "t": "2026-09-02T08:50:03.337Z",
+      "note": "Built. New pure type PhotonzCore/CopyConfirmation.swift (subject: specList(measurements:) or measurements(count:), shownAt, lifetime 1.6s, isLive, reshown, title Copied, detail line) with Tests/PhotonzCoreTests/CopyConfirmationTests.swift written first. EditorState gained copyConfirmation + showCopyConfirmation(_:), raised by copyMeasureSpecList (visible count), copySelectedMeasurements (ids.count) and copyMeasurement(id:) (1) after copyText, gated on measurePanelEnabled so Current never sees it; it and showMeasureModeHint cancel each other so the canvas-bottom slot holds one pill. EditorView's measureHintChip became canvasNoticeChip(title:detail:) and the bottom overlay shows the notice first, else the hint, with a matching .animation(value: copyConfirmation). Full Scripts/test.sh: 1193 tests green. Probe app built, launched (pid checked) and quit. Audit: queue/audits/2026-09-02-copy-confirmation.json. Review after building: plain command-C on a measurement stays silent, matching every Copy on the Mac; a row context menu copy confirms on the canvas rather than beside the row, recorded in the audit's rough list."
+    },
+    {
+      "t": "2026-09-02T08:50:09.743Z",
+      "note": "Copy as Spec List, Copy Measurement(s) and control-command-C now raise a Copied pill at the bottom of the canvas (Next only, next-measure-panel) that names what was copied and fades in 1.6s; it shares the slot with the Measure mode hint so two never stack. PhotonzCore/CopyConfirmation.swift with tests written first; EditorState.showCopyConfirmation; EditorView.canvasNoticeChip. Scripts/test.sh green (1193 tests); probe app launched and quit. Audit: queue/audits/2026-09-02-copy-confirmation.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T08:44:53.808Z",
+  "completed": "2026-09-02T08:50:09.744Z"
 }
