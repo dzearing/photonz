@@ -5212,3 +5212,27 @@ Audit: `queue/audits/2026-09-02-arrow-caption-anchor.json`; walk:
 `Scripts/playtest/arrow-caption-anchor.json`. Next: the field's bubble measures
 ~10px wider than the committed pill (two different text measurers), filed
 separately.
+
+## 2026-09-02 — The region capture overlay, photographed
+
+The dim audit (`queue/audits/2026-09-02-capture-dim-no-loupe.json`) had no
+picture in it: the machine was locked when it was written and nothing can see
+past a lock screen. Taken now, on an unlocked screen, with two
+`--capture-diag` runs on the probe bundle:
+`queue/audits/2026-09-02-capture-dim-drag.png`.
+
+Checked by measurement rather than by eye, because a drag box in a shot is not
+by itself proof the dim is real. Outside the box the screen reads (31,33,38)
+where inside it reads (41,44,51) — 0.75 on every channel, which is the 25%
+black exactly. The top strip and the dock strip both cap at 191, dimmed white,
+so the dim reaches the menu bar and the Dock. The only undimmed thing anywhere
+is the system's own screen-recording dot, which no app can dim.
+
+One real finding on the way. `CaptureDiag`'s overlay-up line reports 0.997 and
+0.999 of clean in both runs — it claims there is no dim — while the drag shot
+taken 250 ms later measures 0.75. `SelectionWindow` opens at
+`sharingType = .none` and `RectSelectionController.freeze()` only flips every
+window to `.readOnly` once every display has been shot, so the overlay is
+invisible to any other capture tool for as long as the whole freeze takes,
+which is longer than the diag's 600 ms sleep. Filed as "The screen dim shows up
+in other recording tools half a second late".

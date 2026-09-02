@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-02T23:25:51.535Z",
-  "updated": "2026-09-02T23:45:50.399Z",
+  "updated": "2026-09-02T23:46:10.522Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The on-canvas field measures its text with NSLayoutManager (plus 3px caret slack) while the committed pill measures with TextRasterizer/PillRasterizer.footprint, so widths differ by about ten image pixels on a long label. The near edge already matches exactly because the bubble is anchored there (task a-caption-being-typed-grows-from-the-arrow-not-a). Fix by having one measurer feed both, most likely by giving the field the rasterizer natural size for the draft string.",
@@ -61,6 +61,6 @@
     }
   ],
   "started": "2026-09-02T23:26:45.527Z",
-  "failures": 1,
+  "failures": 0,
   "completed": "2026-09-02T23:45:50.399Z"
 }

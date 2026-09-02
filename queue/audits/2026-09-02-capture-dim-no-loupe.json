@@ -14,7 +14,8 @@
       "do": "Keep watching for a second without moving. The picture under the dim should not flicker, shift or change brightness when the freeze lands."
     },
     {
-      "do": "Drag a box around something. The box should be bright against the dim, with its size in a pill and no second readout anywhere."
+      "do": "Drag a box around something. The box should be bright against the dim, with its size in a pill and no second readout anywhere.",
+      "shot": "2026-09-02-capture-dim-drag.png"
     },
     {
       "do": "Drag onto a second display, if you have one, and off the bottom of a display. The dim should be right on both."
@@ -38,9 +39,9 @@
   ],
   "rough": [
     "The dim was never covering the whole display before this. It was painted per redrawn rectangle, so a fresh overlay dimmed the outline of the window under the pointer and little else, and the rest of the screen only darkened where a drag had swept. That is fixed here, and it is probably a good part of what felt wrong.",
-    "No screenshot. The loop's probe does hold Screen Recording, and it photographed the drag earlier in the session (box, size pill, no magnifier anywhere), but the machine locked before the dim was fixed and nothing can see past a lock screen: every capture after that came back as the desktop picture, so the shot would have shown a locked machine rather than the feature. The finished dim is checked by its geometry instead (CaptureDim, six tests in PhotonzCore) and by the overlay's layer tree. A follow-up task takes the picture once somebody is logged in.",
+    "The picture is real, taken on an unlocked screen while the probe held Screen Recording. Measured off it: outside the box the screen reads 0.75 of its own colour, which is the 25% black dim exactly, right out to the menu bar and the dock; inside the box the colour is untouched and the size pill reads 580 x 360. Nothing rides beside the pointer. The one bright thing the dim does not cover is the system's own recording dot in the menu bar, which no app can dim and which only shows because the probe was recording.",
     "The freeze now happens a frame or two after the overlay appears rather than before it. Nothing activates, so a menu left open should survive into the picture, but that is the one behaviour this change could have cost and it is in the steps above for that reason.",
-    "The overlay hides itself from its own screenshot while the freeze is in flight and goes back to being visible afterwards. If you record your screen with another tool, the very first instant of a capture will not show the dim.",
+    "The overlay hides itself from screen captures until its own frozen picture has landed, so another recording tool sees no dim for roughly the first half second of a capture, not just the first instant. Two probe runs measured the same thing: half a second in, a capture of the screen still comes back undimmed; a quarter second later the dim is there. A follow-up task is filed for it.",
     "Nothing replaced the magnifier. If placing a crop to the exact pixel matters to you, say so and it comes back as something else: nudge keys, or a readout in the pill, not a floating loupe."
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 120,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T12:07:28.443Z",
-  "updated": "2026-09-02T21:29:52.933Z",
+  "updated": "2026-09-02T23:47:04.718Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-09-02-redline-walk.json step 3 (click two edges, watch the line follow the pointer, click once more) and its earlier rough item that the line seemed stuck after two clicks; MeasureLabelPlanner already plans Size and Gap readouts. Related open card: whether the Measure tool stays in hand after a landing. Filed by the 2026-09-02 digest after judging the walk as a first-time user.",
@@ -55,7 +55,17 @@
     {
       "t": "2026-09-02T21:29:52.932Z",
       "note": "Waiting on the decision card: should a Distance measurement finish when you let go of the drag, with its number placed for you? Both gestures are built behind next-measure-modes / distance-on-release, default OFF so Next is unchanged. A real screen capture per option is on the card, and the brief compares them. An approving answer is a default flip in the next run."
+    },
+    {
+      "t": "2026-09-02T23:47:04.718Z",
+      "note": "decision \"Should a Distance measurement finish when you let go of the drag, with its number placed for you?\" resolved: Keep the three clicks"
+    },
+    {
+      "t": "2026-09-02T23:47:04.718Z",
+      "note": "retired by that answer: \"Keep the three clicks\" means this should not be built, so it will not be picked up again."
     }
   ],
-  "started": "2026-09-02T21:13:13.263Z"
+  "started": "2026-09-02T21:13:13.263Z",
+  "parked": false,
+  "parkReason": ""
 }

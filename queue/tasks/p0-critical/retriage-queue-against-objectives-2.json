@@ -1,0 +1,26 @@
+{
+  "id": "retriage-queue-against-objectives-2",
+  "title": "Retriage queue against objectives",
+  "goal": "",
+  "epic": "",
+  "priority": "p0-critical",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-02T23:48:09.131Z",
+  "updated": "2026-09-02T23:48:09.132Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user updated queue/objectives.json and asked for a retriage. Read the objectives tree (order is priority, nesting is sub-epics) and every open task, then make the queue reflect it: reprioritize (queue.mjs priority), resequence to clean steps of 10 per priority (queue.mjs seq), dedupe, and groom notes so each task names the objective it serves. Do NOT write a digest. Record one history event: queue.mjs event triage with a summary of what moved.",
+  "acceptance": [
+    "Every open task priority/sequence is consistent with the objectives ordering",
+    "A triage history event summarizes the changes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T23:48:09.131Z",
+      "note": "created (dashboard retriage button)"
+    }
+  ]
+}

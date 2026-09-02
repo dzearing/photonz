@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 610,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T22:57:40.652Z",
-  "updated": "2026-09-02T23:26:52.397Z",
+  "updated": "2026-09-02T23:52:34.758Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/probe-app.sh --no-build, then: open -a \"dist/Photonz Probe.app\" --args --capture-diag. It writes /tmp/photonz-capture-diag.txt (dim latency, double-dim ratio) and /tmp/photonz-capture-diag-drag.png, then quits itself. The first line of the report says whether the screen was locked; if it was, the whole run is of the lock screen and must be thrown away. Downscale the PNG before committing it, the raw one is 10 MB. See docs/design/playtest-harness.md.",
@@ -31,8 +31,41 @@
     {
       "t": "2026-09-02T23:26:52.397Z",
       "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-02T23:46:38.573Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Adversarial pass before shooting: the risk here is shipping a picture that looks like the feature but is not. A locked screen photographs as the desktop, and the overlay hides itself from captures while its freeze is in flight, so 'there is a box in the shot' is not proof the dim is real. Plan: check the lock state first, then measure the picture rather than eyeball it."
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Screen was unlocked (CaptureDiag first line: 'screen recording granted: true, screen unlocked'). Probe held Screen Recording per the Grants line. Ran --capture-diag twice on the existing probe bundle (built from HEAD at 16:43, no rebuild needed)."
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Measured the drag shot instead of trusting it: modal background colour outside the box is (31,33,38) against (41,44,51) inside, ratio 0.75 on all three channels, which is the 25% black dim exactly. Top strip and dock strip both cap at 191, i.e. dimmed white, so the dim reaches the menu bar and the dock. Only undimmed thing anywhere is the system's own recording dot at the far top right, which no app can dim. Size pill reads 580 x 360, nothing beside the pointer."
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Discrepancy found and chased: the diag's own overlay-up line reports 0.997 and 0.999 of clean in both runs, i.e. it claims there is no dim, while the drag shot taken 250 ms later measures 0.75. Cause is the overlay staying sharingType .none until the whole freeze finishes, which takes longer than the diag's 600 ms sleep. Filed as 'The screen dim shows up in other recording tools half a second late'."
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Shot downscaled to 1400 px wide (697 KB from 2.1 MB) and committed as queue/audits/2026-09-02-capture-dim-drag.png, hung off the drag step of 2026-09-02-capture-dim-no-loupe.json. Two rough notes in that audit rewritten: the 'no screenshot' one now says what the picture shows and what was measured off it, and the 'first instant' one now says half a second and points at the new task."
+    },
+    {
+      "t": "2026-09-02T23:52:30.571859Z",
+      "note": "Scripts/test.sh green: 1483 tests in 171 suites. No source changed."
+    },
+    {
+      "t": "2026-09-02T23:52:34.758Z",
+      "note": "Real screen capture of the region capture overlay taken on an unlocked screen and committed as queue/audits/2026-09-02-capture-dim-drag.png, referenced from the drag step of 2026-09-02-capture-dim-no-loupe.json. Verified by measurement, not eye: outside the box reads 0.75 of inside on every channel (the 25% dim), menu bar and dock included; pill reads 580 x 360; no loupe. Filed a follow-up for the dim arriving in other recording tools half a second late."
     }
   ],
-  "started": "2026-09-02T23:26:32.871Z",
-  "failures": 1
+  "started": "2026-09-02T23:46:38.573Z",
+  "failures": 1,
+  "completed": "2026-09-02T23:52:34.758Z"
 }
