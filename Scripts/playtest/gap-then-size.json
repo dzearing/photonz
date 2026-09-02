@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/gap-then-size",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+
+    { "do": "measureMode", "mode": "gap" },
+    { "do": "move", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [720, 432] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-gap", "note": "gap between the two cards, tagged spacing" },
+
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "2-size-hover" },
+    { "do": "click", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-size", "note": "Save Changes measured right after a gap" },
+    { "do": "snapshot", "name": "2-size-landed" },
+
+    { "do": "measureMode", "mode": "distance" },
+    { "do": "click", "at": [236, 696] },
+    { "do": "click", "at": [476, 696] },
+    { "do": "click", "at": [476, 656] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-distance", "note": "a plain caliper after size, should keep the popover role" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "copySpecList" },
+    { "do": "readClipboard", "stage": "4-spec" },
+    { "do": "snapshot", "name": "4-spec-copied" }
+  ]
+}

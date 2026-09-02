@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 530,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T13:18:01.776Z",
-  "updated": "2026-09-02T13:18:01.777Z",
+  "updated": "2026-09-02T13:26:08.716Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the scripted playtest walk (Scripts/playtest/redline-walk.json, 2026-09-02): EditorState.addElementSize starts both calipers from measureStyle, so content.role is whatever the popover last held (.spacing here) and MeasureSpecList.derivedName then says Gap. Force role = .size for the two calipers it builds (keep mode horizontal/vertical so Width/Height derive), with a test in MeasureSpecListTests or MeasureTests.",
@@ -22,6 +22,41 @@
     {
       "t": "2026-09-02T13:18:01.777Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T13:20:00.116Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:22:07.512Z",
+      "note": "Reproduced from the recorded redline-walk log: the Size click landed as \"Gap = 121 px [spacing]\" and \"Gap = 30 px [spacing]\". Running a gap-then-size walk in the probe to see it live, and added a MeasureSpecListTests case pinning the contract Size mode will use (styles.content(for: .size) names Width/Height, keeps size ink, leaves the popover role alone)."
+    },
+    {
+      "t": "2026-09-02T13:23:12.594Z",
+      "note": "Reproduced live in the probe (gap click, then Size click, copy spec list): both Size calipers came out as \"Gap: N px (spacing)\". Fix in EditorState.addElementSize: both calipers start from measureStyles.content(for: .size) when roles are on (Size ink, like Gap mode takes Spacing ink), from measureStyle otherwise, and role is pinned to .size either way. Also made measureStyleForActiveMode preview Size mode in Size ink so the hover matches what lands. Running Scripts/test.sh and the walk again."
+    },
+    {
+      "t": "2026-09-02T13:23:27.095Z",
+      "note": "runner failed (exit 0, attempt 1): Both results are pending; nothing further is independent of them, so I'm waiting for the notifications."
+    },
+    {
+      "t": "2026-09-02T13:23:57.882Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T13:26:08.715Z",
+      "note": "Resumed with the fix uncommitted. Scripts/test.sh: 1297 tests in 157 suites pass, including the new MeasureSpecListTests case. Ran a gap-then-size walk in the probe (Scripts/playtest/gap-then-size.json): spec list now reads Gap 121 px (spacing), Height 30 px (size), Width 124 px (size), then a plain caliper drawn afterwards still reads Gap (spacing), so the popover role is untouched. LayersPanel names rows via the same MeasureSpecList.displayName, so the layer list follows."
+    },
+    {
+      "t": "2026-09-02T13:26:08.716Z",
+      "note": "Adversarial pass: the only judgment call was whether Size should also take Size ink when roles are on. Went with yes, mirroring Gap mode taking Spacing ink, and made the hover preview use that ink too so what you see is what lands. With roles off, the single shared ink stays and only the role is pinned."
     }
-  ]
+  ],
+  "started": "2026-09-02T13:23:57.882Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-02T13:23:27.094Z",
+    "exit": 0,
+    "message": "Both results are pending; nothing further is independent of them, so I'm waiting for the notifications."
+  }
 }

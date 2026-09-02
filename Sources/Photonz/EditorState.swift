@@ -1065,11 +1065,19 @@ final class EditorState {
         guard rect.width > 0, rect.height > 0, let canvas = document?.canvasSize else { return }
         let widthFeet = (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.maxX, y: rect.maxY))
         let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
-        var width = measureStyle
+        // A width is a Size callout whatever you measured last: starting from
+        // the popover's last-used role left both calipers tagged Spacing (and
+        // listed as "Gap") right after a Gap click. With roles on they take
+        // Size's own ink, like Gap mode takes Spacing's; with roles off the
+        // one shared ink stays, only the role is pinned so the names derive.
+        var template = Experiments.shared.measureRolesEnabled
+            ? measureStyles.content(for: .size) : measureStyle
+        template.role = .size
+        var width = template
         width.mode = .horizontal
         width.headOffset = MeasureBuilder.clearingHeadOffset(content: width, from: widthFeet.0,
                                                              to: widthFeet.1, canvas: canvas)
-        var height = measureStyle
+        var height = template
         height.mode = .vertical
         height.headOffset = MeasureBuilder.clearingHeadOffset(content: height, from: heightFeet.0,
                                                               to: heightFeet.1, canvas: canvas)
@@ -1096,13 +1104,15 @@ final class EditorState {
     }
 
     /// The style the canvas should preview the active Measure mode in. Gap mode
-    /// previews in the Spacing ink it will actually commit, so what you see
-    /// under the pointer is what lands.
+    /// previews in the Spacing ink it will actually commit, and Size mode in
+    /// Size's, so what you see under the pointer is what lands.
     var measureStyleForActiveMode: MeasureContent {
-        guard measureToolMode == .gap, Experiments.shared.measureRolesEnabled else {
-            return measureStyle
+        guard Experiments.shared.measureRolesEnabled else { return measureStyle }
+        switch measureToolMode {
+        case .gap: return measureStyles.content(for: .spacing)
+        case .size: return measureStyles.content(for: .size)
+        case .distance, .alignment: return measureStyle
         }
-        return measureStyles.content(for: .spacing)
     }
 
     /// Gap mode's click: one caliper across the whitespace, tagged Spacing when

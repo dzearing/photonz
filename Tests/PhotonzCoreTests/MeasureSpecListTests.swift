@@ -88,6 +88,38 @@ struct MeasureSpecListTests {
         #expect(MeasureSpecList.displayName(for: guide) == "Left edges, 2 items")
     }
 
+    /// A Size click builds its two calipers from the Size template, not from
+    /// whatever role the style popover last held: a width is a Width and a
+    /// height a Height even right after a spacing measurement. The popover's
+    /// remembered role is untouched, so the next plain caliper still follows it.
+    @Test func aSizeClickAfterASpacingMeasurementStillNamesWidthAndHeight() {
+        var styles = MeasureStyles()
+        styles.role = .spacing // what a Gap click leaves behind
+
+        var width = styles.content(for: .size)
+        width.mode = .horizontal
+        var height = styles.content(for: .size)
+        height.mode = .vertical
+        let widthLayer = MeasureBuilder.layer(content: width,
+                                              from: CGPoint(x: 8, y: 53), to: CGPoint(x: 250, y: 53))
+        let heightLayer = MeasureBuilder.layer(content: height,
+                                               from: CGPoint(x: 8, y: 8), to: CGPoint(x: 8, y: 69))
+
+        #expect(MeasureSpecList.displayName(for: widthLayer) == "Width")
+        #expect(MeasureSpecList.displayName(for: heightLayer) == "Height")
+        #expect(width.strokeColorHex == styles.colors(for: .size).strokeColorHex)
+
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 640, height: 420))
+        doc.addLayer(widthLayer)
+        doc.addLayer(heightLayer)
+        #expect(MeasureSpecList.specLine(for: widthLayer, in: doc)?.hasSuffix("(size)") == true)
+        #expect(MeasureSpecList.specLine(for: heightLayer, in: doc)?.hasSuffix("(size)") == true)
+
+        // Distance keeps the role the popover shows.
+        #expect(styles.content.role == .spacing)
+        #expect(MeasureSpecList.derivedName(for: styles.content) == "Gap")
+    }
+
     // MARK: - Panel order
 
     @Test func measureLayersListTopMostFirstAndKeepHiddenOnes() {
