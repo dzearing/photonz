@@ -10,6 +10,9 @@
 #   PHOTONZ_BACKOFF_STEPS comma-separated seconds to wait after the 1st, 2nd, ...
 #                         consecutive runner failure. Default 30,120,300,900,1800.
 #   PHOTONZ_MAX_ITERS     stop after N loop passes (drills only; 0 = forever).
+#   PHOTONZ_MANAGER_LOW_WATER  run the manager pass when fewer than this many
+#                         tasks are ready to claim. Default 3; 0 disables it.
+#   PHOTONZ_MANAGER_COOLDOWN   seconds between manager passes. Default 1200.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
@@ -47,6 +50,37 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
 record_exit() { # $1 = task id or "-", $2 = exit code
   OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0
   eval "$(Q runner-exit "$1" "$2" "$RUNNER_ERR")"
+}
+
+# Manager pass: the loop's own product manager. Whenever fewer than
+# MANAGER_LOW_WATER tasks are ready to claim, a fresh agent reads the
+# objectives, measures the app against them (and against the competition,
+# the IA, the workflows, the UI, the architecture), and files the next batch
+# of one-sitting tasks, so the queue refills itself instead of waiting for a
+# human or for the 5am digest. See queue/bin/manager-prompt.md.
+MANAGER_LOW_WATER="${PHOTONZ_MANAGER_LOW_WATER:-3}"
+MANAGER_COOLDOWN="${PHOTONZ_MANAGER_COOLDOWN:-1200}"
+MANAGER_STAMP="$QDIR/manager/.last-run"
+mkdir -p "$QDIR/manager"
+manager_due() { # $1 = ready task count; true when a pass should run now
+  (( SANDBOX == 0 )) || return 1
+  (( MANAGER_LOW_WATER > 0 )) || return 1
+  (( $1 < MANAGER_LOW_WATER )) || return 1
+  [[ -f "$MANAGER_STAMP" ]] || return 0
+  local last; last=$(stat -f %m "$MANAGER_STAMP" 2>/dev/null || echo 0)
+  (( $(date +%s) - last >= MANAGER_COOLDOWN ))
+}
+manager_pass() { # $1 = ready task count (for the log)
+  echo "[go-loop] $(date +%T) manager pass: $1 ready task(s), assessing objectives and refilling the queue" | tee -a "$LOG"
+  Q busy "manager pass: assessing the app against the objectives and filing tasks"
+  banner "**Go loop** manager pass: assessing the app against the objectives and filing the next tasks"
+  state busy
+  touch "$MANAGER_STAMP"
+  run_runner "$(cat queue/bin/manager-prompt.md)"
+  local rc=$?
+  record_exit - "$rc"
+  echo "[go-loop] $(date +%T) manager pass exited $rc, $(Q ready) task(s) now ready" | tee -a "$LOG"
+  Q event manager_pass "{\"exit\":$rc,\"ready\":$(Q ready)}"
 }
 
 banner() { printf '\033]7778;%s\007' "$1"; }   # sticky Ghoztty pane banner
@@ -132,11 +166,23 @@ while :; do
     fi
   fi
 
+  # Refill before the queue runs dry: when few tasks are ready, the manager
+  # pass files the next batch (bounded by a cooldown so an empty pass cannot
+  # spin). A failed pass backs off like any other runner failure.
+  READY=$(Q ready)
+  if manager_due "$READY"; then
+    manager_pass "$READY"
+    if [[ "$OUTCOME" != "ok" ]]; then
+      backoff_wait "$BACKOFF" "$FAILURES" "$RUNNER_ERR"
+      continue
+    fi
+  fi
+
   # Claim the next ready task.
   TASK_FILE=$(Q next)
   if [[ "$TASK_FILE" == "none" ]]; then
     Q idle
-    banner "**Go loop** idle, no ready tasks. Queue one from the dashboard."
+    banner "**Go loop** idle, no ready tasks; the manager pass runs again in a few minutes. Or queue one from the dashboard."
     state idle
     sleep 60
     continue

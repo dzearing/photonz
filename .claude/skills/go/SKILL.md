@@ -6,7 +6,10 @@ description: Start the unmanned Photonz go loop and set this window up for monit
 # /go: start the go loop and the monitoring layout
 
 The go loop (`queue/bin/go-loop.sh`) runs the task queue unmanned: a daily digest
-plus triage pass, then one task at a time, each in a fresh headless agent. The
+plus triage pass, a manager pass whenever fewer than three tasks are ready (it
+measures the app against the objectives and files the next batch, see
+`queue/bin/manager-prompt.md`), then one task at a time, each in a fresh headless
+agent. The
 dashboard (Project section of the design site) is the monitoring surface. This
 skill makes "get it all running again after a reboot" one command. Everything is
 idempotent; running /go when things are already up just verifies and reports.
@@ -29,7 +32,11 @@ idempotent; running /go when things are already up just verifies and reports.
    "photonz: go-loop (stopped)" on the way out), and keeps its pane banner and
    activity state current, so the title alone answers "is the loop alive".
 
-3. **Verify the loop is actually alive** (do not skip): within ~10 seconds
+3. **Verify the loop is actually alive** (do not skip), and keep verifying for a
+   couple of minutes: on 2026-09-01 a freshly spawned loop window vanished within
+   two minutes with nothing in `queue/loop.log`. If the window is gone, spawn it
+   again and watch it. An empty queue is not idle time: the loop should be in a
+   manager pass within seconds of finding fewer than three ready tasks. within ~10 seconds
    `queue/status.json` gets a fresh `updatedAt` and a `pid`; confirm with
    `node queue/bin/queue.mjs state | head` or check
    `ghoztty +read --name=photonz-go-loop --lines=5` shows the `[go-loop] started`

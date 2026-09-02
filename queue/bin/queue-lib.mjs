@@ -19,6 +19,7 @@ export const PRIORITIES = ['p0-critical', 'p1-high', 'p2-normal', 'p3-low'];
 const TASKS = join(QUEUE, 'tasks');
 const DECISIONS = join(QUEUE, 'decisions');
 const DIGESTS = join(QUEUE, 'digests');
+const MANAGER = join(QUEUE, 'manager');
 const HISTORY = join(QUEUE, 'history.jsonl');
 const STATUS = join(QUEUE, 'status.json');
 
@@ -29,6 +30,7 @@ function ensureDirs() {
   for (const p of PRIORITIES) mkdirSync(join(TASKS, p), { recursive: true });
   mkdirSync(DECISIONS, { recursive: true });
   mkdirSync(DIGESTS, { recursive: true });
+  mkdirSync(MANAGER, { recursive: true });
 }
 
 function readJSON(file, fallback = null) {
@@ -253,11 +255,17 @@ export function setStatus(id, status, note = '') {
   return t;
 }
 
-// Pick the highest-priority pending task whose deps are all done and claim it.
-export function claimNext(pid = null) {
-  const tasks = readAllTasks();
+// Every pending task whose deps are all done, in claim order.
+export function readyTasks(tasks = readAllTasks()) {
   const doneIds = new Set(tasks.filter((t) => t.status === 'done').map((t) => t.id));
   const ready = tasks.filter((t) => t.status === 'pending' && (t.deps || []).every((d) => doneIds.has(d)));
+  ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
+  return ready;
+}
+
+// Pick the highest-priority pending task whose deps are all done and claim it.
+export function claimNext(pid = null) {
+  const ready = readyTasks();
   if (!ready.length) return null;
   ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
   const t = ready[0];
@@ -567,6 +575,17 @@ export function readDigest(name) {
   try { return readFileSync(join(DIGESTS, name), 'utf8'); } catch { return null; }
 }
 
+// ---- manager reports --------------------------------------------------------
+// Written by the manager pass (queue/bin/manager-prompt.md) each time the loop
+// refills the queue: where the app stands against the objectives, findings by
+// lens, and the tasks filed. Newest first.
+export function listManagerReports() {
+  try { return readdirSync(MANAGER).filter((f) => f.endsWith('.md')).sort().reverse(); } catch { return []; }
+}
+export function readManagerReport(name) {
+  try { return readFileSync(join(MANAGER, name), 'utf8'); } catch { return null; }
+}
+
 // ---- aggregate state for the dashboard --------------------------------------
 export function aggregateState() {
   const tasks = readAllTasks().map(({ file, ...t }) => t);
@@ -590,6 +609,7 @@ export function aggregateState() {
   for (const s of series) { open += s.created - s.completed; s.open = open; }
 
   const digestNames = listDigests();
+  const managerNames = listManagerReports();
   return {
     objectives: readObjectives(),
     generated: now(),
@@ -617,6 +637,7 @@ export function aggregateState() {
     // fetches every 4 seconds and re-parses. The page fetches the one digest it
     // is showing from /api/digest/<name> instead.
     digests: { list: digestNames, latest: digestNames[0] || null },
+    manager: { list: managerNames, latest: managerNames[0] || null },
     audits: listAudits(),
   };
 }

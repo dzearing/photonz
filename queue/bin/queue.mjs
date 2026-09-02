@@ -3,6 +3,7 @@
 // task runners, and humans all mutate the queue the same way.
 //
 //   node queue/bin/queue.mjs next            claim highest-priority ready task; prints its file path, or "none"
+//   node queue/bin/queue.mjs ready           print how many tasks are ready to claim (pending, deps done)
 //   node queue/bin/queue.mjs idle            mark the loop idle (heartbeat)
 //   node queue/bin/queue.mjs stopped         mark the loop stopped
 //   node queue/bin/queue.mjs note <msg>      update the live status note (shown on the dashboard)
@@ -35,6 +36,9 @@ try {
       out(t ? t.file : 'none');
       break;
     }
+    case 'ready':
+      out(String(q.readyTasks().length));
+      break;
     case 'idle':
       q.writeStatus({ state: 'idle', task: null, note: 'waiting for tasks', pid });
       break;
