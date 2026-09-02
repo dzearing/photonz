@@ -103,19 +103,29 @@ public enum CaptureLoupe {
 
     // MARK: - Readout
 
-    /// The lines under the picture: the pointer in points, in pixels when the
-    /// display is not 1x, and the selection's size in points while dragging.
+    /// The lines under the picture: the pointer, its device pixel when the
+    /// display is not 1x, and the selection's size while dragging.
+    ///
+    /// Units follow the editor, so a size reads the same on both sides of the
+    /// capture: "px" is the logical, on-screen size (what the editor reads by
+    /// default, its Logical mode) and "actual px" is the raw device pixel
+    /// (the editor's Actual mode). Nothing here says "pt".
+    ///
     /// Coordinates floor rather than round: they name the pixel the crop
     /// starts or ends on.
     public static func readout(pointer: CGPoint, scale: CGFloat, selection: CGSize?) -> [String] {
-        var lines = ["\(Int(floor(pointer.x))), \(Int(floor(pointer.y))) pt"]
+        var lines = ["\(Int(floor(pointer.x))), \(Int(floor(pointer.y))) \(MeasureUnit.points.suffix)"]
         if scale != 1 {
             let px = pixel(at: pointer, scale: scale)
-            lines.append("\(Int(px.x)), \(Int(px.y)) px")
+            lines.append("\(Int(px.x)), \(Int(px.y)) \(actualSuffix)")
         }
         if let selection {
-            lines.append("\(WindowPick.sizeLabel(for: selection)) pt")
+            lines.append("\(WindowPick.sizeLabel(for: selection)) \(MeasureUnit.points.suffix)")
         }
         return lines
     }
+
+    /// The device-pixel line's unit: the editor's Actual mode, spelled the way
+    /// its Units readout spells it.
+    static let actualSuffix = "actual \(MeasureUnit.pixels.suffix)"
 }

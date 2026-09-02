@@ -4755,3 +4755,10 @@ the card's left end, over the icons.
   `renderPadding` already covers the legs. `clearingHeadOffset` moves from 31
   to 32.5 px at the default size as a consequence; no pinned test changed.
   1287 tests green.
+
+## 2026-09-02 — The capture loupe and the editor call the same numbers by the same unit (go loop)
+
+- The loupe's readout drops `pt` and follows the editor's unit convention: the pointer and the selection size read `px` (logical, the editor's default Logical mode) and the device-pixel line reads `actual px` (the editor's Actual mode, spelled as its Units readout spells it). A 300 × 200 drag now reads 300 × 200 px on the loupe and 300 × 200 px in the editor.
+- Considered and rejected: showing both units on the loupe (the editor never says pt, so it would keep the mismatch alive), changing the editor to pt (its CSS-style px convention runs through measurements and the spec export), and the spec header's `@2x` idiom for the device line (that annotates a logical number, so it would mislabel device coordinates). The widest possible line at 11 pt medium is about 116 pt against the 123 pt the panel gives it.
+- `CaptureLoupe.readout` now builds its suffixes from `MeasureUnit`, so the two surfaces cannot drift apart again. Five readout tests, suite green (1288). Current untouched: the loupe is Next only.
+- Audit: `queue/audits/2026-09-02-loupe-units.json`. Open: whether the selection line should also carry the actual size.

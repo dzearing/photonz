@@ -163,26 +163,43 @@ struct CaptureLoupeTests {
 
     // MARK: - Readout
 
-    @Test func theReadoutGivesPointsAndPixelsOnARetinaDisplay() {
+    // The loupe names sizes the way the editor does: "px" is the logical,
+    // on-screen size the editor reads by default, and "actual px" is the raw
+    // device pixel the editor's Actual mode reads. One number, one name,
+    // whichever side of the capture you are on.
+
+    @Test func theReadoutGivesLogicalAndActualPixelsOnARetinaDisplay() {
         let lines = CaptureLoupe.readout(pointer: CGPoint(x: 412.5, y: 233.2), scale: 2, selection: nil)
-        #expect(lines == ["412, 233 pt", "825, 466 px"])
+        #expect(lines == ["412, 233 px", "825, 466 actual px"])
     }
 
-    @Test func theReadoutSkipsThePixelLineOnAOneXDisplay() {
+    @Test func theReadoutSkipsTheActualLineOnAOneXDisplay() {
+        // At 1x logical and actual are the same pixel, so one line says it all.
         let lines = CaptureLoupe.readout(pointer: CGPoint(x: 412, y: 233), scale: 1, selection: nil)
-        #expect(lines == ["412, 233 pt"])
+        #expect(lines == ["412, 233 px"])
     }
 
     @Test func theReadoutAddsTheSelectionSizeWhileDragging() {
+        // The selection is the size the editor will read once the capture
+        // opens (logical, its default), under the same "px" name.
         let lines = CaptureLoupe.readout(pointer: CGPoint(x: 412, y: 233), scale: 2,
                                          selection: CGSize(width: 300.4, height: 199.6))
-        #expect(lines == ["412, 233 pt", "824, 466 px", "300 × 200 pt"])
+        #expect(lines == ["412, 233 px", "824, 466 actual px", "300 × 200 px"])
     }
 
     @Test func theReadoutFloorsRatherThanRoundsThePointer() {
         // The pixel under the pointer is the one the crop will start on, so
         // 99.9 reads as 99, never 100.
         let lines = CaptureLoupe.readout(pointer: CGPoint(x: 99.9, y: 0.4), scale: 2, selection: nil)
-        #expect(lines == ["99, 0 pt", "199, 0 px"])
+        #expect(lines == ["99, 0 px", "199, 0 actual px"])
+    }
+
+    @Test func theReadoutNeverSaysPt() {
+        // The editor never says "pt" for a size, so neither does the loupe.
+        for scale: CGFloat in [1, 2, 3] {
+            let lines = CaptureLoupe.readout(pointer: CGPoint(x: 10, y: 10), scale: scale,
+                                             selection: CGSize(width: 20, height: 30))
+            #expect(lines.allSatisfy { $0.hasSuffix(" px") }, "scale \(scale): \(lines)")
+        }
     }
 }

@@ -1,0 +1,24 @@
+{
+  "feature": "Capture loupe and editor share one unit wording",
+  "epic": "measure-redline",
+  "summary": "The loupe beside the pointer during a region capture now names sizes the way the editor does. What it called 300 × 200 pt while you dragged is the 300 × 200 px the editor reads once the capture opens, and the device pixel line is labelled actual px, the same word the editor's Units row uses.",
+  "setup": "Photonz Dev, Experiments window, release Next, flag Loupe during a region capture on (the default). A Retina display shows all three lines; a 1x display shows two.",
+  "try": [
+    { "do": "Press Shift Command 4 and hold still. The first line under the loupe's picture should read the pointer as px, with no pt anywhere." },
+    { "do": "On a Retina display read the second line. It should say actual px and be twice the first line." },
+    { "do": "Drag a box about 300 by 200. The third line should read 300 × 200 px." },
+    { "do": "Release and open the capture. Draw a measure across the whole width. It should read the same number as the loupe's third line, in px." },
+    { "do": "In the measure inspector switch Units from Logical to Actual. The measure should now read the doubled number, matching the loupe's actual px line." }
+  ],
+  "evaluate": [
+    "Reading px, then actual px, then px again, is it clear which is which without a legend?",
+    "Would you rather the third line also carried the actual size, at the cost of a fourth line?",
+    "Now that the loupe says px and the editor says px, is there anywhere else in the capture flow still saying pt?"
+  ],
+  "rough": [
+    "The loupe drops pt entirely instead of showing both units. The editor never says pt for a size, so a second name would have kept the disagreement alive one line lower.",
+    "actual is the editor's word for device pixels, but the View menu's Actual Size means the on-screen point size. That overload predates this change and lives in the editor, not the loupe.",
+    "The selection line shows the logical size only; its actual size is that times the display scale, the same doubling the pointer lines show.",
+    "No screenshot: the loop holds no Screen Recording grant and the offscreen loupe harness from the first loupe task was not committed. The lines are covered by unit tests verbatim."
+  ]
+}

@@ -158,8 +158,12 @@ The `NSStatusItem` menu is the always-available entry point:
      on, a magnified patch of the frozen bitmap rides beside the pointer from
      the moment the overlay opens: 25 device pixels across (a flag parameter)
      at 5 pt each, nearest-neighbour, the pointer's own pixel boxed, a
-     two-tone crosshair, and a readout of the pointer in points, in pixels
-     (not on 1x displays), and the selection size while dragging. `CaptureLoupe`
+     two-tone crosshair, and a readout of the pointer, its device pixel (not
+     on 1x displays), and the selection size while dragging. The readout uses
+     the editor's unit names so a size reads the same on both sides of the
+     capture: "px" is the logical on-screen size (the editor's default,
+     Logical mode) and "actual px" is the device pixel (its Actual mode);
+     the loupe never says "pt". `CaptureLoupe`
      in PhotonzCore owns the placement rule (beyond the pointer on the side
      away from the drag start, so it stays outside the box and off its active
      corner; flips per axis at a display edge; unit tested), the pixel sample
