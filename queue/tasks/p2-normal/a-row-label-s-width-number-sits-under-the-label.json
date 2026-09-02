@@ -1,0 +1,27 @@
+{
+  "id": "a-row-label-s-width-number-sits-under-the-label",
+  "title": "A row label's width number sits under the label, not above it with a leader",
+  "goal": "When Size mode measures a text label inside a settings row, the width number currently jumps above the label's right end with a leader line, because the next row is close beneath. Redliners expect the number under the caliper, where a heading's number already lands. The number should sit in the band between the label and the divider when it fits, and only then move away.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 560,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T14:48:50.092Z",
+  "updated": "2026-09-02T14:48:50.092Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "See queue/audits/2026-09-02-text-line-3-label-hover-zoom.png. The planner (MeasureLabelPlanner.plan describing:/avoiding:) is handed the label as subject and the neighbours from ElementBounds.neighbors(of:) at two reaches; the far probe lands on the next row (or its label), so the space under the caliper counts as on a neighbour and the above-right slot with a leader wins. Options: let the strip between the subject and the next neighbour count as clear when the chip fits in it, or weigh a neighbour that is a row less than one that is a control.",
+  "acceptance": [
+    "On the settings-pane fixture, Size-click the Launch at login label: the width number sits below the label and above the row divider, with no leader line.",
+    "The heading and button readouts on the same fixture land where they land today.",
+    "MeasureLabelPlacementTests pins the row-label case."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T14:48:50.092Z",
+      "note": "created (manual)"
+    }
+  ]
+}

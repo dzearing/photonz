@@ -87,6 +87,27 @@ why Size commits two standard calipers instead of a combined "124 × 30" badge.
   dead end. Each rung must CONTAIN the one before it, and rungs that barely
   differ are thinned, so every press visibly changes the pick.
 - `detect(at:in:luma:)` is the first rung, unchanged in meaning.
+- **A line of text is an element.** The pair rule cannot see text (a glyph's
+  top never agrees with its baseline), so `TextLineBounds.detect(at:in:gap:)`
+  reads the words under the pointer straight off the brightness field: the
+  commonest brightness nearby is the background, the ink nearest the pointer
+  seeds a band, the band runs along the line while the clean stretches stay
+  under the visible gap (`AlignmentScan.visibleGap`, scaled) and grows up and
+  down while any column still carries ink. What comes back must look like
+  words (taller than a hairline, shorter than a panel, daylight between at
+  least two letters, not a solid fill) or it is quiet. The box is the INK box,
+  cap or ascender top to descender bottom: a screenshot has no line height,
+  and the ink box is what a hand-laid caliper across the letters already says.
+  `candidates` puts the line first on the ladder, so `]` climbs from a row
+  label to its row and card. The one exception is a control's own label:
+  words centered in a rung not much taller than they are (a button, a tab, a
+  chip) stay that rung's caption, because a pick that flickered between a
+  word and its button as the pointer crossed the letters would be worse than
+  one that is quietly wrong. Pinned on the fixture: the General heading (157 x
+  34 px), the Launch at login label (181 x 25 px), and the buttons unchanged.
+  `subjects(from:to:)` sees the same rungs, so a Distance caliper across a
+  label hands the label to the readout planner and its number stays off the
+  words.
 - `gap(at:in:)` needs only ONE axis: the space between two stacked cards has a
   top and a bottom and no sides, and the shorter span wins when both read. It
   measures whitespace, so it keeps reading to the probe-side landing (the clean

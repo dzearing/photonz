@@ -114,11 +114,14 @@ struct ElementBoundsTests {
         // The exact failure the audit of 2026-08-23 measured: glyph strokes
         // inside a button won the nearest-edge walk, so the readout was a sliver
         // of a letter — or, when the walks disagreed, nothing at all.
+        // The label is centered, as a button's is: a line of text a control
+        // hugs and centers belongs to the control. (A left-aligned label in a
+        // wide row is its own element; see `ElementBoundsTextRungTests`.)
         var c = Capture(w: 400, h: 300)
         let button = CGRect(x: 60, y: 50, width: 200, height: 60)
         c.box(button, border: 90)
-        c.text(x: 100, y: 72, glyphs: 8)
-        expectRect(ElementBounds.detect(at: CGPoint(x: 130, y: 80), in: c.map, luma: c.luma),
+        c.text(x: 130, y: 72, glyphs: 8)
+        expectRect(ElementBounds.detect(at: CGPoint(x: 135, y: 80), in: c.map, luma: c.luma),
                    button)
         // And the pick does not change as the pointer crosses the letters.
         expectRect(ElementBounds.detect(at: CGPoint(x: 170, y: 80), in: c.map, luma: c.luma),
@@ -176,10 +179,13 @@ struct ElementBoundsTests {
         // The band between a word's cap height and its baseline looks exactly
         // like a wide, short box. Nothing that small is something anyone means
         // to measure.
+        // (The line of text itself is read by `TextLineBounds`, which has its
+        // own floor and its own reasons to stay quiet; a centered label in a
+        // button is the button's, so nothing under the floor is offered here.)
         var c = Capture(w: 400, h: 300)
         c.box(CGRect(x: 60, y: 50, width: 200, height: 60), border: 90)
-        c.text(x: 100, y: 72, glyphs: 8)
-        let ladder = ElementBounds.candidates(at: CGPoint(x: 130, y: 80),
+        c.text(x: 130, y: 72, glyphs: 8)
+        let ladder = ElementBounds.candidates(at: CGPoint(x: 135, y: 80),
                                               in: c.map, luma: c.luma)
         #expect(ladder.allSatisfy { $0.height >= ElementBounds.defaultMinElement })
     }

@@ -1,0 +1,28 @@
+{
+  "feature": "A line of text counts as an element",
+  "epic": "measure-redline",
+  "summary": "Size mode now reads a heading or a text label as one element: hover it for its width and height, click to keep both. A caliper drawn across a label keeps its number off the words, the way it already keeps off buttons.",
+  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default. Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png (the settings pane the earlier audits used).",
+  "try": [
+    { "do": "Press I for the Measure tool, then press I until the pill reads Size." },
+    { "do": "Hover the General heading. It outlines as one element with its width and height beside it.", "shot": "2026-09-02-text-line-1-heading-hover.png" },
+    { "do": "Click it. Two calipers land, 78 px wide and 17 px tall, and one Undo removes both.", "shot": "2026-09-02-text-line-2-heading-size.png" },
+    { "do": "Press I again for Size and hover the Launch at login label. The label outlines, not the row.", "shot": "2026-09-02-text-line-3-label-hover-zoom.png" },
+    { "do": "Press ] once. The pick grows to the row, 624 by 44. Press [ to come back to the label.", "shot": "2026-09-02-text-line-4-label-climb.png" },
+    { "do": "Click the label. Its width and height land with both numbers off the letters.", "shot": "2026-09-02-text-line-5-label-size.png" },
+    { "do": "Switch to Distance and click on the two ends of Copy to clipboard, then click below to place the number. It sits under the label, not on the word.", "shot": "2026-09-02-text-line-6-label-caliper.png" },
+    { "do": "Back in Size, hover the Save Changes button's own words. The button is the pick, not its label." }
+  ],
+  "evaluate": [
+    "A text line measures its ink, cap top to descender bottom. Is that the number you want for a heading, or do you expect the line box a design tool would quote?",
+    "Over a row label the pick is the label and one ] away is the row. Does that feel right, or should the row come first with [ to reach the label?",
+    "The words inside a button stay the button. Do you ever want the button's label on its own, and if so is [ the way you would reach for it?",
+    "The label's width number lands above its right end with a leader, because the next row sits below. Would you rather it sat on the divider band under the label?"
+  ],
+  "rough": [
+    "Half points are rounded away: Launch at login is 90.5 by 12.5 points of ink and reads 90 px by 12 px. The formatter has done this for every caliper since the start; text just lands on halves more often.",
+    "The width readout of a row label goes above the label with a leader line whenever the next row is close beneath, which is every settings row. Filed as a follow-up.",
+    "Text on a photo or a gradient is out of scope: the line reader needs one flat background behind the words and stays quiet otherwise.",
+    "The mock's Size mode only ever showed bordered controls; treating a text line as a first-class element is a departure from it, taken because redliners measure text as often as buttons."
+  ]
+}

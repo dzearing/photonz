@@ -1024,7 +1024,8 @@ final class EditorState {
         let scale = document?.pixelScale ?? 1
         return ElementBounds.subjects(from: start, to: end, mode: mode,
                                       in: snappingEdgeMap, luma: measureLumaField,
-                                      minElement: max(10, 10 * scale))
+                                      minElement: max(10, 10 * scale),
+                                      textGap: AlignmentScan.visibleGap * max(1, scale))
     }
 
     /// Completed 3-click caliper placement: add the dimension layer with the

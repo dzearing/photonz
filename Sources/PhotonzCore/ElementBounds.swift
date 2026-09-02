@@ -100,20 +100,83 @@ public enum ElementBounds {
                               luma: LumaField,
                               maxRadius: Double = defaultMaxRadius,
                               spanRadius: Double = defaultSpanRadius,
-                              minElement: Double = defaultMinElement) -> CGRect? {
+                              minElement: Double = defaultMinElement,
+                              textGap: Double = TextLineBounds.defaultGap) -> CGRect? {
         candidates(at: point, in: edges, luma: luma, maxRadius: maxRadius,
-                   spanRadius: spanRadius, minElement: minElement, limit: 1).first
+                   spanRadius: spanRadius, minElement: minElement, textGap: textGap,
+                   limit: 1).first
     }
+
+    /// How much taller than its words a rung may be and still be a CONTROL
+    /// wearing them as its label. A button is two to three times its label's
+    /// ink height, a tab item four; a dialog with a centered title is ten
+    /// times it and more.
+    private static let captionHeightRatio: Double = 5
 
     /// The nested ladder of element rects around `point`, innermost first, each
     /// containing the one before it. Empty when nothing is readable.
+    ///
+    /// A line of text under the pointer (`TextLineBounds`) is the first rung,
+    /// so a heading or a row label reads as an element and `]` climbs from it
+    /// to the row and the card. The one exception is a control's own label:
+    /// words centered in a rung not much taller than they are (a button, a
+    /// tab, a chip) belong to that rung, and pointing at them means it. A
+    /// readout that flickered between a word and its button as the pointer
+    /// crossed the letters would be worse than one that is quietly wrong.
+    /// `textGap` is the clean stretch that ends a line, in image px.
     public static func candidates(at point: CGPoint, in edges: EdgeMap,
                                   luma: LumaField,
                                   maxRadius: Double = defaultMaxRadius,
                                   spanRadius: Double = defaultSpanRadius,
                                   minElement: Double = defaultMinElement,
+                                  textGap: Double = TextLineBounds.defaultGap,
                                   limit: Int = candidateLimit) -> [CGRect] {
         guard !edges.isEmpty, !luma.isEmpty, maxRadius > 0, limit > 0 else { return [] }
+        guard let text = TextLineBounds.detect(at: point, in: luma, gap: textGap,
+                                               minElement: minElement, maxRadius: maxRadius)
+        else {
+            return pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                             spanRadius: spanRadius, minElement: minElement, limit: limit)
+        }
+        let slack = CGFloat(probeSlack)
+        func holds(_ rung: CGRect) -> Bool { rung.insetBy(dx: -slack, dy: -slack).contains(text) }
+        var rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                              spanRadius: spanRadius, minElement: minElement, limit: limit)
+        // A rung that does not hold the whole line is a fragment of it (one
+        // letter's top and baseline can agree with each other), not a
+        // container. When that is all a short ladder found, the full ladder is
+        // needed to see the rung that does hold the words, since that one
+        // decides whether they are its caption.
+        if let first = rungs.first, !holds(first), limit < candidateLimit {
+            rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                              spanRadius: spanRadius, minElement: minElement,
+                              limit: candidateLimit)
+        }
+        let containing = rungs.filter(holds)
+        if let control = containing.first, hugs(control, text) {
+            return Array(rungs.prefix(limit))
+        }
+        var ladder = [text]
+        for rect in containing where ladder.count < limit && grows(rect, beyond: ladder.last) {
+            ladder.append(rect)
+        }
+        return ladder
+    }
+
+    /// Whether `rung` is a control wearing `text` as its label: the words are
+    /// centered in it and it is not much taller than they are.
+    private static func hugs(_ rung: CGRect, _ text: CGRect) -> Bool {
+        guard Double(rung.height) <= captionHeightRatio * Double(text.height) else { return false }
+        let leftPad = Double(text.minX - rung.minX)
+        let rightPad = Double(rung.maxX - text.maxX)
+        let tolerance = max(4, 0.1 * Double(rung.width))
+        return abs(leftPad - rightPad) <= tolerance
+    }
+
+    /// The ladder read from pairs of boundaries alone, innermost first.
+    private static func pairRungs(at point: CGPoint, in edges: EdgeMap,
+                                  luma: LumaField, maxRadius: Double, spanRadius: Double,
+                                  minElement: Double, limit: Int) -> [CGRect] {
         let px = Double(point.x), py = Double(point.y)
         let sides = sides(at: point, in: edges, maxRadius: maxRadius, spanRadius: spanRadius)
         let above = pairable(sides[0])
@@ -248,13 +311,15 @@ public enum ElementBounds {
                                  maxRadius: Double = defaultMaxRadius,
                                  spanRadius: Double = defaultSpanRadius,
                                  minElement: Double = defaultMinElement,
+                                 textGap: Double = TextLineBounds.defaultGap,
                                  reaches: [Double] = [neighborProbeReach]) -> [CGRect] {
         guard !edges.isEmpty, !luma.isEmpty, rect.width > 0, rect.height > 0 else { return [] }
         let slack = CGFloat(probeSlack)
         var found: [CGRect] = []
         for reach in reaches {
             probe(rect, reach: CGFloat(reach), slack: slack, into: &found, in: edges, luma: luma,
-                  maxRadius: maxRadius, spanRadius: spanRadius, minElement: minElement)
+                  maxRadius: maxRadius, spanRadius: spanRadius, minElement: minElement,
+                  textGap: textGap)
         }
         return found
     }
@@ -262,7 +327,8 @@ public enum ElementBounds {
     /// The four probes at one distance, appending whatever is new to `found`.
     private static func probe(_ rect: CGRect, reach r: CGFloat, slack: CGFloat,
                               into found: inout [CGRect], in edges: EdgeMap, luma: LumaField,
-                              maxRadius: Double, spanRadius: Double, minElement: Double) {
+                              maxRadius: Double, spanRadius: Double, minElement: Double,
+                              textGap: Double) {
         // Each probe carries the test for what a neighbour on THAT side looks
         // like: it has to begin where the element ends. A box that reaches back
         // across the element is a band read off the picture, not the row next
@@ -279,7 +345,8 @@ public enum ElementBounds {
                   Double(probe.point.x) < Double(edges.width),
                   Double(probe.point.y) < Double(edges.height),
                   let hit = detect(at: probe.point, in: edges, luma: luma, maxRadius: maxRadius,
-                                   spanRadius: spanRadius, minElement: minElement),
+                                   spanRadius: spanRadius, minElement: minElement,
+                                   textGap: textGap),
                   probe.beyond(hit),
                   !found.contains(where: { $0.insetBy(dx: -slack, dy: -slack).contains(hit) })
             else { continue }
@@ -313,7 +380,8 @@ public enum ElementBounds {
                                 in edges: EdgeMap, luma: LumaField,
                                 maxRadius: Double = defaultMaxRadius,
                                 spanRadius: Double = defaultSpanRadius,
-                                minElement: Double = defaultMinElement) -> [CGRect] {
+                                minElement: Double = defaultMinElement,
+                                textGap: Double = TextLineBounds.defaultGap) -> [CGRect] {
         guard !edges.isEmpty, !luma.isEmpty else { return [] }
         let horizontal = mode == .horizontal
         func along(_ p: CGPoint) -> CGFloat { horizontal ? p.x : p.y }
@@ -332,7 +400,8 @@ public enum ElementBounds {
                       Double(probe.x) < Double(edges.width),
                       Double(probe.y) < Double(edges.height),
                       let hit = detect(at: probe, in: edges, luma: luma, maxRadius: maxRadius,
-                                       spanRadius: spanRadius, minElement: minElement)
+                                       spanRadius: spanRadius, minElement: minElement,
+                                       textGap: textGap)
                 else { continue }
                 // The face of the hit nearest the foot has to BE the foot.
                 let facing = sign < 0 ? alongMax(hit) : alongMin(hit)

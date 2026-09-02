@@ -1162,8 +1162,10 @@ final class CanvasNSView: NSView {
             let ladder = ElementBounds.candidates(
                 at: probe, in: edgeMap, luma: lumaField,
                 // Ten logical points is the smallest thing worth calling an
-                // element, whatever the capture's scale.
-                minElement: max(10, 10 * document.pixelScale))
+                // element, whatever the capture's scale; a line of text ends
+                // at the same visible gap the alignment scan splits items on.
+                minElement: max(10, 10 * document.pixelScale),
+                textGap: AlignmentScan.visibleGap * max(1, document.pixelScale))
             guard let rect = ladder.isEmpty
                     ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
                 hideMeasureHoverReadout()
@@ -1195,7 +1197,10 @@ final class CanvasNSView: NSView {
         if let cached = measureNeighborCache, cached.rect == rect, cached.reach == reach {
             return cached.neighbors
         }
+        let scale = max(1, document?.pixelScale ?? 1)
         let found = ElementBounds.neighbors(of: rect, in: edgeMap, luma: lumaField,
+                                            minElement: max(10, 10 * scale),
+                                            textGap: AlignmentScan.visibleGap * scale,
                                             reaches: [ElementBounds.neighborProbeReach,
                                                       Double(reach)])
         measureNeighborCache = (rect, reach, found)
@@ -1292,7 +1297,8 @@ final class CanvasNSView: NSView {
         if let cached = measureGapSubjectCache, cached.gap == gap { return cached.subjects }
         let found = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
                                            in: edgeMap, luma: lumaField,
-                                           minElement: max(10, 10 * pixelScale))
+                                           minElement: max(10, 10 * pixelScale),
+                                           textGap: AlignmentScan.visibleGap * max(1, pixelScale))
         measureGapSubjectCache = (gap, found)
         return found
     }

@@ -117,12 +117,76 @@ struct ElementDetectionFixtureTests {
         #expect(reading(at: 700, y: 368) == Reading("624 px", "44 px"))
     }
 
-    @Test func aSettingsRowStillReadsFromOverItsLabel() {
+    @Test func aSettingsRowIsOneStepUpFromItsLabel() {
         // Half of a settings row is its label, so this is where a person's
-        // pointer actually lands.
-        let row = reading(at: 200, y: 192)
+        // pointer actually lands. The label is the first rung (below); the
+        // row is one press of `]` away, and reads as it always did.
+        let row = reading(at: 200, y: 192, level: 1)
         #expect(row?.height == "44 px")
         #expect(row?.width == "623 px" || row?.width == "624 px")
+    }
+
+    // MARK: A line of text is an element
+
+    /// The ink box of the text under `probe`, in image px, as Size mode's
+    /// first pick.
+    private func ink(at x: Double, y: Double) -> CGRect? {
+        ElementBounds.candidates(at: CGPoint(x: x, y: y), in: Self.analysis.edges,
+                                 luma: Self.analysis.luma).first
+    }
+
+    @Test func aHeadingReadsAsOneElement() {
+        // "General", 157 x 34 image px of ink (the G's antialiased flank
+        // counts), 17 logical points tall, on the bare page with no border
+        // anywhere near it. Used to read nothing at all.
+        let heading = CGRect(x: 65, y: 66, width: 157, height: 34)
+        #expect(ink(at: 140, y: 82) == heading)
+        #expect(reading(at: 140, y: 82)?.height == "17 px")
+        // From the first letter and the last, the same heading.
+        #expect(ink(at: 75, y: 90) == heading)
+        #expect(ink(at: 215, y: 80) == heading)
+        // Nothing else is offered: the page has no rung around a heading.
+        #expect(reading(at: 140, y: 82, level: 1) == nil)
+    }
+
+    @Test func aRowLabelReadsAsOneElement() {
+        // "Launch at login": 181 x 25 px of ink, cap top to the g's descender.
+        // Two word spaces inside it (9 and 10 px) do not split it.
+        #expect(ink(at: 200, y: 192) == CGRect(x: 98, y: 181, width: 181, height: 25))
+        #expect(ink(at: 187, y: 192) == CGRect(x: 98, y: 181, width: 181, height: 25))
+        #expect(ink(at: 260, y: 200) == CGRect(x: 98, y: 181, width: 181, height: 25))
+    }
+
+    @Test func aButtonLabelIsStillTheButton() {
+        // The words inside a button belong to the button (pinned above); the
+        // label is not offered as a rung at all, so `[` has nowhere to go.
+        #expect(reading(at: 340, y: 786, level: 1) == nil
+                || reading(at: 340, y: 786, level: 1)?.width != "85 px")
+        let ladder = ElementBounds.candidates(at: CGPoint(x: 340, y: 786),
+                                              in: Self.analysis.edges,
+                                              luma: Self.analysis.luma)
+        #expect(!ladder.contains { $0.width < 200 })
+    }
+
+    @Test func aCaliperAcrossALabelKnowsTheLabel() {
+        // Distance mode with its feet on the two ends of "Copy to clipboard"
+        // (97...308 x 662...686): the label comes back as the caliper's
+        // subject, so the readout planner keeps the number off the words.
+        let subjects = ElementBounds.subjects(from: CGPoint(x: 97, y: 674),
+                                              to: CGPoint(x: 309, y: 674),
+                                              mode: .horizontal,
+                                              in: Self.analysis.edges,
+                                              luma: Self.analysis.luma)
+        #expect(subjects.contains { abs($0.minX - 97) <= 2 && abs($0.maxX - 309) <= 2
+                                    && abs($0.minY - 662) <= 2 && abs($0.maxY - 687) <= 2 },
+                "subjects: \(subjects)")
+    }
+
+    @Test func blankPageAndHairlinesStillReadNothing() {
+        // The row divider under "Launch at login" and the empty text field's
+        // inside: no words, no rung from the text reader.
+        #expect(ink(at: 700, y: 235) == nil || (ink(at: 700, y: 235)?.height ?? 0) >= 40)
+        #expect(reading(at: 1124, y: 495)?.height == "26 px")
     }
 
     @Test func growingThePickReachesTheCard() {
@@ -159,16 +223,26 @@ struct ElementDetectionFixtureTests {
 
     @Test func detectionCostsLittleMoreThanTheEdgeQueryItAlreadyMade() {
         // Spec budget: under 1 ms per mouse move, which an optimized build meets
-        // with room to spare (~32 µs on this capture, of which ~21 µs is the
-        // edge-map query snapping makes anyway). Tests build unoptimized, where
+        // with room to spare (under 100 µs on this capture for the whole
+        // ladder, of which ~20 µs is the edge-map query snapping makes anyway
+        // and ~10 µs the text reader). Tests build unoptimized, where
         // everything is ~100x slower, so the guard is RELATIVE: reading the
-        // pixels to follow each boundary must stay a fraction of the query it
-        // rides on. That catches the regression that matters — detection going
-        // back to scanning whole rows of the image — at any build setting.
+        // pixels to follow each boundary, and to read the words under the
+        // pointer, must stay a small multiple of the query it rides on. That
+        // catches the regression that matters — detection going back to
+        // scanning whole rows of the image — at any build setting. Each
+        // reading is the fastest of several rounds, so the rest of the suite
+        // running alongside does not decide the verdict.
         func elapsed(_ body: () -> Void) -> Duration {
-            let start = ContinuousClock.now
-            for _ in 0..<200 { body() }
-            return (ContinuousClock.now - start) / 200
+            body()
+            var best = Duration.seconds(60)
+            for _ in 0..<20 {
+                let start = ContinuousClock.now
+                for _ in 0..<10 { body() }
+                let round = (ContinuousClock.now - start) / 10
+                if round < best { best = round }
+            }
+            return best
         }
         let query = elapsed {
             _ = Self.analysis.edges.horizontalEdges(inXRange: 263...327)
@@ -178,6 +252,6 @@ struct ElementDetectionFixtureTests {
             _ = ElementBounds.detect(at: CGPoint(x: 295, y: 786),
                                      in: Self.analysis.edges, luma: Self.analysis.luma)
         }
-        #expect(detect < query * 3)
+        #expect(detect < query * 4)
     }
 }

@@ -4843,3 +4843,25 @@ the card's left end, over the icons.
   system glass; the CSS comment no longer claims tint parity.
 - Next: nothing queued from this; the next capture task builds from the mock
   as it now stands.
+
+## 2026-09-02 (go loop) — a line of text counts as an element
+
+- New `TextLineBounds` (PhotonzCore) reads the line of text under the pointer
+  off the brightness field: background by vote, ink band seeded at the pointer,
+  run along the line while gaps stay under the visible gap, grown up and down
+  while columns carry ink, then checked for looking like words. Ink box only.
+- `ElementBounds.candidates` offers the line as the first rung, so `]` climbs
+  from a row label to the row and card; a label centered in a control not much
+  taller than it stays that control's caption (button labels unchanged).
+  `detect`/`neighbors`/`subjects` take `textGap`; the app passes
+  `AlignmentScan.visibleGap * pixelScale`.
+- Pinned on the fixture: General 157 x 34 px, Launch at login 181 x 25 px,
+  a Distance caliper across Copy to clipboard gets the label as a subject.
+  Two synthetic button tests now center their label (a left-aligned label with
+  room beside it is a row label by design). Perf guard hardened (fastest of N,
+  4x the edge query); optimized cost ~10 us for the text reader, <100 us for
+  the whole ladder.
+- Audit: `queue/audits/2026-09-02-text-line.json`. Walk:
+  `Scripts/playtest/text-line.json`.
+- Next: readout placement for a row label's width (goes above with a leader
+  when the next row is close), half-point display.
