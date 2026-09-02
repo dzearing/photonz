@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T14:57:23.206Z",
-  "updated": "2026-09-02T16:25:46.835Z",
+  "updated": "2026-09-02T16:42:27.988Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Asked by the user on 2026-09-02: when I resize a sizer I would love it to snap to other elements; I am trying to align a bunch of measuring chips, if I grab the sizer for the chip on one I want it to snap to the positioning of other chips above it, and have the yellow guide show up. Code: CanvasView.swift measureHandleDrag; the .head handle (the chip bar position, MeasureContent.headOffset) is explicitly left free with snapGuide = nil while feet go through EdgeSnapping.snap with edgeMap candidates and the snapGuideLayer (systemYellow). Build the candidate set from the other measure layers in the document: each caliper geometry (MeasureContent.caliperGeometry, labelAnchor, feet) projected to document coordinates by the layer frame. Add those candidates alongside the edge map for feet, and as the only candidates for the head. EdgeSnapping is per-axis with a zoom-scaled tolerance; extend it to accept extra candidate lines rather than writing a second snapper. Keep it in PhotonzCore and tested (EdgeSnappingTests). Related earlier decision: the user rejected alignment guides drawn against image content in phase 16, so keep this strictly about measurement-to-measurement snapping, not content guides.",
@@ -49,8 +49,25 @@
     {
       "t": "2026-09-02T16:25:46.835Z",
       "note": "Shortest version that delivers the value: one candidate-line collector in PhotonzCore plus a guides parameter on the existing per-axis snapper. No second snapper, no new overlay: the existing yellow full-span guide already draws through whatever it lined up with."
+    },
+    {
+      "t": "2026-09-02T16:42:27.957Z",
+      "note": "Built: MeasureSnapping (PhotonzCore) collects the chip-centre lines and the structural feet/head/end lines from the other measurements; EdgeSnapping took a GuideLines parameter and a one-axis snapValue rather than a second snapper. CanvasView collects the guides once at grab time and the chip drag snaps single-axis, keeping the pointer's grip so the CHIP lines up, not the pointer. Flag next-measure-guide-snap, on by default in Next. Creation also uses the lines, so a new caliper lines up with the ones already placed."
+    },
+    {
+      "t": "2026-09-02T16:42:27.958Z",
+      "note": "Post-build review on the real app (probe walk Scripts/playtest/measure-chip-snap-walk.json). Chip dragged to y 636 landed at 640, the other chip's line, with the yellow guide through both; the same drag with command held stayed at 636 and drew nothing; a foot dragged to 636 landed on 640; the measured value stayed 106 px through all of it. Rough and honest: a chip still cannot slide ALONG its own line, so a stack of width measurements cannot be pulled into one column (follow-up filed: a-measurement-number-can-be-slid-along-its-own-m). The guide draws over the chip's digits rather than behind them, and it spans the whole picture so it does not say WHICH measurement it caught."
+    },
+    {
+      "t": "2026-09-02T16:42:27.958Z",
+      "note": "Harness additions this needed: drag gained modifiers (command is the escape hatch from every magnet, so a walk must be able to hold it) and hold, a snapshot taken with the button still down, which is the only way to photograph a guide that exists only mid-drag. describe now reports each measurement's feet and chip centre in document space."
+    },
+    {
+      "t": "2026-09-02T16:42:27.988Z",
+      "note": "Shipped in Next behind next-measure-guide-snap (on by default): a dragged readout chip snaps into line with the other chips and a dragged foot with the other calipers' feet, head lines and ends, with the yellow guide, and command drags free. PhotonzCore MeasureSnapping + EdgeSnapping.GuideLines/snapValue, 18 new tests, Scripts/test.sh green at 1401. Verified on the probe app: chip to 636 landed on 640 with the guide, command-held stayed at 636 with none, foot to 636 landed on 640, measured value never changed. Audit queue/audits/2026-09-02-measure-guide-snap.json with three screenshots. Commit 03e228d."
     }
   ],
   "started": "2026-09-02T16:22:53.007Z",
-  "failures": 1
+  "failures": 1,
+  "completed": "2026-09-02T16:42:27.988Z"
 }
