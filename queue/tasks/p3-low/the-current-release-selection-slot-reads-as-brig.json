@@ -5,14 +5,14 @@
   "epic": "measure-redline",
   "priority": "p3-low",
   "seq": 550,
-  "status": "pending",
+  "status": "done",
   "release": "current",
   "area": "app",
   "created": "2026-09-02T15:45:27.111Z",
-  "updated": "2026-09-02T15:45:27.112Z",
+  "updated": "2026-09-02T22:12:35.865Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Same root cause as the Next fix in ToolModeButton/ToolGroupButton: Menu(primaryAction:) under .buttonStyle(.borderless) draws its label at about 58% (measured 155 vs 244). selectionGroupButton in EditorView.swift still uses .borderless; switch it to .plain. Left alone on 2026-09-02 because that task was Next-only and the rule is never to touch Current behaviour without a task saying so. Verify with Scripts/playtest.sh and the -sc.png capture (docs/design/playtest-harness.md).",
+  "notes": "RESOLVED WITHOUT A CODE CHANGE. The premise was stale: commit 815da85a (2026-09-02 08:56) already replaced `.buttonStyle(.borderless)` with `.buttonStyle(.tool(isActive:in:))` on selectionGroupButton in EditorView.swift, and EditorView.swift is shared by both releases, so Current got the fix too even though the commit was written up as Next-only (only the hover/press feedback is behind next-tool-bar-feedback). Verified with a real screen capture at release=current: the slot's glyph peaks at 244, the same as every plain tool button (the bug measured 155). Regression walk: Scripts/playtest/current-selection-slot.json. Press-and-hold is unverifiable by the loop - the harness can only click the canvas and this terminal has no Accessibility grant.",
   "acceptance": [
     "A real capture of the Current tool bar shows the selection slot glyph at the same luminance as the plain tool buttons",
     "Click still picks the remembered selector and press-and-hold still lists the three"
@@ -21,6 +21,36 @@
     {
       "t": "2026-09-02T15:45:27.112Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T22:07:40.439Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T22:12:22.340614Z",
+      "note": "Adversarial read first: the task's premise is stale. `selectionGroupButton` in EditorView.swift no longer uses `.borderless` - git blame line 1834 shows commit 815da85a (2026-09-02 08:56) switched it to `.buttonStyle(.tool(isActive:in:))`. That commit was written up as Next-only, but EditorView.swift is SHARED (both CurrentExperience and NextExperience open ImageEditorRootView), and only the hover/press feedback is flag-gated (`pointerFeedback: Experiments.shared.toolBarFeedbackEnabled`). The part that fixes the dimming - `restingTint: .primary` plus an explicit `.foregroundStyle` applied by the style rather than by the Menu's label - is unconditional, so it reached Current the moment it landed. Nothing to write; everything to verify."
+    },
+    {
+      "t": "2026-09-02T22:12:22.340614Z",
+      "note": "Verified on a real screen capture, not a render. Probe set to release `current` (`defaults write com.dzearing.photonz.probe experiments.release current`), Grants line said `probe Screen Recording granted`, so `Scripts/playtest/current-selection-slot.json` produced 1-rest-sc.png (2560x1680, the window as a person sees it). Peak glyph luminance in a 48x48 box on each tool button: selection slot 244, arrow 244, line 244, rectangle 244, ellipse 244, highlight 244, text 244, crop 244, resize 244, zoom 244, measure 244. The old bug measured 155 vs 244; the slot is now exactly at parity. Acceptance 1 met."
+    },
+    {
+      "t": "2026-09-02T22:12:22.340614Z",
+      "note": "Acceptance 2, half verified and half not. M activates the remembered member (walk set the slot's memory to Ellipse Select, then Select, then M -> activeTool ellipseSelect, and 2-m-sc.png shows the accent circle slid onto the slot with a white 255 glyph): that is literally the same `activateSelectionTool(remembered)` closure the button's `primaryAction:` calls, so the click path is exercised. Press-and-hold could NOT be driven: the playtest harness delivers mouse events straight to CanvasNSView, so it cannot click tool bar chrome, and this terminal's Accessibility grant is denied so no real pointer can be synthesized either. The same limitation is recorded in queue/audits/2026-09-02-tool-bar-feedback.json. The menu itself is untouched by the change (a ButtonStyle does not alter `.menuStyle(.button)` + `primaryAction:` behaviour) and Next ships the identical construction in ToolGroupButton."
+    },
+    {
+      "t": "2026-09-02T22:12:22.340614Z",
+      "note": "Side observation, not filed as an app bug: shift+M did not cycle the slot to the wand under the harness. Cause is the harness, not the app - PlaytestHarness synthesizes key events with `characters` and `charactersIgnoringModifiers` both set to the unshifted letter, so a shifted-letter key equivalent (`M`) never matches. Filed as a separate harness task."
+    },
+    {
+      "t": "2026-09-02T22:12:22.340614Z",
+      "note": "No code change needed, so no audit file: this completes no feature. Saved the walk as Scripts/playtest/current-selection-slot.json so the parity check is repeatable, and put the probe's release setting back to `next`."
+    },
+    {
+      "t": "2026-09-02T22:12:35.864Z",
+      "note": "Already fixed and now proven: the shared commit 815da85a switched the selection slot off .borderless before this task was filed, and EditorView.swift is shared, so Current got it too. Real screen capture at release=current shows the slot glyph at 244, identical to every plain tool button (bug was 155). Regression walk: Scripts/playtest/current-selection-slot.json. No code change."
     }
-  ]
+  ],
+  "started": "2026-09-02T22:07:40.439Z",
+  "completed": "2026-09-02T22:12:35.865Z"
 }

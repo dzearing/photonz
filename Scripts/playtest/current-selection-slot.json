@@ -1,0 +1,19 @@
+{
+  "out": "/tmp/photonz-playtest/current-selection-slot",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "ellipseSelect" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "1-rest", "note": "Select in hand: the shared selection slot rests at the same weight as every plain tool" },
+    { "do": "snapshot", "name": "1-rest" },
+
+    { "do": "key", "key": "m" },
+    { "do": "waitFor", "condition": "tool", "value": "ellipseSelect" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-m", "note": "M fires the same closure the slot's click fires: the remembered member, now wearing the accent circle" },
+    { "do": "snapshot", "name": "2-m" }
+  ]
+}

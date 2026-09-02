@@ -1,0 +1,26 @@
+{
+  "id": "scripted-walks-can-press-shifted-letter-shortcut",
+  "title": "Scripted walks can press shifted letter shortcuts",
+  "goal": "The automated walks the build loop uses to try the app can press a letter key, but not a capital one. That means any shortcut that needs Shift plus a letter (cycling the selection tools with Shift M, for example) cannot be checked automatically, so those shortcuts ship untested.",
+  "epic": "measure-redline",
+  "priority": "p3-low",
+  "seq": 580,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T22:12:31.301Z",
+  "updated": "2026-09-02T22:12:31.302Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/Playtest/PlaytestHarness.swift around line 491 builds the NSEvent with characters and charactersIgnoringModifiers both set to key.characters, the unshifted letter. AppKit key-equivalent matching for KeyboardShortcut(\"m\", modifiers: .shift) wants \"M\" in charactersIgnoringModifiers, so the invisible stand-in button never fires. Fix: uppercase (or shift-map) characters when the shift modifier is present. Seen on 2026-09-02 while verifying the Current selection slot: step \"key m + shift\" logged \"taken by window\" but activeTool never became wand.",
+  "acceptance": [
+    "A walk step that presses Shift plus a letter activates the shortcut bound to the capital letter",
+    "An existing shortcut that needs Shift plus a letter is proven working by a walk that fails if it regresses"
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T22:12:31.302Z",
+      "note": "created (manual)"
+    }
+  ]
+}
