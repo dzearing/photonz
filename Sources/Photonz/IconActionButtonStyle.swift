@@ -54,12 +54,18 @@ struct IconActionButtonStyle: ButtonStyle {
 /// soft fill on hover, stronger fill + slight shrink while pressed; destructive
 /// buttons tint red on interaction.
 struct PillActionButtonStyle: ButtonStyle {
+    /// A `prominent` pill keeps a soft fill at rest, so it reads as a button
+    /// before anyone points at it (the capture toast's Edit row); the default
+    /// is quiet until hovered.
+    var prominent: Bool = false
+
     func makeBody(configuration: Configuration) -> some View {
-        PillButtonBody(configuration: configuration)
+        PillButtonBody(configuration: configuration, prominent: prominent)
     }
 
     private struct PillButtonBody: View {
         let configuration: Configuration
+        let prominent: Bool
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
@@ -87,8 +93,8 @@ struct PillActionButtonStyle: ButtonStyle {
 
         private func fillOpacity(pressed: Bool) -> Double {
             if pressed { return 0.20 }
-            if hovering { return 0.12 }
-            return 0
+            if hovering { return prominent ? 0.14 : 0.12 }
+            return prominent ? 0.08 : 0
         }
     }
 }

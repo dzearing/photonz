@@ -1,0 +1,27 @@
+{
+  "feature": "The capture toast says how to open the editor",
+  "epic": "measure-redline",
+  "summary": "After a capture the toast now carries an Edit row under the picture with the key, Shift Command 6, at its end. Before, the way into the editor was a pencil that only appeared on hover, a double-click, or a key only the Welcome window mentioned.",
+  "setup": "Photonz Dev, Experiments window, release Next. The flag Edit from the capture toast is on by default; turn it off there to compare with the hover-only toast.",
+  "try": [
+    { "do": "Press Shift Command 4 and drag over any part of the screen.", "shot": "2026-09-02-capture-toast-edit-on-light.png" },
+    { "do": "Look at the toast at the bottom right without moving the pointer to it. Read what it offers." },
+    { "do": "Click the Edit row. The capture opens in an editor and the toast leaves." },
+    { "do": "Capture again and hover the toast. Only Dismiss appears in the top corner now; the pencil is gone because Edit is already on screen." },
+    { "do": "Capture again, let the toast fade, then press Shift Command 6. The same capture opens." },
+    { "do": "Open Experiments, turn off Edit from the capture toast, and capture once more. The toast is back to the caption only, with the pencil on hover.", "shot": "2026-09-02-capture-toast-edit-off-light.png" },
+    { "do": "Record a short clip with Shift Command 5 and stop it. The recording toast has the same Edit row under its longer message.", "shot": "2026-09-02-capture-toast-edit-video-dark.png" }
+  ],
+  "evaluate": [
+    "On a first capture, is the Edit row the first thing you would click, or does the toast still read as a receipt?",
+    "Does the key at the end of the row teach Shift Command 6 for later, or is it clutter you would rather lose?",
+    "Is the toast now too tall for something that fades on its own, or does the extra row earn its space?",
+    "Should the row say Edit, or something that names the destination, like Open in Editor?"
+  ],
+  "rough": [
+    "The pictures are offscreen renders of a mirror of the toast, not the running app: the loop cannot record the screen, so no capture could be made to trigger the real toast.",
+    "Edit and its key are in one full-width pill rather than a small button beside the caption. Beside the caption the footer measured 213 points against a 196 point picture, and the recording messages overflow even without the key.",
+    "On a Touch Bar Mac where macOS still owns Shift Command 6 the key is left off the row, so the toast never promises a key that does nothing. That case was not tried on a real Touch Bar machine.",
+    "The audit's original option of a hint line saying double-click to edit was not built: it teaches a gesture instead of offering the action, and double-click still works either way."
+  ]
+}

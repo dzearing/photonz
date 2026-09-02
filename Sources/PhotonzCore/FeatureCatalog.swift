@@ -28,6 +28,8 @@ public enum FeatureCatalog {
     public static let captureToastHoldSeconds: Double = 7
     public static let captureToastFadeSeconds: Double = 3
 
+    public static let captureToastEditFlag = "next-capture-toast-edit"
+
     public static let measureModesFlag = "next-measure-modes"
 
     public static let measureAlignFlag = "next-measure-align"
@@ -94,6 +96,15 @@ public enum FeatureCatalog {
                     ]),
                 releases: [.current, .next],
                 enabledByDefaultIn: []),
+            Definition(
+                flag: FeatureFlag(
+                    name: captureToastEditFlag,
+                    title: "Edit from the capture toast",
+                    description: "The toast after a capture shows an Edit button under the picture and names its key, Shift Command 6, so the way into the editor is on screen without hovering. Off means Edit only appears while the pointer is over the toast.",
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: measureModesFlag,

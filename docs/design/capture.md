@@ -193,6 +193,16 @@ The `NSStatusItem` menu is the always-available entry point:
    false`) — stealing key from whatever the user is typing in caused stray
    keystrokes + beeps. The slide-down history overlay remains the recallable
    home (⌘⇧H) with the newest entry ring-highlighted.
+   - **Edit row (Next, `next-capture-toast-edit`, added 2026-09-02).** The
+     hover pencil is invisible until pointed at and only the Welcome window
+     ever taught ⇧⌘6, so a first capture read as a receipt with no way in.
+     With the flag on, `ToastEditAction.always` adds a full-width Edit pill
+     under the message, as wide as the thumbnail (196pt, so a longer
+     recording message cannot push the toast wider), with ⇧⌘6 at its trailing
+     end; the hover pill drops its pencil and keeps Copy / Dismiss. On a
+     Touch Bar Mac where macOS still owns ⇧⌘6 the key is left off
+     (`WelcomeState.currentShortcutConflicts`). Off (Current) is the hover
+     pencil above, unchanged.
 5. Editing routes through the multi-window editor (below).
 
 Screen Recording permission (TCC) is requested user-initiated from the agent;

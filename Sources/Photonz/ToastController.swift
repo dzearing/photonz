@@ -40,7 +40,13 @@ final class ToastController {
     /// opens the capture for editing. For recordings, `onCopyVideo`/`onCopyGIF`
     /// add a Copy button whose menu re-copies the clip as an MP4 or animated GIF;
     /// pass nil (the default) for screenshots, which are already on the clipboard.
+    /// `editAction` decides how the toast offers editing: `.onHover` is the
+    /// pencil that appears while pointed at (Current); `.always(shortcut:)`
+    /// adds a visible Edit row under the message naming the key (Next,
+    /// `next-capture-toast-edit`). Pass a nil shortcut when the key is not
+    /// Photonz's to promise, e.g. a Touch Bar Mac where macOS still owns it.
     func present(entry: CaptureEntry?, store: CaptureStore, message: String, on screen: NSScreen,
+                 editAction: ToastEditAction = .onHover,
                  onEdit: @escaping () -> Void,
                  onCopyVideo: (() -> Void)? = nil,
                  onCopyGIF: (() -> Void)? = nil) {
@@ -59,6 +65,7 @@ final class ToastController {
             entry: entry,
             store: store,
             message: message,
+            editAction: editAction,
             onEdit: { [weak self] in onEdit(); self?.remove(id, animated: true) },
             onCopyVideo: onCopyVideo.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
             onCopyGIF: onCopyGIF.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
@@ -288,6 +295,16 @@ private final class ClosureMenuItem: NSMenuItem {
     @objc private func fire() { handler() }
 }
 
+/// How a capture toast offers the way into the editor.
+enum ToastEditAction: Equatable {
+    /// A pencil in the hover pill, plus double-click. Nothing says so on screen.
+    case onHover
+    /// A full-width Edit row under the message, always visible, naming the
+    /// key that does the same after the toast has gone (nil: leave the key
+    /// off, because the system still owns it on this Mac).
+    case always(shortcut: String?)
+}
+
 /// One capture toast: the thumbnail with a "Copied to clipboard" caption,
 /// Liquid Glass surface. Self-driving lifecycle (hold → fade → dismiss); hover
 /// pins it open at full opacity and reveals Edit / Dismiss.
@@ -295,6 +312,7 @@ private struct ToastView: View {
     let entry: CaptureEntry?
     let store: CaptureStore
     let message: String
+    var editAction: ToastEditAction = .onHover
     var onEdit: () -> Void
     /// Non-nil only for recordings: the Copy button's menu re-copies the clip.
     var onCopyVideo: (() -> Void)?
@@ -323,6 +341,9 @@ private struct ToastView: View {
                 Text(message)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
+            }
+            if case .always(let shortcut) = editAction {
+                editRow(shortcut: shortcut)
             }
         }
         .padding(12)
@@ -379,12 +400,40 @@ private struct ToastView: View {
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
     }
 
+    /// The always-visible way into the editor (`ToastEditAction.always`): a
+    /// full-width pill as wide as the thumbnail, Edit at the leading end and
+    /// the key at the trailing end. One row, so a first capture leads into
+    /// editing without hovering, reading the Welcome window, or guessing at
+    /// a double-click. Sized to the thumbnail so a longer recording message
+    /// above it can never push the toast wider.
+    private func editRow(shortcut: String?) -> some View {
+        Button(action: onEdit) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.and.pencil")
+                Text("Edit")
+                Spacer(minLength: 8)
+                if let shortcut {
+                    Text(shortcut)
+                        .foregroundStyle(.tertiary)
+                        .accessibilityLabel("Shortcut \(shortcut)")
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(PillActionButtonStyle(prominent: true))
+        .frame(width: 196)
+        .help(shortcut.map { "Edit (\($0))" } ?? "Edit")
+    }
+
     @ViewBuilder
     private var hoverControls: some View {
         if hovering {
             HStack(spacing: 4) {
-                Button(action: onEdit) { Image(systemName: "square.and.pencil") }
-                    .help("Edit")
+                // With the Edit row on screen the pencil would say it twice.
+                if editAction == .onHover {
+                    Button(action: onEdit) { Image(systemName: "square.and.pencil") }
+                        .help("Edit")
+                }
                 if onCopyVideo != nil || onCopyGIF != nil {
                     Button(action: presentCopyMenu) { Image(systemName: "doc.on.doc") }
                         .help("Copy as…")

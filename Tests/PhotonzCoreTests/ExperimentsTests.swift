@@ -371,6 +371,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.measurePanelFlag })
     }
 
+    @Test func theToastEditFlagIsNextOnlyAndOnByDefault() {
+        // The capture toast used to hide its way into the editor behind a
+        // hover. In Next the toast shows an Edit control and names the key;
+        // Current keeps the hover-only pencil, so the flag is not offered there.
+        #expect(FeatureCatalog.captureToastEditFlag == "next-capture-toast-edit")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.captureToastEditFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.captureToastEditFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.captureToastEditFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.captureToastEditFlag))
+    }
+
     @Test func theToastTimingFlagShipsWithTheBuiltInSeconds() {
         let settings = FeatureCatalog.defaultSettings(for: .current)
         #expect(!settings.isEnabled(FeatureCatalog.captureToastTimingFlag))

@@ -127,6 +127,12 @@ extension Experiments {
             ?? FeatureCatalog.captureToastHoldSeconds
     }
 
+    /// `next-capture-toast-edit`: whether the capture toast shows its Edit
+    /// button (with the key) all the time instead of only while hovered.
+    /// Exists only in the Next release's catalog, so Current always reads
+    /// false and keeps the hover-only pencil.
+    var captureToastEditEnabled: Bool { isEnabled(FeatureCatalog.captureToastEditFlag) }
+
     /// `next-measure-modes`: whether the Measure tool offers Distance, Size and
     /// Gap as modes you pick. Exists only in the Next release's catalog, so
     /// Current always reads false and keeps the plain two-point caliper.

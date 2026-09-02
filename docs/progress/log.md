@@ -4686,3 +4686,27 @@ the card's left end, over the icons.
   run (never reaching a corner) sees both flanks at equal extent and falls
   back to the drawn position. A guide across two buttons always crosses a
   corner, so this did not come up.
+
+## 2026-09-02 (go loop) The capture toast says how to open the editor
+
+- Task `the-capture-toast-says-how-to-open-the-editor` (Next,
+  `next-capture-toast-edit`, on by default). The toast after a capture said
+  "Copied to clipboard!" and nothing else; Edit was a hover-only pencil or a
+  double-click, and ⇧⌘6 was taught only by the Welcome window.
+- Reviewed the three options from the audit before building. A hint line
+  teaches a gesture instead of offering the action; hover-only fails a first
+  capture outright. Built the shortest version: a full-width Edit pill under
+  the message with ⇧⌘6 at its trailing end (`ToastEditAction.always`,
+  `ToastView.editRow`, `PillActionButtonStyle(prominent:)`). One row, not a
+  trailing button: a single-row footer measured 213pt against a 196pt
+  thumbnail and recording messages overflow even without the key.
+- With the flag on the hover pill drops its pencil (Copy / Dismiss stay) and
+  double-click still edits. The key is left off on a Touch Bar Mac where the
+  system owns ⇧⌘6 (`WelcomeState.currentShortcutConflicts`, now internal).
+  Current reads `.onHover` and is unchanged.
+- Verified: 1279 tests green (1 new, flag is Next-only and on there). The
+  footer was rendered offscreen as a mirror of the real view in light and
+  dark: 236 by 219.5pt on and 236 by 188.5pt off, screenshot and recording
+  messages the same width. Probe app built, launched, idle at 0% CPU, quit.
+  The loop cannot record the screen, so the toast was not triggered live.
+  Audit `queue/audits/2026-09-02-capture-toast-edit.json`.

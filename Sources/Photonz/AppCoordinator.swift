@@ -186,6 +186,7 @@ final class AppCoordinator {
         toasts.present(
             entry: entry, store: capture.store,
             message: "Copied to clipboard!", on: activeScreen(),
+            editAction: captureToastEditAction,
             onEdit: { [weak self] in
                 guard let self else { return }
                 if isVideo { self.openRecording(entry.url) } else { self.editCapture(entry.url) }
@@ -310,9 +311,20 @@ final class AppCoordinator {
     private func presentCopyToast(for sourceURL: URL, message: String) {
         let entry = capture.store.entries.first(where: { $0.url == sourceURL })
         toasts.present(entry: entry, store: capture.store,
-                       message: message, on: activeScreen()) { [weak self] in
+                       message: message, on: activeScreen(),
+                       editAction: captureToastEditAction) { [weak self] in
             self?.openRecording(sourceURL)
         }
+    }
+
+    /// How a capture toast offers editing. Next (`next-capture-toast-edit`)
+    /// shows the Edit row and names ⇧⌘6; the key is left off on a Touch Bar
+    /// Mac where macOS still owns ⇧⌘6 for its own screenshot, so the toast
+    /// never promises a key that does nothing. Current keeps the hover pencil.
+    private var captureToastEditAction: ToastEditAction {
+        guard Experiments.shared.captureToastEditEnabled else { return .onHover }
+        let shadowed = WelcomeState.currentShortcutConflicts().contains(.touchBar)
+        return .always(shortcut: shadowed ? nil : SystemScreenshotShortcuts.Shortcut.touchBar.keyLabel)
     }
 
     /// Export the recording open in the video editor, honoring its in-memory

@@ -207,8 +207,9 @@ final class WelcomeState {
     }
 
     /// Which of ⇧⌘3/⇧⌘4/⇧⌘5 (and ⇧⌘6 on a Touch Bar Mac) macOS's own
-    /// screenshot shortcuts still swallow.
-    private static func currentShortcutConflicts() -> [SystemScreenshotShortcuts.Shortcut] {
+    /// screenshot shortcuts still swallow. Also read by the capture toast, so
+    /// it only names ⇧⌘6 when Photonz actually receives it.
+    static func currentShortcutConflicts() -> [SystemScreenshotShortcuts.Shortcut] {
         let value = CFPreferencesCopyValue(
             "AppleSymbolicHotKeys" as CFString,
             "com.apple.symbolichotkeys" as CFString,

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 510,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:59:36.556Z",
-  "updated": "2026-09-02T10:59:36.556Z",
+  "updated": "2026-09-02T11:47:43.544Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on the end-to-end walk (queue/audits/2026-09-02-redline-walk.json). ToastController.ToastView: message under the thumbnail, hoverControls reveal Edit/Dismiss; double-click = Edit. Options worth a decision card if visual direction is unclear: (a) an always-visible Edit button row under the message, (b) message reads Copied · double-click to edit, (c) keep hover-only. The toast is shared code, so gate any change on a Next flag (new catalog entry).",
@@ -22,6 +22,36 @@
     {
       "t": "2026-09-02T10:59:36.556Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T11:40:06.910Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T11:42:31.524Z",
+      "note": "Reproduced: ToastView's footer is one row, a green check and the message; Edit lives only in hoverControls (pencil, shown while hovering) and in a double-click gesture. The key path (Shift Command 6) is taught only by WelcomeView line 133. Nothing on the toast names any of the three."
+    },
+    {
+      "t": "2026-09-02T11:42:31.524Z",
+      "note": "Adversarial review before building. First-time user: sees a picture and 'Copied to clipboard!', reads it as a receipt, and moves on; nothing invites a click. Option (c) keep hover-only fails them. Option (b), a hint line 'double-click to edit', teaches a gesture instead of offering the action and adds a second line of small text to read. Option (a), a visible Edit button, is the shortest version that delivers the value: one control where the eye already is, no reading required. Decided: the caption row keeps the check and message and gains a trailing Edit pill that is always visible; the pill carries the shortcut (Shift Command 6) in a quieter weight so the keyboard path is also said on screen for the day the toast has faded. With the flag on, the hover pill drops its pencil (now redundant) and keeps Copy (recordings) and Dismiss; double-click still edits. On a Touch Bar Mac where the system still owns Shift Command 6 the shortcut is left off the pill rather than promising a key that does nothing. This is not a visual-direction call the user needs to make: the task's own acceptance names a visible Edit control as the first acceptable answer, so no decision card."
+    },
+    {
+      "t": "2026-09-02T11:47:36.901Z",
+      "note": "Layout decided by measurement, not taste: a single caption row with an Edit pill beside it is 213pt wide (with the key) against the 196pt thumbnail, and 'Video copied to clipboard!' overflows even without the key, so the toast would widen past its picture. Built a two-row footer instead: caption unchanged, then a full-width Edit pill exactly 196pt wide with the pencil and Edit leading and the key trailing. Rendered offscreen in light and dark: on 236 x 219.5pt, off 236 x 188.5pt, screenshot and recording messages identical width."
+    },
+    {
+      "t": "2026-09-02T11:47:36.901Z",
+      "note": "Shipped: FeatureCatalog.captureToastEditFlag (next-capture-toast-edit, Next only, on by default; test theToastEditFlagIsNextOnlyAndOnByDefault), Experiments.captureToastEditEnabled, ToastEditAction (.onHover / .always(shortcut:)), ToastView.editRow, PillActionButtonStyle(prominent:) for a resting fill, AppCoordinator.captureToastEditAction which leaves the key off when WelcomeState.currentShortcutConflicts (now internal) says a Touch Bar Mac's system shortcut still owns Shift Command 6. With the flag on the hover pill drops its pencil; double-click still edits. Current passes .onHover and is byte-for-byte the old footer and hover pill."
+    },
+    {
+      "t": "2026-09-02T11:47:36.901Z",
+      "note": "Review after building, honestly: the loop cannot record the screen, so the real toast was never triggered; the pictures are a mirror of the view rendered offscreen, and the probe app was only confirmed to build, launch and idle at 0% CPU before being quit. The label Edit is generic; Open in Editor might read better and is a question in the audit. 1279 tests green. Audit queue/audits/2026-09-02-capture-toast-edit.json."
+    },
+    {
+      "t": "2026-09-02T11:47:43.544Z",
+      "note": "Next flag next-capture-toast-edit (on by default): the capture toast gains a full-width Edit row under the message with Shift Command 6 at its end; hover pill drops the pencil; Current unchanged. Verified by 1279 green tests, offscreen renders of the footer in light and dark, probe app launched and idle. Audit queue/audits/2026-09-02-capture-toast-edit.json"
     }
-  ]
+  ],
+  "started": "2026-09-02T11:40:06.910Z",
+  "completed": "2026-09-02T11:47:43.544Z"
 }
