@@ -4646,3 +4646,10 @@ the card's left end, over the icons.
 - Every Measure mode hint is now one short line (36 to 43 characters, limit 45) on one two-second schedule; the [ and ] tip moved to a caption under the inspector's Mode control (Size only) and into the picker's tooltip.
 - The legend's corner walk gained a hard-blocked tier: the hint's slot (reserved whether or not a pill is up) and the tool bar's measured width. Over a measurement beats behind the bar. New EditorChromeLayout frames for the bottom chrome, tested.
 - Verified on the probe app with a temporary harness; renders under queue/audits/2026-09-02-measure-hint-*. Follow-up filed: when every corner is taken the legend still sits on a measurement.
+
+## 2026-09-02 (go loop) Layer menu commands act on the whole selection
+
+- Duplicate Layer, Delete Layer and the four arrange commands (plus command-J) are enabled under a multi-selection and act on every selected row, from the menu, its shortcuts and the row context menu. Before, they keyed off the single primary selection, which is nil the moment two rows are selected.
+- PhotonzCore: `PhotonzDocument.restackLayers(ids:_:)` with `RestackStep` and `duplicateLayers(ids:offsetBy:)`, Photoshop semantics (members keep order and gaps; a member pressed against the top or the locked floor pins the ones behind it). 14 tests in `LayerBatchRestackTests`.
+- Undo now prunes a multi-selection whose layers vanished (undoing a batch duplicate), so the menu never stays enabled over nothing.
+- Verified on the probe app with a temporary harness (removed); 1270 tests green. Audit: `queue/audits/2026-09-02-layers-menu-multi-select.json`.

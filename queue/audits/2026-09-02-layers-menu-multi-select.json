@@ -1,0 +1,27 @@
+{
+  "feature": "Layers menu commands act on the whole selection",
+  "epic": "spec-export",
+  "summary": "With several layers or measurements selected, Duplicate Layer, Delete Layer and the four arrange commands in the Layer menu are now live and act on every selected row. Before, they greyed out the moment two rows were selected, so batch work meant going back to the canvas.",
+  "setup": "Photonz Dev, Experiments window, release Next. No flag: this is shared editor behavior. Open any screenshot and draw three or four rectangles or measurements first.",
+  "try": [
+    { "do": "In the Layers list, click one row, then shift-click a row two below it. Three rows highlight and the count line reads 3 layers selected." },
+    { "do": "Open the Layer menu. Duplicate Layer, Bring to Front, Bring Forward, Send Backward, Send to Back and Delete Layer are all enabled." },
+    { "do": "Press command-shift-] (Bring to Front). The three rows jump to the top of the list together, in the same order they had." },
+    { "do": "Press command-Z once. All three return to where they were in one step." },
+    { "do": "Choose Layer > Duplicate Layer. Each selected layer gets a copy directly above it, and the three copies are now the selection, nudged 16 points down and right." },
+    { "do": "Press command-Delete. All three copies vanish. Press command-Z: they come back together, still selected." },
+    { "do": "With the Select tool, drag a marquee around the shapes on the canvas, then press command-[ (Send Backward). The whole group steps down one slot and never goes under Background." },
+    { "do": "Right-click one of the selected rows and choose Bring Forward. The whole selection moves, not just that row." }
+  ],
+  "evaluate": [
+    "When a selected block already touches the top of the stack, Bring Forward does nothing at all. Is holding the block right, or should the lower members still creep up until they close the gap?",
+    "After Duplicate Layer the copies become the selection, so a nudge moves the copies. Is that what your hands expect, or did you want the originals to stay selected?",
+    "The row context menu now acts on the whole selection when you right-click a selected row. Does that ever surprise you, for example when you meant to send just that one row back?",
+    "Do the shortcuts feel worth learning for redlining: command-[ and command-] to restack a batch of measurements, command-Delete to clear a batch?"
+  ],
+  "rough": [
+    "Verified by core tests and a scripted run on the probe app (rows selected through the same code a shift-click reaches, every command invoked and undone with the stack logged). The loop cannot send modifier clicks or read the live menu on this machine, so the menu itself was not opened by hand and there is no screenshot.",
+    "Undoing a batch duplicate used to leave the vanished copies counted as selected, with the menu still enabled over them. The multi-selection now drops layers that no longer exist, and a lone survivor becomes the single selection.",
+    "Merge Down and Rasterize Layer still work on one layer only. Merging a multi-selection down is a different feature and was left alone."
+  ]
+}

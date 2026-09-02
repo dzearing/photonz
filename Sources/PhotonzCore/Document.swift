@@ -122,6 +122,69 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         layers = visual.reversed()
     }
 
+    /// One step of the Layers menu's arrange commands, applied to a whole
+    /// selection at once.
+    public enum RestackStep: Sendable, Hashable {
+        case toFront, forward, backward, toBack
+    }
+
+    /// Moves every unlocked layer in `ids` one arrange step, together: the
+    /// selected layers keep their relative order and the gaps between them,
+    /// a member that already presses against the top (or the floor) pins the
+    /// members behind it in place, and nothing passes the locked Background
+    /// at the bottom. Locked members and unknown ids are ignored. Returns
+    /// whether the stack changed, so a no-op never costs an undo step.
+    @discardableResult
+    public mutating func restackLayers(ids: Set<UUID>, _ step: RestackStep) -> Bool {
+        let moving = Set(layers.filter { ids.contains($0.id) && !$0.isLocked }.map(\.id))
+        guard !moving.isEmpty else { return false }
+        let floor = layers.prefix(while: \.isLocked).count
+        let before = layers.map(\.id)
+        switch step {
+        case .toFront:
+            let block = layers.filter { moving.contains($0.id) }
+            layers.removeAll { moving.contains($0.id) }
+            layers.append(contentsOf: block)
+        case .toBack:
+            let block = layers.filter { moving.contains($0.id) }
+            layers.removeAll { moving.contains($0.id) }
+            layers.insert(contentsOf: block, at: min(floor, layers.count))
+        case .forward:
+            // Top down, so a member that just moved up leaves its slot free
+            // for the member beneath it, and a pinned member pins the rest.
+            for i in stride(from: layers.count - 2, through: 0, by: -1)
+            where moving.contains(layers[i].id) && !moving.contains(layers[i + 1].id) {
+                layers.swapAt(i, i + 1)
+            }
+        case .backward:
+            for i in layers.indices
+            where i > floor && moving.contains(layers[i].id) && !moving.contains(layers[i - 1].id) {
+                layers.swapAt(i, i - 1)
+            }
+        }
+        return layers.map(\.id) != before
+    }
+
+    /// Duplicates every layer in `ids` in one mutation, each copy directly
+    /// above its own original, so a multi-selection duplicates in a single
+    /// history step. Returns the copies bottom-up. Unknown ids are ignored.
+    @discardableResult
+    public mutating func duplicateLayers(ids: Set<UUID>, offsetBy offset: CGPoint = .zero) -> [Layer] {
+        var copies: [Layer] = []
+        var result: [Layer] = []
+        result.reserveCapacity(layers.count + ids.count)
+        for layer in layers {
+            result.append(layer)
+            if ids.contains(layer.id) {
+                let copy = layer.duplicated(offsetBy: offset)
+                copies.append(copy)
+                result.append(copy)
+            }
+        }
+        layers = result
+        return copies
+    }
+
     /// Duplicates a layer directly above the original (panel context menu, ⌘V
     /// of a copied layer reuses `Layer.duplicated`). Returns the copy.
     @discardableResult

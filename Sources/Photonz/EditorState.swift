@@ -2567,6 +2567,71 @@ final class EditorState {
         perform { $0.removeLayer(id: id) }
     }
 
+    // MARK: - Whole-selection commands (Layers menu)
+
+    /// Every layer the Layers menu's Duplicate, Delete and arrange commands
+    /// act on: the multi-selection when there is one (shift-click, command-
+    /// click or a marquee), else the primary selection. Empty with no layer
+    /// selected, which is when those menu items grey out.
+    var actionableLayerIDs: Set<UUID> {
+        if !multiSelectedLayerIDs.isEmpty { return multiSelectedLayerIDs }
+        return selectedLayerID.map { [$0] } ?? []
+    }
+
+    var hasLayerSelection: Bool { !actionableLayerIDs.isEmpty }
+
+    /// Layers > Delete Layer (⌘⌫): the whole selection in one undo step.
+    func deleteSelectedLayers() {
+        let ids = actionableLayerIDs
+        guard !ids.isEmpty else { return }
+        deleteLayers(ids: Array(ids))
+    }
+
+    /// Layers > Duplicate Layer over a selection: every member gets a copy
+    /// directly above it, in one undo step, and the copies become the new
+    /// selection so a follow-up nudge or arrange moves the copies, not the
+    /// originals.
+    func duplicateSelectedLayers() {
+        let ids = actionableLayerIDs
+        guard !ids.isEmpty else { return }
+        if ids.count == 1, let only = ids.first {
+            duplicateLayer(id: only)
+            return
+        }
+        discardDragPreview()
+        var copies: [Layer] = []
+        perform { copies = $0.duplicateLayers(ids: ids, offsetBy: CGPoint(x: 16, y: 16)) }
+        selectLayers(Set(copies.map(\.id)))
+    }
+
+    /// The four arrange commands over a selection: the members move together,
+    /// keeping their relative order and gaps, and stop at the locked Background.
+    func restackSelectedLayers(_ step: PhotonzDocument.RestackStep) {
+        guard let document else { return }
+        let ids = actionableLayerIDs
+        guard !ids.isEmpty else { return }
+        // Dry-run on a copy so a pinned selection never costs an undo step.
+        var preview = document
+        guard preview.restackLayers(ids: ids, step) else { return }
+        discardDragPreview()
+        perform { $0.restackLayers(ids: ids, step) }
+    }
+
+    /// Makes `ids` the selection the way a row click would: one becomes the
+    /// primary selection, several the multi-selection, none clears.
+    private func selectLayers(_ ids: Set<UUID>) {
+        switch ids.count {
+        case 0:
+            selectLayer(nil)
+        case 1:
+            selectedLayerID = ids.first
+        default:
+            selectedLayerID = nil // didSet clears the multi-selection first
+            multiSelectedLayerIDs = ids
+            rowSelection = ListSelection(selected: ids)
+        }
+    }
+
     /// Layers the committed marquee fully contains — the rubber-band
     /// multi-selection. Derived from (selection, document), so there's no
     /// separate selection state to fall out of sync.
@@ -2587,6 +2652,12 @@ final class EditorState {
     }
 
     func duplicateLayer(id: UUID) {
+        // Duplicating a member of the multi-selection (row context menu)
+        // duplicates the whole selection, like Delete does.
+        if multiSelectedLayerIDs.contains(id) {
+            duplicateSelectedLayers()
+            return
+        }
         discardDragPreview()
         var copyID: UUID?
         perform { copyID = $0.duplicateLayer(id: id, offsetBy: CGPoint(x: 16, y: 16))?.id }
@@ -2840,21 +2911,25 @@ final class EditorState {
 
     // MARK: - Restacking (Photoshop ⌘] ⌘[ ⇧⌘] ⇧⌘[)
 
-    func bringLayerForward(id: UUID) { restack(id: id) { idx, count, _ in min(idx + 1, count - 1) } }
-    func sendLayerBackward(id: UUID) { restack(id: id) { idx, _, floor in max(idx - 1, floor) } }
-    func bringLayerToFront(id: UUID) { restack(id: id) { _, count, _ in count - 1 } }
-    func sendLayerToBack(id: UUID) { restack(id: id) { _, _, floor in floor } }
+    func bringLayerForward(id: UUID) { restack(id: id, .forward) }
+    func sendLayerBackward(id: UUID) { restack(id: id, .backward) }
+    func bringLayerToFront(id: UUID) { restack(id: id, .toFront) }
+    func sendLayerToBack(id: UUID) { restack(id: id, .toBack) }
 
-    /// Moves a layer in the stack. Locked layers stay put, and nothing can be
-    /// pushed underneath the locked Background at the bottom.
-    private func restack(id: UUID, _ target: (Int, Int, Int) -> Int) {
-        guard let document, let idx = document.index(of: id),
-              !document.layers[idx].isLocked else { return }
-        let floor = document.layers.prefix(while: \.isLocked).count
-        let to = target(idx, document.layers.count, floor)
-        guard to != idx else { return }
+    /// Moves a layer in the stack (row context menu). A member of the
+    /// multi-selection takes the whole selection with it; on its own, locked
+    /// layers stay put and nothing can be pushed underneath the locked
+    /// Background at the bottom.
+    private func restack(id: UUID, _ step: PhotonzDocument.RestackStep) {
+        if multiSelectedLayerIDs.contains(id) {
+            restackSelectedLayers(step)
+            return
+        }
+        guard let document else { return }
+        var preview = document
+        guard preview.restackLayers(ids: [id], step) else { return }
         discardDragPreview()
-        perform { $0.moveLayer(id: id, to: to) }
+        perform { $0.restackLayers(ids: [id], step) }
     }
 
     /// Drag-reorder from the layers panel (SwiftUI `onMove` indices, visual
@@ -3339,6 +3414,16 @@ final class EditorState {
         if let id = selectedLayerID, document.layer(id: id) == nil {
             selectedLayerID = nil
         }
+        // Same for the multi-selection (undoing a batch duplicate takes the
+        // copies it selected away), so the Layers menu never stays enabled
+        // over layers that no longer exist. One survivor becomes the primary.
+        if !multiSelectedLayerIDs.isEmpty {
+            let alive = multiSelectedLayerIDs.filter { document.layer(id: $0) != nil }
+            if alive.count != multiSelectedLayerIDs.count {
+                if alive.count == 1 { selectedLayerID = alive.first }
+                else { multiSelectedLayerIDs = alive }
+            }
+        }
         // Same for a per-layer crop target: fall back to a document crop.
         if let id = cropTargetLayerID, document.layer(id: id) == nil {
             cropTargetLayerID = nil
@@ -3392,3 +3477,4 @@ final class EditorState {
         Task { await scheduler.submit(document) }
     }
 }
+

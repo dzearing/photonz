@@ -5,14 +5,14 @@
   "epic": "spec-export",
   "priority": "p2-normal",
   "seq": 480,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-02T10:19:18.007Z",
-  "updated": "2026-09-02T10:19:18.007Z",
+  "updated": "2026-09-02T11:25:35.000Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "EditorCommands.swift: the Layers CommandMenu keys every item off `selectedID` (editor?.selectedLayerID), which is nil whenever multiSelectedLayerIDs holds two or more. EditorState.deleteLayers(ids:) already batches; duplicateLayer(id:) and restack(id:) are single-layer. Add multi-aware entry points (deleteSelectedLayers, duplicateSelectedLayers, restackSelection) and enable the menu items when either store is non-empty. Same gap exists after a canvas marquee, so this also fixes the marquee case. Found while building shift/command-click list selection (audit 2026-09-02-list-multi-select rough 1).",
+  "notes": "EditorCommands.swift: the Layers CommandMenu keys every item off `selectedID` (editor?.selectedLayerID), which is nil whenever multiSelectedLayerIDs holds two or more. EditorState.deleteLayers(ids:) already batches; duplicateLayer(id:) and restack(id:) are single-layer. Add multi-aware entry points (deleteSelectedLayers, duplicateSelectedLayers, restackSelection) and enable the menu items when either store is non-empty. Same gap exists after a canvas marquee, so this also fixes the marquee case. Found while building shift/command-click list selection (audit 2026-09-02-list-multi-select rough 1). DONE: see log. Core API PhotonzDocument.restackLayers / duplicateLayers; EditorState.restackSelectedLayers / duplicateSelectedLayers / deleteSelectedLayers; menu keyed off hasLayerSelection.",
   "acceptance": [
     "With three rows selected by shift-click, Layers > Delete Layer (command-Delete) removes all three in one undo step.",
     "Layers > Duplicate Layer with several rows selected duplicates each one and the copies become the new selection.",
@@ -23,6 +23,27 @@
     {
       "t": "2026-09-02T10:19:18.007Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-02T11:16:38.260Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T11:25:35.000Z",
+      "note": "Adversarial pass before building: the menu was keyed off the single primary selection, which is nil whenever two or more rows are selected, so every batch path (shift-click, command-click, marquee) hit the same wall. Shortest fix that delivers the value: one selection-aware entry point per command in EditorState, with the batch reorder logic in PhotonzCore where it can be tested. Photoshop semantics chosen for Forward/Backward over a selection: members move one slot each, a member pressed against the top or the locked floor pins the members behind it, gaps survive."
+    },
+    {
+      "t": "2026-09-02T11:25:35.000Z",
+      "note": "PhotonzCore: PhotonzDocument.restackLayers(ids:_:) with RestackStep (toFront/forward/backward/toBack) and duplicateLayers(ids:offsetBy:); 14 tests in LayerBatchRestackTests written first (block moves, gaps, pinned top, locked floor, locked members ignored, single-layer parity, duplicate placement)."
+    },
+    {
+      "t": "2026-09-02T11:25:35.000Z",
+      "note": "App: EditorState.actionableLayerIDs / hasLayerSelection, deleteSelectedLayers, duplicateSelectedLayers (copies become the selection), restackSelectedLayers (dry-run so a pinned selection costs no undo step). The Layer menu items and command-J route through them; the single-id duplicate/restack used by the row context menu act on the whole selection when the row is a member, matching how Delete already behaved. rerender now prunes a multi-selection whose layers vanished (undo of a batch duplicate), promoting a lone survivor to the primary selection."
+    },
+    {
+      "t": "2026-09-02T11:25:35.000Z",
+      "note": "Verified live on the probe app with a temporary harness (removed): four rectangles added, rows 2..4 selected via clickRow plain + extend, then toFront / undo / toBack at floor (unchanged) / forward / undo / duplicate (copies selected, names end in copy) / undo / delete (three gone, menu disabled) / undo restores all three in one step / selectAll marquee toBack. Scripts/test.sh green, 1270 tests. Audit: queue/audits/2026-09-02-layers-menu-multi-select.json."
     }
-  ]
+  ],
+  "started": "2026-09-02T11:16:38.259Z"
 }

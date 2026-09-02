@@ -257,6 +257,7 @@ struct EditorCommands: Commands {
 
         CommandMenu("Layer") {
             let selectedID = editor?.selectedLayerID
+            let hasLayerSelection = editor?.hasLayerSelection ?? false
             // New empty (transparent, canvas-sized) layer. The selection
             // region is preserved, so select → ⌘N → fill paints the region
             // onto the fresh layer (user decision 2026-07-05; New from
@@ -268,20 +269,18 @@ struct EditorCommands: Commands {
             // with no marquee — duplicate the selected layer.
             Button("New Layer via Copy") {
                 if editor?.selection != nil { editor?.promoteSelectionToLayer() }
-                else if let selectedID { editor?.duplicateLayer(id: selectedID) }
+                else { editor?.duplicateSelectedLayers() }
             }
             .keyboardShortcut("j", modifiers: .command)
-            .disabled(editor?.selection == nil && selectedID == nil)
+            .disabled(editor?.selection == nil && !hasLayerSelection)
             Button("Blur Behind Selection") { editor?.blurBehindSelection() }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
                 .disabled(editor?.selection == nil)
             Divider()
             // No shortcut (Photoshop parity: ⌘D is Deselect; ⌘J covers the
             // duplicate-selected-layer case when no region is marqueed).
-            Button("Duplicate Layer") {
-                if let selectedID { editor?.duplicateLayer(id: selectedID) }
-            }
-            .disabled(selectedID == nil)
+            Button("Duplicate Layer") { editor?.duplicateSelectedLayers() }
+                .disabled(!hasLayerSelection)
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))
@@ -294,32 +293,25 @@ struct EditorCommands: Commands {
             Button("New Collage Layer") { editor?.newEmptyCollageLayer() }
                 .disabled(editor?.document == nil)
             Divider()
-            Button("Bring to Front") {
-                if let selectedID { editor?.bringLayerToFront(id: selectedID) }
-            }
-            .keyboardShortcut("]", modifiers: [.command, .shift])
-            .disabled(selectedID == nil)
-            Button("Bring Forward") {
-                if let selectedID { editor?.bringLayerForward(id: selectedID) }
-            }
-            .keyboardShortcut("]", modifiers: .command)
-            .disabled(selectedID == nil)
-            Button("Send Backward") {
-                if let selectedID { editor?.sendLayerBackward(id: selectedID) }
-            }
-            .keyboardShortcut("[", modifiers: .command)
-            .disabled(selectedID == nil)
-            Button("Send to Back") {
-                if let selectedID { editor?.sendLayerToBack(id: selectedID) }
-            }
-            .keyboardShortcut("[", modifiers: [.command, .shift])
-            .disabled(selectedID == nil)
+            // The arrange commands, Duplicate and Delete act on the whole
+            // selection: the multi-selection a shift-click, command-click or
+            // marquee built, else the one selected layer.
+            Button("Bring to Front") { editor?.restackSelectedLayers(.toFront) }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
+                .disabled(!hasLayerSelection)
+            Button("Bring Forward") { editor?.restackSelectedLayers(.forward) }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(!hasLayerSelection)
+            Button("Send Backward") { editor?.restackSelectedLayers(.backward) }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(!hasLayerSelection)
+            Button("Send to Back") { editor?.restackSelectedLayers(.toBack) }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+                .disabled(!hasLayerSelection)
             Divider()
-            Button("Delete Layer") {
-                if let selectedID { editor?.deleteLayer(id: selectedID) }
-            }
-            .keyboardShortcut(.delete, modifiers: .command)
-            .disabled(selectedID == nil)
+            Button("Delete Layer") { editor?.deleteSelectedLayers() }
+                .keyboardShortcut(.delete, modifiers: .command)
+                .disabled(!hasLayerSelection)
         }
 
         // The mock's Measure command group (§6, `next-measure-panel`): the tool,
