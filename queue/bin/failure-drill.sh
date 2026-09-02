@@ -1,11 +1,12 @@
 #!/bin/zsh
-# Runner-failure drill: prove the go loop reacts to a runner that always dies.
+# Runner-failure drill: prove the go loop reacts to a runner that cannot work.
 #
 #   queue/bin/failure-drill.sh
 #
-# Builds a throwaway queue with two tasks, puts a fake `claude` on PATH that
-# always exits non-zero with a spend-limit message, runs the REAL go loop
-# against it, then asserts what the dashboard would show:
+# Two scenarios, each in a throwaway queue with a fake `claude` on PATH, each
+# running the REAL go loop and then asserting what the dashboard would show.
+#
+# Scenario 1, a runner that always dies (the spend limit of 2026-08-23):
 #
 #   1. every attempt is recorded as a runner_failed event (not a silent reset)
 #   2. the loop reports unhealthy, with the runner's own error text
@@ -14,12 +15,26 @@
 #   5. failures that span more than one task are blamed on the environment,
 #      and anything parked during that streak is handed back
 #
+# Scenario 2, a login that expires and is later restored (2026-08-26 to 09-01):
+#
+#   6. a runner that says it could not sign in is an environment failure even
+#      though it exits 0 with a "success" result
+#   7. the task it was given is handed back uncharged: no failure counted,
+#      never parked
+#   8. status.json and the loop window say sign-in is needed, at once
+#   9. the daily digest is not stubbed as failed; it is retried and written
+#      for real once sign-in works, and the loop recovers on its own
+#
 # Nothing here touches the real queue or the real repo history.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
+Q() { node queue/bin/queue.mjs "$@"; }
+
+# ---- scenario 1: a runner that always dies ----------------------------------
 SANDBOX=$(mktemp -d -t photonz-drill)
-trap 'rm -rf "$SANDBOX"' EXIT
+SANDBOX2=$(mktemp -d -t photonz-drill-signin)
+trap 'rm -rf "$SANDBOX" "$SANDBOX2"' EXIT
 QDIR="$SANDBOX/queue"
 BIN="$SANDBOX/bin"
 mkdir -p "$QDIR" "$BIN"
@@ -37,14 +52,13 @@ export PHOTONZ_QUEUE_DIR="$QDIR"
 export PHOTONZ_BACKOFF_STEPS="1,2,3,4,5"   # same shape, seconds instead of minutes
 export PHOTONZ_MAX_ITERS=6
 
-Q() { node queue/bin/queue.mjs "$@"; }
-# Skip the digest pass: this drill is about task runners.
+# Skip the digest pass: this scenario is about task runners.
 mkdir -p "$QDIR/digests"; : > "$QDIR/digests/$(date +%F).md"
 
 Q add "Drill task one" p1-high "drill" >/dev/null
 Q add "Drill task two" p1-high "drill" >/dev/null
 
-echo "[drill] running the real go loop against a runner that always exits 1..."
+echo "[drill] scenario 1: running the real go loop against a runner that always exits 1..."
 queue/bin/go-loop.sh > "$SANDBOX/drill.log" 2>&1
 export DRILL_LOG="$SANDBOX/drill.log"
 
@@ -86,6 +100,8 @@ check("park reason names the error",
   parks.every((p) => /monthly spend limit/.test(p.reason || "")), JSON.stringify(parks[0] && parks[0].reason));
 check("failures across tasks are blamed on the environment",
   fails.some((e) => e.environment === true), "environment flags: " + fails.map((e) => e.environment ? 1 : 0).join(""));
+check("a real failure is never mistaken for a sign-in failure",
+  fails.every((e) => !e.signIn) && !status.lastError.signIn, "signIn flags: " + fails.map((e) => e.signIn ? 1 : 0).join(""));
 check("tasks parked during an environment streak are handed back",
   unparks.length >= 1 && tasks.every((t) => !t.parked),
   unparks.length + " unparked; still parked: " + tasks.filter((t) => t.parked).map((t) => t.id).join(", "));
@@ -103,6 +119,152 @@ check("shipped default backoff is minutes, not zero",
   BACKOFF_STEPS.length > 1 && BACKOFF_STEPS[0] >= 30 && BACKOFF_STEPS[BACKOFF_STEPS.length - 1] >= 900,
   "default steps: " + BACKOFF_STEPS.join(", "));
 
-console.log(failed ? "\n[drill] " + failed + " check(s) failed" : "\n[drill] all checks passed");
+console.log(failed ? "\n[drill] scenario 1: " + failed + " check(s) failed" : "\n[drill] scenario 1: all checks passed");
 process.exit(failed ? 1 : 0);
 '
+S1=$?
+
+# ---- scenario 2: a login that expires, then is restored ---------------------
+QDIR2="$SANDBOX2/queue"
+BIN2="$SANDBOX2/bin"
+STATE2="$SANDBOX2/state"
+mkdir -p "$QDIR2/digests" "$BIN2" "$STATE2"
+
+# The fake runner mimics the agent CLI with an expired login, byte for byte
+# what nine digest runs did: the sign-in failure on stderr and in the stream, a
+# "success" result, exit 0. The FIRST run of each kind (digest, task) fails to
+# sign in; the second run of that kind succeeds, standing in for a person
+# having logged in meanwhile. It also snapshots status.json on every call, so
+# the checks can see what the dashboard said while the login was expired.
+cat > "$BIN2/claude" <<'FAKE'
+#!/bin/zsh
+prompt="${@[-1]}"
+kind=digest; [[ "$prompt" == *"TASK FILE: "* ]] && kind=task
+stamp="$DRILL_STATE/$kind.calls"
+n=$(( $(cat "$stamp" 2>/dev/null || echo 0) + 1 )); echo $n > "$stamp"
+cp "$PHOTONZ_QUEUE_DIR/status.json" "$DRILL_STATE/status-before-$kind-$n.json" 2>/dev/null
+echo '{"type":"system","subtype":"init","session_id":"drill-session"}'
+if (( n == 1 )); then
+  echo '{"type":"assistant","message":{"content":[{"type":"text","text":"Failed to authenticate: OAuth session expired and could not be refreshed"}]}}'
+  echo '{"type":"result","subtype":"success","result":""}'
+  echo 'Failed to authenticate: OAuth session expired and could not be refreshed' >&2
+  exit 0
+fi
+if [[ $kind == task ]]; then
+  file="${prompt##*TASK FILE: }"
+  id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+  node queue/bin/queue.mjs status "$id" done "drill: finished once sign-in was restored" >/dev/null
+else
+  printf '# Daily digest %s\n\n## Summary\nA real digest, written once sign-in was restored.\n' "$(date +%F)" > "$PHOTONZ_QUEUE_DIR/digests/$(date +%F).md"
+fi
+echo '{"type":"result","subtype":"success","result":"done"}'
+exit 0
+FAKE
+chmod +x "$BIN2/claude"
+
+export PATH="$BIN2:$PATH"
+export PHOTONZ_QUEUE_DIR="$QDIR2"
+export DRILL_STATE="$STATE2"
+export PHOTONZ_BACKOFF_STEPS="1,2,3,4,5"
+export PHOTONZ_DIGEST_HOUR=0                # the digest pass must run whatever the clock says
+export PHOTONZ_MAX_ITERS=3                  # digest (sign-in fails), digest + task (sign-in fails), task
+
+Q add "Drill task three" p1-high "drill" >/dev/null
+
+echo "[drill] scenario 2: running the real go loop against a login that expires, then is restored..."
+queue/bin/go-loop.sh > "$SANDBOX2/drill.log" 2>&1
+export DRILL_LOG="$SANDBOX2/drill.log"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const q = process.env.PHOTONZ_QUEUE_DIR;
+const st = process.env.DRILL_STATE;
+const today = new Date().toISOString().slice(0, 10);
+const read = (f, fb) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return fb; } };
+const status = read(q + "/status.json", {});
+const history = fs.readFileSync(q + "/history.jsonl", "utf8").trim().split("\n").map(JSON.parse);
+const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+  const d = q + "/tasks/" + p;
+  return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+});
+const task = tasks[0] || {};
+const log = fs.readFileSync(process.env.DRILL_LOG, "utf8");
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const fails = history.filter((e) => e.ev === "runner_failed");
+const parks = history.filter((e) => e.ev === "task_parked");
+const digestFailed = history.filter((e) => e.ev === "digest_failed");
+const digestDeferred = history.filter((e) => e.ev === "digest_deferred");
+const duringDigest = read(st + "/status-before-digest-2.json", {});
+const duringTask = read(st + "/status-before-task-2.json", {});
+
+check("a runner that could not sign in is recorded as a failure despite exit 0",
+  fails.length === 2 && fails.every((e) => e.exit === 0 && e.signIn === true && e.outcome === "signin"),
+  fails.length + " runner_failed events: " + JSON.stringify(fails.map((e) => [e.kind, e.exit, e.outcome])));
+check("the failure text is the sign-in line",
+  fails.every((e) => /Failed to authenticate/.test(e.error || "")), JSON.stringify(fails[0] && fails[0].error));
+check("a sign-in failure is blamed on the environment on its own",
+  fails.every((e) => e.environment === true), "environment flags: " + fails.map((e) => e.environment ? 1 : 0).join(""));
+check("the task is not charged a failure", !(task.failures > 0) && !task.lastError,
+  "failures=" + (task.failures || 0) + " lastError=" + JSON.stringify(task.lastError || null));
+check("the task is never parked", parks.length === 0 && !task.parked, parks.length + " parked");
+check("the task log says it was handed back, not that it failed",
+  (task.log || []).some((l) => /could not sign in/.test(l.note)) && !(task.log || []).some((l) => /runner failed \(exit/.test(l.note)),
+  (task.log || []).map((l) => l.note).join(" | "));
+check("status.json reported sign-in needed while the login was expired",
+  duringDigest.health === "unhealthy" && duringDigest.lastError && duringDigest.lastError.signIn === true && duringDigest.lastError.kind === "digest",
+  "health=" + duringDigest.health + " signIn=" + (duringDigest.lastError && duringDigest.lastError.signIn));
+check("...and again when a task run hit it",
+  duringTask.health === "unhealthy" && duringTask.lastError && duringTask.lastError.signIn === true && duringTask.lastError.taskId === task.id,
+  "health=" + duringTask.health + " taskId=" + (duringTask.lastError && duringTask.lastError.taskId));
+check("the loop window named sign-in as the fix", /sign-in needed: the agent could not authenticate/.test(log),
+  (log.match(/sign-in needed[^\n]*/) || ["no such line"])[0]);
+check("the digest was not stubbed as failed", digestFailed.length === 0 && digestDeferred.length === 1,
+  digestFailed.length + " digest_failed, " + digestDeferred.length + " digest_deferred");
+check("the digest was retried and written for real once sign-in worked",
+  /written once sign-in was restored/.test(fs.readFileSync(q + "/digests/" + today + ".md", "utf8")),
+  "digest exists: " + fs.existsSync(q + "/digests/" + today + ".md"));
+check("the task finished once sign-in worked", task.status === "done", task.id + "=" + task.status);
+check("the loop recovered on its own", status.health === "ok" && status.consecutiveFailures === 0 && !status.lastError,
+  "health=" + status.health + " consecutive=" + status.consecutiveFailures);
+check("no task is left in_progress", tasks.every((t) => t.status !== "in_progress"),
+  tasks.map((t) => t.id + "=" + t.status).join(", "));
+
+// The status note is overwritten the moment the next run starts (that is what
+// "busy" is for), so its wording is checked on a fresh queue with a direct
+// call, the same call the loop makes.
+process.env.PHOTONZ_QUEUE_DIR = st + "/unit-queue";
+fs.mkdirSync(process.env.PHOTONZ_QUEUE_DIR, { recursive: true });
+const { pickRunnerError, isSignInFailure, recordRunnerExit, readStatus } = await import(process.cwd() + "/queue/bin/queue-lib.mjs");
+const unitExit = recordRunnerExit({ taskId: null, exit: 0, error: "Failed to authenticate: OAuth session expired and could not be refreshed", kind: "digest" });
+const unitStatus = readStatus();
+check("the status note says sign-in is needed, from the first failure",
+  unitExit.outcome === "signin" && unitStatus.health === "unhealthy" && unitStatus.consecutiveFailures === 1 && /sign-in needed/i.test(unitStatus.note || ""),
+  "outcome=" + unitExit.outcome + " health=" + unitStatus.health + " note=" + JSON.stringify(unitStatus.note));
+
+// The line picker must find the sign-in failure even when the CLI printed
+// something after it, and must not read a working runner as one.
+check("the error picker surfaces a sign-in line buried above other stderr lines",
+  /Failed to authenticate/.test(pickRunnerError("Failed to authenticate: OAuth session expired and could not be refreshed\nRun /login to sign in\n", "unrelated")),
+  JSON.stringify(pickRunnerError("Failed to authenticate: OAuth session expired\nRun /login\n", "")));
+check("the error picker keeps the last stderr line for anything else",
+  pickRunnerError("first\nRequest timed out\n", "\x1b[1m■ runner finished (success)\x1b[0m") === "Request timed out"
+    && pickRunnerError("", "\x1b[1m■ runner finished (success)\x1b[0m") === "■ runner finished (success)",
+  "");
+check("a working runner is not a sign-in failure", !isSignInFailure("■ runner finished (success)") && !isSignInFailure(""), "");
+
+console.log(failed ? "\n[drill] scenario 2: " + failed + " check(s) failed" : "\n[drill] scenario 2: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S2=$?
+
+if (( S1 == 0 && S2 == 0 )); then
+  echo "[drill] all checks passed"
+  exit 0
+fi
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2)"
+exit 1

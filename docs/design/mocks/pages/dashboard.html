@@ -666,7 +666,10 @@
     if (L.stale) return { cls: 'warn', ic: 'ic-warning', label: 'Loop lost', note: 'A task is marked running but the loop process is gone. Run /go to restart it.' };
     if (!L.alive) return { cls: 'off', ic: 'ic-x-circle', label: 'Loop stopped', note: 'Run /go in a repo session to start the go loop.' };
     // Runners that keep dying used to read as Running forever. Say unhealthy,
-    // say how many in a row, and let the strip below say why.
+    // say how many in a row, and let the strip below say why. An expired
+    // login is the one failure a person has to fix by hand, so it gets its
+    // own name and the instruction right in the pill.
+    if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) return { cls: 'bad', ic: 'ic-warning', label: 'Sign-in needed', note: 'The agent cannot sign in, so nothing runs until someone logs in. Nothing was charged to a task.' };
     if (L.health === 'unhealthy') return { cls: 'bad', ic: 'ic-warning', label: 'Loop unhealthy', note: L.consecutiveFailures + ' runner ' + (L.consecutiveFailures === 1 ? 'failure' : 'failures') + ' in a row. Nothing is getting done until this clears.' };
     if (L.state === 'running') return { cls: 'run', ic: '', label: 'Running', note: '' };
     return { cls: 'idle', ic: 'ic-pause', label: 'Idle', note: 'Waiting for ready tasks. Queue one below or resolve a blocker.' };
@@ -683,7 +686,16 @@
     h += '</div>';
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked</div>';
     h += '</div>';
-    if (L.health === 'unhealthy' && L.lastError) {
+    if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) {
+      var LS = L.lastError;
+      h += '<div class="db-herr"><i class="ic ic-warning"></i><div>';
+      h += '<b>Sign-in needed · ' + L.consecutiveFailures + (L.consecutiveFailures === 1 ? ' try' : ' tries') + ' so far · ' + rel(LS.at) + '</b>';
+      h += '<code>' + esc(LS.message || 'no error text captured') + '</code>';
+      h += '<p>The agent’s login expired. No task was charged a failure and none was parked' +
+        (LS.kind === 'digest' ? '; today’s digest is waiting and will be written once sign-in works' : '') +
+        '. To fix it: open a terminal, run claude, and log in. The loop retries every few minutes and picks up where it left off.</p>';
+      h += '</div></div>';
+    } else if (L.health === 'unhealthy' && L.lastError) {
       var LE = L.lastError;
       h += '<div class="db-herr"><i class="ic ic-warning"></i><div>';
       h += '<b>' + L.consecutiveFailures + ' runner ' + (L.consecutiveFailures === 1 ? 'failure' : 'failures') + ' in a row' +

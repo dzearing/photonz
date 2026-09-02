@@ -24,7 +24,7 @@ a task says otherwise.
 | `bin/runner-prompt.md` | The contract each task runner follows (status protocol, decision protocol, next-release rule). |
 | `bin/digest-prompt.md` | The daily digest + triage contract. |
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
-| `bin/failure-drill.sh` | Runs the real loop against a runner that always exits non-zero, in a throwaway queue, and asserts what the dashboard would show. Run it after touching failure handling. |
+| `bin/failure-drill.sh` | Runs the real loop in a throwaway queue against two fake runners, one that always exits non-zero and one whose login has expired and is later restored, and asserts what the dashboard would show. Run it after touching failure handling. |
 | `bin/churn-drill.mjs` | Replays a claim/reset storm against a throwaway queue and asserts the task log, the task file, and `history.jsonl` all stay bounded. Run it after touching logs, history, or the guard. |
 
 ## Task lifecycle
@@ -58,8 +58,24 @@ happens now, after every runner exit:
   any task. Nothing gets parked during such a streak, and anything parked
   earlier in it is handed back automatically. That is the spend-limit case: when
   the credit clears, the loop resumes on its own with the queue intact.
+- **An expired login is never the task's fault.** The agent CLI reports a
+  sign-in failure as a success: `Failed to authenticate: OAuth session expired`
+  on stderr, a success result, exit 0. From 2026-08-26 to 2026-09-01 that
+  passed the exit-code rule, nine digests were stubbed as "generation failed",
+  and nothing said why. The loop now reads the runner's words as well as its
+  exit code: a run that says it could not sign in is recorded as an
+  environment failure (`runner_failed` with `signIn: true`), the task is handed
+  back with no failure counted and can never be parked for it, `status.json`
+  reports `unhealthy` at once with a note that sign-in is needed, and the
+  Summary hero pill reads **Sign-in needed** with the fix (run `claude` in a
+  terminal and log in). The daily digest is not stubbed on a sign-in failure:
+  the file stays missing (a `digest_deferred` event records why), so the digest
+  is the first thing retried on every pass and the day gets a real one once
+  someone has signed in. Retries follow the usual backoff, capped at 30 minutes.
 
-`queue/bin/failure-drill.sh` proves all of the above against the real loop.
+`queue/bin/failure-drill.sh` proves all of the above against the real loop:
+one scenario for a runner that always dies, one for a login that expires and
+is later restored.
 
 Whatever still slips through cannot balloon the files the dashboard reads. A
 task's `log` is capped at 120 entries (the oldest 20 and the newest 99 are kept,

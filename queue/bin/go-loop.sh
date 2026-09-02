@@ -13,6 +13,8 @@
 #   PHOTONZ_MANAGER_LOW_WATER  run the manager pass when fewer than this many
 #                         tasks are ready to claim. Default 3; 0 disables it.
 #   PHOTONZ_MANAGER_COOLDOWN   seconds between manager passes. Default 1200.
+#   PHOTONZ_DIGEST_HOUR   earliest local hour for the daily digest. Default 5
+#                         (drills set 0 so the digest pass runs whenever).
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
@@ -37,18 +39,21 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
   claude -p "${CLAUDE_FLAGS[@]}" "$1" 2>"$errf" | node queue/bin/stream-format.mjs | tee -a "$LOG" "$outf"
   rc=${pipestatus[1]}
   cat "$errf" >> "$LOG"
-  # Prefer stderr; some failures (API errors mid-stream) only ever reach stdout.
-  RUNNER_ERR=$(grep -v '^[[:space:]]*$' "$errf" | tail -n 1)
-  [[ -z "$RUNNER_ERR" ]] && RUNNER_ERR=$(grep -v '^[[:space:]]*$' "$outf" | tail -n 1)
+  # The queue picks the telling line: a sign-in failure wherever it sits, else
+  # the last stderr line, else the last stdout line (some failures, API errors
+  # mid-stream, only ever reach stdout).
+  RUNNER_ERR=$(Q runner-error "$errf" "$outf")
   rm -f "$errf" "$outf"
   return $rc
 }
 
 # Ask the queue what that runner exit meant and adopt its answer. Defaults are
 # set first so a queue CLI that itself fails still leaves the loop with a sane
-# (and cautious) OUTCOME/BACKOFF rather than an unset variable.
+# (and cautious) OUTCOME/BACKOFF rather than an unset variable. SIGNIN=1 means
+# the runner could not authenticate: the queue charged nothing to the task, and
+# the loop's job is to say so and wait for a person to log in.
 record_exit() { # $1 = task id or "-", $2 = exit code
-  OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0
+  OUTCOME=failed; BACKOFF=60; FAILURES=1; HEALTH=unhealthy; ENVFAIL=0; SIGNIN=0
   eval "$(Q runner-exit "$1" "$2" "$RUNNER_ERR")"
 }
 
@@ -118,13 +123,22 @@ Q busy "starting up"
 # as working when nothing is working.
 backoff_wait() {
   local secs=$1 fails=$2 err=$3
-  echo "[go-loop] $(date +%T) unhealthy: $fails consecutive runner failures; waiting ${secs}s. Last error: $err" | tee -a "$LOG"
-  banner "**Go loop unhealthy** $fails runner failures in a row, retrying in ${secs}s. Last error: $err"
+  if [[ "${SIGNIN:-0}" == 1 ]]; then
+    # Not a runner failure in any useful sense: nothing runs until a person
+    # logs in, so the window says exactly that and what to do about it.
+    echo "[go-loop] $(date +%T) sign-in needed: the agent could not authenticate ($fails attempt(s)). Run \`claude\` in a terminal and log in; retrying in ${secs}s. Last error: $err" | tee -a "$LOG"
+    banner "**Go loop needs sign-in** the agent could not authenticate. Run \`claude\` in a terminal and log in; the loop retries in ${secs}s and resumes on its own."
+    title "photonz: go-loop (sign-in needed)"
+  else
+    echo "[go-loop] $(date +%T) unhealthy: $fails consecutive runner failures; waiting ${secs}s. Last error: $err" | tee -a "$LOG"
+    banner "**Go loop unhealthy** $fails runner failures in a row, retrying in ${secs}s. Last error: $err"
+    title "photonz: go-loop (unhealthy)"
+  fi
   state idle
-  title "photonz: go-loop (unhealthy)"
   sleep "$secs"
   title "photonz: go-loop"
 }
+DIGEST_HOUR="${PHOTONZ_DIGEST_HOUR:-5}"
 
 # loop.log is the raw runner transcript and grows without limit: one stuck night
 # on 2026-08-23 put 2.9MB into it. Keep one generation so a loop left running
@@ -147,7 +161,7 @@ while :; do
   # Daily digest + triage: once per calendar day, at or after 05:00 so it reads
   # as a morning report rather than a midnight one. (10# forces base-10: date
   # prints 08/09 and zsh arithmetic would otherwise read those as bad octal.)
-  if [[ ! -f "$QDIR/digests/$TODAY.md" && $((10#$(date +%H))) -ge 5 ]]; then
+  if [[ ! -f "$QDIR/digests/$TODAY.md" && $((10#$(date +%H))) -ge $DIGEST_HOUR ]]; then
     echo "[go-loop] $(date +%T) generating digest + triage for $TODAY" | tee -a "$LOG"
     Q busy "running daily digest + triage"
     banner "**Go loop** running daily digest + triage for $TODAY"
@@ -155,8 +169,14 @@ while :; do
     run_runner "$(cat queue/bin/digest-prompt.md)"
     DIGEST_EXIT=$?
     record_exit - "$DIGEST_EXIT"
+    if [[ "$SIGNIN" == 1 ]]; then
+      # The runner never started, so leave no stub behind: with the file still
+      # missing, the digest is the first thing retried on every pass, and the
+      # day gets a real one as soon as a person has signed in.
+      echo "[go-loop] $(date +%T) digest for $TODAY deferred: the agent could not sign in" | tee -a "$LOG"
+      Q event digest_deferred '{"reason":"sign-in"}'
     # If the digest still does not exist, write a stub so we do not spin on it.
-    if [[ ! -f "$QDIR/digests/$TODAY.md" ]]; then
+    elif [[ ! -f "$QDIR/digests/$TODAY.md" ]]; then
       printf '# Daily digest %s\n\n## Summary\nDigest generation failed; see %s.\n\n## Reflections\n(none)\n\n## Triage review\n(skipped)\n' "$TODAY" "$LOG" > "$QDIR/digests/$TODAY.md"
       Q event digest_failed "{}"
     fi

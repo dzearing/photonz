@@ -18,11 +18,15 @@
 //   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing)
 //   node queue/bin/queue.mjs compact        collapse old churn events in history.jsonl into counted entries
 //   node queue/bin/queue.mjs reset-health   clear the unhealthy flag (the loop does this on start)
+//   node queue/bin/queue.mjs runner-error <stderrFile> <stdoutFile>
+//                                            print the one line of a runner's output worth keeping
+//                                            (a sign-in failure first, else the last stderr/stdout line)
 //   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [error]
 //                                            record how a runner ended; prints shell vars
-//                                            (OUTCOME/BACKOFF/FAILURES/HEALTH) for the go loop to eval
+//                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN) for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
+import { readFileSync } from 'node:fs';
 import * as q from './queue-lib.mjs';
 
 const [cmd, ...args] = process.argv.slice(2);
@@ -93,8 +97,15 @@ try {
     case 'reset-health':
       q.writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
       break;
+    // Missing files read as empty: the loop must get an answer even when a
+    // temp file vanished, and "no error text" is the honest one.
+    case 'runner-error': {
+      const slurp = (f) => { try { return f ? readFileSync(f, 'utf8') : ''; } catch { return ''; } };
+      out(q.pickRunnerError(slurp(args[0]), slurp(args[1])));
+      break;
+    }
     // The go loop evals this, so print shell assignments, not JSON. OUTCOME is
-    // ok|failed|parked, BACKOFF is seconds to wait before claiming again.
+    // ok|failed|parked|signin, BACKOFF is seconds to wait before claiming again.
     case 'runner-exit': {
       const r = q.recordRunnerExit({
         taskId: args[0] && args[0] !== '-' ? args[0] : null,
@@ -102,7 +113,8 @@ try {
         error: args.slice(2).join(' '),
         kind: args[0] && args[0] !== '-' ? 'task' : 'digest',
       });
-      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${r.consecutiveFailures >= q.UNHEALTHY_AT ? 'unhealthy' : 'ok'} ENVFAIL=${r.environment ? 1 : 0}`);
+      const health = (r.signIn || r.consecutiveFailures >= q.UNHEALTHY_AT) ? 'unhealthy' : 'ok';
+      out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0}`);
       break;
     }
     case 'event':

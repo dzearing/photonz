@@ -1,0 +1,28 @@
+{
+  "id": "the-loop-treats-a-spend-limit-refusal-on-a-diges",
+  "title": "The loop treats a spend-limit refusal on a digest run as a failure, not a finished digest",
+  "goal": "When the agent refuses to run because the monthly spend limit is hit, it says so and exits as if it succeeded. On a task run the loop already notices, because the task is left unfinished. On the daily digest run it does not: the day gets written up as a failed digest and the loop reports healthy. The loop should read the refusal as an environment problem, say so on the dashboard, and retry the digest later instead of writing it off.",
+  "epic": "unmanned-loop",
+  "priority": "p3-low",
+  "seq": 540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-02T07:49:54.831Z",
+  "updated": "2026-09-02T07:49:54.831Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-08-26 05:38 in queue/loop.log: \"You have hit your monthly spend limit\" printed, result success, exit 0, then the digest stub was written. Same shape as the sign-in failure fixed by the-loop-tells-an-expired-login-apart-from-a-fai; the natural extension is a small table of environment signatures (sign-in, spend limit) in queue-lib.mjs feeding recordRunnerExit, with each signature carrying its own dashboard wording. Careful: scenario 1 of the drill uses the spend-limit text with exit 1 and expects a solo task to be PARKED after three tries, so a text match must not override the per-task rule for task runs, only stop the digest run from being counted as ok.",
+  "acceptance": [
+    "A digest runner that prints the spend-limit line and exits 0 is recorded as an environment failure with the loop reporting unhealthy and the message on the dashboard hero.",
+    "The digest is not stubbed as failed on that run; it is retried once a runner succeeds.",
+    "A real task failure is still handled exactly as before: three solo failures park the task.",
+    "queue/bin/failure-drill.sh gains a case for it."
+  ],
+  "log": [
+    {
+      "t": "2026-09-02T07:49:54.831Z",
+      "note": "created (manual)"
+    }
+  ]
+}

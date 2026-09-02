@@ -297,6 +297,29 @@ export const BACKOFF_STEPS = ENV_BACKOFF.length ? ENV_BACKOFF : DEFAULT_BACKOFF;
 
 const cleanError = (s) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 400);
 
+// The agent CLI's own words when it cannot sign in. From 2026-08-26 to
+// 2026-09-01 every runner printed this, reported a "success" result and exited
+// 0, so the exit-code rule below said ok, nine digests were stubbed as failed,
+// and nothing on the dashboard said why. A run that says this did no work,
+// whichever task it was for, and the only cure is a person signing in.
+export const SIGN_IN_PATTERN = /failed to authenticate|oauth session expired|not logged in|please run \/login|invalid api key|authentication[_ ]error/i;
+export const isSignInFailure = (text) => SIGN_IN_PATTERN.test(String(text || ''));
+export const SIGN_IN_HINT = 'Sign-in needed: run `claude` in a terminal and log in. The loop retries on its own.';
+
+// The one line of a runner's output worth keeping as its error. The CLI's own
+// complaints (stderr) beat the runner's last words (stdout), and a sign-in
+// failure beats whatever the CLI printed after it, since that line explains
+// everything. Stdout is only searched for a sign-in line when stderr is empty:
+// a runner working on this very feature echoes the phrase in its tool calls.
+const stripAnsi = (s) => String(s || '').replace(/\x1b\[[0-9;]*m/g, '');
+export function pickRunnerError(stderrText = '', stdoutText = '') {
+  const lines = (s) => stripAnsi(s).split('\n').map((l) => l.trim()).filter(Boolean);
+  const err = lines(stderrText);
+  const out = lines(stdoutText);
+  if (err.length) return err.find(isSignInFailure) || err[err.length - 1];
+  return out.find(isSignInFailure) || out[out.length - 1] || '';
+}
+
 // Park a task: it has failed on its own often enough that retrying it is just
 // burning runners. Blocked keeps it out of claimNext; parked/parkReason say why
 // so the dashboard and the next human can tell it from a decision block.
@@ -325,17 +348,19 @@ function unparkTask(id, reason) {
 // a success or a failure, updates the task and the loop health, and returns how
 // long the loop should wait before claiming again.
 //
-//   outcome  ok | failed | parked
+//   outcome  ok | failed | parked | signin
 //   backoff  seconds to sleep before the next claim
 export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = 'task' } = {}) {
   const s = readStatus();
   const task = taskId ? findTask(taskId) : null;
   // What counts as failure: for a task run, the runner leaving its task
   // in_progress (it never finalized, whatever it exited with); for a digest run
-  // there is no task to inspect, so the exit code is all we have. A runner that
+  // there is no task to inspect, so the exit code is all we have, plus the one
+  // failure the CLI reports as a success: it could not sign in. A runner that
   // finalized its task and then exited non-zero still did the work.
   const unfinalized = !!task && task.status === 'in_progress';
-  const failed = task ? unfinalized : exit !== 0;
+  const signIn = isSignInFailure(error);
+  const failed = task ? unfinalized : (exit !== 0 || signIn);
   if (!failed) {
     if (task && task.failures) { task.failures = 0; saveTask(task); }
     writeStatus({ health: 'ok', consecutiveFailures: 0, lastError: null, failureStreak: null });
@@ -352,8 +377,10 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   // Failures that span more than one task are the environment's fault (spend
   // limit, no network, bad credentials), not any task's. Parking the whole
   // queue one task at a time would be the worst possible response, so back off
-  // instead and hand back anything parked earlier in this same streak.
-  const environment = streak.taskIds.length > 1;
+  // instead and hand back anything parked earlier in this same streak. A
+  // sign-in failure is the environment's fault on its own: it needs no second
+  // task to prove it.
+  const environment = signIn || streak.taskIds.length > 1;
   const unparked = [];
   if (environment && streak.parked.length) {
     for (const id of streak.parked) {
@@ -362,8 +389,14 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
     streak.parked = [];
   }
 
-  let outcome = 'failed';
-  if (task && unfinalized) {
+  let outcome = signIn ? 'signin' : 'failed';
+  if (task && unfinalized && signIn) {
+    // The runner never got to start, so the task is handed straight back:
+    // no failure counted, no lastError, nothing that could ever park it.
+    task.status = 'pending';
+    appendLog(task, `runner could not sign in; handed back uncharged: ${message}`);
+    saveTask(task);
+  } else if (task && unfinalized) {
     task.failures = (task.failures || 0) + 1;
     task.lastError = { at: now(), exit, message };
     if (!environment && task.failures >= MAX_TASK_FAILURES) {
@@ -378,15 +411,19 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
   }
 
   const backoff = BACKOFF_STEPS[Math.min(consecutive - 1, BACKOFF_STEPS.length - 1)];
+  // A sign-in failure is unambiguous, so the loop reports unhealthy on the
+  // first one instead of waiting for a second to be sure.
   writeStatus({
-    health: consecutive >= UNHEALTHY_AT ? 'unhealthy' : 'ok',
+    health: (signIn || consecutive >= UNHEALTHY_AT) ? 'unhealthy' : 'ok',
     consecutiveFailures: consecutive,
-    lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment },
+    lastError: { at: now(), taskId: taskId || null, kind, exit, message, environment, signIn },
     failureStreak: streak,
-    note: `runner failed (exit ${exit}); retrying in ${backoff}s`,
+    note: signIn
+      ? `sign-in needed: the agent could not authenticate; retrying in ${backoff}s`
+      : `runner failed (exit ${exit}); retrying in ${backoff}s`,
   });
-  appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, error: message });
-  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment };
+  appendEvent('runner_failed', { id: taskId || null, kind, exit, consecutive, outcome, environment, signIn, error: message });
+  return { outcome, backoff, consecutiveFailures: consecutive, parked: outcome === 'parked', unparked, environment, signIn };
 }
 
 // A runner that exits without finalizing leaves the task in_progress forever.

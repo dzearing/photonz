@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p3-low",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-02T05:50:57.383Z",
-  "updated": "2026-09-02T05:50:57.383Z",
+  "updated": "2026-09-02T07:50:26.738Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/loop.log around lines 45581 to 45590 ('Failed to authenticate: OAuth session expired and could not be refreshed' followed by 'runner finished (success)'), digests 2026-08-24 through 2026-09-01 all read 'Digest generation failed', history.jsonl 2026-09-02T01:55 'unparked ... expired login, not the task'. Code: go-loop.sh run_runner and record_exit, queue-lib.mjs recordRunnerExit and the failureStreak environment rule. Serves the focus by keeping measure tasks moving unattended.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-02T05:50:57.383Z",
       "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-02T07:37:44.461Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-02T07:43:50.102Z",
+      "note": "Reproduced from loop.log: 2026-08-26 to 09-01 every digest runner printed the sign-in failure on stderr and stdout, reported result success, and exited 0. recordRunnerExit only looks at the exit code for a digest, so it said ok and the loop stubbed the day as failed. Correction to the goal narrative: the three parks on 08-24/25 were the machine sleeping mid-run and request timeouts under the pre-08-23 guard-only loop still in memory, not the sign-in failure; the sign-in failure itself never parked anything because no task was ready by then. The fix still stands: a sign-in line must count as an environment failure whatever the exit code, hand a task back uncharged, say so on the dashboard, and leave the digest unstubbed. Also noted: the spend-limit line on 08-26 arrived with exit 0 too, so the existing exit-code rule misses it for digests; filing as a follow-up rather than widening this task."
+    },
+    {
+      "t": "2026-09-02T07:50:09.865Z",
+      "note": "Built: queue-lib.mjs gains SIGN_IN_PATTERN/isSignInFailure/pickRunnerError; recordRunnerExit treats a sign-in line as a failure whatever the exit code, blames the environment on its own, hands the task back with no failure counted (log entry: handed back uncharged), reports unhealthy at once with the note sign-in needed, returns outcome=signin and writes signIn:true into lastError and the runner_failed event. queue.mjs: new runner-error <stderr> <stdout> command picks the telling line (sign-in line first, ANSI stripped) and runner-exit prints SIGNIN=. go-loop.sh: uses runner-error, skips the digest stub on SIGNIN=1 (digest_deferred event, file stays missing so the digest is the first thing retried every pass), banner/log/title say sign-in needed with the fix, PHOTONZ_DIGEST_HOUR env for drills. dashboard.html: hero pill reads Sign-in needed with a strip that says nothing was charged, the digest is waiting, and how to fix it."
+    },
+    {
+      "t": "2026-09-02T07:50:09.866Z",
+      "note": "Verified: queue/bin/failure-drill.sh now runs two scenarios against the real loop; scenario 1 (spend limit, exit 1) unchanged and passing with an extra check that no real failure is read as sign-in; scenario 2 (login expires, exits 0 with a success result, later restored) 18 checks passing: task uncharged and never parked, digest deferred not stubbed then written for real, status/banner say sign-in needed, loop recovers. churn-drill passes. Scripts/test.sh: 1181 tests pass. Dashboard hero verified in a browser against a throwaway queue on port 8799 (screenshot temp/signin-demo-hero-digest-2.png, untracked); fixed an inline code tag that broke the strip paragraph onto its own line."
+    },
+    {
+      "t": "2026-09-02T07:50:09.866Z",
+      "note": "Adversarial review before building: the mock has no say here; the only UX is the hero and the loop window. First-time reader needs to know what to DO, not just that it is broken, so the pill note and strip name the fix (run claude, log in) and say nothing was charged. Considered generalising to every environment signature (spend limit with exit 0 has the same shape) but scenario 1 of the drill pins the spend-limit text to the per-task park rule, so widening it here would change real-failure handling; filed as a follow-up task instead."
+    },
+    {
+      "t": "2026-09-02T07:50:09.866Z",
+      "note": "No audit written: this is loop plumbing, and the only way to playtest it is to let the login expire, which is not something to ask the user to do. The drill and the screenshot stand in for it."
+    },
+    {
+      "t": "2026-09-02T07:50:26.737Z",
+      "note": "A runner that cannot sign in is now an environment failure whatever its exit code: task handed back uncharged and never parked, status.json and the Summary hero say Sign-in needed with the fix, the digest is deferred instead of stubbed and retried first every pass. Verified by queue/bin/failure-drill.sh scenario 2 (18 checks, runs the real loop), scenario 1 unchanged, churn-drill and Scripts/test.sh (1181 tests) green, hero checked in a browser on a throwaway queue."
     }
-  ]
+  ],
+  "started": "2026-09-02T07:37:44.460Z",
+  "completed": "2026-09-02T07:50:26.738Z"
 }

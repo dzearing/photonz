@@ -57,5 +57,9 @@ Summary hero swaps its Running pill for a red **Loop unhealthy** pill above a
 strip carrying the failure count, the raw error, and what it means. A task that
 fails three times in a row on its own is parked and the loop moves on; failures
 that span several tasks are read as an environment problem instead, so nothing
-gets parked and anything parked in that streak is handed back. Details and the
-drill that verifies it: `queue/README.md`.
+gets parked and anything parked in that streak is handed back. An expired login
+is its own case: the CLI reports it as a success with exit 0, so the loop reads
+the runner's words instead, charges nothing to the task, leaves the daily
+digest unwritten so it is retried, and the hero pill says **Sign-in needed**
+with the fix (run `claude` in a terminal and log in). Details and the drill that
+verifies it: `queue/README.md`.
